@@ -34,4 +34,34 @@ class GlobalQualification extends Model
             'global_qualification_id'
         );
     }
+    public function qualifiables(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\User\Models\User::class,
+            'qualifiable',
+            'global_qualifiables',
+            'global_qualification_id',
+            'qualifiable_id'
+        );
+    }
+    public function freelancers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\Freelancer\Models\Freelancer::class,
+            'qualifiable',
+            'global_qualifiables',
+            'global_qualification_id',
+            'qualifiable_id'
+        );
+    }
+    public function serviceProviders(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+            'qualifiable',
+            'global_qualifiables',
+            'global_qualification_id',
+            'qualifiable_id'
+        );
+    }
 }

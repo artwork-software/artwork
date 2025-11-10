@@ -41,12 +41,15 @@ class GlobalQualificationService
         return $this->globalQualificationRepository->getAll();
     }
 
-    public function activateOrDeactivateInUser(GlobalQualification $globalQualification, User $user): void
+    /**
+     * Aktiviert oder deaktiviert eine GlobalQualification für ein beliebiges qualifiable Model (User, Freelancer, ServiceProvider)
+     */
+    public function activateOrDeactivateInQualifiable(GlobalQualification $globalQualification, $qualifiable): void
     {
-        if ($user->globalQualifications->contains($globalQualification->id)) {
-            $user->globalQualifications()->detach($globalQualification->id);
+        if ($qualifiable->globalQualifications->contains($globalQualification->id)) {
+            $qualifiable->globalQualifications()->detach($globalQualification->id);
         } else {
-            $user->globalQualifications()->attach($globalQualification->id);
+            $qualifiable->globalQualifications()->attach($globalQualification->id);
         }
     }
 }

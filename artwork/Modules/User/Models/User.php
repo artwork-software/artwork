@@ -291,12 +291,13 @@ class User extends Model implements
         //'assigned_craft_ids',
     ];
 
-    public function globalQualifications(): BelongsToMany
+    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this->belongsToMany(
-            GlobalQualification::class,
-            'user_global_qualifications',
-            'user_id',
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\GlobalQualification::class,
+            'qualifiable',
+            'global_qualifiables',
+            'qualifiable_id',
             'global_qualification_id'
         );
     }
@@ -529,11 +530,15 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
-    public function shiftQualifications(): BelongsToMany
+    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this
-            ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
-            ->using(UserShiftQualification::class);
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\ShiftQualification::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'qualifiable_id',
+            'shift_qualification_id'
+        )->withPivot('craft_id');
     }
 
     public function workerShiftPlanFilter(): HasOne

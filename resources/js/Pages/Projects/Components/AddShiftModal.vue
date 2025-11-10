@@ -159,8 +159,6 @@ function getInitialQualificationValue() {
             )
             : undefined
 
-        console.log('getInitialQualificationValue - found:', found)
-
         return {
             id: shiftQualification.id,
             name: shiftQualification.name,
@@ -193,13 +191,13 @@ function captureInitialShiftSnapshot() {
 watch(
     () => computedShiftQualifications.value,
     () => captureInitialShiftSnapshot(),
-    { immediate: true }
+    { immediate: true, deep: true }
 )
 
 // watch on selectecCraft to update computedShiftQualifications
 watch(selectedCraft, () => {
     computedShiftQualifications.value = getInitialQualificationValue()
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 
 watch(breakMinutes, (v) => {
@@ -207,12 +205,12 @@ watch(breakMinutes, (v) => {
     if (shiftForm.start && shiftForm.end) {
         shiftForm.break_minutes = v
     }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 onMounted(() => {
     if (props.edit)
     {
-
+        computedShiftQualifications.value = getInitialQualificationValue() // nur beim ersten Mount
         validate()
     }
 })
@@ -470,8 +468,6 @@ function validateShiftsQualifications() {
 }
 
 function validate() {
-    console.log('Mounted - edit mode')
-    computedShiftQualifications.value = getInitialQualificationValue()
     const hasShiftDateError = validateShiftDates()
     const hasShiftBreakError = validateShiftBreak()
     const hasShiftCraftError = validateShiftCraft()
@@ -612,7 +608,6 @@ const lockOrUnlockShift = (commit = false) => {
     }, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => wantsFreshPlacements()
     })
 }
 </script>
@@ -627,11 +622,6 @@ const lockOrUnlockShift = (commit = false) => {
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
             <div class="space-y-6">
-
-                <pre>
-                    {{ computedShiftQualifications }}
-                </pre>
-
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->

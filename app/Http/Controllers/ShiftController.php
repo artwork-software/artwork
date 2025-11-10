@@ -325,6 +325,21 @@ class ShiftController extends Controller
 
         $this->shiftService->save($shift);
 
+        if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
+
+            ShiftUser::where('shift_id', $shift->id)->forceDelete();
+            ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
+            ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
+
+
+            if ($shift->shiftsQualifications()->exists()) {
+                $shift->shiftsQualifications()->delete();
+            }
+
+            // 3) Eager-Loaded Relation invalidieren, damit Response nicht alte Daten zeigt
+            $shift->unsetRelation('users');
+        }
+
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);

@@ -11,20 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_global_qualifications', function (Blueprint $table) {
-            $table->id(); // Primärschlüssel
-            $table->unsignedBigInteger('user_id');
+        Schema::create('global_qualifiables', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('global_qualification_id');
+            $table->unsignedBigInteger('qualifiable_id');
+            $table->string('qualifiable_type');
             $table->timestamps();
 
-            // KURZER UNIQUE-INDEX
-            $table->unique(['user_id', 'global_qualification_id'], 'ugq_user_qual_uq');
+            $table->unique([
+                'global_qualification_id',
+                'qualifiable_id',
+                'qualifiable_type'
+            ], 'gq_qualifiable_unique');
 
-            // KURZE FK-NAMEN (optional, aber sicher bei langen Tabellennamen)
-            $table->foreign('user_id', 'fk_ugq_user')
-                ->references('id')->on('users')->onDelete('cascade');
-
-            $table->foreign('global_qualification_id', 'fk_ugq_qual')
+            $table->foreign('global_qualification_id', 'fk_gq_qualification')
                 ->references('id')->on('global_qualifications')->onDelete('cascade');
         });
     }
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_global_qualifications');
+        Schema::dropIfExists('global_qualifiables');
     }
 };

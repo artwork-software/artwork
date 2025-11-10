@@ -103,7 +103,7 @@ class ServiceProvider extends Model implements DayServiceable
 
     public function assignedCrafts(): morphToMany
     {
-        return $this->morphToMany(Craft::class, 'craftable');
+        return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
     }
 
     public function managingCrafts(): MorphToMany
@@ -111,11 +111,26 @@ class ServiceProvider extends Model implements DayServiceable
         return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
-    public function shiftQualifications(): BelongsToMany
+    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this
-            ->belongsToMany(ShiftQualification::class, 'service_provider_shift_qualifications')
-            ->using(ServiceProviderShiftQualification::class);
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\ShiftQualification::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'qualifiable_id',
+            'shift_qualification_id'
+        )->withPivot('craft_id');
+    }
+
+    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\GlobalQualification::class,
+            'qualifiable',
+            'global_qualifiables',
+            'qualifiable_id',
+            'global_qualification_id'
+        );
     }
 
     /**

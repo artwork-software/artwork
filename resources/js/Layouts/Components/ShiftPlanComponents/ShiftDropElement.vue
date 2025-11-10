@@ -9,25 +9,24 @@
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
                 <input :checked="userForMultiEdit.shift_ids.includes(shift.id)"
-                       @change="(e) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
+                       @change="(e: any) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
                        type="checkbox"
                        :value="shift.id"
                        class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-x-1.5">
-
-                    <!--@click="this.showQualificationRowExpander = !this.showQualificationRowExpander"-->
                     <div>
                         <span>{{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}</span>
-
                     </div>
                     <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
-                        ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
+                        ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
                         <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
-                              :class="{'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
-                              'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
-                              'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount}">
+                              :class="{
+                                'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
+                                'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
+                                'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount
+                              }">
                         </span>
                     </div>
                     <div v-else-if="room" class="truncate">
@@ -37,437 +36,377 @@
                 </div>
             </div>
         </div>
+
         <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
             <div class="w-full flex flex-row flex-wrap">
                 <div
-                    v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
-                    class="flex xsLight items-center">
-                    {{ computedShiftsQualificationWithWorkerCount.workerCount }}/{{ computedShiftsQualificationWithWorkerCount.maxWorkerCount }}
-                    <component stroke-width="1"
+                    v-for="(row) in computedShiftsQualificationsWithWorkerCount"
+                    :key="row.shift_qualification_id"
+                    class="flex xsLight items-center"
+                >
+                    {{ row.workerCount }}/{{ row.maxWorkerCount }}
+                    <component
+                        stroke-width="1"
                         class="text-black size-3.5 mx-1"
-                        :is="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
+                        :is="getShiftQualificationById(row.shift_qualification_id)?.icon"
                     />
                 </div>
             </div>
         </div>
+
         <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
             {{ shift.description }}
         </div>
     </div>
+
     <ChooseUserSeriesShift
-        v-if="this.showChooseUserSeriesShiftModal"
-        @close-modal="this.showChooseUserSeriesShiftModal = false"
-        @returnBuffer="this.setSeriesShiftData"
+        v-if="showChooseUserSeriesShiftModal"
+        @close-modal="showChooseUserSeriesShiftModal = false"
+        @returnBuffer="setSeriesShiftData"
     />
+
     <MultipleShiftQualificationSlotsAvailable
-        v-if="this.showMultipleShiftQualificationSlotsAvailableModal"
-        :show="this.showMultipleShiftQualificationSlotsAvailableModal"
-        :available-shift-qualification-slots="this.showMultipleShiftQualificationSlotsAvailableModalSlots"
-        :dropped-user="this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
-        @close="this.closeMultipleShiftQualificationSlotsAvailableModal"
+        v-if="showMultipleShiftQualificationSlotsAvailableModal"
+        :show="showMultipleShiftQualificationSlotsAvailableModal"
+        :available-shift-qualification-slots="showMultipleShiftQualificationSlotsAvailableModalSlots"
+        :dropped-user="showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
+        @close="closeMultipleShiftQualificationSlotsAvailableModal"
     />
 </template>
 
-<script>
-import {defineComponent} from 'vue';
-import {CheckIcon} from "@heroicons/vue/outline";
-import VueMathjax from "vue-mathjax-next";
-import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
-import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import MultipleShiftQualificationSlotsAvailable
-    from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import axios from "axios";
-import Permissions from "@/Mixins/Permissions.vue";
-import {usePage} from "@inertiajs/vue3";
-import {IconLock} from "@tabler/icons-vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+<script setup lang="ts">
+import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 
+// UI / Components
+import { CheckIcon } from '@heroicons/vue/outline'
+import { IconLock } from '@tabler/icons-vue'
+import VueMathjax from 'vue-mathjax-next'
+import ChooseUserSeriesShift from '@/Pages/Projects/Components/ChooseUserSeriesShift.vue'
+import ShiftQualificationIconCollection from '@/Layouts/Components/ShiftQualificationIconCollection.vue'
+import MultipleShiftQualificationSlotsAvailable from '@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue'
+import BaseMenu from '@/Components/Menu/BaseMenu.vue'
+import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 
-export default defineComponent({
-    components: {
-        BaseMenuItem,
-        BaseMenu,
-        MultipleShiftQualificationSlotsAvailable,
-        ShiftQualificationIconCollection,
-        ChooseUserSeriesShift,
-        CheckIcon,
-        VueMathjax
-    },
-    props: [
-        'shift',
-        'showRoom',
-        'craftId',
-        'event',
-        'room',
-        'maxCount',
-        'currentCount',
-        'freeEmployeeCount',
-        'freeMasterCount',
-        'highlightMode',
-        'highlightedId',
-        'highlightedType',
-        'multiEditMode',
-        'userForMultiEdit',
-        'shiftQualifications'
-    ],
-    emits: ['dropFeedback', 'desiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit'],
-    mixins: [IconLib, Permissions],
-    data() {
-        return {
-            showChooseUserSeriesShiftModal: false,
-            buffer: {
-                onlyThisDay: false,
-                start: null,
-                end: null,
-                dayOfWeek: null
-            },
-            selectedUser: null,
-            dropFeedback: null,
-            showQualificationRowExpander: false,
-            showMultipleShiftQualificationSlotsAvailableModal: false,
-            showMultipleShiftQualificationSlotsAvailableModalSlots: null,
-            showMultipleShiftQualificationSlotsAvailableModalDroppedUser: null
-        }
-    },
-    computed: {
-        computedMaxWorkerCount() {
-            let maxWorkerCount = 0;
+// Mixins weiterverwenden (liefert z.B. $can / hasAdminRole o.ä.)
+import IconLib from '@/Mixins/IconLib.vue'
+import Permissions from '@/Mixins/Permissions.vue'
 
-            this.shift?.shifts_qualifications?.forEach(
-                (shiftsQualification) => maxWorkerCount += shiftsQualification.value
-            );
+// In <script setup> können Optionen inkl. Mixins gesetzt werden
+defineOptions({
+    mixins: [IconLib, Permissions]
+})
 
-            return maxWorkerCount;
-        },
-        computedUsedWorkerCount() {
-            return this.shift.users.length + this.shift.freelancer?.length + this.shift.serviceProviders?.length;
-        },
-        computedShiftsQualificationsWithWorkerCount() {
-            let shiftsQualificationsWithWorkerCount = [];
+/* ---------------- Props & Emits ---------------- */
+const props = defineProps<{
+    shift: any
+    showRoom?: boolean
+    craftId?: number
+    event?: any
+    room?: any
+    maxCount?: number
+    currentCount?: number
+    freeEmployeeCount?: number
+    freeMasterCount?: number
+    highlightMode?: boolean
+    highlightedId?: number | null
+    highlightedType?: 0 | 1 | 2 | null
+    multiEditMode?: boolean
+    userForMultiEdit?: any
+    shiftQualifications: Array<{ id: number; icon?: any }>
+}>()
 
-            this.shift?.shifts_qualifications?.forEach((shiftsQualification) => {
-                if (shiftsQualification.value === null || shiftsQualification.value === 0) {
-                    return;
-                }
+const emit = defineEmits<{
+    (e: 'dropFeedback', msg: string): void
+    (e: 'desiresReload', droppedId: number | string, type: 0 | 1 | 2, seriesShiftData?: any): void
+    (e: 'handleShiftAndEventForMultiEdit', checked: boolean, shift: any, event: any): void
+    (e: 'clickOnEdit', shift: any): void
+}>()
 
-                let assignedUserCount = 0;
+/* ---------------- Lokaler State ---------------- */
+const showChooseUserSeriesShiftModal = ref(false)
+const buffer = reactive({
+    onlyThisDay: false,
+    start: null as string | null,
+    end: null as string | null,
+    dayOfWeek: null as number | null
+})
 
-                this.shift.users.forEach((user) => {
-                    if (user.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
-                        assignedUserCount++;
-                    }
-                });
+const selectedUser = ref<any>(null)
+const dropFeedback = ref<string | null>(null)
+const showQualificationRowExpander = ref(false)
 
-                this.shift.freelancer.forEach((freelancer) => {
-                    if (freelancer.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
-                        assignedUserCount++;
-                    }
-                });
+const showMultipleShiftQualificationSlotsAvailableModal = ref(false)
+const showMultipleShiftQualificationSlotsAvailableModalSlots = ref<any[] | null>(null)
+const showMultipleShiftQualificationSlotsAvailableModalDroppedUser = ref<any | null>(null)
 
-                this.shift.serviceProviders.forEach((serviceProvider) => {
-                    if (serviceProvider.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
-                        assignedUserCount++;
-                    }
-                });
+const droppedUser = ref<any | null>(null)
+const seriesShiftData = ref<any | null>(null)
 
-                shiftsQualificationsWithWorkerCount.push({
-                    shift_qualification_id: shiftsQualification.shift_qualification_id,
-                    maxWorkerCount: shiftsQualification.value,
-                    workerCount: assignedUserCount
-                });
-            });
+/* ---------------- Helpers ---------------- */
+const page = usePage()
+const { proxy } = getCurrentInstance() || {}
 
-            return shiftsQualificationsWithWorkerCount;
-        },
-        shiftUserIds() {
-            const ids = {
-                userIds: [],
-                freelancerIds: [],
-                providerIds: []
-            }
-            this.shift.users.forEach(user => {
-                ids.userIds.push(user.id)
-            })
+/* ---------------- Computed ---------------- */
+const computedMaxWorkerCount = computed(() => {
+    let maxWorkerCount = 0
+    props.shift?.shifts_qualifications?.forEach((sq: any) => {
+        maxWorkerCount += sq.value
+    })
+    return maxWorkerCount
+})
 
-            this.shift.freelancer.forEach((freelancer) => {
-                ids.freelancerIds.push(freelancer.id)
-            })
+const computedUsedWorkerCount = computed(() => {
+    return (props.shift.users?.length || 0) +
+        (props.shift.freelancer?.length || 0) +
+        (props.shift.serviceProviders?.length || 0)
+})
 
-            this.shift.serviceProviders.forEach((provider) => {
-                ids.providerIds.push(provider.id)
-            })
+const computedShiftsQualificationsWithWorkerCount = computed(() => {
+    const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number }> = []
+    props.shift?.shifts_qualifications?.forEach((sq: any) => {
+        if (sq.value === null || sq.value === 0) return
 
-            return ids;
-        },
-        checkIfUserIsInCraft() {
-            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id) || this.userForMultiEdit.craft_are_universally_applicable;
-        },
-    },
-    watch: {
-        multiEditMode: {
-            handler() {
-                if (!this.multiEditMode) {
-                    this.shift.isCheckedForMultiEdit = false;
-                }
-            },
-            deep: true
-        },
-        userForMultiEdit: {
-            handler() {
-                this.shift.isCheckedForMultiEdit = this.userForMultiEdit ?
-                    this.userForMultiEdit.shift_ids.includes(this.shift.id) :
-                    false;
-            },
-            deep: true
-        },
-    },
-    methods: {
-        IconLock,
-        handleClickEvent() {
-            if (this.multiEditMode) {
-                return;
-            }
+        let assigned = 0
 
-            if (this.$can('can plan shifts') || this.hasAdminRole()) {
-                this.$emit('clickOnEdit', this.shift)
-            }
-        },
-        usePage,
-        onDragOver(event) {
-            event.preventDefault();
-        },
-        onDrop(event) {
-            event.preventDefault();
+        props.shift.users?.forEach((u: any) => {
+            if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
+        })
+        props.shift.freelancer?.forEach((f: any) => {
+            if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
+        })
+        props.shift.serviceProviders?.forEach((p: any) => {
+            if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
+        })
 
-            this.droppedUser = JSON.parse(event.dataTransfer.getData('application/json'));
+        rows.push({
+            shift_qualification_id: sq.shift_qualification_id,
+            maxWorkerCount: sq.value,
+            workerCount: assigned
+        })
+    })
+    return rows
+})
 
-            if (this.event?.is_series) {
-                this.showChooseUserSeriesShiftModal = true;
-                return;
-            }
+const shiftUserIds = computed(() => {
+    const ids = {
+        userIds: [] as Array<number | string>,
+        freelancerIds: [] as Array<number | string>,
+        providerIds: [] as Array<number | string>
+    }
+    props.shift.users?.forEach((u: any) => ids.userIds.push(u.id))
+    props.shift.freelancer?.forEach((f: any) => ids.freelancerIds.push(f.id))
+    props.shift.serviceProviders?.forEach((p: any) => ids.providerIds.push(p.id))
+    return ids
+})
 
-            this.saveUser();
-        },
-        getShiftQualificationById(id) {
-            return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
-        },
-        setSeriesShiftData(seriesShiftData) {
-            this.showChooseUserSeriesShiftModal = false;
-            this.seriesShiftData = seriesShiftData;
-            this.saveUser();
-        },
-        isIdHighlighted(highlightedId, highlightedType) {
-            const typeMap = {
-                0: 'userIds',
-                1: 'freelancerIds',
-                2: 'providerIds'
-            };
+const checkIfUserIsInCraft = computed(() => {
+    const u = props.userForMultiEdit
+    if (!u) return false
+    return u.assigned_craft_ids?.includes(props.shift?.craft?.id) || !!u.craft_are_universally_applicable
+})
 
-            return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
-        },
-        saveUser() {
-            if (!this.droppedUser.craft_universally_applicable) {
-                if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
-                    this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
-                    return;
-                }
-            }
-
-            if (this.droppedUserAlreadyWorksOnShift(this.droppedUser)) {
-                this.dropFeedbackUserAlreadyWorksOnShift(this.droppedUser.type);
-                return;
-            }
-
-            if (this.droppedUserHasNoQualifications(this.droppedUser)) {
-                this.dropFeedbackUserHasNoQualifications(this.droppedUser.type);
-                return;
-            }
-
-            if (this.droppedUser.shift_qualifications.length === 1) {
-                this.assignUser(this.droppedUser, this.droppedUser.shift_qualifications[0].id);
-            } else {
-                let availableShiftQualificationSlots = [];
-
-                this.droppedUser.shift_qualifications.forEach((userShiftQualification) => {
-                    this.computedShiftsQualificationsWithWorkerCount.forEach((shiftsQualification) => {
-                        if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
-                            availableShiftQualificationSlots.push(userShiftQualification);
-                        }
-                    })
-                });
-
-                if (availableShiftQualificationSlots.length === 0) {
-                    this.openMultipleShiftQualificationSlotsAvailableModal(
-                        this.droppedUser,
-                        this.droppedUser.shift_qualifications
-                    );
-                    return;
-                }
-
-                if (availableShiftQualificationSlots.length === 1) {
-                    this.assignUser(
-                        this.droppedUser,
-                        availableShiftQualificationSlots[0].id
-                    );
-                    return;
-                }
-
-                //show select modal by availableSlots
-                this.openMultipleShiftQualificationSlotsAvailableModal(
-                    this.droppedUser,
-                    availableShiftQualificationSlots
-                );
-            }
-        },
-        droppedUserAlreadyWorksOnShift(droppedUser) {
-            if (droppedUser.type === 0) {
-                if (this.shiftUserIds.userIds.includes(droppedUser.id)) {
-                    return true;
-                }
-            }
-
-            if (droppedUser.type === 1) {
-                if (this.shiftUserIds.freelancerIds.includes(droppedUser.id)) {
-                    return true;
-                }
-            }
-
-            if (droppedUser.type === 2) {
-                if (this.shiftUserIds.providerIds.includes(droppedUser.id)) {
-                    return true;
-                }
-            }
-
-            return false;
-        },
-        dropFeedbackUserAlreadyWorksOnShift(userType) {
-            let userDescription = '';
-
-            switch (userType) {
-                case 0:
-                    userDescription = this.$t('Employee');
-                    break;
-                case 1:
-                    userDescription = this.$t('Freelancer');
-                    break;
-                case 2:
-                    userDescription = this.$t('ServiceProvider');
-                    break;
-            }
-
-            this.$emit(
-                'dropFeedback', this.$t('{0} already assigned to a shift.', userDescription)
-            );
-        },
-        droppedUserCannotBeAssignedToCraft(droppedUser) {
-            return droppedUser.craft_ids && !droppedUser.craft_ids.includes(this.craftId);
-        },
-        dropFeedbackUserCannotBeAssignedToCraft(userType) {
-            let userDescription = '';
-
-            switch (userType) {
-                case 0:
-                    userDescription = this.$t('Employee');
-                    break;
-                case 1:
-                    userDescription = this.$t('Freelancer');
-                    break;
-                case 2:
-                    userDescription = this.$t('ServiceProvider');
-                    break;
-            }
-
-            this.$emit(
-                'dropFeedback',
-                this.$t('{0} cannot be assigned to shifts of this craft.', userDescription)
-            );
-        },
-        droppedUserHasNoQualifications(droppedUser) {
-            return droppedUser.shift_qualifications.length === 0;
-        },
-        dropFeedbackUserHasNoQualifications(userType) {
-            let userDescription = '';
-
-            switch (userType) {
-                case 0:
-                    userDescription = this.$t('Employee');
-                    break;
-                case 1:
-                    userDescription = this.$t('Freelancer');
-                    break;
-                case 2:
-                    userDescription = this.$t('ServiceProvider');
-                    break;
-            }
-
-            this.$emit(
-                'dropFeedback',
-                this.$t('{0} has no qualifications and therefore cannot be assigned.', userDescription)
-            );
-        },
-        dropFeedbackNoSlotsForQualification(userType) {
-            let userDescription = '';
-
-            switch (userType) {
-                case 0:
-                    userDescription = this.$t('Employee');
-                    break;
-                case 1:
-                    userDescription = this.$t('Freelancer');
-                    break;
-                case 2:
-                    userDescription = this.$t('ServiceProvider');
-                    break;
-            }
-
-            this.$emit(
-                'dropFeedback',
-                this.$t('There is no position that can be filled by {0} with the available qualifications.', userDescription)
-            );
-        },
-        openMultipleShiftQualificationSlotsAvailableModal(droppedUser, availableShiftQualificationSlots) {
-            this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser = droppedUser;
-            this.showMultipleShiftQualificationSlotsAvailableModalSlots = availableShiftQualificationSlots;
-            this.showMultipleShiftQualificationSlotsAvailableModal = true;
-        },
-        closeMultipleShiftQualificationSlotsAvailableModal(droppedUser, selectedShiftQualificationId) {
-            this.showMultipleShiftQualificationSlotsAvailableModal = false;
-            this.showMultipleShiftQualificationSlotsAvailableModalSlots = null;
-            this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser = null;
-
-            if (droppedUser && selectedShiftQualificationId) {
-                this.assignUser(droppedUser, selectedShiftQualificationId);
-            }
-        },
-        assignUser(droppedUser, shiftQualificationId) {
-            axios.post(
-                route('shift.assignUserByType', {shift: this.shift.id}),
-                {
-                    userId: droppedUser.id,
-                    userType: droppedUser.type,
-                    shiftQualificationId: shiftQualificationId,
-                    seriesShiftData: this.seriesShiftData,
-                    craft_abbreviation: droppedUser.craft_abbreviation
-                }
-            ).then(() => {
-                this.$emit(
-                    'desiresReload',
-                    droppedUser.id,
-                    droppedUser.type,
-                    this.seriesShiftData
-                );
-            });
-        },
-        handleShiftAndEventForMultiEdit(checked, shift, event) {
-            this.$emit(
-                'handleShiftAndEventForMultiEdit',
-                checked,
-                shift,
-                event
-            );
-        }
+/* ---------------- Watcher ---------------- */
+watch(() => props.multiEditMode, (val) => {
+    if (!val && props.shift) {
+        // Mutation des geschachtelten Prop-Objekts ist hier beabsichtigt
+        props.shift.isCheckedForMultiEdit = false
     }
 })
+
+watch(() => props.userForMultiEdit, (val) => {
+    if (props.shift) {
+        props.shift.isCheckedForMultiEdit = val ? val.shift_ids?.includes(props.shift.id) : false
+    }
+}, { deep: true })
+
+/* ---------------- Methoden (als Funktionen) ---------------- */
+function isIdHighlighted(highlightedId?: number | null, highlightedType?: 0 | 1 | 2 | null) {
+    const typeMap: Record<number, 'userIds' | 'freelancerIds' | 'providerIds'> = {
+        0: 'userIds',
+        1: 'freelancerIds',
+        2: 'providerIds'
+    }
+    if (highlightedId == null || highlightedType == null) return false
+    const key = typeMap[highlightedType]
+    return shiftUserIds.value[key].includes(highlightedId)
+}
+
+function handleClickEvent() {
+    if (props.multiEditMode) return
+    // Zugriff auf $can/hasAdminRole über Mixin (global am proxy)
+    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
+    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
+
+    if (canPlan || isAdmin) {
+        emit('clickOnEdit', props.shift)
+    }
+}
+
+function onDragOver(event: DragEvent) {
+    event.preventDefault()
+}
+
+function onDrop(event: DragEvent) {
+    event.preventDefault()
+    try {
+        const data = event.dataTransfer?.getData('application/json')
+        droppedUser.value = data ? JSON.parse(data) : null
+    } catch {
+        droppedUser.value = null
+    }
+
+    if (props.event?.is_series) {
+        showChooseUserSeriesShiftModal.value = true
+        return
+    }
+    saveUser()
+}
+
+function getShiftQualificationById(id: number) {
+    return props.shiftQualifications.find(q => q.id === id)
+}
+
+function setSeriesShiftData(data: any) {
+    showChooseUserSeriesShiftModal.value = false
+    seriesShiftData.value = data
+    saveUser()
+}
+
+function droppedUserHasQualificationForCraft(user: any) {
+    if (user?.craft_universally_applicable) return true
+    if (!user?.shift_qualifications?.length) return false
+    const cid = props.shift?.craft?.id ?? props.craftId
+    return user.shift_qualifications.some((q: any) => q.pivot && (q.pivot.craft_id === cid))
+}
+
+function droppedUserAlreadyWorksOnShift(user: any) {
+    if (!user) return false
+    if (user.type === 0) return shiftUserIds.value.userIds.includes(user.id)
+    if (user.type === 1) return shiftUserIds.value.freelancerIds.includes(user.id)
+    if (user.type === 2) return shiftUserIds.value.providerIds.includes(user.id)
+    return false
+}
+
+function dropFeedbackUserAlreadyWorksOnShift(userType: 0 | 1 | 2) {
+    const map: Record<0 | 1 | 2, string> = {
+        0: (proxy as any)?.$t?.('Employee') ?? 'Employee',
+        1: (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer',
+        2: (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+    }
+    emit('dropFeedback', (proxy as any)?.$t?.('{0} already assigned to a shift.', [map[userType]]) ?? `${map[userType]} already assigned to a shift.`)
+}
+
+function droppedUserHasNoQualifications(user: any) {
+    return !user?.shift_qualifications?.length
+}
+
+function dropFeedbackUserHasNoQualifications(userType: 0 | 1 | 2) {
+    const map: Record<0 | 1 | 2, string> = {
+        0: (proxy as any)?.$t?.('Employee') ?? 'Employee',
+        1: (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer',
+        2: (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+    }
+    emit('dropFeedback', (proxy as any)?.$t?.('{0} has no craft function and therefore cannot be assigned.', [map[userType]]) ?? `${map[userType]} has no craft function and therefore cannot be assigned.`)
+}
+
+function dropFeedbackNoSlotsForQualification(userType: 0 | 1 | 2) {
+    const map: Record<0 | 1 | 2, string> = {
+        0: (proxy as any)?.$t?.('Employee') ?? 'Employee',
+        1: (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer',
+        2: (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+    }
+    emit('dropFeedback', (proxy as any)?.$t?.('There is no position that can be filled by {0} with the available craft function.',[map[userType]]) ?? `There is no position that can be filled by ${map[userType]} with the available craft function.`)
+}
+
+function openMultipleShiftQualificationSlotsAvailableModal(user: any, slots: any[]) {
+    showMultipleShiftQualificationSlotsAvailableModalDroppedUser.value = user
+    showMultipleShiftQualificationSlotsAvailableModalSlots.value = slots
+    showMultipleShiftQualificationSlotsAvailableModal.value = true
+}
+
+function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selectedShiftQualificationId?: number) {
+    showMultipleShiftQualificationSlotsAvailableModal.value = false
+    showMultipleShiftQualificationSlotsAvailableModalSlots.value = null
+    showMultipleShiftQualificationSlotsAvailableModalDroppedUser.value = null
+
+    if (user && selectedShiftQualificationId) {
+        assignUser(user, selectedShiftQualificationId)
+    }
+}
+
+function saveUser() {
+    const user = droppedUser.value
+    if (!user) return
+
+    const craftId = props.shift?.craft?.id ?? props.craftId
+    const qualificationsForCraft = (user.shift_qualifications || []).filter((q: any) => q.pivot && q.pivot.craft_id === craftId)
+
+    if (!user.craft_universally_applicable) {
+        if (!user.craft_ids || !user.craft_ids.includes(craftId)) {
+            const label = user.type === 0
+                ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
+                : user.type === 1
+                    ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
+                    : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+
+            emit('dropFeedback',
+                (proxy as any)?.$t?.('{0} cannot be assigned to shifts of this craft.', [label]) ??
+                `${label} cannot be assigned to shifts of this craft.`
+            )
+            return
+        }
+    }
+
+    if (droppedUserAlreadyWorksOnShift(user)) {
+        dropFeedbackUserAlreadyWorksOnShift(user.type)
+        return
+    }
+    if (droppedUserHasNoQualifications(user)) {
+        dropFeedbackUserHasNoQualifications(user.type)
+        return
+    }
+    if (qualificationsForCraft.length === 0) {
+        const label = user.type === 0
+            ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
+            : user.type === 1
+                ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
+                : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('There is no position that can be filled by {0} with the available craft function.', [label]) ??
+            `There is no position that can be filled by ${label} with the available craft function.`
+        )
+        return
+    }
+
+    if (qualificationsForCraft.length === 1) {
+        assignUser(user, qualificationsForCraft[0].id)
+        return
+    }
+
+    openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsForCraft)
+}
+
+function assignUser(user: any, shiftQualificationId: number) {
+    axios.post(
+        route('shift.assignUserByType', { shift: props.shift.id }),
+        {
+            userId: user.id,
+            userType: user.type,
+            shiftQualificationId,
+            seriesShiftData: seriesShiftData.value,
+            craft_abbreviation: user.craft_abbreviation
+        }
+    ).then(() => {
+        emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
+    })
+}
+
+function handleShiftAndEventForMultiEdit(checked: boolean, shift: any, event: any) {
+    emit('handleShiftAndEventForMultiEdit', checked, shift, event)
+}
+
+/* ---------------- Expose in Template (script setup exportiert automatisch) ---------------- */
 </script>

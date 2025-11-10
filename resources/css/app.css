@@ -35,7 +35,7 @@
     --color-link-on-dark: #BDB6F0;
 
     /* Artwork Farben */
-    --color-artwork-navigation-background: #222;
+    --color-artwork-navigation-background: #222831;
     --color-artwork-navigation-color: #eee;
     --color-artwork-success: #25cd0e;
     --color-artwork-warning: #ecce00;
@@ -930,7 +930,7 @@
     .card {
         @apply rounded-lg;
         &.glassy {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/20 text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
+            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-[#4A70A910] text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
         }
 
         &.glassy-shiftplan {

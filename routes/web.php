@@ -212,7 +212,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'index' => 'api-management.index',
                 'store' => 'api-management.store',
                 'destroy' => 'api-management.destroy'
-        ]);
+            ]);
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -1377,7 +1377,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [FreelancerController::class, 'updateCraftSettings']
     )->name('freelancer.update.craftSettings');
     Route::patch(
-        '/freelancer/{freelancer}/shift-qualification',
+        '/freelancer/{freelancer}/{qualification}/shift-qualification',
         [FreelancerController::class, 'updateShiftQualification']
     )->name('freelancer.update.shift-qualification');
     Route::patch(
@@ -1450,7 +1450,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ServiceProviderController::class, 'updateCraftSettings']
     )->name('service_provider.update.craftSettings');
     Route::patch(
-        '/service-provider/{serviceProvider}/shift-qualification',
+        '/service-provider/{serviceProvider}/{qualification}/shift-qualification',
         [ServiceProviderController::class, 'updateShiftQualification']
     )->name('service_provider.update.shift-qualification');
     Route::patch(
@@ -1862,7 +1862,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         //inventory.filter.store
         Route::post('/filter/store', [InventoryUserFilterController::class, 'store'])
-                ->name('inventory.filter.store');
+            ->name('inventory.filter.store');
 
         // get articles form api
         Route::get('/articles/', [InventoryArticleController::class, 'loadArticlesByFilter'])
@@ -2448,6 +2448,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // artist.toggle-active
         Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });
+
+    // user.update.craft-shift-qualification
+    Route::patch(
+        '/user/{user}/update/{craft}/{qualification}/craft-shift-qualification',
+        [UserController::class, 'updateCraftShiftQualification']
+    )->name('user.update.craft-shift-qualification');
+
+    // freelancer.update.craft-shift-qualification
+    Route::patch(
+        '/freelancer/{freelancer}/update/{craft}/{qualification}/craft-shift-qualification',
+        [FreelancerController::class, 'updateCraftShiftQualification']
+    )->name('freelancer.update.craft-shift-qualification');
+
+    // service_provider.update.craft-shift-qualification
+    Route::patch(
+        '/service-provider/{serviceProvider}/update/{craft}/{qualification}/craft-shift-qualification',
+        [ServiceProviderController::class, 'updateCraftShiftQualification']
+    )->name('service_provider.update.craft-shift-qualification');
 });
 
 Route::get(

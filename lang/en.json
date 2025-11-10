@@ -671,11 +671,11 @@
     "ServiceProvider": "Service provider",
     "{0} already assigned to a shift.": "{0} already assigned to a shift.",
     "{0} cannot be assigned to shifts of this craft.": "{0} cannot be assigned to shifts of this craft.",
-    "{0} has no qualifications and therefore cannot be assigned.": "{0} has no qualifications and therefore cannot be assigned.",
+    "{0} has no craft function and therefore cannot be assigned.": "{0} has no craft function and therefore cannot be assigned.",
     "this employee": "this employee",
     "this freelancer": "this freelancer",
     "this service provider": "this service provider",
-    "There is no position that can be filled by {0} with the available qualifications.": "There is no position that can be filled by {0} with the available qualifications.",
+    "There is no position that can be filled by {0} with the available craft function.": "There is no position that can be filled by {0} with the available craft function.",
     "Organize shift": "Organize shift",
     "Determine how long your shift lasts and how many people should work in your shift.": "Determine how long your shift lasts and how many people should work in your shift.",
     "Shift start": "Shift start",
@@ -3372,5 +3372,7 @@
     "Add or remove functions for this craft.": "Add or remove functions for this craft.",
     "Select functions": "Select functions",
     "Restricted assignment": "Restricted assignment",
-    "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected."
+    "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.",
+    "assigned": "assigned",
+    "Craft function": "Craft function"
 }

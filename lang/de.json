@@ -676,11 +676,11 @@
     "ServiceProvider": "Dienstleister*in",
     "{0} already assigned to a shift.": "{0} bereits zur Schicht eingeteilt.",
     "{0} cannot be assigned to shifts of this craft.": "{0} kann nicht zu Schichten von diesem Gewerk zugewiesen werden.",
-    "{0} has no qualifications and therefore cannot be assigned.": "{0} besitzt keinerlei Qualifikationen und kann daher nicht zugeordnet werden.",
+    "{0} has no craft function and therefore cannot be assigned.": "{0} besitzt keinerlei Gewerks-Funktion und kann daher nicht zugeordnet werden.",
     "this employee": "diesem/dieser Mitarbeiter*in",
     "this freelancer": "diesem/dieser externe Mitarbeiter*in",
     "this service provider": "diesem/dieser Dienstleister*in",
-    "There is no position that can be filled by {0} with the available qualifications.": "Es gibt keine Position die von {0} mit den verfügbaren Qualifikationen besetzt werden kann.",
+    "There is no position that can be filled by {0} with the available craft function.": "Es gibt keine Position die von {0} mit den verfügbaren Gewerks-Funktion besetzt werden kann.",
     "Organize shift": "Schicht einteilen",
     "Determine how long your shift lasts and how many people should work in your shift.": "Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.",
     "Shift start": "Schicht Start",
@@ -3380,5 +3380,7 @@
     "Add or remove functions for this craft.": "Füge Funktionen für dieses Gewerk hinzu oder entferne sie.",
     "Select functions": "Funktionen auswählen",
     "Restricted assignment": "Eingeschränkte Zuweisung",
-    "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Spezifiziere, wer Inventar für dieses Gewerk planen darf. Es können nur Nutzer*innen mit der Berechtigung zur Inventarplanung ausgewählt werden."
+    "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Spezifiziere, wer Inventar für dieses Gewerk planen darf. Es können nur Nutzer*innen mit der Berechtigung zur Inventarplanung ausgewählt werden.",
+    "assigned": "zugewiesen",
+    "Craft function": "Gewerk-Funktion"
 }

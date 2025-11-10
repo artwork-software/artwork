@@ -2861,11 +2861,13 @@
     "Next 14 days": "Next 14 days",
     "Employment contract": "Employment contract",
     "Select employment contract": "Select employment contract",
+    "Active contract: {0}": "Active contract: {0}",
     "Here you can manage the user contract settings.": "Here you can manage the user contract settings.",
     "The employment contract “{0}” is currently selected. This means that the contractually agreed rules cannot be edited. Remove the employment contract to enter your own rules.": "The employment contract “{0}” is currently selected. This means that the contractually agreed rules cannot be edited. Remove the employment contract to enter your own rules.",
     "Click here to remove the current employment contract.": "Click here to remove the current employment contract.",
     "The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.": "The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.",
     "Remove employment contract": "Remove employment contract",
+    "Switch employment contract": "Switch employment contract",
     "Are you sure you want to remove the current employment contract? This action cannot be undone.": "Are you sure you want to remove the current employment contract? This action cannot be undone.",
     "Worked": "Worked",
     "Night": "Night",
@@ -3012,7 +3014,7 @@
     "Project Artist": "Project Artist",
     "Convert to planning events": "Convert to planning events",
     "Shift warnings - rules": "Shift warnings - rules",
-    "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.": "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies. You can create, edit, and delete shift warning rules here.",
+    "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies.": "Shift warnings are used to monitor and enforce compliance with labor regulations and internal policies.",
     "Create new rule": "Create new rule",
     "Contract(s) selected": "Contract(s) selected",
     "Assign contracts": "Assign contracts",
@@ -3359,5 +3361,8 @@
     "Filter was saved": "Filter was saved",
     "No fitting checklists found": "No fitting checklists found",
     "Search lists & tasks...": "Search lists & tasks...",
-    "Hide": "Hide"
+    "Hide": "Hide",
+    "Select User contract": "Select User contract",
+    "Choose a contract for the user.": "Choose a contract for the user.",
+    "Search contracts...": "Search contracts..."
 }

@@ -215,7 +215,7 @@
                             class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pr-2"
                         >
               <span
-                  class="ml-1 block size-8 rounded-full border-2"
+                  class="ml-1 block size-8 rounded-full border"
                   :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color }"
               />
                             <span class="text-sm text-zinc-800">{{ craft.name }}</span>
@@ -251,8 +251,8 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                     <span
-                        class="block size-6 rounded-full ring-2"
-                        :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), ringColor: craft.color }"
+                        class="block size-6 rounded-full border"
+                        :style="{ backgroundColor: backgroundColorWithOpacityOld(craft.color, 75), borderColor: craft.color }"
                     />
                                         <span class="font-semibold text-zinc-800 tracking-tight">{{ craft.name }}</span>
                                     </div>
@@ -297,7 +297,7 @@
                                 </div>
 
                                 <div v-else class="text-xs text-zinc-400 px-1 py-2">
-                                    {{ $t('No qualifications for this craft') }}
+                                    {{ $t('No functions for this craft') }}
                                 </div>
                             </div>
                         </div>

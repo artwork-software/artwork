@@ -3374,5 +3374,6 @@
     "Restricted assignment": "Restricted assignment",
     "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.",
     "assigned": "assigned",
-    "Craft function": "Craft function"
+    "Craft function": "Craft function",
+    "No functions for this craft": "No functions for this craft"
 }

@@ -3382,5 +3382,6 @@
     "Restricted assignment": "Eingeschränkte Zuweisung",
     "Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.": "Spezifiziere, wer Inventar für dieses Gewerk planen darf. Es können nur Nutzer*innen mit der Berechtigung zur Inventarplanung ausgewählt werden.",
     "assigned": "zugewiesen",
-    "Craft function": "Gewerk-Funktion"
+    "Craft function": "Gewerk-Funktion",
+    "No functions for this craft": "Keine Funktionen für dieses Gewerk"
 }

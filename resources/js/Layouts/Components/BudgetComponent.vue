@@ -26,37 +26,47 @@
             </div>
         </div>
         <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
-            <button v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
-                    type="button"
-                    class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
-                <IconPlus stroke-width="2" class="h-4 w-4 mr-2"/>
-                <p class="text-sm"> {{ $t('New column') }}</p>
-            </button>
-            <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button"
-                    class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
-                <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
-                <p class="text-sm">{{ $t('Excel-Export') }}</p>
-            </button>
+
+            <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
+                label="New column"
+                use-translation
+                is-add-button
+            />
+
+            <BaseUIButton v-if="!table.is_template" @click="downloadBudgetExport(project.id)"
+                          label="Excel-Export"
+                          use-translation
+                          icon="IconFileAnalytics"
+            />
+
             <div v-if="!table.is_template">
-                <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)"
-                                    class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IconZoomOut v-else @click="$emit('changeProjectHeaderVisualisation',false)"
-                             class="h-7 w-7 mx-2 cursor-pointer"
+                <BaseUIButton
+                    v-if="!hideProjectHeader"
+                    @click="$emit('changeProjectHeaderVisualisation',true)"
+                    label=""
+                    use-translation
+                    icon="IconArrowsDiagonal"
+                />
+                <BaseUIButton
+                    v-else
+                    @click="$emit('changeProjectHeaderVisualisation',false)"
+                    label=""
+                    use-translation
+                    icon="IconZoomOut"
                 />
             </div>
-            <SwitchGroup as="div" v-if="!table.is_template">
-                <Switch v-model="userExcludeCommentedBudgetItems"
-                        :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
-                    <span aria-hidden="true"
-                          :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                </Switch>
-                <SwitchLabel as="span">
-                    <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
+
+            <div class="flex items-center gap-x-2" v-if="!table.is_template">
+                <SwitchIconTooltip
+                    v-model="userExcludeCommentedBudgetItems"
+                    :tooltip-text="$t('Excluded items hidden')"
+                    size="md"
+                    :icon="IconEyeX"
+                />
+                <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
                         {{ $t('Excluded items hidden') }}
                     </span>
-                </SwitchLabel>
-            </SwitchGroup>
-
+            </div>
         </div>
 
 
@@ -91,7 +101,7 @@
                                         </div>
                                         <div class="text-xs text-white text-right flex items-center gap-x-1">
                                             <ToolTipComponent
-                                                icon="IconFlagUp"
+                                                :icon="IconFlagUp"
                                                 :tooltip-text="$t('This Column is relevant for project groups')"
                                                 icon-size="size-4"
                                                 white-icon
@@ -564,7 +574,7 @@
             </div>
         </div>
     </div>
-    <BaseModal @closed="closeSuccessModal" v-if="showSuccessModal" modal-image="/Svgs/Overlays/illu_success.svg">
+    <ArtworkBaseModal @close="closeSuccessModal" v-if="showSuccessModal" :title="successHeading" :description="successDescription">
         <div class="mx-4">
             <div class="headline1 my-2">
                 {{ successHeading }}
@@ -580,8 +590,8 @@
                 </button>
             </div>
         </div>
-    </BaseModal>
-    <BaseModal @closed="closeVerifiedModal" v-if="showVerifiedModal" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
+    </ArtworkBaseModal>
+    <ArtworkBaseModal @close="closeVerifiedModal" v-if="showVerifiedModal" :title="verifiedTexts.title" :description="verifiedTexts.description">
         <div class="mx-4">
             <ModalHeader
                 :title="verifiedTexts.title"
@@ -649,9 +659,8 @@
                 </button>
             </div>
         </div>
-    </BaseModal>
-    <BaseModal @closed="closeBudgetAccessModal" v-if="showBudgetAccessModal"
-               modal-image="/Svgs/Overlays/illu_budget_access.svg">
+    </ArtworkBaseModal>
+    <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" :title="$t('Grant budget access')" :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')">
         <div class="mx-4">
             <ModalHeader
                 :title="$t('Grant budget access')"
@@ -665,7 +674,7 @@
                 </button>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
     <add-column-component
         v-if="showAddColumnModal"
         :project="project"
@@ -787,12 +796,18 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconFlagUp} from "@tabler/icons-vue";
+import {IconCalendarCog, IconEyeX, IconFlagUp} from "@tabler/icons-vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        ArtworkBaseModal,
+        BaseUIButton,
+        SwitchIconTooltip,
         ToolTipComponent,
         UserPopoverTooltip,
         UserSearch,
@@ -1011,6 +1026,9 @@ export default {
         },
     },
     methods: {
+        IconEyeX,
+        IconCalendarCog,
+        IconFlagUp,
         calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[type])) return 0;

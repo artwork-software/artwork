@@ -2,6 +2,12 @@
     <AppLayout :title="$t('Accommodation') + ': ' + accommodation.name">
         <div class="mt-5 mx-auto container pb-20">
             <div>
+                <div class="mb-4">
+                    <Link :href="route('accommodation.index')" class="inline-flex items-center text-sm font-medium text-artwork-buttons-hover hover:text-artwork-buttons-hover/80">
+                        <component :is="IconArrowLeft" class="h-4 w-4 mr-2" />
+                        {{ $t('Back to accommodations overview') }}
+                    </Link>
+                </div>
                 <PageTitle :title="$t('Accommodation') + ': ' + accommodation.name" description="Bearbeite deine Unterkunft" />
 
             </div>
@@ -31,13 +37,133 @@
                     </div>
                 </div>
 
+                <div>
+                    <div class="my-4">
+                        <h2 class="text-md font-semibold mb-2">{{ $t('Room types')}}</h2>
+                        <p class="text-sm text-zinc-600 mb-3">{{ $t('Manage room types and their costs for this accommodation.') }}</p>
+                    </div>
+
+                    <!-- Room Types Table -->
+                    <div v-if="selectedRoomTypes.length > 0" class="mt-4">
+                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            {{ $t('Room type') }}
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <div class="flex items-center gap-2">
+                                                {{ $t('Cost per night') }}
+                                                <ToolTipComponent
+                                                    :icon="IconInfoCircle"
+                                                    icon-size="h-4 w-4"
+                                                    :tooltip-text="$t('Cost per night tooltip')"
+                                                    direction="top"
+                                                />
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">{{ $t('Actions') }}</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr v-for="roomType in selectedRoomTypes" :key="roomType.id" class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="text-sm font-medium text-gray-900">{{ $t(roomType.name) }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-32">
+                                                <BaseInput
+                                                    :id="`cost_${roomType.id}`"
+                                                    type="number"
+                                                    :step="0.01"
+                                                    :max="50000"
+                                                    v-model="roomTypeCosts[roomType.id]"
+                                                    placeholder="0.00"
+                                                    no-margin-top
+                                                    @focusout="updateAccommodation"
+                                                />
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <BaseUIButton
+                                                type="button"
+                                                @click="removeRoomType(roomType.id)"
+                                                is-delete-button
+                                                :label="$t('Remove')"
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Room Type Section -->
+                    <div class="mt-4">
+                        <div v-if="!showAddRoomType" class="flex justify-start">
+                            <BaseUIButton
+                                type="button"
+                                @click="showAddRoomType = true"
+                                is-add-button
+                                :label="$t('Add room type')"
+                            />
+                        </div>
+
+                        <!-- Add Room Type Dropdown -->
+                        <div v-if="showAddRoomType" class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <ArtworkBaseListbox
+                                        v-model="selectedNewRoomType"
+                                        :items="availableRoomTypes"
+                                        use-translations
+                                        placeholder="Select a room type"
+                                        label="Room type"
+                                    />
+                                </div>
+                                <div class="flex items-end gap-2">
+                                    <BaseUIButton
+                                        type="button"
+                                        @click="addRoomType"
+                                        :disabled="!selectedNewRoomType"
+                                        is-add-button
+                                        :label="$t('Add')"
+                                    />
+                                    <BaseUIButton
+                                        type="button"
+                                        @click="showAddRoomType = false; selectedNewRoomType = null"
+                                        is-cancel-button
+                                        :label="$t('Cancel')"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div v-if="selectedRoomTypes.length === 0" class="mt-4 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <component :is="IconHome" class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No room types') }}</h3>
+                        <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
+                        <div class="mt-6">
+                            <BaseUIButton
+                                :label="$t('Add room type') "
+                                is-cancel-button
+                                type="button"
+                                @click="showAddRoomType = true"
+                                />
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-10">
                     <div>
                         <div class="flex items-center justify-between mb-5">
                             <PageTitle :title="$t('Contacts')" :description="$t('You can view and edit all accommodation contacts here')" />
-                            <ArtworkBaseButton size="sm" variant="primary" type="button" @click="showCreateOrUpdateContactModal = true">
-                                {{ $t('Add Contact') }}
-                            </ArtworkBaseButton>
+                            <BaseUIButton is-add-button :label="$t('Add Contact')" type="button" @click="showCreateOrUpdateContactModal = true" />
                         </div>
 
 
@@ -77,11 +203,16 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {useForm} from "@inertiajs/vue3";
-import {defineAsyncComponent, ref} from "vue";
+import {useForm, Link} from "@inertiajs/vue3";
+import {computed, defineAsyncComponent, ref, watch} from "vue";
 import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconArrowLeft, IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     accommodation: {
@@ -95,8 +226,14 @@ const props = defineProps({
             street: '',
             zip_code: '',
             location: '',
-            note: ''
+            note: '',
+            room_types: [],
         })
+    },
+    roomTypes: {
+        type: Object,
+        required: false,
+        default: () => []
     }
 })
 const showCreateOrUpdateContactModal = ref(false)
@@ -128,27 +265,77 @@ const accommodationForm = useForm({
     zip_code: props.accommodation.zip_code,
     location: props.accommodation.location,
     note: props.accommodation.note,
+    room_types: props.accommodation.room_types ?? [],
+    room_type_costs: {}
 })
 
 
-const updateAccommodation = () => {
-    if ( accommodationForm.isDirty ) {
-        accommodationForm.patch(route('accommodation.update', props.accommodation.id), {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                toastTexts.title = 'Accommodation updated successfully'
-                toastTexts.description = 'The changes have been saved successfully.'
-                toastVisible.value = true
-            },
-            onError: () => {
-                toastTexts.title = 'Error updating accommodation'
-                toastTexts.description = 'There was an error updating the accommodation.'
-                toastTexts.type = 'danger'
-                toastVisible.value = true
-            }
-        });
+const selectedRoomTypes = ref([])
+const selectedRoomTypeIds = computed(() => selectedRoomTypes.value.map(rt => rt.id))
+const roomTypeCosts = ref({})
+const showAddRoomType = ref(false)
+const selectedNewRoomType = ref(null)
+
+// Available room types that are not yet selected
+const availableRoomTypes = computed(() => {
+    const selectedIds = new Set(selectedRoomTypeIds.value)
+    return props.roomTypes.filter(rt => !selectedIds.has(rt.id))
+})
+watch(
+    () => [props.accommodation?.id, props.roomTypes], // neu laden, wenn Unterkunft oder die Liste wechselt
+    () => {
+        const accTypeIds = new Set(
+            (props.accommodation?.room_types ?? []).map((rt) => rt.id)
+        )
+        selectedRoomTypes.value = (props.roomTypes ?? []).filter((rt) =>
+            accTypeIds.has(rt.id)
+        )
+
+        // Initialize costs from existing pivot data
+        const newCosts = {}
+        props.accommodation?.room_types?.forEach((rt) => {
+            newCosts[rt.id] = rt.pivot?.cost_per_night || 0.00
+        })
+        roomTypeCosts.value = newCosts
+    },
+    { immediate: true }
+)
+
+const addRoomType = () => {
+    if (selectedNewRoomType.value) {
+        selectedRoomTypes.value.push(selectedNewRoomType.value)
+        roomTypeCosts.value[selectedNewRoomType.value.id] = 0.00
+        selectedNewRoomType.value = null
+        showAddRoomType.value = false
+        updateAccommodation()
     }
+}
+
+const removeRoomType = (roomTypeId) => {
+    selectedRoomTypes.value = selectedRoomTypes.value.filter(rt => rt.id !== roomTypeId)
+    delete roomTypeCosts.value[roomTypeId]
+    updateAccommodation()
+}
+
+const updateAccommodation = () => {
+    accommodationForm.room_types = selectedRoomTypeIds.value;
+    accommodationForm.room_type_costs = roomTypeCosts.value;
+    accommodationForm.patch(route('accommodation.update', props.accommodation.id), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            toastTexts.title = 'Accommodation updated successfully'
+            toastTexts.description = 'The changes have been saved successfully.'
+            toastTexts.type = 'success'
+            toastVisible.value = true
+        },
+        onError: () => {
+            toastTexts.title = 'Error updating accommodation'
+            toastTexts.description = 'There was an error updating the accommodation.'
+            toastTexts.type = 'danger'
+            toastVisible.value = true
+        }
+    });
 }
 
 </script>

@@ -2,16 +2,16 @@
     <div class="print:break-before-auto">
         <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
-                <TinyPageHeadline :title="$t('Artist residencies')" :description="$t('Manage the artist residencies for this project.')"/>
+                <BasePageTitle title="artist management" description="Manage the artist management for this project."/>
             </div>
             <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent
-                    icon="IconFileExport"
-                    :tooltip-text="$t('Export artist residencies')"
+                    :icon="IconFileExport"
+                    :tooltip-text="$t('Export artist management')"
                     direction="bottom"
                     @click="openExportArtistResidenciesModal = true"
                 />
-                <AddButtonSmall @click="showAddEditArtistResidenciesModal = true" :text="$t('Add artist residency')"/>
+                <BaseUIButton @click="showAddEditArtistResidenciesModal = true" :label="$t('Add artist residency')" is-add-button/>
             </div>
         </div>
         <div class="max-w-lg">
@@ -32,6 +32,8 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Arrival date') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Date departure') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Accommodation') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Room type') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Total cost') }}</th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                         </tr>
                         </thead>
@@ -44,11 +46,11 @@
         </div>
         <div class="flex items-center justify-end mt-3 gap-x-3">
             <div class="flex items-center gap-x-1">
-                <component is="IconBuildingSkyscraper" class="h-4 w-4"/>
+                <component :is="IconBuildingSkyscraper" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
             </div>
             <div class="flex items-center gap-x-1">
-                <component is="IconMoneybag" class="h-4 w-4"/>
+                <component :is="IconMoneybag" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
         </div>
@@ -74,7 +76,7 @@
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {IconEdit} from "@tabler/icons-vue";
+import {IconBuildingSkyscraper, IconEdit, IconFileExport, IconMoneybag} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue";
@@ -85,6 +87,9 @@ import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/ExportArtistResidenciesModal.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     loadedProjectInformation: {

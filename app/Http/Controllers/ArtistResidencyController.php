@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use Artwork\Core\Enums\ExportType;
 use Artwork\Modules\ArtistResidency\Http\Requests\ArtistResidencyCreateRequest;
 use Artwork\Modules\ArtistResidency\Http\Requests\ArtistResidencyUpdateRequest;
+use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\ArtistResidency\Services\ArtistResidencyService;
 use Artwork\Modules\Project\Models\Project;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 use function Spatie\LaravelPdf\Support\pdf;
 
@@ -42,7 +44,7 @@ class ArtistResidencyController extends Controller
      */
     public function store(ArtistResidencyCreateRequest $request): void
     {
-        ArtistResidency::create($request->all());
+        $this->artistResidencyService->create($request->validated());
     }
 
     /**
@@ -66,7 +68,7 @@ class ArtistResidencyController extends Controller
      */
     public function update(ArtistResidencyUpdateRequest $request, ArtistResidency $artistResidency): void
     {
-        $artistResidency->update($request->all());
+        $this->artistResidencyService->update($artistResidency, $request->validated());
     }
 
     /**

@@ -1,10 +1,10 @@
 <template>
     <AppLayout :title="$t('Inventory')">
-        <div class="w-full px-10 bg-gray-50 min-h-screen">
+        <div class="w-full px-10 min-h-screen">
             <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
                 <div class="">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Inventory')"
                             :description="$t('Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.', [usePage().props.name])"
                         />
@@ -22,12 +22,7 @@
 
 
                 <div class="mt-5">
-                    <SmallFormButton v-if="can('inventory.create_edit') || is('artwork admin')" class="flex items-center gap-x-2 font-lexend" @click="showAddEditArticleModal = true">
-                        <component is="IconBarcode" class="size-5" aria-hidden="true" />
-                        <span>
-                            {{ $t('Add Article') }}
-                        </span>
-                    </SmallFormButton>
+                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || is('artwork admin')"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
                 </div>
 
             </div>
@@ -42,14 +37,30 @@
                     />
                 </div>
                 <section aria-labelledby="product-heading" class="col-span-full lg:col-span-6 2xl:w-full">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between">
                         <div>
                             <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
                         </div>
 
-                        <div>
+                        <div class="flex items-center gap-x-6">
+                            <div class="relative">
+                                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-1 ring-blue-200 text-blue-500 text-xs flex items-center justify-center">
+                                    {{ productBaskets?.basket_articles?.length ?? 0 }}
+                                </span>
+                                <BaseUIButton :label="$t('Product Basket')" icon="IconBasket" @click="showProductBasketModal = true" />
+                            </div>
+                            <SwitchIconTooltip
+                                v-model="enableAddArticleToBasket"
+                                :tooltip-text="$t('Enable adding articles to a temporary product basket')"
+                                size="md"
+                                icon="IconBasket"
+                            />
                             <InventoryLayoutSwitchComponent :grid-layout="gridLayout" @update:gridLayout="updateGridLayout" />
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <StatusOverview :counts-by-status="props.countsByStatus" />
                     </div>
                     <div class="mb-3" v-if="filterableProperties?.length > 0">
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
@@ -57,7 +68,20 @@
                     <div v-if="props.articles.data.length > 0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
-                                <InventorySingleArticleInGrid :item="item" />
+                                <div class="relative">
+                                    <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-zinc-500/30 rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
+                                        <div class="flex items-center justify-center h-full w-full">
+                                            <div class="relative">
+                                                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-2 ring-white text-blue-500 text-xs flex items-center justify-center">
+                                                    {{ findBasketForArticle(item.id) ? findBasketForArticle(item.id).quantity : 0 }}
+                                                </span>
+                                                <BaseUIButton :label="$t('Add to Basket')" use-translation icon="IconBasketPlus" @click="addArticleToBasket(item.id)" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <InventorySingleArticleInGrid :item="item" />
+                                </div>
                             </div>
                         </div>
                         <div v-else>
@@ -105,6 +129,19 @@
                 :rooms="props.rooms"
                 :manufacturers="props.manufacturers"
             />
+
+            <ProductBasketModal
+                v-if="showProductBasketModal"
+                @close="closeModalProductBasket"
+            />
+
+            <issue-of-material-modal
+                v-if="showIssueOfMaterialModal"
+                :issue-of-material="!internOrExternIssue"
+                :is-extern-or-intern="internOrExternIssue"
+                @close="showIssueOfMaterialModal = false"
+                :load-article-form-basket="true"
+            />
         </div>
 
     </AppLayout>
@@ -128,10 +165,16 @@ import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/I
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {IconIdBadge} from "@tabler/icons-vue";
+import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import ProductBasketModal from "@/Pages/Inventory/ProductBasket/Components/ProductBasketModal.vue";
+import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 const props = defineProps({
     categories: {
         type: Object,
@@ -174,6 +217,15 @@ const props = defineProps({
     statuses: {
         type: Object,
         required: true
+    },
+    countsByStatus: {
+        type: Object,
+        required: true
+    },
+    productBaskets: {
+        type: Object,
+        required: false,
+        default: () => ({})
     }
 })
 
@@ -186,6 +238,10 @@ provide('statuses', props.statuses)
 
 
 const gridLayout = ref(true)
+const enableAddArticleToBasket = ref(false)
+const showProductBasketModal = ref(false)
+const showIssueOfMaterialModal = ref(false)
+const internOrExternIssue = ref(false)
 const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
 
@@ -225,11 +281,45 @@ const searchArticles = debounce(() => {
 }, 500)
 
 
+const addArticleToBasket = (articleId) => {
+    // add article to basket
+    router.post(route('inventory.basket.add'), {
+        article_id: articleId,
+        quantity: 1
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // optionally show a success message or update UI
+        }
+    })
+}
+
+const findBasketForArticle = (articleId) => {
+    if (!props.productBaskets || !props.productBaskets.basket_articles) {
+        return null;
+    }
+
+    return props.productBaskets.basket_articles.find(basketArticle => basketArticle.article_id === articleId) || null;
+}
+
 // watch for search input
 watch(searchArticleInput, (value) => {
     // search for articles with debounce
     searchArticles()
 })
+
+const closeModalProductBasket = (payload) => {
+    showProductBasketModal.value = false;
+
+    if(payload) {
+        if (payload.createIssue) {
+            internOrExternIssue.value = payload.internOrExternIssue;
+            showIssueOfMaterialModal.value = true;
+        }
+    }
+
+    console.log(payload)
+}
 </script>
 
 <style scoped>

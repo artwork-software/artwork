@@ -32,7 +32,7 @@ class ChecklistController extends Controller
         $this->authorizeResource(Checklist::class);
     }
 
-    public function create(): ResponseFactory
+    public function create(): Response|ResponseFactory
     {
         return inertia('Checklists/Create');
     }

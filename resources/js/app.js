@@ -1,92 +1,84 @@
-import './bootstrap';
-import '../css/app.css';
-import '../css/global.css';
+// resources/js/app.js
+import './bootstrap'
+import '../css/app.css'
+import '../css/global.css'
 
-import {createApp, h, reactive, provide} from 'vue';
-import {createInertiaApp} from '@inertiajs/vue3';
+import { createApp, h } from 'vue'
+import { createInertiaApp } from '@inertiajs/vue3'
+import { createI18n } from 'vue-i18n'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
-import VueMathjax from 'vue-mathjax-next';
-import * as VueI18n from 'vue-i18n';
+import PrimeVue from 'primevue/config'
+import Aura from '@primeuix/themes/aura'
+import Tooltip from 'primevue/tooltip'
 
-import en from '../../lang/en.json';
-import de from '../../lang/de.json';
-import Icons from "@/icons.js";
-import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import Tooltip from 'primevue/tooltip';
+async function loadLocaleMessages(locale) {
+    // Vite macht daraus separate Chunks pro Sprache
+    const messages = await import(`../../lang/${locale}.json`)
+    return messages.default || messages
+}
 
+const initialLocale =
+    localStorage.getItem('locale') ||
+    document.documentElement.lang ||
+    'de'
 
-const svgColors = {
-    eventType0: '#A7A6B1',
-    eventType1: '#641A54',
-    eventType2: '#DA3F87',
-    eventType3: '#EB7A3D',
-    eventType4: '#F1B640',
-    eventType5: '#86C554',
-    eventType6: '#2EAA63',
-    eventType7: '#3DC3CB',
-    eventType8: '#168FC3',
-    eventType9: '#4D908E',
-    eventType10: '#21485C'
-};
+const i18n = createI18n({
+    legacy: false,
+    globalInjection: true,
+    locale: initialLocale,
+    fallbackLocale: 'en',
+    messages: {}, // erstmal leer
+    missingWarn: false,
+    fallbackWarn: false,
+    missing: (_l, key) => key,
+})
 
-const messages = {
-    en: en,
-    de: de
-};
+const pages = import.meta.glob('./Pages/**/*.vue')
 
-// Globaler Zustand für Dragging
-
-
-
-
-const i18n = VueI18n.createI18n({
-    legacy: false, // Verwende die Composition API
-    locale: document.documentElement.lang || 'de', // Standard-Sprache
-    fallbackLocale: 'en', // Fallback-Sprache
-    messages,
-    missingWarn: false, // Deaktiviert Warnungen für fehlende Schlüssel
-    fallbackWarn: false, // Deaktiviert Warnungen für Fallback-Schlüssel
-    missing: (locale, key) => {
-        // Gibt den Schlüssel zurück, wenn keine Übersetzung gefunden wurde
-        return key;
-    },
-});
-const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
     title: (title) => `${title}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue')
-        return pages[`./Pages/${name}.vue`]();
+        const page = pages[`./Pages/${name}.vue`]
+        if (!page) throw new Error(`Page not found: ${name}`)
+        return page()
     },
-    setup({ el, App: inertiaApp, props, plugin }) {
-        const app = createApp({ render: () => h(inertiaApp, props) })
-            .use(plugin)
-            .mixin({ methods: { route }});
-        app.config.globalProperties.$svgColors = svgColors;
-        app.use(VueMathjax);
-        app.use(i18n);
-        app.use(Icons);
+    async setup({el, App: InertiaRoot, props, plugin}) {
+        const app = createApp({render: () => h(InertiaRoot, props)})
+        app.use(plugin)
+
+        if(typeof route !== 'undefined')
+        {
+            app.mixin({methods: {route}})
+        }
+
+        // Sprache dynamisch laden, bevor wir i18n registrieren
+        const initialLocale =
+            localStorage.getItem('locale') ||
+            document.documentElement.lang ||
+            'de'
+
+        const messages = await import(`../../lang/${initialLocale}.json`)
+        i18n.global.setLocaleMessage(initialLocale, messages.default || messages)
+
+        app.use(i18n)
         app.use(PrimeVue, {
-            theme: {
-                preset: Aura,
-                options: {
-                    darkModeSelector: '.fake-dark-selector', // trying to also force a non-usage of the dark mode
-                },
-            },
-        });
-        app.use(LaravelPermissionToVueJS);
-        app.directive('tooltip', Tooltip);
-        app.mount(el);
-        app.config.globalProperties.$updateLocale = function (newLocale) {
-            this.$i18n.locale = newLocale;
-            document.documentElement.lang = newLocale;
-        };
+            theme: {preset: Aura, options: {darkModeSelector: '.fake-dark-selector'}},
+            ripple: true,
+        })
+        app.directive('tooltip', Tooltip)
+        //app.use(VueMathjax)
+        app.use(LaravelPermissionToVueJS)
+
+
+        app.config.globalProperties.$updateLocale = (newLocale) => {
+            i18n.global.locale.value = newLocale
+            document.documentElement.lang = newLocale
+            localStorage.setItem('locale', newLocale)
+        }
+
+        if (import.meta.env.DEV) app.config.performance = true
+        app.mount(el)
     },
-    progress: {
-        color: '#3017AD',
-        showSpinner: true,
-        includeCss: true,
-    },
-});
+    progress: {color: '#3017AD', showSpinner: false, includeCss: true},
+}).then(r => {})

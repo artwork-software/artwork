@@ -34,7 +34,7 @@
                                 {{ file.name }}
                             </div>
                             <div>
-                                <component is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                                <component :is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
                             </div>
                         </div>
                     </div>
@@ -58,6 +58,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
+import {IconCircleX} from "@tabler/icons-vue";
 
 const props = defineProps({
     show: Boolean,

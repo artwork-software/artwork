@@ -1,15 +1,15 @@
 <template>
     <ArtworkBaseModal modal-size="max-w-4xl" title="Calendar Filter" description="Allows you to show and hide specific calendar contents, ideal for quickly finding the relevant information." @close="$emit('close')" full-modal>
-        <div class="p-5">
+        <div class="">
             <div>
                 <div class="flex items-start justify-between">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Saved filters')"
                             :description="$t('Your saved filters. Click on a filter to apply it.')"
                             v-if="!saveFilterOption"
                         />
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Save filter')"
                             :description="$t('Save your current filter settings.')"
                             v-else
@@ -43,9 +43,7 @@
                                 v-model="saveFilterForm.name"
                                 label="Filter name"
                             />
-                            <ArtworkBaseModalButton @click="saveFilter" type="button">
-                                {{ $t('Save') }}
-                            </ArtworkBaseModalButton>
+                            <BaseUIButton @click="saveFilter" type="button" label="Save" use-translation is-add-button/>
                         </div>
                     </div>
                 </div>
@@ -54,7 +52,7 @@
             <div>
                 <div class="flex items-start justify-between">
                     <div>
-                        <TinyPageHeadline
+                        <BasePageTitle
                             :title="$t('Active filters')"
                             :description="$t('Your active filters. Click on a filter to remove it.')"
                         />
@@ -83,28 +81,28 @@
             </div>
 
             <div class="space-y-1">
-                <div v-for="(filterMainCategory, index) in filteredOptionsByCategories" :key="index" class="py-1">
+                <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1">
                     <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
-                        {{ $t(index) }}
+                        {{ $t(mainKey) }}
                     </div>
 
                     <div class="space-y-2 mt-2">
-                        <div v-for="(filterSubCategory, index) in filterMainCategory" :key="index">
+                        <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
                             <div class="card white px-4 ">
-                                <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="filterSubCategory.open = !filterSubCategory.open">
+                                <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                     <div class="text-sm text-gray-900">
-                                        {{ $t(index) }}
+                                        {{ $t(subKey) }}
                                     </div>
                                     <div class="flex items-center gap-5">
                                         <span class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10" :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'">
                                             <!-- count of checked filters in subcategory -->
                                             {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                         </span>
-                                        <component is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="filterSubCategory.open ? 'rotate-180' : ''" />
+                                        <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
                                     </div>
                                 </div>
 
-                                <div v-if="filterSubCategory.open">
+                                <div v-if="isOpen(mainKey, subKey)">
                                     <div class="grid gird-cols-1 md:grid-cols-4 gap-4 my-3">
                                         <div v-for="(filter, index) in filterSubCategory" :key="index">
                                             <div class="flex items-center gap-x-2">
@@ -136,15 +134,13 @@
             </div>
         </div>
 
-        <div class="px-5 py-4">
+        <div class="py-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <div @click="resetFilter" class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Reset') }}</div>
+                    <BaseUIButton @click="resetFilter" type="button" label="Reset" use-translation icon="IconRestore"/>
                 </div>
                 <div class="flex items-center gap-4">
-                    <ArtworkBaseModalButton variant="primary" @click="applyFilter">
-                        {{ $t('Apply') }}
-                    </ArtworkBaseModalButton>
+                    <BaseUIButton @click="applyFilter" type="button" label="Apply" use-translation is-add-button icon="IconCircleCheck"/>
 
                 </div>
             </div>
@@ -162,6 +158,18 @@ import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import {IconChevronDown} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+// Local open/close state per subcategory to avoid mutating computed arrays
+const openState = ref({});
+const keyFor = (mainKey, subKey) => `${mainKey}::${subKey}`;
+const isOpen = (mainKey, subKey) => !!openState.value[keyFor(mainKey, subKey)];
+const toggleOpen = (mainKey, subKey) => {
+    const k = keyFor(mainKey, subKey);
+    openState.value[k] = !openState.value[k];
+};
 
 const props = defineProps({
     filterOptions: {
@@ -218,19 +226,33 @@ const filteredOptionsByCategories = computed(() => {
         eventFilters: {},
     }
 
+    // Areas are passed through unchanged
     areaFilters.forEach(filter => {
         filteredOptions.areaFilters[filter] = props.filterOptions[filter];
-
     })
 
+    // Rooms: exclude rooms that are not relevant for disposition from appearing in the filter modal
     roomFilters.forEach(filter => {
-        filteredOptions.roomFilters[filter] = props.filterOptions[filter];
+        const list = props.filterOptions[filter] || [];
+        // Only apply relevance filtering to the actual room list (usually key === 'rooms').
+        // Other room-related groups (e.g., roomCategories, roomAttributes) should remain untouched.
+        if (filter === 'rooms' || filter === 'room_ids') {
+            // Exclude rooms explicitly marked as not relevant for disposition
+            filteredOptions.roomFilters[filter] = list.filter(item => {
+                const rel = item?.relevant_for_disposition;
+                return !(rel === false || rel === 0 || rel === '0');
+            });
+        } else {
+            filteredOptions.roomFilters[filter] = list;
+        }
     })
 
+    // Events are passed through unchanged
     eventFilters.forEach(filter => {
         filteredOptions.eventFilters[filter] = props.filterOptions[filter];
     })
 
+    // Crafts are only included for shift filter / shift plan
     if(props.filterType === 'shift_filter' || props.inShiftPlan) {
         filteredOptions.craftFilters = {};
         craftFilter.forEach(filter => {

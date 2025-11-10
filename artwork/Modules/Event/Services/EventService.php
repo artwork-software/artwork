@@ -794,7 +794,7 @@ readonly class EventService
         ));
     }
 
-    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings $userCalendarSettings = null)
+    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings|null $userCalendarSettings = null)
     {
         $userCalendarFilter = $filter;
 
@@ -1587,7 +1587,7 @@ readonly class EventService
         ))->toOthers();*/
 
         broadcast(new EventCreated(
-            $event->load(['event_type']),
+            $event->load(['event_type', 'project']),
             $event->room_id
         ));
         return $event;
@@ -1696,6 +1696,7 @@ readonly class EventService
         /** @var Event $createdEvent */
         $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
+            'name' => $event['name'] ?? '',
             'user_id' => $userId,
             'start_time' => $startTime,
             'end_time' => $endTime,
@@ -1707,10 +1708,21 @@ readonly class EventService
 
         $eventStatusSetting = app(EventSettings::class);
 
-        if ($eventStatusSetting->enable_status && isset($event['status']['id'])) {
-            $createdEvent->update([
-                'event_status_id' => $event['status']['id']
-            ]);
+        if ($eventStatusSetting->enable_status) {
+            if (isset($event['status']['id'])) {
+                // Use provided status
+                $createdEvent->update([
+                    'event_status_id' => $event['status']['id']
+                ]);
+            } else {
+                // Use default status if no status provided
+                $defaultStatus = EventStatus::where('default', true)->first();
+                if ($defaultStatus) {
+                    $createdEvent->update([
+                        'event_status_id' => $defaultStatus->id
+                    ]);
+                }
+            }
         }
 
         return $createdEvent;
@@ -1772,6 +1784,8 @@ readonly class EventService
 
         return $event;
     }
+
+
 
     public function attachEventProperty(Event $event, EventProperty $eventProperty): Event
     {

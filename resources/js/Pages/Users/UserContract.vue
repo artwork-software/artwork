@@ -13,13 +13,13 @@
                         {{ $t('The employment contract “{0}” is currently selected. This means that the contractually agreed rules cannot be edited. Remove the employment contract to enter your own rules.', [selectedContract.name]) }}
                     </p>
                     <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="showConfirmRemoveContractModal = true">
-                        <component is="IconRepeat" class="size-5 text-gray-500"/>
+                        <component :is="IconRepeat" class="size-5 text-gray-500"/>
                         {{ $t('Click here to remove the current employment contract.') }}
                     </div>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2">
-                <GlassyIconButton text="Select employment contract" icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
+                <BaseUIButton label="Select employment contract" is-add-button :icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
             </div>
         </div>
 
@@ -91,12 +91,12 @@
 
 
                 <div>
-                    <ArtworkBaseModalButton
+                    <BaseUIButton
                         type="submit"
                         class="mt-4"
-                        :disabled="userContractForm.processing">
-                        {{ $t('Save') }}
-                    </ArtworkBaseModalButton>
+                        :label="$t('Save')"
+                        is-add-button
+                        :disabled="userContractForm.processing"/>
                 </div>
             </form>
         </div>
@@ -154,6 +154,8 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SelectUserContractModal from "@/Pages/Users/Components/SelectUserContractModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import {IconFileSearch, IconRepeat} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     userToEdit: {

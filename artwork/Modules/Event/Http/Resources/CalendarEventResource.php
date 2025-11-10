@@ -5,6 +5,9 @@ namespace Artwork\Modules\Event\Http\Resources;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Http\Resources\ProjectInCalendarResource;
 use Artwork\Modules\Event\Http\Resources\SubEventResource;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -12,81 +15,123 @@ use Illuminate\Support\Facades\Auth;
 /** @mixin Event */
 class CalendarEventResource extends JsonResource
 {
-    public static $wrap = null;
-
-    private UserCalendarSettings $userCalendarSettings;
-
-    /**
-     * @return array<string, mixed>
-     */
-    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $this->userCalendarSettings = Auth::user()->calendar_settings;
+        $projectId = $this->getAttribute('project_id');
+        [$projectName, $projectArtists, $projectStateColor, $projectLeaders] = $projectId
+            ? $this->aggregateProjectRelevantData()
+            : [null, null, null, null];
 
-        $output = [
-            'resource' => class_basename($this),
-            'id' => $this->id,
-            'start' => $this->start_time->toIso8601String(),
-            'startTime' => $this->start_time->toIso8601String(),
-            'end' => $this->end_time->toIso8601String(),
-            'title' => $this->project?->name ?: $this->eventName ? : $this->event_type->name,
-            'alwaysEventName' => $this->eventName,
-            'eventName' => $this->eventName,
-            'event_type' => $this->event_type,
-            'description' => $this->description,
-            'audience' => $this->audience,
-            'isLoud' => $this->is_loud,
-            'projectId' => $this->project_id,
-            'projectName' => $this->project?->name,
-            'roomId' => $this->room_id,
-            'roomName' => $this->room?->name,
-            'declinedRoomId' => $this->declined_room_id,
-            'eventTypeId' => $this->event_type_id,
-            'eventStatusId' => $this->event_status_id,
+        $creator   = $this->getAttribute('creator');
+        $eventType = $this->getAttribute('event_type');
+        $eventName = $this->getAttribute('eventName');
+        $startTime = $this->getAttribute('start_time');
+
+        return [
+            'id'          => $this->getAttribute('id'),
+            'description' => $this->getAttribute('description'),
+            'projectId'   => $projectId,
+            'projectArtists' => $projectArtists,
+            'roomId'      => $this->getAttribute('room_id'),
+            'roomName'    => $this->getAttribute('room')?->getAttribute('name'),
+            'created_by'  => [
+                'id'               => $creator->getAttribute('id'),
+                'profile_photo_url'=> $creator->getAttribute('profile_photo_url'),
+                'first_name'       => $creator->getAttribute('first_name'),
+                'last_name'        => $creator->getAttribute('last_name'),
+            ],
+            'project'     => $this->getAttribute('project'),
+            'start'       => $startTime->utc()->toIso8601String(),
+            'startTime'   => $startTime,
+            'end'         => $this->getAttribute('end_time')->utc()->toIso8601String(),
+            'allDay'      => (bool)$this->getAttribute('allDay'),
+            'is_series'   => (bool)$this->getAttribute('is_series'),
+            'series'      => $this->aggregateSeriesEvents(),
+            'option_string'    => $this->getAttribute('option_string'),
+            'occupancy_option' => $this->getAttribute('occupancy_option'),
+            'alwaysEventName'  => $eventName,
+            'eventName'        => $eventName,
+            'title'            => $projectName ?: $eventName ?: $eventType->getAttribute('name'),
+            'eventTypeId'      => $eventType->getAttribute('id'),
+            'eventStatusId'    => $this->getAttribute('event_status_id'),
             'eventStatusColor' => $this->getAttribute('eventStatus')?->getAttribute('color'),
-            'eventTypeName' => $this->event_type->name,
-            'eventTypeAbbreviation' => $this->event_type->abbreviation,
-            'event_type_color' => $this->event_type->hex_code,
-            'areaId' => $this->room?->area_id,
-            'created_at' => $this->created_at?->format('d.m.Y, H:i'),
-            'created_by' => $this->creator,
-            'occupancy_option' => $this->occupancy_option,
-            'projectLeaders' => $this->project?->managerUsers,
-            'project' => new ProjectInCalendarResource($this->project),
-            'collisionCount' => $this->collision_count,
-            'is_series' => $this->is_series,
-            'series_id' => $this->series_id,
-            'option_string' => $this->option_string,
-            'series' => $this->series,
-            'allDay' => $this->allDay,
-            // to display rooms as split
-            'split' => $this->room_id,
-            // Todo Add Authorization
-            'resizable' => true,
-            'draggable' => true,
-            'canEdit' => Auth::user()->can('update', $this->resource),
-            'canAccept' => Auth::user()->can('update', $this->resource),
-            'canDelete' => Auth::user()->can('delete', $this->resource),
-            'subEvents' => SubEventResource::collection($this->subEvents),
-            'comments' => $this->comments,
-            'shifts' => $this->shifts,
-            'eventTypeColorBackground' => $this->event_type->hex_code . '33',
-            'eventProperties' => $this->eventProperties,
+            'event_type_color' => $eventType->getAttribute('hex_code'),
+            'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
+            'eventTypeName'    => $eventType->getAttribute('name'),
+            'eventTypeAbbreviation' => $eventType->getAttribute('abbreviation'),
+            'audience'         => $this->getAttribute('audience'),
+            'isLoud'           => $this->getAttribute('is_loud'),
+            'projectName'      => $projectName,
+            'projectStateColor'=> $projectStateColor,
+            'projectLeaders'   => $projectLeaders,
+            'subEvents'        => SubEventResource::collection($this->getAttribute('subEvents'))->resolve(),
+            'shifts'           => $this->aggregateEventShifts($this->getAttribute('shifts')->all()),
+            'start_hour'       => $this->getAttribute('start_hour') . ':00',
+            'event_length_in_hours' => $this->getAttribute('event_length_in_hours'),
+            'hours_to_next_day' => $this->getAttribute('hours_to_next_day'),
+            'minutes_form_start_hour_to_start' => $this->getAttribute('minutes_form_start_hour_to_start'),
+            'eventProperties'  => $this->getAttribute('eventProperties'),
+            'status'           => $this->getAttribute('eventStatus'),
         ];
-
-        return $this->handleNoUserCalendarWorkShifts($output);
     }
 
-    /**
-     * @param array $output
-     * @return array<string, mixed>
-     */
-    private function handleNoUserCalendarWorkShifts(array $output): array
+    private function aggregateProjectRelevantData(): array
     {
-        if (!$this->userCalendarSettings->work_shifts && array_key_exists('shifts', $output)) {
-            unset($output['shifts']);
+        /** @var Project|null $project */
+        $project = $this->getAttribute('project');
+        if (!$project) {
+            return [null, null, null, null];
         }
-        return $output;
+
+        $projectStateColor = $project->status?->getAttribute('color');
+
+        return [
+            $project->getAttribute('name'),
+            $project->getAttribute('artists'),
+            $projectStateColor,
+            $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
+        ];
+    }
+
+    private function aggregateEventShifts(array $shifts): array
+    {
+        return array_map(function (Shift $shift): array {
+            return [
+                'id' => $shift->getAttribute('id'),
+                'craft' => [
+                    'id' => $shift->getAttribute('craft')->getAttribute('id'),
+                    'name' => $shift->getAttribute('craft')->getAttribute('name'),
+                    'abbreviation' => $shift->getAttribute('craft')->getAttribute('abbreviation'),
+                ],
+                'worker_count' => $shift->getAttribute('users')->count()
+                    + $shift->getAttribute('freelancer')->count()
+                    + $shift->getAttribute('serviceProvider')->count(),
+                'max_worker_count' => (int)$shift->getAttribute('shiftsQualifications')->sum('value'),
+            ];
+        }, $shifts);
+    }
+
+    private function determineProjectLeaders(array $managerUsers): array
+    {
+        return count($managerUsers) > 0
+            ? array_map(fn(User $u) => [
+                'profile_photo_url' => $u->getAttribute('profile_photo_url'),
+                'first_name'        => $u->getAttribute('first_name'),
+                'last_name'         => $u->getAttribute('last_name'),
+            ], $managerUsers)
+            : [];
+    }
+
+    private function aggregateSeriesEvents(): array
+    {
+        $series = $this->getAttribute('series');
+        if (!($series instanceof \Artwork\Modules\Event\Models\SeriesEvents)) {
+            return [];
+        }
+
+        return [
+            'id'       => $series->getAttribute('id'),
+            'end_date' => $series->getAttribute('end_date')->format('Y-m-d'),
+        ];
     }
 }

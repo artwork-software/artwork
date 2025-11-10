@@ -1,11 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Select print layout')"
-                :description="$t('Select a print layout to print the project')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')"  :title="$t('Select print layout')"
+                      :description="$t('Select a print layout to print the project')">
 
 
         <div v-if="printLayouts.length > 0">
@@ -14,7 +9,7 @@
                 <div class="relative mt-2">
                     <ListboxButton class="menu-button">
                         <span class="col-start-1 row-start-1 truncate pr-6 !xsDark">{{ selectedLayout?.name }}</span>
-                        <component is="IconChevronDown" class="h-5 w-5 text-gray-500 col-start-1 row-start-1 -mt-1 -mr-1" aria-hidden="true" />
+                        <component :is="IconChevronDown" class="h-5 w-5 text-gray-500 col-start-1 row-start-1 -mt-1 -mr-1" aria-hidden="true" />
                     </ListboxButton>
 
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -24,7 +19,7 @@
                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ layout.name }}</span>
 
                                     <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <component is="IconCheck" class="h-5 w-5" aria-hidden="true" />
+                                        <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                 </li>
                             </ListboxOption>
@@ -34,9 +29,10 @@
             </Listbox>
 
             <div class="flex items-center justify-center mt-10">
-                <FormButton
+                <BaseUIButton
                     @click="openPrintDialog"
-                    :text="$t('Print')"
+                    :label="$t('Print')"
+                    is-add-button
                 />
             </div>
         </div>
@@ -44,7 +40,7 @@
             <div class="bg-red-50 p-4 rounded-lg">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component is="IconExclamationCircle" class="size-5 text-red-400" aria-hidden="true" />
+                        <component :is="IconExclamationCircle" class="size-5 text-red-400" aria-hidden="true" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm text-red-700">
@@ -54,7 +50,7 @@
                 </div>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -64,6 +60,9 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     project: {

@@ -1,11 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
-            <div class="headline1">
-                {{ $t('Contact persons') }}
-            </div>
-            <div class="xsLight my-4">
-                {{ $t('Define contact persons for this shift planning') }}
-            </div>
+    <ArtworkBaseModal @close="$emit('closeModal')" v-if="show" :title="$t('Contact persons')" :description="$t('Define contact persons for this shift planning')">
+
             <div class="w-full grid grid-cols-2">
                 <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.projectManagers">
                     <div class="flex">
@@ -29,13 +24,9 @@
                     </div>
                 </div>
             </div>
-            <div class="w-full relative">
-                <div class="my-auto w-full mr-12">
-                    <input :placeholder="$t('Employee')"
-                           id="userSearch"
-                           v-model="user_query"
-                           autocomplete="off"
-                           class="mt-4 p-4 inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+            <div class="w-full relative mt-5">
+                <div class="">
+                    <BaseInput id="userSearch" v-model="user_query" :label="$t('Employee')" />
                 </div>
                 <transition leave-active-class="transition ease-in duration-100"
                             leave-from-class="opacity-100"
@@ -75,10 +66,10 @@
                     </button>
                 </span>
             </div>
-            <div class="flex justify-center mt-2">
-                <FormButton :text="$t('Save')" @click="changeShiftContacts"/>
+            <div class="flex justify-end mt-2">
+                <BaseUIButton :label="$t('Save')" is-add-button @click="changeShiftContacts"/>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -90,6 +81,9 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 export default {
     mixins: [Permissions],
@@ -101,6 +95,9 @@ export default {
         'projectManagers'
     ],
     components: {
+        BaseInput,
+        BaseUIButton,
+        ArtworkBaseModal,
         BaseModal,
         FormButton,
         XCircleIcon,

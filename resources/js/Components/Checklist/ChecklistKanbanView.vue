@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-start gap-4 overflow-y-scroll " :class="isInOwnTaskManagement ? 'h-[calc(100vh-20rem)]' : ''">
+    <div class="flex divide-x divide-gray-200 divide-dashed overflow-y-scroll items-stretch mt-5" :class="isInOwnTaskManagement ? 'h-[calc(100vh-20rem)]' : ''">
         <div v-for="checklist in checklists" :key="checklist.id">
             <SingleChecklistInKanbanView
                 :checklist="checklist"

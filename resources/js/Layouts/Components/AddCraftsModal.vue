@@ -1,10 +1,6 @@
 <template>
-<BaseModal v-if="open" @closed="closeModal">
-    <ModalHeader
-        :title="$t('Craft')"
-        :description="$t('Define the specifications of your trade.')"
-    />
-    <div class="grid grid-cols-1 sm:grid-cols-7 gap-4 mb-4">
+<ArtworkBaseModal v-if="open" @close="closeModal" title="Craft" description="Define the specifications of your trade.">
+    <div class="grid grid-cols-1 sm:grid-cols-7 gap-4 my-4">
         <div class="col-span-1">
             <ColorPickerComponent :color="craft.color" @updateColor="addColor"/>
         </div>
@@ -100,7 +96,7 @@
     </div>
     <div class="mt-3">
         <div class="my-5">
-            <TinyPageHeadline
+            <BasePageTitle
                 :title="$t('Inventory settings')"
                 :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
             />
@@ -206,7 +202,7 @@
     <div class="flex items-center justify-center mt-5">
         <FormButton :text="$t('Save')" @click="saveCraft"/>
     </div>
-</BaseModal>
+</ArtworkBaseModal>
 </template>
 
 <script>
@@ -239,11 +235,15 @@ import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        ArtworkBaseModal,
+        BasePageTitle,
         BaseInput,
         UserSearch,
         TinyPageHeadline,

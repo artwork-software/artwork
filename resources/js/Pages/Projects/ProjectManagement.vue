@@ -13,7 +13,7 @@
                             <div class="flex items-center">
                                 <div v-if="!showSearchbar" @click="openSearchbar"
                                      class="cursor-pointer inset-y-0">
-                                    <ToolTipComponent icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
+                                    <ToolTipComponent :icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
                                                       direction="bottom"/>
                                 </div>
                                 <div v-else class="flex items-center w-60">
@@ -123,7 +123,7 @@
                                     </div>
                                 </MenuItem>
                             </BaseMenu>
-                            <ToolTipComponent icon="IconFileExport"
+                            <ToolTipComponent :icon="IconFileExport"
                                               icon-size="h-7 w-7"
                                               :tooltip-text="$t('Export project list')"
                                               direction="bottom"
@@ -323,7 +323,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import {IconCheck, IconPin} from "@tabler/icons-vue";
+import {IconCheck, IconFileExport, IconPin, IconSearch} from "@tabler/icons-vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -510,6 +510,8 @@ export default defineComponent({
         }
     },
     methods: {
+        IconFileExport,
+        IconSearch,
         usePage,
         getSortEnumTranslation,
         openCreateProjectModal() {

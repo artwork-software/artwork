@@ -17,6 +17,7 @@ use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
+use Artwork\Modules\Inventory\Models\ProductBasket;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceTask;
@@ -241,6 +242,8 @@ class User extends Model implements
         'use_chat',
         'work_time_balance',
         'chat_popup_position',
+        'chat_push_notification',
+        'is_time_preset_open'
     ];
 
     protected $casts = [
@@ -271,6 +274,8 @@ class User extends Model implements
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
         'use_chat' => 'boolean',
+        'chat_push_notification' => 'boolean',
+        'is_time_preset_open' => 'boolean',
     ];
 
     protected $hidden = [
@@ -290,9 +295,22 @@ class User extends Model implements
 
     //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
+        /**
+         * Beziehung zum InventoryUserFilter
+         */
+        public function inventoryUserFilter()
+        {
+            return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+        }
+
     public function getTypeAttribute(): string
     {
         return 'user';
+    }
+
+    public function productBasket(): HasMany
+    {
+        return $this->hasMany(ProductBasket::class, 'user_id', 'id');
     }
 
     public function shiftCalendarAbo(): hasOne
@@ -765,4 +783,20 @@ class User extends Model implements
                 return $end->diffInHours($start);
             });
     }
+    /**
+     * Exclude the placeholder "Deleted user" from Scout indexing
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->email !== config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+    }
+
+    /**
+     * Convenience scope to hide the placeholder user in queries
+     */
+    public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
+    {
+        return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+    }
+
 }

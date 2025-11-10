@@ -16,7 +16,7 @@
         <slot name="buttons" class="print:hidden">
 
         </slot>
-        <div class="flex items-center justify-center gap-x-3 print:hidden">
+        <div class="flex items-center justify-center gap-x-4 print:hidden">
             <slot name="search">
 
             </slot>
@@ -26,8 +26,8 @@
             <slot name="sort">
 
             </slot>
-            <div class="flex items-center w-max" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
-                <GlassyIconButton text="New checklist" icon="IconPlus" @click="openAddChecklistModal = true" />
+            <div class="ml-5" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
+                <BaseUIButton label="New checklist" use-translation is-add-button @click="openAddChecklistModal = true" />
             </div>
         </div>
     </div>
@@ -47,13 +47,14 @@
 <script setup>
 
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-vue";
+import {IconLayoutKanban, IconLayoutList, IconPlus} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const { can, canAny } = usePermission(usePage().props)
 
 const props = defineProps({

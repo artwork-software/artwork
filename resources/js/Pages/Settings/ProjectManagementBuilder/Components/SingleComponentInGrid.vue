@@ -9,7 +9,7 @@
 
             <div class="flex items-center" v-if="element.deletable">
                 <BaseMenu has-no-offset>
-                    <BaseMenuItem title="Delete" icon="IconTrash" @click="showDeleteConfirmationModal = true" />
+                    <BaseMenuItem whiteMenuBackground title="Delete" :icon="IconTrash" @click="showDeleteConfirmationModal = true" />
                 </BaseMenu>
             </div>
         </div>
@@ -30,6 +30,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
+import {IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     element: {

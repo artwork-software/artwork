@@ -12,6 +12,7 @@ use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
@@ -28,6 +29,7 @@ use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\RemoveEvent;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
@@ -47,6 +49,8 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -74,6 +78,7 @@ use Artwork\Modules\Shift\Services\ShiftPresetService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
+use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
@@ -81,6 +86,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
@@ -88,12 +94,14 @@ use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -134,9 +142,39 @@ class EventController extends Controller
         private readonly ShiftTimePresetService $shiftTimePresetService,
         private readonly ProjectService $projectService,
         private readonly EventPlanningCalendarService $eventPlanningCalendarService,
+        protected readonly SingleShiftPresetService $singleShiftPresetService,
+        private readonly GeneralSettingsService $generalSettingsService,
     ) {
     }
 
+
+    public function redirectToCalendar(Event $event): \Illuminate\Http\RedirectResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        // get full calendar week of event
+        $startOfWeek = Carbon::parse($event->start_time)->startOfWeek(Carbon::MONDAY);
+        $endOfWeek = Carbon::parse($event->end_time)->endOfWeek(Carbon::SUNDAY);
+
+
+
+        $user->userFilters()->calendarFilter()->first()->update([
+            'start_date' => $startOfWeek->format('Y-m-d'),
+            'end_date' => $endOfWeek->format('Y-m-d'),
+            'event_type_ids' => null,
+            'room_ids' => null,
+            'area_ids' => null,
+            'room_attribute_ids' => null,
+            'room_category_ids' => null,
+            'event_property_ids' => null,
+            'craft_ids' => null,
+        ]);
+
+        return redirect()->route('events', [
+            'highlightEventId' => $event->id
+        ]);
+    }
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
         ProjectService $projectService
@@ -188,70 +226,128 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request, ?Project $project = null): Response|JsonResponse
     {
+
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->userFilters()->calendarFilter()->first(); //$user->getAttribute('calendar_filter');
 
-        //dd($userCalendarFilter);
-
-
+        $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
-        $isPlanning = $request->boolean('isPlanning', false);
+        $isPlanning           = $request->boolean('isPlanning', false);
 
-
+        // Abo/Shared Daten (leichtgewichtig lassen)
         $this->userService->shareCalendarAbo('calendar');
-        $dateRangeRequested = false;
 
-        if ($request->input('start_date') && $request->input('end_date')) {
+        // Datum bestimmen
+        $dateRangeRequested = $request->filled(['start_date','end_date']);
+        if ($dateRangeRequested) {
             $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
-            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
-            $dateRangeRequested = true;
+            $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
         } else {
             [$startDate, $endDate] = $this->calendarDataService
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         }
 
+        // Sicherheitskappen für View-Spannen
         $calendarWarningText = '';
-
         if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['end_date' => $endDate->format('Y-m-d')]
+            );
         }
 
         if ($startDate->diffInDays($endDate) > (365 * 2)) {
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
-            $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value
-            ], [
-                'end_date' => $endDate->format('Y-m-d')
-            ]);
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['end_date' => $endDate->format('Y-m-d')]
+            );
         }
 
-        $period = $this->calendarDataService->createCalendarPeriodDto(
-            $startDate,
-            $endDate,
-            $user,
-            false
-        );
+        // Perioden/Monate (leichtgewichtig)
+        $period = $this->calendarDataService->createCalendarPeriodDto($startDate, $endDate, $user, false);
 
         $months = [];
-        foreach ($period as $periodObject) {
-            $date = Carbon::parse($periodObject->withoutFormat);
-            $month = $date->format('m.Y');
-            if (!array_key_exists($month, $months)) {
-                $months[$month] = [
-                    'first_day_in_period' => $date->format('Y-m-d'),
-                    'month' => $date->monthName,
-                    'year' => $date->format('y'),
-                ];
-            }
+        foreach ($period as $p) {
+            $date  = Carbon::parse($p->withoutFormat);
+            $key   = $date->format('m.Y');
+            $months[$key] ??= [
+                'first_day_in_period' => $date->format('Y-m-d'),
+                'month' => $date->monthName,
+                'year'  => $date->format('y'),
+            ];
         }
+
+        // **Rooms selbst sind leichtgewichtig** (id/name/admins/has_events Flag),
+        // Events werden **lazy** geliefert (siehe 'calendar' Prop unten).
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
+
+        $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
+
+        return Inertia::render('Calendar/Index', [
+            'period'                 => $period,
+            'months'                 => $months,
+            'rooms'                  => $rooms,
+            'dateValue'              => $dateValue,
+            'user_filters'           => $userCalendarFilter,
+            'calendarWarningText'    => $calendarWarningText,
+            'personalFilters' => fn () =>
+            $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value),
+            'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
+            'eventsWithoutRoom' => fn () =>
+             Event::query()->hasNoRoom()->get()->map(fn($event) =>
+                 \Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO::formModel(
+                     $event,
+                     $userCalendarSettings,
+                     EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
+                 )
+             ),
+            'areas'            => fn () => $this->areaService->getAll(),
+            'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
+            'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
+            'event_properties' => fn () => EventProperty::all(),
+            'first_project_tab_id' => fn () => $this->projectTabService->getDefaultOrFirstProjectTabId(),
+            'first_project_calendar_tab_id' => fn () => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_shift_tab_id' => fn () => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+
+            'projectNameUsedForProjectTimePeriod' => fn () =>
+            $userCalendarSettings->getAttribute('time_period_project_id')
+                ? $this->projectService->findById(
+                $userCalendarSettings->getAttribute('time_period_project_id')
+            )->name
+                : null,
+        ]);
+    }
+
+    public function allEventsAPI(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isPlanning           = $request->boolean('isPlanning', false);
+
+        if ($isPlanning) {
+            $userCalendarFilter   = $user->userFilters()->planningCalendarFilter()->first();
+        } else {
+            $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
+        }
+
+        $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
+        $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
 
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
@@ -260,98 +356,25 @@ class EventController extends Controller
             $endDate,
         );
 
-        if ($dateRangeRequested) {
-            if ($isPlanning) {
-                $this->eventPlanningCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            } else {
-                $this->eventCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            }
-        } else {
-            if ($isPlanning) {
-                $this->eventPlanningCalendarService->filterRoomsEvents(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            } else {
-                $this->eventCalendarService->filterRoomsEventsWithMinimalData(
-                    $rooms,
-                    $userCalendarFilter,
-                    $startDate,
-                    $endDate,
-                    $userCalendarSettings
-                );
-            }
-        }
-
-        if ($isPlanning) {
-            $calendarData = $this->eventPlanningCalendarService->mapRoomsToContentForCalendar(
+        $calendar = ($isPlanning
+            ? $this->eventPlanningCalendarService
+            : $this->eventCalendarService
+        )->mapRoomsToContentForCalendar(
+            ($isPlanning
+                ? $this->eventPlanningCalendarService
+                : $this->eventCalendarService
+            )->filterRoomsEvents(
                 $rooms,
+                $userCalendarFilter,
                 $startDate,
                 $endDate,
-            );
-        } else {
-            $calendarData = $this->eventCalendarService->mapRoomsToContentForCalendar(
-                $rooms,
-                $startDate,
-                $endDate,
-            );
-        }
+                $userCalendarSettings
+            ),
+            $startDate,
+            $endDate
+        );
 
-        $dateValue = [
-            $startDate ? $startDate->format('Y-m-d') : null,
-            $endDate ? $endDate->format('Y-m-d') : null
-        ];
-
-        $eventTypes = EventType::select(['id', 'name', 'abbreviation', 'hex_code'])
-            ->get()
-            ->keyBy('id');
-
-        if ($dateRangeRequested) {
-            return response()->json(['calendar' => $calendarData->rooms]);
-        }
-
-        return Inertia::render('Calendar/Index', [
-            'period' => $period,
-            'rooms' => $rooms,
-            'calendar' => Inertia::always(fn() => $calendarData->rooms),
-            'personalFilters' => Inertia::always(fn() =>
-                $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value)),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
-                EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
-            'areas' => $this->areaService->getAll(),
-            'dateValue' => $dateValue,
-            'user_filters' => $userCalendarFilter,
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
-            'first_project_tab_id' => $this->projectTabService->getDefaultOrFirstProjectTabId(),
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_shift_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectNameUsedForProjectTimePeriod' => $userCalendarSettings->getAttribute('time_period_project_id') ?
-                $this->projectService->findById(
-                    $userCalendarSettings->getAttribute('time_period_project_id')
-                )->name : null,
-            'calendarWarningText' => $calendarWarningText,
-            'months' => $months,
-        ]);
+        return response()->json(['calendar' => $calendar->rooms]);
     }
 
     public function viewPlanningCalendar(Request $request, ?Project $project = null): Response
@@ -483,6 +506,7 @@ class EventController extends Controller
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
+        $this->singleShiftPresetService->shareSingleShiftPresets();
 
 
         [$startDate, $endDate] = $this->calendarDataService
@@ -509,9 +533,7 @@ class EventController extends Controller
             ]);
         }
 
-        if ($user->getAttribute('daily_view')) {
-            $renderViewName = 'Shifts/ShiftPlanDailyView';
-        }
+
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
             $startDate,
@@ -548,6 +570,16 @@ class EventController extends Controller
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
+
+        if ($user->getAttribute('daily_view')) {
+            $renderViewName = 'Shifts/ShiftPlanDailyView';
+        }
+
+        if ($userCalendarSettings->hide_unoccupied_days) {
+            $result = $this->calendarDataService->hideUnoccupiedDays($calendarData, $period);
+            $calendarData = $result['calendarData'];
+            $period       = $result['period'];
+        }
 
 
         return Inertia::render($renderViewName, [
@@ -612,6 +644,7 @@ class EventController extends Controller
             'calendarWarningText' => $calendarWarningText,
         ]);
     }
+
 
     /**
      * @return array<string, array<int, mixed>>
@@ -914,7 +947,7 @@ class EventController extends Controller
         }
 
         broadcast(new EventCreated(
-            $firstEvent->load(['event_type']),
+            $firstEvent->load(['event_type', 'project']),
             $firstEvent->room_id
         ));
 
@@ -944,7 +977,10 @@ class EventController extends Controller
         $event->eventProperties()
             ->sync($request->get('event_properties', []));
 
-        broadcast(new EventCreated($event, $event->room_id));
+        broadcast(new EventCreated(
+            $event->fresh(),
+            $event->room_id
+        ));
     }
 
     public function commitShifts(Request $request): void
@@ -958,6 +994,10 @@ class EventController extends Controller
         $endDate = Carbon::parse($request->end)->endOfDay();
 
         $this->shiftService->commitShiftsByDate($startDate, $endDate);
+    }
+
+    public function changeCommitShifts(Request $request, Shift $shift){
+        $shift->update(['is_committed' => $request->boolean('commit')]);
     }
 
 
@@ -1404,7 +1444,7 @@ class EventController extends Controller
                     'message' => $notificationTitle
                 ];
 
-                $this->eventService->save($event);
+                //$this->eventService->save($event);
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
@@ -1453,7 +1493,6 @@ class EventController extends Controller
         if ($request->roomChange) {
             $room = Room::find($event->room_id);
             $project = Project::find($event->project_id);
-
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
@@ -1514,11 +1553,7 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __(
-                'notification.event.room_change_confirmed',
-                [],
-                $event->creator->language
-            );
+            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -1568,22 +1603,26 @@ class EventController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $oldEventDescription = $event->description;
-        $oldEventRoom = $event->room_id;
-        $oldEventProject = $event->project_id;
-        $oldEventName = $event->eventName;
-        $oldEventType = $event->event_type_id;
-        $oldEventStartDate = $event->start_time;
-        $oldEventEndDate = $event->end_time;
-        $oldEventPropertyIds = $event->getAttribute('eventProperties')->map(
+        $oldEventDescription   = $event->description;
+        $oldEventRoom          = $event->room_id;
+        $oldEventProject       = $event->project_id;
+        $oldEventName          = $event->eventName;
+        $oldEventType          = $event->event_type_id;
+        $oldEventStartDate     = $event->start_time;
+        $oldEventEndDate       = $event->end_time;
+        $oldEventPropertyIds   = $event->getAttribute('eventProperties')->map(
             fn (EventProperty $eventProperty) => $eventProperty->getAttribute('id')
         )->all();
 
-        $event->fill($request->data());
-        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
+        $data = $request->data();
 
+        // remove is_series and series_id from data to prevent overwriting
+        unset($data['is_series'], $data['series_id']);
+        $event->fill($data);
+        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
         $this->eventService->save($event);
 
+        // Projekt ggf. anlegen & zuordnen (dein Original)
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
@@ -1603,12 +1642,12 @@ class EventController extends Controller
         }
 
         $newEventDescription = $event->description;
-        $newEventRoom = $event->room_id;
-        $newEventProject = $event->project_id;
-        $newEventName = $event->eventName;
-        $newEventType = $event->event_type_id;
-        $newEventStartDate = $event->start_time;
-        $newEventEndDate = $event->end_time;
+        $newEventRoom        = $event->room_id;
+        $newEventProject     = $event->project_id;
+        $newEventName        = $event->eventName;
+        $newEventType        = $event->event_type_id;
+        $newEventStartDate   = $event->start_time;
+        $newEventEndDate     = $event->end_time;
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
@@ -1620,90 +1659,65 @@ class EventController extends Controller
 
         $this->createEventScheduleNotification($event);
 
-        // get time diff
         $oldEventStartDateDays = Carbon::create($oldEventStartDate);
-        $oldEventEndDateDays = Carbon::create($oldEventEndDate);
-
+        $oldEventEndDateDays   = Carbon::create($oldEventEndDate);
         $newEventStartDateDays = Carbon::parse($newEventStartDate);
-        $newEventEndDateDays = Carbon::parse($newEventEndDate);
+        $newEventEndDateDays   = Carbon::parse($newEventEndDate);
 
-        $diffStartDays = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
-        $diffEndDays = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
-
+        $diffStartDays    = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
+        $diffEndDays      = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
         $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDateDays, false);
-        $diffEndMinutes = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
+        $diffEndMinutes   = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
 
-        if ($request->allSeriesEvents) {
-            if ($event->is_series) {
-                $seriesEvents = Event::where('series_id', $event->series_id)->get();
-                foreach ($seriesEvents as $seriesEvent) {
-                    // Guard
-                    if ($seriesEvent->id === $event->id) {
-                        continue;
-                    }
-
-                    $startDay = Carbon::create($seriesEvent->start_time)
-                        ->addDays($diffStartDays)
-                        ->format('Y-m-d');
-                    $endDay = Carbon::create($seriesEvent->end_time)
-                        ->addDays($diffEndDays)
-                        ->format('Y-m-d');
-
-                    $startTime = Carbon::create($seriesEvent->start_time)
-                        ->addMinutes($diffStartMinutes)
-                        ->format('H:i:s');
-                    $endTime = Carbon::create($seriesEvent->end_time)
-                        ->addMinutes($diffEndMinutes)
-                        ->format('H:i:s');
-
-                    $seriesEvent->update([
-                        'name' => $event->name,
-                        'eventName' => $event->eventName,
-                        'description' => $event->description,
-                        'occupancy_option' => $event->occupancy_option,
-                        'audience' => $event->audience,
-                        'is_loud' => $event->is_loud,
-                        'event_type_id' => $event->event_type_id,
-                        'room_id' => $event->room_id,
-                        'project_id' => $event->project_id,
-                        'start_time' => $startDay . ' ' . $startTime,
-                        'end_time' => $endDay . ' ' . $endTime,
-                    ]);
+        if ($request->allSeriesEvents && $event->is_series) {
+            $seriesEvents = Event::where('series_id', $event->series_id)->get();
+            foreach ($seriesEvents as $seriesEvent) {
+                if ($seriesEvent->id === $event->id) {
+                    continue;
                 }
-                // date shifts with date
+
+                $startDay = Carbon::create($seriesEvent->start_time)->addDays($diffStartDays)->format('Y-m-d');
+                $endDay   = Carbon::create($seriesEvent->end_time)->addDays($diffEndDays)->format('Y-m-d');
+
+                $startTime = Carbon::create($seriesEvent->start_time)->addMinutes($diffStartMinutes)->format('H:i:s');
+                $endTime   = Carbon::create($seriesEvent->end_time)->addMinutes($diffEndMinutes)->format('H:i:s');
+
+                $seriesEvent->update([
+                    'name'         => $event->name,
+                    'eventName'    => $event->eventName,
+                    'description'  => $event->description,
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience'     => $event->audience,
+                    'is_loud'      => $event->is_loud,
+                    'event_type_id'=> $event->event_type_id,
+                    'room_id'      => $event->room_id,
+                    'project_id'   => $event->project_id,
+                    'start_time'   => $startDay.' '.$startTime,
+                    'end_time'     => $endDay.' '.$endTime,
+                ]);
             }
         }
 
+        DB::transaction(function () use ($request, $event) {
+            $this->handleSeriesOnUpdate($request, $event);
+        });
+
         $shifts = Shift::where('event_id', $event->id)->get();
         foreach ($shifts as $shift) {
-            $startDay = Carbon::create($shift->start_date)
-                ->addDays($diffStartDays)
-                ->format('Y-m-d');
-            $endDay = Carbon::create($shift->end_date)
-                ->addDays($diffEndDays)
-                ->format('Y-m-d');
+            $startDay = Carbon::create($shift->start_date)->addDays($diffStartDays)->format('Y-m-d');
+            $endDay   = Carbon::create($shift->end_date)->addDays($diffEndDays)->format('Y-m-d');
 
             $shift->update([
                 'start_date' => $startDay,
-                'end_date' => $endDay,
+                'end_date'   => $endDay,
             ]);
         }
 
-        // update event time in inventory
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
-        broadcast(new EventCreated(
-            $event->fresh(),
-            $event->fresh()->room_id
-        ));
-
-        //redirect is required for bulk component event component
-        /*if ($request->boolean('usedInBulkComponent')) {
-            return $this->redirector->back();
-        }*/
-        //return new CalendarEventResource($event);
+        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
 
     private function createEventScheduleNotification(Event $event): void
@@ -2266,6 +2280,210 @@ class EventController extends Controller
         ));
     }
 
+    /**
+     * Serie beim Bearbeiten setzen/aktualisieren:
+     * - Serie neu anlegen, wenn vorher keine war und is_series=true.
+     * - Bei bestehender Serie: bei Turnus-/Ende-Änderung alle zukünftigen Instanzen
+     *   (ab dem bearbeiteten Event) löschen und gemäß neuem Plan neu erzeugen.
+     * - Am Bearbeitungstag wird KEIN zusätzlicher Termin erzeugt.
+     */
+    protected function handleSeriesOnUpdate(Request $request, Event $event): void
+    {
+        $wantsSeries   = (bool) $request->boolean('is_series') ?? false;
+        $newFrequency  = $request->input('seriesFrequency');   // 1,2,3,4 (daily/weekly/biweekly/monthly)
+        $newSeriesEnd  = $request->input('seriesEndDate');     // z.B. '2025-12-31'
+
+        // Wenn der Nutzer nichts zu Serie/Ende/Frequenz übermittelt, nichts tun.
+        if ($wantsSeries === false && !$event->is_series) {
+            return;
+        }
+
+        //dd($request->all(), $wantsSeries, $event->is_series, $newFrequency, $newSeriesEnd);
+
+        $eventStart = Carbon::parse($event->start_time)->setTimezone(config('app.timezone'));
+        $eventEnd   = Carbon::parse($event->end_time)->setTimezone(config('app.timezone'));
+
+        // FALL A: vorher KEINE Serie -> jetzt Serie aktivieren
+        if (!$event->is_series && $wantsSeries) {
+            if (empty($newFrequency) || empty($newSeriesEnd)) {
+                // Ohne Frequency/Ende können wir keine Serie sinnvoll erzeugen.
+                return;
+            }
+
+            /** @var SeriesEvents $series */
+            $series = SeriesEvents::create([
+                'frequency_id' => (int) $newFrequency,
+                'end_date'     => $newSeriesEnd,
+            ]);
+
+            $event->update([
+                'is_series' => true,
+                'series_id' => $series->id,
+            ]);
+
+            $endSeriesDateExclusive = Carbon::parse($newSeriesEnd)->addDay()->startOfDay();
+
+            // Fortlaufende Erzeugung ab NÄCHSTER Instanz; am Bearbeitungstag nichts erzeugen.
+            $cursorStart = $eventStart->copy();
+            $cursorEnd   = $eventEnd->copy();
+            [$nextStart, $nextEnd] = $this->generateNextOccurrence($cursorStart, $cursorEnd, (int) $newFrequency);
+
+            while ($nextEnd < $endSeriesDateExclusive) {
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, (int) $newFrequency);
+            }
+
+            return;
+        }
+
+        // FALL B: Serie existiert bereits – prüfen, ob Turnus oder Enddatum geändert wurde
+        if ($event->is_series && $wantsSeries) {
+            /** @var SeriesEvents|null $series */
+            $series = SeriesEvents::find($event->series_id);
+            if (!$series) {
+                return;
+            }
+
+            $oldFrequency = (int) $series->frequency_id;
+            $oldEnd       = Carbon::parse($series->end_date)->startOfDay();
+            $freq         = (int) ($newFrequency ?: $oldFrequency);
+            $seriesEndStr = $newSeriesEnd ?: $oldEnd->toDateString();
+
+            $series->update([
+                'frequency_id' => $freq,
+                'end_date'     => $seriesEndStr,
+            ]);
+
+            $newEndExclusive = Carbon::parse($seriesEndStr)->addDay()->startOfDay();
+
+            // --- Robuster Lösch-Block (ersetzen) ---
+            $cutoff = $event->getRawOriginal('start_time') ?: (string) $event->start_time; // roher DB-Wert bevorzugt
+
+            $query = Event::query()
+                ->where('series_id', $series->id)
+                ->where('id', '!=', $event->id)
+                ->where('start_time', '>', $cutoff);
+
+            $ids = $query->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+
+                foreach ($query->get() as $eventToDelete) {
+                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
+                }
+
+                $usesSoftDeletes = in_array(
+                    SoftDeletes::class,
+                    class_uses_recursive(Event::class),
+                    true
+                );
+
+                if ($usesSoftDeletes) {
+                    // wirklich weg damit (nicht nur "trashed")
+                    Event::whereIn('id', $ids)->forceDelete();
+                } else {
+                    Event::whereIn('id', $ids)->delete();
+                }
+            }
+
+            [$nextStart, $nextEnd] = $this->generateNextOccurrence($eventStart->copy(), $eventEnd->copy(), $freq);
+
+            while ($nextEnd < $newEndExclusive) {
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, $freq);
+            }
+
+            return;
+        }
+
+        // FALL C (NEU): Serie existiert, Nutzer deaktiviert is_series => Zukunft löschen & Event entkoppeln
+        if ($event->is_series && !$wantsSeries) {
+            /** @var SeriesEvents|null $series */
+            $series = SeriesEvents::find($event->series_id);
+            if (!$series) {
+                // Falls das Serienobjekt fehlt, einfach am Event deaktivieren
+                $event->update(['is_series' => false, 'series_id' => null]);
+                return;
+            }
+
+            $query = Event::query()
+                ->where('series_id', $series->id)
+                ->where('id', '!=', $event->id);
+
+
+            $ids = $query->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+                foreach ($query->get() as $eventToDelete) {
+                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
+                }
+
+                $usesSoftDeletes = in_array(
+                    SoftDeletes::class,
+                    class_uses_recursive(Event::class),
+                    true
+                );
+
+                if ($usesSoftDeletes) {
+                    // wirklich weg damit (nicht nur "trashed")
+                    Event::whereIn('id', $ids)->forceDelete();
+                } else {
+                    Event::whereIn('id', $ids)->delete();
+                }
+            }
+
+
+
+            // Aktuelles Event aus der Serie lösen
+            $event->update(['is_series' => false, 'series_id' => null]);
+
+            // Optionales Aufräumen: Wenn KEIN Event mehr auf diese Serie verweist, Serie-Datensatz löschen
+            $stillReferenced = Event::where('series_id', $series->id)->exists();
+            if (!$stillReferenced) {
+                $series->delete();
+            }
+
+            return;
+        }
+    }
+
+
+    /**
+     * Liefert nächste Instanz (Start/Ende) basierend auf Frequency-ID.
+     * 1=daily(+1 Tag), 2=weekly(+1 Woche), 3=biweekly(+2 Wochen), 4=monthly(+1 Monat)
+     */
+    protected function generateNextOccurrence(Carbon $start, Carbon $end, int $frequency): array
+    {
+        $nextStart = $start->copy();
+        $nextEnd   = $end->copy();
+
+        switch ($frequency) {
+            case 1:
+                $nextStart->addDay();
+                $nextEnd->addDay();
+                break;
+            case 2:
+                $nextStart->addWeek();
+                $nextEnd->addWeek();
+                break;
+            case 3:
+                $nextStart->addWeeks(2);
+                $nextEnd->addWeeks(2);
+                break;
+            case 4:
+                $nextStart->addMonthNoOverflow();
+                $nextEnd->addMonthNoOverflow();
+                break;
+            default:
+                $nextStart->addWeek();
+                $nextEnd->addWeek();
+                break;
+        }
+
+        return [$nextStart, $nextEnd];
+    }
+
+
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -2365,8 +2583,12 @@ class EventController extends Controller
         NotificationService $notificationService,
         ProjectTabService $projectTabService
     ): void {
+        //$eventBeforeDelete = $event->replicate();
         $this->authorize('delete', $event);
-
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event,
+            'deleted'
+        ));
         $this->eventService->delete(
             $event,
             $shiftsQualificationsService,
@@ -2385,6 +2607,8 @@ class EventController extends Controller
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
+
+
     }
 
     /**
@@ -3049,11 +3273,15 @@ class EventController extends Controller
         $events = $request->input('events', []);
 
         foreach ($events as $event) {
-            $this->eventService->createBulkEvent(
+            $storedEvent = $this->eventService->createBulkEvent(
                 $event,
                 $project,
                 $this->authManager->id()
             );
+            broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+                $storedEvent->fresh(),
+                'created'
+            ));
         }
 
         return Redirect::back();
@@ -3062,7 +3290,7 @@ class EventController extends Controller
     public function updateSingleBulkEvent(
         Request $request,
         Event $event
-    ): RedirectResponse {
+    ) {
         $data =  $request->collect('data');
         $this->eventService->updateBulkEvent(
             $data,
@@ -3070,50 +3298,38 @@ class EventController extends Controller
         );
 
         $freshEvent = $event->fresh();
-        broadcast(new EventCreated(
-            $event->load(['project', 'event_type']),
-            $event->room_id
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event,
+            'updated'
         ));
-
-        return Redirect::back();
     }
 
     public function createSingleBulkEvent(
         Request $request,
         Project $project
-    ): RedirectResponse {
+    ): void
+    {
         $data =  $request->input('event', []);
-
-
 
         $event = $this->eventService->createBulkEvent(
             $data,
             $project,
             $this->authManager->id()
         );
-
-
-        broadcast(new EventCreated(
-            $event,
-            $event->room_id
+        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
+            $event->fresh(),
+            'created'
         ));
-
-        return Redirect::back();
     }
 
-    public function updateDescription(Request $request, Event $event): RedirectResponse
+    public function updateDescription(Request $request, Event $event): void
     {
         $event->update($request->only(['description']));
 
-        broadcast(new EventUpdated(
-            $event->room_id,
-            $event->start_time,
-            $event->is_series ?
-                $event->series->end_date :
-                $event->end_time
-        ))->toOthers();
-
-        return $this->redirector->back();
+        broadcast(new EventCreated(
+            $event->fresh(),
+            $event->fresh()->room_id
+        ));
     }
 
 
@@ -3136,5 +3352,32 @@ class EventController extends Controller
     public function bulkDeleteEvent(Request $request): void
     {
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
+
+
+    }
+
+    public function standardEventValues(){
+        return Inertia::render('Settings/StandardEventValues');
+    }
+
+    public function saveStandardEventValues(Request $request): void
+    {
+        $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
+    }
+
+    public function convertToPlanning(Event $event): RedirectResponse
+    {
+        // Set the event as a planning event
+        $event->update(['is_planning' => true]);
+
+        // Broadcast the event update
+        $freshEvent = $event->fresh();
+        broadcast(new EventUpdated(
+            $freshEvent->room_id,
+            $freshEvent->start_time,
+            $freshEvent->is_series ? $freshEvent->series->end_date : $freshEvent->end_time
+        ));
+
+        return Redirect::back();
     }
 }

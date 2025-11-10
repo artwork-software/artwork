@@ -1,161 +1,168 @@
-<script>
+<script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
-import {IconDragDrop} from "@tabler/icons-vue";
-import {Link} from "@inertiajs/vue3";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import draggable from "vuedraggable";
 import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
-export default {
-    name: "Index",
-    components: {
-        BaseInput,
-        GlassyIconButton,
-        PlusButton,
-        AddEditTabModal,
-        DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout
-    },
-    props: ['tabs', 'components', 'componentsSpecial'],
-    mixins: [IconLib],
-    data() {
-        return {
-            searchComponent: '',
-            showAddEditModal: false,
-            dragging: false,
-        }
-    },
-    computed: {
-        filteredComponents() {
-            return Object.keys(this.components).reduce((acc, key) => {
-                const filtered = this.components[key].filter(component => {
-                    return component.name.toLowerCase().includes(this.searchComponent.toLowerCase());
-                });
+import { computed, ref, watch } from "vue";
+import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import {IconPlus} from "@tabler/icons-vue";
 
-                if (filtered.length > 0) {
-                    acc[key] = {
-                        name: key,
-                        components: filtered,
-                        closed: false
-                    };
-                } else {
-                    acc[key] = {
-                        name: key,
-                        components: filtered,
-                        closed: true
-                    };
-                }
+// Props
+const props = defineProps({
+    tabs: { type: Array, required: true },
+    components: { type: Object, required: true },
+    componentsSpecial: { type: Array, required: true },
+});
 
-                return acc;
-            }, {});
+// i18n
+const { t } = useI18n();
 
-        },
-        filteredSpecialComponents() {
-            // filter special components with translation
-            return this.componentsSpecial.filter(component => {
-                return this.$t(component.name).toLowerCase().includes(this.searchComponent.toLowerCase());
-            });
-        },
-    },
-    methods:{
-        updateComponentOrder(components) {
-            // Update local order
-            components.map((component, index) => {
-                component.order = index + 1
-            })
+// Lokale States
+const searchComponent = ref("");
+const showAddEditModal = ref(false);
+const dragging = ref(false);
 
-            // Create a minimal payload with only necessary data (id and order)
-            const minimalComponents = components.map(component => ({
-                id: component.id,
-                order: component.order
-            }));
-
-            this.$inertia.post(route('tab.reorder'), {
-                components: minimalComponents,
-            }, {
-                preserveScroll: true
-            });
-        }
+// Lokale Kopie der Tabs (Vermeidung von Prop-Mutation)
+const tabsLocal = ref([...props.tabs]);
+watch(
+    () => props.tabs,
+    (val) => {
+        tabsLocal.value = [...val];
     }
+);
 
+// Gefilterte normale Komponenten (in Gruppen nach Key)
+const filteredComponents = computed(() => {
+    const search = searchComponent.value.toLowerCase();
+    return Object.keys(props.components).reduce((acc, key) => {
+        const filtered = props.components[key].filter((component) =>
+            String(component.name).toLowerCase().includes(search)
+        );
+        acc[key] = {
+            name: key,
+            components: filtered,
+            closed: filtered.length === 0,
+        };
+        return acc;
+    }, {});
+});
+
+// Gefilterte Special Components (mit Übersetzung)
+const filteredSpecialComponents = computed(() => {
+    const search = searchComponent.value.toLowerCase();
+    return props.componentsSpecial.filter((component) =>
+        t(component.name).toLowerCase().includes(search)
+    );
+});
+
+// Reorder-Handler
+function updateComponentOrder(components) {
+    // lokale Reihenfolge aktualisieren
+    components.forEach((component, index) => {
+        component.order = index + 1;
+    });
+
+    // Minimal-Payload
+    const minimalComponents = components.map((c) => ({
+        id: c.id,
+        order: c.order,
+    }));
+
+    router.post(
+        route("tab.reorder"),
+        { components: minimalComponents },
+        { preserveScroll: true }
+    );
 }
 </script>
 
 <template>
-    <AppLayout>
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{$t('Tab Settings')}}</h2>
-                <div class="xsLight">
-                    {{$t('Define global settings for projects.')}}
-                </div>
-            </div>
-
-            <ProjectTabs />
-
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
+        <template #actions>
+            <button class="ui-button-add" @click="showAddEditModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ t('Create tab') }}
+            </button>
+        </template>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <!-- Tab components -->
-               <div class="w-full col-span-1">
-                   <div class="flex justify-end mb-5">
-                       <GlassyIconButton icon="IconPlus" @click="showAddEditModal = true" :text="$t('Create tab')" />
-                   </div>
+                <div class="w-full col-span-1">
 
-
-                   <div class="card white p-5">
-                       <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tabs" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tabs)">
-                           <template #item="{element}" :key="element.id">
-                               <div class="mb-2">
-                                   <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                       <SingleTabComponent :all-tabs="tabs" :tab="element" />
-                                   </div>
-                               </div>
-                           </template>
-                       </draggable>
-                   </div>
-               </div>
+                    <div class="card white p-5">
+                        <draggable
+                            ghost-class="opacity-50"
+                            key="draggableKey"
+                            item-key="id"
+                            :list="tabsLocal"
+                            @start="dragging = true"
+                            @end="dragging = false"
+                            @change="updateComponentOrder(tabsLocal)"
+                        >
+                            <template #item="{ element }">
+                                <div class="mb-2">
+                                    <div :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                                        <SingleTabComponent :all-tabs="tabsLocal" :tab="element" />
+                                    </div>
+                                </div>
+                            </template>
+                        </draggable>
+                    </div>
+                </div>
 
                 <!-- Components List -->
-
                 <div class="col-span-1 card glassy p-5">
-                    <div class="card white p-5">
+                    <div class="card white p-5 space-y-3">
                         <div class="flex items-center justify-end w-full mb-3">
                             <div class="w-44 md:w-56 lg:w-72">
-                                <div>
-                                    <BaseInput id="search" type="text" name="search" v-model="searchComponent" label="Search" />
-                                </div>
+                                <BaseInput
+                                    id="search"
+                                    type="text"
+                                    name="search"
+                                    v-model="searchComponent"
+                                    :label="t('Search')"
+                                />
                             </div>
                         </div>
-                        <div v-for="componentsArray in filteredComponents">
+
+                        <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
                             <div>
                                 <div class="flex items-center gap-x-4 cursor-pointer">
-                                    <h2 class="text-md font-bold mb-2">{{ $t(componentsArray.name) }}</h2>
+                                    <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
                                 </div>
-                                <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
-                                    <DragComponentElement v-for="component in componentsArray.components" :component="component" />
+                                <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                                    <DragComponentElement
+                                        v-for="component in componentsArray.components"
+                                        :key="component.id"
+                                        :component="component"
+                                    />
                                 </div>
                             </div>
                         </div>
+
                         <div>
-                            <h2 class="text-md font-bold mb-2">{{ $t('Special components') }}</h2>
-                            <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
-                                <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
+                            <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
+                            <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                                <DragComponentElement
+                                    v-for="component in filteredSpecialComponents"
+                                    :key="component.id || component.name"
+                                    :component="component"
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
         <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <style scoped>
-
+/* optional: styles bleiben wie gehabt */
 </style>

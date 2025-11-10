@@ -97,13 +97,20 @@ class EventListExportService extends EventExportService
                     'end_time' => $desiredEvent->getAttribute('end_time')->format('H:i'),
                     'event_type' => $desiredEvent->getAttribute('event_type')->getAttribute('name'),
                     'event_name' => $desiredEvent->getAttribute('name'),
+                    'event_description' => $desiredEvent->getAttribute('description') ?? '',
                     'event_status' => $this->eventSettingsService->get('enable_status', false) ?
                         $desiredEvent->getAttribute('eventStatus')?->getAttribute('name') ?? '' :
                         '',
                     'room' => $desiredEvent->getAttribute('room')?->getAttribute('name') ?? '',
-                    'artists',
-                    'project_name',
-                    'project_team',
+                    'artists' => $project ?
+                        $this->aggregateDesiredProjectDataBy($column, $project) :
+                        '',
+                    'project_name' => $project ?
+                        $this->aggregateDesiredProjectDataBy($column, $project) :
+                        '',
+                    'project_team' => $project ?
+                        $this->aggregateDesiredProjectDataBy($column, $project) :
+                        '',
                     'project_properties' => $project ?
                         $this->aggregateDesiredProjectDataBy($column, $project) :
                         '',

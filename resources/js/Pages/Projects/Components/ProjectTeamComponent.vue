@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <h2 class=" xWhiteBold">{{ $t('Project team') }}</h2>
+            <BasePageTitle title="Project team" :white-text="inSidebar" />
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
                       v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
@@ -74,6 +74,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default defineComponent({
     mixins: [
@@ -81,6 +82,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        BasePageTitle,
         ToolTipDefault,
         UserPopoverTooltip,
         ProjectEditTeamModal,

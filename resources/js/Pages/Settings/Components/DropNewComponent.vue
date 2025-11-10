@@ -1,5 +1,8 @@
 <script>
 import SelectTabsModal from "@/Pages/Settings/Components/SelectTabsModal.vue";
+import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
+
+const dragBus = EventListenerForDragging();
 
 export default {
     name: "DropNewComponent",
@@ -11,7 +14,15 @@ export default {
             dropOver: false,
             showSelectTabsModal: false,
             componentData: null,
+            listeners: null,
+            isDragging: dragBus.isDragging,
         }
+    },
+    mounted() {
+        this.listeners = dragBus.addEventListenerForDraggingStart();
+    },
+    beforeUnmount() {
+        dragBus.removeEventListenerForDraggingStart(this.listeners);
     },
     methods: {
         onDragOver(event) {
@@ -82,8 +93,24 @@ export default {
 </script>
 
 <template>
-    <div class="flex items-center h-4 min-h-4 hover:bg-gray-50/40 rounded cursor-pointer" @dragleave="dropOver = false" @dragover="onDragOver" @drop="onDrop">
-        <span v-if="dropOver" class="text-xs text-gray-300 w-full flex items-center justify-center pointer-events-none">
+    <div
+        @dragleave="dropOver = false"
+        @dragover="onDragOver"
+        @drop="onDrop"
+        :class="[
+            'flex items-center h-4 min-h-4 rounded cursor-pointer transition',
+            isDragging ? 'border-2 border-dashed' : 'hover:bg-gray-50/40',
+            isDragging && dropOver
+                ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30'
+                : (isDragging ? 'border-zinc-300 bg-zinc-50/40' : '')
+        ]"
+        :aria-hidden="!isDragging"
+        :aria-dropeffect="isDragging ? 'copy' : undefined"
+    >
+        <div v-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-xs text-zinc-600 pointer-events-none">
+            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">Komponente hier ablegen</span>
+        </div>
+        <span v-else-if="dropOver" class="text-xs text-gray-300 w-full flex items-center justify-center pointer-events-none">
             Zum hinzufügen hier loslassen
         </span>
     </div>

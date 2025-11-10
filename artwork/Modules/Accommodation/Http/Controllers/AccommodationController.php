@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Http\Requests\StoreAccommodationRequest;
 use Artwork\Modules\Accommodation\Http\Requests\UpdateAccommodationRequest;
 use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Accommodation\Services\AccommodationService;
 use Inertia\Inertia;
 
@@ -23,7 +24,8 @@ class AccommodationController extends Controller
     public function index()
     {
         return Inertia::render('Accommodation/index', [
-            'accommodations' => Accommodation::all(),
+            'accommodations' => Accommodation::with(['roomTypes'])->get(),
+            'roomTypes' => AccommodationRoomType::all(),
         ]);
     }
 
@@ -42,7 +44,20 @@ class AccommodationController extends Controller
     {
         $accommodation = $this->accommodationService->store($request->validated());
 
-        return redirect()->route('accommodation.show', $accommodation);
+        // Handle room types with costs
+        $roomTypes = $request->input('room_types', []);
+        $roomTypeCosts = $request->input('room_type_costs', []);
+
+        $syncData = [];
+        foreach ($roomTypes as $roomTypeId) {
+            $syncData[$roomTypeId] = [
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+            ];
+        }
+
+        $accommodation->roomTypes()->sync($syncData);
+
+        return redirect()->route('accommodation.index');
     }
 
     /**
@@ -51,7 +66,10 @@ class AccommodationController extends Controller
     public function show(Accommodation $accommodation)
     {
         return Inertia::render('Accommodation/Show', [
-            'accommodation' => $accommodation->load(['contacts']),
+            'accommodation' => $accommodation->load(['contacts', 'roomTypes' => function($query) {
+                $query->withPivot('cost_per_night');
+            }]),
+            'roomTypes' => AccommodationRoomType::all(),
         ]);
     }
 
@@ -69,6 +87,22 @@ class AccommodationController extends Controller
     public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
     {
         $accommodation = $this->accommodationService->update($accommodation, $request->validated());
+
+        // Handle room types with costs
+        $roomTypes = $request->input('room_types', []);
+        $roomTypeCosts = $request->input('room_type_costs', []);
+
+        $syncData = [];
+        foreach ($roomTypes as $roomTypeId) {
+            $syncData[$roomTypeId] = [
+                'cost_per_night' => $roomTypeCosts[$roomTypeId] ?? 0.00
+            ];
+        }
+
+        $accommodation->roomTypes()->sync($syncData);
+
+
+        return redirect()->route('accommodation.show', $accommodation);
     }
 
     /**

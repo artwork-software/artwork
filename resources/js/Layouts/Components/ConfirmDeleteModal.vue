@@ -1,19 +1,12 @@
 <template>
 
-    <BaseModal @closed="closeModal(false)">
-        <div class="relative">
-            <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
-                {{ title }}
-            </div>
-
-
-            <BaseAlertComponent :message="description" type="error" />
-        </div>
+    <ArtworkBaseModal @close="closeModal(false)" :title="title" :description="description">
         <div>
             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
                 <FormButton class="bg-red-500 hover:bg-red-600"
                     @click="deleteElement(true)"
-                    :text="buttonText" />
+                    :text="buttonText"
+                    :disabled="loading" />
                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">
                     {{ $t('No, not really') }}
                 </p>
@@ -21,7 +14,8 @@
             <div v-if="isSeriesDelete" class="flex justify-between mt-5 items-center pr-4">
                 <FormButton
                     @click="deleteElement(true)"
-                    :text="buttonText" />
+                    :text="buttonText"
+                    :disabled="loading" />
                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete(true)">
                     {{ $t('Delete series entry completely') }}
                 </p>
@@ -31,11 +25,12 @@
                 <FormButton
                     type="button"
                     @click="deleteElement(true)"
-                    :text="buttonText" />
+                    :text="buttonText"
+                    :disabled="loading" />
 
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -46,11 +41,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: "ConfirmDeleteModal",
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
         BaseAlertComponent,
         BaseModal,
         FormButton,
@@ -66,7 +63,7 @@ export default {
             buttonText: this.button ? this.button : this.$t('Delete')
         }
     },
-    props: ['title', 'description', 'button', 'is_budget', 'isSeriesDelete'],
+    props: ['title', 'description', 'button', 'is_budget', 'isSeriesDelete', 'loading'],
     emits: ['closed', 'delete', 'complete_delete'],
     methods: {
         closeModal(bool){

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\DTOs\InventoryArticleDTO;
 use Artwork\Modules\Inventory\DTOs\PaginatedInventoryArticleDTO;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryCategory;
+use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +24,9 @@ class InventoryArticleApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 15);
+        if ($perPage > 100) {
+            $perPage = 100;
+        }
         $search = $request->input('search', '');
         $categoryId = $request->input('category_id');
         $subCategoryId = $request->input('subcategory_id');
@@ -30,16 +35,15 @@ class InventoryArticleApiController extends Controller
         $subCategory = null;
 
         if ($categoryId) {
-            $category = \Artwork\Modules\Inventory\Models\InventoryCategory::find($categoryId);
+            $category = InventoryCategory::find($categoryId);
         }
 
         if ($subCategoryId) {
-            $subCategory = \Artwork\Modules\Inventory\Models\InventorySubCategory::find($subCategoryId);
+            $subCategory = InventorySubCategory::find($subCategoryId);
         }
 
-        $articles = $this->articleService->getArticleList($category, $subCategory, $search);
+        $articles = $this->articleService->getArticleList($category, $subCategory, $search, $perPage);
 
-        // Transform the paginated data to DTOs
         $paginatedDTO = PaginatedInventoryArticleDTO::fromPaginator($articles);
 
         return response()->json($paginatedDTO->toArray());

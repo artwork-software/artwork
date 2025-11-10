@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
+use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
@@ -23,6 +24,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 readonly class CalendarDataService
 {
@@ -32,152 +35,76 @@ readonly class CalendarDataService
         private FilterService $filterService,
         private UserService $userService,
         private ProjectService $projectService,
-    ) {
-    }
+    ) {}
 
-    /**
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @param UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter
-     * @param Project|null $project
-     * @param Room|null $room
-     * @param bool|null $desiresInventorySchedulingResource
-     * @return array<string, mixed>
-     */
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarData(
-        Carbon $startDate,
-        Carbon $endDate,
-        UserFilter|null $calendarFilter,
-        ?Project $project = null,
-        ?Room $room = null,
-        ?bool $desiresInventorySchedulingResource = null
+        $startDate,
+        $endDate,
+        $calendarFilter,
+        $project = null,
+        $room = null,
+        $desiresInventorySchedulingResource = null,
+        User $user
     ): array {
-        $periodArray = [];
-        $user = $this->userService->getAuthUser();
-        foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
-            $holidays = Holiday::where(function ($query) use ($period): void {
-                $query->where(function ($q) use ($period): void {
-                    $q->whereDate('date', '<=', $period->format('Y-m-d'))
-                        ->whereDate('end_date', '>=', $period->format('Y-m-d'));
-                })->orWhere(function ($q) use ($period): void {
-                    $q->where('yearly', true)
-                        ->whereMonth('date', $period->month)
-                        ->whereDay('end_date', $period->day);
-                });
-            })->with('subdivisions')->get();
-            $periodArray[] = [
-                'day' => $period->format('d.m.'),
-                'day_string' => $period->shortDayName,
-                'is_weekend' => $period->isWeekend(),
-                'full_day' => $period->format('d.m.Y'),
-                'without_format' => $period->format('Y-m-d'),
-                'full_day_display' => $period->format('d.m.y'),
-                'short_day' => $period->format('d.m'),
-                'week_number' => $period->weekOfYear,
-                'is_monday' => $period->isMonday(),
-                'month_number' => $period->month,
-                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
-                'holidays' => $holidays->map(function ($holiday) {
-                    return [
-                        'name' => $holiday->name,
-                        'type' => $holiday->type,
-                        'start_date' => $holiday->startDate,
-                        'end_date' => $holiday->endDate,
-                        'color' => $holiday->color,
-                        'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
-                    ];
-                }),
-                //'hours_of_day' => $user->getAttribute('daily_view') ? range(0, 23) : [
-            ];
-        }
 
-        $months = [];
-        foreach ($calendarPeriod as $period) {
-            $month = $period->format('m.Y');
-            if (!array_key_exists($month, $months)) {
-                $months[$month] = [
-                    'first_day_in_period' => $period->format('Y-m-d'),
-                    'month' => $period->monthName,
-                    'year' => $period->format('y'),
-                ];
-            }
-        }
+        // Create the calendar period
+        $period = $this->createCalendarPeriodDto($startDate, $endDate, $user, true);
 
-        $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
-        $calendarType = $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ? 'daily' : 'individual';
-        $selectedDate = $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
-            $startDate->format('Y-m-d') :
-            null;
-        $roomsWithEvents = empty($room) ?
-            $this->eventCollectionService->collectEventsForRooms(
-                roomsWithEvents: $this->roomRepository->getFilteredRoomsBy(
-                    $calendarFilter?->room_ids,
-                    $calendarFilter?->room_attribute_ids,
-                    $calendarFilter?->area_ids,
-                    $calendarFilter?->room_category_ids,
-                ),
-                calendarPeriod: $calendarPeriod,
-                calendarFilter: $calendarFilter,
-                project: $project,
-                desiresInventorySchedulingResource: $desiresInventorySchedulingResource
-            ) :
-            $this->eventCollectionService->collectEventsForRoom(
-                room: $room,
-                calendarPeriod: $calendarPeriod,
-                calendarFilter: $calendarFilter,
-                project: $project
+        // Create calendar period for event collection
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+
+        // Get filtered rooms
+        $rooms = [];
+        if ($room) {
+            // If specific room is provided, use only that room
+            $rooms = [$room];
+        } else {
+            // Get filtered rooms based on calendar filter
+            $filteredRooms = $this->roomRepository->getFilteredRoomsBy(
+                $calendarFilter->room_ids,
+                $calendarFilter->room_attribute_ids,
+                $calendarFilter->area_ids,
+                $calendarFilter->room_category_ids
             );
-        $eventsWithoutRoom = empty($room) ?
-            CalendarEventResource::collection(
-                $this->eventCollectionService->getEventsWithoutRoom(
-                    $project,
-                    [
-                        'room',
-                        'creator',
-                        'project',
-                        'project.managerUsers',
-                        'project.state',
-                        'shifts',
-                        'shifts.craft',
-                        'shifts.users',
-                        'shifts.freelancer',
-                        'shifts.serviceProvider',
-                        'shifts.shiftsQualifications',
-                        'subEvents.event',
-                        'subEvents.event.room'
-                    ]
-                )
-            )->resolve() :
-            [];
+            $rooms = $filteredRooms->all();
+        }
+
+        // Collect events for rooms
+        $roomsWithEvents = $this->eventCollectionService->collectEventsForRooms(
+            $rooms,
+            $calendarPeriod,
+            $calendarFilter
+        )->toArray();
+
+        // Get events without room
+        $eventsWithoutRoom = $this->eventCollectionService->getEventsWithoutRoom(
+            $project
+        )->toArray();
+
+        // Get filter options and personal filters
         $filterOptions = $this->filterService->getCalendarFilterDefinitions();
         $personalFilters = $this->filterService->getPersonalFilter();
 
+        // convert  $period dto to array
+        $period = array_map(fn($d) => is_array($d) ? $d : (array)$d, $period);
+
+
         return [
-            'days' => $periodArray,
-            'months' => $months,
-            'dateValue' => $dateValue,
-            'calendarType' => $calendarType,
-            'selectedDate' => $selectedDate,
+            'days' => $period,
+            'dateValue' => [
+                'start' => $startDate->format('Y-m-d'),
+                'end' => $endDate->format('Y-m-d')
+            ],
+            'calendarType' => $room ? 'room' : 'calendar',
+            'selectedDate' => $startDate->format('Y-m-d'),
             'roomsWithEvents' => $roomsWithEvents,
             'eventsWithoutRoom' => $eventsWithoutRoom,
             'filterOptions' => $filterOptions,
             'personalFilters' => $personalFilters,
-            'user_filters' => $calendarFilter,
+            'user_filters' => $calendarFilter
         ];
     }
 
-
-    /**
-     * @description Create calendar period DTO
-     * @param $startDate
-     * @param $endDate
-     * @param User $user
-     * @param bool $extraRow
-     * @return array
-     */
     public function createCalendarPeriodDto($startDate, $endDate, User $user, bool $extraRow = true): array
     {
         if (!$startDate || !$endDate) {
@@ -185,29 +112,22 @@ readonly class CalendarDataService
         }
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $holidays = collect($this->getHolidaysForPeriod($startDate, $endDate)); // Optimierung: Alle Feiertage einmal abrufen
+
+        // Einmal alle Feiertage holen (per-day Filter lokal)
+        $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
+            ->groupBy(fn(CalendarHolidayDTO $h) => $h->date);
 
         $hoursOfDay = $user->getAttribute('daily_view')
-            ? array_map(fn($hour) => sprintf('%02d:00', $hour), range(0, 23))
+            ? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23))
             : [];
 
         $periodArray = [];
-
         foreach ($calendarPeriod as $period) {
-            $isMonday = $period->isMonday();
-            $isSunday = $period->isSunday();
-            $isFirstDayOfMonth = $period->isSameDay($period->copy()->firstOfMonth());
-            $weekNumber = $period->weekOfYear;
-            $monthNumber = $period->month;
-
-            $holidayForDay = $holidays->where('date', $period->toDateString())->values() ?? [];
-            if ($extraRow) {
-                if ($isMonday) {
-                    $periodArray[] = [
-                        'isExtraRow' => true,
-                        'weekNumber' => $period->weekOfYear,
-                    ];
-                }
+            if ($extraRow && $period->isMonday()) {
+                $periodArray[] = [
+                    'isExtraRow'  => true,
+                    'weekNumber'  => $period->weekOfYear,
+                ];
             }
 
             $periodArray[] = new CalendarPeriodDTO(
@@ -218,13 +138,13 @@ readonly class CalendarDataService
                 shortDay: $period->format('d.m'),
                 withoutFormat: $period->toDateString(),
                 fullDayDisplay: $period->format('d.m.y'),
-                weekNumber: $weekNumber,
-                isMonday: $isMonday,
-                monthNumber: $monthNumber,
-                isSunday: $isSunday,
-                isFirstDayOfMonth: $isFirstDayOfMonth,
-                addWeekSeparator: $isSunday,
-                holidays: $holidayForDay,
+                weekNumber: $period->weekOfYear,
+                isMonday: $period->isMonday(),
+                monthNumber: $period->month,
+                isSunday: $period->isSunday(),
+                isFirstDayOfMonth: $period->isSameDay($period->copy()->firstOfMonth()),
+                addWeekSeparator: $period->isSunday(),
+                holidays: $holidaysByDate->get($period->toDateString(), collect())->values(),
                 hoursOfDay: $hoursOfDay,
                 isExtraRow: false,
             );
@@ -233,39 +153,12 @@ readonly class CalendarDataService
         return $periodArray;
     }
 
-
-
     /**
-     * @description Get holidays for period
-     * @param $period
-     * @return SupportCollection
+     * Optimierte Room-Liste:
+     * - nur benötigte Spalten
+     * - `withExists` liefert `has_events` ohne N+1
+     * - `with('admins')` um N+1 für Admins zu vermeiden
      */
-    public function getHolidaysForPeriod($period): SupportCollection
-    {
-        return Holiday::select(['id', 'name', 'date', 'end_date', 'color', 'yearly'])
-            ->where(function (Builder $query) use ($period): void {
-                $query->where(function (Builder $q) use ($period): void {
-                    $q->whereDate('date', '<=', $period->toDateString())
-                        ->whereDate('end_date', '>=', $period->toDateString());
-                })->orWhere(function (Builder $q) use ($period): void {
-                    $q->where('yearly', true)
-                        ->whereMonth('date', $period->month)
-                        ->whereDay('end_date', $period->day);
-                });
-            })
-            ->with(['subdivisions' => function ($query): void {
-                $query->select('name');
-            }])
-            ->get()
-            ->transform(fn($holiday) => new CalendarHolidayDTO(
-                name: $holiday->name,
-                date: $holiday->date->toDateString(),
-                end_date: $holiday->end_date->toDateString(),
-                color: $holiday->color,
-                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
-            ));
-    }
-
     public function getFilteredRooms(UserFilter $filter, $userCalendarSettings, $startDate, $endDate)
     {
         $userCalendarFilter = $filter;
@@ -281,24 +174,24 @@ readonly class CalendarDataService
                 ): void {
                     $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate): void {
                         $eventQuery->selectRaw(1)
-                        ->from('events')
-                        ->whereColumn('events.room_id', 'rooms.id')
-                        ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
-                            $q->whereIn('events.event_type_id', $filter->event_type_ids);
-                        })
-                        ->where(function ($q) use ($startDate, $endDate): void {
-                            $q->where(function ($q) use ($startDate, $endDate): void {
-                                $q->whereBetween('start_time', [$startDate, $endDate])
-                                    ->orWhereBetween('end_time', [$startDate, $endDate]);
-                            })->orWhere(function ($q) use ($startDate, $endDate): void {
-                                $q->where('start_time', '<=', $startDate)
-                                    ->where('end_time', '>=', $endDate);
+                            ->from('events')
+                            ->whereColumn('events.room_id', 'rooms.id')
+                            ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                                $q->whereIn('events.event_type_id', $filter->event_type_ids);
+                            })
+                            ->where(function ($q) use ($startDate, $endDate): void {
+                                $q->where(function ($q) use ($startDate, $endDate): void {
+                                    $q->whereBetween('start_time', [$startDate, $endDate])
+                                        ->orWhereBetween('end_time', [$startDate, $endDate]);
+                                })->orWhere(function ($q) use ($startDate, $endDate): void {
+                                    $q->where('start_time', '<=', $startDate)
+                                        ->where('end_time', '>=', $endDate);
+                                });
                             });
-                        });
                     });
                 }
             )
-            ->orderBy('order')
+            ->orderBy('position')
             ->get();
 
         // Filter out temporary rooms that don't overlap with the displayed time period
@@ -320,50 +213,33 @@ readonly class CalendarDataService
         ));
     }
 
-    /**
-     * @param UserCalendarSettings $userCalendarSettings
-     * @param UserFilter $userCalendarFilter
-     * @param Project|null $project
-     * @return array<\Carbon\Carbon>
-     */
     public function getCalendarDateRange(
         UserCalendarSettings $userCalendarSettings,
         UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
-        $useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period');
 
-        // If project mode is turned off, always use the user's calendar filter dates
-        if (!$useProjectTimePeriod) {
-            // Clear the project parameter to ensure no filtering by project happens
-            $project = null;
+        if (!$userCalendarSettings->getAttribute('use_project_time_period')) {
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
 
-        // Only use project time period if project mode is enabled
-        if (!$project && $useProjectTimePeriod) {
+        if (!$project) {
             $project = $this->projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
         }
 
         return $this->getProjectDateRange($project, $today);
     }
 
-    /**
-     * @param $project
-     * @param Carbon $today
-     * @return array<\Carbon\Carbon>
-     */
-    protected function getProjectDateRange($project, Carbon $today): array
+    public function getProjectDateRange($project, Carbon $today): array
     {
         if (!$project) {
             return [$today->startOfDay(), $today->endOfDay()];
         }
 
-        $firstEvent = $this->projectService->getFirstEventInProject($project);
+        $firstEvent  = $this->projectService->getFirstEventInProject($project);
         $latestEvent = $this->projectService->getLatestEndingEventInProject($project);
 
-        // For events with specific start and end times, add a day to ensure the last day is included
         $endDate = $latestEvent ? $latestEvent->getAttribute('end_time')->copy()->endOfDay() : $today->endOfDay();
 
         return [
@@ -372,24 +248,130 @@ readonly class CalendarDataService
         ];
     }
 
-    /**
-     * Check if two date ranges overlap
-     *
-     * @param \Carbon\Carbon|null $start1 Start date of first range
-     * @param \Carbon\Carbon|null $end1 End date of first range
-     * @param \Carbon\Carbon|null $start2 Start date of second range
-     * @param \Carbon\Carbon|null $end2 End date of second range
-     * @return bool True if the ranges overlap, false otherwise
-     */
-    private function datesOverlap(?\Carbon\Carbon $start1, ?\Carbon\Carbon $end1, ?\Carbon\Carbon $start2, ?\Carbon\Carbon $end2): bool
+    private function datesOverlap(?Carbon $start1, ?Carbon $end1, ?Carbon $start2, ?Carbon $end2): bool
     {
-        // If any date is null, we can't determine overlap
         if ($start1 === null || $end1 === null || $start2 === null || $end2 === null) {
-            return true; // Default to showing the room if dates are missing
+            return true;
+        }
+        return $start1 <= $end2 && $start2 <= $end1;
+    }
+
+    /**
+     * Feiertage einmal für Range
+     * @return SupportCollection<CalendarHolidayDTO>
+     */
+    private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
+    {
+        return Holiday::select(['id','name','date','end_date','color','yearly'])
+            ->where(function (Builder $q) use ($start, $end) {
+                $q->whereBetween('date',     [$start->toDateString(), $end->toDateString()])
+                    ->orWhereBetween('end_date',[$start->toDateString(), $end->toDateString()])
+                    ->orWhere(function (Builder $nested) use ($start, $end) {
+                        $nested->where('date', '<=', $start->toDateString())
+                            ->where('end_date', '>=', $end->toDateString());
+                    })
+                    ->orWhere(function (Builder $nested) use ($start, $end) {
+                        // jährliche Gedenktage
+                        $nested->where('yearly', true)
+                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
+                    });
+            })
+            ->with(['subdivisions' => fn($q) => $q->select('name')])
+            ->get()
+            ->map(fn($holiday) => new CalendarHolidayDTO(
+                name: $holiday->name,
+                date: $holiday->date->toDateString(),
+                end_date: $holiday->end_date->toDateString(),
+                color: $holiday->color,
+                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            ));
+    }
+
+    /**
+     * Blendet unbelegte Tage aus dem Kalender aus.
+     *
+     * - Ermittelt belegte Tage aus allen Räumen (mind. ein Event oder eine Schicht).
+     * - Filtert $period auf echte CalendarPeriodDTOs, deren ->fullDay belegt ist.
+     * - Reduziert und sortiert pro Raum die content-Keys in der Reihenfolge der gefilterten Perioden.
+     * - Entfernt Week-Separators/ExtraRows (die im $period als Arrays vorliegen).
+     *
+     * @param  CalendarFrontendDataDTO                 $calendarData
+     * @param  array<int, CalendarPeriodDTO|array>     $period
+     * @return array{
+     *     calendarData: CalendarFrontendDataDTO,
+     *     period: array<int, CalendarPeriodDTO>
+     * }
+     */
+    public function hideUnoccupiedDays(CalendarFrontendDataDTO $calendarData, array $period): array
+    {
+        // 1) Belegte Tage sammeln (Set aus "dd.mm.YYYY")
+        $occupiedDays = [];
+
+        foreach ($calendarData->rooms as $room) {
+            if (!isset($room['content']) || !is_array($room['content'])) {
+                continue;
+            }
+
+            foreach ($room['content'] as $dateKey => $bucket) {
+                $hasEvents = isset($bucket['events']) && !empty($bucket['events']);
+                $hasShifts = isset($bucket['shifts']) && !empty($bucket['shifts']);
+
+                if ($hasEvents || $hasShifts) {
+                    $occupiedDays[$dateKey] = true;
+                }
+            }
         }
 
-        // Check if the ranges overlap
-        // Range 1 starts before Range 2 ends AND Range 2 starts before Range 1 ends
-        return $start1 <= $end2 && $start2 <= $end1;
+        // Wenn nichts belegt ist: original zurückgeben (keine Reduktion)
+        if (empty($occupiedDays)) {
+            // zudem sicherstellen, dass period nur DTOs enthält (optional):
+            $periodDTOs = array_values(array_filter(
+                $period,
+                fn ($d) => $d instanceof CalendarPeriodDTO
+            ));
+
+            return [
+                'calendarData' => $calendarData,
+                'period'       => $periodDTOs,
+            ];
+        }
+
+        // 2) Perioden filtern: nur echte DTOs, deren ->fullDay im belegten Set liegt
+        $filteredPeriod = array_values(array_filter(
+            $period,
+            static function ($d) use ($occupiedDays) {
+                if (!($d instanceof CalendarPeriodDTO)) {
+                    return false; // Arrays (Week-Separators/ExtraRows) raus
+                }
+                return isset($occupiedDays[$d->fullDay]);
+            }
+        ));
+
+        // 3) Räume-Content auf belegte Tage reduzieren & in Perioden-Reihenfolge sortieren
+        $orderedKeys = array_map(static fn (CalendarPeriodDTO $p) => $p->fullDay, $filteredPeriod);
+
+        foreach ($calendarData->rooms as &$room) {
+            if (!isset($room['content']) || !is_array($room['content'])) {
+                continue;
+            }
+
+            // a) nur belegte Keys behalten
+            $room['content'] = array_intersect_key($room['content'], $occupiedDays);
+
+            // b) auf Reihenfolge der gefilterten Perioden bringen
+            $ordered = [];
+            foreach ($orderedKeys as $key) {
+                if (isset($room['content'][$key])) {
+                    $ordered[$key] = $room['content'][$key];
+                }
+            }
+            $room['content'] = $ordered;
+        }
+        unset($room);
+
+        return [
+            'calendarData' => $calendarData,
+            'period'       => $filteredPeriod,
+        ];
     }
 }

@@ -1,23 +1,14 @@
 <template>
-    <AppLayout >
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1 my-6">{{ $t('Print Layout Settings') }}</h2>
-                <div class="xsLight">
-                    {{ $t('Here you can manage the print layouts for your projects. You can add, edit and delete print layouts. You can also set the default print layout for your projects.') }}
-                </div>
-            </div>
-
-            <ProjectTabs />
-
-
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
+    <ProjectSettingsHeader :title="$t('Print Layout Settings')" :description="$t('Here you can manage the print layouts for your projects. You can add, edit and delete print layouts. You can also set the default print layout for your projects.')">
+        <template #actions>
+            <button class="ui-button-add" @click="showCreateOrUpdateModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Create print layout') }}
+            </button>
+        </template>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 <!-- Tab components -->
                 <div class="w-full col-span-1">
-                    <div class="flex justify-end mb-5">
-                        <GlassyIconButton icon="IconPlus" @click="showCreateOrUpdateModal = true" :text="$t('Create tab')" />
-                    </div>
 
 
                     <div class="card white p-5">
@@ -62,21 +53,18 @@
                     </div>
                 </div>
             </div>
-        </div>
-
         <CreateOrUpdateProjectPrintLayoutModal
             v-if="showCreateOrUpdateModal"
             @close="showCreateOrUpdateModal = false"
         />
-
-    </AppLayout>
+    </ProjectSettingsHeader>
 </template>
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
-import {IconCircleX, IconSearch} from "@tabler/icons-vue";
+import {IconPlus} from "@tabler/icons-vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {computed, ref} from "vue";
 import CreateOrUpdateProjectPrintLayoutModal from "@/Pages/Settings/ProjectPrintLayout/Components/CreateOrUpdateProjectPrintLayoutModal.vue";

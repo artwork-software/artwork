@@ -10,38 +10,54 @@
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
                             <span class="sr-only">{{ $t('Dismiss') }}</span>
-                            <component is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
                         </button>
                     </div>
                 </div>
             </transition>
             <!-- topbar with date range selector -->
             <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
-                <div class="flex items-center px-5 gap-x-5 justify-between">
-                    <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+                <div class="flex items-center pr-5 gap-x-5 justify-between">
+                    <div class="flex items-center gap-x-4">
+                        <!-- Date Shortcuts - 3 vertical icons -->
+                        <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+
+                        <div class="flex gap-x-1 mx-2">
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Today')"
+                                :icon="IconCalendar"
+                                icon-size="h-5 w-5"
+                                @click="jumpToToday"
+                                classesButton="ui-button"
+                            />
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Current week')"
+                                :icon="IconCalendarWeek"
+                                icon-size="h-5 w-5"
+                                @click="jumpToCurrentWeek"
+                                classesButton="ui-button"
+                            />
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('Current month')"
+                                :icon="IconCalendarMonth"
+                                icon-size="h-5 w-5"
+                                @click="jumpToCurrentMonth"
+                                classesButton="ui-button"
+                            />
+                        </div>
+                    </div>
 
                     <div class="flex items-center gap-x-5 ">
-                        <Switch @click="changeDailyViewMode" v-model="dailyViewMode" :class="[dailyViewMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                        <span :class="[dailyViewMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                            <span :class="[dailyViewMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-40', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <ToolTipComponent
-                                    icon="IconCalendarWeek"
-                                    icon-size="h-4 w-4"
-                                    :tooltip-text="$t('Daily view')"
-                                    direction="bottom"
-                                />
-                            </span>
-                            <span :class="[dailyViewMode ? 'opacity-100 duration-200 ease-in z-40' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                <ToolTipComponent
-                                    icon="IconCalendarWeek"
-                                    icon-size="h-4 w-4"
-                                    :tooltip-text="$t('Daily view')"
-                                    direction="bottom"
-                                />
-                            </span>
-                        </span>
-                        </Switch>
-
+                        <SwitchIconTooltip
+                            v-model="dailyViewMode"
+                            :tooltip-text="$t('Daily view')"
+                            size="md"
+                            @change="changeDailyViewMode"
+                            :icon="IconCalendarWeek"
+                        />
                         <!--<ShiftPlanFilter
                             :filter-options="filterOptions"
                             :personal-filters="personalFilters"
@@ -55,6 +71,8 @@
                             :crafts="crafts"
                             filter-type="shift_filter"
                         />
+
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
             </div>
@@ -68,7 +86,7 @@
                             {{ day.dayString }}, {{ day.fullDay }}
                         </div>
                     </div>
-                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlan">
+                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlanCopy">
                         <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
                             <!-- Raumnamen von unten nach oben -->
                             <div :key="room.roomName" class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
@@ -94,7 +112,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No events for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Event')" icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
+                                            <BaseUIButton :label="$t('Add Event')" is-add-button :icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                     <div class="card white p-5 text-xs font-lexend col-span-2">
@@ -107,7 +125,7 @@
                                             <div class="text-gray-300 text-center">{{ $t('No shifts for this day') }}</div>
                                         </div>
                                         <div class="mt-5">
-                                            <GlassyIconButton :text="$t('Add Shift')" icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
+                                            <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
                                         </div>
                                     </div>
                                 </div>
@@ -174,9 +192,19 @@ import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
-import { IconAlertSquareRounded } from "@tabler/icons-vue";
+import {
+    IconAlertSquareRounded,
+    IconCalendar,
+    IconCalendarWeek,
+    IconCalendarMonth,
+    IconX,
+    IconCalendarPlus, IconCalendarUser
+} from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 
 const props = defineProps({
     days: {
@@ -290,7 +318,6 @@ const eventComponentClosed = () => {
 };
 
 const  changeDailyViewMode = () => {
-    dailyViewMode.value = !dailyViewMode.value;
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
         daily_view: dailyViewMode.value
     }, {
@@ -313,6 +340,99 @@ const filterShiftsByCraft = (shifts) => {
 
     // If no craft_ids filter is set, return all shifts
     return shifts;
+};
+
+// Daily view mode management
+const changeDailyViewModeValue = (newValue) => {
+    dailyViewMode.value = newValue;
+    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+        daily_view: dailyViewMode.value
+    }, {
+        preserveScroll: false,
+        preserveState: false
+    });
+};
+
+// Shortcut functions for the three icons (adapted from ShiftPlanFunctionBar)
+const jumpToToday = () => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Switch to daily mode if not already in daily mode
+    if (!dailyViewMode.value) {
+        changeDailyViewModeValue(true);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: today,
+                end_date: today,
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in daily mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: today,
+            end_date: today,
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
+};
+
+const jumpToCurrentWeek = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    const currentWeekEnd = new Date(today);
+
+    // Calculate start of week (Monday)
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+    currentWeekStart.setDate(today.getDate() - daysToMonday);
+
+    // Calculate end of week (Sunday)
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    currentWeekEnd.setDate(today.getDate() + daysToSunday);
+
+    router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+        start_date: currentWeekStart.toISOString().slice(0, 10),
+        end_date: currentWeekEnd.toISOString().slice(0, 10),
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    });
+};
+
+const jumpToCurrentMonth = () => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    // Switch to normal mode (not daily mode) if in daily mode (month is longer than 7 days)
+    if (dailyViewMode.value) {
+        changeDailyViewModeValue(false);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: monthStart.toISOString().slice(0, 10),
+                end_date: monthEnd.toISOString().slice(0, 10),
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in normal mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: monthStart.toISOString().slice(0, 10),
+            end_date: monthEnd.toISOString().slice(0, 10),
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
 };
 
 

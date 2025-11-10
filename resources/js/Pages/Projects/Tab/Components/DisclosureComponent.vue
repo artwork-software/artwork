@@ -6,7 +6,7 @@
                 <InfoButtonComponent :component="component" />
             </div>
             <div>
-                <component is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
+                <component :is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
             </div>
         </DisclosureButton>
         <DisclosurePanel v-show="open" class="px-4 py-2 bg-gray-50 rounded-b-lg">
@@ -88,6 +88,7 @@ import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
 import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
 import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProjectDisplayComponent.vue";
 import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
+import {IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
     data: {

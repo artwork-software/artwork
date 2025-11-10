@@ -1,9 +1,9 @@
 <template>
     <div :id="'timeline-container-' + event.id + '-' + timeLineForm.id"
-         class="flex flex-col relative h-full mb-1"
+         class="flex flex-col relative h-full mb-2"
          :class="{'cursor-pointer': can('can plan shifts') || hasAdminRole()}"
          v-if="timeLineForm.start !== null && timeLineForm.end !== null">
-        <div class="text-xs bg-neutral-300 p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
+        <div class="text-xs bg-zinc-100 border border-zinc-200 shadow-sm p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
             <div>
                 <div v-if="time.clicked" class="mb-3 mx-1">
                     <SwitchGroup as="div" class="flex items-center">
@@ -75,8 +75,8 @@
             </div>
             <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
                 <BaseMenu v-if="canEditComponent" white-menu-background has-no-offset>
-                    <BaseMenuItem white-menu-background title="Edit" @click="openCloseTimeEditor(true)" />
-                    <BaseMenuItem white-menu-background title="Delete" icon="IconTrash" @click="deleteTime" />
+                    <BaseMenuItem white-menu-background title="Edit" :icon="IconEdit" @click="openCloseTimeEditor(true)" />
+                    <BaseMenuItem white-menu-background title="Delete" :icon="IconTrash" @click="deleteTime" />
                 </BaseMenu>
             </div>
         </div>
@@ -91,7 +91,7 @@ import {usePermission} from "@/Composeables/Permission.js";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 const {hasAdminRole, can} = usePermission(usePage().props)
-import {IconCircleCheck, IconNote, IconTrash} from '@tabler/icons-vue';
+import {IconCircleCheck, IconEdit, IconNote, IconTrash} from '@tabler/icons-vue';
 import timeline from "@/Pages/Projects/Components/Timeline.vue";
 import {nextTick, ref, watch} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";

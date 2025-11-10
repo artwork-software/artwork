@@ -11,7 +11,7 @@ class UpdateInventoryArticleStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class UpdateInventoryArticleStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'color' => 'required|string|max:7',
         ];
     }
 }

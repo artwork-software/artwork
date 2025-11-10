@@ -1,70 +1,72 @@
 <template>
-    <div class="flex items-center group/tooltip" :class="noRelative ? '' : 'relative' ">
+    <div class="flex items-center group/tooltip" :class="[noRelative ? '' : 'relative']">
         <!-- Tooltip aktiv: je Richtung eigener Button mit Modifier -->
         <template v-if="!noTooltip">
-            <button
-                v-if="direction === 'top'"
-                class="focus:outline-none"
-                type="button"
-                :class="classes"
-                :disabled="disabled"
-                v-tooltip.top="tooltipBinding"
-            >
-                <component
-                    :is="icon"
-                    class="cursor-pointer"
-                    :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
-                    :stroke-width="stroke"
-                />
-            </button>
+            <div v-tooltip.top="tooltipBinding"  v-if="direction === 'top'" :class="classesButton">
+                <button
+                    class="focus:outline-none"
+                    type="button"
+                    :class="classes"
+                    :disabled="disabled"
+                >
+                    <PropertyIcon
+                        :name="icon"
+                        class="cursor-pointer"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :stroke-width="stroke"
+                        :style="iconStyle"
+                    />
+                </button>
+            </div>
 
-            <button
-                v-else-if="direction === 'bottom'"
-                class="focus:outline-none"
-                type="button"
-                :class="classes"
-                :disabled="disabled"
-                v-tooltip.bottom="tooltipBinding"
-            >
-                <component
-                    :is="icon"
-                    class="cursor-pointer"
-                    :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
-                    :stroke-width="stroke"
-                />
-            </button>
-
-            <button
-                v-else-if="direction === 'left'"
-                class="focus:outline-none"
-                type="button"
-                :class="classes"
-                :disabled="disabled"
-                v-tooltip.left="tooltipBinding"
-            >
-                <component
-                    :is="icon"
-                    class="cursor-pointer"
-                    :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
-                    :stroke-width="stroke"
-                />
-            </button>
-
-            <button
-                v-else
-                class="focus:outline-none"
-                type="button"
-                :class="classes"
-                :disabled="disabled"
-                v-tooltip.right="tooltipBinding"
-            >
-                <component
-                    :is="icon"
-                    class="cursor-pointer"
-                    :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
-                    :stroke-width="stroke"
-                />
-            </button>
+            <div v-tooltip.bottom="tooltipBinding"  v-else-if="direction === 'bottom'" :class="classesButton">
+                <button
+                    class="focus:outline-none"
+                    type="button"
+                    :class="classes"
+                    :disabled="disabled"
+                >
+                    <PropertyIcon
+                        :name="icon"
+                        class="cursor-pointer"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :stroke-width="stroke"
+                        :style="iconStyle"
+                    />
+                </button>
+            </div>
+            <div v-tooltip.left="tooltipBinding" v-else-if="direction === 'left'" :class="classesButton">
+                <button
+                    class="focus:outline-none"
+                    type="button"
+                    :class="classes"
+                    :disabled="disabled"
+                >
+                    <PropertyIcon
+                        :name="icon"
+                        class="cursor-pointer"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :stroke-width="stroke"
+                        :style="iconStyle"
+                    />
+                </button>
+            </div>
+            <div v-tooltip.right="tooltipBinding" v-else :class="classesButton">
+                <button
+                    class="focus:outline-none"
+                    type="button"
+                    :class="classes"
+                    :disabled="disabled"
+                >
+                    <PropertyIcon
+                        :name="icon"
+                        class="cursor-pointer"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :stroke-width="stroke"
+                        :style="iconStyle"
+                    />
+                </button>
+            </div>
         </template>
 
         <!-- Tooltip komplett aus -->
@@ -72,21 +74,23 @@
             v-else
             class="focus:outline-none"
             type="button"
-            :class="classes"
+            :class="[classes, classesButton]"
             :disabled="disabled"
         >
-            <component
-                :is="icon"
+            <PropertyIcon
+                :name="icon"
                 class="cursor-pointer"
                 :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
                 :stroke-width="stroke"
+                :style="iconStyle"
             />
         </button>
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     direction: {
@@ -96,8 +100,14 @@ const props = defineProps({
     },
     tooltipText: { type: String, default: '' },
     classes: { type: [String, Array], default: '' },
-    icon: { type: [String, Object, Function], default: null },
+    classesButton: { type: [String, Array], default: 'mt-1' },
+    icon: {
+        // erlaubt String oder echte Komponente (Function/Object)
+        type: [String, Function, Object] as PropType<string | Component>,
+        default: null,
+    },
     iconSize: { type: String, default: 'w-6 h-6' },
+    iconStyle: { type: [String, Object], default: null },
     disabled: { type: Boolean, default: false },
     stroke: { type: [String, Number], default: '1' },
     whiteIcon: { type: Boolean, default: false },
@@ -117,8 +127,7 @@ const tooltipBinding = computed(() => ({
     disabled: props.noTooltip,
     useTranslation: props.useTranslation,
     position: props.direction, // Fallback, wenn kein Modifier genutzt wird
-    pt: {
-        text: '!bg-primary !text-primary-contrast !font-medium !text-xs !px-2 !py-1 !border !border-gray-800 !rounded-lg !shadow-lg !rounded-md !w-auto !min-w-max !max-w-xs !whitespace-nowrap',
-    },
+    appendTo: 'body', // sicherstellen, dass Overlay am Body hängt
+    class: 'aw-tooltip',
 }))
 </script>

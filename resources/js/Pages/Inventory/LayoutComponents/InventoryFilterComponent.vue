@@ -1,17 +1,16 @@
 <template>
-    <div class="select-none border-b" :class="showFilter ? 'pb-4' : ''">
+    <div class="select-none border-b border-gray-300" :class="showFilter ? 'pb-4' : ''">
         <div class="flex items-start gap-x-4 cursor-pointer hover:text-artwork-buttons-hover" @click="showFilter = !showFilter">
-            <TinyPageHeadline
+            <BasePageTitle
                 title="Filter"
-                description=""
             />
-            <component is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
+            <component :is="IconChevronDown" class="size-5 mt-0.5" :class="showFilter ? 'rotate-180 transform' : ''" />
         </div>
         <div v-if="showFilter">
-            <div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-6 gap-4">
+            <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, max-content));">
                 <div v-for="filterProperty in newFilterObject" :key="filterProperty.id">
                     <div>
-                        <label class="font-lexend text-xs mb-1">{{ filterProperty.name }}</label>
+                        <label class="font-lexend text-xs mb-1 whitespace-nowrap">{{ filterProperty.name }}</label>
                     </div>
                     <div class="flex items-center border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-blue-500" v-if="filterProperty.type !== 'selection' && filterProperty.type !== 'checkbox'">
                         <select v-model="filterProperty.operator" v-if="getAllowedFilters(filterProperty.type).length > 0" class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0">
@@ -63,7 +62,7 @@
                 <div v-if="filter.value" class="flex items-center bg-blue-50 rounded-full px-3 py-1 text-sm font-medium text-blue-700 border border-blue-100">
                     <span>{{ filter.name }}{{ isBool(filter.value) ? '' : ': ' + filter.value }}</span>
                     <button type="button" @click="removeFilter(filter)" class="ml-2 text-blue-500 hover:text-blue-700">
-                        <component is="IconX" class="size-4" />
+                        <component :is="IconX" class="size-4" />
                     </button>
                 </div>
             </div>
@@ -78,6 +77,8 @@ import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {isBool} from "@aesoper/normal-utils";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
     filterableProperties: {

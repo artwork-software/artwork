@@ -56,7 +56,7 @@ class RoomRepository extends BaseRepository
             ->unlessRoomAttributeIds($roomAttributeIds)
             ->unlessAreaIds($areaIds)
             ->unlessRoomCategoryIds($roomCategoryIds)
-            ->orderBy('order')
+            ->orderBy('position')
             ->get();
     }
 

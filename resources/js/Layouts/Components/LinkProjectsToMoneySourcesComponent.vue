@@ -1,10 +1,6 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
+    <ArtworkBaseModal @close="closeModal" v-if="true" :title="$t('Link projects')" :description="$t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')">
             <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Link projects')"
-                    :description="$t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')"
-                />
                 <!--   Heading   -->
                 <div>
                     <div class="flex w-full mt-6">
@@ -32,6 +28,12 @@
                             </transition>
                         </div>
                     </div>
+
+                    <LastedProjects
+                        :limit="10"
+                        @select="addProjectToArray"
+                    />
+
                     <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
                         {{$t('Linked projects')}}:
                     </div>
@@ -57,7 +59,7 @@
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -71,12 +73,16 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ArtworkBaseModal,
+        LastedProjects,
         BaseInput,
         TextInputComponent,
         ModalHeader,

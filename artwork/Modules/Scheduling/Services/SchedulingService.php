@@ -73,14 +73,17 @@ class SchedulingService
         );
 
         foreach ($schedulingsToNotify as $schedulings) {
-            $user = User::query()->find($schedulings->user_id);
-            if (!$user instanceof User) {
-                $this->logger->error('User with id: ' . $schedulings->user_id . ' not found.');
-                continue;
-            }
+            try {
+                $user = User::query()->find($schedulings->user_id);
+                if (!$user instanceof User) {
+                    $this->logger->error('User with id: ' . $schedulings->user_id . ' not found.');
+                    // Remove invalid scheduling to avoid repeated failures
+                    $schedulings->delete();
+                    continue;
+                }
 
-            $this->logger->debug('Attempt to send scheduling type: ' . $schedulings->type);
-            switch ($schedulings->type) {
+                $this->logger->debug('Attempt to send scheduling type: ' . $schedulings->type);
+                switch ($schedulings->type) {
                 case 'TASK_ADDED':
                     $notificationTitle = __(
                         'notification.scheduling.new_tasks',
@@ -203,11 +206,11 @@ class SchedulingService
                         1 => [
                             'type' => 'link',
                             'title' => $room ? $room->name : '',
-                            'href' => route('rooms.show', $room ? $room->id : null)
+                            'href' => $room ? route('rooms.show', $room->id) : null
                         ],
                         2 => [
                             'type' => 'string',
-                            'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                            'title' => (($event->event_type()->first()?->name) ?? '') . ', ' . $event->eventName,
                             'href' => null
                         ],
                         3 => [
@@ -321,6 +324,22 @@ class SchedulingService
                     $schedulings->id
                 )
             );
+            } catch (\Throwable $e) {
+                // Log the error and continue with next scheduling item to avoid failing the whole command
+                $this->logger->error('Failed to process scheduling item', [
+                    'scheduling_id' => $schedulings->id ?? null,
+                    'type' => $schedulings->type ?? null,
+                    'user_id' => $schedulings->user_id ?? null,
+                    'model' => $schedulings->model ?? null,
+                    'model_id' => $schedulings->model_id ?? null,
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                ]);
+
+                // Do not delete the scheduling on failure to allow retry in next run
+                // Optionally, one could implement a retry counter to prevent infinite retries
+                continue;
+            }
         }
         $this->logger->debug(__CLASS__ . ' done.');
     }

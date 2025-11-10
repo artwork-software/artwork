@@ -5,13 +5,13 @@
         <ToolTipComponent
             direction="bottom"
             :tooltip-text="$t('Display Settings')"
-            icon="IconSettings"
-            icon-size="h-7 w-7"
+            :icon="IconSettings"
+            icon-size="h-5 w-5"
             @click="showCalendarSettingsModal = true"
+            classesButton="ui-button"
         />
 
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnySettingIsActive">
-              <span class="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-blue-400 opacity-75"></span>
               <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
         </span>
     </div>
@@ -33,6 +33,7 @@
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import {IconSettings} from "@tabler/icons-vue";
 
 const props = defineProps({
     isPlanning: {
@@ -54,9 +55,9 @@ const CalendarSettingsModal = defineAsyncComponent({
 })
 
 const checkIfAnySettingIsActive = computed(() => {
-
     const settingsInShiftPlan = [
-        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes'
+        'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
+        'hide_unoccupied_days', 'hide_unoccupied_rooms'
     ]
 
     if (props.isInShiftPlan) {

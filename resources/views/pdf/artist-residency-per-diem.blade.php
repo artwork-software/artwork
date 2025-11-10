@@ -1,6 +1,8 @@
 <html lang="en">
 <head>
-    <title>Donation Log</title>
+    <title>
+        {{ __('export.per_diem_list', [], $language) }}
+    </title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
     <style>
@@ -75,7 +77,7 @@
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $artistResidency->name }}</td>
+                    <td>{{ $artistResidency?->artist?->name }}</td>
                     <td>{{ $artistResidency->formatted_dates['arrival_date'] }} {{ $artistResidency->formatted_dates['arrival_time'] }}</td>
                     <td>{{ $artistResidency->formatted_dates['departure_date'] }} {{ $artistResidency->formatted_dates['departure_time'] }}</td>
                     <td style="text-align: center">{{ $artistResidency->days }}</td>
@@ -107,6 +109,8 @@
             </tr>
         </tbody>
     </table>
+
+
 </div>
 
 

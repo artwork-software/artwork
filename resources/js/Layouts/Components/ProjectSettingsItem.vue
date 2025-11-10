@@ -1,10 +1,7 @@
 <template>
     <div class="card white p-5">
         <div class="">
-            <h2 class="headline2 my-2">{{ title }}</h2>
-            <div class="xsLight">
-                {{ description }}
-            </div>
+            <BasePageTitle :title="title" :description="description" />
         </div>
         <div class="mt-8 flex items-center w-full flex-wrap gap-x-2">
             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
@@ -16,7 +13,11 @@
 
             </div>
             <div class="">
-                <GlassyIconButton text="Save" icon="IconCheck" @click="add" :disabled="!input"/>
+                <button class="ui-button-add" @click="add" :disabled="!input">
+                    <component :is="IconCirclePlus" class="size-6" stroke-width="1"/>
+                    {{ $t('Add') }}
+                </button>
+                <!--<button text="Save" :icon="IconCheck" @click="add" :disabled="!input"/>-->
             </div>
 
         </div>
@@ -39,10 +40,13 @@ import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import {IconCheck, IconCirclePlus} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default {
     name: "ProjectSettingsItem",
     components: {
+        BasePageTitle,
         GlassyIconButton,
         BaseInput,
         TextInputComponent,
@@ -85,6 +89,8 @@ export default {
         }
     },
     methods: {
+        IconCirclePlus,
+        IconCheck,
         add() {
             this.$emit('add', this.input, this.hex_code)
             this.input = ''

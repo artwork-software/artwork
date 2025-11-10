@@ -30,15 +30,14 @@ class ExternalIssue extends Model
     protected $fillable = [
         'material_value', 'issued_by_id', 'received_by_id',
         'issue_date', 'return_date', 'return_remarks',
-        'external_name', 'external_address', 'external_email', 'external_phone', 'special_items_done'
+        'external_name', 'external_address', 'external_email', 'external_phone', 'special_items_done',
+        'name'
     ];
 
     protected $casts = [
         'material_value' => 'decimal:2',
         'issued_by_id' => 'integer',
         'received_by_id' => 'integer',
-        'issue_date' => 'date:Y-m-d',
-        'return_date' => 'date:Y-m-d',
         'special_items_done' => 'boolean',
     ];
 
@@ -87,5 +86,31 @@ class ExternalIssue extends Model
             return '';
         }
         return Carbon::parse($this->return_date)->translatedFormat('d. F Y');
+    }
+
+    public function scopeOverlapping($query, ?string $from, ?string $to)
+    {
+        return $query
+            // beide Grenzen gesetzt
+            ->when($from && $to, function ($q) use ($from, $to) {
+                $q->where(function ($qq) use ($from, $to) {
+                    $qq->whereDate('issue_date', '<=', $to)
+                        ->where(function ($qqq) use ($from) {
+                            $qqq->whereNull('return_date')
+                                ->orWhereDate('return_date', '>=', $from);
+                        });
+                });
+            })
+            // nur FROM: alles, was am/vor unendlicher Zukunft läuft & nicht vor FROM endet
+            ->when($from && !$to, function ($q) use ($from) {
+                $q->where(function ($qq) use ($from) {
+                    $qq->whereNull('return_date')
+                        ->orWhereDate('return_date', '>=', $from);
+                });
+            })
+            // nur TO: alles, was bis TO begonnen hat
+            ->when(!$from && $to, function ($q) use ($to) {
+                $q->whereDate('issue_date', '<=', $to);
+            });
     }
 }

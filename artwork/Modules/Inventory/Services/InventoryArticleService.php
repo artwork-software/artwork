@@ -57,7 +57,10 @@ class InventoryArticleService
         $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
         $query = $this->articleRepository->applyFilters($query, $filters);
 
-        return $query->paginate(Request::integer('entitiesPerPage', 50));
+        //per_page = api, entitiesPerPage = frontend
+        $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
+
+        return $query->paginate($perPage);
     }
 
     /**
@@ -101,6 +104,64 @@ class InventoryArticleService
     {
         return $this->articleRepository->count();
     }
+
+    /**
+     * Summiert Status-Zähler:
+     * - Haupt-Artikel:  pivot->value
+     * - Detail-Artikel: detailedArticleQuantities.quantity (gruppiert nach deren Status)
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getCountsByStatus($articles): array
+    {
+
+        // 1) Aggregation Haupt-Artikel (Pivot->value)
+        $main = $articles
+            ->flatMap(static fn ($article) => $article->statusValues->map(static fn ($status) => [
+                'id'    => (int) $status->id,
+                'name'  => $status->name,
+                'color' => $status->color ?? '#ccc',
+                'count' => (int) ($status->pivot->value ?? 0),
+            ]))
+            ->groupBy('id')
+            ->map(static fn ($rows) => [
+                'name'  => $rows->first()['name'],
+                'color' => $rows->first()['color'] ?? '#ccc',
+                'count' => $rows->sum('count'),
+            ]);
+
+        // 2) Aggregation Detail-Artikel (quantity pro Detail-Status)
+        $detail = $articles
+            ->flatMap(static fn ($article) => $article->detailedArticleQuantities
+                ->filter(static fn ($d) => $d->status !== null)
+                ->map(static fn ($d) => [
+                    'id'    => (int) $d->status->id,
+                    'name'  => $d->status->name,
+                    'color' => $d->status->color ?? '#ccc',
+                    'count' => (int) ($d->quantity ?? 0),
+                ])
+            )
+            ->groupBy('id')
+            ->map(static fn ($rows) => [
+                'name'  => $rows->first()['name'],
+                'color' => $rows->first()['color'] ?? '#ccc',
+                'count' => $rows->sum('count'),
+            ]);
+
+        // 3) Mergen: Haupt-Artikel + Detail-Artikel addieren
+        $merged = $main->toArray();
+        foreach ($detail as $id => $row) {
+            if (!isset($merged[$id])) {
+                $merged[$id] = ['name' => $row['name'], 'count' => 0];
+            }
+            $merged[$id]['count'] += $row['count'];
+        }
+
+        ksort($merged, SORT_NUMERIC);
+        return $merged;
+    }
+
+
 
     /**
      * Store a new inventory article with all related data

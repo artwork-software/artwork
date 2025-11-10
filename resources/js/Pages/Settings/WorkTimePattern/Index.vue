@@ -1,19 +1,11 @@
 <template>
-    <AppLayout :title="$t('Work Time Pattern')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1">{{$t('Work Time Pattern')}}</h2>
-                <div class="xsLight mt-2">
-                    {{$t('Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.')}}
-                </div>
-            </div>
-
-
-
-            <div class="flex items-center justify-between">
-                <TabComponent :tabs="tabs" use-translation/>
-                <GlassyIconButton text="Add Work Time Pattern" icon="IconPlus" @click="showCreateOrUpdateWorkTimePatternModal  = true" />
-            </div>
+    <ShiftSettingsHeader :title="$t('Work Time Pattern')">
+        <template #actions>
+            <button class="ui-button-add" @click="showCreateOrUpdateWorkTimePatternModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Add Work Time Pattern') }}
+            </button>
+        </template>
 
 
 
@@ -27,21 +19,18 @@
                     <BaseAlertComponent message="No work time patterns found. Please create a new one." type="error" use-translation />
                 </div>
             </div>
-        </div>
-
 
         <CreateOrUpdateWorkTimePatternModal
             v-if="showCreateOrUpdateWorkTimePatternModal"
             @close="showCreateOrUpdateWorkTimePatternModal = false"
         />
-
-    </AppLayout>
+    </ShiftSettingsHeader>
 </template>
 
 <script setup>
 
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import CreateOrUpdateWorkTimePatternModal
@@ -50,6 +39,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     workTimePatterns: {

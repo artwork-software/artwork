@@ -1,68 +1,118 @@
 <template>
     <div class="my-5">
-        <div v-if="vacations?.length > 0">
-            <h3 class="sDark mb-4">{{ $t('Absences') }}</h3>
-            <div v-for="vacation in vacationsWithType">
-                <SingleUserVacation :type="type" :createShowDate="createShowDate" :vacation="vacation" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
+        <!-- Absences -->
+        <div v-if="vacations?.length > 0" class="mb-6">
+            <h3 class="mb-3 text-base font-semibold text-zinc-800">
+                {{ $t('Absences') }}
+            </h3>
+            <div v-for="vacation in vacationsWithType" :key="vacationKey(vacation)">
+                <SingleUserVacation
+                    :type="type"
+                    :createShowDate="createShowDate"
+                    :vacation="vacation"
+                    :user="user"
+                    :vacationSelectCalendar="vacationSelectCalendar"
+                />
             </div>
         </div>
-        <div v-if="availabilities?.length > 0">
-            <h3 class="sDark mb-4">{{ $t('Registered availability') }}</h3>
-            <div v-for="availability in availabilitiesWithType">
-                <SingleUserVacation :type="type" :createShowDate="createShowDate" :vacation="availability" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
+
+        <!-- Registered availability -->
+        <div v-if="availabilities?.length > 0" class="mb-6">
+            <h3 class="mb-3 text-base font-semibold text-zinc-800">
+                {{ $t('Registered availability') }}
+            </h3>
+            <div v-for="availability in availabilitiesWithType" :key="availabilityKey(availability)">
+                <SingleUserVacation
+                    :type="type"
+                    :createShowDate="createShowDate"
+                    :vacation="availability"
+                    :user="user"
+                    :vacationSelectCalendar="vacationSelectCalendar"
+                />
             </div>
         </div>
-        <div v-if="availabilities?.length <= 0 && vacations <= 0">
-            <h3 class="sDark mb-4">{{ $t('Availability & absence') }}</h3>
-            <p class="text-sm text-gray-500">{{ $t('No entry has yet been made for this day.') }}</p>
+
+        <!-- Empty state -->
+        <div v-if="hasNoEntries" class="mb-6">
+            <h3 class="mb-2 text-base font-semibold text-zinc-800">
+                {{ $t('Availability & absence') }}
+            </h3>
+            <p class="text-sm text-zinc-500">
+                {{ $t('No entry has yet been made for this day.') }}
+            </p>
         </div>
     </div>
-    <div v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.auth.user.id || $can('can manage availability')" class="flex items-center gap-2"  @click="showAddEditVacationsModal = true">
-        <PlusCircleIcon class="h-5 w-5 text-white bg-[#3017AD] rounded-full cursor-pointer" />
-        <div class="underline underline-offset-1 text-[#3017AD] text-sm cursor-pointer">
-            {{ $t('Edit availability & absence') }}
-        </div>
+
+    <!-- Add / Edit trigger -->
+    <div
+        v-if="canManage"
+        class="inline-flex items-center gap-2 cursor-pointer select-none"
+        @click="showAddEditVacationsModal = true"
+    >
+        <PlusCircleIcon class="h-5 w-5 text-blue-600" />
+        <span class="text-sm text-blue-700 underline underline-offset-2">
+      {{ $t('Edit availability & absence') }}
+    </span>
     </div>
-    <AddEditVacationsModal :createShowDate="createShowDate" :type="type" v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
+
+    <!-- Modal -->
+    <AddEditVacationsModal
+        v-if="showAddEditVacationsModal"
+        :createShowDate="createShowDate"
+        :type="type"
+        :user="user"
+        :vacationSelectCalendar="vacationSelectCalendar"
+        :selectedDate="showVacationsAndAvailabilitiesDate"
+        @closed="showAddEditVacationsModal = false"
+    />
 </template>
 
-<script>
-import {defineComponent} from 'vue'
-import {PlusCircleIcon} from "@heroicons/vue/outline";
-import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
-import SingleUserVacation from "@/Pages/Users/Components/SingleUserVacation.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import {usePage} from "@inertiajs/vue3";
-
-export default defineComponent({
-    name: "UserVacations",
-    methods: {usePage},
-    mixins: [Permissions],
-    components: {
-        SingleUserVacation,
-        AddEditVacationsModal,
-        PlusCircleIcon
-    },
-    props: ['user', 'vacations','type', 'vacationSelectCalendar', 'dateToShow', 'createShowDate', 'availabilities'],
-    data(){
-        return {
-            showAddEditVacationsModal: false
-        }
-    },
-    computed: {
-        // add value type to all vacations and return them
-        vacationsWithType(){
-            return this.vacations.map(vacation => {
-                vacation.type = 'vacation'
-                return vacation
-            })
-        },
-        availabilitiesWithType(){
-            return this.availabilities.map(availability => {
-                availability.type = 'available'
-                return availability
-            })
-        }
-    },
+<script setup>
+import { computed, ref, getCurrentInstance } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import { PlusCircleIcon } from '@heroicons/vue/outline'
+import AddEditVacationsModal from '@/Pages/Users/Components/AddEditVacationsModal.vue'
+import SingleUserVacation from '@/Pages/Users/Components/SingleUserVacation.vue'
+import { can, is } from 'laravel-permission-to-vuejs'
+// Props unverändert
+const props = defineProps({
+    user: { type: Object, required: true },
+    vacations: { type: Array, default: () => [] },
+    type: { type: String, default: '' },
+    vacationSelectCalendar: { type: [Boolean, Array], default: false },
+    dateToShow: { type: Array, default: () => [] },
+    createShowDate: { type: Array, default: [] },
+    availabilities: { type: Array, default: () => [] },
+    showVacationsAndAvailabilitiesDate: { type: String, default: '' },
 })
+
+const showAddEditVacationsModal = ref(false)
+
+// Schlüssel (stabil) für v-for
+const vacationKey = (v) => v?.id ?? `${v?.date_casted}-${v?.start_time}-${v?.end_time}-v`
+const availabilityKey = (a) => a?.id ?? `${a?.date_casted}-${a?.start_time}-${a?.end_time}-a`
+
+// Ursprüngliche Computeds: Typen anreichern (ohne Original zu mutieren)
+const vacationsWithType = computed(() =>
+    (props.vacations || []).map(v => ({ ...v, type: 'vacation' }))
+)
+const availabilitiesWithType = computed(() =>
+    (props.availabilities || []).map(a => ({ ...a, type: 'available' }))
+)
+
+const hasNoEntries = computed(
+    () => (!props.availabilities || props.availabilities.length <= 0)
+        && (!props.vacations || props.vacations.length <= 0)
+)
+
+// Berechtigungen: $can & hasAdminRole aus globalem Kontext (wie vorher)
+const { proxy } = getCurrentInstance()
+const page = usePage()
+
+const canManage = computed(() =>
+    can('can manage workers') ||
+    is('artwork admin') ||
+    props.user?.id === page.props?.auth?.user?.id ||
+    can('can manage availability')
+)
 </script>

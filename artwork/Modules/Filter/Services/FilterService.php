@@ -65,6 +65,7 @@ class FilterService
                     'id' => $room->getAttribute('id'),
                     'name' => $room->getAttribute('name'),
                     'label' => $room->getAttribute('name'),
+                    'relevant_for_disposition' => (bool) $room->getAttribute('relevant_for_disposition'),
                 ]),
             'craft_ids' => $this->map($crafts),
         ];

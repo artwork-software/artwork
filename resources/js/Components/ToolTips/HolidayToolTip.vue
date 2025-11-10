@@ -3,7 +3,7 @@
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 35}">
             <div class="font-semibold text-artwork-buttons-context flex items-center justify-end" ref="menuButtonRef">
                 <MenuButton>
-                    <component is="IconBeach" class="flex-shrink-0 h-4 w-4" aria-hidden="true" />
+                    <component :is="IconBeach" class="flex-shrink-0 h-4 w-4" aria-hidden="true" />
                 </MenuButton>
             </div>
 
@@ -27,6 +27,7 @@
 
 import {Float} from "@headlessui-float/vue";
 import {MenuItems, MenuButton, Menu} from "@headlessui/vue";
+import {IconBeach} from "@tabler/icons-vue";
 
 const props = defineProps({
     placement: {

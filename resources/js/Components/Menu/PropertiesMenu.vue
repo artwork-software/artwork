@@ -13,7 +13,7 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background']">
+                <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-black/10 ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background']">
                     <div class="max-h-60 overflow-y-auto">
                         <slot name="menu"/>
                     </div>

@@ -1,6 +1,6 @@
 <template>
-    <div class="xxsLight">
-        <p class="line-clamp-3" v-html="project['TextField'][component.component_id]?.data?.text"></p>
+    <div class="xxsLight max-w-44">
+        <p class="line-clamp-2" v-html="project['TextField'][component.component_id]?.data?.text"></p>
     </div>
 
 </template>

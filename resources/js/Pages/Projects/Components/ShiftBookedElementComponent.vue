@@ -20,9 +20,9 @@
                     </span>
                     </div>
                 </div>
-                <component stroke-width="1.5"
+                <PropertyIcon stroke-width="1.5"
                     class=" block group-hover:hidden size-4"
-                    :is="getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
+                    :name="getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
             </div>
         </div>
         <template #xButton>
@@ -81,6 +81,7 @@ import SelectUserForShiftMenu from "@/Pages/Projects/Components/SelectUserForShi
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 import {useTranslation} from "@/Composeables/Translation.js";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const $t = useTranslation()
 
 const props = defineProps({

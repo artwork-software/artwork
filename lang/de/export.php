@@ -48,6 +48,7 @@ return [
             'end_time' => 'Uhrzeit bis',
             'event_type' => 'Termintyp',
             'event_name' => 'Terminname',
+            'event_description' => 'Terminbeschreibung',
             'event_status' => 'Terminstatus',
             'room' => 'Raum',
             'project_team' => 'Projekttean',
@@ -69,5 +70,9 @@ return [
     'total' => 'Gesamt',
     'get_sum' => 'Betrag erhalten',
     'total_sum' => 'Gesamtbetrag',
-    'total_days' => 'Gesamt Tage'
+    'total_days' => 'Gesamt Tage',
+    'name_artist' => 'Name Künstler',
+    'civil_name' => 'Zivilname',
+    'phone_number' => 'Telefonnummer',
+    'position' => 'Position',
 ];

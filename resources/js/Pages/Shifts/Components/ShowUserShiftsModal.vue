@@ -24,7 +24,7 @@
             <div class="space-y-2">
                 <div v-for="shift in user.element.shifts" class="pb-1">
                     <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group border-b border-dashed border-gray-300 py-2" :id="'shift-' + shift.id">
-                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" />
+                        <SingleShiftInShiftOverviewUser :user="user" :shift="shift" @shiftDeleted="handleShiftDeleted" />
                         <!--<SingleEntityInShift :shift="shift" :person="user.element" :shift-qualifications="shiftQualifications" />-->
                         <!--
                         <div>
@@ -114,7 +114,7 @@
                                 <BaseInput type="time" id="end_time" v-model="individual_time.end_time" classes="border-l-0 rounded-l-none" label="Endzeit" :show-label="false" no-margin-top />
                             </div>
                             <div class="invisible group-hover:visible flex items-center justify-center" v-if="individual_time.id">
-                                <component is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeById(individual_time)" />
+                                <component :is="IconTrash" class="h-6 w-6 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5" @click="deleteIndividualTimeById(individual_time)" />
                             </div>
                         </div>
                         <div v-if="individual_time.error" class="text-xs text-red-500 -mt-2">
@@ -123,7 +123,7 @@
                     </div>
                     <div class="mt-5">
                         <component
-                            is="IconCirclePlus"
+                            :is="IconCirclePlus"
                             class="h-6 w-6 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-all duration-300 ease-in-out"
                             stroke-width="2"
                             @click="addIndividualTime"
@@ -164,8 +164,9 @@
                 </div>
             </div>
             <div class="flex justify-center mt-5">
-                <FormButton
-                    :text="$t('Save')"
+                <BaseUIButton
+                    :label="$t('Save')"
+                    is-add-button
                     @click="checkVacation"
                 />
             </div>
@@ -214,10 +215,13 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import SingleEntityInShift from "@/Pages/Shifts/DailyViewComponents/SingleEntityInShift.vue";
 import SingleShiftInShiftOverviewUser from "@/Pages/Shifts/Components/SingleShiftInShiftOverviewUser.vue";
+import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        BaseUIButton,
         SingleShiftInShiftOverviewUser,
         SingleEntityInShift,
         RequestWorkTimeChangeModal,
@@ -280,6 +284,8 @@ export default defineComponent({
 
     },
     methods: {
+        IconCirclePlus,
+        IconTrash,
         usePage,
         blackColorIfColorIsWhite(color) {
             return color === '#ffffff' ? '#000000' : color;
@@ -333,6 +339,11 @@ export default defineComponent({
         closeConfirmDeleteModal() {
             this.showConfirmDeleteModal = false;
         },
+        handleShiftDeleted(deletedShiftId) {
+            // Remove the deleted shift from the user.element.shifts array
+            // This prevents stale pivot IDs from causing issues on subsequent deletions
+            this.user.element.shifts = this.user.element.shifts.filter(shift => shift.id !== deletedShiftId);
+        },
         sendIndividualTimes() {
             axios.post(route('add.update.individualTimesAndShiftPlanComment'), {
                 modelId: this.user.element.id,
@@ -351,10 +362,8 @@ export default defineComponent({
 
                 this.sendCheckVacation(); // wichtig für Freigabe etc.
             }).catch(() => {
-                return false;
+                // Handle error case - could add error handling here if needed
             });
-
-            return false;
             /*router.post(route('add.update.individualTimesAndShiftPlanComment'), {
                 modelId: this.user.element.id,
                 modelType: this.user.type,
@@ -410,10 +419,12 @@ export default defineComponent({
             }
         },
         checkVacation() {
-            let callback = (afterRequest) => {
-                this.closeModal(true);
-            };
+            // Clear previous validation errors
+            for (let individualTime of this.user.individual_times) {
+                delete individualTime.error;
+            }
 
+            // Validate individual times
             for (let individualTime of this.user.individual_times) {
                 if (individualTime.start_time && !individualTime.end_time) {
                     individualTime.error = $t('Please also enter an end time here.');
@@ -426,7 +437,6 @@ export default defineComponent({
             }
 
             this.sendIndividualTimes();
-
         },
         openRequestWorkTimeChangeModal(shift) {
             this.selectedShift = shift;

@@ -1,5 +1,5 @@
 <template>
-    <BudgetSettingsHeader>
+    <BudgetSettingsHeader :title="$t('General')" :description="$t('Define settings for your budget.')">
         <div class="xsLight mb-5">
             {{ $t('Specify here what the first three columns of new budget tables should be called') }}
         </div>

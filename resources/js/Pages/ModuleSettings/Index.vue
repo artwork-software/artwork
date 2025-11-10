@@ -1,11 +1,5 @@
 <template>
     <ToolSettingsHeader :title="$t('Module visibility')">
-        <h2 class="headline2">{{ $t('Module visibility') }}</h2>
-        <div class="xsLight mt-4">
-            {{
-                $t("Here you can control for each menu item whether it can only be seen by admins or also by other users")
-            }}
-        </div>
         <div v-if="usePage().props.flash.success"
              class="mt-4 w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ usePage().props.flash.success }}

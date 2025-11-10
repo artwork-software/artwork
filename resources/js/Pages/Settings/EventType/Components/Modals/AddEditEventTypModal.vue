@@ -72,7 +72,14 @@
                         </p>
                         <div class="mt-6 space-y-6 ">
                             <div v-for="notificationMethod in verificationModes" :key="notificationMethod.id" class="flex items-center">
-                                <input v-if="eventTypeForm.verification_mode" @change="selectVerificationMode(notificationMethod.id)" :id="notificationMethod.id" name="notification-method" type="radio" :checked="notificationMethod.id === eventTypeForm.verification_mode" class="relative size-4 appearance-none rounded-full input-checklist" />
+                                <input
+                                    @change="selectVerificationMode(notificationMethod.id)"
+                                    :id="notificationMethod.id"
+                                    name="notification-method"
+                                    type="radio"
+                                    :checked="notificationMethod.id === eventTypeForm.verification_mode"
+                                    class="size-5 text-primary border-gray-300 focus:ring-primary"
+                                />
                                 <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ $t(notificationMethod.title) }}</label>
                             </div>
                         </div>
@@ -85,7 +92,7 @@
                             </h4>
                         </div>
                         <div class="pt-2">
-                            <UserSearch @userSelected="addUserToEventType" :disabled="checkIfUserSearchMustDisabled" />
+                            <UserSearch @userSelected="addUserToEventType" :disabled="checkIfUserSearchMustDisabled" label="Search for users" />
                         </div>
 
                         <div v-if="eventTypeForm.users?.length > 0">
@@ -118,11 +125,11 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-5 w-full flex justify-center items-center text-center">
-                <FormButton
+            <div class="mt-5 w-full flex justify-end items-center text-center">
+                <BaseUIButton
                     type="submit"
                     :disabled="eventTypeForm.name === '' || eventTypeForm.svg_name === '' || eventTypeForm.processing || eventTypeForm.verification_mode === 'specific' && eventTypeForm.specific_verifier_id === null"
-                    :text="!eventType ? $t('Create event type') : $t('Save')" />
+                    :label="!eventType ? $t('Create event type') : $t('Save')" is-add-button />
             </div>
         </form>
     </BaseModal>
@@ -141,6 +148,7 @@ import {XIcon} from "@heroicons/vue/outline";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {computed} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     eventType: {

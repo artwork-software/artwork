@@ -23,6 +23,7 @@ class UpdateExternalIssueRequest extends FormRequest
     {
         return [
             'material_value' => 'required|numeric|min:0',
+            'name' => 'required|string|max:255',
             'issued_by_id' => 'nullable|exists:users,id',
             'received_by_id' => 'nullable|exists:users,id',
             'issue_date' => 'required|date',

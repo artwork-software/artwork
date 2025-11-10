@@ -20,8 +20,11 @@ class InventoryDetailedQuantityArticle extends Model
         'name',
         'description',
         'quantity',
-        'inventory_article_status_id'
+        'inventory_article_status_id',
+        'type_number'
     ];
+
+
 
     protected $appends = ['room', 'manufacturer'];
 
@@ -99,7 +102,8 @@ class InventoryDetailedQuantityArticle extends Model
 
     public function status()
     {
-        return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id');
+        return $this->belongsTo(InventoryArticleStatus::class, 'inventory_article_status_id')
+            ->orderBy('order');
     }
 
 }

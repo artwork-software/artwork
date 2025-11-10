@@ -1,10 +1,37 @@
 <template>
-    <div class=" card glassy py-2 sticky top-0 z-50 ">
+    <div class="bg-white border-b border-zinc-200 shadow-sm py-2 sticky top-0 z-50 ">
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
+                    <!-- Date Shortcuts - 3 vertical icons -->
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue"
                                            :is_shift_plan="true"></date-picker-component>
+                    <div class="flex gap-x-1 mx-2">
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Today')"
+                            :icon="IconCalendar"
+                            icon-size="h-5 w-5"
+                            @click="jumpToToday"
+                            classesButton="ui-button"
+                        />
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Current week')"
+                            :icon="IconCalendarWeek"
+                            icon-size="h-5 w-5"
+                            @click="jumpToCurrentWeek"
+                            classesButton="ui-button"
+                        />
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Current month')"
+                            :icon="IconCalendarMonth"
+                            icon-size="h-5 w-5"
+                            @click="jumpToCurrentMonth"
+                            classesButton="ui-button"
+                        />
+                    </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
                         <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                              @click="previousTimeRange"/>
@@ -13,11 +40,11 @@
                         <Menu as="div" class="relative inline-block text-left">
                             <div class="flex items-center">
                                 <MenuButton class="">
-                                    <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                        v-if="userGotoMode === 'month'"/>
-                                    <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                       v-if="userGotoMode === 'week'"/>
-                                    <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <component :is="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                   v-if="userGotoMode === 'day'"/>
                                 </MenuButton>
                             </div>
@@ -37,7 +64,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                                    icon="IconCalendar"
+                                                    :icon="IconCalendar"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -47,7 +74,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                                    icon="IconCalendarWeek"
+                                                    :icon="IconCalendarWeek"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -57,7 +84,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                                    icon="IconCalendarMonth"
+                                                    :icon="IconCalendarMonth"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -83,7 +110,7 @@
                     </div>
                 </div>
 
-                <div v-else class="relative">
+                <div v-else class="relative mr-2">
                     <BaseInput
                         id="shiftPlanProjectSearch"
                         v-model="projectSearch"
@@ -117,27 +144,16 @@
                     </template>
                 </div>
 
-                <Switch
-                    v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
-                    @update:model-value="handleUseTimePeriodChange"
-                    :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none ml-4 z-50']">
-                    <span class="sr-only">Use project time period toggle</span>
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out pointer-events-none' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                        aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry"
-                                          :tooltip-text="$t('Project search')" stroke="1.5"/>
-                    </span>
-                    <span
-                        :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out pointer-events-none', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                        aria-hidden="true">
-                        <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry"
-                                          :tooltip-text="$t('Project search')" stroke="1.5"/>
-                    </span>
-                </span>
-                </Switch>
+                <div class=" mr-2">
+                    <SwitchIconTooltip
+                        v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                        :tooltip-text="$t('Project search')"
+                        size="md"
+                        @change="handleUseTimePeriodChange"
+                        :icon="IconGeometry"
+                    />
+                </div>
+
             </div>
             <slot name="multiEditCalendar"/>
 
@@ -166,20 +182,22 @@
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7"
+                                      :tooltip-text="$t('Lock all shifts')" :icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                       @click="commitAllShifts()"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
-                                      icon-size="h-7 w-7" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
-                                      icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" :icon="IconHistory"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" :icon="IconArrowsDiagonal"
+                                      icon-size="h-5 w-5" classes-button="ui-button" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" :icon="IconCalendarStar"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
                         :crafts="crafts"
                     />-->
-
                 </div>
             </div>
         </div>
@@ -210,6 +228,8 @@
         in-shift-plan
     />
 
+    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
 </template>
 
@@ -230,7 +250,7 @@ import {
     IconCalendarWeek,
     IconCalendar,
     IconChevronRight,
-    IconChevronRightPipe,
+    IconChevronRightPipe, IconGeometry, IconArrowsDiagonal, IconHistory, IconCalendarCheck, IconCalendarStar,
 } from "@tabler/icons-vue";
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
@@ -245,6 +265,9 @@ import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
+import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
@@ -257,7 +280,8 @@ const props = defineProps({
     user_filters: Object,
     crafts: Array,
     projectNameUsedForProjectTimePeriod: String,
-    firstProjectShiftTabId: [Number, String]
+    firstProjectShiftTabId: [Number, String],
+    eventTypes: Array
 });
 
 const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
@@ -266,6 +290,8 @@ const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeR
 const showConfirmCommitModal = ref(false);
 const showShiftCommitDateSelectModal = ref(false);
 const showCalendarSettingsModal = ref(false);
+const showCalendarAboInfoModal = ref(false);
+const showCalendarAboSettingModal = ref(false);
 const showCalendarFilterModal = ref(false);
 const scrollDays = ref(1);
 const projectSearch = ref('');
@@ -402,6 +428,101 @@ const openHistoryModal = () => {
     emit('openHistoryModal');
 };
 
+// Daily view mode management
+const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+
+const changeDailyViewMode = (newValue) => {
+    dailyViewMode.value = newValue;
+    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
+        daily_view: dailyViewMode.value
+    }, {
+        preserveScroll: false,
+        preserveState: false
+    });
+};
+
+// Shortcut functions for the three icons (adapted from FunctionBarCalendar)
+const jumpToToday = () => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Switch to daily mode if not already in daily mode
+    if (!dailyViewMode.value) {
+        changeDailyViewMode(true);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: today,
+                end_date: today,
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in daily mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: today,
+            end_date: today,
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
+};
+
+const jumpToCurrentWeek = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    const currentWeekEnd = new Date(today);
+
+    // Calculate start of week (Monday)
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+    currentWeekStart.setDate(today.getDate() - daysToMonday);
+
+    // Calculate end of week (Sunday)
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    currentWeekEnd.setDate(today.getDate() + daysToSunday);
+
+    router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+        start_date: currentWeekStart.toISOString().slice(0, 10),
+        end_date: currentWeekEnd.toISOString().slice(0, 10),
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    });
+};
+
+const jumpToCurrentMonth = () => {
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    // Switch to normal mode (not daily mode) if in daily mode (month is longer than 7 days)
+    if (dailyViewMode.value) {
+        changeDailyViewMode(false);
+        // Update dates after mode change
+        setTimeout(() => {
+            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+                start_date: monthStart.toISOString().slice(0, 10),
+                end_date: monthEnd.toISOString().slice(0, 10),
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
+        }, 100);
+    } else {
+        // If already in normal mode, just update the dates
+        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
+            start_date: monthStart.toISOString().slice(0, 10),
+            end_date: monthEnd.toISOString().slice(0, 10),
+        }, {
+            preserveScroll: true,
+            preserveState: false
+        });
+    }
+};
+
 const commitAllShifts = () => {
     /*
     let filteredEvents = [];
@@ -455,6 +576,13 @@ watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period,
         });
     }
 });
+
+const closeCalendarAboSettingModal = (bool) => {
+    showCalendarAboSettingModal.value = false;
+    if(bool){
+        showCalendarAboInfoModal.value = true;
+    }
+}
 </script>
 
 <style scoped>

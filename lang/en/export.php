@@ -48,6 +48,7 @@ return [
             'end_time' => 'Time to',
             'event_type' => 'Event type',
             'event_name' => 'Event name',
+            'event_description' => 'Event description',
             'event_status' => 'Event status',
             'room' => 'Room',
             'project_team' => 'Project team',
@@ -70,4 +71,8 @@ return [
     'get_sum' => 'Amount received',
     'total_sum' => 'Total Amount',
     'total_days' => 'Total Days',
+    'name_artist' => 'Name Artist',
+    'civil_name' => 'Civil Name',
+    'phone_number' => 'Phone Number',
+    'position' => 'Position',
 ];

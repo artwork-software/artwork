@@ -1,16 +1,11 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="manufacturer ? $t('Edit Manufacturer') : $t('Create Manufacturer')"
-                :description="manufacturer ? $t('Edit manufacturer details') : $t('Create a new manufacturer')"
-            />
-        </div>
+    <ArtworkBaseModal @close="$emit('close')" :title="manufacturer ? $t('Edit Manufacturer') : $t('Create Manufacturer')"
+                      :description="manufacturer ? $t('Edit manufacturer details') : $t('Create a new manufacturer')">
 
         <form @submit.prevent>
             <div class="grid gird-cols-1 gap-4">
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="name"
                         v-model="manufacturerForm.name"
                         :label="$t('Name*')"
@@ -18,47 +13,47 @@
                     />
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="address"
                         v-model="manufacturerForm.address"
                         :label="$t('Address')"
                     />
-                    <div class="text-xs text-artwork-messages-info mt-1 font-lexend">
+                    <div class="text-xs text-blue-400 mt-1 px-1">
                         <p>
                             {{ $t('Please enter the address of the manufacturer, e.g: Maxmustermann Str. 1234, 12345 Musterdorf') }}
                         </p>
                     </div>
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="contact_person"
                         v-model="manufacturerForm.contact_person"
                         :label="$t('Contact Person')"
                     />
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="phone"
                         v-model="manufacturerForm.phone"
                         :label="$t('Phone')"
                     />
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="email"
                         v-model="manufacturerForm.email"
                         :label="$t('Email')"
                     />
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="website"
                         v-model="manufacturerForm.website"
                         :label="$t('Website')"
                     />
                 </div>
                 <div>
-                    <TextInputComponent
+                    <BaseInput
                         id="customer_number"
                         v-model="manufacturerForm.customer_number"
                         :label="$t('Customer Number')"
@@ -76,7 +71,7 @@
                 </div>
             </div>
         </form>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -86,6 +81,8 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     manufacturer: {

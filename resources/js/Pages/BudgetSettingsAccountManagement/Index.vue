@@ -1,5 +1,5 @@
 <template>
-    <BudgetSettingsHeader>
+    <BudgetSettingsHeader :title="$t('Account management')" :description="$t('Define settings for your budget.')">
         <SwitchGroup as="div" class="mb-5">
             <Switch v-model="budgetAccountManagementGlobal"
                     :class="[

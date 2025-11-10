@@ -1,50 +1,59 @@
 <template>
-    <div class="min-w-0 w-full">
-        <div class="flex items-start justify-between gap-x-10">
-            <p class="text-sm/6 font-semibold text-gray-900">{{ manufacturer.name }}</p>
+    <div class="grid w-full grid-cols-[1fr_auto] items-start gap-4">
+        <!-- Left: Info -->
+        <div class="min-w-0">
+            <div class="flex items-start justify-between gap-x-10">
+                <p class="truncate text-base font-semibold text-zinc-900">
+                    {{ manufacturer.name }}
+                </p>
+            </div>
 
+            <div class="mt-1 space-y-1 text-xs text-zinc-500">
+                <p class="truncate">{{ manufacturer.address }}</p>
+                <p class="truncate">{{ manufacturer.contact_person }}</p>
+                <p class="truncate">{{ manufacturer.phone }}</p>
+                <p class="truncate">{{ manufacturer.email }}</p>
+                <p class="truncate">
+                    {{ $t('Customer Number') }}:
+                    <span class="font-medium text-zinc-700">{{ manufacturer.customer_number }}</span>
+                </p>
+            </div>
         </div>
-        <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="whitespace-nowrap">
-                {{ manufacturer.address }}
-            </p>
-        </div>
-        <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="whitespace-nowrap">
-                {{ manufacturer.contact_person }}
-            </p>
-        </div>
-        <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="whitespace-nowrap">
-                {{ manufacturer.phone }}
-            </p>
-        </div>
-        <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="whitespace-nowrap">
-                {{ manufacturer.email }}
-            </p>
-        </div>
-        <div class="mt-1 flex items-center gap-x-2 text-xs/5 text-gray-500">
-            <p class="whitespace-nowrap">
-                {{ $t('Customer Number') }}: {{ manufacturer.customer_number }}
-            </p>
+
+        <!-- Right: Actions -->
+        <div class="flex flex-none items-center gap-2">
+            <a
+                v-if="manufacturer.website"
+                :href="manufacturer.website"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium
+               text-blue-600 ring-1 ring-inset ring-blue-200 hover:bg-blue-50 transition"
+            >
+                {{ $t('Manufacturer website') }}
+            </a>
+
+            <BaseMenu has-no-offset white-menu-background>
+                <BaseMenuItem white-menu-background
+                    @click="showAddEditManufacturerModal = true"
+                    :icon="IconEdit"
+                    :title="$t('Edit Manufacturer')"
+                />
+                <BaseMenuItem white-menu-background
+                    :icon="IconTrash"
+                    :title="$t('Delete Manufacturer')"
+                    @click="showDeleteModal = true"
+                />
+            </BaseMenu>
         </div>
     </div>
-    <div class="flex flex-none items-center gap-x-4">
-        <a v-if="manufacturer.website" :href="manufacturer.website" target="_blank" class="inline-flex items-center rounded-md bg-gray-50 hover:bg-blue-50 hover:text-blue-500 duration-200 ease-in-out px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-gray-500/10 ring-inset">
-            {{ $t('Manufacturer website') }}
-        </a>
-        <BaseMenu has-no-offset>
-            <BaseMenuItem @click="showAddEditManufacturerModal = true" icon="IconEdit" title="Edit Manufacturer" />
-            <BaseMenuItem icon="IconTrash" title="Delete Manufacturer" @click="showDeleteModal = true"/>
-        </BaseMenu>
-    </div>
 
+    <!-- Modals -->
     <CreateOrUpdateManufacturerModal
         v-if="showAddEditManufacturerModal"
         @close="showAddEditManufacturerModal = false"
         :manufacturer="manufacturer"
-        />
+    />
 
     <ConfirmDeleteModal
         v-if="showDeleteModal"
@@ -56,30 +65,27 @@
 </template>
 
 <script setup>
-
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import CreateOrUpdateManufacturerModal
-    from "@/Pages/Manufacturer/Components/Modals/CreateOrUpdateManufacturerModal.vue";
-import {ref} from "vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router, Link} from "@inertiajs/vue3";
+import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
+import BaseMenu from '@/Components/Menu/BaseMenu.vue'
+import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
+import CreateOrUpdateManufacturerModal from '@/Pages/Manufacturer/Components/Modals/CreateOrUpdateManufacturerModal.vue'
+import { IconEdit, IconTrash } from '@tabler/icons-vue'
 
 const props = defineProps({
     manufacturer: {
         type: Object,
-        required: true
-    }
+        required: true,
+    },
 })
 
 const showAddEditManufacturerModal = ref(false)
 const showDeleteModal = ref(false)
 
 const deleteManufacturer = () => {
-    router.delete(route('manufacturer.destroy', {manufacturer: props.manufacturer.id}))
+    router.delete(route('manufacturer.destroy', { manufacturer: props.manufacturer.id }))
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

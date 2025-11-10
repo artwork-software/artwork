@@ -1,7 +1,8 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <h2 class="xWhiteBold">{{ $t('Project properties') }}</h2>
+            <BasePageTitle title="Project properties" :white-text="inSidebar" />
+
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="openProjectAttributeEditModal"
                       v-if="this.canEditComponent && projectMembersWriteAccess()"
@@ -42,6 +43,7 @@ import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default defineComponent({
     mixins: [
@@ -49,6 +51,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        BasePageTitle,
         ProjectAttributeEditModal,
         SidebarTagComponent
     },

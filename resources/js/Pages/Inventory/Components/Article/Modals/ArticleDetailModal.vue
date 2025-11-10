@@ -1,11 +1,37 @@
 <template>
     <BaseModal @closed="$emit('close')" modal-size="max-w-6xl">
-        <div class="mt-10">
+        <div class="">
             <!-- Product -->
-            <div class="">
-                <!-- Image gallery -->
-                <TabGroup as="div" class="flex flex-row-reverse gap-4" v-if="article.images.length > 0">
-                    <!-- Image Selector -->
+            <div class="mb-5">
+
+                <div class="card flex justify-center">
+                    <Galleria v-model:activeIndex="activeIndex" v-model:visible="displayCustom" :value="article.images" :responsiveOptions="responsiveOptions" :numVisible="7"
+                              :pt="{ mask: { onClick: onMaskClick } }"
+                              containerStyle="max-width: 850px" :circular="true" :fullScreen="true" :showItemNavigators="true" :showThumbnails="false">
+                        <template #item="slotProps">
+                            <img :src="'/storage/' + slotProps.item.image" alt="" :alt="slotProps.item.alt" style="width: 100%; display: block" @error="(e) => e.target.src = usePage().props.big_logo" />
+                        </template>
+                        <template #thumbnail="slotProps">
+                            <img :src="'/storage/' + slotProps.item.image" alt="" style="display: block" :alt="slotProps.item.alt" @error="(e) => e.target.src = usePage().props.big_logo" class="w-20 max-w-20" />
+                        </template>
+                    </Galleria>
+
+                    <div v-if="article.images" class="grid grid-cols-12 gap-4" style="max-width: 400px">
+                        <div v-for="(image, index) of article.images" :key="index" class="col-span-4 border border-gray-300 rounded-lg shadow relative hover:shadow-lg transition duration-200 ease-in-out group">
+                            <!-- lupe icon -->
+                            <div class="absolute inset-0 bg-black/50 z-10 rounded-lg group-hover:opacity-100 opacity-0 cursor-pointer transition duration-200 ease-in-out" @click="imageClick(index)">
+                                <div class="flex items-center justify-center w-full h-full">
+                                    <component :is="IconWindowMaximize" class="w-5 h-5 text-white" />
+                                </div>
+                            </div>
+                            <img :src="'/storage/' + image.image" alt="" style="cursor: pointer" class="cursor-pointer rounded-lg" @click="imageClick(index)" />
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                <TabGroup as="div" class="flex flex-row-reverse gap-4 !hidden" v-if="article.images.length > 0">
+
                     <div class="mx-auto w-full flex">
                         <TabList v-if="article.images?.length > 1"
                                  class="grid grid-cols-2 sm:grid-cols-3 gap-2 items-center overflow-y-scroll overflow-x-hidden max-h-[30vh] p-2">
@@ -25,8 +51,6 @@
                             </Tab>
                         </TabList>
                     </div>
-
-                    <!-- Main Image Viewer -->
                     <TabPanels class=" w-full max-w-6xl">
                         <TabPanel v-for="image in article.images" :key="image.id"
                                   class="flex justify-center items-center rounded-lg py-4 pl-2 sm:py-6">
@@ -42,6 +66,7 @@
                     <img :src="usePage().props.big_logo" alt=""
                          class="aspect-square w-full object-contain sm:rounded-lg"/>
                 </div>
+                -->
             </div>
             <!-- Product info -->
             <div>
@@ -58,10 +83,10 @@
                                     </span>
                             </div>
                         </div>
-                        <div class="flex gap-x-2 px-2">
-                            <component is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
+                        <div class="flex gap-x-2 px-2" v-if="showButtonForEditAndDelete">
+                            <component :is="IconEdit" class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
                                       @click="openArticleEditModal" v-if="can('inventory.create_edit') || is('artwork admin')" />
-                            <component is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
+                            <component :is="IconTrash" class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
                                       @click="showConfirmDelete = true" v-if="can('inventory.delete') || is('artwork admin')" />
                         </div>
                     </div>
@@ -89,12 +114,12 @@
                                     <div class="pr-2 py-4 flex items-center justify-between">
                                         <dt class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2">
                                             {{ $t('Total quantity') }}
-                                            <component is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
+                                            <component :is="IconChevronDown" :class="[open ? 'rotate-180' : '']"
                                                        class="size-5 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
                                         </dt>
                                         <p class="font-lexend text-sm pl-2"
-                                           :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                            {{ formatQuantity(article.quantity) }}</p>
+                                           :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                            {{ formatQuantity(article.total_quantity || article.quantity) }}</p>
                                     </div>
                                 </div>
                             </DisclosureButton>
@@ -133,7 +158,7 @@
                             </div>
                         </div>-->
                         <div>
-                            <dl class="divide-y divide-gray-100" v-if="article.properties.length > 0">
+                            <dl class="divide-y divide-gray-100" v-if="article.properties?.length > 0">
                                 <div
                                     class="pr-2 py-4 flex items-center justify-between"
                                     v-for="property in article.properties"
@@ -147,17 +172,17 @@
                             </dl>
 
                             <div v-else>
-                                <div class="rounded-md bg-red-50 p-4">
+                                <div class="rounded-md bg-blue-50 p-4">
                                     <div class="flex">
                                         <div class="shrink-0">
                                             <component
-                                                is="IconAlertSquareRoundedFilled"
-                                                class="size-5 text-red-400"
+                                                :is="IconAlertSquareRoundedFilled"
+                                                class="size-5 text-blue-400"
                                                 aria-hidden="true"
                                             />
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-red-800">
+                                            <p class="text-sm font-medium text-blue-800">
                                                 {{ $t('No properties were specified for this article') }}
                                             </p>
                                         </div>
@@ -180,25 +205,25 @@
                                 </h3>
                             </div>
                             <p class="font-lexend text-sm pl-2"
-                               :class="article.quantity === 0 ? 'text-error' : 'text-artwork-buttons-create'">
-                                {{ formatQuantity(article.quantity) }}
+                               :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'">
+                                {{ formatQuantity(article.total_quantity || article.quantity) }}
                             </p>
                         </div>
                     </div>
 
                     <div class="pb-10">
-                        <Disclosure as="div" class="mb-2" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities" :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']">
+                        <Disclosure as="div" class="mb-2" v-slot="{ open }" v-for="detailedArticle in article.detailed_article_quantities" :class="[open ? 'shadow-sm rounded-lg' : 'rounded-xl shadow-lg ', '']" :style="{backgroundColor: (detailedArticle.status?.color || '#6b7280') + '15'}">
                             <h3>
-                                <DisclosureButton class="flex items-center group justify-between w-full px-4 py-3 bg-white hover:bg-artwork-buttons-create/10" :class="open ? 'rounded-t-lg' : 'rounded-lg'">
+                                <DisclosureButton class="flex items-center group justify-between w-full px-4 py-3 hover:bg-artwork-buttons-create/10" :class="open ? 'rounded-t-lg' : 'rounded-lg'">
                                     <span :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']">
                                         {{ detailedArticle.name }}
                                     </span>
                                     <span class="ml-6 flex items-center gap-x-3">
-                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-lexend font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
-                                            {{ detailedArticle.status?.name }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
+                                        <span class="inline-flex items-center rounded-md  px-2 py-1 text-xs font-lexend font-medium border" :style="{backgroundColor: (detailedArticle.status?.color || '#6b7280') + '33', borderColor: (detailedArticle.status?.color || '#6b7280') + '66', color: detailedArticle.status?.color || '#6b7280'}">
+                                            {{ detailedArticle.status?.name || $t('Unknown Status') }} - {{ $t('Quantity')}}: {{ formatQuantity(detailedArticle.quantity) }}
                                         </span>
-                                        <component is="IconPlus" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
-                                        <component is="IconMinus" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
+                                        <component :is="IconChevronDown" v-if="!open" class="block size-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true"/>
+                                        <component :is="IconChevronUp" v-else class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover" aria-hidden="true"/>
                                     </span>
                                 </DisclosureButton>
                             </h3>
@@ -229,7 +254,7 @@
                                     <div class="rounded-md bg-red-50 p-4">
                                         <div class="flex">
                                             <div class="shrink-0">
-                                                <component is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
+                                                <component :is="IconAlertSquareRoundedFilled" class="size-5 text-red-400"
                                                            aria-hidden="true"/>
                                             </div>
                                             <div class="ml-3">
@@ -249,6 +274,7 @@
         <ConfirmDeleteModal
             :title="$t('Delete article')"
             :description="$t('Are you sure you want to delete this article?')"
+            z-index="999999"
             @closed="showConfirmDelete = false"
             v-if="showConfirmDelete"
             @delete="confirmDelete"
@@ -264,19 +290,20 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {
     Disclosure,
     DisclosureButton, DisclosurePanel,
-    Tab,
-    TabGroup,
-    TabList,
-    TabPanel,
-    TabPanels
 } from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
-import AddEditArticleModal from "@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue";
-import {nextTick, ref, computed} from "vue";
-import {IconEdit, IconPhoto} from "@tabler/icons-vue";
+import {ref} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import Galleria from 'primevue/galleria';
+import {
+    IconAlertSquareRoundedFilled,
+    IconChevronDown, IconChevronUp,
+    IconEdit,
+    IconTrash,
+    IconWindowMaximize
+} from "@tabler/icons-vue";
 
 const $t = useTranslation()
 
@@ -284,6 +311,10 @@ const props = defineProps({
     article: {
         type: Object,
         required: true
+    },
+    showButtonForEditAndDelete: {
+        type: Boolean,
+        default: true
     }
 })
 
@@ -293,7 +324,27 @@ const emit = defineEmits([
 ])
 
 const showConfirmDelete = ref(false);
+const activeIndex = ref(0);
+const responsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 5
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 3
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1
+    }
+]);
+const displayCustom = ref(false);
 
+const imageClick = (index) => {
+    activeIndex.value = index;
+    displayCustom.value = true;
+};
 
 const confirmDelete = () => {
     router.delete(route('articles.destroy', props.article.id), {
@@ -320,18 +371,42 @@ const formatProperty = (article, property) => {
     }
 
     if (property.type === 'date') {
-        if(!property.pivot.value) return $t('No date set');
-        return new Date(property.pivot.value).toLocaleDateString();
+        const v = property.pivot.value;
+        if (!v) return $t('No date set');
+        let d = new Date(v);
+        if (isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+            d = new Date(`${v}T00:00:00`);
+        }
+        return isNaN(d.getTime()) ? v : d.toLocaleDateString();
     }
 
     if (property.type === 'time') {
-        if(!property.pivot.value) return $t('No time set');
-        return new Date(property.pivot.value).toLocaleTimeString();
+        const v = property.pivot.value;
+        if (!v) return $t('No time set');
+
+        // Zeit-Only (z. B. "12:12" oder "12:12:30") direkt und stabil anzeigen
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(v)) {
+            const parts = v.split(':');
+            const h = String(parts[0]).padStart(2, '0');
+            const m = String(parts[1]).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        // Falls doch ein kompletter ISO-/Datetime-String kommt, nur die Zeit formatiert ausgeben
+        const d = new Date(v);
+        if (!isNaN(d.getTime())) {
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Fallback: Rohwert anzeigen statt "Invalid Date"
+        return v;
     }
 
     if (property.type === 'datetime') {
-        if(!property.pivot.value) return $t('No date set');
-        return new Date(property.pivot.value).toLocaleString();
+        const v = property.pivot.value;
+        if (!v) return $t('No date set');
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? v : d.toLocaleString();
     }
 
     if (property.type === 'checkbox') {
@@ -349,6 +424,12 @@ const formatQuantity = (quantity) => {
     // if not return 10000 to 10.000
 
     return quantity.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+const onMaskClick = (e) => {
+    if (e.target === e.currentTarget) {
+        displayCustom.value = false
+    }
 }
 </script>
 

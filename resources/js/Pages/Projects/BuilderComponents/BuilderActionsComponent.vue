@@ -1,14 +1,14 @@
 <template>
-    <component is="IconCalendarMonth" class="w-6 h-6 cursor-pointer" @click="useProjectTimePeriodAndRedirect()"/>
+    <component :is="IconCalendarMonth" class="w-6 h-6 cursor-pointer" @click="useProjectTimePeriodAndRedirect()"/>
     <BaseMenu has-no-offset :button-id="'project-menu-' + project.id">
         <BaseMenuItem
             as-link
             :link="route('projects.tab', { project: project.id, projectTab: project.firstTabId })"
             title="Open"
-            icon="IconFolderOpen"
+            :icon="IconFolderOpen"
         />
-        <BaseMenuItem title="Edit" />
-        <BaseMenuItem title="Delete" icon="IconTrash" />
+        <BaseMenuItem title="Edit" :icon="IconEdit" />
+        <BaseMenuItem title="Delete" :icon="IconTrash" />
     </BaseMenu>
 </template>
 
@@ -17,6 +17,7 @@
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {router} from "@inertiajs/vue3";
+import {IconCalendarMonth, IconEdit, IconFolderOpen, IconTrash} from "@tabler/icons-vue";
 
 const props = defineProps({
     project: {

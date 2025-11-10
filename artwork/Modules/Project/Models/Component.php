@@ -155,6 +155,6 @@ class Component extends Model
 
     public function componentInDisclosures(): HasMany
     {
-        return $this->hasMany(DisclosureComponents::class, 'component_id', 'id');
+        return $this->hasMany(DisclosureComponents::class, 'disclosure_id', 'id');
     }
 }

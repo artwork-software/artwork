@@ -19,9 +19,9 @@
                     <ToolTipComponent
                         direction="right"
                         :tooltip-text="$t('Select time')"
-                        icon="IconCalendar"
-                        icon-size="h-5 w-5 mr-3"
-                        class="cursor-pointer"
+                        :icon="IconCalendar"
+                        icon-size="h-5 w-5"
+                        classesButton="ui-button"
                     />
                 </template>
                 <template #preset-date-range-button="{ label, value }">
@@ -42,7 +42,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -51,7 +51,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -68,7 +68,7 @@
                 </div>
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -77,7 +77,7 @@
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
-                       @change="updateTimes"
+                       @focusout="updateTimes"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -93,7 +93,18 @@
     <div class="font-medium text-gray-900" v-else>
         {{ $t('Project period') }}: {{ new Date(dateValue[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValue[1]).format("DD.MM.YYYY") }}
     </div>
-    <div v-if="hasError" class="text-error mt-1 mx-2" :class="errorMessage.length > 0 ? 'mt-10' : ''" >{{ errorMessage }}</div>
+    <transition name="fade" appear>
+        <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="hasError">
+            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                <p class="text-sm/6 text-white"> {{ errorMessage }} </p>
+                <button type="button" class="-m-1.5 flex-none p-1.5">
+                    <span class="sr-only">Dismiss</span>
+                    <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
+                </button>
+            </div>
+        </div>
+    </transition>
 </template>
 
 <script setup>
@@ -105,7 +116,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useTranslation} from "@/Composeables/Translation.js";
-import { IconCalendar } from '@tabler/icons-vue';
+import {IconAlertSquareRounded, IconCalendar, IconX} from '@tabler/icons-vue';
 const $t = useTranslation()
 // Props
 const props = defineProps({
@@ -331,7 +342,7 @@ function updateTimes() {
     }
 
     if (endDateObj < startDateObj) {
-        errorMessage.value = $t('The end date must be after the start date.');
+        errorMessage.value = $t('Please select a valid date.');
         hasError.value = true;
     } else {
         errorMessage.value = '';

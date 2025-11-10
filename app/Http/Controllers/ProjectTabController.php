@@ -133,6 +133,13 @@ class ProjectTabController extends Controller
         $componentInTab->update($request->only('note'));
     }
 
+    public function updateComponentScope(ComponentInTab $componentInTab, Request $request): void
+    {
+        $componentInTab->update([
+            'scope' => $request->input('scope', []),
+        ]);
+    }
+
     public function addDisclosureComponent(Request $request): void {
         // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
         DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))

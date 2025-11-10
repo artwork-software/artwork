@@ -1,22 +1,25 @@
 <template>
     <app-layout :title="$t('Event Properties')">
         <EventSettingHeader>
+            <template #actions>
+                <button class="ui-button-add" @click="showEventPropertyModal = true">
+                    <component :is="IconPlus" stroke-width="1" class="size-5" />
+                    {{ $t('New Event Property') }}
+                </button>
+            </template>
             <div class="my-10">
-                <div class="mb-4 flex items-center justify-between gap-x-10">
-                    <TinyPageHeadline title="Event Eigenschaften"
+                <div class="mb-4">
+                    <BasePageTitle title="Event Eigenschaften"
                                       description="Hier kannst du die Event Eigenschaften verwalten."/>
-                    <div>
-                        <GlassyIconButton icon="IconPlus" @click="showEventPropertyModal = true;" text="Event Eigenschaft hinzufügen"/>
-                    </div>
                 </div>
                 <ul role="list" class="flex flex-col gap-y-3">
                     <li v-for="(eventProperty) in event_properties"
                         :key="eventProperty.id"
                         class="flex flex-row justify-between">
                         <div class="flex flex-row items-center gap-4">
-                            <component as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
+                            <PropertyIcon as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
                                        width="16" height="16"
-                                       :is="eventProperty.icon"
+                                       :name="eventProperty.icon"
                                        stroke-width="1.5"/>
                             <p class="mDark">{{ eventProperty.name }}</p>
                         </div>
@@ -77,6 +80,9 @@ import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
+import {IconPlus} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 const props = defineProps({
         event_properties: {

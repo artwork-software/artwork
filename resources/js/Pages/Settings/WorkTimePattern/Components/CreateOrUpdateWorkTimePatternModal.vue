@@ -105,19 +105,15 @@
             </div>
 
             <div class="flex items-center justify-between mt-10">
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     type="button"
                     @click="$emit('close')"
-                    variant="danger">
-                    {{ $t('Cancel') }}
-                </ArtworkBaseModalButton>
+                    variant="danger" :label="$t('Cancel')" is-delete-button />
 
 
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     type="submit"
-                    variant="primary">
-                    {{ $t('Save') }}
-                </ArtworkBaseModalButton>
+                    variant="danger" :label="$t('Save')" is-add-button />
             </div>
         </form>
 
@@ -133,6 +129,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     workTimePattern: {

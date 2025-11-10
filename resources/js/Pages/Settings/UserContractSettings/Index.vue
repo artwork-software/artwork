@@ -1,19 +1,11 @@
 <template>
-    <AppLayout :title="$t('User Contracts')">
-        <div class="artwork-container">
-            <div class="">
-                <h2 class="headline1">{{$t('User Contracts')}}</h2>
-                <div class="xsLight mt-2">
-                    {{$t('Work Time Patterns are used to define the working hours and shifts for employees. You can create, edit, and delete work time patterns here.')}}
-                </div>
-            </div>
-
-
-
-            <div class="flex items-center justify-between">
-                <TabComponent :tabs="tabs" use-translation/>
-                <GlassyIconButton text="Add User Contracts" icon="IconPlus" @click="showCreateOrUpdateUserContractModal  = true" />
-            </div>
+    <ShiftSettingsHeader :title="$t('User Contracts')">
+        <template #actions>
+            <button class="ui-button-add" @click="showCreateOrUpdateUserContractModal = true">
+                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                {{ $t('Add User Contracts') }}
+            </button>
+        </template>
 
 
             <div class="card white p-5 mt-5">
@@ -23,24 +15,21 @@
                     </li>
                 </ul>
                 <div v-else>
-                    <BaseAlertComponent message="No work time patterns found. Please create a new one." type="error" use-translation />
+                    <BaseAlertComponent message="No user contracts found. Please create a new one." type="error" use-translation />
                 </div>
             </div>
-        </div>
-
 
         <CreateOrUpdateUserContractModal
             v-if="showCreateOrUpdateUserContractModal"
             @close="showCreateOrUpdateUserContractModal = false"
         />
-
-    </AppLayout>
+    </ShiftSettingsHeader>
 </template>
 
 <script setup>
 
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import CreateOrUpdateWorkTimePatternModal
@@ -53,6 +42,7 @@ import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
+import {IconPlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     contracts: {

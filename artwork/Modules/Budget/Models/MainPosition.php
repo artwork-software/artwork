@@ -80,10 +80,11 @@ class MainPosition extends Model
             ->skip(3)
             ->mapWithKeys(fn (Collection $cells, $column_id) => [
                     $column_id => [
-                        //replace , with . to cast properly to float
-                        'sum' => $cells->sum(
-                            fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
-                        ),
+                        //replace , with . and use bcadd for precise decimal arithmetic
+                        'sum' => $cells->reduce(function ($carry, ColumnCell $columnCell) {
+                            $decimalValue = str_replace(',', '.', $columnCell->value ?: '0');
+                            return bcadd($carry ?: '0', $decimalValue, 2);
+                        }, '0'),
                         'hasComments' => isset($sumDetails[$column_id]) && $sumDetails[$column_id]->comments_count > 0,
                         'hasMoneySource' => isset($sumDetails[$column_id]) &&
                             $sumDetails[$column_id]->sum_money_source_count > 0,

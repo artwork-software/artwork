@@ -5,6 +5,7 @@ namespace Artwork\Modules\Event\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,9 +36,9 @@ class SeriesEvents extends Model
         return $this->hasMany(Event::class, 'series_id', 'id');
     }
 
-    public function prunable(): bool
+    public function prunable(): Builder
     {
-        // Automatically prune series events that have no associated events
-        return $this->events()->doesntExist();
+        // Prune series that have no associated events
+        return static::doesntHave('events');
     }
 }

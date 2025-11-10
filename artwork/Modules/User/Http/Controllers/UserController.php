@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\Controller;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -10,6 +11,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -17,6 +19,8 @@ use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
@@ -27,6 +31,8 @@ use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\User\Enums\MemberSortEnum;
 use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
@@ -44,6 +50,7 @@ use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,9 +59,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -65,11 +76,13 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
+use App\Models\User as LaravelUser;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected AuthManager $auth,
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -105,7 +118,11 @@ class UserController extends Controller
     {
         $wantedUserArray = [];
 
-        $wantedUsers = User::search($request->input('query'))->get();
+        $wantedUsers = User::search($request->input('query'))
+            ->query(function ($query): void {
+                $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+            })
+            ->get();
         foreach ($wantedUsers as $user) {
             $wantedUserArray[] = $user;
         }
@@ -169,6 +186,8 @@ class UserController extends Controller
                 ? User::search($searchQuery)
                 ->query(function ($query) use ($sortEnum): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
+                    // Exclude the placeholder "Deleted user"
+                    $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
 
                     // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
                     if (!is_null($sortEnum)) {
@@ -190,6 +209,8 @@ class UserController extends Controller
                 ->get()
                 : User::query()
                 ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                // Exclude the placeholder "Deleted user"
+                ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
@@ -336,7 +357,6 @@ class UserController extends Controller
 
     public function editUserWorkTime(User $user): Response|ResponseFactory
     {
-
         return inertia('Users/UserWorkTimePatternPage', [
             'userToEdit' => new UserShowResource($user),
             'currentTab' => 'workTimePattern',
@@ -434,10 +454,10 @@ class UserController extends Controller
             $weekKey = "KW" . $current->isoWeek();
 
             $userWorkTime = $user->workTimes()
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
                 })
-                ->where(function ($q) use ($current) {
+                ->where(function ($q) use ($current): void {
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
                 })
                 ->orderByDesc('valid_from')
@@ -467,7 +487,9 @@ class UserController extends Controller
                             'user' => $booking->booker,
                             'date' => $booking->created_at->locale(session('locale', config('app.fallback_locale')))
                                 ->isoFormat('D. MMMM YYYY'),
-                            'work_time_change' => $this->convertMinutesToHoursAndMinutes($booking->work_time_balance_change),
+                            'work_time_change' => $this->convertMinutesToHoursAndMinutes(
+                                $booking->work_time_balance_change
+                            ),
                         ];
                     }
                 }
@@ -524,7 +546,6 @@ class UserController extends Controller
     }
 
 
-
     private function getPlannedShiftMinutesForDay(User $user, Carbon $day): int
     {
         $total = 0;
@@ -554,7 +575,7 @@ class UserController extends Controller
             }
         }
 
-        return (int) round($total);
+        return (int)round($total);
     }
 
 
@@ -598,6 +619,8 @@ class UserController extends Controller
         $selectedPeriodDate = $vacationMonth ?
             Carbon::parse($vacationMonth) :
             Carbon::today();
+
+        $userService->shareCalendarAbo('shiftCalendar');
 
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
@@ -903,6 +926,24 @@ class UserController extends Controller
         return Redirect::back();
     }
 
+    public function assignCraftsBulk(User $user, Request $request)
+    {
+        $this->authorize('updateWorkProfile', User::class);
+
+        $craftIds = $request->get('craftIds', []);
+
+        $validCraftIds = Craft::whereIn('id', $craftIds)->pluck('id')->toArray();
+
+        // Filter out already assigned crafts
+        $newCraftIds = array_diff($validCraftIds, $user->assignedCrafts()->pluck('craft_id')->toArray());
+
+        if (!empty($newCraftIds)) {
+            $user->assignedCrafts()->attach($newCraftIds);
+        }
+
+        return Redirect::back();
+    }
+
     /**
      * @throws AuthorizationException
      */
@@ -919,104 +960,188 @@ class UserController extends Controller
         User $user,
         RoomService $roomService,
         EventService $eventService,
-        UserService $userService
+        UserService $userService,
     ): RedirectResponse {
-        // Get the authenticated user ID for reassigning ownership
-        $authUserId = $userService->getAuthUserId();
+        // Prevent self-deletion to avoid authentication/session inconsistencies
+        $authUserId = null;
+        try {
+            $authUserId = $userService->getAuthUserId();
+        } catch (\Throwable $e) {
+            $authUserId = null;
+        }
+        if ($authUserId !== null && $authUserId === $user->id) {
+            return Redirect::back()->withErrors([
+                'user' => __('You cannot delete your own account.')
+            ]);
+        }
+
+        // Use a dedicated placeholder user for all mandatory FK reassignments
+        $reassignUserId = $this->getOrCreateDeletedPlaceholderUserId();
+
+        // Disallow deleting the placeholder itself
+        if ($user->id === $reassignUserId) {
+            return Redirect::back()->withErrors([
+                'user' => __('The placeholder user cannot be deleted.')
+            ]);
+        }
 
         // Handle belongsToMany relationships - detach the user
-        $user->departments()->detach();
-        $user->projects()->detach();
-        $user->adminRooms()->detach();
-        $user->crafts()->detach();
-        $user->assignedCrafts()->detach();
-        $user->managingCrafts()->detach();
-        $user->shiftQualifications()->detach();
-        $user->chats()->detach();
-        $user->verifiableEventTypes()->detach();
-        $user->accessMoneySources()->detach();
+        DB::beginTransaction();
+        try {
+            $user->departments()->detach();
+            $user->projects()->detach();
+            $user->adminRooms()->detach();
+            $user->crafts()->detach();
+            $user->assignedCrafts()->detach();
+            $user->managingCrafts()->detach();
+            $user->shiftQualifications()->detach();
+            $user->chats()->detach();
+            $user->verifiableEventTypes()->detach();
+            $user->accessMoneySources()->detach();
+            // Reassign all shift_user entries to the placeholder user to satisfy FK constraints and preserve data
+            try {
+                ShiftUser::withTrashed()
+                    ->where('user_id', $user->id)
+                    ->update(['user_id' => $reassignUserId, 'deleted_at' => null]);
+            } catch (\Throwable $e) {
+                if (function_exists('report')) {
+                    report($e);
+                }
+                // Fallback: ensure no blocking FK remains
+                try {
+                    ShiftUser::withTrashed()->where('user_id', $user->id)->forceDelete();
+                } catch (\Throwable $e2) {
+                    if (function_exists('report')) {
+                        report($e2);
+                    }
+                }
+            }
 
-        // Handle hasMany relationships - reassign or delete
-        // Reassign created rooms to authenticated user
-        $user->createdRooms()->withTrashed()->each(
-            fn(Room $room) => $roomService->update(
-                $room,
-                ['user_id' => $authUserId]
-            )
-        );
+            // Handle hasMany relationships - reassign or delete
+            // Reassign created rooms to replacement user
+            $user->createdRooms()->withTrashed()->each(
+                fn(Room $room) => $roomService->update(
+                    $room,
+                    ['user_id' => $reassignUserId]
+                )
+            );
 
-        // Reassign events to authenticated user
-        $user->events()->withTrashed()->each(
-            fn(Event $event) => $eventService->update(
-                $event,
-                ['user_id' => $authUserId]
-            )
-        );
+            // Reassign events to replacement user
+            $user->events()->withTrashed()->each(
+                fn(Event $event) => $eventService->update(
+                    $event,
+                    ['user_id' => $reassignUserId]
+                )
+            );
 
-        // Delete or reassign other hasMany relationships
-        $user->project_files()->update(['user_id' => $authUserId]);
-        $user->notificationSettings()->delete();
-        $user->comments()->update(['user_id' => $authUserId]);
-        $user->private_checklists()->update(['user_id' => $authUserId]);
-        $user->doneTasks()->update(['user_id' => $authUserId]);
-        $user->globalNotification()->delete();
-        $user->money_sources()->update(['creator_id' => $authUserId]);
-        $user->moneySourceTasks()->update(['user_id' => $authUserId]);
-        $user->tasks()->update(['user_id' => $authUserId]);
-        $user->eventVerifications()->delete();
-        $user->workTimeBookings()->delete();
+            // Reassign shifts committed by this user, if applicable
+            try {
+                if (Schema::hasColumn('shifts', 'committing_user_id')) {
+                    Shift::where('committing_user_id', $user->id)->update(['committing_user_id' => $reassignUserId]);
+                }
+            } catch (\Throwable $e) {
+                if (function_exists('report')) {
+                    report($e);
+                }
+            }
 
-        // Handle hasOne relationships - delete
-        if ($user->calendarAbo) {
-            $user->calendarAbo->delete();
+            // Delete or reassign other hasMany relationships
+            $user->notificationSettings()->delete();
+            $user->comments()->update(['user_id' => $reassignUserId]);
+            $user->private_checklists()->update(['user_id' => $reassignUserId]);
+            $user->doneTasks()->update(['user_id' => $reassignUserId]);
+            // Some installations may not have a user_id column on project_files.
+            // In that case, attempting to update the relation would throw a SQL error.
+            // We first check the schema and only attempt an update if the column exists.
+            try {
+                if (Schema::hasColumn('project_files', 'user_id')) {
+                    $user->project_files()->update(['user_id' => $reassignUserId]);
+                }
+            } catch (\Throwable $e) {
+                // Log at a low level and continue without failing the whole request
+                if (function_exists('report')) {
+                    report($e);
+                }
+            }
+            $user->globalNotification()->delete();
+            $user->money_sources()->update(['creator_id' => $reassignUserId]);
+            $user->tasks()->update(['user_id' => $reassignUserId]);
+            Project::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
+            $user->eventVerifications()->delete();
+            $user->workTimeBookings()->delete();
+            $user->productBasket()->delete();
+
+            // Handle hasOne relationships - delete
+            if ($user->calendarAbo) {
+                $user->calendarAbo->delete();
+            }
+
+            if ($user->shiftCalendarAbo) {
+                $user->shiftCalendarAbo->delete();
+            }
+
+            if ($user->calendar_settings) {
+                $user->calendar_settings->delete();
+            }
+
+            if ($user->calendar_filter) {
+                $user->calendar_filter->delete();
+            }
+
+            if ($user->shift_calendar_filter) {
+                $user->shift_calendar_filter->delete();
+            }
+
+            if ($user->commentedBudgetItemsSetting) {
+                $user->commentedBudgetItemsSetting->delete();
+            }
+
+            if ($user->workerShiftPlanFilter) {
+                $user->workerShiftPlanFilter->delete();
+            }
+
+            if ($user->inventoryArticlePlanFilter) {
+                $user->inventoryArticlePlanFilter->delete();
+            }
+
+            if ($user->inventoryManagementFilter) {
+                $user->inventoryManagementFilter->delete();
+            }
+
+            if ($user->projectFilterAndSortSetting) {
+                $user->projectFilterAndSortSetting->delete();
+            }
+
+            if ($user->userFilterAndSortSetting) {
+                $user->userFilterAndSortSetting->delete();
+            }
+
+            if ($user->contract) {
+                $user->contract->delete();
+            }
+            Change::query()
+                ->where(function ($query) use ($user): void {
+                    $query->where('changer_id', $user->id)
+                        ->orWhere('changes', 'LIKE', '"changed_by": {"id": ' . $user->id . '%');
+                })
+                ->whereIn('changer_type', [User::class, LaravelUser::class])
+                ->each(function ($change) use ($user, $reassignUserId): void {
+                    $change->changer_id = $reassignUserId;
+                    $change->changes = str_replace(
+                        ' "changed_by": {"id": ' . $user->id,
+                        ' "changed_by": {"id": ' . $reassignUserId,
+                        $change->changes
+                    );
+                    $change->save();
+                });
+            SubEvent::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
+            // Now delete the user
+            $user->delete();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-        if ($user->shiftCalendarAbo) {
-            $user->shiftCalendarAbo->delete();
-        }
-
-        if ($user->calendar_settings) {
-            $user->calendar_settings->delete();
-        }
-
-        if ($user->calendar_filter) {
-            $user->calendar_filter->delete();
-        }
-
-        if ($user->shift_calendar_filter) {
-            $user->shift_calendar_filter->delete();
-        }
-
-        if ($user->commentedBudgetItemsSetting) {
-            $user->commentedBudgetItemsSetting->delete();
-        }
-
-        if ($user->workerShiftPlanFilter) {
-            $user->workerShiftPlanFilter->delete();
-        }
-
-        if ($user->inventoryArticlePlanFilter) {
-            $user->inventoryArticlePlanFilter->delete();
-        }
-
-        if ($user->inventoryManagementFilter) {
-            $user->inventoryManagementFilter->delete();
-        }
-
-        if ($user->projectFilterAndSortSetting) {
-            $user->projectFilterAndSortSetting->delete();
-        }
-
-        if ($user->userFilterAndSortSetting) {
-            $user->userFilterAndSortSetting->delete();
-        }
-
-        if ($user->contract) {
-            $user->contract->delete();
-        }
-
-        // Now delete the user
-        $user->delete();
 
         broadcast(new UserUpdated())->toOthers();
 
@@ -1068,8 +1193,18 @@ class UserController extends Controller
             'hide_unoccupied_rooms',
             'display_project_groups',
             'show_unplanned_events',
-            'show_planned_events'
+            'show_planned_events',
+            'hide_unoccupied_days'
         ]));
+    }
+
+    public function toggleUserShiftTimePreset(Request $request): void
+    {
+        /** @var User $user */
+        $user = $this->auth->user();
+        $user->update([
+            'is_time_preset_open' => $request->boolean('is_time_preset_open')
+        ]);
     }
 
     public function updateSidebar(User $user, Request $request): void
@@ -1136,7 +1271,7 @@ class UserController extends Controller
         $selectedPeriodDate = $vacationMonth ?
             Carbon::parse($vacationMonth) :
             Carbon::today();
-        $user->load(['shiftCalendarAbo']);
+        $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(
@@ -1268,11 +1403,43 @@ class UserController extends Controller
         $letters = strtoupper(substr($letters, 0, 2));
 
         // Hintergrundfarbe über Parameter oder Standardwert setzen
-        $bgColor = request()?->query('bg', '#eb7a3d'); // Standard: Blau
+        $bgColor = request()?->query('bg', '#00a3ff'); // Standard: Blau
         $textColor = request()?->query('color', '#ffffff'); // Standard: Weiß
 
         // SVG in Blade rendern
         return response()->view('avatar', compact('letters', 'bgColor', 'textColor'))
             ->header('Content-Type', 'image/svg+xml');
+        }
+
+    private function getOrCreateDeletedPlaceholderUserId(): int
+    {
+        $email = config('artwork.deleted_user_email', 'deleted-user@artwork.local');
+
+        $placeholder = User::where('email', $email)->first();
+        if ($placeholder) {
+            return (int) $placeholder->id;
+        }
+
+        $user = new User();
+        $user->forceFill([
+            'first_name' => 'Deleted',
+            'last_name' => 'user',
+            'email' => $email,
+            'password' => Hash::make(Str::random(40)),
+            'email_verified_at' => now(),
+            'language' => config('app.fallback_locale', 'en'),
+            // Required JSON columns without DB defaults must be set explicitly
+            'opened_checklists' => json_encode([]),
+            'opened_areas' => json_encode([]),
+        ]);
+        $user->save();
+        // Ensure the placeholder is not present in Meilisearch index
+        try {
+            $user->unsearchable();
+        } catch (\Throwable $e) {
+            // ignore indexing issues
+        }
+
+        return (int) $user->id;
     }
 }

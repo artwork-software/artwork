@@ -30,9 +30,20 @@ class Manufacturer extends Model
         'email',
     ];
 
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
     public function searchableAs(): string
     {
         return 'manufacturers_index';
+    }
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return $this->profile_photo_path
+            ? asset('storage/' . $this->profile_photo_path)
+            : route('generate-avatar-image', ['letters' => $this->name[0] ?? 'M']);
     }
 
     public function toSearchableArray(): array

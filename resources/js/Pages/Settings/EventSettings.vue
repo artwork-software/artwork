@@ -2,18 +2,17 @@
     <app-layout :title="$t('Event Settings')">
 
            <EventSettingHeader>
+               <template #actions>
+                   <button class="ui-button-add" @click="openAddEventTypeModal">
+                       <component :is="IconPlus" stroke-width="1" class="size-5" />
+                       {{ $t('New Event Type') }}
+                   </button>
+               </template>
                <div>
-                   <div class="flex items-center justify-between mb-5">
-                       <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                       <GlassyIconButton icon="IconPlus" @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
-                       <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                           <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                           <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
-                       </div>
-                   </div>
-                   <div class="xsLight mt-2">
-                       {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
-                   </div>
+                   <BasePageTitle
+                       title="Event Types"
+                       description="Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name."
+                   />
                </div>
                <ul role="list" class="mt-5">
                    <li v-for="(eventType,index) in event_types" :key="eventType.id" class="flex justify-between">
@@ -53,8 +52,8 @@
                        </div>
                        <div class="flex items-center">
                            <BaseMenu has-no-offset white-menu-background>
-                               <BaseMenuItem title="Edit event type" white-menu-background @click="openEditEventTypeModal(eventType)" />
-                               <BaseMenuItem v-if="index !== 0" title="Delete event type" icon="IconTrash" white-menu-background @click="openDeleteEventTypeModal(eventType)" />
+                               <BaseMenuItem title="Edit event type" :icon="IconEdit" white-menu-background @click="openEditEventTypeModal(eventType)" />
+                               <BaseMenuItem v-if="index !== 0" title="Delete event type" :icon="IconTrash" white-menu-background @click="openDeleteEventTypeModal(eventType)" />
                            </BaseMenu>
                        </div>
                    </li>
@@ -103,6 +102,8 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
+import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -142,6 +143,7 @@ export default {
         }
     },
     components: {
+        BasePageTitle,
         BaseMenuItem,
         GlassyIconButton,
         ColorPicker,
@@ -204,6 +206,9 @@ export default {
         }
     },
     methods: {
+        IconTrash,
+        IconEdit,
+        IconPlus,
         addColor(color) {
             this.eventTypeForm.hex_code = color;
         },

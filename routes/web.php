@@ -1,89 +1,88 @@
 <?php
 
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
-use App\Http\Controllers\ArtistResidencyController;
-use App\Http\Controllers\AvailabilityController;
-use App\Http\Controllers\BudgetAccountManagementController;
-use App\Http\Controllers\BudgetGeneralController;
-use App\Http\Controllers\BudgetManagementAccountController;
-use App\Http\Controllers\BudgetManagementCostUnitController;
-use App\Http\Controllers\BudgetTemplateController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CraftController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\FilterController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CellCalculationsController;
-use App\Http\Controllers\CellCommentsController;
-use App\Http\Controllers\ChecklistController;
-use App\Http\Controllers\ChecklistTemplateController;
-use App\Http\Controllers\CollectingSocietyController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\CompanyTypeController;
-use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ContractModuleController;
-use App\Http\Controllers\ContractTypeController;
-use App\Http\Controllers\CraftController;
-use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\RoomFileController;
+use App\Http\Controllers\VacationController;
+use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\ExportPDFController;
+use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\EventStatusController;
-use App\Http\Controllers\EventTypeController;
-use App\Http\Controllers\EventVerificationController;
-use App\Http\Controllers\ExportPDFController;
-use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
-use App\Http\Controllers\GeneralSettingsController;
-use App\Http\Controllers\GenreController;
-use App\Http\Controllers\HolidayController;
-use App\Http\Controllers\IndividualTimeController;
-use App\Http\Controllers\MoneySourceCategoryController;
-use App\Http\Controllers\MoneySourceController;
-use App\Http\Controllers\MoneySourceFileController;
-use App\Http\Controllers\MoneySourceReminderController;
-use App\Http\Controllers\MoneySourceTaskController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PermissionPresetController;
-use App\Http\Controllers\PresetShiftController;
-use App\Http\Controllers\PresetTimeLineController;
-use App\Http\Controllers\PresetTimelineTimeController;
-use App\Http\Controllers\ProjectComponentValueController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\ProjectFileController;
-use App\Http\Controllers\ProjectManagementBuilderController;
-use App\Http\Controllers\ProjectPrintLayoutController;
-use App\Http\Controllers\ProjectRoleController;
-use App\Http\Controllers\ProjectStatesController;
 use App\Http\Controllers\ProjectTabController;
-use App\Http\Controllers\ProjectTabSidebarTabController;
-use App\Http\Controllers\RoomAttributeController;
-use App\Http\Controllers\RoomCategoryController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
-use App\Http\Controllers\SageAssignedDataCommentController;
-use App\Http\Controllers\SageNotAssignedDataController;
-use App\Http\Controllers\SectorController;
-use App\Http\Controllers\ServiceProviderContactsController;
-use App\Http\Controllers\ServiceProviderController;
-use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\ShiftFilterController;
-use App\Http\Controllers\ShiftPresetController;
-use App\Http\Controllers\ShiftQualificationController;
-use App\Http\Controllers\ShiftSettingsController;
-use App\Http\Controllers\ShiftTimePresetController;
-use App\Http\Controllers\SidebarTabComponentController;
-use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
-use App\Http\Controllers\System\FileSettingsController;
-use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CompanyTypeController;
+use App\Http\Controllers\EventStatusController;
+use App\Http\Controllers\MoneySourceController;
+use App\Http\Controllers\PresetShiftController;
+use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectRoleController;
+use App\Http\Controllers\ShiftFilterController;
+use App\Http\Controllers\ShiftPresetController;
+use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\CellCommentsController;
+use App\Http\Controllers\ContractTypeController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\BudgetGeneralController;
+use App\Http\Controllers\ProjectStatesController;
+use App\Http\Controllers\RoomAttributeController;
+use App\Http\Controllers\ShiftSettingsController;
+use App\Http\Controllers\BudgetTemplateController;
+use App\Http\Controllers\ContractModuleController;
+use App\Http\Controllers\IndividualTimeController;
+use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\TimelinePresetController;
+use App\Http\Controllers\ArtistResidencyController;
+use App\Http\Controllers\GeneralSettingsController;
+use App\Http\Controllers\MoneySourceFileController;
+use App\Http\Controllers\MoneySourceTaskController;
+use App\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\ShiftTimePresetController;
+use App\Http\Controllers\CellCalculationsController;
+use App\Http\Controllers\PermissionPresetController;
+use App\Http\Controllers\ChecklistTemplateController;
+use App\Http\Controllers\CollectingSocietyController;
+use App\Http\Controllers\EventVerificationController;
+use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use App\Http\Controllers\PresetTimelineTimeController;
+use App\Http\Controllers\ProjectPrintLayoutController;
+use App\Http\Controllers\ShiftQualificationController;
+use App\Http\Controllers\MoneySourceCategoryController;
+use App\Http\Controllers\MoneySourceReminderController;
+use App\Http\Controllers\SageNotAssignedDataController;
+use App\Http\Controllers\SidebarTabComponentController;
+use App\Http\Controllers\System\FileSettingsController;
+use App\Http\Controllers\ProjectTabSidebarTabController;
 use App\Http\Controllers\ToolSettingsBrandingController;
+use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\ArtistResidency\Http\Controllers\ArtistController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
@@ -95,44 +94,48 @@ use Artwork\Modules\User\Http\Controllers\UserFilterController;
 use Artwork\Modules\User\Http\Controllers\UserFilterTemplateController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarAboController;
 use Artwork\Modules\User\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\VacationController;
-use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
+use Artwork\Modules\Accommodation\Http\Controllers\AccommodationRoomTypeController;
 use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Chat\Http\Controllers\ChatController;
+use App\Http\Controllers\BudgetAccountManagementController;
+use App\Http\Controllers\BudgetManagementAccountController;
+use App\Http\Controllers\CraftInventoryItemEventController;
+use App\Http\Controllers\SageAssignedDataCommentController;
+use App\Http\Controllers\ServiceProviderContactsController;
+use Artwork\Modules\Project\Http\Middleware\CanEditProject;
+use Artwork\Modules\Project\Http\Middleware\CanViewProject;
+use App\Http\Controllers\BudgetManagementCostUnitController;
+use App\Http\Controllers\ProjectManagementBuilderController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
 use Artwork\Modules\Workflow\Http\Controllers\WorkflowController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
-use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
-use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
-use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
-use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
-use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
-use Artwork\Modules\Invitation\Http\Controller\InvitationController;
-use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
-use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
-use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
-use Artwork\Modules\Project\Http\Middleware\CanEditProject;
-use Artwork\Modules\Project\Http\Middleware\CanViewProject;
-use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
+use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
+use Artwork\Modules\ExternalIssue\Http\Controllers\ExternalIssueController;
+use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
+use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
+use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
-use Artwork\Modules\User\Http\Controllers\UserWorkTimeController;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -173,13 +176,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'shift-rules'], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
-        
+
         // Specific routes must come before parameterized routes
         Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
-        
+
         // Parameterized routes come last
         Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
         Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->name('shift-rules.update');
@@ -300,6 +303,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])
         ->name('user.calendar_settings.update');
 
+    Route::patch('/users/shift-preset-toggle', [UserController::class, 'toggleUserShiftTimePreset'])
+        ->name('user.shift-time-preset.toggle');
+
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::get('/users/addresses', [UserController::class, 'getAddresses'])->name('users.addresses');
@@ -328,6 +334,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/chat/popup-settings', [UserController::class, 'updateChatPopupSettings'])
         ->name('user.chat.popup-settings');
 
+    // chat-system.toggle-push-notifications
+    Route::post('/users/chat/push-notifications', [ChatController::class, 'disableOrEnableChatNotifications'])
+        ->name('chat-system.toggle-push-notifications');
+
     Route::patch(
         '/users/{user}/permissions',
         [
@@ -351,6 +361,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
     Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
+    Route::patch('/users/{user}/assignCraft/bulk', [UserController::class, 'assignCraftsBulk'])->name('user.assign.crafts.bulk');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
     //user.sidebar.update
@@ -369,7 +380,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.edit');
     Route::patch('/departments/{department}/remove/members', [DepartmentController::class, 'removeAllMembers'])
         ->name('departments.remove.members');
-    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 
     //Projects
     Route::post('/projects/{project}/pin', [ProjectController::class, 'pin'])->name('project.pin');
@@ -603,6 +614,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])->name('dashboard.redirect-to-calendar');
+    Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
@@ -613,6 +626,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
+    Route::post('/events/{event}/convert-to-planning', [EventController::class, 'convertToPlanning'])
+        ->name('events.convertToPlanning');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
@@ -673,6 +688,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
+    Route::post('/shifts/{shift}/commit/change', [EventController::class, 'changeCommitShifts'])->name('shift.change.commit.status');
     Route::post('/shifts/commit/request', [ShiftCommitWorkflowRequestsController::class, 'store'])
         ->name('shifts.requestCommit');
 
@@ -1405,6 +1421,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/freelancer/{freelancer}/assignCraft',
         [FreelancerController::class, 'assignCraft']
     )->name('freelancer.assign.craft');
+    Route::patch(
+        '/freelancer/{freelancer}/assignCraft/bulk',
+        [FreelancerController::class, 'assignCraftsBulk']
+    )->name('freelancer.assign.crafts.bulk');
     Route::delete(
         '/freelancer/{freelancer}/removeCraft/{craft}',
         [FreelancerController::class, 'removeCraft']
@@ -1474,6 +1494,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/service-provider/{serviceProvider}/assignCraft',
         [ServiceProviderController::class, 'assignCraft']
     )->name('service_provider.assign.craft');
+    Route::patch(
+        '/service-provider/{serviceProvider}/assignCraft/bulk',
+        [ServiceProviderController::class, 'assignCraftsBulk']
+    )->name('service_provider.assign.crafts.bulk');
     Route::delete(
         '/service-provider/{serviceProvider}/removeCraft/{craft}',
         [ServiceProviderController::class, 'removeCraft']
@@ -1589,18 +1613,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ]
     );
 
+    Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
+        ->name('event.standard.values');
+
+    Route::patch('/event/standard-values/update', [EventController::class, 'saveStandardEventValues'])
+        ->name('event.standard.values.update');
+
     Route::group(['prefix' => 'day-service'], function (): void {
         Route::get('index', [DayServiceController::class, 'index'])->name('day-service.index');
         Route::post('store', [DayServiceController::class, 'store'])->name('day-service.store');
         Route::patch('update/{dayService}', [DayServiceController::class, 'update'])
             ->name('day-service.update');
+        Route::delete('destroy/{dayService}', [DayServiceController::class, 'destroy'])
+            ->name('day-service.destroy');
     });
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
-                ->name('tab.index')
-                ->middleware('role:artwork admin');
+                ->name('tab.index');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -1650,6 +1681,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'addComponentWithScopes'
             ])->name('tab.add.component.with.scopes');
 
+            // tab.update.component.scope
+            Route::patch('/component-in-tab/{componentInTab}/update-scope', [
+                ProjectTabController::class,
+                'updateComponentScope'
+            ])->name('tab.update.component.scope');
+
             // patch tab.update.default
             Route::patch('/{projectTab}/update/default', [ProjectTabController::class, 'updateDefault'])
                 ->name('tab.update.default');
@@ -1657,8 +1694,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'component'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
-                ->name('component.index')
-                ->middleware('role:artwork admin');
+                ->name('component.index');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])
@@ -1779,14 +1815,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::resource('project-roles', ProjectRoleController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:artwork admin');
+        ->only(['index', 'store', 'update', 'destroy']);
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {
         Route::resource('shift-time-preset', ShiftTimePresetController::class)
             ->only(['store', 'update', 'destroy']);
     });
+
+    // SingleShiftPreset Routes
+    Route::get('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'index'])
+        ->name('single-shift-presets.index');
+    Route::post('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'store'])
+        ->name('single-shift-presets.store');
+    Route::put('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'update'])
+        ->name('single-shift-presets.update');
+    Route::delete('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'destroy'])
+        ->name('single-shift-presets.destroy');
 
     // attach DayService to entity
     Route::post(
@@ -1829,8 +1874,43 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch articles.restore
         Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
             ->name('articles.restore');
+
+        //inventory.filter.store
+        Route::post('/filter/store', [InventoryUserFilterController::class, 'store'])
+                ->name('inventory.filter.store');
+
+        // get articles form api
+        Route::get('/articles/', [InventoryArticleController::class, 'loadArticlesByFilter'])
+            ->name('inventory.articles.api');
+
+        // Nutzungsdaten für UsageModal eines Artikels an einem Tag
+        Route::get('/articles/usage', [InventoryArticleController::class, 'usageData'])
+            ->name('inventory.articles.usage');
     });
 
+
+    Route::group(['prefix' => 'basket'], function (): void {
+        // inventory.basket.add
+        Route::post('/add', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'store'])
+            ->name('inventory.basket.add');
+
+        // inventory.product_basket.get_baskets
+        Route::get('/get_baskets', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketController::class, 'index'])
+            ->name('inventory.product_basket.get_baskets');
+
+        // inventory.product_basket.update_quantity
+        Route::post('/update_quantity/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantity'])
+            ->name('inventory.product_basket.update_quantity');
+        Route::post('/update_quantity/{basketArticle}/single', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'updateQuantitySingle'])
+            ->name('inventory.product_basket.update_quantity.single');
+
+        Route::delete('/{basketArticle}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'destroy'])
+            ->name('inventory.product_basket.remove');
+
+        // inventory.product_basket.remove_articles
+        Route::post('/remove_articles/{productBasket}', [\Artwork\Modules\Inventory\Http\Controllers\ProductBasketArticleController::class, 'removeArticles'])
+            ->name('inventory.product_basket.remove_articles');
+    });
 
 
 
@@ -1867,6 +1947,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
+
+            Route::get('/status', [InventoryArticleStatusController::class, 'index'])
+                ->name('inventory-management.settings.status');
+
+            Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
+                ->name('inventory.article-status.update');
 
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');
@@ -2225,6 +2311,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/destroy/{accommodation}', [AccommodationController::class, 'destroy'])->name('accommodation.destroy');
     });
 
+    Route::group(['prefix' => 'accommodation-room-types'], function (): void {
+        Route::post('/store', [AccommodationRoomTypeController::class, 'store'])->name('accommodation-room-types.store');
+    });
+
     Route::group(['prefix' => 'contact'], function (): void {
         Route::post('/store/{model}/{modelId}', [ContactController::class, 'store'])->name('contact.store');
         Route::patch('/update/{contact}', [ContactController::class, 'update'])->name('contact.update');
@@ -2302,7 +2392,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.work-time-pattern.update
         Route::patch(
             '/work-time-pattern/{user}/update-user',
-            [\Artwork\Modules\User\Http\Controllers\UserWorkTimeController::class, 'store']
+            [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
         )->name('shift.work-time-pattern.update-user');
     });
 
@@ -2360,6 +2450,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/change-request/{workTimeChangeRequest}/decline',
             [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'decline']
         )->name('worktime.change-request.decline');
+    });
+
+
+    Route::group(['prefix' => 'artist'], function (): void {
+        Route::get('/', [ArtistController::class, 'index'])->name('artist.index');
+        Route::post('/store', [ArtistController::class, 'store'])->name('artist.store');
+        Route::patch('/{artist}/update', [ArtistController::class, 'update'])->name('artist.update');
+        Route::delete('/{artist}/destroy', [ArtistController::class, 'destroy'])->name('artist.destroy');
+        // export artists
+        Route::get('/export', [ArtistController::class, 'export'])->name('artist.export');
+        // artist.toggle-active
+        Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });
 });
 

@@ -1,39 +1,26 @@
 <template>
     <app-layout :title="$t(title)">
-        <div class="mt-5 mx-auto container">
+        <div class="container mx-auto mt-6">
+            <div class="my-6">
+                <slot name="tabBar"></slot>
+            </div>
             <div>
-                <PageTitle :title="$t(title) ?? $t('Users & teams')" :description="$t(description)" />
-
-            </div>
-
-            <div class="flex items-center justify-between">
                 <UserTabs />
-
-                <slot name="tabBar">
-
-                </slot>
             </div>
-
-            <div class="mt-10">
+            <div class="mt-6">
                 <slot name="default"></slot>
             </div>
         </div>
     </app-layout>
 </template>
 
-<script>
-import {defineComponent} from 'vue'
-import UserTabs from "@/Pages/Users/Components/UserTabs.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import PageTitle from "@/Artwork/Titles/PageTitle.vue";
+<script setup>
+import AppLayout from '@/Layouts/AppLayout.vue'
+import UserTabs from '@/Pages/Users/Components/UserTabs.vue'
+import PageTitle from '@/Artwork/Titles/PageTitle.vue'
 
-export default defineComponent({
-    name: "UserHeader",
-    props: ['title', 'description'],
-    components: {PageTitle, UserTabs, AppLayout}
+defineProps({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
 })
 </script>
-
-<style scoped>
-
-</style>

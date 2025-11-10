@@ -11,6 +11,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -432,6 +433,7 @@ class ShiftService
             $shift->is_committed = true;
             $shift->committing_user_id = Auth::id();
             $shift->save();
+            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
 
             foreach ($shift->users as $user) {
                 if (!in_array($user->id, $userIdHasGetNotification)) {

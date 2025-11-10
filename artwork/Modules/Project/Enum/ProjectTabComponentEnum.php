@@ -10,6 +10,7 @@ enum ProjectTabComponentEnum: string
     case DROPDOWN = 'DropDown';
     case TEXT_AREA = 'TextArea';
     case TITLE = 'Title';
+    case LINK = 'Link';
 
 
     // default tab component types
@@ -44,6 +45,7 @@ enum ProjectTabComponentEnum: string
 
     case ARTIST_RESIDENCIES = 'ArtistResidenciesComponent';
     case ARTIST_NAME_DISPLAY = 'ArtistNameDisplayComponent';
+    case PROJECT_MATERIAL_ISSUE_COMPONENT = 'ProjectMaterialIssueComponent';
 
     /**
      * Get all available values
@@ -61,6 +63,14 @@ enum ProjectTabComponentEnum: string
             ],
             self::TEXT_FIELD->value => [
                 'name' => self::TEXT_FIELD->value,
+                'availableFields' => [
+                    'label' => '',
+                    'text' => '',
+                    'placeholder' => '',
+                ]
+            ],
+            self::LINK->value => [
+                'name' => self::LINK->value,
                 'availableFields' => [
                     'label' => '',
                     'text' => '',

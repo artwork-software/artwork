@@ -26,9 +26,15 @@ class BudgetManagementAccount extends Model
 
     public function scopeByAccountNumberOrTitle(Builder $builder, string $search): Builder
     {
-        return $builder
-            ->where('account_number', 'like', $search . '%')
-            ->orWhere('title', 'like', $search . '%');
+        $search = trim($search);
+
+        // Sonderzeichen escapen, um LIKE sicher zu machen
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+
+        return $builder->where(function (Builder $query) use ($escaped): void {
+            $query->whereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($escaped) . '%'])
+                ->orWhereRaw('LOWER(title) LIKE ?', ['%' . strtolower($escaped) . '%']);
+        });
     }
 
     public function scopeIsAccountForRevenue(Builder $builder, bool $isAccountForRevenue): Builder

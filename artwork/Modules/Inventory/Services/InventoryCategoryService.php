@@ -75,74 +75,105 @@ class InventoryCategoryService
         });
     }
 
+    protected function normalizeValue(mixed $v): string
+    {
+        if (is_bool($v)) {
+            return $v ? 'true' : 'false';
+        }
+        if ($v === 'true' || $v === 'false') {
+            return (string) $v;
+        }
+        return (string) ($v ?? '');
+    }
+
+    /**
+     * Baut das Sync-Payload: [property_id => ['value' => ..., 'position' => i]]
+     * – entfernt Duplikate (erste Vorkommnis gewinnt)
+     * – nutzt vorhandene 'position' oder ansonsten den Array-Index
+     * * @param array|SupportCollection $properties
+     * @return array<int, array{value: string, position: int}>
+     */
+    protected function buildPropertyPivotPayload(array|SupportCollection $properties): array
+    {
+        $payload = [];
+        $seen = [];
+
+        foreach (collect($properties)->filter(fn ($p) => isset($p['id']))->values() as $i => $p) {
+            $id = (int) $p['id'];
+            if (isset($seen[$id])) {
+                continue; // Duplikat ignorieren
+            }
+            $seen[$id] = true;
+
+            $payload[$id] = [
+                'value'    => $this->normalizeValue($p['defaultValue'] ?? null),
+                'position' => isset($p['position']) ? (int) $p['position'] : $i,
+            ];
+        }
+
+        return $payload;
+    }
+
     /**
      * Create subcategories for a category
      */
     protected function createSubcategories(InventoryCategory $category, SupportCollection $subcategories): void
     {
         foreach ($subcategories as $subcategoryData) {
-            // Create the subcategory
-            $subcategory = $category->subcategories()->create([
-                'name' => $subcategoryData['name']
+            $subcategory = $category->subCategories()->create([
+                'name' => (string) ($subcategoryData['name'] ?? ''),
             ]);
 
-            // Attach properties to the subcategory if they exist
-            if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
-                $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
-                    return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
-                });
-
+            if (!empty($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
+                $propertyData = $this->buildPropertyPivotPayload($subcategoryData['properties']);
                 $subcategory->properties()->sync($propertyData);
             }
         }
     }
 
     /**
-     * Update subcategories efficiently
+     * Update subcategories efficiently (inkl. Property-Positionen)
      */
     protected function updateSubcategories(InventoryCategory $category, SupportCollection $subcategories): void
     {
-        $existingIds = $subcategories->pluck('id')->filter()->toArray();
+        // Wenn keine Subcategories im Request => alle löschen
+        if ($subcategories->isEmpty()) {
+            $category->subCategories()->delete();
+            return;
+        }
 
-        // Delete removed subcategories
-        $category->subcategories()
-            ->whereNotIn('id', $existingIds)
+        $existingIds = $subcategories->pluck('id')->filter()->map(fn ($v) => (int) $v)->all();
+
+        // Entferne Subcategories, die nicht mehr im Request sind
+        $category->subCategories()
+            ->when(!empty($existingIds), fn ($q) => $q->whereNotIn('id', $existingIds))
+            ->when(empty($existingIds), fn ($q) => $q) // explizit keine Bedingung -> löscht nichts hier
             ->delete();
 
-        // Update or create subcategories
         foreach ($subcategories as $subcategoryData) {
-            if (isset($subcategoryData['id'])) {
-                // Update existing subcategory
-                $subcategory = $category->subcategories()
-                    ->where('id', $subcategoryData['id'])
-                    ->first();
+            $name = (string) ($subcategoryData['name'] ?? '');
+
+            // Update oder Create je nach Vorhandensein der ID
+            if (!empty($subcategoryData['id'])) {
+                $subcategory = $category->subCategories()->where('id', (int) $subcategoryData['id'])->first();
 
                 if ($subcategory) {
-                    $subcategory->update(['name' => $subcategoryData['name']]);
-
-                    // Sync properties for the subcategory
-                    if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
-                        $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
-                            return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
-                        });
-
-                        $subcategory->properties()->sync($propertyData);
-                    }
+                    $subcategory->update(['name' => $name]);
+                } else {
+                    // Fallback: wenn ID nicht (mehr) existiert, neu anlegen
+                    $subcategory = $category->subCategories()->create(['name' => $name]);
                 }
             } else {
-                // Create new subcategory
-                $subcategory = $category->subcategories()->create([
-                    'name' => $subcategoryData['name']
-                ]);
+                $subcategory = $category->subCategories()->create(['name' => $name]);
+            }
 
-                // Attach properties to the new subcategory
-                if (isset($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
-                    $propertyData = collect($subcategoryData['properties'])->mapWithKeys(function ($property) {
-                        return [$property['id'] => ['value' => $property['defaultValue'] ?? '']];
-                    });
-
-                    $subcategory->properties()->sync($propertyData);
-                }
+            // Properties synchronisieren (Werte + Position)
+            if (!empty($subcategoryData['properties']) && is_array($subcategoryData['properties'])) {
+                $propertyData = $this->buildPropertyPivotPayload($subcategoryData['properties']);
+                $subcategory->properties()->sync($propertyData);
+            } else {
+                // Keine Properties im Request => alle entfernen
+                $subcategory->properties()->detach();
             }
         }
     }

@@ -29,7 +29,7 @@
                                 id="start" type="time" class="max-w-28 text-xs"
                                 v-model="person.pivot.end_time"
                             />
-                            <GlassyIconButton text="Save" icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
+                            <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                         </div>
                     </div>
                 </PopoverPanel>
@@ -59,14 +59,14 @@
         </div>
 
         <div class="flex items-center gap-x-1 col-span-1">
-            <component :is="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
+            <PropertyIcon :name="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
             {{ findShiftQualification(person.pivot?.shift_qualification_id)?.name }}
         </div>
         <div class=" col-span-2">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                     <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full text-gray-500 !ring-0 border-none">
-                        <component is="IconNote"
+                        <component :is="IconNote"
                                    class="size-4 min-h-4 min-w-4 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out cursor-pointer"
                         />
                         <span class="truncate">{{ person.pivot?.short_description || 'Keine Beschreibung' }}</span>
@@ -90,7 +90,7 @@
                                         id="start" label="Short Description" type="text" class="max-w-56 text-xs"
                                         v-model="person.pivot.short_description"
                                     />
-                                    <GlassyIconButton text="Save" icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
+                                    <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
                                 </div>
                             </div>
                         </PopoverPanel>
@@ -123,8 +123,10 @@ import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import {computed, ref} from "vue";
-import {IconX} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     person: {

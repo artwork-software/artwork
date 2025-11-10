@@ -25,6 +25,8 @@ class ShiftRuleCheckFactory
         $this->register(new MaxWorkingHoursOnDayCheck());
         $this->register(new MaxConsecutiveWorkingDaysCheck());
         $this->register(new WeeklyMaxHoursCheck());
+        // Backward compatibility alias for previously used trigger type key in DB/UI
+        $this->checks['maxWorkingHoursOnWeek'] = $this->checks['weeklyMaxHours'];
         $this->register(new RestTimeBeforeWorkdayCheck());
         $this->register(new RestTimeBeforeHolidayCheck());
         $this->register(new MinDaysBeforeCommitCheck());

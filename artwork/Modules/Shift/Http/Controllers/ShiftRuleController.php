@@ -305,7 +305,7 @@ class ShiftRuleController extends Controller
                 'name' => 'Maximale Tage in Folge arbeiten',
                 'description' => 'Maximale aufeinanderfolgende Arbeitstage'
             ],
-            'maxWorkingHoursOnWeek' => [
+            'weeklyMaxHours' => [
                 'name' => 'Wochenmaximum an Stunden',
                 'description' => 'Maximal erlaubte Arbeitsstunden pro Woche'
             ],

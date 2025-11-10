@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\RuleChecks;
 
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftRule;
@@ -15,6 +16,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 {
     protected function getPlannedWorkingHoursForDay(User $user, Carbon $date): float
     {
+        // Sum minutes from shifts overlapping this date
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
             $query->where('user_id', $user->id);
         })
@@ -22,17 +24,52 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             ->whereDate('end_date', '>=', $date)
             ->get();
 
-        $totalHours = 0;
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd = $date->copy()->endOfDay();
+
+        $totalMinutes = 0;
         foreach ($shifts as $shift) {
             $start = Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start);
             $end = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
             $breakMinutes = $shift->break_minutes ?? 0;
 
-            $totalMinutes = $start->diffInMinutes($end) - $breakMinutes;
-            $totalHours += $totalMinutes / 60;
+            // Clip to the day window
+            $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
+            $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
+
+            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $breakMinutes);
+            $totalMinutes += $minutes;
         }
 
-        return $totalHours;
+        // Add minutes from IndividualTimes overlapping this date
+        $individualTimes = $user->individualTimes()
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->get();
+
+        foreach ($individualTimes as $it) {
+            $itStart = Carbon::parse($it->start_date);
+            $itEnd = Carbon::parse($it->end_date);
+
+            if (!empty($it->start_time)) {
+                $itStart->setTimeFromTimeString($it->start_time);
+            } else {
+                $itStart->startOfDay();
+            }
+            if (!empty($it->end_time)) {
+                $itEnd->setTimeFromTimeString($it->end_time);
+            } else {
+                $itEnd->endOfDay();
+            }
+
+            $segStart = $itStart->greaterThan($dayStart) ? $itStart : $dayStart;
+            $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd : $dayEnd;
+
+            $minutes = max(0, $segStart->diffInMinutes($segEnd));
+            $totalMinutes += $minutes;
+        }
+
+        return $totalMinutes / 60.0;
     }
 
     protected function getShiftForUserOnDate(User $user, Carbon $date): ?Shift
@@ -89,38 +126,71 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     ): Collection {
         $violations = collect();
 
-        // Get all shifts for this user on this date, ordered by start time
+        $dayStart = $date->copy()->startOfDay();
+        $dayEnd = $date->copy()->endOfDay();
+
+        // Build a list of work segments (shifts + individual times) on this date
+        $segments = [];
+
+        // Shifts
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
             $query->where('user_id', $user->id);
         })
-        ->whereDate('start_date', $date)
-        ->orderBy('start')
-        ->get();
-
-        if ($shifts->count() < 2) {
-            return $violations; // Need at least 2 shifts to check rest time between them
+            ->whereDate('start_date', $date)
+            ->orderBy('start')
+            ->get();
+        foreach ($shifts as $shift) {
+            $start = Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start);
+            $end = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
+            // clip to day
+            $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
+            $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
+            if ($segStart < $segEnd) {
+                $segments[] = ['start' => $segStart, 'end' => $segEnd, 'type' => 'shift', 'shift' => $shift];
+            }
         }
 
-        // Check rest time between consecutive shifts
-        for ($i = 0; $i < $shifts->count() - 1; $i++) {
-            $currentShift = $shifts[$i];
-            $nextShift = $shifts[$i + 1];
+        // Individual times
+        $individualTimes = $user->individualTimes()
+            ->whereDate('start_date', $date)
+            ->orderByRaw('COALESCE(start_time, "00:00:00")')
+            ->get();
+        foreach ($individualTimes as $it) {
+            $itStart = Carbon::parse($it->start_date);
+            $itEnd = Carbon::parse($it->end_date);
+            $itStart->setTimeFromTimeString($it->start_time ?: '00:00:00');
+            $itEnd->setTimeFromTimeString($it->end_time ?: '23:59:59');
+            $segStart = $itStart->greaterThan($dayStart) ? $itStart : $dayStart;
+            $segEnd = $itEnd->lessThan($dayEnd) ? $itEnd : $dayEnd;
+            if ($segStart < $segEnd) {
+                $segments[] = ['start' => $segStart, 'end' => $segEnd, 'type' => 'it', 'shift' => null];
+            }
+        }
 
-            // Calculate end time of current shift (may go into next day)
-            $currentShiftEnd = Carbon::parse($currentShift->end_date)->setTimeFromTimeString($currentShift->end);
+        if (count($segments) < 2) {
+            return $violations;
+        }
 
-            // Calculate start time of next shift
-            $nextShiftStart = Carbon::parse($nextShift->start_date)->setTimeFromTimeString($nextShift->start);
+        // Sort segments by start time
+        usort($segments, function ($a, $b) {
+            if ($a['start']->eq($b['start'])) {
+                return 0;
+            }
+            return $a['start']->lt($b['start']) ? -1 : 1;
+        });
 
-            // Calculate rest hours between shifts
-            $restHours = $this->calculateRestHours($currentShiftEnd, $nextShiftStart);
-
-            if ($restHours < $rule->individual_number_value) {
-                $violations->push($this->createViolation($rule, $nextShift, $user, $date, [
+        // Check rest time between consecutive segments; create violation when the NEXT segment is a shift
+        for ($i = 0; $i < count($segments) - 1; $i++) {
+            $current = $segments[$i];
+            $next = $segments[$i + 1];
+            $restHours = $this->calculateRestHours($current['end'], $next['start']);
+            if ($restHours < $rule->individual_number_value && $next['type'] === 'shift' && $next['shift']) {
+                $violations->push($this->createViolation($rule, $next['shift'], $user, $date, [
                     'rest_hours' => $restHours,
                     'min_required' => $rule->individual_number_value,
-                    'previous_shift_end' => $currentShiftEnd->format('Y-m-d H:i:s'),
-                    'current_shift_start' => $nextShiftStart->format('Y-m-d H:i:s')
+                    'previous_segment_end' => $current['end']->format('Y-m-d H:i:s'),
+                    'current_segment_start' => $next['start']->format('Y-m-d H:i:s'),
+                    'next_segment_type' => 'shift',
                 ]));
             }
         }
@@ -131,12 +201,13 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     protected function calculateRestHours(Carbon $endTime, Carbon $startTime): float
     {
         // Calculate the difference in hours - endTime is when last shift ended, startTime is when next shift starts
-        // If start time is before end time, it means there's no gap (violation)
+        // If start time is before or equal to end time, it means there's no gap (or overlap)
         if ($startTime <= $endTime) {
-            return 0; // No rest time if shifts overlap or touch
+            return 0.0; // No rest time if shifts overlap or touch
         }
 
-        return $endTime->diffInHours($startTime, false);
+        // Always return a positive fractional hour difference for precise comparisons
+        return $endTime->diffInMinutes($startTime) / 60.0;
     }
 
     protected function isWorkday(Carbon $date): bool
@@ -200,19 +271,32 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
     protected function getEarliestShiftStartOfDay(User $user, Carbon $date): ?Carbon
     {
+        // Earliest shift start on this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
             $query->where('user_id', $user->id);
         })
-        ->whereDate('start_date', $date)
-        ->orderBy('start')
-        ->first();
+            ->whereDate('start_date', $date)
+            ->orderBy('start')
+            ->first();
+        $earliest = $shift ? Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start) : null;
 
-        return $shift ? Carbon::parse($shift->start_date)->setTimeFromTimeString($shift->start) : null;
+        // Earliest individual time start on this date
+        $it = $user->individualTimes()
+            ->whereDate('start_date', $date)
+            ->orderByRaw('COALESCE(start_time, "00:00:00")')
+            ->first();
+        if ($it) {
+            $itStart = Carbon::parse($it->start_date);
+            $itStart->setTimeFromTimeString($it->start_time ?: '00:00:00');
+            $earliest = $earliest ? $earliest->min($itStart) : $itStart;
+        }
+
+        return $earliest;
     }
 
     protected function getLatestShiftEndOfDay(User $user, Carbon $date): ?Carbon
     {
-        // Find shifts that end on the given date OR start on the given date and go past midnight
+        // Find latest shift end relevant for this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
             $query->where('user_id', $user->id);
         })
@@ -227,16 +311,34 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             ->orderByDesc('end')
             ->first();
 
-        if (!$shift) {
-            return null;
+        $latest = null;
+        if ($shift) {
+            if ($shift->start_date === $shift->end_date) {
+                $latest = Carbon::parse($date->format('Y-m-d'))->setTimeFromTimeString($shift->end);
+            } else {
+                $latest = Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
+            }
         }
 
-        // If shift ends on the same date as start, use that date
-        if ($shift->start_date === $shift->end_date) {
-            return Carbon::parse($date->format('Y-m-d'))->setTimeFromTimeString($shift->end);
+        // Consider IndividualTimes ending on this date or starting on this date and spanning into next day
+        $it = $user->individualTimes()
+            ->where(function ($q) use ($date): void {
+                $q->whereDate('end_date', $date)
+                    ->orWhere(function ($qq) use ($date): void {
+                        $qq->whereDate('start_date', $date)
+                            ->whereRaw('end_date > start_date');
+                    });
+            })
+            ->orderByDesc('end_date')
+            ->orderByRaw('COALESCE(end_time, "23:59:59") DESC')
+            ->first();
+
+        if ($it) {
+            $itEndDate = Carbon::parse($it->end_date);
+            $itEndDate->setTimeFromTimeString($it->end_time ?: '23:59:59');
+            $latest = $latest ? $latest->max($itEndDate) : $itEndDate;
         }
 
-        // If shift goes past midnight, use the actual end date
-        return Carbon::parse($shift->end_date)->setTimeFromTimeString($shift->end);
+        return $latest;
     }
 }

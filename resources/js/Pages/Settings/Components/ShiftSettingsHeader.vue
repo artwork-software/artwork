@@ -71,6 +71,12 @@ export default defineComponent({
                 href: route('single-shift-presets.index'),
                 current: route().current('single-shift-presets.index'),
                 permission: true
+            },
+            {
+                name: $t('Shift warnings - rules'),
+                href: route('shift-rules.index'),
+                current: route().current('shift-rules.index'),
+                permission: true,
             }
         ];
 

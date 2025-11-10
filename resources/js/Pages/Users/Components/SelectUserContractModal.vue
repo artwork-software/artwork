@@ -1,14 +1,14 @@
 <template>
     <ArtworkBaseModal
-        title="Select Work Time Pattern"
-        description="Choose a work time pattern for the user."
+        title="Select User contract"
+        description="Choose a contract for the user."
         @close="$emit('close')">
 
         <div class="p-4 space-y-4">
             <BaseInput
                 v-model="searchInput"
                 type="text"
-                label="Search patterns..."
+                label="Search contracts..."
                 id="searchInput"/>
 
 

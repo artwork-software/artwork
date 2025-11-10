@@ -4,22 +4,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div>
                 <TinyPageHeadline
-                    :title="$t('User Contract')"
-                    :description="$t('Here you can manage the user contract settings.')"
+                    :title="isContractSelected ? $t('Active contract: {0}', [selectedContract?.name]) : $t('User Contract')"
+                    :description="isContractSelected ? selectedContract?.description : $t('Here you can manage the user contract settings.')"
                 />
-
-                <div v-if="selectedContract" class="mt-1">
-                    <p class="text-sm font-lexend text-gray-500">
-                        {{ $t('The employment contract “{0}” is currently selected. This means that the contractually agreed rules cannot be edited. Remove the employment contract to enter your own rules.', [selectedContract.name]) }}
-                    </p>
-                    <div class="mt-2 cursor-pointer text-artwork-buttons-create hover:text-artwork-buttons-default flex items-center gap-x-1 text-sm font-lexend" @click="showConfirmRemoveContractModal = true">
-                        <component :is="IconRepeat" class="size-5 text-gray-500"/>
-                        {{ $t('Click here to remove the current employment contract.') }}
-                    </div>
-                </div>
             </div>
-            <div class="flex items-center justify-end gap-2">
-                <BaseUIButton label="Select employment contract" is-add-button :icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
+            <div class="flex items-center justify-end gap-2" v-if="!isContractSelected">
+                <BaseUIButton :label="$t('Select employment contract')" is-add-button :icon="IconFileSearch" @click.stop="showSelectUserContractModal = true"/>
             </div>
         </div>
 
@@ -102,24 +92,30 @@
         </div>
 
         <div v-else class="mt-5">
-            <div>
-                <p class="text-sm font-lexend text-gray-500">
-                    {{ $t('The employment contract “{0}” is currently selected. This means that employment contract rules cannot be edited.', [selectedContract?.name]) }}
-                </p>
-            </div>
-
             <div class="mt-5">
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-700">
-                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ contract?.free_full_days_per_week }}</div>
-                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ contract?.free_half_days_per_week }}</div>
-                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ contract?.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
-                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ contract?.compensation_period }}</div>
-                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ contract?.free_sundays_per_season }}</div>
-                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ contract?.days_off_first_26_weeks.toFixed(2) }}</div>
+                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ selectedContract?.free_full_days_per_week }}</div>
+                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ selectedContract?.free_half_days_per_week }}</div>
+                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ selectedContract?.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
+                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ selectedContract?.compensation_period }}</div>
+                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ selectedContract?.free_sundays_per_season }}</div>
+                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ Number(selectedContract?.days_off_first_26_weeks).toFixed(2) }}</div>
                 </div>
             </div>
 
+            <div class="mt-6 flex items-center gap-2">
+                <BaseUIButton
+                    :label="$t('Remove employment contract')"
+                    :icon="IconRepeat"
+                    @click.stop="showConfirmRemoveContractModal = true"
+                />
+                <BaseUIButton
+                    :label="$t('Switch employment contract')"
+                    is-add-button
+                    :icon="IconFileSearch"
+                    @click.stop="showSelectUserContractModal = true"
+                />
+            </div>
         </div>
 
 
@@ -128,6 +124,7 @@
             v-if="showSelectUserContractModal"
             @close="showSelectUserContractModal = false"
             @select-contract="selectUserContract"
+            @selectContract="selectUserContract"
         />
 
         <ConfirmDeleteModal

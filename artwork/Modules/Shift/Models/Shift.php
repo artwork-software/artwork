@@ -55,6 +55,8 @@ use Illuminate\Support\Collection;
  * @property-read array $days_of_shift
  * @property-read int $max_users
  * @method static Builder isCommitted()
+ * @property-read Collection<GlobalQualification> $globalQualifications
+ * @property-read Project $project
  */
 class Shift extends Model
 {
@@ -132,6 +134,16 @@ class Shift extends Model
             'id',
             'crafts'
         )->without(['users']);
+    }
+
+    public function globalQualifications(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            GlobalQualification::class,
+            'shift_global_qualifications',
+            'shift_id',
+            'global_qualification_id'
+        )->withPivot('quantity');
     }
 
     public function room(): BelongsTo

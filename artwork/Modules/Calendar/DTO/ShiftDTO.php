@@ -32,6 +32,7 @@ class ShiftDTO extends Data
         public ?string $startOfShift,
         public ?bool $isCommitted = false,
         public ?Project $project = null,
+        public ?Collection $globalQualifications = null,
         //public EventDTO $event
     ){
     }
@@ -48,7 +49,7 @@ class ShiftDTO extends Data
             break_minutes: $shift->break_minutes,
             eventId: $shift?->event_id,
             description: $shift->description,
-            craft: $shift->craft,
+            craft: $shift->craft()->with('qualifications')->first(),
             shifts_qualifications: $shift->shiftsQualifications,
             users: $shift->users,
             freelancer: $shift->freelancer,
@@ -60,6 +61,7 @@ class ShiftDTO extends Data
             startOfShift: $shift->getAttribute('start_date')->format('d.m.Y'),
             isCommitted: $shift->is_committed,
             project: $shift?->project,
+            globalQualifications: $shift->globalQualifications,
             //event: EventDTO::fromModel($shift->event)
         );
     }

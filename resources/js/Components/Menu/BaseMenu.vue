@@ -141,7 +141,7 @@ const props = withDefaults(defineProps<{
     dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,
-    menuWidth: 'w-56',
+    menuWidth: 'w-fit',
     whiteIcon: false,
     hasNoOffset: false,
     showCustomIcon: false,

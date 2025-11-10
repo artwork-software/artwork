@@ -17,6 +17,7 @@ import { IconSearch, IconX } from '@tabler/icons-vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const { t: $t } = useI18n()
 
@@ -72,8 +73,25 @@ const searchTimePreset = ref('')
 
 // Schichtvorlagen (Komplett)
 const showShiftPresetBox = ref(false)
+const showGlobalQualificationBox = ref(false)
 const showShiftSearchbar = ref(false)
-const searchShiftPreset = ref('')
+const searchShiftPreset = ref('');
+
+const globalQualificationsComputed = computed(() => {
+    const all = page?.props?.globalQualifications ?? []
+    const shiftQualis = props.shift?.globalQualifications ?? []
+
+    return all.map(gq => {
+        // Suche nach passender Quali aus dem Shift
+        const match = shiftQualis.find(sq => sq.id === gq.id)
+        return {
+            ...gq,
+            quantity: match?.pivot?.quantity ?? gq?.pivot?.quantity ?? null,
+        }
+    })
+})
+
+const globalQualifications = ref(globalQualificationsComputed.value)
 
 const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
 
@@ -102,6 +120,7 @@ const shiftForm = useForm({
     automaticMode: true,
     room_id: props.room ? props.room : null,
     day: props.day ? props.day : null,
+    globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
     project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
@@ -126,9 +145,13 @@ const { breakMinutes } = useLegalBreak(
 )
 
 // ----- computedShiftQualifications als ref (stabil für v-model) -----
-const computedShiftQualifications = ref([])
-function initComputedShiftQualifications() {
-    const list = (props.shiftQualifications || []).map((shiftQualification) => {
+
+const initComputedShiftQualifications = computed(() => {
+    return getInitialQualificationValue()
+})
+
+function getInitialQualificationValue() {
+    const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
         // auf Edit: vorhandenen Wert übernehmen
         const found = props.edit
             ? (props.shift?.shifts_qualifications || []).find(
@@ -136,17 +159,22 @@ function initComputedShiftQualifications() {
             )
             : undefined
 
+        console.log('getInitialQualificationValue - found:', found)
+
         return {
             id: shiftQualification.id,
             name: shiftQualification.name,
-            available: shiftQualification.available,
+            available: true,
             value: typeof found !== 'undefined' ? found.value : '',
             warning: null,
             error: null,
         }
     })
-    computedShiftQualifications.value = list
+
+    return list
 }
+
+const computedShiftQualifications = ref(initComputedShiftQualifications.value ?? [])
 
 // beim ersten Initialisieren sichern
 function captureInitialShiftSnapshot() {
@@ -168,11 +196,11 @@ watch(
     { immediate: true }
 )
 
-watch(
-    () => [props.shiftQualifications, props.edit, props.shift],
-    () => initComputedShiftQualifications(),
-    { immediate: true }
-)
+// watch on selectecCraft to update computedShiftQualifications
+watch(selectedCraft, () => {
+    computedShiftQualifications.value = getInitialQualificationValue()
+}, { immediate: true })
+
 
 watch(breakMinutes, (v) => {
     // nur überschreiben, wenn Start/Ende gefüllt sind
@@ -182,7 +210,11 @@ watch(breakMinutes, (v) => {
 }, { immediate: true })
 
 onMounted(() => {
-    if (props.edit) validate()
+    if (props.edit)
+    {
+
+        validate()
+    }
 })
 
 // ----- Computeds -----
@@ -438,6 +470,8 @@ function validateShiftsQualifications() {
 }
 
 function validate() {
+    console.log('Mounted - edit mode')
+    computedShiftQualifications.value = getInitialQualificationValue()
     const hasShiftDateError = validateShiftDates()
     const hasShiftBreakError = validateShiftBreak()
     const hasShiftCraftError = validateShiftCraft()
@@ -471,6 +505,17 @@ function saveShift() {
 
     shiftForm.craft_id = selectedCraft.value?.id
     shiftForm.shiftsQualifications = []
+    shiftForm.globalQualifications = []
+
+    globalQualifications.value.forEach( (qualification) => {
+        if(qualification.quantity > 0) {
+            shiftForm.globalQualifications.push({
+                global_qualification_id: qualification.id,
+                quantity: qualification.quantity,
+            });
+        }
+    })
+
     appendComputedShiftQualificationsToShiftForm()
 
     if (props.multiAddMode) {
@@ -557,6 +602,10 @@ function toggleTimePresetBox() {
     )
 }
 
+function toggleGlobalQualificationBox() {
+    showGlobalQualificationBox.value = !showGlobalQualificationBox.value
+}
+
 const lockOrUnlockShift = (commit = false) => {
     router.post(route('shift.change.commit.status', props.shift.id), {
         commit: commit
@@ -577,8 +626,12 @@ const lockOrUnlockShift = (commit = false) => {
         @close="closeModal"
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
-
             <div class="space-y-6">
+
+                <pre>
+                    {{ computedShiftQualifications }}
+                </pre>
+
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
@@ -774,6 +827,72 @@ const lockOrUnlockShift = (commit = false) => {
                                                 <span class="ml-auto rounded bg-gray-50 px-1.5 py-0.5">
                                                   {{ preset.break_time }} {{ $t('min') }}
                                                 </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="py-6">
+                                <AlertComponent
+                                    type="info"
+                                    show-icon
+                                    icon-size="w-4 h-4"
+                                    :text="$t('No presets found.')"
+                                    class="mx-auto w-fit"
+                                />
+                            </div>
+                        </div>
+                    </transition>
+                </section>
+
+                <!-- Sektion: Zeitvorgaben -->
+                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between gap-3 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('Global qualifications') }}</h3>
+                        <div class="flex items-center gap-2">
+                              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                                {{ globalQualifications?.length }}
+                              </span>
+                            <button type="button" class="ui-button !text-xs" @click="toggleGlobalQualificationBox()">
+                                {{ showGlobalQualificationBox ? $t('Hide') : $t('Show') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Inhalt (scrollbar) -->
+                    <transition
+                        enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div v-if="showGlobalQualificationBox" class="px-4 sm:px-5 pb-4">
+                            <div v-if="globalQualifications?.length > 0" class="max-h-[240px] md:max-h-[280px] overflow-y-auto pr-1 py-1">
+                                <div class="space-y-3 divide-y divide-zinc-200 divide-dashed">
+                                    <div
+                                        v-for="globalQualification in globalQualifications"
+                                        :key="'globalQualification-' + globalQualification.id"
+                                        class="group pb-3"
+                                    >
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-2.5">
+                                            <div class="flex items-center gap-x-2">
+                                                <PropertyIcon :name="globalQualification.icon" class="w-4 h-4" />
+                                                <div class="antialiased text-sm">
+                                                    {{ globalQualification.name }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <BaseInput
+                                                    v-model="globalQualification.quantity"
+                                                    type="number"
+                                                    :id="'globalQualificationValue-' + globalQualification.id"
+                                                    :label="$t('Quantity')"
+                                                    is-small
+                                                />
                                             </div>
                                         </div>
                                     </div>

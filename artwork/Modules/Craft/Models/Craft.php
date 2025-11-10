@@ -7,6 +7,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,6 +28,12 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property User[] $users
  * @property Shift[] $shifts
  * @property Collection $inventoryCategories
+ * @property bool $universally_applicable
+ * @property int $position
+ * @property bool $inventory_planned_by_all
+ * @property Collection $craftShiftPlaner
+ * @property Collection $craftInventoryPlaner
+ * @property Collection $qualifications
  */
 class Craft extends Model
 {
@@ -69,6 +76,16 @@ class Craft extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'craft_id', 'id');
+    }
+
+    public function qualifications(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ShiftQualification::class,
+            'craft_shift_qualification',
+            'craft_id',
+            'shift_qualification_id'
+        );
     }
 
     public function inventoryCategories(): HasMany

@@ -83,6 +83,10 @@ class ShiftController extends Controller
             data: $request->all(),
         );
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $shift->event_start_day = Carbon::parse($event->start_time)->format('Y-m-d');
         $shift->event_end_day = Carbon::parse($event->end_time)->format('Y-m-d');
 
@@ -199,7 +203,14 @@ class ShiftController extends Controller
             'description',
         ]));
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->detach();
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $this->shiftService->save($shift);
+
+
 
         return $this->redirector->route('shifts.plan');
     }
@@ -317,6 +328,11 @@ class ShiftController extends Controller
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
+        }
+
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->detach();
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
         }
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
@@ -1269,6 +1285,10 @@ class ShiftController extends Controller
 
         $this->shiftService->save($shift);
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $shiftSave = $shift->fresh();
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
@@ -1393,7 +1413,6 @@ class ShiftController extends Controller
                         $endTime = Carbon::parse($endTime)->format('H:i');
                         $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
                         $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
-
                     } catch (\Exception $e) {
                         continue; // Skip this shift
                     }
@@ -1491,6 +1510,10 @@ class ShiftController extends Controller
                 data: $data,
                 day: Carbon::parse($roomAndDate['day'])->format('Y-m-d'),
             );
+
+            if ($request->get('globalQualifications')) {
+                $shift->globalQualifications()->sync($request->get('globalQualifications'));
+            }
 
             $shiftUuid = Str::uuid();
             $shift->shift_uuid = $shiftUuid;

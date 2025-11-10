@@ -28,7 +28,9 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
+use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -82,6 +84,7 @@ class UserController extends Controller
 {
     public function __construct(
         protected AuthManager $auth,
+        protected GlobalQualificationService $qualificationService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -665,6 +668,16 @@ class UserController extends Controller
         ShiftQualificationRepository $shiftQualificationRepository,
         CraftService $craftService
     ): Response|ResponseFactory {
+
+        $globalQualifications = $this->qualificationService->getAll()->map(function ($qualification) use ($user) {
+            return [
+                'id' => $qualification->id,
+                'name' => $qualification->name,
+                'icon' => $qualification->icon,
+                'assigned' => $user->globalQualifications->contains('id', $qualification->id),
+            ];
+        });
+
         return inertia(
             'Users/UserWorkProfilePage',
             [
@@ -673,7 +686,8 @@ class UserController extends Controller
                     $craftService->getAll()
                 ))->resolve(),
                 'currentTab' => 'workProfile',
-                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
+                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
+                'globalQualifications' => $globalQualifications,
             ]
         );
     }
@@ -887,18 +901,19 @@ class UserController extends Controller
      */
     public function updateShiftQualification(
         User $user,
-        UpdateUserShiftQualificationRequest $request,
-        UserShiftQualificationService $userShiftQualificationService
+        GlobalQualification $qualification,
     ): RedirectResponse {
         $this->authorize('updateWorkProfile', User::class);
 
-        if ($request->boolean('create')) {
+        $this->qualificationService->activateOrDeactivateInUser($qualification, $user);
+
+        /*if ($request->boolean('create')) {
             //if useable is set to true create a new entry in pivot table
             $userShiftQualificationService->createByRequestForUser($request, $user);
         } else {
             //if useable is set to false pivot table entry needs to be deleted
             $userShiftQualificationService->deleteByRequestForUser($request, $user);
-        }
+        }*/
 
         return Redirect::back();
     }

@@ -68,6 +68,7 @@ use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -144,6 +145,7 @@ class EventController extends Controller
         private readonly EventPlanningCalendarService $eventPlanningCalendarService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly GeneralSettingsService $generalSettingsService,
+        protected GlobalQualificationService $globalQualificationService,
     ) {
     }
 
@@ -495,6 +497,7 @@ class EventController extends Controller
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
+
         ]);
     }
 
@@ -588,7 +591,7 @@ class EventController extends Controller
                 'managingUsers',
                 'managingFreelancers',
                 'managingServiceProviders',
-                'users', 'freelancers', 'serviceProviders'
+                'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
             'rooms' => $rooms,
             'eventTypes' => EventType::all(),
@@ -642,6 +645,7 @@ class EventController extends Controller
             ),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'calendarWarningText' => $calendarWarningText,
+            'globalQualifications' => $this->globalQualificationService->getAll(),
         ]);
     }
 

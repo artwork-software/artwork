@@ -319,7 +319,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::patch('/users/{user}/shift-qualification', [UserController::class, 'updateShiftQualification'])
+    Route::patch('/users/{user}/{qualification}/shift-qualification', [UserController::class, 'updateShiftQualification'])
         ->name('user.update.shift-qualification');
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
@@ -1488,6 +1488,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     Route::group(['prefix' => 'settings'], function (): void {
+
+        Route::group(['prefix' => 'global-qualifications'], function (): void {
+            // global-qualification.update
+            Route::patch(
+                '/{globalQualification}/update',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'update']
+            )->name('global-qualification.update');
+
+            // global-qualification.store
+            Route::post(
+                '/store',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'store']
+            )->name('global-qualification.store');
+
+            // global-qualification.delete
+            Route::delete(
+                '/{globalQualification}/delete',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'destroy']
+            )->name('global-qualification.delete');
+        });
+
+
         Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
         Route::patch(
             'shift-settings/updateShiftSettingsUseFirstNameForSort',

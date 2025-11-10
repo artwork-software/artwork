@@ -1,399 +1,393 @@
 <template>
-<ArtworkBaseModal v-if="open" @close="closeModal" title="Craft" description="Define the specifications of your trade.">
-    <div class="grid grid-cols-1 sm:grid-cols-7 gap-4 my-4">
-        <div class="col-span-1">
-            <ColorPickerComponent :color="craft.color" @updateColor="addColor"/>
-        </div>
-        <div class="col-span-3">
-            <BaseInput
-                :label="$t('Name of the craft') + '*'"
-                v-model="craft.name"
-                id="name"
-                required
+    <ArtworkBaseModal
+        v-if="open"
+        @close="closeModal"
+        :title="$t(craftToEdit ? 'Edit craft' : 'Create craft')"
+        :description="$t('Define the specifications of your trade and who may plan shifts/inventory for it.')"
+    >
+        <!-- Basics ------------------------------------------------------>
+        <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <BasePageTitle
+                :title="$t('Edit basic data')"
+                :description="$t('General information about this craft.')"
             />
-        </div>
-        <div class="col-span-3">
-            <BaseInput
-                :label="$t('Abbreviation') + '*'"
-                v-model="craft.abbreviation"
-                :maxlength="3"
-                id="abbreviation"
-                required
-            />
-        </div>
-    </div>
-    <div class="">
-        <BaseInput type="number"
-               v-model="craft.notify_days"
-               :maxlength="3"
-               required
-                id="notify_days"
-               :label="$t('Days until notification if shift not fully staffed')"
-               :min="0" :max="100"
-        />
-    </div>
-    <div class="my-3">
-        <div class="relative flex items-start mb-2">
-            <div class="flex h-6 items-center">
-                <input id="universally_applicable" v-model="craft.universally_applicable" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
-            </div>
-            <div class="ml-2 text-sm leading-6">
-                <label for="universally_applicable" class="font-medium">{{ $t('Universally applicable') }}</label>
-            </div>
-        </div>
-    </div>
-    <div class="mt-3">
-        <SwitchGroup as="div" class="flex items-center gap-2">
-            <SwitchLabel as="span" class="mr-3 text-sm">
-                <span class="font-medium text-gray-900" :class="enabled ? '!text-gray-400' : ''">{{ $t('Allocable to a limited extent')}}</span>
-            </SwitchLabel>
-            <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-            </Switch>
-            <SwitchLabel as="span" class="ml-3 text-sm">
-                <span class="font-medium text-gray-900" :class="!enabled ? '!text-gray-400' : ''">{{ $t('Can be scheduled by all shift planners')}}</span>
-            </SwitchLabel>
-        </SwitchGroup>
-    </div>
-    <div v-if="!enabled" class="">
-        <Listbox as="div">
-            <div class="relative mt-2">
-                <ListboxButton class="menu-button">
-                    <span class="block truncate text-left">
-                        {{ $t('Select users')}}
-                    </span>
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                    </span>
-                </ListboxButton>
-                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
-                            <li @click="addOrRemoveFormUserList(user, 'shift_planer')" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
-                                <span>{{ user.full_name }}</span>
-                            </li>
-                        </ListboxOption>
-                    </ListboxOptions>
-                </transition>
-            </div>
-        </Listbox>
-        <div class="mt-3">
-            <div v-for="user in craftShiftPlaner" class="my-2">
-                <div class="flex col-span-2">
-                    <div class="flex items-center">
-                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
-                        <span class="flex ml-4">
-                            {{ user.first_name }} {{ user.last_name }}
-                        </span>
+
+            <div class="border-b border-dashed border-zinc-200 pb-3">
+                <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-7 items-center">
+                    <div class="sm:col-span-1 flex items-center w-full">
+                        <ColorPickerComponent :color="craft.color" @updateColor="onPickColor"/>
+
                     </div>
-                    <button type="button" @click="addOrRemoveFormUserList(user, 'shift_planer')">
-                        <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
-                    </button>
+
+                    <div class="sm:col-span-4">
+                        <BaseInput
+                            :label="$t('Name of the craft') + '*'"
+                            v-model="craft.name"
+                            id="name"
+                            required
+                        />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <BaseInput
+                            :label="$t('Abbreviation') + '*'"
+                            v-model="craft.abbreviation"
+                            :maxlength="3"
+                            id="abbreviation"
+                            required
+                        />
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-zinc-500">{{$t('Choose a color for fast visual recognition in calendars and lists.')}}</p>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div class="sm:col-span-full">
+                    <BaseInput
+                        type="number"
+                        v-model.number="craft.notify_days"
+                        :maxlength="3"
+                        required
+                        id="notify_days"
+                        :label="$t('Days until notification if shift not fully staffed')"
+                        :min="0"
+                        :max="100"
+                    />
+                    <p class="mt-2 text-xs text-zinc-500">{{$t('We will alert you when a shift remains under-staffed after this many days.')}}</p>
+                </div>
+
+                <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                    <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary focus:ring-2">
+                    <label for="universally_applicable" class="text-sm text-zinc-800">{{$t('Universally applicable')}}</label>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="mt-3">
-        <div class="my-5">
+        </section>
+
+        <!-- Shift planning permissions ---------------------------------->
+        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <BasePageTitle
+                :title="$t('Shift planning permissions')"
+                :description="$t('Control who may schedule this craft in shifts.')"
+            />
+
+            <div class="mt-4 flex items-center gap-3">
+                <span class="text-sm" :class="enabled ? 'text-zinc-400' : 'text-zinc-900 font-medium'">{{$t('Allocable to a limited extent')}}</span>
+                <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-zinc-200', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                    <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                </Switch>
+                <span class="text-sm" :class="!enabled ? 'text-zinc-400' : 'text-zinc-900 font-medium'">{{$t('Can be scheduled by all shift planners')}}</span>
+            </div>
+
+            <div v-if="!enabled" class="mt-4">
+                <div class="sm:w-96">
+                    <Listbox as="div">
+                        <div class="relative">
+                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition">
+                                <span class="block truncate text-left">{{$t('Select users')}}</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                </span>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-zinc-200 ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active }">
+                                        <li @click="togglePlanner(user, 'shift_planer')" :class="[active ? 'bg-zinc-50' : '', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                            <span>{{ user.full_name }}</span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+                </div>
+
+                <div class="mt-4">
+                    <div v-if="craftShiftPlaner.length === 0" class="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">{{$t('No specific planners selected yet.')}}</div>
+                    <ul class="mt-2 grid gap-3 sm:grid-cols-2">
+                        <li v-for="user in craftShiftPlaner" :key="'planner-' + user.id" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                            <div class="flex items-center gap-3">
+                                <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
+                                <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
+                            </div>
+                            <button type="button" @click="togglePlanner(user, 'shift_planer')" class="p-1" aria-label="{{$t('Remove')}}">
+                                <IconCircleX stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory planning permissions ------------------------------>
+        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <BasePageTitle
                 :title="$t('Inventory settings')"
-                :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
+                :description="$t('Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.')"
             />
-        </div>
-        <SwitchGroup as="div" class="flex items-center gap-2">
-            <SwitchLabel as="span" class="mr-3 text-sm">
-                <span class="font-medium text-gray-900" :class="inventoryPlannedByAll ? '!text-gray-400' : ''">{{ $t('Explicitly selected persons') }}</span>
-            </SwitchLabel>
-            <Switch v-model="inventoryPlannedByAll" :class="[inventoryPlannedByAll ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                <span aria-hidden="true" :class="[inventoryPlannedByAll ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-            </Switch>
-            <SwitchLabel as="span" class="ml-3 text-sm">
-                <span class="font-medium text-gray-900" :class="!inventoryPlannedByAll ? '!text-gray-400' : ''">
-                    {{ $t('From all planners') }}
+
+            <div class="mt-4 flex items-center gap-3">
+                <span class="text-sm" :class="!inventoryPlannedByAll ? 'text-zinc-900 font-medium' : 'text-zinc-400'">{{$t('Explicitly selected persons')}}</span>
+                <Switch v-model="inventoryPlannedByAll" :class="[inventoryPlannedByAll ? 'bg-artwork-buttons-create' : 'bg-zinc-200', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                    <span aria-hidden="true" :class="[inventoryPlannedByAll ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                </Switch>
+                <span class="text-sm" :class="inventoryPlannedByAll ? 'text-zinc-900 font-medium' : 'text-zinc-400'">{{$t('From all planners')}}</span>
+            </div>
+
+            <div v-if="!inventoryPlannedByAll" class="mt-4">
+                <div class="sm:w-96">
+                    <Listbox as="div">
+                        <div class="relative">
+                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition">
+                                <span class="block truncate text-left">{{$t('Select users')}}</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                 </span>
-            </SwitchLabel>
-        </SwitchGroup>
-    </div>
-    <div v-if="!inventoryPlannedByAll">
-        <Listbox as="div">
-            <div class="relative mt-2">
-                <ListboxButton class="menu-button">
-                    <span class="block truncate text-left">
-                        {{ $t('Select users')}}
-                    </span>
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                    </span>
-                </ListboxButton>
-                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
-                            <li @click="addOrRemoveFormUserList(user, 'inventory')" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
-                                <span>{{ user.full_name }}</span>
-                            </li>
-                        </ListboxOption>
-                    </ListboxOptions>
-                </transition>
-            </div>
-        </Listbox>
-        <div class="mt-3">
-            <div v-for="user in craftInventoryPlaner" class="my-2">
-                <div class="flex col-span-2">
-                    <div class="flex items-center">
-                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
-                        <span class="flex ml-4">
-                            {{ user.first_name }} {{ user.last_name }}
-                        </span>
-                    </div>
-                    <button type="button" @click="addOrRemoveFormUserList(user, 'inventory')">
-                        <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                        <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
-                    </button>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-zinc-200 ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active }">
+                                        <li @click="togglePlanner(user, 'inventory')" :class="[active ? 'bg-zinc-50' : '', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                            <span>{{ user.full_name }}</span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+                </div>
+
+                <div class="mt-4">
+                    <div v-if="craftInventoryPlaner.length === 0" class="rounded-xl border border-dashed p-4 text-sm text-zinc-500">{{$t('No inventory planners selected yet.')}}</div>
+                    <ul class="mt-2 grid gap-3 sm:grid-cols-2">
+                        <li v-for="user in craftInventoryPlaner" :key="'inv-' + user.id" class="flex items-center justify-between rounded-xl border bg-zinc-50 p-3">
+                            <div class="flex items-center gap-3">
+                                <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
+                                <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
+                            </div>
+                            <button type="button" @click="togglePlanner(user, 'inventory')" class="p-1" aria-label="{{$t('Remove')}}">
+                                <IconCircleX stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="my-5">
-        <TinyPageHeadline
-            :title="$t('Craft manager')"
-            :description="$t('Here you can specify the department management for this craft. It will be highlighted in the overview.')"
-        />
-    </div>
-    <div class="mt-8">
-        <UserSearch :label="'Add department management'"
-                    @user-selected="addSelectedToCraftManagers"
-                    :search-workers="false"
-                    :current-craft="craft"
-                    :dont-close-on-select="false"/>
-        <div class="mt-3">
-            <div v-for="(user,index) in this.managers" class="my-2">
-                <div class="flex col-span-2">
-                    <div class="flex items-center">
-                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
-                        <span class="flex ml-4">
-                            {{ user.first_name }} {{ user.last_name }}
-                        </span>
-                    </div>
-                    <button type="button" @click="this.deleteDepartmentManager(user)">
-                        <span class="sr-only">{{ $t('Delete department management') }}</span>
-                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
-                    </button>
-                </div>
+        </section>
+
+        <!-- Managers ----------------------------------------------------->
+        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <div class="mb-2">
+                <BasePageTitle
+                    :title="$t('Craft manager')"
+                    :description="$t('Assign department management for this craft. They will be highlighted in overviews.')"
+                />
             </div>
+
+            <UserSearch
+                :label="$t('Add department management')"
+                @user-selected="addSelectedToCraftManagers"
+                :search-workers="false"
+                :current-craft="craft"
+                :dont-close-on-select="false"
+            />
+
+            <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+                <li v-for="user in managers" :key="'manager-' + (user.id || user.pivot?.craft_manager_id)" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                    <div class="flex items-center gap-3">
+                        <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
+                        <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
+                    </div>
+                    <button type="button" @click="deleteDepartmentManager(user)" class="p-1" aria-label="$t('Delete department management')">
+                        <IconCircleX stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Managers ----------------------------------------------------->
+        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <div class="mb-2">
+                <BasePageTitle
+                    :title="$t('Functions')"
+                    :description="$t('Add or remove functions for this craft.')"
+                />
+            </div>
+
+            <ArtworkBaseListbox
+                v-model="craft.qualifications"
+                :items="propQualifications"
+                by="id"
+                multiple
+                option-label="name"
+                option-key="id"
+                :use-translations="false"
+                :label="null"
+                :placeholder="$t('Select functions')"
+            />
+        </section>
+
+        <!-- Footer ------------------------------------------------------->
+        <div class="flex items-center justify-end mt-6">
+            <BaseUIButton :label="$t('Save')" @click="saveCraft" is-add-button/>
         </div>
-<!--            <div class="flex items-center">-->
-<!--                <img class="h-5 w-5 mr-2 object-cover rounded-full"-->
-<!--                     :src="user.profile_photo_url"-->
-<!--                     alt=""/>-->
-<!--                <template v-if="user.provider_name">-->
-<!--                    {{ user.provider_name }}-->
-<!--                </template>-->
-<!--                <template v-else>-->
-<!--                    {{ user.first_name }} {{ user.last_name }}-->
-<!--                </template>-->
-<!--            </div>-->
-<!--            <button type="button" @click="this.deleteDepartmentManager(user)">-->
-<!--                <span class="sr-only">{{ $t('Delete department management') }}</span>-->
-<!--                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>-->
-<!--            </button>-->
-<!--        </div>-->
-    </div>
-    <div class="flex items-center justify-center mt-5">
-        <FormButton :text="$t('Save')" @click="saveCraft"/>
-    </div>
-</ArtworkBaseModal>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import {defineComponent} from 'vue'
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 import {
-    Dialog,
-    DialogPanel,
     Listbox,
     ListboxButton,
     ListboxOption,
     ListboxOptions,
     Switch,
-    SwitchGroup,
-    SwitchLabel,
-    TransitionChild,
-    TransitionRoot
-} from "@headlessui/vue";
-import {CheckIcon, XCircleIcon, XIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon} from "@heroicons/vue/outline";
-import Input from "@/Jetstream/Input.vue";
-import {useForm} from "@inertiajs/vue3";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
-import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+} from '@headlessui/vue'
+import { IconChevronDown, IconCircleX } from '@tabler/icons-vue'
 
-export default defineComponent({
-    name: "AddCraftsModal",
-    mixins: [IconLib],
-    components: {
-        ArtworkBaseModal,
-        BasePageTitle,
-        BaseInput,
-        UserSearch,
-        TinyPageHeadline,
-        NumberInputComponent,
-        TextInputComponent,
-        ModalHeader,
-        BaseModal,
-        ColorPickerComponent,
-        FormButton,
-        XCircleIcon,
-        TagComponent,
-        Input,
-        ChevronDownIcon,
-        CheckIcon,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        Listbox,
-        Dialog,
-        TransitionChild,
-        XIcon,
-        TransitionRoot,
-        DialogPanel,
-        SwitchGroup,
-        Switch,
-        SwitchLabel
-    },
-    props: ['craftToEdit', 'usersWithPermission', 'usersWithInventoryPermission'],
-    data(){
-        return {
-            open: true,
-            craft: useForm({
-                name: this.craftToEdit ? this.craftToEdit.name : '',
-                abbreviation: this.craftToEdit ? this.craftToEdit.abbreviation : '',
-                users: [],
-                assignable_by_all: true,
-                inventory_planned_by_all: true,
-                color: this.craftToEdit ? this.craftToEdit.color : '#ffffff',
-                notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0,
-                universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
-                users_for_inventory: [],
-                managersToBeAssigned: []
-            }),
-            enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
-            craftInventoryPlaner: this.craftToEdit ? this.craftToEdit.craft_inventory_planer : [],
-            inventoryPlannedByAll: this.craftToEdit ? this.craftToEdit.inventory_planned_by_all : true,
-            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : [],
-            managers: this.craftToEdit ? this.craftToEdit.managing_freelancers.concat(
-                    this.craftToEdit.managing_service_providers.concat(
-                        this.craftToEdit.managing_users
-                    )
-                ) : []
-        }
-    },
-    unmounted() {
-        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
-    },
-    emits: ['closed'],
-    methods: {
-        closeModal(bool){
-            this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
-            this.$emit('closed', bool)
-        },
-        addOrRemoveFormUserList(user, type = 'shift_planer'){
-            if(type === 'shift_planer') {
-                const userIds = this.craftShiftPlaner.map(user => user.id);
-                if(userIds.includes(user.id)){
-                    this.craftShiftPlaner = this.craftShiftPlaner.filter(u => u.id !== user.id)
-                } else {
-                    this.craftShiftPlaner.push(user)
-                }
-            }
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
+import UserSearch from '@/Components/SearchBars/UserSearch.vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
-            if (type === 'inventory') {
-                const userIds = this.craftInventoryPlaner.map(user => user.id);
-                if(userIds.includes(user.id)){
-                    this.craftInventoryPlaner = this.craftInventoryPlaner.filter(u => u.id !== user.id)
-                } else {
-                    this.craftInventoryPlaner.push(user)
-                }
-            }
-        },
-        saveCraft(){
-            this.managers.forEach((manager) => {
-                this.craft.managersToBeAssigned.push({
-                    manager_id: manager.id ?? manager.pivot.craft_manager_id,
-                    manager_type: manager.manager_type ?? manager.pivot.craft_manager_type
-                });
-            });
+/* ---------------- Props / Emits ---------------- */
+const props = defineProps<{
+    craftToEdit?: any | null
+    usersWithPermission: Array<any>
+    usersWithInventoryPermission: Array<any>
+    propQualifications: Array<any>
+}>()
+const emit = defineEmits<{ (e: 'closed', v: boolean): void }>()
 
-            if (this.craft.notify_days < 0) {
-                this.craft.notify_days = 0;
-            }
+/* ---------------- Local state ------------------ */
+const open = ref(true)
 
-            if (!this.enabled) {
-                this.craft.assignable_by_all = false
-                this.craftShiftPlaner.forEach((user) => {
-                    this.craft.users.push(user.id);
-                });
-            } else {
-                this.craft.assignable_by_all = true;
-                this.craft.users = [];
-            }
-
-            if(!this.inventoryPlannedByAll){
-                this.craft.inventory_planned_by_all = false
-                this.craftInventoryPlaner.forEach((user) => {
-                    this.craft.users_for_inventory.push(user.id);
-                })
-            } else {
-                this.craft.inventory_planned_by_all = true;
-                this.craft.users_for_inventory = [];
-            }
-
-            if(this.craftToEdit){
-                this.craft.patch(route('craft.update', this.craftToEdit.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onFinish: () => {
-                        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
-                        this.closeModal(true)
-                    }
-                })
-            } else {
-                this.craft.post(route('craft.store'), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onFinish: () => {
-                        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
-                        this.closeModal(true)
-                    }
-                })
-            }
-        },
-        addColor(color) {
-            this.craft.color = color;
-        },
-        addSelectedToCraftManagers(user) {
-            if (this.managers.findIndex((manager) => user.id === manager.id) > -1) {
-                return;
-            }
-
-            this.managers.push(user);
-        },
-        deleteDepartmentManager(manager) {
-            this.managers.splice(
-                this.managers.findIndex((currentManager) => currentManager.id === manager.id),
-                1
-            );
-        }
-    }
+const craft = useForm({
+    name: props.craftToEdit?.name ?? '',
+    abbreviation: props.craftToEdit?.abbreviation ?? '',
+    users: [] as number[],
+    assignable_by_all: true,
+    inventory_planned_by_all: true,
+    color: props.craftToEdit?.color ?? '#ffffff',
+    notify_days: props.craftToEdit?.notify_days ?? 0,
+    universally_applicable: props.craftToEdit?.universally_applicable ?? false,
+    users_for_inventory: [] as number[],
+    managersToBeAssigned: [] as Array<{ manager_id: number; manager_type: string }>,
+    qualifications: props.craftToEdit?.qualifications ?? [],
 })
+
+const enabled = ref<boolean>(props.craftToEdit?.assignable_by_all ?? true)
+const inventoryPlannedByAll = ref<boolean>(props.craftToEdit?.inventory_planned_by_all ?? true)
+
+const craftShiftPlaner = ref<Array<any>>(props.craftToEdit?.craft_shift_planer ?? [])
+const craftInventoryPlaner = ref<Array<any>>(props.craftToEdit?.craft_inventory_planer ?? [])
+const managers = ref<Array<any>>(
+    props.craftToEdit
+        ? [
+            ...(props.craftToEdit.managing_freelancers ?? []),
+            ...(props.craftToEdit.managing_service_providers ?? []),
+            ...(props.craftToEdit.managing_users ?? []),
+        ]
+        : []
+)
+
+// headlessui needs a v-model value, but we handle selection via click\ nconst dummySelect = ref<any | null>(null)
+
+/* ---------------- Watchers / guards ----------- */
+watch(
+    () => craft.notify_days,
+    (v) => {
+        if (v == null) return
+        if (v < 0) craft.notify_days = 0
+        if (v > 100) craft.notify_days = 100
+    }
+)
+
+/* ---------------- Methods --------------------- */
+function closeModal(bool = false) {
+    craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
+    emit('closed', bool)
+}
+
+function onPickColor(color: string) {
+    craft.color = color
+}
+
+function togglePlanner(user: any, type: 'shift_planer' | 'inventory') {
+    if (type === 'shift_planer') {
+        const idx = craftShiftPlaner.value.findIndex((u) => u.id === user.id)
+        if (idx > -1) craftShiftPlaner.value.splice(idx, 1)
+        else craftShiftPlaner.value.push(user)
+    } else {
+        const idx = craftInventoryPlaner.value.findIndex((u) => u.id === user.id)
+        if (idx > -1) craftInventoryPlaner.value.splice(idx, 1)
+        else craftInventoryPlaner.value.push(user)
+    }
+}
+
+function addSelectedToCraftManagers(user: any) {
+    if (managers.value.findIndex((m) => m.id === user.id) > -1) return
+    managers.value.push(user)
+}
+
+function deleteDepartmentManager(user: any) {
+    const idx = managers.value.findIndex((m) => m.id === user.id)
+    if (idx > -1) managers.value.splice(idx, 1)
+}
+
+function saveCraft() {
+    // Managers payload
+    craft.managersToBeAssigned = []
+    managers.value.forEach((manager: any) => {
+        craft.managersToBeAssigned.push({
+            manager_id: manager.id ?? manager.pivot?.craft_manager_id,
+            manager_type: manager.manager_type ?? manager.pivot?.craft_manager_type,
+        })
+    })
+
+    // Clamp notify days
+    if ((craft.notify_days as number) < 0) craft.notify_days = 0
+
+    // Shift planners
+    if (!enabled.value) {
+        craft.assignable_by_all = false
+        craft.users = craftShiftPlaner.value.map((u) => u.id)
+    } else {
+        craft.assignable_by_all = true
+        craft.users = []
+    }
+
+    // Inventory planners
+    if (!inventoryPlannedByAll.value) {
+        craft.inventory_planned_by_all = false
+        craft.users_for_inventory = craftInventoryPlaner.value.map((u) => u.id)
+    } else {
+        craft.inventory_planned_by_all = true
+        craft.users_for_inventory = []
+    }
+
+    if (props.craftToEdit?.id) {
+        craft.patch(route('craft.update', props.craftToEdit.id), {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => {
+                craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
+                closeModal(true)
+            },
+        })
+    } else {
+        craft.post(route('craft.store'), {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => {
+                craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
+                closeModal(true)
+            },
+        })
+    }
+}
 </script>
+
+

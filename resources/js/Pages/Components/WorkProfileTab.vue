@@ -105,33 +105,34 @@
                 <!-- shift qualifications -->
                 <div class="mt-6">
                     <h4 class="text-sm font-medium text-zinc-900">
-                        {{ $t('Shift qualifications')}}
+                        {{ $t('Global qualifications')}}
                     </h4>
                     <div class="mt-3 space-y-3">
                         <SwitchGroup
-                            v-for="sq in computedShiftQualifications"
+                            v-for="sq in usePage().props.globalQualifications"
                             :key="sq.id"
                             as="div"
                             class="flex items-center justify-between rounded-2xl border border-zinc-200 px-3 py-2"
                         >
                             <div class="text-sm text-zinc-800">
+                                <PropertyIcon :name="sq.icon" class="inline-block h-5 w-5 mr-2 text-zinc-400" />
                                 {{ $t('Can be used as {shiftQualificationName}', { shiftQualificationName: sq.name }) }}
                             </div>
                             <Switch
-                                v-model="sq.toggled"
+                                v-model="sq.assigned"
                                 @update:modelValue="updateUserShiftQualification(sq)"
                                 :class="[
-                  sq.toggled ? 'bg-blue-600' : 'bg-zinc-300',
-                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
-                ]"
+                                  sq.assigned ? 'bg-blue-600' : 'bg-zinc-300',
+                                  'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
+                                ]"
                             >
-                <span
-                    aria-hidden="true"
-                    :class="[
-                    sq.toggled ? 'translate-x-6' : 'translate-x-1',
-                    'inline-block h-4 w-4 transform rounded-full bg-white shadow transition'
-                  ]"
-                />
+                                <span
+                                    aria-hidden="true"
+                                    :class="[
+                                    sq.assigned ? 'translate-x-6' : 'translate-x-1',
+                                    'inline-block h-4 w-4 transform rounded-full bg-white shadow transition'
+                                  ]"
+                                />
                             </Switch>
                         </SwitchGroup>
                     </div>
@@ -275,7 +276,7 @@
 
 <script setup>
 import {computed, nextTick, ref, watch} from 'vue'
-import { router, useForm } from '@inertiajs/vue3'
+import {router, useForm, usePage} from '@inertiajs/vue3'
 import {
     Listbox, ListboxButton, ListboxOption, ListboxOptions,
     Switch, SwitchGroup, SwitchLabel
@@ -287,6 +288,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     userType: { type: String, required: true },                 // 'user' | 'freelancer' | 'serviceProvider'
@@ -372,7 +374,7 @@ const updateUserShiftQualification = (shiftQualification) => {
     switch (props.userType) {
         case 'user':
             desiredRoute = 'user.update.shift-qualification'
-            routeParameter = { user: props.user.id }
+            routeParameter = { user: props.user.id, qualification: shiftQualification }
             break
         case 'freelancer':
             desiredRoute = 'freelancer.update.shift-qualification'
@@ -387,7 +389,7 @@ const updateUserShiftQualification = (shiftQualification) => {
     if (desiredRoute) {
         router.patch(
             route(desiredRoute, routeParameter),
-            { shiftQualificationId: shiftQualification.id, create: shiftQualification.toggled },
+            {  },
             { preserveScroll: true, preserveState: true }
         )
     }

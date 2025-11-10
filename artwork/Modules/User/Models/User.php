@@ -41,6 +41,8 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\Workflow\Traits\HasWorkflows;
+use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;
@@ -160,7 +162,8 @@ class User extends Model implements
     CanResetPasswordContract,
     Vacationer,
     Available,
-    DayServiceable
+    DayServiceable,
+    WorkflowSubject
 {
     use Authenticatable;
     use Authorizable;
@@ -180,6 +183,7 @@ class User extends Model implements
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use LaravelPermissionToVueJS;
+    use HasWorkflows;
     use HasProfilePhotoCustom;
 
     protected $fillable = [
@@ -725,6 +729,60 @@ class User extends Model implements
         return sprintf('%02d:%02d', $hours, $minutes);
     }
 
+    public function canHaveWorkflow(string $workflowType): bool
+    {
+        return in_array($workflowType, [
+            'shift_rule_validation',
+            'work_time_approval'
+        ]);
+    }
+
+    public function getWorkflowSubjectInfo(): array
+    {
+        return [
+            'type' => 'user',
+            'name' => $this->full_name,
+            'email' => $this->email
+        ];
+    }
+
+    public function activeWorkContract()
+    {
+        $contractAssign = $this->contract()->first();
+        return $contractAssign?->userContract;
+    }
+
+    public function getActiveShiftRules()
+    {
+        $activeContract = $this->activeWorkContract();
+        if (!$activeContract) {
+            return collect();
+        }
+
+        return $activeContract->shiftRules()
+            ->where('is_active', true)
+            ->get();
+    }
+
+    /**
+     * @deprecated Use getActiveShiftRules() instead
+     */
+    public function getActiveWorkflowRules()
+    {
+        return $this->getActiveShiftRules();
+    }
+
+    public function getPlannedWorkingHours(Carbon $date): float
+    {
+        return $this->shifts()
+            ->whereDate('start_time', $date)
+            ->get()
+            ->sum(function ($shift) {
+                $start = Carbon::parse($shift->start_time);
+                $end = Carbon::parse($shift->end_time);
+                return $end->diffInHours($start);
+            });
+    }
     /**
      * Exclude the placeholder "Deleted user" from Scout indexing
      */

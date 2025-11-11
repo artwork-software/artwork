@@ -5,10 +5,12 @@
             <div class="bg-gray-500 py-1.5 px-2 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}90` }">
                 {{ shift.start }} - {{ shift.end }}
             </div>
+
             <Link class="text-blue-500 font-semibold underline" v-if="shift?.project" :href="route('projects.tab', { project: shift?.project?.id, projectTab: first_project_calendar_tab_id })">
                 {{ shift.project.name }}
             </Link>
             <div class="text-gray-700 font-semibold">
+                <span v-if="shift.shiftGroup">[{{ shift.shiftGroup.name[0] }}]</span>
                 [{{ shift.craft.abbreviation }}] {{ shift.craft.name }}
             </div>
         </div>

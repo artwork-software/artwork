@@ -15,11 +15,17 @@
                        class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-x-1.5">
+                <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
-                        <span>{{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}</span>
+                        <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
+                        <div class="text-[11px]">
+                            <span>
+                                {{ shift.craft.abbreviation }}
+                                {{ shift.start }} - {{ shift.end }}
+                            </span>
+                        </div>
                     </div>
-                    <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
+                    <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
                         <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
                               :class="{
@@ -38,7 +44,7 @@
         </div>
 
         <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
-            <div class="w-full flex flex-row flex-wrap">
+            <div class="w-full flex flex-row flex-wrap text-[10px]">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
                     :key="row.shift_qualification_id"

@@ -79,7 +79,8 @@ class Shift extends Model
         'event_end_day',
         'committing_user_id',
         'room_id',
-        'project_id'
+        'project_id',
+        'shift_group_id'
     ];
 
     protected $casts = [
@@ -321,5 +322,16 @@ class Shift extends Model
     public function getMaxUsersAttribute(): int
     {
         return $this->shiftsQualifications->sum('value');
+    }
+
+    // shift group relation
+    public function shiftGroup(): BelongsTo
+    {
+        return $this->belongsTo(
+            ShiftGroup::class,
+            'shift_group_id',
+            'id',
+            'shift_groups'
+        );
     }
 }

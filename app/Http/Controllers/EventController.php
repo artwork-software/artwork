@@ -70,6 +70,7 @@ use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftGroupService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
@@ -146,6 +147,7 @@ class EventController extends Controller
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly GeneralSettingsService $generalSettingsService,
         protected GlobalQualificationService $globalQualificationService,
+        protected ShiftGroupService $shiftGroupService,
     ) {
     }
 
@@ -312,8 +314,7 @@ class EventController extends Controller
                      $event,
                      $userCalendarSettings,
                      EventType::select(['id','name','abbreviation','hex_code'])->get()->keyBy('id')
-                 )
-             ),
+                 )),
             'areas'            => fn () => $this->areaService->getAll(),
             'eventTypes'       => fn () => EventType::select(['id','name','abbreviation','hex_code'])->orderBy('name')->get(),
             'eventStatuses'    => fn () => EventStatus::orderBy('order')->get(),
@@ -327,8 +328,8 @@ class EventController extends Controller
             'projectNameUsedForProjectTimePeriod' => fn () =>
             $userCalendarSettings->getAttribute('time_period_project_id')
                 ? $this->projectService->findById(
-                $userCalendarSettings->getAttribute('time_period_project_id')
-            )->name
+                    $userCalendarSettings->getAttribute('time_period_project_id')
+                )->name
                 : null,
         ]);
     }
@@ -646,6 +647,7 @@ class EventController extends Controller
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'calendarWarningText' => $calendarWarningText,
             'globalQualifications' => $this->globalQualificationService->getAll(),
+            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
         ]);
     }
 
@@ -1000,7 +1002,8 @@ class EventController extends Controller
         $this->shiftService->commitShiftsByDate($startDate, $endDate);
     }
 
-    public function changeCommitShifts(Request $request, Shift $shift){
+    public function changeCommitShifts(Request $request, Shift $shift): void
+    {
         $shift->update(['is_committed' => $request->boolean('commit')]);
     }
 
@@ -1693,16 +1696,16 @@ class EventController extends Controller
                     'occupancy_option' => $event->occupancy_option,
                     'audience'     => $event->audience,
                     'is_loud'      => $event->is_loud,
-                    'event_type_id'=> $event->event_type_id,
+                    'event_type_id' => $event->event_type_id,
                     'room_id'      => $event->room_id,
                     'project_id'   => $event->project_id,
-                    'start_time'   => $startDay.' '.$startTime,
-                    'end_time'     => $endDay.' '.$endTime,
+                    'start_time'   => $startDay . ' ' . $startTime,
+                    'end_time'     => $endDay . ' ' . $endTime,
                 ]);
             }
         }
 
-        DB::transaction(function () use ($request, $event) {
+        DB::transaction(function () use ($request, $event): void {
             $this->handleSeriesOnUpdate($request, $event);
         });
 
@@ -2371,7 +2374,6 @@ class EventController extends Controller
             $ids = $query->pluck('id');
 
             if ($ids->isNotEmpty()) {
-
                 foreach ($query->get() as $eventToDelete) {
                     broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
                 }
@@ -2611,8 +2613,6 @@ class EventController extends Controller
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
-
-
     }
 
     /**
@@ -3294,7 +3294,7 @@ class EventController extends Controller
     public function updateSingleBulkEvent(
         Request $request,
         Event $event
-    ) {
+    ): void {
         $data =  $request->collect('data');
         $this->eventService->updateBulkEvent(
             $data,
@@ -3311,8 +3311,7 @@ class EventController extends Controller
     public function createSingleBulkEvent(
         Request $request,
         Project $project
-    ): void
-    {
+    ): void {
         $data =  $request->input('event', []);
 
         $event = $this->eventService->createBulkEvent(
@@ -3356,18 +3355,18 @@ class EventController extends Controller
     public function bulkDeleteEvent(Request $request): void
     {
         $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
-
-
     }
 
-    public function standardEventValues(){
-        return Inertia::render('Settings/StandardEventValues');
+    public function standardEventValues()
+    {
+        return Inertia::render('Settings/StandardEventValues', []);
     }
 
     public function saveStandardEventValues(Request $request): void
     {
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
     }
+
 
     public function convertToPlanning(Event $event): RedirectResponse
     {

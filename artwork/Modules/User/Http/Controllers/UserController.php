@@ -1201,7 +1201,8 @@ class UserController extends Controller
             'display_project_groups',
             'show_unplanned_events',
             'show_planned_events',
-            'hide_unoccupied_days'
+            'hide_unoccupied_days',
+            'show_shift_group_tag'
         ]));
     }
 

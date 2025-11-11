@@ -1,5 +1,6 @@
 <?php
 
+use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
@@ -2466,6 +2467,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/service-provider/{serviceProvider}/update/{craft}/{qualification}/craft-shift-qualification',
         [ServiceProviderController::class, 'updateCraftShiftQualification']
     )->name('service_provider.update.craft-shift-qualification');
+
+    Route::group(['prefix' => 'shift-groups'], function (): void {
+        Route::get('/', [ShiftGroupController::class, 'index'])->name('shift-groups.index');
+        Route::post('/', [ShiftGroupController::class, 'store'])->name('shift-groups.store');
+        Route::patch('/{shiftGroup}/update', [ShiftGroupController::class, 'update'])->name('shift-groups.update');
+        Route::delete('/{shiftGroup}/destroy', [ShiftGroupController::class, 'destroy'])->name('shift-groups.destroy');
+    });
+
+    // patch shift-settings.update-warn-multiple-assignments
+    Route::patch(
+        '/shift-settings/update-warn-multiple-assignments',
+        [ShiftSettingsController::class, 'saveWarningMultipleAssignments']
+    )->name('shift-settings.update-warn-multiple-assignments');
 });
 
 Route::get(

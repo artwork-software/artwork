@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
@@ -25,6 +26,7 @@ class ShiftSettingsController extends Controller
         private readonly Redirector $redirector,
         private readonly ResponseFactory $responseFactory,
         protected GlobalQualificationService $globalQualificationService,
+        protected GeneralSettingsService $generalSettingsService,
     ) {
     }
 
@@ -60,5 +62,11 @@ class ShiftSettingsController extends Controller
         }
 
         return $this->redirector->back();
+    }
+
+
+    public function saveWarningMultipleAssignments(Request $request): void
+    {
+        $this->generalSettingsService->updateWarningMultipleAssignmentsFromRequest($request);
     }
 }

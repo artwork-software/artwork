@@ -6,6 +6,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftGroup;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 
@@ -33,6 +34,8 @@ class ShiftDTO extends Data
         public ?bool $isCommitted = false,
         public ?Project $project = null,
         public ?Collection $globalQualifications = null,
+        public ?int $shiftGroupId = null,
+        public ?ShiftGroup $shiftGroup = null,
         //public EventDTO $event
     ){
     }
@@ -62,6 +65,8 @@ class ShiftDTO extends Data
             isCommitted: $shift->is_committed,
             project: $shift?->project,
             globalQualifications: $shift->globalQualifications,
+            shiftGroupId: $shift->shift_group_id,
+            shiftGroup: $shift->shiftGroup,
             //event: EventDTO::fromModel($shift->event)
         );
     }

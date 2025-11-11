@@ -95,6 +95,9 @@ const globalQualifications = ref(globalQualificationsComputed.value)
 
 const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
 
+const shiftGroups = ref(usePage().props.shiftGroups || []);
+const selectedShiftGroup = ref(props.shift?.shiftGroupId ? shiftGroups.value.find((sg) => sg.id === props.shift?.shiftGroupId) : null);
+
 const selectedCraft = ref(props.shift ? props.shift.craft : null)
 
 const validationMessages = reactive({
@@ -124,6 +127,7 @@ const shiftForm = useForm({
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
     project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
+    shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
 })
 
 const initialShiftSnapshot = ref<null | {
@@ -497,6 +501,12 @@ function saveShift() {
         shiftForm.project_id = selectedProject.value.id
     } else {
         shiftForm.project_id = null
+    }
+
+    if (selectedShiftGroup.value) {
+        shiftForm.shift_group_id = selectedShiftGroup.value.id
+    } else {
+        shiftForm.shift_group_id = null
     }
 
     shiftForm.craft_id = selectedCraft.value?.id
@@ -1020,6 +1030,21 @@ const lockOrUnlockShift = (commit = false) => {
                                 selected-property-to-display="name"
                                 :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                             />
+                        </div>
+                        <!-- Craft -->
+                        <div class="sm:col-span-2">
+                            <SelectComponent
+                                id="addShiftShiftGroupSelectComponent"
+                                :label="$t('Shift Group')"
+                                :default="$t('Please select...')"
+                                v-model="selectedShiftGroup"
+                                :options="shiftGroups"
+                                selected-property-to-display="name"
+                                :getter-for-options-to-display="(option) => option.name"
+                            />
+                            <div class="flex items-center justify-end">
+                                <button type="button" @click="selectedShiftGroup = null" class="text-xs text-zinc-500 hover:text-blue-500 mt-0.5 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
+                            </div>
                         </div>
 
                         <div class="sm:col-span-2">

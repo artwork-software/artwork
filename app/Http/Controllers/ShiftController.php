@@ -321,6 +321,7 @@ class ShiftController extends Controller
             'number_masters',
             'description',
             'project_id',
+            'shift_group_id',
         ]));
 
         $this->shiftService->save($shift);
@@ -1518,6 +1519,7 @@ class ShiftController extends Controller
                 'description' => $request->get('description'),
                 'room_id' => $roomAndDate['roomId'],
                 'project_id' => $request->get('project_id'),
+                'shift_group_id' => $request->get('shift_group_id'),
             ];
 
             $shift = $this->shiftService->createShiftWithoutEventAutomatic(

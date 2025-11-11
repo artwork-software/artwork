@@ -334,4 +334,10 @@ class Shift extends Model
             'shift_groups'
         );
     }
+
+    public function shiftRuleViolations(): HasMany
+    {
+        return $this->hasMany(ShiftRuleViolation::class);
+
+    }
 }

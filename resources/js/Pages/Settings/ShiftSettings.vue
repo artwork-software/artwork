@@ -568,7 +568,43 @@ export default defineComponent({
                 users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
             }),
             deleteType: '',
-
+            tabs: [
+                {
+                    name: this.$t('Shift Settings'),
+                    href: route('shift.settings'),
+                    current: route().current('shift.settings'),
+                    show: true,
+                    icon: 'IconCalendarUser'
+                },
+                {
+                    name: this.$t('Day Services'),
+                    href: route('day-service.index'),
+                    current: route().current('day-service.index'),
+                    show: true,
+                    icon: 'IconHours24'
+                },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true,
+                    icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
+                },
+                {
+                    name: this.$t('Shift warnings - rules'),
+                    href: route('shift-rules.index'),
+                    current: route().current('shift-rules.index'),
+                    show: true,
+                    icon: 'IconGavel'
+                }
+            ]
         }
     },
     computed: {

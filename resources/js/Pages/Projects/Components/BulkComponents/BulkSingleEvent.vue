@@ -122,14 +122,14 @@
 
             </div>
 
-            <!-- Day -->
+            <!-- Start Day -->
             <div class="print:col-span-2" :style="getColumnSize(5)">
                 <div class="relative">
                     <BaseInput
                         v-model="event.day"
                         type="date"
                         :id="'day-' + index"
-                        :label="'Tag ' + dayString"
+                        :label="$t('Start date') + ' ' + dayString"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="updateEventInDatabase"
@@ -138,25 +138,46 @@
                 </div>
             </div>
 
-            <!-- Time -->
-            <div class="col-span-2" :style="getColumnSize(6)">
+            <!-- Start time -->
+            <div class="col-span-1" :style="getColumnSize(6)">
                 <div class="flex items-center" v-if="timeArray">
                     <BaseInput
                         v-model="event.start_time"
                         type="time"
                         :id="'start-time-' + index"
-                        label="Start"
-                        class="rounded-r-none print:border-0"
+                        :label="$t('Start time')"
+                        class="print:border-0"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('start-time-' + index)"
                         @focusout="updateEventInDatabase"
                     />
+                </div>
+            </div>
+
+            <!-- End Day (optional) -->
+            <div v-if="showEndDate" class="print:col-span-2" :style="getColumnSize(5)">
+                <div class="relative">
+                    <BaseInput
+                        v-model="event.end_day"
+                        type="date"
+                        :id="'end-day-' + index"
+                        :label="$t('End date')"
+                        :disabled="canEditComponent === false"
+                        @mousedown="storeFocus('end-day-' + index)"
+                        @focusout="updateEventInDatabase"
+                    />
+                </div>
+            </div>
+
+            <!-- End time -->
+            <div class="col-span-1" :style="getColumnSize(6)">
+                <div class="flex items-center" v-if="timeArray">
                     <BaseInput
                         v-model="event.end_time"
                         type="time"
                         :id="'end_time-' + index"
-                        label="End"
-                        class="!rounded-l-none border-l-0 print:border-0"
+                        :label="$t('End time')"
+                        class="print:border-0"
                         :disabled="canEditComponent === false"
                         @focusout="updateEventInDatabase"
                         @mousedown="storeFocus('end_time-' + index)"
@@ -306,7 +327,8 @@ const props = defineProps({
     eventStatuses: { type: Object, required: true },
     multiEdit: { type: Boolean, required: false, default: false },
     hasPermission: { type: Boolean, required: false, default: true },
-    lastEditEventIds: { type: Array, required: false, default: () => [] }
+    lastEditEventIds: { type: Array, required: false, default: () => [] },
+    showEndDate: { type: Boolean, required: false, default: false },
 });
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent', 'editEvent']);
@@ -340,6 +362,7 @@ const getComparableEvent = (ev) => ({
     typeId: ev.type?.id ?? null,
     roomId: ev.room?.id ?? null,
     day: ev.day ?? null,
+    end_day: ev.end_day ?? null,
     start_time: ev.start_time ?? null,
     end_time: ev.end_time ?? null,
     is_planning: ev.is_planning ?? false,
@@ -430,6 +453,8 @@ const getDayOfWeek = (date) => {
 
 onMounted(() => {
     dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    // ensure end_day initialized
+    if (!props.event.end_day) props.event.end_day = props.event.day;
     // initialize snapshot so first change is detected
     if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
     const snapshotKey = `event-snapshot-${props.event.id}`;

@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Http\Middleware\UpdateUserStatus;
 use App\Listeners\UpdateUserOnLogout;
+use Artwork\Modules\Workflow\Events\WorkflowTriggered;
+use Artwork\Modules\Workflow\Listeners\AutoStartWorkflowListener;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -17,6 +19,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         Logout::class => [
             UpdateUserOnLogout::class,
+        ],
+        WorkflowTriggered::class => [
+            AutoStartWorkflowListener::class,
         ]
     ];
 

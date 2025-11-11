@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserWorkTime extends Model
 {
+    protected $table = 'user_work_times';
+
     use HasFactory;
 
     protected $fillable = [

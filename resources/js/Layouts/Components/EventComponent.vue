@@ -106,7 +106,7 @@
                             />
                         </div>
                         <div class="flex gap-2 items-end">
-                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="checkChanges" class="ui-input" />
+                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="() => { endAutoFilled = false; checkChanges() }" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"

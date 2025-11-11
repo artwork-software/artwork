@@ -52,6 +52,44 @@ const props = defineProps({
 })
 
 const showCreateOrUpdateUserContractModal = ref(false)
+
+const tabs = ref([
+    {
+        name: 'Shift Settings',
+        href: route('shift.settings'),
+        current: route().current('shift.settings'),
+        show: true,
+        icon: 'IconCalendarUser'
+    },
+    {
+        name: 'Day Services',
+        href: route('day-service.index'),
+        current: route().current('day-service.index'),
+        show: true,
+        icon: 'IconHours24'
+    },
+    {
+        name: 'Work Time Pattern',
+        href: route('shift.work-time-pattern'),
+        current: route().current('shift.work-time-pattern'),
+        show: true,
+        icon: 'IconClockCog'
+    },
+    {
+        name: 'User Contracts',
+        href: route('user-contract-settings.index'),
+        current: route().current('user-contract-settings.index'),
+        show: true,
+        icon: 'IconContract'
+    },
+    {
+        name: 'Shift warnings - rules',
+        href: route('shift-rules.index'),
+        current: route().current('shift-rules.index'),
+        show: true,
+        icon: 'IconGavel'
+    }
+])
 </script>
 
 <style scoped>

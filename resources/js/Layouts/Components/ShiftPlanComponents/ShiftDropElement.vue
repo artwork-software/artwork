@@ -44,17 +44,17 @@
         </div>
 
         <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
-            <div class="w-full flex flex-row flex-wrap text-[10px]">
+            <div class="w-full flex flex-row flex-wrap text-[10px] text-zinc-400">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
                     :key="row.shift_qualification_id"
-                    class="flex xsLight items-center"
+                    class="flex items-center"
                 >
                     {{ row.workerCount }}/{{ row.maxWorkerCount }}
-                    <component
+                    <PropertyIcon
                         stroke-width="1"
-                        class="text-black size-3.5 mx-1"
-                        :is="getShiftQualificationById(row.shift_qualification_id)?.icon"
+                        class="text-black size-3 mx-1"
+                        :name="getShiftQualificationById(row.shift_qualification_id)?.icon"
                     />
                 </div>
             </div>
@@ -98,6 +98,7 @@ import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 // Mixins weiterverwenden (liefert z.B. $can / hasAdminRole o.ä.)
 import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({

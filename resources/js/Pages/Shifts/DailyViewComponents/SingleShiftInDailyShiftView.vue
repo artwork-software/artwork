@@ -10,7 +10,7 @@
                 {{ shift.project.name }}
             </Link>
             <div class="text-gray-700 font-semibold">
-                <span v-if="shift.shiftGroup">[{{ shift.shiftGroup.name[0] }}]</span>
+                <span v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag">({{ shift.shiftGroup.name }})</span>
                 [{{ shift.craft.abbreviation }}] {{ shift.craft.name }}
             </div>
         </div>

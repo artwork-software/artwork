@@ -5,9 +5,6 @@
             <title>{{ $t('Login') }} - {{ $page.props.page_title }}</title>
         </Head>
 
-        <!-- Zarte Akzentleiste oben -->
-        <div class="h-1 w-full bg-gradient-to-r from-blue-500/30 via-sky-400/25 to-cyan-400/30"></div>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
             <!-- Left: Form -->
             <section class="flex items-center justify-center py-10">

@@ -32,7 +32,9 @@ class CraftUpdateRequest extends FormRequest
                 User::class,
                 Freelancer::class,
                 ServiceProvider::class
-            )
+            ),
+            'qualifications' => 'sometimes|array',
+            'qualifications.*.id' => 'integer|exists:shift_qualifications,id',
         ];
     }
 }

@@ -12,6 +12,7 @@ use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,7 @@ class UpdateArtwork extends Command
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
+        $this->remapShiftEventProjectRelations();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -383,7 +385,8 @@ class UpdateArtwork extends Command
 
     private function addSwissCantons(): void
     {
-        $this->section('Seeding swiss cantons');;
+        $this->section('Seeding swiss cantons');
+        ;
         $this->swissCantoneSeeder->seed();
     }
 
@@ -400,7 +403,24 @@ class UpdateArtwork extends Command
                 'name' => 'Standard',
             ]);
         }
-
     }
 
+    private function remapShiftEventProjectRelations(): void
+    {
+        $this->section('Remapping Shift Event Project Relations');
+
+        $shifts = Shift::with(['event', 'event.project'])->whereNull('room_id')->whereNotNull('event_id')->get();
+
+        foreach ($shifts as $shift) {
+            // get project id form event and save it in shift->project_id, set event_id to null
+            if ($shift->event && $shift->event->project) {
+                $shift->update([
+                    'project_id' => $shift->event->project->id,
+                    'room_id' => $shift->event->room_id,
+                    'event_id' => null,
+                ]);
+                $this->info("Shift ID {$shift->id} remapped to Project ID {$shift->project_id}");
+            }
+        }
+    }
 }

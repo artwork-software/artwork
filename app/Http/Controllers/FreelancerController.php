@@ -11,7 +11,9 @@ use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Shift\Http\Requests\UpdateFreelancerShiftQualificationRequest;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Services\FreelancerShiftQualificationService;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -30,6 +32,12 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class FreelancerController extends Controller
 {
+
+    public function __construct(
+        protected GlobalQualificationService $globalQualificationService,
+    ) {
+    }
+
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $freelancer = Freelancer::create();
@@ -65,6 +73,26 @@ class FreelancerController extends Controller
             Carbon::today();
 
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
+
+        $globalQualifications = $this->globalQualificationService
+            ->getAll()->map(function ($qualification) use ($freelancer) {
+                return [
+                'id' => $qualification->id,
+                'name' => $qualification->name,
+                'icon' => $qualification->icon,
+                'assigned' => $freelancer->globalQualifications->contains('id', $qualification->id),
+                ];
+            });
+
+        // check if $globalQualifications is not empty
+        if (!$globalQualifications->isEmpty()) {
+            Inertia::share([
+                'globalQualifications' => $globalQualifications,
+            ]);
+        }
+
+
+
 
         return Inertia::render(
             'Freelancer/Show',
@@ -146,21 +174,13 @@ class FreelancerController extends Controller
      * @throws AuthorizationException
      */
     public function updateShiftQualification(
-        Freelancer $freelancer,
-        UpdateFreelancerShiftQualificationRequest $request,
-        FreelancerShiftQualificationService $freelancerShiftQualificationService
-    ): RedirectResponse {
-        $this->authorize('updateWorkProfile', Freelancer::class);
-
-        if ($request->boolean('create')) {
-            //if useable is set to true create a new entry in pivot table
-            $freelancerShiftQualificationService->createByRequestForFreelancer($request, $freelancer);
-        } else {
-            //if useable is set to false pivot table entry needs to be deleted
-            $freelancerShiftQualificationService->deleteByRequestForFreelancer($request, $freelancer);
-        }
-
-        return Redirect::back();
+        \Artwork\Modules\Freelancer\Models\Freelancer $freelancer,
+        \Artwork\Modules\Shift\Models\GlobalQualification $qualification,
+        \Artwork\Modules\Shift\Services\GlobalQualificationService $qualificationService
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\Freelancer\Models\Freelancer::class);
+        $qualificationService->activateOrDeactivateInQualifiable($qualification, $freelancer);
+        return \Illuminate\Support\Facades\Redirect::back();
     }
 
     /**
@@ -224,5 +244,32 @@ class FreelancerController extends Controller
         $freelancer->delete();
 
         return Redirect::back();
+    }
+
+    /**
+     * Toggle a shift qualification for a freelancer in a specific craft (morphToMany pivot mit craft_id)
+     */
+    public function updateCraftShiftQualification(
+        Freelancer $freelancer,
+        Craft $craft,
+        ShiftQualification $qualification
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\Freelancer\Models\Freelancer::class);
+        $pivotExists = $freelancer->shiftQualifications()
+            ->wherePivot('craft_id', $craft->id)
+            ->where('shift_qualification_id', $qualification->id)->exists();
+        if ($pivotExists) {
+            $freelancer->shiftQualifications()->newPivotStatement()
+                ->where('qualifiable_id', $freelancer->id)
+                ->where('qualifiable_type', $freelancer->getMorphClass())
+                ->where('shift_qualification_id', $qualification->id)
+                ->where('craft_id', $craft->id)
+                ->delete();
+        } else {
+            $freelancer->shiftQualifications()->attach($qualification->id, [
+                'craft_id' => $craft->id
+            ]);
+        }
+        return \Illuminate\Support\Facades\Redirect::back();
     }
 }

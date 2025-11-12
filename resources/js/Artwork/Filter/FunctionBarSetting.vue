@@ -57,7 +57,7 @@ const CalendarSettingsModal = defineAsyncComponent({
 const checkIfAnySettingIsActive = computed(() => {
     const settingsInShiftPlan = [
         'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
-        'hide_unoccupied_days', 'hide_unoccupied_rooms'
+        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag'
     ]
 
     if (props.isInShiftPlan) {

@@ -1,32 +1,30 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <ModalHeader
-            :title="$t('Delete Group Chat')"
-            :description="$t('Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.')"
-        />
+    <ArtworkBaseModal @close="$emit('close')" :title="$t('Delete Group Chat')"
+                      :description="$t('Are you sure you want to delete this group chat? This action cannot be undone and all messages will be permanently deleted.')">
         <div class="flex justify-between gap-3 mt-6">
-            <FormButton
+            <BaseUIButton
                 type="button"
-                class="bg-artwork-error hover:bg-artwork-error/80"
+                is-delete-button
                 @click="handleDelete"
-                :text="$t('Delete')"
-                variant="danger"
+                :label="$t('Delete')"
             />
-            <FormButton
+            <BaseUIButton
                 type="button"
                 @click="$emit('close')"
-                :text="$t('Cancel')"
-                variant="secondary"
+                :label="$t('Cancel')"
+                is-cancel-button
             />
 
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     chat: {

@@ -89,4 +89,10 @@ class GeneralSettingsService
         $this->generalSettings->event_time_length_minutes = $request->get('event_time_length_minutes');
         $this->generalSettings->save();
     }
+
+    function updateWarningMultipleAssignmentsFromRequest(Request $request): void
+    {
+        $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');
+        $this->generalSettings->save();
+    }
 }

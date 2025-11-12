@@ -32,6 +32,19 @@
         />
       </span>
         </Switch>
+
+        <!-- Right Label -->
+        <span v-if="label"
+            class="model-title cursor-pointer ml-3 text-sm "
+            :class="model ? 'text-zinc-700' : 'text-gray-300'"
+            role="button"
+            tabindex="0"
+            @click="set(true)"
+            @keydown.enter.prevent="set(true)"
+            @keydown.space.prevent="set(true)"
+        >
+        {{ label }}
+    </span>
     </div>
 </template>
 
@@ -52,7 +65,8 @@ const props = defineProps({
     tooltipText: { type: String, default: 'At a glance' },
     icon: { type: [Object, Function, String], default: () => IconList },
     size: { type: String, default: 'sm' }, // 'sm' | 'md'
-    disabled: { type: Boolean, default: false }
+    disabled: { type: Boolean, default: false },
+    label: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -67,6 +81,12 @@ const model = computed({
         emit('change', val)
     }
 })
+
+function set(val) {
+    if (!props.disabled) {
+        model.value = val
+    }
+}
 
 /**
  * Größen-Klassen (kompakt = sm, optional md)

@@ -30,6 +30,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
@@ -155,6 +156,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $weekly_working_hours
  * @property float $salary_per_hour
  * @property string $salary_description
+ * @property Collection<GlobalQualification> $globalQualifications
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -292,6 +294,17 @@ class User extends Model implements
         'formated_work_time_balance',
         //'assigned_craft_ids',
     ];
+
+    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\GlobalQualification::class,
+            'qualifiable',
+            'global_qualifiables',
+            'qualifiable_id',
+            'global_qualification_id'
+        );
+    }
 
     //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
@@ -513,7 +526,7 @@ class User extends Model implements
 
     public function assignedCrafts(): morphToMany
     {
-        return $this->morphToMany(Craft::class, 'craftable');
+        return $this->morphToMany(Craft::class, 'craftable')->with(['qualifications']);
     }
 
     public function managingCrafts(): MorphToMany
@@ -521,11 +534,15 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
-    public function shiftQualifications(): BelongsToMany
+    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this
-            ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
-            ->using(UserShiftQualification::class);
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\ShiftQualification::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'qualifiable_id',
+            'shift_qualification_id'
+        )->withPivot('craft_id');
     }
 
     public function workerShiftPlanFilter(): HasOne

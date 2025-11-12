@@ -22,6 +22,7 @@
                 jsPermissions: {!! auth()->check()?auth()->user()->jsPermissions():0 !!}
             }
         </script>
+
     </head>
     <body class="font-sans antialiased artwork ">
         @inertia

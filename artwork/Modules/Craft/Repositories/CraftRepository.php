@@ -48,7 +48,7 @@ class CraftRepository extends BaseRepository
 
     public function getAssignableByAllCrafts(): Collection
     {
-        return Craft::query()->isAssignableByAll()->get();
+        return Craft::query()->isAssignableByAll()->with(['qualifications'])->get();
     }
 
     public function findById(int $id): Craft

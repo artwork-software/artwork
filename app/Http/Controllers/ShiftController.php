@@ -83,6 +83,10 @@ class ShiftController extends Controller
             data: $request->all(),
         );
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $shift->event_start_day = Carbon::parse($event->start_time)->format('Y-m-d');
         $shift->event_end_day = Carbon::parse($event->end_time)->format('Y-m-d');
 
@@ -199,7 +203,14 @@ class ShiftController extends Controller
             'description',
         ]));
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->detach();
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $this->shiftService->save($shift);
+
+
 
         return $this->redirector->route('shifts.plan');
     }
@@ -210,7 +221,7 @@ class ShiftController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ProjectTabService $projectTabService
     ): RedirectResponse {
-        $projectId = $shift->event()->first()?->project()?->first()->id;
+        $projectId = $shift?->project_id;
         if ($shift->is_committed) {
             $event = $shift?->event;
 
@@ -309,13 +320,35 @@ class ShiftController extends Controller
             'number_employees',
             'number_masters',
             'description',
+            'project_id',
+            'shift_group_id',
         ]));
 
         $this->shiftService->save($shift);
 
+        if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
+
+            ShiftUser::where('shift_id', $shift->id)->forceDelete();
+            ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
+            ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
+
+
+            if ($shift->shiftsQualifications()->exists()) {
+                $shift->shiftsQualifications()->delete();
+            }
+
+            // 3) Eager-Loaded Relation invalidieren, damit Response nicht alte Daten zeigt
+            $shift->unsetRelation('users');
+        }
+
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
+        }
+
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->detach();
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
         }
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
@@ -1268,6 +1301,10 @@ class ShiftController extends Controller
 
         $this->shiftService->save($shift);
 
+        if ($request->get('globalQualifications')) {
+            $shift->globalQualifications()->sync($request->get('globalQualifications'));
+        }
+
         $shiftSave = $shift->fresh();
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
@@ -1392,7 +1429,6 @@ class ShiftController extends Controller
                         $endTime = Carbon::parse($endTime)->format('H:i');
                         $shiftStart = Carbon::parse($startDate . ' ' . $startTime);
                         $shiftEnd = Carbon::parse($endDate . ' ' . $endTime);
-
                     } catch (\Exception $e) {
                         continue; // Skip this shift
                     }
@@ -1482,6 +1518,8 @@ class ShiftController extends Controller
                 'break_minutes' => $request->get('break_minutes'),
                 'description' => $request->get('description'),
                 'room_id' => $roomAndDate['roomId'],
+                'project_id' => $request->get('project_id'),
+                'shift_group_id' => $request->get('shift_group_id'),
             ];
 
             $shift = $this->shiftService->createShiftWithoutEventAutomatic(
@@ -1489,6 +1527,10 @@ class ShiftController extends Controller
                 data: $data,
                 day: Carbon::parse($roomAndDate['day'])->format('Y-m-d'),
             );
+
+            if ($request->get('globalQualifications')) {
+                $shift->globalQualifications()->sync($request->get('globalQualifications'));
+            }
 
             $shiftUuid = Str::uuid();
             $shift->shift_uuid = $shiftUuid;

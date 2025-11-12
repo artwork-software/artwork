@@ -10,6 +10,8 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Http\Requests\UpdateServiceProviderShiftQualificationRequest;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ServiceProviderShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\User\Services\UserService;
@@ -24,6 +26,12 @@ use Inertia\Response;
 
 class ServiceProviderController extends Controller
 {
+
+    public function __construct(
+        protected GlobalQualificationService $globalQualificationService,
+    ) {
+    }
+
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $serviceProvider = ServiceProvider::create();
@@ -41,6 +49,26 @@ class ServiceProviderController extends Controller
         ProjectService $projectService,
         ShiftQualificationService $shiftQualificationService
     ): Response {
+
+        $globalQualifications = $this->globalQualificationService
+            ->getAll()->map(function ($qualification) use ($serviceProvider) {
+                return [
+                    'id' => $qualification->id,
+                    'name' => $qualification->name,
+                    'icon' => $qualification->icon,
+                    'assigned' => $serviceProvider->globalQualifications->contains('id', $qualification->id),
+                ];
+            });
+
+        // check if $globalQualifications is not empty
+        if (!$globalQualifications->isEmpty()) {
+            Inertia::share([
+                'globalQualifications' => $globalQualifications,
+            ]);
+        }
+
+
+
         return Inertia::render(
             'ServiceProvider/Show',
             $serviceProviderService->createShowDto(
@@ -115,21 +143,13 @@ class ServiceProviderController extends Controller
      * @throws AuthorizationException
      */
     public function updateShiftQualification(
-        ServiceProvider $serviceProvider,
-        UpdateServiceProviderShiftQualificationRequest $request,
-        ServiceProviderShiftQualificationService $serviceProviderShiftQualificationService
-    ): RedirectResponse {
-        $this->authorize('updateWorkProfile', ServiceProvider::class);
-
-        if ($request->boolean('create')) {
-            //if useable is set to true create a new entry in pivot table
-            $serviceProviderShiftQualificationService->createByRequestForServiceProvider($request, $serviceProvider);
-        } else {
-            //if useable is set to false pivot table entry needs to be deleted
-            $serviceProviderShiftQualificationService->deleteByRequestForServiceProvider($request, $serviceProvider);
-        }
-
-        return Redirect::back();
+        \Artwork\Modules\ServiceProvider\Models\ServiceProvider $serviceProvider,
+        \Artwork\Modules\Shift\Models\GlobalQualification $qualification,
+        \Artwork\Modules\Shift\Services\GlobalQualificationService $qualificationService
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class);
+        $qualificationService->activateOrDeactivateInQualifiable($qualification, $serviceProvider);
+        return \Illuminate\Support\Facades\Redirect::back();
     }
 
     /**
@@ -199,5 +219,32 @@ class ServiceProviderController extends Controller
         Storage::putFileAs('public/profile-photos', $file, $basename);
 
         $serviceProvider->update(['profile_image' => Storage::url('public/profile-photos/' . $basename)]);
+    }
+
+    /**
+     * Toggle a shift qualification for a service provider in a specific craft (morphToMany pivot mit craft_id)
+     */
+    public function updateCraftShiftQualification(
+        ServiceProvider $serviceProvider,
+        Craft $craft,
+        ShiftQualification $qualification
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class);
+        $pivotExists = $serviceProvider->shiftQualifications()
+            ->wherePivot('craft_id', $craft->id)
+            ->where('shift_qualification_id', $qualification->id)->exists();
+        if ($pivotExists) {
+            $serviceProvider->shiftQualifications()->newPivotStatement()
+                ->where('qualifiable_id', $serviceProvider->id)
+                ->where('qualifiable_type', $serviceProvider->getMorphClass())
+                ->where('shift_qualification_id', $qualification->id)
+                ->where('craft_id', $craft->id)
+                ->delete();
+        } else {
+            $serviceProvider->shiftQualifications()->attach($qualification->id, [
+                'craft_id' => $craft->id
+            ]);
+        }
+        return \Illuminate\Support\Facades\Redirect::back();
     }
 }

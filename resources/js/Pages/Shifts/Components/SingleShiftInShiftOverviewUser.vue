@@ -62,7 +62,7 @@
                 {{ shift.roomName }}
             </div>
             <div class="col-span-3 text-xs flex items-center">
-                {{ $t('Qualification') }}: {{ shift.qualificationName }}
+                {{ $t('Craft function') }}: {{ shift.qualificationName }}
             </div>
             <div class="col-span-2 text-xs flex items-center" v-if="shift.eventTypeAbbreviation">
                 {{ shift.eventTypeAbbreviation }}:

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
-
+import { useLegalBreak} from "@/Composeables/useLegalBreak";
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
@@ -15,8 +15,13 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 // Icons (Tabler)
 import { IconSearch, IconX } from '@tabler/icons-vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const { t: $t } = useI18n()
+
+
 
 // Helper: normalize time strings to 'HH:MM' (trim seconds or parse from datetime)
 function toHHMM(val: any): string | null {
@@ -68,8 +73,30 @@ const searchTimePreset = ref('')
 
 // Schichtvorlagen (Komplett)
 const showShiftPresetBox = ref(false)
+const showGlobalQualificationBox = ref(false)
 const showShiftSearchbar = ref(false)
-const searchShiftPreset = ref('')
+const searchShiftPreset = ref('');
+
+const globalQualificationsComputed = computed(() => {
+    const all = page?.props?.globalQualifications ?? []
+    const shiftQualis = props.shift?.globalQualifications ?? []
+
+    return all.map(gq => {
+        // Suche nach passender Quali aus dem Shift
+        const match = shiftQualis.find(sq => sq.id === gq.id)
+        return {
+            ...gq,
+            quantity: match?.pivot?.quantity ?? gq?.pivot?.quantity ?? null,
+        }
+    })
+})
+
+const globalQualifications = ref(globalQualificationsComputed.value)
+
+const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
+
+const shiftGroups = ref(usePage().props.shiftGroups || []);
+const selectedShiftGroup = ref(props.shift?.shiftGroupId ? shiftGroups.value.find((sg) => sg.id === props.shift?.shiftGroupId) : null);
 
 const selectedCraft = ref(props.shift ? props.shift.craft : null)
 
@@ -84,7 +111,7 @@ const shiftForm = useForm({
     end_date: props.shift ? props.shift.formatted_dates.frontend_end : null,
     start: props.shift ? toHHMM(props.shift.start) : null,
     end: props.shift ? toHHMM(props.shift.end) : null,
-    break_minutes: props.shift ? props.shift.break_minutes : 30,
+    break_minutes: props.shift ? props.shift.break_minutes : null,
     craft_id: props.shift ? props.shift.craft?.id : null,
     description: props.shift ? props.shift.description : '',
     event_id: props.event ? props.event.id : null,
@@ -96,8 +123,11 @@ const shiftForm = useForm({
     automaticMode: true,
     room_id: props.room ? props.room : null,
     day: props.day ? props.day : null,
+    globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
-    updateOrCreateInShiftPlan: props.shiftPlanModal
+    updateOrCreateInShiftPlan: props.shiftPlanModal,
+    project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
+    shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
 })
 
 const initialShiftSnapshot = ref<null | {
@@ -109,10 +139,23 @@ const initialShiftSnapshot = ref<null | {
     qualifications: Array<{ id: number, value: number | '' }>
 }>(null)
 
+const { breakMinutes } = useLegalBreak(
+    toRef(shiftForm, 'start'),
+    toRef(shiftForm, 'end'),
+    {
+        allowCrossMidnight: true,
+        roundToMinutes: 1,
+    }
+)
+
 // ----- computedShiftQualifications als ref (stabil für v-model) -----
-const computedShiftQualifications = ref([])
-function initComputedShiftQualifications() {
-    const list = (props.shiftQualifications || []).map((shiftQualification) => {
+
+const initComputedShiftQualifications = computed(() => {
+    return getInitialQualificationValue()
+})
+
+function getInitialQualificationValue() {
+    const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
         // auf Edit: vorhandenen Wert übernehmen
         const found = props.edit
             ? (props.shift?.shifts_qualifications || []).find(
@@ -123,14 +166,17 @@ function initComputedShiftQualifications() {
         return {
             id: shiftQualification.id,
             name: shiftQualification.name,
-            available: shiftQualification.available,
+            available: true,
             value: typeof found !== 'undefined' ? found.value : '',
             warning: null,
             error: null,
         }
     })
-    computedShiftQualifications.value = list
+
+    return list
 }
+
+const computedShiftQualifications = ref(initComputedShiftQualifications.value ?? [])
 
 // beim ersten Initialisieren sichern
 function captureInitialShiftSnapshot() {
@@ -149,17 +195,28 @@ function captureInitialShiftSnapshot() {
 watch(
     () => computedShiftQualifications.value,
     () => captureInitialShiftSnapshot(),
-    { immediate: true }
+    { immediate: true, deep: true }
 )
 
-watch(
-    () => [props.shiftQualifications, props.edit, props.shift],
-    () => initComputedShiftQualifications(),
-    { immediate: true }
-)
+// watch on selectecCraft to update computedShiftQualifications
+watch(selectedCraft, () => {
+    computedShiftQualifications.value = getInitialQualificationValue()
+}, { immediate: true, deep: true })
+
+
+watch(breakMinutes, (v) => {
+    // nur überschreiben, wenn Start/Ende gefüllt sind
+    if (shiftForm.start && shiftForm.end) {
+        shiftForm.break_minutes = v
+    }
+}, { immediate: true, deep: true })
 
 onMounted(() => {
-    if (props.edit) validate()
+    if (props.edit)
+    {
+        computedShiftQualifications.value = getInitialQualificationValue() // nur beim ersten Mount
+        validate()
+    }
 })
 
 // ----- Computeds -----
@@ -434,8 +491,37 @@ function saveShift() {
         }
     }
 
+    // if Break null or '' set it to 0
+    if (shiftForm.break_minutes === null || shiftForm.break_minutes === '') {
+        shiftForm.break_minutes = 0
+    }
+
+    // if selected Project add id to shiftForm
+    if (selectedProject.value) {
+        shiftForm.project_id = selectedProject.value.id
+    } else {
+        shiftForm.project_id = null
+    }
+
+    if (selectedShiftGroup.value) {
+        shiftForm.shift_group_id = selectedShiftGroup.value.id
+    } else {
+        shiftForm.shift_group_id = null
+    }
+
     shiftForm.craft_id = selectedCraft.value?.id
     shiftForm.shiftsQualifications = []
+    shiftForm.globalQualifications = []
+
+    globalQualifications.value.forEach( (qualification) => {
+        if(qualification.quantity > 0) {
+            shiftForm.globalQualifications.push({
+                global_qualification_id: qualification.id,
+                quantity: qualification.quantity,
+            });
+        }
+    })
+
     appendComputedShiftQualificationsToShiftForm()
 
     if (props.multiAddMode) {
@@ -522,13 +608,16 @@ function toggleTimePresetBox() {
     )
 }
 
+function toggleGlobalQualificationBox() {
+    showGlobalQualificationBox.value = !showGlobalQualificationBox.value
+}
+
 const lockOrUnlockShift = (commit = false) => {
     router.post(route('shift.change.commit.status', props.shift.id), {
         commit: commit
     }, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => wantsFreshPlacements()
     })
 }
 </script>
@@ -542,9 +631,6 @@ const lockOrUnlockShift = (commit = false) => {
         @close="closeModal"
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
-
-
-
             <div class="space-y-6">
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
@@ -760,6 +846,72 @@ const lockOrUnlockShift = (commit = false) => {
                     </transition>
                 </section>
 
+                <!-- Sektion: Zeitvorgaben -->
+                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between gap-3 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('Global qualifications') }}</h3>
+                        <div class="flex items-center gap-2">
+                              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                                {{ globalQualifications?.length }}
+                              </span>
+                            <button type="button" class="ui-button !text-xs" @click="toggleGlobalQualificationBox()">
+                                {{ showGlobalQualificationBox ? $t('Hide') : $t('Show') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Inhalt (scrollbar) -->
+                    <transition
+                        enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                    >
+                        <div v-if="showGlobalQualificationBox" class="px-4 sm:px-5 pb-4">
+                            <div v-if="globalQualifications?.length > 0" class="max-h-[240px] md:max-h-[280px] overflow-y-auto pr-1 py-1">
+                                <div class="space-y-3 divide-y divide-zinc-200 divide-dashed">
+                                    <div
+                                        v-for="globalQualification in globalQualifications"
+                                        :key="'globalQualification-' + globalQualification.id"
+                                        class="group pb-3"
+                                    >
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-2.5">
+                                            <div class="flex items-center gap-x-2">
+                                                <PropertyIcon :name="globalQualification.icon" class="w-4 h-4" />
+                                                <div class="antialiased text-sm">
+                                                    {{ globalQualification.name }}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <BaseInput
+                                                    v-model="globalQualification.quantity"
+                                                    type="number"
+                                                    :id="'globalQualificationValue-' + globalQualification.id"
+                                                    :label="$t('Quantity')"
+                                                    is-small
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="py-6">
+                                <AlertComponent
+                                    type="info"
+                                    show-icon
+                                    icon-size="w-4 h-4"
+                                    :text="$t('No presets found.')"
+                                    class="mx-auto w-fit"
+                                />
+                            </div>
+                        </div>
+                    </transition>
+                </section>
+
                 <!-- Sektion: Basisdaten -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3 mb-3">
@@ -878,6 +1030,50 @@ const lockOrUnlockShift = (commit = false) => {
                                 selected-property-to-display="name"
                                 :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                             />
+                        </div>
+                        <!-- Craft -->
+                        <div class="sm:col-span-2">
+                            <SelectComponent
+                                id="addShiftShiftGroupSelectComponent"
+                                :label="$t('Shift Group')"
+                                :default="$t('Please select...')"
+                                v-model="selectedShiftGroup"
+                                :options="shiftGroups"
+                                selected-property-to-display="name"
+                                :getter-for-options-to-display="(option) => option.name"
+                            />
+                            <div class="flex items-center justify-end">
+                                <button type="button" @click="selectedShiftGroup = null" class="text-xs text-zinc-500 hover:text-blue-500 mt-0.5 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <div v-if="!selectedProject">
+
+                                <ProjectSearch id="2" label="Search project"  @project-selected="selectedProject = $event" />
+
+                                <LastedProjects
+                                    :limit="10"
+                                    @select="selectedProject = $event"/>
+                            </div>
+
+                            <div v-else>
+                                <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                    <div class="min-w-0 flex items-center gap-3">
+                                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">
+                                            {{ selectedProject.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-900 truncate">
+                                                {{ selectedProject.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="ui-button !text-xs" @click="selectedProject = null">
+                                        {{ $t('Change') }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Break/Craft Hinweise -->

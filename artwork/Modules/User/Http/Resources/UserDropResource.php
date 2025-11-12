@@ -22,7 +22,7 @@ class UserDropResource extends JsonResource
             'profile_photo_url' => $this->profile_photo_url,
             'can_work_shifts' => $this->can_work_shifts,
             'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
-            'shift_qualifications' => $this->shiftQualifications()->get(['id', 'name', 'available']),
+            'shift_qualifications' => $this->shiftQualifications()->get(['shift_qualifications.id', 'name', 'available']),
             'formatted_vacation_days' => $this->getFormattedVacationDays(),
         ];
     }

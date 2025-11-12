@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Settings\ShiftSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Models\ShiftTimePreset;
 use Artwork\Modules\User\Models\User;
@@ -23,6 +25,8 @@ class ShiftSettingsController extends Controller
     public function __construct(
         private readonly Redirector $redirector,
         private readonly ResponseFactory $responseFactory,
+        protected GlobalQualificationService $globalQualificationService,
+        protected GeneralSettingsService $generalSettingsService,
     ) {
     }
 
@@ -30,7 +34,7 @@ class ShiftSettingsController extends Controller
     {
         return $this->responseFactory->render('Settings/ShiftSettings', [
             'crafts' => Craft::query()
-                ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders')
+                ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders', 'qualifications')
                 ->orderBy('position')
                 ->get(),
             'eventTypes' => EventType::all(),
@@ -41,7 +45,8 @@ class ShiftSettingsController extends Controller
             'shiftSettings' => $shiftSettings,
             'shiftCommitWorkflowUsers' => ShiftCommitWorkflowUser::with('user')
                 ->orderBy('user_id')
-                ->get()
+                ->get(),
+            'globalQualifications' => $this->globalQualificationService->getAll(),
         ]);
     }
 
@@ -57,5 +62,11 @@ class ShiftSettingsController extends Controller
         }
 
         return $this->redirector->back();
+    }
+
+
+    public function saveWarningMultipleAssignments(Request $request): void
+    {
+        $this->generalSettingsService->updateWarningMultipleAssignmentsFromRequest($request);
     }
 }

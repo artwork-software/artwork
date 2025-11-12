@@ -22,7 +22,7 @@ class FreelancerDropResource extends JsonResource
             'profile_photo_url' => $this->profile_image,
             'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
             'can_work_shifts' => $this->can_work_shifts,
-            'shift_qualifications' => $this->shiftQualifications()->get(['id', 'name', 'available'])
+            'shift_qualifications' => $this->shiftQualifications()->get(['shift_qualifications.id', 'name', 'available'])
         ];
     }
 }

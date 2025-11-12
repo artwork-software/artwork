@@ -1,16 +1,19 @@
 <template>
-    <BaseModal @closed="close(null, null, null, true)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg" is-in-shift-plan>
+    <ArtworkBaseModal @close="close(null, null, null, true)" v-if="show"  :title="$t('Select qualification')"
+                      :description="$t('In which qualification should the user be added?')"  is-in-shift-plan>
             <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Select qualification')"
-                    :description="$t('In which qualification should the user be added?')" />
                 <div class="grid grid-cols-2 w-full gap-4">
-                    <AddButtonSmall no-icon v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
-                                :text="$t('Use as {0}', [availableShiftQualificationSlot.name])"
-                                @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id)" />
+
+                    <BaseUIButton
+                        v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
+                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name])"
+                        @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id)"
+                        :icon="availableShiftQualificationSlot.icon"
+                        is-add-button
+                    />
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -22,9 +25,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default defineComponent({
     components: {
+        BaseUIButton,
+        ArtworkBaseModal,
         ModalHeader,
         AddButtonSmall,
         FormButton,

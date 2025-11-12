@@ -49,6 +49,7 @@ class GeneralSettings extends Settings
     public string $playing_time_window_end;
 
     public bool $shift_commit_workflow_enabled = false;
+    public bool $warn_multiple_assignments = false;
 
     public static function group(): string
     {

@@ -15,6 +15,14 @@ use Inertia\ResponseFactory;
 
 class ProjectTabController extends Controller
 {
+    public function list()
+    {
+        // Minimal list for client-side selection when creating checklists
+        return response()->json(\Artwork\Modules\Project\Models\ProjectTab::query()
+            ->orderBy('order')
+            ->get(['id','name']));
+    }
+
     public function index(): ResponseFactory|Response
     {
         return inertia('Settings/ProjectTab/Index', [

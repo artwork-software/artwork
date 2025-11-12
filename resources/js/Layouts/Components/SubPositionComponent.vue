@@ -104,6 +104,7 @@
                                                type="text"
                                                class="w-full"
                                                @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
+                                               @focusout="this.handleBudgetManagementSearchBlur(cell)"
                                         />
                                         <XIcon class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
@@ -893,6 +894,15 @@ export default {
                 preserveScroll: true,
                 preserveState: true
             })
+        },
+        handleBudgetManagementSearchBlur(cell) {
+            // Auto-close the search input if user leaves the field without making any change
+            // Use a short timeout so click on a suggestion can be processed before we possibly cancel
+            setTimeout(() => {
+                if (cell?.value === this.editedCellOriginalValue) {
+                    this.handleBudgetManagementSearchCancel(cell);
+                }
+            }, 0);
         },
         handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
             if (cell.searchValue === '') {

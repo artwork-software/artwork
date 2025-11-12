@@ -237,11 +237,13 @@ const filteredOptionsByCategories = computed(() => {
         // Only apply relevance filtering to the actual room list (usually key === 'rooms').
         // Other room-related groups (e.g., roomCategories, roomAttributes) should remain untouched.
         if (filter === 'rooms' || filter === 'room_ids') {
-            // Exclude rooms explicitly marked as not relevant for disposition
-            filteredOptions.roomFilters[filter] = list.filter(item => {
-                const rel = item?.relevant_for_disposition;
-                return !(rel === false || rel === 0 || rel === '0');
-            });
+            // Exclude rooms explicitly marked as not relevant for disposition and sort alphabetically by name
+            filteredOptions.roomFilters[filter] = list
+                .filter(item => {
+                    const rel = item?.relevant_for_disposition;
+                    return !(rel === false || rel === 0 || rel === '0');
+                })
+                .sort((a, b) => String(a?.name ?? '').localeCompare(String(b?.name ?? ''), undefined, { sensitivity: 'base' }));
         } else {
             filteredOptions.roomFilters[filter] = list;
         }

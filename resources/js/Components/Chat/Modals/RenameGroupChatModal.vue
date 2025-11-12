@@ -1,9 +1,6 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <ModalHeader
-            :title="$t('Rename Group Chat')"
-            :description="$t('Enter a new name for this group chat')"
-        />
+    <ArtworkBaseModal @close="$emit('close')"  :title="$t('Rename Group Chat')"
+                      :description="$t('Enter a new name for this group chat')">
         <div class="mt-4">
             <BaseInput
                 id="newGroupName"
@@ -13,22 +10,23 @@
             />
         </div>
         <div class="flex justify-between gap-3 mt-6">
-            <FormButton
+            <BaseUIButton
                 type="button"
                 @click="handleRename"
-                :text="$t('Rename')"
+                :label="$t('Rename')"
+                is-add-button
                 :disabled="!groupName.trim()"
             />
 
-            <FormButton
+            <BaseUIButton
                 type="button"
                 @click="$emit('close')"
-                :text="$t('Cancel')"
-                variant="secondary"
+                :label="$t('Cancel')"
+                is-cancel-button
             />
 
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -37,6 +35,8 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     chat: {

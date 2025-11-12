@@ -28,7 +28,10 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
+use Artwork\Modules\Shift\Models\GlobalQualification;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -82,6 +85,7 @@ class UserController extends Controller
 {
     public function __construct(
         protected AuthManager $auth,
+        protected GlobalQualificationService $qualificationService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -665,6 +669,16 @@ class UserController extends Controller
         ShiftQualificationRepository $shiftQualificationRepository,
         CraftService $craftService
     ): Response|ResponseFactory {
+
+        $globalQualifications = $this->qualificationService->getAll()->map(function ($qualification) use ($user) {
+            return [
+                'id' => $qualification->id,
+                'name' => $qualification->name,
+                'icon' => $qualification->icon,
+                'assigned' => $user->globalQualifications->contains('id', $qualification->id),
+            ];
+        });
+
         return inertia(
             'Users/UserWorkProfilePage',
             [
@@ -673,7 +687,8 @@ class UserController extends Controller
                     $craftService->getAll()
                 ))->resolve(),
                 'currentTab' => 'workProfile',
-                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
+                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
+                'globalQualifications' => $globalQualifications,
             ]
         );
     }
@@ -886,21 +901,13 @@ class UserController extends Controller
      * @throws AuthorizationException
      */
     public function updateShiftQualification(
-        User $user,
-        UpdateUserShiftQualificationRequest $request,
-        UserShiftQualificationService $userShiftQualificationService
-    ): RedirectResponse {
-        $this->authorize('updateWorkProfile', User::class);
-
-        if ($request->boolean('create')) {
-            //if useable is set to true create a new entry in pivot table
-            $userShiftQualificationService->createByRequestForUser($request, $user);
-        } else {
-            //if useable is set to false pivot table entry needs to be deleted
-            $userShiftQualificationService->deleteByRequestForUser($request, $user);
-        }
-
-        return Redirect::back();
+        \Artwork\Modules\User\Models\User $user,
+        \Artwork\Modules\Shift\Models\GlobalQualification $qualification,
+        \Artwork\Modules\Shift\Services\GlobalQualificationService $qualificationService
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\User\Models\User::class);
+        $qualificationService->activateOrDeactivateInQualifiable($qualification, $user);
+        return \Illuminate\Support\Facades\Redirect::back();
     }
 
     /**
@@ -1194,7 +1201,8 @@ class UserController extends Controller
             'display_project_groups',
             'show_unplanned_events',
             'show_planned_events',
-            'hide_unoccupied_days'
+            'hide_unoccupied_days',
+            'show_shift_group_tag'
         ]));
     }
 
@@ -1441,5 +1449,34 @@ class UserController extends Controller
         }
 
         return (int) $user->id;
+    }
+
+    /**
+     * Toggle a shift qualification for a user in a specific craft (morphToMany pivot with craft_id)
+     */
+    public function updateCraftShiftQualification(
+        User $user,
+        Craft $craft,
+        ShiftQualification $qualification
+    ): \Illuminate\Http\RedirectResponse {
+        $this->authorize('updateWorkProfile', \Artwork\Modules\User\Models\User::class);
+
+        // morphToMany: shiftQualifications() mitPivot('craft_id')
+        $pivotExists = $user->shiftQualifications()
+            ->wherePivot('craft_id', $craft->id)
+            ->where('shift_qualification_id', $qualification->id)->exists();
+        if ($pivotExists) {
+            $user->shiftQualifications()->newPivotStatement()
+                ->where('qualifiable_id', $user->id)
+                ->where('qualifiable_type', $user->getMorphClass())
+                ->where('shift_qualification_id', $qualification->id)
+                ->where('craft_id', $craft->id)
+                ->delete();
+        } else {
+            $user->shiftQualifications()->attach($qualification->id, [
+                'craft_id' => $craft->id
+            ]);
+        }
+        return Redirect::back();
     }
 }

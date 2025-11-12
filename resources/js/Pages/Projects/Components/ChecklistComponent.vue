@@ -118,13 +118,18 @@ const projectCanWriteIds = computed(() => {
 });
 
 const allChecklists = computed(() => {
-    const publicLists = Array.isArray(props?.project?.public_checklists.data)
+    // For the regular Checklist component, prefer tab-scoped lists.
+    const publicLists = Array.isArray(props?.project?.public_checklists?.data)
         ? props.project.public_checklists.data
-        : [];
+        : (Array.isArray(props?.project?.public_all_checklists)
+            ? props.project.public_all_checklists
+            : []);
 
-    const privateLists = Array.isArray(props?.project?.private_checklists.data)
+    const privateLists = Array.isArray(props?.project?.private_checklists?.data)
         ? props.project.private_checklists.data
-        : [];
+        : (Array.isArray(props?.project?.private_all_checklists)
+            ? props.project.private_all_checklists
+            : []);
 
     return publicLists.concat(privateLists);
 });

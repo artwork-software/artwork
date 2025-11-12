@@ -127,6 +127,11 @@ class CraftService
             }
         );
 
+        if ($craftUpdateRequest->has('qualifications')) {
+            $craft->qualifications()->detach();
+            $craft->qualifications()->sync($craftUpdateRequest->collect('qualifications')->pluck('id')->toArray());
+        }
+
         if ($managersToBeAssigned->empty()) {
             $craft->managingUsers()->sync([]);
             $craft->managingFreelancers()->sync([]);

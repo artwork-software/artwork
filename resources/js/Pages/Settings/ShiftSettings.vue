@@ -69,61 +69,141 @@
                         <BaseUIButton @click="openAddCraftsModal = true" label="New Craft" use-translation is-add-button />
                     </div>
                 </div>
-                <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
-                    <template #item="{element}" :key="element.id">
-                        <div :key="element" class="flex justify-between gap-x-6 py-5" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                            <div class="flex gap-x-4">
-                                <div class="min-w-0 flex-auto">
-                                    <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
-                                        <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(element.color), borderColor: TextColorWithDarken(element.color, 90)}"/>
-                                        {{ element.name }} ({{ element.abbreviation }})
-                                    </p>
-                                    <div v-if="element.universally_applicable" class="mt-1 truncate xsLight">
-                                        {{ $t('Universally applicable') }}
+                <draggable
+                    ghost-class="opacity-50"
+                    key="draggableKey"
+                    item-key="id"
+                    :list="crafts"
+                    @start="dragging = true"
+                    @end="dragging = false"
+                    @change="reorderCrafts(crafts)"
+                    class="space-y-3 mt-5"
+                >
+                    <template #item="{ element }">
+                        <div
+                            class="group relative w-full rounded-2xl border border-zinc-200 bg-white transition hover:border-zinc-300"
+                            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                        >
+
+                            <!-- Inhalt -->
+                            <div class="pl-4 pr-3 sm:pl-6 sm:pr-4 py-4">
+                                <div class="flex items-start gap-4">
+                                    <!-- Drag-Handle -->
+                                    <div class="mt-1 shrink-0 opacity-60 group-hover:opacity-100 transition">
+                                        <PropertyIcon name="IconGripVertical" class="size-5" aria-hidden="true" />
                                     </div>
-                                    <div class="" v-if="element.assignable_by_all">
-                                        <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
-                                    </div>
-                                    <div v-else>
-                                        <p class="mt-1 truncate xsLight">
-                                            {{$t('Can only be assigned by:')}}
-                                            {{ element.craft_shift_planer.map((user) => user.full_name).join(', ') }}
-                                        </p>
-                                    </div>
-                                    <div class="" v-if="element.inventory_planned_by_all">
-                                        <p class="mt-1 truncate xsLight">
-                                            {{$t('Inventory can be planned by all planners')}}
-                                        </p>
-                                    </div>
-                                    <div v-else>
-                                        <p class="mt-1 truncate xsLight">
-                                            {{$t('Inventory can only be planned by:')}}
-                                            {{ element.craft_inventory_planer.map((user) => user.full_name).join(', ') }}
-                                        </p>
-                                    </div>
-                                    <div class="mt-1 truncate xsLight">
-                                        <div v-if="element.notify_days > 0">
-                                            {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [element.notify_days]) }}
+
+                                    <!-- Header: Name + Kürzel + Badges -->
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center flex-wrap gap-2">
+                                            <div class="flex items-center gap-2">
+                                              <span
+                                                  class="inline-block size-5 rounded-full ring-2"
+                                                  :style="{
+                                                  backgroundColor: element.color + '33',
+                                                  boxShadow: `inset 0 0 0 1px ${element.color}`
+                                                }"
+                                                  aria-hidden="true"
+                                              />
+                                                                            <h3 class="text-sm font-semibold text-zinc-900 leading-6">
+                                                                                {{ element.name }}
+                                                                                <span class="text-zinc-500">({{ element.abbreviation }})</span>
+                                                                            </h3>
+                                                                        </div>
+
+                                                                        <span
+                                                                            v-if="element.universally_applicable"
+                                                                            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ring-inset
+                                                     ring-zinc-200 bg-zinc-50 text-zinc-700"
+                                                                        >
+                                              <PropertyIcon name="IconShieldCheck" class="size-3.5" />
+                                              {{ $t('Universally applicable') }}
+                                            </span>
+
+                                                                        <span
+                                                                            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ring-inset
+                                                     ring-zinc-200 bg-zinc-50 text-zinc-700"
+                                                                        >
+                                              <IconUsersGroup class="size-3.5" />
+                                              <span v-if="element.assignable_by_all">
+                                                {{ $t('Assignable by all schedulers') }}
+                                              </span>
+                                              <span v-else>
+                                                {{ $t('Restricted assignment') }}
+                                              </span>
+                                            </span>
                                         </div>
-                                        <div v-else>
-                                            {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
+
+                                        <!-- Subtext-Zeilen -->
+                                        <div class="mt-2 space-y-1.5 text-xs text-zinc-600">
+                                            <p v-if="element.assignable_by_all" class="leading-5">
+                                                {{ $t('Assignable by all schedulers') }}
+                                            </p>
+                                            <p v-else class="leading-5">
+                                                {{ $t('Can only be assigned by:') }}
+                                                <span class="text-zinc-800">
+                                            {{ (element.craft_shift_planer || []).map(u => u.full_name).join(', ') || '—' }}
+                                          </span>
+                                            </p>
+
+                                            <p v-if="element.inventory_planned_by_all" class="leading-5">
+                                                {{ $t('Inventory can be planned by all planners') }}
+                                            </p>
+                                            <p v-else class="leading-5">
+                                                {{ $t('Inventory can only be planned by:') }}
+                                                <span class="text-zinc-800">
+                                                {{ (element.craft_inventory_planer || []).map(u => u.full_name).join(', ') || '—' }}
+                                              </span>
+                                            </p>
+
+                                            <p class="leading-5 flex items-center gap-1.5">
+                                                <IconBell class="size-3.5 shrink-0" />
+                                                <span v-if="element.notify_days > 0">
+                                                    {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [element.notify_days]) }}
+                                                </span>
+                                                <span v-else>
+                                                    {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
+                                                </span>
+                                            </p>
                                         </div>
+
+                                        <!-- Qualifications -->
+                                        <div v-if="(element.qualifications || []).length" class="mt-3 flex flex-wrap gap-2">
+                                            <span
+                                                v-for="q in element.qualifications"
+                                                :key="q.id"
+                                                class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-700"
+                                            >
+                                              <PropertyIcon :name="q.icon" class="size-3.5" />
+                                              {{ q.name }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="mt-1 flex items-start gap-2">
+                                        <BaseMenu white-menu-background has-no-offset>
+                                            <BaseMenuItem
+                                                white-menu-background
+                                                @click="updateCraft(element)"
+                                                :title="$t('Edit')"
+                                                icon="IconEdit"
+                                            />
+                                            <BaseMenuItem
+                                                white-menu-background
+                                                @click="openDeleteCraftModal(element)"
+                                                :title="$t('Delete')"
+                                                icon="IconTrash"
+                                            />
+                                        </BaseMenu>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <component :is="IconGripVertical" class="h-5 w-5" />
-                                <BaseMenu white-menu-background has-no-offset>
-                                    <BaseMenuItem white-menu-background @click="updateCraft(element)" title="Edit" icon="IconEdit" />
-                                    <BaseMenuItem white-menu-background @click="openDeleteCraftModal(element)" title="Delete" icon="IconTrash" />
-                                </BaseMenu>
-                            </div>
                         </div>
-
                     </template>
                 </draggable>
             </div>
-            <div class="mt-10 card white p-5">
+            <!--<div class="mt-10 card white p-5">
                 <BasePageTitle
                     :title="$t('Shift-relevant Event Types')"
                     :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
@@ -156,50 +236,116 @@
                 <div class="mt-3 flex flex-wrap">
                     <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
-            </div>
-            <div class="card white p-5 mt-10">
-                <div class="flex items-center justify-between">
-                    <BasePageTitle class=""
-                        :title="$t('Qualifications')"
-                        :description="$t('Create or edit qualifications')"
+            </div>-->
+
+            <GlobalQualificationsSettingsCard :global-qualifications="globalQualifications" />
+
+        <section class="mt-10">
+            <!-- Card -->
+            <div class="rounded-2xl border border-zinc-200 bg-white/95 shadow-sm backdrop-blur">
+                <!-- Header -->
+                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between px-5 py-4">
+                    <BasePageTitle
+                        :title="$t('Craft functions')"
+                        :description="$t('Create or edit craft functions.')"
                     />
-                    <BaseUIButton @click="openShiftQualificationModal('create')" label="Neue Qualifikation" use-translation is-add-button />
-                </div>
-                <div class="mt-5">
-                    <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
-                        {{$t('No qualifications have been created yet.')}}
+                    <div class="flex items-center gap-2">
+                        <BaseUIButton
+                            @click="openShiftQualificationModal('create')"
+                            label="Neue Qualifikation"
+                            use-translation
+                            is-add-button
+                        />
                     </div>
-                    <ul v-else role="list" class="w-full">
-                        <li v-for="(shiftQualification) in shiftQualifications"
-                            :key="shiftQualification.id"
+                </div>
 
-                            class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b border-zinc-200"
-                        >
+                <!-- Content -->
+                <div class="px-5 py-4">
+                    <!-- Empty state -->
+                    <div v-if="shiftQualifications.length === 0" class="flex items-center justify-between rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-8">
+                        <div class="flex items-start gap-3">
+                            <div class="rounded-xl bg-white p-3 shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-width="1.5" d="M12 6v6l4 2" />
+                                    <circle cx="12" cy="12" r="9" stroke-width="1.5" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-zinc-900">
+                                    {{ $t('No qualifications have been created yet.') }}
+                                </p>
+                                <p class="mt-1 text-xs text-zinc-600">
+                                    {{ $t('Create your first qualification to use it in shifts and staffing rules.') }}
+                                </p>
+                            </div>
+                        </div>
+                        <BaseUIButton
+                            @click="openShiftQualificationModal('create')"
+                            size="sm"
+                            label="Neue Qualifikation"
+                            use-translation
+                            is-add-button
+                        />
+                    </div>
 
-                            <div class="">
-                                <div class="flex items-center gap-x-2">
-                                    <PropertyIcon
-                                        stroke-width="1.5"
-                                        class="text-black mx-1 size-5"
-                                        :name="shiftQualification.icon"
-                                    />
-                                    {{ shiftQualification.name }}
+                    <!-- List -->
+                    <ul v-else role="list" class="space-y-2">
+                        <transition-group
+                            name="list-fade"
+                            tag="div"
+                            class="space-y-2 divide-y divide-zinc-200 divide-dashed">
+                            <li v-for="shiftQualification in shiftQualifications"
+                                :key="shiftQualification.id"
+                                class="group bg-white px-4 py-3 transition">
+                                <div class="flex items-center justify-between gap-4 pb-2">
+                                    <!-- Left: Icon + name + meta -->
+                                    <div class="min-w-0 flex items-center gap-3">
+                                        <div class="mt-0.5 rounded-lg bg-zinc-50 p-2 ring-1 ring-inset ring-zinc-200">
+                                            <PropertyIcon
+                                                stroke-width="1.5"
+                                                class="text-zinc-900 size-7"
+                                                :name="shiftQualification.icon"
+                                            />
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="">
+                                                <h3 class="truncate text-sm font-medium text-zinc-900">
+                                                    {{ shiftQualification.name }}
+                                                </h3>
+
+                                                <!-- Availability badge -->
+                                                <span v-if="shiftQualification.available" class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                                                    {{ $t('Considered for new shifts') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: actions -->
+                                    <div class="shrink-0">
+                                        <BaseMenu white-menu-background has-no-offset>
+                                            <BaseMenuItem
+                                                white-menu-background
+                                                @click="openShiftQualificationModal('edit', shiftQualification)"
+                                                title="Edit"
+                                                icon="IconEdit"
+                                            />
+                                            <BaseMenuItem
+                                                v-if="shiftQualification.id > 1"
+                                                white-menu-background
+                                                @click="openDeleteQualificationModal(shiftQualification)"
+                                                title="Delete"
+                                                icon="IconTrash"
+                                            />
+                                        </BaseMenu>
+                                    </div>
                                 </div>
-                                <span v-if="shiftQualification.available"
-                                      class="xxsLight ml-1 mt-1">
-                                    {{$t('(Considered for new shifts)')}}
-                                </span>
-                            </div>
-                            <div class="">
-                                <BaseMenu white-menu-background has-no-offset>
-                                    <BaseMenuItem white-menu-background @click="openShiftQualificationModal('edit', shiftQualification)" title="Edit" icon="IconEdit" />
-                                    <BaseMenuItem v-if="shiftQualification.id > 1" white-menu-background @click="openDeleteQualificationModal(shiftQualification)" title="Delete" icon="IconTrash" />
-                                </BaseMenu>
-                            </div>
-                        </li>
+                            </li>
+                        </transition-group>
                     </ul>
                 </div>
             </div>
+        </section>
             <div class="card white p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <BasePageTitle
@@ -284,7 +430,7 @@
             :confirm="$t('Close message')"
         />
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
-        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :users-with-inventory-permission="usersWithInventoryPermission" />
+        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :users-with-inventory-permission="usersWithInventoryPermission" :prop-qualifications="shiftQualifications" />
         <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </ShiftSettingsHeader>
 </template>
@@ -336,11 +482,13 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        GlobalQualificationsSettingsCard,
         PropertyIcon,
         SwitchIconTooltip,
         BaseMenuItem,
@@ -394,7 +542,8 @@ export default defineComponent({
         'shiftTimePresets',
         'usersWithInventoryPermission',
         'shiftSettings',
-        'shiftCommitWorkflowUsers'
+        'shiftCommitWorkflowUsers',
+        'globalQualifications'
     ],
     data(){
         return {
@@ -419,7 +568,43 @@ export default defineComponent({
                 users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
             }),
             deleteType: '',
-
+            tabs: [
+                {
+                    name: this.$t('Shift Settings'),
+                    href: route('shift.settings'),
+                    current: route().current('shift.settings'),
+                    show: true,
+                    icon: 'IconCalendarUser'
+                },
+                {
+                    name: this.$t('Day Services'),
+                    href: route('day-service.index'),
+                    current: route().current('day-service.index'),
+                    show: true,
+                    icon: 'IconHours24'
+                },
+                {
+                    name: this.$t('Work Time Pattern'),
+                    href: route('shift.work-time-pattern'),
+                    current: route().current('shift.work-time-pattern'),
+                    show: true,
+                    icon: 'IconClockCog'
+                },
+                {
+                    name: this.$t('User Contracts'),
+                    href: route('user-contract-settings.index'),
+                    current: route().current('user-contract-settings.index'),
+                    show: true,
+                    icon: 'IconContract'
+                },
+                {
+                    name: this.$t('Shift warnings - rules'),
+                    href: route('shift-rules.index'),
+                    current: route().current('shift-rules.index'),
+                    show: true,
+                    icon: 'IconGavel'
+                }
+            ]
         }
     },
     computed: {

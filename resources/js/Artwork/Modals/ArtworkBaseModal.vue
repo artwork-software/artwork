@@ -42,7 +42,9 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <slot/>
+                                        <div>
+                                            <slot/>
+                                        </div>
                                     </div>
                                 </div>
                             </DialogPanel>

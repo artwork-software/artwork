@@ -35,7 +35,7 @@
     --color-link-on-dark: #BDB6F0;
 
     /* Artwork Farben */
-    --color-artwork-navigation-background: #222;
+    --color-artwork-navigation-background: #222831;
     --color-artwork-navigation-color: #eee;
     --color-artwork-success: #25cd0e;
     --color-artwork-warning: #ecce00;
@@ -930,7 +930,7 @@
     .card {
         @apply rounded-lg;
         &.glassy {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/20 text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
+            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-[#4A70A910] text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
         }
 
         &.glassy-shiftplan {
@@ -1061,6 +1061,42 @@
     span {
         @apply text-left float-left text-sm placeholder-transparent text-gray-500;
     }
+}
+
+
+.btn-icon {
+    @apply grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white hover:bg-zinc-50 transition-colors;
+}
+.btn-subtle {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors;
+}
+
+/* Inputs */
+.form-input {
+    @apply w-full rounded-xl border border-zinc-200/80 bg-white py-2 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+}
+.form-textarea {
+    @apply rounded-xl border border-zinc-200/80 bg-white py-2.5 pr-3 pl-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+}
+
+/* Position Picker spots */
+.picker-spot {
+    @apply absolute h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none transition-colors;
+}
+
+/* Scrollbar (WebKit) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: rgba(24, 24, 27, 0.12);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 

@@ -214,38 +214,26 @@ class ProjectPrintLayoutController extends Controller
                             $project->checklists
                                 ->where('private', false)
                                 ->filter(function ($checklist) use ($userId) {
-                                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
                                     $isInChecklistUsers = $checklist->users->contains('id', $userId);
-
-                                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
                                     $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
                                         return $task->task_users->contains('id', $userId);
                                     });
-
-                                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
                                     $isCreator = $checklist->user_id === $userId;
-
                                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                                 })
-                        );
+                        )->resolve();
                         $projectData->private_all_checklists = ChecklistIndexResource::collection(
                             $project->checklists
                                 ->where('private', true)
                                 ->filter(function ($checklist) use ($userId) {
-                                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
                                     $isInChecklistUsers = $checklist->users->contains('id', $userId);
-
-                                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
                                     $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
                                         return $task->task_users->contains('id', $userId);
                                     });
-
-                                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
                                     $isCreator = $checklist->user_id === $userId;
-
                                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                                 })
-                        );
+                        )->resolve();
                         break;
                 }
 

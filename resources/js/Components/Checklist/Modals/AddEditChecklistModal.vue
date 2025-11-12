@@ -67,10 +67,9 @@
             </div>
 
             <div class="" v-if="!project">
-                <div >
+                <div>
                     <ProjectSearch @project-selected="addProjectToChecklist" />
                 </div>
-
 
                 <TagComponent
                     class="mt-4"
@@ -84,6 +83,33 @@
                     :limit="10"
                     @select="addProjectToChecklist"
                 />
+            </div>
+
+            <!-- Tab selection: required if a project is linked and no fixed tab_id is provided -->
+            <div v-if="(selectedProject || project) && !tab_id" class="mt-4">
+                <Listbox v-model="selectedTab" class="w-full">
+                    <div class="relative">
+                        <ListboxButton class="menu-button">
+                            <span v-if="selectedTab?.name">{{ selectedTab.name }}</span>
+                            <span v-else>
+                                {{ $t('Select project tab') }}
+                            </span>
+                            <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                        </ListboxButton>
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute z-10 mt-1 w-full bg-artwork-navigation-background shadow-lg max-h-40 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" v-for="t in tabs" :key="t.id" :value="t" v-slot="{ active, selected }">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">{{ t.name }}</span>
+                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                            <IconCircleCheckFilled v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true" />
+                                        </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </div>
+                </Listbox>
             </div>
 
             <div class="" v-if="selectedTemplate.name === ''">
@@ -106,7 +132,7 @@
                 <div class="flex items-center justify-end">
                     <BaseUIButton
                         type="submit"
-                        :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
+                        :disabled="((!selectedTemplate.id) ? checklistForm.name.length === 0 : false) || (((selectedProject || project) && !tab_id) && !(selectedTab && selectedTab.id))"
                         :label="checklistToEdit ? $t('Save') : $t('Create')"
                     />
                 </div>
@@ -121,7 +147,7 @@ import {useForm, usePage} from "@inertiajs/vue3";
 import {IconChevronDown, IconCircleCheckFilled} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {ref} from "vue";
+import {ref, watch, onMounted} from "vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch} from "@headlessui/vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
@@ -130,16 +156,19 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import axios from 'axios';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     project: {
         type: Object,
-        required: true
+        required: false,
+        default: null
     },
     tab_id: {
         type: Number,
-        required: false
+        required: false,
+        default: null
     },
     checklist_templates: {
         type: Object,
@@ -157,6 +186,46 @@ const props = defineProps({
 })
 
 const selectedProject = ref(null);
+const tabs = ref([]);
+const selectedTab = ref(null);
+
+const resolveTabListUrl = () => {
+    try {
+        // Prefer Ziggy route() if available
+        // @ts-ignore
+        if (typeof route === 'function') {
+            // @ts-ignore
+            return route('tab.list');
+        }
+    } catch (_) { /* ignore */ }
+    // Fallback to hardcoded path
+    return '/settings/tab/list';
+};
+
+const loadTabs = async () => {
+    try {
+        const url = resolveTabListUrl();
+        const { data } = await axios.get(url);
+        tabs.value = Array.isArray(data) ? data : [];
+    } catch (e) {
+        // Ensure tabs is an array to avoid empty options rendering issues
+        tabs.value = [];
+        // You could log to console in dev if needed
+        // console.debug('Failed to load project tabs', e);
+    }
+};
+
+onMounted(() => {
+    // tabs are global, not project-specific; load once
+    loadTabs();
+});
+
+watch(selectedTab, (val) => {
+    // keep form in sync with selection when no fixed tab_id is provided via props
+    if (!props.tab_id) {
+        checklistForm.tab_id = val?.id ?? null;
+    }
+});
 
 const emits = defineEmits([
     'closed'
@@ -180,6 +249,11 @@ const checklistForm = useForm({
 const addProjectToChecklist = (project) => {
     checklistForm.project_id = project.id;
     selectedProject.value = project;
+    // reset tab selection when project changes
+    if (!props.tab_id) {
+        selectedTab.value = null;
+        checklistForm.tab_id = null;
+    }
 }
 
 const submit = () => {
@@ -211,6 +285,10 @@ const submit = () => {
 const deleteSelectedProject = () => {
     selectedProject.value = null
     checklistForm.project_id = null
+    if (!props.tab_id) {
+        selectedTab.value = null;
+        checklistForm.tab_id = null;
+    }
 }
 
 </script>

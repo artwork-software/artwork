@@ -1655,6 +1655,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
                 ->name('tab.index');
+            // lightweight list of tabs for client-side selection (OwnTasks checklist creation)
+            Route::get('list', [ProjectTabController::class, 'list'])
+                ->name('tab.list');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');

@@ -118,7 +118,7 @@ class HandleInertiaRequests extends Middleware
                 ],
                 'event_status_module' => $eventSettings->enable_status,
                 'default_language' => config('app.fallback_locale'),
-                'selected_language' => Auth::guest() ? app()->getLocale() : $user->language,
+                'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
                 'calendar_settings' => $calendarSettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),

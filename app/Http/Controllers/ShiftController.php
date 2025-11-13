@@ -846,11 +846,30 @@ class ShiftController extends Controller
                 continue;
             }
 
+            // Resolve a valid shift qualification id if not provided
+            $resolvedShiftQualificationId = $shiftToAssign['shiftQualificationId'] ?? null;
+            if ($resolvedShiftQualificationId === null) {
+                // Try to take the first defined qualification for this shift
+                $resolvedShiftQualificationId = $shift->shiftsQualifications()->orderBy('id')->value('shift_qualification_id');
+                if ($resolvedShiftQualificationId === null) {
+                    // Fallback to a generic worker qualification if available
+                    $resolvedShiftQualificationId = \Artwork\Modules\Shift\Models\ShiftQualification::available()
+                        ->workerQualification()
+                        ->orderByCreationDateAscending()
+                        ->value('id');
+                }
+            }
+
+            // If no qualification id can be resolved, skip this assignment entry (DB requires it)
+            if (!$resolvedShiftQualificationId) {
+                continue;
+            }
+
             if ($serviceToUse instanceof ShiftServiceProviderService) {
                 $serviceToUse->assignToShift(
                     $shift,
                     $request->get('userTypeId'),
-                    $shiftToAssign['shiftQualificationId'],
+                    $resolvedShiftQualificationId,
                     $request->string('craft_abbreviation'),
                     $shiftCountService,
                     $changeService
@@ -875,7 +894,7 @@ class ShiftController extends Controller
             $serviceToUse->assignToShift(
                 $shift,
                 $request->get('userTypeId'),
-                $shiftToAssign['shiftQualificationId'],
+                $resolvedShiftQualificationId,
                 $request->string('craft_abbreviation'),
                 $notificationService,
                 $shiftCountService,

@@ -99,8 +99,12 @@ const props = defineProps({
 const projectData = computed(() => props.data);
 
 
+const normalizeSelected = (val) => {
+    if (val === null || val === undefined) return '';
+    return typeof val === 'object' && val !== null && 'value' in val ? val.value : val;
+};
 const selected = ref(
-    props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected
+    normalizeSelected(props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected)
 );
 
 onMounted(() => {
@@ -111,7 +115,7 @@ onMounted(() => {
 watch(
     () => props.data,
     (newVal) => {
-        selected.value = newVal.project_value ? newVal.project_value.data.selected : newVal.data.selected;
+        selected.value = normalizeSelected(newVal.project_value ? newVal.project_value.data.selected : newVal.data.selected);
     },
     { deep: true }
 );

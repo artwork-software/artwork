@@ -1,5 +1,5 @@
 <template>
-    <BaseModal v-if="true" @closed="$emit('closed')" modal-size="max-w-7xl">
+    <BaseModal v-if="true" @closed="$emit('closed')" modal-size="w-[95vw] max-w-screen-2xl">
         <div class="modal-header">
             <div class="flex items-center gap-x-4">
                 <div class="model-title">

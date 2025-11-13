@@ -3424,5 +3424,6 @@
     "Select User contract": "Wähle Nutzervertrag",
     "Choose a contract for the user.": "Wähle einen Vertrag für die Nutzer*in.",
     "Search contracts...": "Verträge suchen...",
-    "Select project tab": "Projekt-Tab auswählen"
+    "Select project tab": "Projekt-Tab auswählen",
+    "Deselect project group": "Projektgruppenauswahl aufheben"
 }

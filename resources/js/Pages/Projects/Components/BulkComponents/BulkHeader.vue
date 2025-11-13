@@ -50,7 +50,6 @@
               </span>
               <!-- Toggle to show End date column -->
               <Switch
-                  v-if="!isInModal"
                   v-model="localShowEndDate"
                   @change="$emit('update:showEndDate', localShowEndDate)"
                   :class="[
@@ -72,30 +71,7 @@
 
                     <!-- Start time -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(6)">
-                        <div v-if="isInModal" class="flex items-center gap-2">
-                            <SwitchGroup as="div" class="flex items-center">
-                                <Switch
-                                    v-model="localValue"
-                                    @change="$emit('update:modelValue', localValue)"
-                                    :class="[
-                    localValue ? 'bg-artwork-buttons-hover' : 'bg-zinc-200 dark:bg-zinc-800',
-                    'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
-                  ]"
-                                >
-                  <span
-                      aria-hidden="true"
-                      :class="[
-                      localValue ? 'translate-x-5' : 'translate-x-0',
-                      'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-100 shadow ring-0 transition duration-200 ease-in-out'
-                    ]"
-                  />
-                                </Switch>
-                                <SwitchLabel as="span" class="ml-3 select-none uppercase tracking-wider font-semibold text-zinc-700 ">
-                                    {{ $t('Start time') }}
-                                </SwitchLabel>
-                            </SwitchGroup>
-                        </div>
-                        <div v-else>
+                        <div>
                           <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('Start time') }}</span>
                         </div>
                     </div>

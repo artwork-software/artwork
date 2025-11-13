@@ -3420,5 +3420,6 @@
     "Select User contract": "Select User contract",
     "Choose a contract for the user.": "Choose a contract for the user.",
     "Search contracts...": "Search contracts...",
-    "Select project tab": "Select project tab"
+    "Select project tab": "Select project tab",
+    "Deselect project group": "Deselect project group"
 }

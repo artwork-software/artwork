@@ -139,7 +139,7 @@
         </div>
 
         <!-- Header + Events -->
-        <div class="overflow-x-scroll relative w-max">
+        <div :class="isInModal ? 'overflow-x-auto relative w-full' : 'overflow-x-auto relative w-max'">
             <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="sortedEvents.length > 0 && showEvents">
@@ -209,7 +209,7 @@
         </div>
 
         <!-- Bottom actions -->
-        <div class="flex items-center justify-end pointer-events-none print:hidden" v-if="!multiEdit">
+        <div class="flex items-center justify-end print:hidden" v-if="!multiEdit">
             <div class="flex items-center gap-x-4">
                 <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">
                     {{ $t('The name is not given for {0} event(s)', [invalidEvents.length]) }}
@@ -367,9 +367,9 @@ const props = defineProps({
 const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
-const hasCreateEventsPermission = ref(can('create events without request'));
+const hasCreateEventsPermission = ref(can('create events without request') || hasAdminRole());
 const roomCollisions = ref([]);
-const timeArray = ref(!props.isInModal);
+const timeArray = ref(true);
 
 // Persisted user preference for showing End date column in Bulk
 const showEndDateStorageKey = computed(() => `bulk_show_end_date_user_${usePage().props.auth.user.id}`);
@@ -779,6 +779,12 @@ const createCopyByEventWithData = (event) => {
     event.copyType = copyTypes.value[0];
 
     // Only send request if we have events to create
+    if (props.isInModal) {
+        // In modal: append copies locally so the user sees them immediately
+        events.value.push(...createdEvents);
+        return;
+    }
+
     if (createdEvents.length > 0 && !props.isInModal) {
         /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
             preserveState: false,
@@ -809,9 +815,13 @@ const submit = () => {
         invalidEvents.value.forEach(e => e.nameError = true);
         return;
     }
-    showEvents = false;
+    showEvents.value = false;
     axios.post(route('events.bulk.store', {project: props.project}), { events: events.value })
-        .then(() => { emits('closed'); });
+        .then(() => { emits('closed'); })
+        .catch((e) => {
+            console.error('Bulk create failed', e);
+            showEvents.value = true;
+        });
 };
 
 const updateUserSortId = (id) => {

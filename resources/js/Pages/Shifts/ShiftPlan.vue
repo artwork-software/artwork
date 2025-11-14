@@ -1335,10 +1335,10 @@ export default {
                     .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
             }
 
-            //prepare intern/extern sort
-            let assignedNonManagingInternWorkers = assignedNonManagingWorkers.filter(
+            //prepare intern/extern sort (respect current shift qualification filter)
+            let assignedNonManagingInternWorkers = assignedNonManagingWorkersFiltered.filter(
                 (assignedNonManagingWorker) => this.isWorkerUser(assignedNonManagingWorker)
-            ), assignedNonManagingExternWorkers = assignedNonManagingWorkers.filter(
+            ), assignedNonManagingExternWorkers = assignedNonManagingWorkersFiltered.filter(
                 (assignedNonManagingWorker) => this.isWorkerFreelancer(assignedNonManagingWorker) ||
                     this.isWorkerServiceProvider(assignedNonManagingWorker)
             );
@@ -2047,11 +2047,25 @@ export default {
             });
         },
         applySort(shiftPlanWorkerSortEnumName) {
-            this.$page.props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;
+            // Toggle sort direction when clicking the same option again
+            const current = this.$page.props.auth.user.shift_plan_user_sort_by_id;
+            const toggleMap = {
+                'INTERN_EXTERN_ASCENDING': 'INTERN_EXTERN_DESCENDING',
+                'INTERN_EXTERN_DESCENDING': 'INTERN_EXTERN_ASCENDING',
+                'ALPHABETICALLY_NAME_ASCENDING': 'ALPHABETICALLY_NAME_DESCENDING',
+                'ALPHABETICALLY_NAME_DESCENDING': 'ALPHABETICALLY_NAME_ASCENDING',
+            };
+
+            let nextSort = shiftPlanWorkerSortEnumName;
+            if (current && current === shiftPlanWorkerSortEnumName && toggleMap[shiftPlanWorkerSortEnumName]) {
+                nextSort = toggleMap[shiftPlanWorkerSortEnumName];
+            }
+
+            this.$page.props.auth.user.shift_plan_user_sort_by_id = nextSort;
             router.patch(
                 route('user.update.shiftPlanUserSortBy', {user: this.$page.props.auth.user.id}),
                 {
-                    sortBy: shiftPlanWorkerSortEnumName
+                    sortBy: nextSort
                 }, {
                     preserveState: true,
                     preserveScroll: true,

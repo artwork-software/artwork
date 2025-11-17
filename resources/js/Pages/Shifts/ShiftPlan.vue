@@ -916,16 +916,12 @@ async function initializeShiftPlan() {
             },
         })
 
-        // Tage + Räume aus API übernehmen
         days.value = data.days ?? []
         daysRef.value = days.value
-
-        // shiftPlan kann Array oder Objekt sein – hier nehmen wir direkt das, was die API liefert
         rooms.value = data.shiftPlan ?? []
         newShiftPlanData.value = data.shiftPlan ?? []
 
     } else {
-        // Falls doch Daten über Props kommen, einmal in die lokalen Refs spiegeln
         days.value = [...(props.days ?? [])]
         daysRef.value = days.value
 
@@ -933,8 +929,6 @@ async function initializeShiftPlan() {
         rooms.value = Array.isArray(sp) ? [...sp] : Object.values(sp)
         newShiftPlanData.value = rooms.value
     }
-
-    // aktuellen Tag im View setzen
     currentDayOnView.value =
         days.value.find((d: any) => !d.isExtraRow) ?? null
 

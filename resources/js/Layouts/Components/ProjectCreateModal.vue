@@ -308,7 +308,7 @@
                                             <h3 class="font-semibold text-base">{{ createProjectForm.selectedGroup.name }}</h3>
                                         </div>
                                         <div class="text-blue-500 text-xs underline cursor-pointer" @click="createProjectForm.selectedGroup = null">
-                                            Projektgruppenauswahl aufheben
+                                            {{ $t('Deselect project group') }}
                                         </div>
                                     </div>
 

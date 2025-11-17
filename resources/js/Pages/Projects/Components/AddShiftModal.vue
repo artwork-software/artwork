@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, toRef } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { useLegalBreak} from "@/Composeables/useLegalBreak";
@@ -280,7 +280,7 @@ function qualStats(preset: any) {
 }
 
 // Übernahme einer Schichtvorlage in die Felder (inkl. 0-Werte)
-function takeShiftPreset(preset: any) {
+async function takeShiftPreset(preset: any) {
     if (!preset) return
 
     // Zeiten + Pause (trim seconds to HH:MM)
@@ -296,6 +296,10 @@ function takeShiftPreset(preset: any) {
     const targetCraft = props.crafts?.find(c => c.id === preset.craft_id) ?? null
     if (targetCraft) selectedCraft.value = targetCraft
 
+    // Warten, bis der Watcher auf selectedCraft die computedShiftQualifications
+    // neu aufgebaut hat, damit wir danach die Mengen korrekt setzen können.
+    await nextTick()
+
     // Beschreibung
     shiftForm.description = preset.description ?? ''
 
@@ -304,9 +308,7 @@ function takeShiftPreset(preset: any) {
     for (const q of normalizePresetQualifications(preset)) {
         const id = typeof q?.id === 'number' ? q.id : q?.shift_qualification_id
         if (id == null) continue
-        const qty = (typeof q?.pivot?.quantity === 'number') ? q.pivot.quantity
-            : (typeof q?.quantity === 'number') ? q.quantity
-                : 0
+        const qty = (typeof (q as any)?.quantity === 'number') ? (q as any).quantity : 0
         map.set(Number(id), Math.max(0, qty))
     }
     computedShiftQualifications.value.forEach(q => {
@@ -588,8 +590,28 @@ function closeShiftSearchbar() {
     searchShiftPreset.value = ''
 }
 function normalizePresetQualifications(preset) {
+    // Unterstützt beide möglichen Quellen und normalisiert auf { id, quantity }
     const raw = preset?.shifts_qualifications ?? preset?.shift_qualifications ?? []
-    return Array.isArray(raw) ? raw : []
+    if (!Array.isArray(raw)) return []
+    return raw.map((q) => {
+        // Falls nur die ID übergeben wird (z. B. [1,2,3])
+        if (typeof q === 'number') {
+            return { id: q, quantity: 0 }
+        }
+
+        // Falls Objekt — ID und Menge robust ermitteln
+        if (q && typeof q === 'object') {
+            const id = typeof q.id === 'number' ? q.id : (q.shift_qualification_id ?? Number(q.id))
+            const quantity =
+                (q.pivot && typeof q.pivot.quantity === 'number' ? q.pivot.quantity : undefined) ??
+                (typeof q.quantity === 'number' ? q.quantity : 0)
+            return { id: Number(id), quantity: Math.max(0, Number(quantity)) }
+        }
+
+        // Fallback
+        const num = Number(q)
+        return { id: isNaN(num) ? 0 : num, quantity: 0 }
+    })
 }
 
 function resetTimePresetSelection() {

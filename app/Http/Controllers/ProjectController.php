@@ -451,9 +451,14 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
-
-        $this->projectService->attachUserToProject($project, $this->authManager->id(), $is_manager);
+        // Do not automatically add the creator to the project team.
+        // Only attach the creator if they are explicitly included in assignedUsers.
+        $assignedUsers = collect($request->get('assignedUsers'));
+        if ($assignedUsers->contains(Auth::id())) {
+            // If the creator is explicitly assigned, they should be a manager
+            // as per previous behaviour when present in assignedUsers.
+            $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
+        }
 
         if (!empty($request->assignedUsers)) {
             $this->projectService->attachManagementUsersWithoutSelf(

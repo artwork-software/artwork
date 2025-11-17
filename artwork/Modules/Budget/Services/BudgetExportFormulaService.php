@@ -16,25 +16,46 @@ class BudgetExportFormulaService
     public function createFormula(
         Collection $columns,
         int $currentRowCount,
-        int $firstLinkedColumnId,
+        ?int $firstLinkedColumnId,
         string $operator,
-        int $secondLinkedColumnId
+        ?int $secondLinkedColumnId
     ): string {
-        return sprintf(
-            '=%s%s%s',
-            $this->determineExcelColumn($columns, $firstLinkedColumnId, $currentRowCount),
-            $operator,
-            $this->determineExcelColumn($columns, $secondLinkedColumnId, $currentRowCount)
-        );
+        // If linked columns are not configured, do not create a formula
+        if ($firstLinkedColumnId === null || $secondLinkedColumnId === null) {
+            return '';
+        }
+
+        $first = $this->determineExcelColumn($columns, $firstLinkedColumnId, $currentRowCount);
+        $second = $this->determineExcelColumn($columns, $secondLinkedColumnId, $currentRowCount);
+
+        // Guard against unresolved columns
+        if ($first === '' || $second === '') {
+            return '';
+        }
+
+        return sprintf('=%s%s%s', $first, $operator, $second);
     }
 
-    public function determineExcelColumn(Collection $columns, int $columnId, int $currentRowCount): string
+    public function determineExcelColumn(Collection $columns, ?int $columnId, int $currentRowCount): string
     {
-        return
-            //add +1 to desired column index because first cell is reserved for headings
-            self::$cellCharacters[($columns->search(fn($column) => $column->id === $columnId) + 1)] .
-            //add +1 to rowCount because it reflects the current row, not the next row which should be added right now
-            ($currentRowCount + 1);
+        if ($columnId === null) {
+            return '';
+        }
+
+        $index = $columns->search(fn($column) => $column->id === $columnId);
+
+        if ($index === false) {
+            return '';
+        }
+
+        // add +1 to desired column index because first cell is reserved for headings
+        $cell = self::$cellCharacters[$index + 1] ?? null;
+        if ($cell === null) {
+            return '';
+        }
+
+        // add +1 to rowCount because it reflects the current row, not the next row which should be added right now
+        return $cell . ($currentRowCount + 1);
     }
 
     public function createColumnSumRangeFormula(array $columnsToSum): string

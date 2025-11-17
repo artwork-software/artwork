@@ -22,9 +22,6 @@
                 </div>
             </div>
 
-            <pre>
-                {{ user.element.shifts }}
-            </pre>
             <div class="space-y-2">
                 <div v-for="shift in user.element.shifts" class="pb-1">
                     <div v-show="shift.days_of_shift?.includes(day.fullDay)" class="flex items-center justify-between group border-b border-dashed border-gray-300 py-2" :id="'shift-' + shift.id">

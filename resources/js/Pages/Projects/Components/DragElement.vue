@@ -1,27 +1,17 @@
 <template>
-    <div class="card glassy-shiftplan !rounded-lg">
-        <div
-            :class="page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12'"
-            draggable="true"
-            @dragstart="onDragStart"
-            class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg" :style="{backgroundColor: backgroundColorWithOpacityOld(color) + '!important'}"
-        >
+    <div class="w-full">
+        <div :class="page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12'" draggable="true" @dragstart="onDragStart"
+            class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg border" :style="{backgroundColor: backgroundColorWithOpacityOld(color), borderColor : color+'80'}">
             <div class="text-white" v-if="!page.props.auth.user.compact_mode">
-                <img
-                    :src="item.profile_photo_url"
-                    alt=""
-                    class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6"
-                />
+                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6"/>
             </div>
 
             <div class="text-left cursor-pointer flex items-center gap-2 w-full">
                 <div>
                     <!-- Typ 0/1: Intern/Extern -->
-                    <div
-                        v-if="type === 0 || type === 1"
+                    <div v-if="type === 0 || type === 1"
                         class="text-ellipsis"
-                        :class="page.props.auth.user.compact_mode ? 'w-32' : 'w-24'"
-                    >
+                        :class="page.props.auth.user.compact_mode ? 'w-32' : 'w-24'">
                         <div class="flex">
                             <div :class="isManagingCraft ? 'underline truncate' : 'truncate'">
                                 {{ item.first_name }} {{ item.last_name }}
@@ -30,11 +20,9 @@
                     </div>
 
                     <!-- Typ 2: Provider -->
-                    <div
-                        v-else
+                    <div v-else
                         class="text-ellipsis"
-                        :class="page.props.auth.user.compact_mode ? 'w-32' : 'w-24'"
-                    >
+                        :class="page.props.auth.user.compact_mode ? 'w-32' : 'w-24'">
                         <div class="flex">
                             <div :class="isManagingCraft ? 'underline truncate' : 'truncate'">
                                 {{ item.provider_name }}
@@ -43,11 +31,9 @@
                     </div>
 
                     <div class="flex items-center justify-center w-26">
-                        <div
-                            v-if="!page.props.auth.user.compact_mode && type === 0"
+                        <div v-if="!page.props.auth.user.compact_mode && type === 0"
                             class="text-[9px] w-full"
-                            :class="workTimeBalanceClass"
-                        >
+                            :class="workTimeBalanceClass">
                             {{ workTimeBalance }}
                         </div>
                     </div>

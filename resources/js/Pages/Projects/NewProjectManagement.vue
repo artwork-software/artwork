@@ -272,8 +272,7 @@
 
         <project-history-component
             v-if="showProjectHistory"
-            :project_history="projectHistoryToDisplay"
-            :access_budget="projectBudgetAccess"
+            :project_id="selectedProjectId"
             @closed="closeProjectHistoryModal"
         />
 
@@ -355,11 +354,10 @@ const props = defineProps({
 
 const project_search = ref(route().params.query);
 const showProjectHistoryTab = ref(true);
-const projectBudgetAccess = ref({});
 const showSearchbar = ref(route().params.query?.length > 0);
 const showSuccessModal2 = ref(false);
 const showProjectHistory = ref(false);
-const projectHistoryToDisplay = ref([]);
+const selectedProjectId = ref(null);
 const editingProject = ref(false);
 const projectToEdit = ref(null);
 const createProject = ref(false);
@@ -433,7 +431,7 @@ const closeSuccessModal2 = () => {
 };
 const closeProjectHistoryModal = () => {
     showProjectHistory.value = false;
-    projectHistoryToDisplay.value = [];
+    selectedProjectId.value = null;
 };
 const openExportModal = () => (showExportModal.value = true);
 

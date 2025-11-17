@@ -15,10 +15,17 @@
                 </div>
             </header>
 
+            <div v-if="loadCommentsError" class="px-6 py-2 text-xs text-rose-600">
+                {{ loadCommentsError }}
+            </div>
+            <div v-else-if="isLoadingComments" class="px-6 py-2 text-xs text-secondary">
+                {{ $t('Loading data...') }}
+            </div>
+
             <!-- Composer -->
             <div class="px-6 py-5">
                 <div
-                    v-if="canEditComponent || (is('artwork admin') || can('write projects') || projectWriteIds?.includes($page.props.auth.user.id) || projectManagerIds?.includes($page.props.auth.user.id) || isMemberOfADepartment)"
+                    v-if="canEditComponent || (is('artwork admin') || can('write projects') || effectiveProjectWriteIds?.includes($page.props.auth.user.id) || effectiveProjectManagerIds?.includes($page.props.auth.user.id) || isMemberOfADepartment)"
                     class="relative rounded-xl border border-gray-200/80 bg-gray-50/50 p-4"
                 >
                     <BaseTextarea
@@ -87,8 +94,8 @@
                                             v-if="
                         is('artwork admin') ||
                         can('write projects') ||
-                        projectWriteIds?.includes($page.props.auth.user.id) ||
-                        projectManagerIds?.includes($page.props.auth.user.id) ||
+                        effectiveProjectWriteIds?.includes($page.props.auth.user.id) ||
+                        effectiveProjectManagerIds?.includes($page.props.auth.user.id) ||
                         isMemberOfADepartment ||
                         comment.user?.id === $page.props.auth.user.id ||
                         canEditComponent
@@ -126,8 +133,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, getCurrentInstance } from "vue";
+import { onMounted, ref, computed, getCurrentInstance, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
+import axios from "axios";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { useCommentListener } from "@/Composeables/Listener/useCommentListener.js";
 import { IconCircleCheckFilled, IconCircleXFilled } from "@tabler/icons-vue";
@@ -146,10 +154,16 @@ const props = defineProps({
     projectManagerIds: { type: Array, default: () => [] },
     tab_id: { type: [String, Number, null], default: null },
     canEditComponent: { type: Boolean, default: false },
+    component: { type: Object, default: null },
 });
 
 const { proxy } = getCurrentInstance();
-const newCommentList = ref(props.project.comments);
+const initialComments = props.project?.comments ?? [];
+const newCommentList = ref([...initialComments]);
+const isLoadingComments = ref(false);
+const loadCommentsError = ref('');
+const remoteProjectWriteIds = ref([...props.projectWriteIds]);
+const remoteProjectManagerIds = ref([...props.projectManagerIds]);
 
 const commentForm = useForm({
     text: "",
@@ -158,8 +172,15 @@ const commentForm = useForm({
     tab_id: props.tab_id ? props.tab_id : null,
 });
 
+const effectiveProjectWriteIds = computed(
+    () => (remoteProjectWriteIds.value.length ? remoteProjectWriteIds.value : (props.projectWriteIds ?? []))
+);
+const effectiveProjectManagerIds = computed(
+    () => (remoteProjectManagerIds.value.length ? remoteProjectManagerIds.value : (props.projectManagerIds ?? []))
+);
+
 const sortedComments = computed(() => {
-    const copy = Array.isArray(props.project.comments) ? props.project.comments.slice() : [];
+    const copy = Array.isArray(newCommentList.value) ? newCommentList.value.slice() : [];
     return copy.sort((a, b) => {
         if (b.created_at === null) return -1;
         if (a.created_at === null) return 1;
@@ -168,6 +189,47 @@ const sortedComments = computed(() => {
         return 0;
     });
 });
+
+watch(
+    () => [props.project?.id, props.component?.id],
+    () => {
+        fetchComments();
+    },
+    { immediate: true }
+);
+
+async function fetchComments() {
+    const projectId = props.project?.id;
+    const componentInTabId = props.component?.id ?? (props.component)?.component_in_tab_id;
+
+    if (!projectId || !componentInTabId) {
+        return;
+    }
+
+    isLoadingComments.value = true;
+    loadCommentsError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.comments', { project: projectId, componentInTab: componentInTabId })
+        );
+        const fetchedComments = data?.comments ?? [];
+        newCommentList.value.splice(0, newCommentList.value.length, ...fetchedComments);
+
+        if (Array.isArray(data?.projectWriteIds)) {
+            remoteProjectWriteIds.value = data.projectWriteIds;
+        }
+
+        if (Array.isArray(data?.projectManagerIds)) {
+            remoteProjectManagerIds.value = data.projectManagerIds;
+        }
+    } catch (error) {
+        console.error(error);
+        loadCommentsError.value = 'Unable to load comments.';
+    } finally {
+        isLoadingComments.value = false;
+    }
+}
 
 onMounted(() => {
     const listener = useCommentListener(newCommentList, props.project.id);
@@ -180,15 +242,24 @@ function addCommentToProject() {
         preserveScroll: true,
         onSuccess: () => {
             commentForm.text = "";
+            fetchComments();
         },
     });
 }
 
 function deleteCommentFromProject(comment) {
     if (!comment?.id) return;
-    window?.Inertia
-        ? window.Inertia.delete(`/comments/${comment.id}`, { preserveState: true, preserveScroll: true })
-        : proxy?.$inertia?.delete?.(`/comments/${comment.id}`, { preserveState: true, preserveScroll: true });
+    const deleteFn = window?.Inertia
+        ? window.Inertia.delete
+        : proxy?.$inertia?.delete;
+
+    if (deleteFn) {
+        deleteFn(`/comments/${comment.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: fetchComments
+        });
+    }
 }
 </script>
 

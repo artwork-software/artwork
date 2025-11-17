@@ -115,8 +115,9 @@
 
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
@@ -124,8 +125,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 defineOptions({ name: 'ProjectHistoryComponent' })
 
 const props = defineProps({
-    project_history: { type: Array, required: true },
-    access_budget: { type: Array, required: false, default: () => [] },
+    project_id: { type: [Number, String], required: true },
 })
 
 const emit = defineEmits(['closed'])
@@ -134,7 +134,41 @@ const page = usePage()
 const userId = computed(() => page?.props?.auth?.user?.id)
 const userRoles = computed(() => page?.props?.auth?.user?.roles ?? page?.props?.auth?.roles ?? [])
 
-// robustes Admin-Check (string/objekt)
+// State for fetched history
+const history = ref([])
+const accessBudget = ref([])
+const loading = ref(false)
+const loadError = ref(null)
+
+async function loadHistory() {
+    if (!props.project_id) return
+    loading.value = true
+    loadError.value = null
+    try {
+        const url = route ? route('projects.history', { project: props.project_id }) : `/projects/${props.project_id}/history`
+        const { data } = await axios.get(url)
+        if (data && Array.isArray(data.history)) {
+            history.value = data.history
+            accessBudget.value = Array.isArray(data.access_budget) ? data.access_budget : []
+        } else {
+            history.value = Array.isArray(data) ? data : []
+            // when backend still returns array only
+            accessBudget.value = []
+        }
+    } catch (e) {
+        // keep UI usable even on error
+        loadError.value = e?.message ?? 'Failed to load history'
+        history.value = []
+        accessBudget.value = []
+    } finally {
+        loading.value = false
+    }
+}
+
+onMounted(loadHistory)
+watch(() => props.project_id, () => loadHistory())
+
+// robust admin check (string/object)
 const isAdmin = computed(() => {
     return (userRoles.value || []).some(r => {
         const name = typeof r === 'string' ? r : r?.name
@@ -142,13 +176,30 @@ const isAdmin = computed(() => {
     })
 })
 
+// Determine if current user can see budget tab
+const hasBudgetAccessFromPage = computed(() => {
+    const p = page?.props || {}
+    // Option 1: direct access_budget array of users (objects with id)
+    const accessList = p?.project?.access_budget || p?.headerObject?.project?.access_budget
+    if (Array.isArray(accessList)) {
+        return accessList.some(u => (u?.id ?? u) === userId.value)
+    }
+    // Option 2: usersArray with pivot_access_budget flag
+    const usersArray = p?.project?.usersArray || p?.headerObject?.project?.usersArray
+    if (Array.isArray(usersArray)) {
+        return usersArray.some(u => u?.id === userId.value && !!u?.pivot_access_budget)
+    }
+    return false
+})
+
 const canSeeBudgetTab = computed(() => {
-    return isAdmin.value || (Array.isArray(props.access_budget) && props.access_budget.includes?.(userId.value))
+    const fromResponse = (accessBudget.value || []).some(u => (u?.id ?? u) === userId.value)
+    return isAdmin.value || hasBudgetAccessFromPage.value || fromResponse
 })
 
 const currentTab = ref('project')
 
-// Tabs-Quelle (i18n im Template)
+// Tabs (i18n labels in template)
 const historyTabs = computed(() => {
     const tabs = [{ id: 'project', name: 'Project' }]
     if (canSeeBudgetTab.value) tabs.push({ id: 'budget', name: 'Budget' })
@@ -163,16 +214,16 @@ function closeModal(bool) {
     emit('closed', bool)
 }
 
-// gefilterte Items (mit Guards)
+// Filtered items (with guards)
 const projectItems = computed(() =>
-    (props.project_history ?? []).filter(h => {
+    (history.value ?? []).filter(h => {
         const t = h?.changes?.[0]?.type
         return t === 'project' || t === 'public_changes'
     })
 )
 
 const budgetItems = computed(() =>
-    (props.project_history ?? []).filter(h => h?.changes?.[0]?.type === 'budget')
+    (history.value ?? []).filter(h => h?.changes?.[0]?.type === 'budget')
 )
 </script>
 

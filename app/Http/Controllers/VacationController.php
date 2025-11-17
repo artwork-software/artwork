@@ -138,7 +138,6 @@ class VacationController extends Controller
             }
         }
 
-
         $shifts = $user->shifts()->where('event_start_day', $day)->get();
         foreach ($shifts as $shift) {
             $shift->users()->detach($user->id);

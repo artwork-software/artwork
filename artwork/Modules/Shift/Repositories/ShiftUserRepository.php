@@ -47,7 +47,7 @@ class ShiftUserRepository extends BaseRepository
         return ShiftUser::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
 
-    public function findByUserIdAndShiftId(int $userId, int $shiftId): ShiftUser
+    public function findByUserIdAndShiftId(int $userId, int $shiftId): ?ShiftUser
     {
         return ShiftUser::byUserIdAndShiftId($userId, $shiftId)->first();
     }

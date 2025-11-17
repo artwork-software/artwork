@@ -19,11 +19,6 @@
             </div>
         </div>
 
-        <CreateOrUpdateShiftGroupModal
-            v-if="showCreateOrUpdateShiftGroupModal"
-            @close="showCreateOrUpdateShiftGroupModal = false"
-        />
-
         <div class="card white p-5 mt-10">
             <div class="flex items-center justify-between">
                 <BasePageTitle class=""

@@ -208,10 +208,22 @@ const shiftUserIds = computed(() => {
     return ids
 })
 
-const checkIfUserIsInCraft = computed(() => {
+
+const checkIfUserIsInCraft = computed<boolean>(() => {
     const u = props.userForMultiEdit
-    if (!u) return false
-    return u.assigned_craft_ids?.includes(props.shift?.craft?.id) || !!u.craft_are_universally_applicable
+    const craftId = props.shift?.craft?.id
+
+    // Fehlende Daten → kein Match
+    if (!u || craftId == null) return false
+
+    // Universell anwendbar → immer true
+    if (u.craft_are_universally_applicable) return true
+
+    // IDs normalisieren (z. B. string → number) und performant prüfen
+    const assigned = new Set((u.assigned_craft_ids ?? []).map(Number))
+
+    // Treffer, wenn explizit zugeteilt ODER Primärcraft identisch
+    return assigned.has(Number(craftId)) || u.craftId === craftId
 })
 
 /* ---------------- Watcher ---------------- */

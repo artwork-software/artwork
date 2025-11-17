@@ -58,7 +58,7 @@ const props = defineProps({
     room: Object,
     highlightMode: Boolean,
     highlightedId: [String, Number],
-    highlightedType: String,
+    highlightedType: Number,
     multiEditMode: Boolean,
     userForMultiEdit: Object,
     shiftQualifications: Array,

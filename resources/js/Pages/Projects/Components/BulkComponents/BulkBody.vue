@@ -392,6 +392,8 @@ const eventComponentIsVisible = ref(false);
 const eventToEdit = ref(null);
 const showExportModal = ref(false);
 const lastEditEventIds = ref(usePage()?.props?.headerObject?.project.lastEditEventIds || []);
+const isLoadingBulkData = ref(false);
+const loadBulkDataError = ref('');
 
 const copyTypes = ref([
     { id: 1, name: 'Täglich', type: 'daily' },
@@ -875,11 +877,78 @@ const useProjectTimePeriodAndRedirect = () => {
 };
 
 // Lifecycle
-onMounted(() => {
+async function fetchBulkEditData() {
+    const projectId = props.project?.id;
+    if (!projectId) {
+        return;
+    }
+
+    isLoadingBulkData.value = true;
+    loadBulkDataError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.bulk-edit', { project: projectId })
+        );
+
+        if (data?.events && Array.isArray(data.events)) {
+            events.value = [];
+            data.events.forEach(event => {
+                events.value.push({
+                    id: event.id,
+                    project_id: event.project_id || projectId,
+                    type: props.eventTypes.find(type => type.id === event.event_type_id),
+                    status: props.eventStatuses.find(status => status.id === event.event_status_id),
+                    name: event.eventName || event.name,
+                    room: props.rooms.find(room => room.id === event.room_id),
+                    day: event.event_date_without_time?.start_clear || event.day,
+                    end_day: event.event_date_without_time?.end_clear || event.end_day,
+                    start_time: !event.allDay ? (event.start_time_without_day || event.start_time || '') : '',
+                    end_time: !event.allDay ? (event.end_time_without_day || event.end_time || '') : '',
+                    copy: false,
+                    copyCount: 1,
+                    copyType: copyTypes.value[0],
+                    index: events.value.length + 1,
+                    description: event.description,
+                    isNew: false,
+                    is_planning: event.is_planning
+                });
+            });
+        }
+
+        if (Array.isArray(data?.lastEditEventIds)) {
+            lastEditEventIds.value = data.lastEditEventIds;
+        }
+
+        // Update Inertia shared props if available
+        if (data?.user_filters) {
+            usePage().props.user_filters = data.user_filters;
+        }
+        if (data?.personalFilters) {
+            usePage().props.personalFilters = data.personalFilters;
+        }
+        if (data?.filterOptions) {
+            usePage().props.filterOptions = data.filterOptions;
+        }
+    } catch (error) {
+        console.error(error);
+        loadBulkDataError.value = 'Unable to load bulk edit data.';
+    } finally {
+        isLoadingBulkData.value = false;
+    }
+}
+
+onMounted(async () => {
     // persist showEndDate changes
     watch(showEndDate, (v) => {
         localStorage.setItem(showEndDateStorageKey.value, v ? 'true' : 'false');
     });
+
+    // Try to fetch data first, fallback to props
+    if (props.eventsInProject.length === 0) {
+        await fetchBulkEditData();
+    }
+
     if (props.eventsInProject.length > 0) {
         // FIX: kein splice(0,1)
         props.eventsInProject.forEach(event => {

@@ -1,5 +1,11 @@
 <template>
     <div class="print:break-before-auto">
+        <div v-if="loadResidenciesError" class="mb-2 text-xs text-rose-600">
+            {{ loadResidenciesError }}
+        </div>
+        <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
+            {{ $t('Loading data...') }}
+        </div>
         <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
                 <BasePageTitle title="artist management" description="Manage the artist management for this project."/>
@@ -38,7 +44,7 @@
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <SingleArtistResidency :project="project" v-for="artist_residency in usePage().props.artist_residencies" :artist_residency="artist_residency" @edit-residency="editResidency" :key="artist_residency.id"/>
+                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" @edit-residency="editResidency" :key="artist_residency.id"/>
                         </tbody>
                     </table>
                 </div>
@@ -80,7 +86,8 @@ import {IconBuildingSkyscraper, IconEdit, IconFileExport, IconMoneybag} from "@t
 import {MenuItem} from "@headlessui/vue";
 import AddEditArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
+import axios from "axios";
 import {usePage} from "@inertiajs/vue3";
 import SingleArtistResidency from "@/Pages/Projects/Components/ArtistResidenciesComponents/SingleArtistResidency.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
@@ -113,6 +120,54 @@ const artistResidencyToEdit = ref(null);
 const showDeleteConfirmation = ref(false);
 const openExportArtistResidenciesModal = ref(false);
 
+const isLoadingResidencies = ref(false);
+const loadResidenciesError = ref('');
+const localArtistResidencies = ref([]);
+const localArtists = ref([]);
+const localAccommodations = ref([]);
+
+watch(
+    () => props.project?.id,
+    () => {
+        fetchArtistResidencies();
+    },
+    { immediate: true }
+);
+
+async function fetchArtistResidencies() {
+    const projectId = props.project?.id;
+
+    if (!projectId) {
+        return;
+    }
+
+    isLoadingResidencies.value = true;
+    loadResidenciesError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.artist-residencies', { project: projectId })
+        );
+        localArtistResidencies.value = data?.artist_residencies ?? [];
+        localArtists.value = data?.artists ?? [];
+        localAccommodations.value = data?.accommodations ?? [];
+        
+        // Share with Inertia for other components that might use usePage().props
+        if (window.Inertia) {
+            window.Inertia.share({
+                artist_residencies: localArtistResidencies.value,
+                artists: localArtists.value,
+                accommodations: localAccommodations.value
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        loadResidenciesError.value = 'Unable to load artist residencies.';
+    } finally {
+        isLoadingResidencies.value = false;
+    }
+}
+
 const closeAddEditArtistResidenciesModal = (boolean) => {
     showAddEditArtistResidenciesModal.value = false;
 
@@ -123,6 +178,7 @@ const closeAddEditArtistResidenciesModal = (boolean) => {
         setTimeout(() => {
             showSaveSuccess.value = false;
         }, 3000);
+        fetchArtistResidencies();
     }
 }
 
@@ -134,7 +190,7 @@ const editResidency = (artist_residency) => {
 const totalCostOfArtistResidencies = computed(() => {
     // foreach artist_residency in artist_residencies calculate cost_per_night * days
     let totalCost = 0;
-    usePage().props.artist_residencies.forEach((artist_residency) => {
+    localArtistResidencies.value.forEach((artist_residency) => {
         totalCost += artist_residency.cost_per_night * artist_residency.days;
     });
     return totalCost.toFixed(2);
@@ -143,7 +199,7 @@ const totalCostOfArtistResidencies = computed(() => {
 const totalAllowanceOfArtistResidencies = computed(() => {
     // foreach artist_residency in artist_residencies calculate allowance_per_night * days
     let totalAllowance = 0;
-    usePage().props.artist_residencies.forEach((artist_residency) => {
+    localArtistResidencies.value.forEach((artist_residency) => {
         totalAllowance += (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
     });
     return totalAllowance.toFixed(2);

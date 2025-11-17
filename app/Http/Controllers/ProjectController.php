@@ -2142,58 +2142,8 @@ class ProjectController extends Controller
         foreach ($projectTabComponents as $componentInTab) {
             $component = $componentInTab->component;
 
-            switch ($component->type) {
-                case ProjectTabComponentEnum::CHECKLIST->value:
-                    break;
-
-                case ProjectTabComponentEnum::CHECKLIST_ALL->value:
-                    break;
-
-                case ProjectTabComponentEnum::COMMENT_TAB->value:
-                    break;
-
-                case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_TEAM->value:
-                    break;
-
-                case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
-                    break;
-
-                case ProjectTabComponentEnum::BULK_EDIT->value:
-                    break;
-
-                case ProjectTabComponentEnum::CALENDAR->value:
-                    break;
-
-                case ProjectTabComponentEnum::BUDGET->value:
-                    break;
-
-                case ProjectTabComponentEnum::SHIFT_TAB->value:
-                    $this->singleShiftPresetService->shareSingleShiftPresets();
-                    break;
-
-                case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
-                    break;
-
-                case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
-                    break;
-
-                case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT->value:
-                    break;
+            if ($component->type == ProjectTabComponentEnum::SHIFT_TAB->value) {
+                $this->singleShiftPresetService->shareSingleShiftPresets();
             }
         }
 

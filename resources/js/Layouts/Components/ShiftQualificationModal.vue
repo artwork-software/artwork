@@ -1,11 +1,7 @@
 <template>
-    <BaseModal @closed="close(false)" v-if="show">
+    <ArtworkBaseModal @close="close(false)" v-if="show"   :title="mode === 'create' ? $t('Create qualification') : $t('Edit qualification')"
+                      :description="descriptionText">
             <div class="mx-4">
-                <ModalHeader
-                    :title="mode === 'create' ? $t('Create qualification') : $t('Edit qualification')"
-                    :description="descriptionText"
-
-                    />
                 <div class="flex items-center gap-4">
                     <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
                     <!--<Menu as="div" class="relative col-span-1">
@@ -49,7 +45,7 @@
                         />
                     </div>
                 </div>
-                <div class="mt-5 -mx-10 px-10 py-6 bg-lightBackgroundGray">
+                <div class="mt-5 -mx-9 px-10 py-6 bg-lightBackgroundGray">
                     <div class="flex gap-2 items-center">
                         <input type="checkbox"
                                v-model="this.shiftQualificationForm.available"
@@ -61,16 +57,16 @@
                         </p>
                     </div>
                 </div>
-                <div class="w-full text-center mb-6">
-                    <FormButton
+                <div class="flex items-center justify-end mt-5">
+                    <BaseUIButton
                         @click="save"
                         :disabled="this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null"
-                        :text="this.mode === 'create' ? $t('Create') : $t('Save')"
-                        class="mt-8 inline-flex items-center"
+                        :label="this.mode === 'create' ? $t('Create') : $t('Save')"
+                        is-add-button
                         />
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -87,6 +83,8 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -103,6 +101,8 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
+        BaseUIButton,
+        ArtworkBaseModal,
         BaseInput,
         IconSelector,
         ModalHeader,

@@ -3,8 +3,10 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftGroup;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 
@@ -30,6 +32,10 @@ class ShiftDTO extends Data
         public ?array $formatted_dates,
         public ?string $startOfShift,
         public ?bool $isCommitted = false,
+        public ?Project $project = null,
+        public ?Collection $globalQualifications = null,
+        public ?int $shiftGroupId = null,
+        public ?ShiftGroup $shiftGroup = null,
         //public EventDTO $event
     ){
     }
@@ -46,7 +52,7 @@ class ShiftDTO extends Data
             break_minutes: $shift->break_minutes,
             eventId: $shift?->event_id,
             description: $shift->description,
-            craft: $shift->craft,
+            craft: $shift->craft()->with('qualifications')->first(),
             shifts_qualifications: $shift->shiftsQualifications,
             users: $shift->users,
             freelancer: $shift->freelancer,
@@ -57,6 +63,10 @@ class ShiftDTO extends Data
             formatted_dates: $shift->getAttribute('formatted_dates'),
             startOfShift: $shift->getAttribute('start_date')->format('d.m.Y'),
             isCommitted: $shift->is_committed,
+            project: $shift?->project,
+            globalQualifications: $shift->globalQualifications,
+            shiftGroupId: $shift->shift_group_id,
+            shiftGroup: $shift->shiftGroup,
             //event: EventDTO::fromModel($shift->event)
         );
     }

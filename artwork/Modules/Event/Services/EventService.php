@@ -1680,6 +1680,30 @@ readonly class EventService
         return [$day, $endDay, $allDay];
     }
 
+    /**
+     * Robust parsing for day input coming from UI which may be in formats like 'Y-m-d', 'd.m.Y', or 'd.m.y'.
+     */
+    private function parseDayInput(Carbon|string $day): Carbon
+    {
+        if ($day instanceof Carbon) {
+            return $day->copy();
+        }
+        $day = trim($day);
+        // Common explicit formats first
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
+            return Carbon::createFromFormat('Y-m-d', $day);
+        }
+        if (preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $day)) {
+            return Carbon::createFromFormat('d.m.Y', $day);
+        }
+        if (preg_match('/^\d{2}\.\d{2}\.\d{2}$/', $day)) {
+            // two-digit year, PHP maps 00-69 => 2000-2069, 70-99 => 1970-1999
+            return Carbon::createFromFormat('d.m.y', $day);
+        }
+        // Fallback to Carbon::parse (still handles many ISO strings)
+        return Carbon::parse($day);
+    }
+
 
     public function createBulkEvent(
         array $event,
@@ -1687,12 +1711,23 @@ readonly class EventService
         int $userId,
     ): Event {
 
-        $day = Carbon::parse($event['day']);
+        $day = $this->parseDayInput($event['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $event['start_time'] ?? null,
             $event['end_time'] ?? null
         );
+        // Respect explicit end_day from UI if provided (multi-day)
+        if (!empty($event['end_day'])) {
+            $explicitEndDay = $this->parseDayInput($event['end_day']);
+            if ($allDay) {
+                $endTime = $explicitEndDay->copy()->endOfDay();
+            } else {
+                // keep the provided end time (or the computed one) but on the explicit end date
+                $endAt = ($event['end_time'] ?? null) ? \Carbon\Carbon::parse($event['end_time']) : $endTime;
+                $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+            }
+        }
         /** @var Event $createdEvent */
         $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
@@ -1732,12 +1767,22 @@ readonly class EventService
         SupportCollection $data,
         Event $event,
     ): void {
-        $day = Carbon::parse($data['day']);
+        $day = $this->parseDayInput($data['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $data['start_time'] ?? null,
             $data['end_time'] ?? null
         );
+        // Respect explicit end_day from UI if provided (multi-day update)
+        if (!empty($data['end_day'])) {
+            $explicitEndDay = $this->parseDayInput($data['end_day']);
+            if ($allDay) {
+                $endTime = $explicitEndDay->copy()->endOfDay();
+            } else {
+                $endAt = ($data['end_time'] ?? null) ? \Carbon\Carbon::parse($data['end_time']) : $endTime;
+                $endTime = $explicitEndDay->copy()->setTimeFromTimeString($endAt->toTimeString());
+            }
+        }
 
         $this->eventRepository->update($event, [
             'eventName' => $data['name'],

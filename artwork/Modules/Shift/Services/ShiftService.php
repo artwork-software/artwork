@@ -194,6 +194,8 @@ class ShiftService
             'break_minutes' => $data['break_minutes'],
             'description' => $data['description'],
             'room_id' => $data['room_id'],
+            'project_id' => $data['project_id'],
+            'shift_group_id' => $data['shift_group_id'],
         ]);
 
         $shift->craft()->associate($craftId);

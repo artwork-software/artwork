@@ -1,10 +1,7 @@
 <template>
-    <BaseModal @closed="close(false)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
+    <ArtworkBaseModal @close="close(false)" v-if="show" :title="$t('Qualification assignment')"
+                      :description="$t('Shift') + ' ' + this.getCurrentShiftCount() + '/' + this.getMaxShiftCount()">
             <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Qualification assignment')"
-                    :sub-title="$t('Shift') + ' ' + this.getCurrentShiftCount() + '/' + this.getMaxShiftCount()"
-                />
                 <div class="-mt-8 mb-4 xsLight">
                     {{ $t('In which qualification should')}}
                     <img class="inline h-5 w-5 object-cover rounded-full"
@@ -42,7 +39,7 @@
                     </div>
                 </div>
             </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script>
@@ -55,11 +52,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsAssignmentModal',
     mixins: [IconLib],
     components: {
+        ArtworkBaseModal,
         AddButtonSmall,
         ModalHeader,
         FormButton,

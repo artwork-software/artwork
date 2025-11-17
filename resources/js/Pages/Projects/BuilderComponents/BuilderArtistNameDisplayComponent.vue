@@ -1,10 +1,11 @@
 <template>
     <div class="text-xs">
-        {{ project.artist_name }}
+        <span v-if="artistText">{{ artistText }}</span>
     </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 
 const props = defineProps({
     project: {
@@ -12,6 +13,8 @@ const props = defineProps({
         required: true
     }
 })
+
+const artistText = computed(() => props.project?.artistNames || props.project?.artists || props.project?.artist_name || '')
 </script>
 
 <style scoped>

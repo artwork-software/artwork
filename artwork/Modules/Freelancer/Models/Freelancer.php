@@ -43,6 +43,17 @@ use Laravel\Scout\Searchable;
  * @property string $created_at
  * @property string $updated_at
  * @property int $can_work_shifts
+ * @property-read string $name
+ * @property-read string $display_name
+ * @property-read string $type
+ * @property-read string $profile_photo_url
+ * @property-read array<int> $assigned_craft_ids
+ * @property-read Collection<int, Shift> $shifts
+ * @property-read Collection<int, ShiftQualification> $shiftQualifications
+ * @property-read Collection<int, Craft> $assignedCrafts
+ * @property-read Collection<int, Craft> $managingCrafts
+ * @property-read Collection<int, \Artwork\Modules\Shift\Models\GlobalQualification> $globalQualifications
+ *
  */
 class Freelancer extends Model implements Vacationer, Available, DayServiceable
 {
@@ -134,7 +145,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
 
     public function assignedCrafts(): morphToMany
     {
-        return $this->morphToMany(Craft::class, 'craftable');
+        return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
     }
 
     public function managingCrafts(): MorphToMany
@@ -150,11 +161,15 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
 
-    public function shiftQualifications(): BelongsToMany
+    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this
-            ->belongsToMany(ShiftQualification::class, 'freelancer_shift_qualifications')
-            ->using(FreelancerShiftQualification::class);
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\ShiftQualification::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'qualifiable_id',
+            'shift_qualification_id'
+        )->withPivot('craft_id');
     }
 
     public function getShiftIdsBetweenStartDateAndEndDate(
@@ -209,5 +224,16 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     public function getManagingCraftIds(): array
     {
         return $this->craftsToManage()->pluck('id')->toArray();
+    }
+
+    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\GlobalQualification::class,
+            'qualifiable',
+            'global_qualifiables',
+            'qualifiable_id',
+            'global_qualification_id'
+        );
     }
 }

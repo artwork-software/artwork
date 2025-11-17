@@ -106,7 +106,7 @@
                             />
                         </div>
                         <div class="flex gap-2 items-end">
-                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="checkChanges" class="ui-input" />
+                            <BaseInput type="date" id="endDate" v-model="endDate" :label="$t('End')" @change="() => { endAutoFilled = false; checkChanges() }" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"
@@ -184,7 +184,6 @@
                             label="Frequency"
                             :use-translations="false"
                             :button-class="uiLbBtn"
-                            :options-class="uiLbOpts"
                         />
                         <BaseInput id="seriesEndDate" type="date" v-model="seriesEndDate" :label="$t('End date Repeat event')" class="ui-input" />
                     </div>
@@ -379,7 +378,6 @@
                                     label="Option"
                                     :use-translations="false"
                                     :button-class="uiLbBtn"
-                                    :options-class="uiLbOpts"
                                 />
                             </div>
                         </div>
@@ -944,7 +942,7 @@ function checkChanges() {
 const uiLbBtn =
     'menu-button bg-white focus:outline-none focus:ring-0 w-full text-left rounded-md border border-zinc-200 shadow-sm px-3 py-4 h-13 xsDark text-zinc-900';
 const uiLbOpts =
-    'absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 xsDark ring-1 shadow-lg ring-black/5 focus:outline-none';
+    'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-zinc-900 ring-1 shadow-lg ring-black/5 focus:outline-none';
 
 function toggleAccept(type) {
     if (type === 'option') {

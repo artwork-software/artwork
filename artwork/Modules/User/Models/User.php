@@ -30,6 +30,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
@@ -41,6 +42,8 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\Workflow\Traits\HasWorkflows;
+use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Authenticatable;
@@ -153,6 +156,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $weekly_working_hours
  * @property float $salary_per_hour
  * @property string $salary_description
+ * @property Collection<GlobalQualification> $globalQualifications
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -160,7 +164,8 @@ class User extends Model implements
     CanResetPasswordContract,
     Vacationer,
     Available,
-    DayServiceable
+    DayServiceable,
+    WorkflowSubject
 {
     use Authenticatable;
     use Authorizable;
@@ -180,6 +185,7 @@ class User extends Model implements
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use LaravelPermissionToVueJS;
+    use HasWorkflows;
     use HasProfilePhotoCustom;
 
     protected $fillable = [
@@ -288,6 +294,17 @@ class User extends Model implements
         'formated_work_time_balance',
         //'assigned_craft_ids',
     ];
+
+    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\GlobalQualification::class,
+            'qualifiable',
+            'global_qualifiables',
+            'qualifiable_id',
+            'global_qualification_id'
+        );
+    }
 
     //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
@@ -509,7 +526,7 @@ class User extends Model implements
 
     public function assignedCrafts(): morphToMany
     {
-        return $this->morphToMany(Craft::class, 'craftable');
+        return $this->morphToMany(Craft::class, 'craftable')->with(['qualifications']);
     }
 
     public function managingCrafts(): MorphToMany
@@ -517,11 +534,15 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
-    public function shiftQualifications(): BelongsToMany
+    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this
-            ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
-            ->using(UserShiftQualification::class);
+        return $this->morphToMany(
+            \Artwork\Modules\Shift\Models\ShiftQualification::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'qualifiable_id',
+            'shift_qualification_id'
+        )->withPivot('craft_id');
     }
 
     public function workerShiftPlanFilter(): HasOne
@@ -725,6 +746,60 @@ class User extends Model implements
         return sprintf('%02d:%02d', $hours, $minutes);
     }
 
+    public function canHaveWorkflow(string $workflowType): bool
+    {
+        return in_array($workflowType, [
+            'shift_rule_validation',
+            'work_time_approval'
+        ]);
+    }
+
+    public function getWorkflowSubjectInfo(): array
+    {
+        return [
+            'type' => 'user',
+            'name' => $this->full_name,
+            'email' => $this->email
+        ];
+    }
+
+    public function activeWorkContract()
+    {
+        $contractAssign = $this->contract()->first();
+        return $contractAssign?->userContract;
+    }
+
+    public function getActiveShiftRules()
+    {
+        $activeContract = $this->activeWorkContract();
+        if (!$activeContract) {
+            return collect();
+        }
+
+        return $activeContract->shiftRules()
+            ->where('is_active', true)
+            ->get();
+    }
+
+    /**
+     * @deprecated Use getActiveShiftRules() instead
+     */
+    public function getActiveWorkflowRules()
+    {
+        return $this->getActiveShiftRules();
+    }
+
+    public function getPlannedWorkingHours(Carbon $date): float
+    {
+        return $this->shifts()
+            ->whereDate('start_time', $date)
+            ->get()
+            ->sum(function ($shift) {
+                $start = Carbon::parse($shift->start_time);
+                $end = Carbon::parse($shift->end_time);
+                return $end->diffInHours($start);
+            });
+    }
     /**
      * Exclude the placeholder "Deleted user" from Scout indexing
      */

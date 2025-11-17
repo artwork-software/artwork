@@ -9,6 +9,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
@@ -54,6 +55,8 @@ use Illuminate\Support\Collection;
  * @property-read array $days_of_shift
  * @property-read int $max_users
  * @method static Builder isCommitted()
+ * @property-read Collection<GlobalQualification> $globalQualifications
+ * @property-read Project $project
  */
 class Shift extends Model
 {
@@ -75,7 +78,9 @@ class Shift extends Model
         'event_start_day',
         'event_end_day',
         'committing_user_id',
-        'room_id'
+        'room_id',
+        'project_id',
+        'shift_group_id'
     ];
 
     protected $casts = [
@@ -132,9 +137,30 @@ class Shift extends Model
         )->without(['users']);
     }
 
+    public function globalQualifications(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            GlobalQualification::class,
+            'shift_global_qualifications',
+            'shift_id',
+            'global_qualification_id'
+        )->withPivot('quantity');
+    }
+
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
+    }
+
+    /** project */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(
+            Project::class,
+            'project_id',
+            'id',
+            'projects'
+        )->without(['components', 'users']);
     }
 
     public function users(): BelongsToMany
@@ -296,5 +322,22 @@ class Shift extends Model
     public function getMaxUsersAttribute(): int
     {
         return $this->shiftsQualifications->sum('value');
+    }
+
+    // shift group relation
+    public function shiftGroup(): BelongsTo
+    {
+        return $this->belongsTo(
+            ShiftGroup::class,
+            'shift_group_id',
+            'id',
+            'shift_groups'
+        );
+    }
+
+    public function shiftRuleViolations(): HasMany
+    {
+        return $this->hasMany(ShiftRuleViolation::class);
+
     }
 }

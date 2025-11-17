@@ -44,41 +44,47 @@
 
                     <!-- Day -->
                     <div class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
-              {{ $t('Day') }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+                {{ $t('Start date') }}
+              </span>
+              <!-- Toggle to show End date column -->
+              <Switch
+                  v-model="localShowEndDate"
+                  @change="$emit('update:showEndDate', localShowEndDate)"
+                  :class="[
+                    localShowEndDate ? 'bg-artwork-buttons-hover' : 'bg-zinc-200 dark:bg-zinc-800',
+                    'relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
+                  ]"
+                  :aria-label="$t('Toggle end date column')"
+              >
+                <span
+                    aria-hidden="true"
+                    :class="[
+                      localShowEndDate ? 'translate-x-4' : 'translate-x-0',
+                      'pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white dark:bg-zinc-100 shadow ring-0 transition duration-200 ease-in-out'
+                    ]"
+                />
+              </Switch>
+            </div>
                     </div>
 
-                    <!-- Period -->
-                    <div class="shrink-0 min-w-0 col-span-1" :style="getColumnSize(6)">
-                        <div v-if="isInModal" class="flex items-center gap-2">
-                            <SwitchGroup as="div" class="flex items-center">
-                                <Switch
-                                    v-model="localValue"
-                                    @change="$emit('update:modelValue', localValue)"
-                                    :class="[
-                    localValue ? 'bg-artwork-buttons-hover' : 'bg-zinc-200 dark:bg-zinc-800',
-                    'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
-                  ]"
-                                >
-                  <span
-                      aria-hidden="true"
-                      :class="[
-                      localValue ? 'translate-x-5' : 'translate-x-0',
-                      'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-100 shadow ring-0 transition duration-200 ease-in-out'
-                    ]"
-                  />
-                                </Switch>
-                                <SwitchLabel as="span" class="ml-3 select-none uppercase tracking-wider font-semibold text-zinc-700 ">
-                                    {{ $t('Period') }}
-                                </SwitchLabel>
-                            </SwitchGroup>
+                    <!-- Start time -->
+                    <div class="shrink-0 min-w-0" :style="getColumnSize(6)">
+                        <div>
+                          <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('Start time') }}</span>
                         </div>
+                    </div>
 
-                        <div v-else class="flex items-center gap-2">
-              <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
-                {{ $t('Period') }}
-              </span>
+                    <!-- End date (optional) -->
+                    <div v-if="localShowEndDate" class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
+                        <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('End date') }}</span>
+                    </div>
+
+                    <!-- End time -->
+                    <div class="shrink-0 min-w-0" :style="getColumnSize(6)">
+                        <div class="flex items-center gap-2">
+                            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('End time') }}</span>
                             <ToolTipComponent
                                 :icon="IconExclamationCircle"
                                 icon-size="h-5 w-5"
@@ -106,13 +112,18 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconExclamationCircle} from "@tabler/icons-vue";
 
 // Emit Event
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'update:showEndDate']);
 
 // Props für v-model Unterstützung
 const props = defineProps({
     modelValue: {
         type: Boolean,
         required: true
+    },
+    showEndDate: {
+        type: Boolean,
+        required: false,
+        default: false
     },
     isInModal: {
         type: Boolean,
@@ -136,16 +147,21 @@ const getColumnSize = (column) => {
 
 // Lokaler Wert, um den Zustand des Switches zu halten
 const localValue = ref(props.modelValue);
+const localShowEndDate = ref(props.showEndDate);
 
 // Watcher um Änderungen an modelValue zu berücksichtigen
 watch(() => props.modelValue, (newValue) => {
     localValue.value = newValue;
 });
+watch(() => props.showEndDate, (v) => {
+    localShowEndDate.value = v;
+});
 
-// Wenn localValue geändert wird, das update:modelValue Event emittieren
+// Wenn lokale Werte geändert werden, Events emittieren
 watch(localValue, (newValue) => {
     emit('update:modelValue', newValue);
 });
+watch(localShowEndDate, (v) => emit('update:showEndDate', v));
 </script>
 
 <style scoped>

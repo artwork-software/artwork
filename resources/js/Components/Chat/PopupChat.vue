@@ -1,7 +1,11 @@
 <template>
-    <!-- Toasts bleiben global -->
-    <div aria-live="assertive" class="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6 z-50" v-if="usePage().props.auth.user.chat_push_notification">
-        <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
+    <!-- Toasts global -->
+    <div
+        v-if="usePage().props.auth.user.chat_push_notification"
+        aria-live="assertive"
+        class="pointer-events-none fixed inset-0 z-[1000] flex items-end px-4 py-6 sm:items-start sm:p-6"
+    >
+        <div class="flex w-full flex-col items-center space-y-3 sm:items-end">
             <ChatToastNotification
                 v-for="(toast, index) in toastMessages"
                 :key="index"
@@ -14,326 +18,343 @@
         </div>
     </div>
 
-    <!-- Chat: fixed, aber innerhalb der Main-Grenzen offsetten -->
+    <!-- Chat Root (Position bleibt per positionClass/positionStyle steuerbar) -->
     <div :class="positionClass" :style="positionStyle" ref="chatRoot" data-chat-root>
+        <!-- Launcher Button -->
         <div v-if="!isChatOpen">
-            <div class="rounded-full shadow-lg bg-white p-2 cursor-pointer border border-gray-200 relative" @click="openChat">
-                <component :is="IconBubbleText" class="size-10" />
-
-                <span v-if="totalUnreadCount > 0" class="absolute inline-flex items-center w-6 h-6 -top-2 -right-2">
-                    <!--<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>-->
-                    <span class="relative inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-red-700 border-red-100 border bg-red-50 rounded-full">
-                        {{ totalUnreadCount }}
-                    </span>
-                </span>
-            </div>
+            <button
+                @click="openChat"
+                class="relative group grid place-items-center size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg ring-1 ring-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+            >
+                <component :is="IconMessage" class="size-6" />
+                <span
+                    v-if="totalUnreadCount > 0"
+                    class="absolute -top-1.5 -right-1.5 inline-flex"
+                >
+          <span
+              class="relative inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[10px] font-bold text-red-700 bg-red-50 border border-red-100 rounded-full"
+          >
+            {{ totalUnreadCount }}
+          </span>
+        </span>
+            </button>
         </div>
 
-        <div v-if="isChatOpen">
-            <div class="w-96">
-                <div class="card white overflow-hidden">
-                    <div class="w-full px-4 py-3">
-                        <div class="flex items-center justify-between w-full">
-                            <div class="text-sm font-bold">
-                                {{ $t('Chat') }}
+        <!-- Chat Panel -->
+        <div v-if="isChatOpen" class="w-[24rem] md:w-[26rem]">
+            <div class="rounded-2xl overflow-hidden border border-zinc-200/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_10px_30px_-10px_rgba(2,6,23,.2)]">
+                <!-- Header -->
+                <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-zinc-100/80">
+                    <div class="px-4 py-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="grid size-8 place-items-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                    <component :is="IconMessage" class="size-4" />
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-semibold text-zinc-900 truncate">
+                                        {{ $t('Chat') }}
+                                    </div>
+                                    <div class="text-[11px] text-zinc-500">
+                                        <template v-if="!checkIfChatIsSelected">
+                                            {{ $t('Select a chat or create a new one') }}
+                                        </template>
+                                        <template v-else>
+                      <span v-if="!chatPartner.is_group" class="first-letter:capitalize">
+                        {{ status ? $t(status) : '' }}
+                      </span>
+                                            <span v-else>{{ $t('Group chat') }}</span>
+                                        </template>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-x-2">
-                                <!-- Add new Chat Button -->
-                                <div v-if="!checkIfChatIsSelected" @click="openAddNewChat = true">
+
+                            <div class="flex items-center gap-1.5">
+                                <!-- New chat -->
+                                <button
+                                    v-if="!checkIfChatIsSelected"
+                                    @click="openAddNewChat = true"
+                                    class="btn-icon"
+                                    aria-label="Add new chat"
+                                >
                                     <ToolTipComponent
                                         direction="top"
                                         :icon="IconPlus"
                                         :tooltip-text="$t('Add new Chat')"
-                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                                        icon-class="size-5"
+                                        icon-class="size-4"
                                     />
-                                </div>
+                                </button>
 
-                                <!-- Change Chat position Button -->
-                                <div @click="enableOrDisablePushNotification">
+                                <!-- Notifications toggle -->
+                                <button @click="enableOrDisablePushNotification" class="btn-icon" aria-label="Toggle notifications">
                                     <ToolTipComponent
                                         direction="top"
                                         :icon="usePage().props.auth.user.chat_push_notification ? IconBellOff : IconBell"
                                         :tooltip-text="usePage().props.auth.user.chat_push_notification ? $t('Disable Notifications') : $t('Enable Notifications')"
-                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                                        icon-class="size-5"
+                                        icon-class="size-4"
                                     />
-                                </div>
+                                </button>
 
-                                <!-- Change Chat position Button -->
-                                <div @click="showPositionPicker = true">
+                                <!-- Position picker -->
+                                <button @click="showPositionPicker = true" class="btn-icon" aria-label="Change position">
                                     <ToolTipComponent
                                         direction="top"
                                         :icon="IconArrowsMove"
                                         :tooltip-text="$t('Change Chat position')"
-                                        class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                                        icon-class="size-5"
+                                        icon-class="size-4"
                                     />
-                                </div>
+                                </button>
 
-                                <div class="" @click="closeChat">
-                                    <component :is="IconX" class="size-5 cursor-pointer transition-colors duration-200 ease-in-out" aria-hidden="true" />
-                                </div>
+                                <!-- Close -->
+                                <button @click="closeChat" class="btn-icon" aria-label="Close chat">
+                                    <component :is="IconX" class="size-4 text-zinc-500 group-hover:text-zinc-700 transition-colors" />
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-zinc-100/60 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
-                        <div class="">
-                            <div v-if="!checkIfChatIsSelected" class="px-3 py-1">
-                                <div class="grid grid-cols-1">
-                                    <input v-model="searchChat" type="text" name="account-number" id="account-number" class="col-start-1 border border-gray-200 row-start-1 block w-full rounded-md bg-white py-3 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:pr-9 sm:text-sm/6" :placeholder="$t('Search in chats')" />
-                                    <component :is="IconSearch" class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-gray-400 sm:size-4" aria-hidden="true" />
-                                </div>
-                            </div>
-                            <div v-else class="bg-white px-4">
-                                <div v-if="!chatPartner.is_group" class="py-2">
-                                    <div class="flex items-center">
-                                        <div class="mr-1 cursor-pointer" @click="goBackToChatList">
-                                            <ToolTipComponent
-                                                direction="top"
-                                                :icon="IconChevronLeft"
-                                                :tooltip-text="$t('Back to Chat List')"
-                                            />
-                                        </div>
-                                        <span class="relative inline-block">
-                                            <img class="size-9 rounded-full object-cover" :src="chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.profile_photo_url" alt="" />
-                                            <span class="absolute right-0.5 bottom-0.5 block size-2 rounded-full  ring-2 ring-white" :class="{ 'bg-red-400': status === 'offline', 'bg-orange-400': status === 'away', 'bg-green-400': status === 'online'}" />
-                                        </span>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-bold text-gray-900">{{ chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.full_name }}</p>
-                                            <p class="text-xs text-gray-500 first-letter:capitalize">{{ status ? $t(status) : '' }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else class="py-2">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <div class="mr-1 cursor-pointer" @click="goBackToChatList">
-                                                <ToolTipComponent
-                                                    direction="top"
-                                                    :icon="IconChevronLeft"
-                                                    :tooltip-text="$t('Back to Chat List')"
-                                                    use-translation
-                                                />
-                                            </div>
-                                            <component :is="IconUsersGroup" class="size-10 rounded-full object-cover p-3 bg-blue-50 text-blue-500 border border-blue-100" />
-                                            <div class="ml-3">
-                                                <p class="text-sm text-gray-900">{{ chatPartner.name }}</p>
-                                                <p class="text-[9px] text-gray-500">{{ chatPartner.users.map((user) => user.full_name).join(', ') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-x-1">
-                                            <!-- Rename Group Chat Button -->
-                                            <div @click="showRenameModal = true">
-                                                <ToolTipComponent
-                                                    direction="top"
-                                                    :icon="IconEdit"
-                                                    :tooltip-text="$t('Rename Group Chat')"
-                                                    class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
-                                                    icon-size="size-4"
-                                                />
-                                            </div>
-                                            <!-- Delete Group Chat Button -->
-                                            <div @click="showDeleteConfirm = true">
-                                                <ToolTipComponent
-                                                    direction="top"
-                                                    :icon="IconTrash"
-                                                    :tooltip-text="$t('Delete Group Chat')"
-                                                    class="cursor-pointer p-1 hover:bg-gray-100 rounded transition-colors duration-200 chat-tooltip-black-icon"
-                                                    icon-size="size-4"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="isLoading">
-                            <div class="flex items-center justify-center max-h-96 min-h-96 w-full h-full">
-                                <!-- loading -->
-                                <component :is="IconLoaderQuarter" class="motion-safe:animate-spin" />
-                            </div>
-                        </div>
-                        <div v-else class="px-3">
-                            <div
-                                class="rounded-b-lg max-h-[300px] sm:max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-y-auto max-w-96"
-                                ref="scrollContainer"
-                                :key="chatPartner?.id || 'chat-list'"
-                                @scroll="handleScroll"
-                            >
-                                <div  v-if="!checkIfChatIsSelected">
-                                    <div v-if="filteredChats.length > 0" class="space-y-1">
-                                        <div class="bg-white hover:bg-blue-50 rounded-lg px-2 py-2 transition duration-200 ease-in-out" v-for="chat in filteredChats">
-                                            <div class="w-full flex items-center justify-between cursor-pointer" @click="openChatPage(chat.id)">
-                                                <div>
-                                                    <SingleChatInOverview :chat="chat" />
-                                                </div>
-                                                <span v-if="chat.unread_count > 0" class="inline-flex items-center justify-center w-6 h-6 min-w-6 min-h-6 text-xs font-bold leading-none text-red-700 border-red-100 border  bg-red-50 font-lexend   rounded-full">
-                                                    {{ chat.unread_count }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else class="px-4">
-                                        <div class="rounded-md bg-red-50 p-4 mb-5">
-                                            <div class="flex items-center">
-                                                <div class="shrink-0">
-                                                    <component :is="IconInfoSquareRoundedFilled" class="size-6 text-red-400" aria-hidden="true" />
-                                                </div>
-                                                <div class="ml-3">
-                                                    <p class="text-xs font-lexend font-medium text-red-800">
-                                                        {{ $t("No chats found. Click the plus icon to start a new chat.") }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="px-3 py-2" v-else>
-                                    <div>
-                                        <!-- Ladeindikator oben beim Nachladen -->
-                                        <div v-if="isLoadingMore" class="flex justify-center py-2 text-xs text-gray-500">
-                                            <svg class="animate-spin h-4 w-4 mr-2 text-gray-400" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
-                                            </svg>
-                                            {{ $t('Messages are loading...') }}
-                                        </div>
 
-                                        <!-- Nachrichten + Datumstrenner -->
-                                        <template v-for="item in messagesWithSeparators" :key="item.key">
-                                            <div v-if="item.type === 'date'" class="flex items-center my-3">
-                                                <div class="flex-1 h-px bg-gray-200"></div>
-                                                <span class="mx-3 text-[10px] text-gray-500 whitespace-nowrap">{{ item.label }}</span>
-                                                <div class="flex-1 h-px bg-gray-200"></div>
-                                            </div>
-                                            <SingleMessageInChat
-                                                v-else
-                                                :message="item.message"
-                                                :chat="chatPartner"
-                                            />
-                                        </template>
-                                        <!-- Scroll-Anker am Ende -->
-                                        <div ref="scrollAnchor" style="height: 1px;"></div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-
-                        </div>
-
-                    </div>
-                    <!-- send message in chat -->
-                    <div v-if="checkIfChatIsSelected" class="rounded-b-lg px-3 py-4 bg-white">
-                        <div class="flex items-center gap-2">
-                            <textarea
-                                class="w-full border resize-none border-gray-200 rounded-xl bg-white py-1.5 pr-10 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-100 placeholder:text-gray-400 focus:outline-1 focus:-outline-offset-1 focus:outline-artwork-buttons-create sm:pr-9 sm:text-xs font-lexend"
-                                :placeholder="$t('Write a message')"
-                                v-model="newMessage"
-                                rows="1"
-                                @keydown.enter.exact.prevent="sendMessage"
-                                @keyup.enter.exact="scrollToBottom"
+                    <!-- Subheader: Suche / Chat-Header -->
+                    <div class="px-4 pb-3" v-if="!checkIfChatIsSelected">
+                        <div class="relative">
+                            <input
+                                v-model="searchChat"
+                                type="text"
+                                class="form-input pl-9"
+                                :placeholder="$t('Search in chats')"
                             />
-                            <div @click="sendMessage" class="rounded-full p-2 bg-artwork-buttons-create cursor-pointer hover:bg-artwork-buttons-hover duration-200 ease-in-out transition-colors">
-                                <component :is="IconBrandTelegram" class="size-4 cursor-pointer text-white" aria-hidden="true" />
+                            <component
+                                :is="IconSearch"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Aktueller Chat Kopf -->
+                    <div v-else class="px-4 pb-3">
+                        <div v-if="!chatPartner.is_group" class="flex items-center justify-between">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="relative inline-block shrink-0">
+                                  <img
+                                      class="size-9 rounded-full object-cover ring-2 ring-white"
+                                      :src="chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.profile_photo_url"
+                                      alt=""
+                                  />
+                                  <span
+                                      class="absolute right-0 bottom-0 block size-2 rounded-full ring-2 ring-white"
+                                      :class="{ 'bg-red-400': status === 'offline', 'bg-orange-400': status === 'away', 'bg-green-400': status === 'online'}"
+                                  />
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-zinc-900 truncate">
+                                        {{ chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.full_name }}
+                                    </p>
+                                    <p class="text-[11px] text-zinc-500 first-letter:capitalize truncate">
+                                        {{ status ? $t(status) : '' }}
+                                    </p>
+                                </div>
+                            </div>
+                            <button class="btn-subtle" @click="goBackToChatList">
+                                <component :is="IconChevronLeft" class="size-4" />
+                                <span class="text-xs">{{ $t('Back') }}</span>
+                            </button>
+                        </div>
+
+                        <div v-else class="flex items-center justify-between">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <component
+                                    :is="IconUsersGroup"
+                                    class="size-10 rounded-xl p-2.5 bg-blue-50 text-blue-600 border border-blue-100"
+                                />
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-zinc-900 truncate">
+                                        {{ chatPartner.name }}
+                                    </p>
+                                    <p class="text-[10px] text-zinc-500 truncate">
+                                        {{ chatPartner.users.map((user) => user.full_name).join(', ') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button class="btn-icon" @click="showRenameModal = true" aria-label="Rename group">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        :icon="IconEdit"
+                                        :tooltip-text="$t('Rename Group Chat')"
+                                        icon-size="size-4"
+                                        class="chat-tooltip-black-icon"
+                                    />
+                                </button>
+                                <button class="btn-icon" @click="showDeleteConfirm = true" aria-label="Delete group">
+                                    <ToolTipComponent
+                                        direction="top"
+                                        :icon="IconTrash"
+                                        :tooltip-text="$t('Delete Group Chat')"
+                                        icon-size="size-4"
+                                        class="chat-tooltip-black-icon"
+                                    />
+                                </button>
+                                <button class="btn-subtle" @click="goBackToChatList">
+                                    <component :is="IconChevronLeft" class="size-4" />
+                                    <span class="text-xs">{{ $t('Back') }}</span>
+                                </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="bg-zinc-50/60 min-h-96">
+                    <!-- Loader -->
+                    <div v-if="isLoading" class="grid place-items-center max-h-96 min-h-96 w-full">
+                        <component :is="IconLoaderQuarter" class="motion-safe:animate-spin text-zinc-400" />
+                    </div>
+
+                    <!-- Content -->
+                    <div v-else class="px-3 py-2">
+                        <div
+                            ref="scrollContainer"
+                            :key="chatPartner?.id || 'chat-list'"
+                            @scroll="handleScroll"
+                            class="rounded-xl max-h-[60vh] md:max-h-[65vh] overflow-y-auto scroll-smooth px-1.5 py-2 bg-white border border-zinc-100"
+                        >
+                            <!-- Chatliste -->
+                            <div v-if="!checkIfChatIsSelected">
+                                <div v-if="filteredChats.length > 0" class="space-y-1.5">
+                                    <div
+                                        v-for="chat in filteredChats"
+                                        :key="chat.id"
+                                        class="group rounded-lg border border-transparent hover:border-blue-100 bg-white hover:bg-blue-50/60 transition-colors cursor-pointer"
+                                        @click="openChatPage(chat.id)"
+                                    >
+                                        <div class="px-3 py-2 flex items-center justify-between">
+                                            <SingleChatInOverview :chat="chat" />
+                                            <span
+                                                v-if="chat.unread_count > 0"
+                                                class="inline-flex items-center justify-center min-w-6 h-6 px-1.5 text-[11px] font-bold text-red-700 bg-red-50 border border-red-100 rounded-full"
+                                            >
+                                                {{ chat.unread_count }}
+                                              </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-else class="p-4">
+                                    <div class="rounded-md border border-red-100 bg-red-50 p-3">
+                                        <div class="flex items-start gap-2">
+                                            <component :is="IconInfoSquareRoundedFilled" class="size-5 text-red-400 mt-0.5" />
+                                            <p class="text-xs font-medium text-red-800">
+                                                {{ $t("No chats found. Click the plus icon to start a new chat.") }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nachrichten -->
+                            <div v-else class="px-2 py-1">
+                                <!-- Loading more -->
+                                <div v-if="isLoadingMore" class="flex justify-center py-2 text-[11px] text-zinc-500">
+                                    <svg class="animate-spin h-4 w-4 mr-2 text-zinc-400" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                                    </svg>
+                                    {{ $t('Messages are loading...') }}
+                                </div>
+
+                                <!-- Nachrichten + Datumstrenner -->
+                                <template v-for="item in messagesWithSeparators" :key="item.key">
+                                    <div v-if="item.type === 'date'" class="flex items-center my-3">
+                                        <div class="flex-1 h-px bg-zinc-200"></div>
+                                        <span class="mx-3 text-[10px] text-zinc-500 whitespace-nowrap">
+                      {{ item.label }}
+                    </span>
+                                        <div class="flex-1 h-px bg-zinc-200"></div>
+                                    </div>
+
+                                    <SingleMessageInChat
+                                        v-else
+                                        :message="item.message"
+                                        :chat="chatPartner"
+                                    />
+                                </template>
+
+                                <div ref="scrollAnchor" class="h-px"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Composer -->
+                <div v-if="checkIfChatIsSelected" class="sticky bottom-0 z-10 bg-white/90 backdrop-blur border-t border-zinc-100 px-3 py-3">
+                    <div class="flex items-end gap-2">
+                        <textarea
+                            v-model="newMessage"
+                            rows="1"
+                            :placeholder="$t('Write a message')"
+                            @keydown.enter.exact.prevent="sendMessage"
+                            @keyup.enter.exact="scrollToBottom"
+                            class="w-full resize-none form-textarea"
+                        />
+                        <button
+                            @click="sendMessage"
+                            class="grid place-items-center rounded-xl p-2.5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:brightness-105 transition-all shadow-sm hover:shadow-md"
+                            aria-label="Send message"
+                        >
+                            <component :is="IconBrandTelegram" class="size-5" />
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Overlay bleibt relativ zum Main (absolute + inset-0) -->
-    <div v-if="showPositionPicker" class="fixed inset-0 z-[100] pointer-events-auto">
-        <div class="w-full h-full">
-            <!-- halbtransparenter Hintergrund -->
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm">
+    <!-- Position Picker Overlay -->
+    <div v-if="showPositionPicker" class="fixed inset-0 z-[1100] pointer-events-auto">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-                <div class="flex items-center justify-center h-full w-fill ">
-                    <div class="text-center">
-                        <div class="text-white text-lg font-bold">{{ $t('Set chat position') }}</div>
-                        <p class="text-white/90 text-sm mt-1">
-                            {{ $t('Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.') }}
-                        </p>
-                    </div>
+        <div class="absolute inset-0">
+            <div class="flex items-center justify-center h-full w-full">
+                <div class="text-center px-6">
+                    <div class="text-white text-lg font-bold">{{ $t('Set chat position') }}</div>
+                    <p class="text-white/90 text-sm mt-1">
+                        {{ $t('Click on one of the marked fields (corners, sides, or center) to select the position of the chat window. You can change this later at any time.') }}
+                    </p>
                 </div>
-
             </div>
-            <!-- vier Targets -->
-            <button
-                class="absolute top-4 left-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Top left')"
-                @click="setChatPosition('top-left')"
-            />
-            <button
-                class="absolute top-4 right-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Top right')"
-                @click="setChatPosition('top-right')"
-            />
-            <button
-                class="absolute bottom-4 left-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Bottom left')"
-                @click="setChatPosition('bottom-left')"
-            />
-            <button
-                class="absolute bottom-4 right-4 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Bottom right')"
-                @click="setChatPosition('bottom-right')"
-            />
-            <!-- NEU: Mitte links -->
-            <button
-                class="absolute top-1/2 left-4 -translate-y-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Middle left')"
-                @click="setChatPosition('middle-left')"
-            />
-            <!-- NEU: Mitte rechts -->
-            <button
-                class="absolute top-1/2 right-4 -translate-y-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Middle right')"
-                @click="setChatPosition('middle-right')"
-            />
-            <!-- NEU: Oben zentriert -->
-            <button
-                class="absolute top-4 left-1/2 -translate-x-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Top center')"
-                @click="setChatPosition('top-center')"
-            />
-            <!-- NEU: Unten zentriert -->
-            <button
-                class="absolute bottom-4 left-1/2 -translate-x-1/2 h-20 w-28 rounded-lg border-2 border-dashed border-white/70 bg-white/20 hover:bg-white/30 focus:outline-none"
-                :title="$t('Bottom center')"
-                @click="setChatPosition('bottom-center')"
-            />
-            <!-- Schließen -->
-            <div class="absolute top-2 right-2">
+
+            <!-- Targets -->
+            <button class="picker-spot top-4 left-4"    :title="$t('Top left')"     @click="setChatPosition('top-left')" />
+            <button class="picker-spot top-4 right-4"   :title="$t('Top right')"    @click="setChatPosition('top-right')" />
+            <button class="picker-spot bottom-4 left-4" :title="$t('Bottom left')"  @click="setChatPosition('bottom-left')" />
+            <button class="picker-spot bottom-4 right-4":title="$t('Bottom right')" @click="setChatPosition('bottom-right')" />
+
+            <button class="picker-spot top-1/2 left-4 -translate-y-1/2"  :title="$t('Middle left')"  @click="setChatPosition('middle-left')" />
+            <button class="picker-spot top-1/2 right-4 -translate-y-1/2" :title="$t('Middle right')" @click="setChatPosition('middle-right')" />
+            <button class="picker-spot top-4 left-1/2 -translate-x-1/2"  :title="$t('Top center')"   @click="setChatPosition('top-center')" />
+            <button class="picker-spot bottom-4 left-1/2 -translate-x-1/2" :title="$t('Bottom center')" @click="setChatPosition('bottom-center')" />
+
+            <div class="absolute top-3 right-3">
                 <component :is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
             </div>
         </div>
     </div>
 
-    <!-- Rename Group Chat Modal -->
+    <!-- Modals -->
     <RenameGroupChatModal
         v-if="showRenameModal"
         :chat="chatPartner"
         @close="showRenameModal = false"
         @renamed="handleChatRenamed"
     />
-
-    <!-- Delete Group Chat Confirmation Modal -->
     <DeleteGroupChatModal
         v-if="showDeleteConfirm"
         :chat="chatPartner"
         @close="showDeleteConfirm = false"
         @deleted="handleChatDeleted"
     />
-
-    <AddNewChat
-        v-if="openAddNewChat"
-        @close="closeAddNewChat"
-    />
+    <AddNewChat v-if="openAddNewChat" @close="closeAddNewChat" />
 </template>
+
 
 <script setup>
 import {computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
@@ -341,7 +362,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {
-    IconArrowsMove, IconBrandTelegram, IconBubbleText, IconBell, IconBellOff,
+    IconArrowsMove, IconBrandTelegram, IconMessage, IconBell, IconBellOff,
     IconChevronLeft,
     IconEdit, IconInfoSquareRoundedFilled,
     IconLoaderQuarter,

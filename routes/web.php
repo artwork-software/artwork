@@ -1,5 +1,6 @@
 <?php
 
+use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppController;
@@ -108,6 +109,9 @@ use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use App\Http\Controllers\BudgetManagementCostUnitController;
 use App\Http\Controllers\ProjectManagementBuilderController;
 use Artwork\Modules\Contacts\Http\Controllers\ContactController;
+use Artwork\Modules\Workflow\Http\Controllers\WorkflowController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftRuleController;
+use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Event\Http\Controllers\EventPropertyController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
@@ -121,7 +125,6 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryUserFilterController;
 use Artwork\Modules\Inventory\Http\Controllers\InventorySubCategoryController;
-use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
@@ -159,6 +162,41 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+
+    // Workflow routes - only accessible via direct URL
+    Route::group(['prefix' => 'workflow'], function (): void {
+        Route::get('/', [WorkflowController::class, 'index'])->name('workflow.index');
+        Route::get('/definitions/create', [WorkflowController::class, 'createDefinition'])->name('workflow.definitions.create');
+        Route::get('/definitions/{definition}', [WorkflowController::class, 'showDefinition'])->name('workflow.definitions.show');
+        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('workflow.instances.show');
+        Route::post('/instances/{instance}/transitions', [WorkflowController::class, 'executeTransition'])->name('workflow.instances.execute-transition');
+        Route::post('/definitions', [WorkflowController::class, 'storeDefinition'])->name('workflow.definitions.store');
+    });
+
+    // Shift Rules routes - New shift rules management system
+    Route::group(['prefix' => 'shift-rules'], function (): void {
+        Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
+        Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
+
+        // Specific routes must come before parameterized routes
+        Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
+        Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
+        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
+        Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
+
+        // Parameterized routes come last
+        Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
+        Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->name('shift-rules.update');
+        Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->name('shift-rules.destroy');
+        Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->name('shift-rules.contracts.assign');
+        Route::post('/{shiftRule}/users', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignUsers'])->name('shift-rules.users.assign');
+    });
+
+    // Shift Rule Violations routes
+    Route::group(['prefix' => 'shift-rule-violations'], function (): void {
+        Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
+        Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
+    });
 
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
@@ -212,7 +250,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'index' => 'api-management.index',
                 'store' => 'api-management.store',
                 'destroy' => 'api-management.destroy'
-        ]);
+            ]);
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -319,7 +357,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::patch('/users/{user}/shift-qualification', [UserController::class, 'updateShiftQualification'])
+    Route::patch('/users/{user}/{qualification}/shift-qualification', [UserController::class, 'updateShiftQualification'])
         ->name('user.update.shift-qualification');
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
@@ -1381,7 +1419,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [FreelancerController::class, 'updateCraftSettings']
     )->name('freelancer.update.craftSettings');
     Route::patch(
-        '/freelancer/{freelancer}/shift-qualification',
+        '/freelancer/{freelancer}/{qualification}/shift-qualification',
         [FreelancerController::class, 'updateShiftQualification']
     )->name('freelancer.update.shift-qualification');
     Route::patch(
@@ -1454,7 +1492,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ServiceProviderController::class, 'updateCraftSettings']
     )->name('service_provider.update.craftSettings');
     Route::patch(
-        '/service-provider/{serviceProvider}/shift-qualification',
+        '/service-provider/{serviceProvider}/{qualification}/shift-qualification',
         [ServiceProviderController::class, 'updateShiftQualification']
     )->name('service_provider.update.shift-qualification');
     Route::patch(
@@ -1492,6 +1530,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     Route::group(['prefix' => 'settings'], function (): void {
+
+        Route::group(['prefix' => 'global-qualifications'], function (): void {
+            // global-qualification.update
+            Route::patch(
+                '/{globalQualification}/update',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'update']
+            )->name('global-qualification.update');
+
+            // global-qualification.store
+            Route::post(
+                '/store',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'store']
+            )->name('global-qualification.store');
+
+            // global-qualification.delete
+            Route::delete(
+                '/{globalQualification}/delete',
+                [\Artwork\Modules\Shift\Http\Controllers\GlobalQualificationController::class, 'destroy']
+            )->name('global-qualification.delete');
+        });
+
+
         Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
         Route::patch(
             'shift-settings/updateShiftSettingsUseFirstNameForSort',
@@ -1599,6 +1659,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
             Route::get('index', [ProjectTabController::class, 'index'])
                 ->name('tab.index');
+            // lightweight list of tabs for client-side selection (OwnTasks checklist creation)
+            Route::get('list', [ProjectTabController::class, 'list'])
+                ->name('tab.list');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -1844,7 +1907,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         //inventory.filter.store
         Route::post('/filter/store', [InventoryUserFilterController::class, 'store'])
-                ->name('inventory.filter.store');
+            ->name('inventory.filter.store');
 
         // get articles form api
         Route::get('/articles/', [InventoryArticleController::class, 'loadArticlesByFilter'])
@@ -2430,6 +2493,37 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // artist.toggle-active
         Route::patch('/{artist}/toggle-active', [ArtistController::class, 'toggleActive'])->name('artist.toggle-active');
     });
+
+    // user.update.craft-shift-qualification
+    Route::patch(
+        '/user/{user}/update/{craft}/{qualification}/craft-shift-qualification',
+        [UserController::class, 'updateCraftShiftQualification']
+    )->name('user.update.craft-shift-qualification');
+
+    // freelancer.update.craft-shift-qualification
+    Route::patch(
+        '/freelancer/{freelancer}/update/{craft}/{qualification}/craft-shift-qualification',
+        [FreelancerController::class, 'updateCraftShiftQualification']
+    )->name('freelancer.update.craft-shift-qualification');
+
+    // service_provider.update.craft-shift-qualification
+    Route::patch(
+        '/service-provider/{serviceProvider}/update/{craft}/{qualification}/craft-shift-qualification',
+        [ServiceProviderController::class, 'updateCraftShiftQualification']
+    )->name('service_provider.update.craft-shift-qualification');
+
+    Route::group(['prefix' => 'shift-groups'], function (): void {
+        Route::get('/', [ShiftGroupController::class, 'index'])->name('shift-groups.index');
+        Route::post('/', [ShiftGroupController::class, 'store'])->name('shift-groups.store');
+        Route::patch('/{shiftGroup}/update', [ShiftGroupController::class, 'update'])->name('shift-groups.update');
+        Route::delete('/{shiftGroup}/destroy', [ShiftGroupController::class, 'destroy'])->name('shift-groups.destroy');
+    });
+
+    // patch shift-settings.update-warn-multiple-assignments
+    Route::patch(
+        '/shift-settings/update-warn-multiple-assignments',
+        [ShiftSettingsController::class, 'saveWarningMultipleAssignments']
+    )->name('shift-settings.update-warn-multiple-assignments');
 });
 
 Route::get(

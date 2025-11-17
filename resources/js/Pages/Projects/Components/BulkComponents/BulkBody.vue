@@ -139,8 +139,8 @@
         </div>
 
         <!-- Header + Events -->
-        <div class="overflow-x-scroll relative w-max">
-            <BulkHeader v-model="timeArray" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
+        <div :class="isInModal ? 'overflow-x-auto relative w-full' : 'overflow-x-auto relative w-max'">
+            <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
             <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
                 <div v-if="sortedEvents.length > 0 && showEvents">
                     <!-- Render events by groups -->
@@ -173,6 +173,7 @@
                                     :multi-edit="multiEdit"
                                     :has-permission="hasCreateEventsPermission"
                                     :last-edit-event-ids="lastEditEventIds"
+                                    :show-end-date="showEndDate"
                                 />
                             </div>
                         </div>
@@ -208,7 +209,7 @@
         </div>
 
         <!-- Bottom actions -->
-        <div class="flex items-center justify-end pointer-events-none print:hidden" v-if="!multiEdit">
+        <div class="flex items-center justify-end print:hidden" v-if="!multiEdit">
             <div class="flex items-center gap-x-4">
                 <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">
                     {{ $t('The name is not given for {0} event(s)', [invalidEvents.length]) }}
@@ -366,9 +367,13 @@ const props = defineProps({
 const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
-const hasCreateEventsPermission = ref(can('create events without request'));
+const hasCreateEventsPermission = ref(can('create events without request') || hasAdminRole());
 const roomCollisions = ref([]);
-const timeArray = ref(!props.isInModal);
+const timeArray = ref(true);
+
+// Persisted user preference for showing End date column in Bulk
+const showEndDateStorageKey = computed(() => `bulk_show_end_date_user_${usePage().props.auth.user.id}`);
+const showEndDate = ref(localStorage.getItem(showEndDateStorageKey.value) === 'true');
 
 const isPlanningEvent = ref((() => {
     const storedValue = localStorage.getItem(`isPlanningEvent_${props.project.id}`);
@@ -535,19 +540,20 @@ const UpdateMultiEditEmits = (value) => { multiEdit.value = value; };
 const mapBulkEventToModalEvent = (e) => {
     if (!e || typeof e !== 'object') return null;
     const day = e.day ?? null;
+    const endDay = e.end_day ?? day;
     const startTime = e.start_time ?? null;
     const endTime = e.end_time ?? null;
     const hasTimes = Boolean(startTime && endTime);
     const start = day ? `${day}T${hasTimes ? startTime : '00:00'}` : null;
-    const end = day ? `${day}T${hasTimes ? endTime : '23:59'}` : null;
+    const end = endDay ? `${endDay}T${hasTimes ? endTime : '23:59'}` : null;
 
     return {
         id: e.id,
         title: e.name ?? '',
         eventName: e.name ?? '',
         start,
-        end,
-        allDay: !hasTimes,
+    end,
+    allDay: !hasTimes,
         eventType: e.type ?? e.eventType ?? null,
         eventTypeId: e.type?.id ?? e.eventTypeId ?? e.eventType?.id ?? null,
         eventStatus: e.status ?? e.eventStatus ?? null,
@@ -579,6 +585,19 @@ const onOpenEventComponent = async (payload) => {
         // Laravel JSON Resource may wrap payload under data
         const payloadData = data?.data ?? data;
         if (props.project) payloadData.project = props.project;
+        // Fix: ensure multi-day end date is respected when opening modal from bulk list
+        try {
+            const fb = fallbackModel();
+            if (fb?.start && fb?.end) {
+                const sd = String(fb.start).slice(0,10);
+                const ed = String(fb.end).slice(0,10);
+                if (sd && ed && sd !== ed) {
+                    payloadData.start = fb.start;
+                    payloadData.end = fb.end;
+                    payloadData.allDay = fb.allDay;
+                }
+            }
+        } catch { /* ignore */ }
         eventToEdit.value = payloadData;
         eventComponentIsVisible.value = true;
     } catch (e) {
@@ -615,6 +634,7 @@ const addEmptyEvent = () => {
         name: props.isInModal ? '' : 'Blocker',
         room: props.rooms?.[0] ?? null,
         day: toISO(newDate),
+        end_day: toISO(newDate),
         start_time: '',
         end_time: '',
         copy: false,
@@ -670,6 +690,7 @@ const addEmptyEventForGroup = (group) => {
         name: props.isInModal ? '' : 'Blocker',
         room: baseEvent?.room || props.rooms?.[0] || null,
         day: toISO(newDate),
+        end_day: baseEvent?.end_day || toISO(newDate),
         start_time: baseEvent?.start_time || '',
         end_time: baseEvent?.end_time || '',
         copy: false,
@@ -716,12 +737,22 @@ const createCopyByEventWithData = (event) => {
 
     let cursor = new Date(event.day);
     const createdEvents = [];
+    const spanDays = (() => {
+        try {
+            const d1 = new Date(event.day);
+            const d2 = new Date(event.end_day ?? event.day);
+            return Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+        } catch { return 0; }
+    })();
 
     for (let i = 0; i < event.copyCount; i++) {
         if (event.copyType.type === 'daily') cursor.setDate(cursor.getDate() + 1);
         else if (event.copyType.type === 'weekly') cursor.setDate(cursor.getDate() + 7);
         else if (event.copyType.type === 'monthly') cursor.setMonth(cursor.getMonth() + 1);
         else if (event.copyType.type === 'same_day') cursor = new Date(event.day);
+
+        const endCursor = new Date(cursor);
+        endCursor.setDate(endCursor.getDate() + spanDays);
 
         const clone = {
             index: events.value.length + 1,
@@ -730,6 +761,7 @@ const createCopyByEventWithData = (event) => {
             name: event.name,
             room: event.room,
             day: toISO(cursor),
+            end_day: toISO(endCursor),
             start_time: event.start_time,
             end_time: event.end_time,
             copy: false,
@@ -747,6 +779,12 @@ const createCopyByEventWithData = (event) => {
     event.copyType = copyTypes.value[0];
 
     // Only send request if we have events to create
+    if (props.isInModal) {
+        // In modal: append copies locally so the user sees them immediately
+        events.value.push(...createdEvents);
+        return;
+    }
+
     if (createdEvents.length > 0 && !props.isInModal) {
         /*router.post(route('events.bulk.store', {project: props.project}), { events: createdEvents }, {
             preserveState: false,
@@ -777,9 +815,13 @@ const submit = () => {
         invalidEvents.value.forEach(e => e.nameError = true);
         return;
     }
-    showEvents = false;
+    showEvents.value = false;
     axios.post(route('events.bulk.store', {project: props.project}), { events: events.value })
-        .then(() => { emits('closed'); });
+        .then(() => { emits('closed'); })
+        .catch((e) => {
+            console.error('Bulk create failed', e);
+            showEvents.value = true;
+        });
 };
 
 const updateUserSortId = (id) => {
@@ -834,6 +876,10 @@ const useProjectTimePeriodAndRedirect = () => {
 
 // Lifecycle
 onMounted(() => {
+    // persist showEndDate changes
+    watch(showEndDate, (v) => {
+        localStorage.setItem(showEndDateStorageKey.value, v ? 'true' : 'false');
+    });
     if (props.eventsInProject.length > 0) {
         // FIX: kein splice(0,1)
         props.eventsInProject.forEach(event => {
@@ -845,6 +891,7 @@ onMounted(() => {
                 name: event.eventName,
                 room: props.rooms.find(room => room.id === event.room_id),
                 day: event.event_date_without_time.start_clear,
+                end_day: event.event_date_without_time.end_clear ?? event.event_date_without_time.end_clear,
                 start_time: !event.allDay ? (event.start_time_without_day || '') : '',
                 end_time: !event.allDay ? (event.end_time_without_day || '') : '',
                 copy: false,

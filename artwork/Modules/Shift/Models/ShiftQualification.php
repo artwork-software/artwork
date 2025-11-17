@@ -34,27 +34,6 @@ class ShiftQualification extends Model
         'available' => 'boolean'
     ];
 
-    public function users(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(User::class, 'user_shift_qualifications')
-            ->using(UserShiftQualification::class);
-    }
-
-    public function freelancers(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(Freelancer::class, 'freelancer_shift_qualifications')
-            ->using(FreelancerShiftQualification::class);
-    }
-
-    public function serviceProviders(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(ServiceProvider::class, 'service_provider_shift_qualifications')
-            ->using(ServiceProviderShiftQualification::class);
-    }
-
     public function shiftsQualifications(): HasMany
     {
         return $this->hasMany(ShiftsQualifications::class);
@@ -78,5 +57,36 @@ class ShiftQualification extends Model
     public function scopeMasterQualification(Builder $builder): Builder
     {
         return $builder->where('name', 'Meister');
+    }
+
+    public function qualifiables(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\User\Models\User::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'shift_qualification_id',
+            'qualifiable_id'
+        )->withPivot('craft_id');
+    }
+    public function freelancersMorph(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\Freelancer\Models\Freelancer::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'shift_qualification_id',
+            'qualifiable_id'
+        )->withPivot('craft_id');
+    }
+    public function serviceProvidersMorph(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(
+            \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+            'qualifiable',
+            'shift_qualifiables',
+            'shift_qualification_id',
+            'qualifiable_id'
+        )->withPivot('craft_id');
     }
 }

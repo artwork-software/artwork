@@ -1,0 +1,366 @@
+{
+  "name": "Comprehensive Shift Rules Management Workflow",
+  "description": "Vollständiger Workflow für die Verwaltung und Bearbeitung von Schicht-Regelverstößen mit allen 6 Hebel-Typen",
+  "version": "1.0",
+  "type": "shift_rule_management",
+  "initial_place": "pending_validation",
+  "places": [
+    {
+      "name": "pending_validation",
+      "type": "start",
+      "label": "Validierung ausstehend",
+      "description": "Regelverstoß wurde erkannt und wartet auf Validierung",
+      "color": "#fbbf24"
+    },
+    {
+      "name": "validated",
+      "type": "intermediate",
+      "label": "Validiert",
+      "description": "Regelverstoß wurde validiert und muss bearbeitet werden",
+      "color": "#f59e0b"
+    },
+    {
+      "name": "in_review",
+      "type": "intermediate",
+      "label": "In Bearbeitung",
+      "description": "Regelverstoß wird gerade bearbeitet",
+      "color": "#3b82f6"
+    },
+    {
+      "name": "resolved",
+      "type": "end",
+      "label": "Gelöst",
+      "description": "Regelverstoß wurde erfolgreich gelöst",
+      "color": "#10b981"
+    },
+    {
+      "name": "dismissed",
+      "type": "end",
+      "label": "Verworfen",
+      "description": "Regelverstoß wurde als ungültig verworfen",
+      "color": "#6b7280"
+    },
+    {
+      "name": "exception_granted",
+      "type": "end",
+      "label": "Ausnahme gewährt",
+      "description": "Ausnahme für diesen Regelverstoß wurde gewährt",
+      "color": "#8b5cf6"
+    }
+  ],
+  "transitions": [
+    {
+      "name": "validate_violation",
+      "label": "Verstoß validieren",
+      "from": ["pending_validation"],
+      "to": "validated",
+      "conditions": [
+        {
+          "type": "user_permission",
+          "permission": "validate_shift_rule_violations"
+        }
+      ],
+      "actions": [
+        {
+          "action": "shift_rule_notification",
+          "parameters": {
+            "message": "Regelverstoß wurde validiert und muss bearbeitet werden",
+            "user_ids": "@shift_managers",
+            "notification_type": "validation_completed"
+          }
+        },
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "validated_at": "@now",
+              "validated_by": "@current_user_id",
+              "status": "validated"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_review",
+      "label": "Bearbeitung starten",
+      "from": ["validated"],
+      "to": "in_review",
+      "actions": [
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "review_started_at": "@now",
+              "review_started_by": "@current_user_id",
+              "status": "in_review"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "resolve_violation",
+      "label": "Verstoß lösen",
+      "from": ["validated", "in_review"],
+      "to": "resolved",
+      "required_fields": ["resolution_note"],
+      "actions": [
+        {
+          "action": "shift_rule_notification",
+          "parameters": {
+            "message": "Regelverstoß wurde erfolgreich gelöst",
+            "user_ids": ["@reporter_id", "@affected_user_id"],
+            "notification_type": "violation_resolved"
+          }
+        },
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "resolved_at": "@now",
+              "resolved_by": "@current_user_id",
+              "resolution_note": "@input.resolution_note",
+              "status": "resolved"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dismiss_violation",
+      "label": "Verstoß verwerfen",
+      "from": ["pending_validation", "validated", "in_review"],
+      "to": "dismissed",
+      "required_fields": ["dismissal_reason"],
+      "actions": [
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "dismissed_at": "@now",
+              "dismissed_by": "@current_user_id",
+              "dismissal_reason": "@input.dismissal_reason",
+              "status": "dismissed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "grant_exception",
+      "label": "Ausnahme gewähren",
+      "from": ["validated", "in_review"],
+      "to": "exception_granted",
+      "required_fields": ["exception_reason", "exception_duration"],
+      "conditions": [
+        {
+          "type": "user_permission",
+          "permission": "grant_shift_rule_exceptions"
+        }
+      ],
+      "actions": [
+        {
+          "action": "shift_rule_notification",
+          "parameters": {
+            "message": "Ausnahme für Regelverstoß wurde gewährt",
+            "user_ids": ["@affected_user_id"],
+            "notification_type": "exception_granted"
+          }
+        },
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "exception_granted_at": "@now",
+              "exception_granted_by": "@current_user_id",
+              "exception_reason": "@input.exception_reason",
+              "exception_duration": "@input.exception_duration",
+              "status": "exception_granted"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reopen_for_review",
+      "label": "Zur erneuten Prüfung öffnen",
+      "from": ["dismissed"],
+      "to": "validated",
+      "conditions": [
+        {
+          "type": "user_permission",
+          "permission": "reopen_shift_rule_violations"
+        }
+      ],
+      "required_fields": ["reopen_reason"],
+      "actions": [
+        {
+          "action": "update_data",
+          "parameters": {
+            "data": {
+              "reopened_at": "@now",
+              "reopened_by": "@current_user_id",
+              "reopen_reason": "@input.reopen_reason",
+              "status": "validated"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "@shift_managers": {
+      "type": "user_group",
+      "resolver": "getUsersByRole",
+      "parameters": ["shift_manager"]
+    },
+    "@reporter_id": {
+      "type": "model_attribute",
+      "path": "subject.reported_by"
+    },
+    "@affected_user_id": {
+      "type": "model_attribute", 
+      "path": "subject.subject_id"
+    },
+    "@current_user_id": {
+      "type": "context",
+      "path": "auth.user.id"
+    },
+    "@now": {
+      "type": "timestamp",
+      "format": "Y-m-d H:i:s"
+    },
+    "@input.resolution_note": {
+      "type": "user_input",
+      "field": "resolution_note"
+    },
+    "@input.dismissal_reason": {
+      "type": "user_input",
+      "field": "dismissal_reason"
+    },
+    "@input.exception_reason": {
+      "type": "user_input",
+      "field": "exception_reason"
+    },
+    "@input.exception_duration": {
+      "type": "user_input",
+      "field": "exception_duration"
+    },
+    "@input.reopen_reason": {
+      "type": "user_input",
+      "field": "reopen_reason"
+    }
+  },
+  "rule_types": {
+    "max_working_hours_on_day": {
+      "name": "Tagesmaximum an Stunden",
+      "description": "Überprüft, ob die geplanten Arbeitsstunden pro Tag das Maximum überschreiten",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\MaxWorkingHoursOnDayRule",
+      "default_value": 8,
+      "unit": "Stunden",
+      "severity": "high",
+      "automatic_notification": true
+    },
+    "max_consecutive_working_days": {
+      "name": "Maximale Tage in Folge arbeiten",
+      "description": "Überprüft die maximale Anzahl aufeinanderfolgender Arbeitstage",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\MaxConsecutiveWorkingDaysRule",
+      "default_value": 5,
+      "unit": "Tage",
+      "severity": "high",
+      "automatic_notification": true
+    },
+    "weekly_max_hours": {
+      "name": "Wochenmaximum an Stunden",
+      "description": "Überprüft das Wochenmaximum an Arbeitsstunden",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\WeeklyMaxHoursRule",
+      "default_value": 40,
+      "unit": "Stunden/Woche",
+      "severity": "high",
+      "automatic_notification": true
+    },
+    "rest_time_before_workday": {
+      "name": "Ruhezeit vor Werktag",
+      "description": "Überprüft die Mindest-Ruhezeit vor Werktagen",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\RestTimeBeforeWorkdayRule",
+      "default_value": 8,
+      "unit": "Stunden",
+      "severity": "high",
+      "automatic_notification": true
+    },
+    "rest_time_before_holiday": {
+      "name": "Ruhezeit vor Sonder-/Sonntag",
+      "description": "Überprüft die Mindest-Ruhezeit vor Sonn- und Feiertagen",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\RestTimeBeforeHolidayRule",
+      "default_value": 12,
+      "unit": "Stunden",
+      "severity": "medium",
+      "automatic_notification": true
+    },
+    "min_days_before_commit": {
+      "name": "Mindesttage bis zur Verbindlich-Schaltung",
+      "description": "Überprüft die Mindesttage bis zur Verbindlich-Schaltung einer Schicht",
+      "class": "Artwork\\Modules\\Workflow\\Rules\\MinDaysBeforeCommitRule",
+      "default_value": 14,
+      "unit": "Tage",
+      "severity": "medium",
+      "automatic_notification": true,
+      "global_rule": true
+    }
+  },
+  "notification_templates": {
+    "validation_completed": {
+      "email": {
+        "subject": "Schicht-Regelverstoß validiert",
+        "template": "shift_rule_validation_completed"
+      },
+      "database": {
+        "type": "shift_rule_validation",
+        "icon": "exclamation-triangle",
+        "color": "yellow"
+      }
+    },
+    "violation_resolved": {
+      "email": {
+        "subject": "Schicht-Regelverstoß gelöst",
+        "template": "shift_rule_violation_resolved"
+      },
+      "database": {
+        "type": "shift_rule_resolved",
+        "icon": "check-circle",
+        "color": "green"
+      }
+    },
+    "exception_granted": {
+      "email": {
+        "subject": "Ausnahme für Schicht-Regelverstoß gewährt",
+        "template": "shift_rule_exception_granted"
+      },
+      "database": {
+        "type": "shift_rule_exception",
+        "icon": "shield-check",
+        "color": "purple"
+      }
+    }
+  },
+  "automation": {
+    "daily_validation": {
+      "schedule": "0 2 * * *",
+      "description": "Täglich um 2 Uhr nachts Regeln für die nächsten 14 Tage validieren",
+      "job": "Artwork\\Modules\\Workflow\\Jobs\\ValidateRulesJob",
+      "parameters": {
+        "days_ahead": 14,
+        "auto_create_workflows": true
+      }
+    },
+    "notification_digest": {
+      "schedule": "0 8 * * 1-5",
+      "description": "Wochentags um 8 Uhr Zusammenfassung offener Regelverstöße senden",
+      "job": "Artwork\\Modules\\Workflow\\Jobs\\SendViolationDigestJob",
+      "parameters": {
+        "recipient_roles": ["shift_manager", "admin"]
+      }
+    }
+  }
+}

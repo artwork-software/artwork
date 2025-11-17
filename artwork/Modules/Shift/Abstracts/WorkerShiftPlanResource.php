@@ -75,6 +75,7 @@ class WorkerShiftPlanResource extends JsonResource
                     'eventTypeAbbreviation' => $event?->getAttribute('event_type')->getAttribute('abbreviation'),
                     'craft' => $shift->getAttribute('craft'),
                     'isCommitted' => $shift->getAttribute('is_committed'),
+                    'shiftGroup' => $shift->getAttribute('shiftGroup'),
                 ];
             }
         );

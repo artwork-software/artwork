@@ -231,6 +231,7 @@ class WorkingHourService
         // Eager load all necessary relationships for all workers at once
         $workers = $this->userRepository->getWorkers()->load([
             'shifts',
+            'shifts.shiftGroup',
             'individualTimes' => function ($query) use ($startDate, $endDate): void {
                 $query->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },

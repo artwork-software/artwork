@@ -42,6 +42,11 @@ class CraftController extends Controller
             $craft->craftInventoryPlaner()->sync($craftStoreRequest->users_for_inventory);
         }
 
+
+        if ($craftStoreRequest->has('qualifications')) {
+            $craft->qualifications()->sync($craftStoreRequest->qualifications);
+        }
+
         $craft->update([
             'position' => Craft::max('position') + 1
         ]);
@@ -52,6 +57,8 @@ class CraftController extends Controller
     public function update(CraftUpdateRequest $craftUpdateRequest, Craft $craft): RedirectResponse
     {
         $this->craftService->updateByRequest($craftUpdateRequest, $craft);
+
+
 
         return Redirect::back();
     }

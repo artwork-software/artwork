@@ -32,6 +32,11 @@ class IndividualTimeService
             throw new ModelNotFoundException("Model does not support individual times");
         }
 
+        if (!$individualTime) {
+            // Defensive guard: do not call update on null, signal a not-found case to the caller
+            throw new ModelNotFoundException("Individual time not found for update");
+        }
+
         if ($startTime && $endTime) {
             $startDateForConvert = Carbon::parse($date . ' ' . $startTime);
 

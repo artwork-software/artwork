@@ -118,7 +118,7 @@
                                     <div class="card white p-5 text-xs font-lexend col-span-2">
                                         <div class="space-y-2" v-if="room.content[day.fullDay]?.shifts?.length > 0">
                                             <div v-for="shift in filterShiftsByCraft(room.content[day.fullDay]?.shifts)" :key="shift.id">
-                                                <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :crafts="crafts"/>
+                                                <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :first_project_calendar_tab_id="first_project_calendar_tab_id" :crafts="crafts"/>
                                             </div>
                                         </div>
                                         <div v-else>

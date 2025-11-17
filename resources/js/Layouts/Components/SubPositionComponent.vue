@@ -116,7 +116,7 @@
                                             >
                                                 <div
                                                     class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
-                                                    @click="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
                                                             {{ account.account_number }}
@@ -140,7 +140,7 @@
                                             >
                                                 <div
                                                     class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
-                                                    @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
                                                             {{ cost_unit.cost_unit_number }}

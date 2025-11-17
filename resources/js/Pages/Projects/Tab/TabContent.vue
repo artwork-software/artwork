@@ -1,7 +1,7 @@
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
-            <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
+            <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="removeML(component.component?.type)">
                 <Component
                     v-if="canSeeComponent(component.component)"
                     :is="componentMapping[component.component?.type]"
@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <div class="px-3">
-                    <div v-for="component in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
+                    <div v-for="(component, sidx) in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar" :key="component?.id ?? component?.component?.id ?? sidx">
                         <Component
                             v-if="canSeeComponent(component.component)"
                             :is="componentMapping[component.component?.type]"

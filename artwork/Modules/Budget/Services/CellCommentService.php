@@ -11,6 +11,11 @@ readonly class CellCommentService
     {
     }
 
+    public function delete(CellComment $cellComment): void
+    {
+        $this->cellCommentRepository->delete($cellComment);
+    }
+
     public function forceDelete(CellComment $cellComment): void
     {
         $this->cellCommentRepository->forceDelete($cellComment);

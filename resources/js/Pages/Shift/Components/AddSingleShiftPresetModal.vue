@@ -60,12 +60,31 @@ function normalizePresetQualifications(preset: any): Array<{ id: number; quantit
     })
 }
 
+/**
+ * Normalisiert Zeitangaben auf das Format HH:MM (ohne Sekunden).
+ * Akzeptiert Werte wie "08:00:00", "8:00", "08:00" oder nur "8" und gibt immer "HH:MM" zurück.
+ */
+function normalizeTimeToHHMM(value?: string | null): string {
+    if (!value) return ''
+    const v = String(value).trim()
+    // Versuche HH:MM(:SS)
+    const m = v.match(/^(\d{1,2}):(\d{2})/)
+    if (m) {
+        const hh = String(Math.min(23, Math.max(0, parseInt(m[1], 10)))).padStart(2, '0')
+        const mm = String(Math.min(59, Math.max(0, parseInt(m[2], 10)))).padStart(2, '0')
+        return `${hh}:${mm}`
+    }
+    // Fallback: nur Stunde angegeben
+    const hh = String(Math.min(23, Math.max(0, parseInt(v, 10) || 0))).padStart(2, '0')
+    return `${hh}:00`
+}
+
 const selectedCraft = ref(props.crafts.find(c => c.id === props.preset?.craft_id) || null)
 
 const form = useForm({
     name: props.preset?.name ?? '',
-    start_time: props.preset?.start_time ?? '',
-    end_time: props.preset?.end_time ?? '',
+    start_time: normalizeTimeToHHMM(props.preset?.start_time ?? ''),
+    end_time: normalizeTimeToHHMM(props.preset?.end_time ?? ''),
     break_duration: props.preset?.break_duration ?? 0,
     craft_id: props.preset?.craft_id ?? '',
     description: props.preset?.description ?? '',
@@ -78,8 +97,8 @@ watch(
     (val) => {
         if (!val) return
         form.name = val?.name ?? ''
-        form.start_time = val?.start_time ?? ''
-        form.end_time = val?.end_time ?? ''
+        form.start_time = normalizeTimeToHHMM(val?.start_time ?? '')
+        form.end_time = normalizeTimeToHHMM(val?.end_time ?? '')
         form.break_duration = val?.break_duration ?? 0
         form.craft_id = val?.craft_id ?? ''
         form.description = val?.description ?? ''
@@ -156,8 +175,8 @@ function closeModal() {
                     <BaseInput v-model="form.name" :label="$t('Name')" id="name" required class="w-full" />
 
                     <div class="grid grid-cols-2 gap-4">
-                        <BaseInput v-model="form.start_time" :label="$t('Start-Time')" type="time" id="start_time" required />
-                        <BaseInput v-model="form.end_time" :label="$t('End-Time')" type="time" id="end_time" required />
+                        <BaseInput v-model="form.start_time" :label="$t('Start-Time')" type="time" id="start_time" :step="60" required />
+                        <BaseInput v-model="form.end_time" :label="$t('End-Time')" type="time" id="end_time" :step="60" required />
                     </div>
 
                     <BaseInput

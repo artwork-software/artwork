@@ -276,7 +276,7 @@ const props = defineProps({
     filterOptions: Object,
     allShiftsCommitted: Boolean,
     personalFilters: Array,
-    rooms: Array,
+    rooms: Object,
     user_filters: Object,
     crafts: Array,
     projectNameUsedForProjectTimePeriod: String,

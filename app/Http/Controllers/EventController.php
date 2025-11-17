@@ -502,6 +502,74 @@ class EventController extends Controller
         ]);
     }
 
+    public function shiftPlanEventAPI(Request $request): JsonResponse
+    {
+
+        if ($request->get('projectId')) {
+            $project = $this->projectService->findById($request->get('projectId'));
+        } else {
+            $project = null;
+        }
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+
+        [$startDate, $endDate] = $this->calendarDataService
+            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+        );
+
+        $period = $this->calendarDataService->createCalendarPeriodDto(
+            $startDate,
+            $endDate,
+            $user,
+        );
+
+        $this->shiftCalendarService->filterRoomsEventsAnShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings,
+            $user->getAttribute('daily_view')
+        );
+
+        $this->shiftCalendarService->filterRoomsEventsAnShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings,
+            $user->getAttribute('daily_view')
+        );
+
+        $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate,
+        );
+
+
+        if ($userCalendarSettings->hide_unoccupied_days) {
+            $result = $this->calendarDataService->hideUnoccupiedDays($calendarData, $period);
+            $calendarData = $result['calendarData'];
+            $period       = $result['period'];
+        }
+
+        return response()->json([
+            'days' => $period,
+            'shiftPlan' => $calendarData->rooms,
+        ]);
+    }
+
+
     public function viewShiftPlan(?Project $project = null): Response
     {
         /** @var User $user */
@@ -537,14 +605,6 @@ class EventController extends Controller
             ]);
         }
 
-
-
-        $period = $this->calendarDataService->createCalendarPeriodDto(
-            $startDate,
-            $endDate,
-            $user,
-        );
-
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
             $userCalendarSettings,
@@ -552,39 +612,14 @@ class EventController extends Controller
             $endDate,
         );
 
-        $this->shiftCalendarService->filterRoomsEventsAnShifts(
-            $rooms,
-            $userCalendarFilter,
-            $startDate,
-            $endDate,
-            $userCalendarSettings,
-            $user->getAttribute('daily_view')
-        );
-
-
-        $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
-            $rooms,
-            $startDate,
-            $endDate,
-        );
-
-
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
-
         if ($user->getAttribute('daily_view')) {
             $renderViewName = 'Shifts/ShiftPlanDailyView';
         }
-
-        if ($userCalendarSettings->hide_unoccupied_days) {
-            $result = $this->calendarDataService->hideUnoccupiedDays($calendarData, $period);
-            $calendarData = $result['calendarData'];
-            $period       = $result['period'];
-        }
-
 
         return Inertia::render($renderViewName, [
             'history' => $this->shiftCalendarService->getEventShiftsHistoryChanges(),
@@ -594,14 +629,14 @@ class EventController extends Controller
                 'managingServiceProviders',
                 'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
-            'rooms' => $rooms,
+            //'rooms' => $rooms,
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'days' => $period,
-            'shiftPlan' => $calendarData->rooms,
+            //'days' => $period,
+            //'shiftPlan' => $calendarData->rooms,
             'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
@@ -614,6 +649,7 @@ class EventController extends Controller
                 $this->projectService->findById(
                     $userCalendarSettings->getAttribute('time_period_project_id')
                 )->name : null,
+            'projectId' => $project->id ?? null,
             'shiftPlanWorkerSortEnums' => array_map(
                 static function (ShiftPlanWorkerSortEnum $enum): string {
                     return $enum->name;

@@ -1,7 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close', { saved: false })">
-        <ModalHeader title="Mehrfacheintrag"  />
-
+    <ArtworkBaseModal @close="$emit('close', { saved: false })" title="Mehrfacheintrag"  description="">
         <div v-show="showSaveSuccess" class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg">
             {{ $t('Saved. The changes have been successfully applied.') }}
         </div>
@@ -64,7 +62,7 @@
         <div class="flex justify-center mt-5">
             <BaseUIButton :label="$t('Save')" is-add-button @click="submitForm" :disabled="multiEditCellForm.processing" />
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
@@ -82,6 +80,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

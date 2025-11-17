@@ -34,7 +34,8 @@
             <div v-if="!isDaily && !atAGlance">
                 <div class="w-max -ml-3">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
-                        <CalendarHeader :rooms="rooms" :filtered-events-length="eventsWithoutRoomLen" />
+                        <!-- Kopfzeile soll exakt dieselbe Raumreihenfolge/-filterung nutzen wie das Grid -->
+                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" />
                         <div
                             class="w-fit events-by-days-container"
                             :class="[isFullscreen ? 'mt-4' : '']"

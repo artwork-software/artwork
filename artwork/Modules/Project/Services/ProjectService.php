@@ -150,11 +150,10 @@ class ProjectService
                     $projectFilters?->contains('showOnlyMyProjects'),
                     function (Builder $builder): void {
                         $userId = $this->userService->getAuthUserId();
-                        $builder->where(function ($query) use ($userId) {
-                            $query->where('user_id', $userId)
-                                  ->orWhereHas('users', function ($query) use ($userId) {
-                                      $query->where('user_id', $userId);
-                                  });
+                        // Only show projects where the auth user is part of the project team.
+                        // The creator (user_id) must be ignored completely for this filter.
+                        $builder->whereHas('users', function ($query) use ($userId) {
+                            $query->where('user_id', $userId);
                         });
                     }
                 )

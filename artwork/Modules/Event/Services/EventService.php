@@ -1767,7 +1767,15 @@ readonly class EventService
         SupportCollection $data,
         Event $event,
     ): void {
-        $day = $this->parseDayInput($data['day']);
+        // Day may be omitted from the UI payload when only times are changed.
+        // In that case, fall back to the event's existing start date to avoid TypeError
+        // when parseDayInput receives null.
+        $dayInput = $data['day'] ?? null;
+        if ($dayInput === null || $dayInput === '') {
+            $day = Carbon::parse($event->start_time)->copy()->startOfDay();
+        } else {
+            $day = $this->parseDayInput($dayInput);
+        }
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $data['start_time'] ?? null,

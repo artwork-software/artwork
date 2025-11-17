@@ -165,8 +165,7 @@
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"
-            :project_history="projectHistoryToDisplay"
-            :access_budget="projectBudgetAccess"
+            :project_id="selectedProjectId"
         ></project-history-component>
 
 
@@ -204,8 +203,7 @@ export default {
     data() {
         return {
             showProjectHistory: false,
-            projectHistoryToDisplay: [],
-            projectBudgetAccess: {},
+            selectedProjectId: null,
             showSearchbar: false,
             searchText: '',
         }
@@ -222,13 +220,12 @@ export default {
     },
     methods: {
         openProjectHistoryModal(project) {
-            this.projectHistoryToDisplay = project.project_history;
-            this.projectBudgetAccess = project.access_budget;
-            this.showProjectHistory = true;
+            this.selectedProjectId = project?.id ?? null;
+            this.showProjectHistory = !!this.selectedProjectId;
         },
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
-            this.projectHistoryToDisplay = [];
+            this.selectedProjectId = null;
         },
         closeSearchbar() {
             this.showSearchbar = false

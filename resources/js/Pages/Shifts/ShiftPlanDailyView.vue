@@ -177,34 +177,32 @@
 
     </div>
 </template>
-<script setup>
-
+<script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import SingleEventInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue";
-import {ref, provide, onMounted} from "vue";
+import { ref, provide, onMounted, watch } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {can} from "laravel-permission-to-vuejs";
+import { can } from "laravel-permission-to-vuejs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {Switch} from "@headlessui/vue";
 import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import {
     IconAlertSquareRounded,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
     IconX,
-    IconCalendarPlus, IconCalendarUser
+    IconCalendarPlus,
+    IconCalendarUser
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import axios from "axios";
 
 const props = defineProps({
     days: {
@@ -218,30 +216,30 @@ const props = defineProps({
         default: () => []
     },
     shiftPlan: {
-        type: Object,
+        type: [Object, Array],
         required: true,
         default: () => ({})
     },
     shiftQualifications: {
-        type: Object,
+        type: [Object, Array],
         required: true,
         default: () => ({})
     },
     crafts: {
-        type: Object,
+        type: [Object, Array],
         required: true,
         default: () => ({})
     },
     rooms: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventStatuses: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventTypes: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     event_properties: {
@@ -274,22 +272,94 @@ const props = defineProps({
     }
 })
 
+/**
+ * Lokale State-Refs – damit wir per API nachladen können
+ */
 const showCalendarWarning = ref(props.calendarWarningText)
 
+// Tage lokal spiegeln, damit wir sie überschreiben können
+const days = ref<Array<any>>(props.days ?? [])
+
+// shiftPlanCopy: intern verwendete Version des Schichtplans
+const shiftPlanCopy = ref<any[]>(
+    Array.isArray(props.shiftPlan)
+        ? props.shiftPlan
+        : Object.values(props.shiftPlan ?? {})
+)
+
 const shiftToEdit = ref(null);
-const roomForShiftAdd = ref(null);
-const dayForShiftAdd = ref(null);
+const roomForShiftAdd = ref<number | null>(null);
+const dayForShiftAdd = ref<string | null>(null);
 const showAddShiftModal = ref(false);
-const eventToEdit = ref(false);
-const wantedRoom = ref(null);
-const wantedDate = ref(null);
+const eventToEdit = ref<any | boolean>(false);
+const wantedRoom = ref<number | null>(null);
+const wantedDate = ref<string | null>(null);
 const showEventComponent = ref(false);
 const isPlanning = ref(false);
-const roomCollisions = ref([]);
-const shiftPlanCopy = ref(props.shiftPlan ? props.shiftPlan : {});
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const roomCollisions = ref<any[]>([]);
+const dailyViewMode = ref<boolean>(usePage().props.auth.user.daily_view ?? false);
+
 provide('event_properties', props.event_properties)
-const openAddShiftForRoomAndDay = (day, roomId) => {
+
+/**
+ * Initiales Laden des Tages-Schichtplans über API, wenn Props leer sind
+ */
+const initializeDailyShiftPlan = async () => {
+    const hasInitialDays = Array.isArray(props.days) && props.days.length > 0
+    const hasInitialShiftPlan =
+        props.shiftPlan &&
+        (Array.isArray(props.shiftPlan)
+            ? props.shiftPlan.length > 0
+            : Object.keys(props.shiftPlan).length > 0)
+
+    if (!hasInitialDays || !hasInitialShiftPlan) {
+        const { data } = await axios.get(route('shift.plan.all'), {
+            params: {
+                start_date: props.dateValue[0],
+                end_date: props.dateValue[1],
+                // falls du hier projektabhängig filtern willst, kannst du das anpassen:
+                projectId: usePage().props.currentProject?.id ?? null
+            }
+        })
+
+        days.value = data.days ?? []
+        shiftPlanCopy.value = Array.isArray(data.shiftPlan)
+            ? data.shiftPlan
+            : Object.values(data.shiftPlan ?? {})
+    } else {
+        // Props in lokale Refs spiegeln
+        days.value = [...(props.days ?? [])]
+        shiftPlanCopy.value = Array.isArray(props.shiftPlan)
+            ? [...props.shiftPlan]
+            : Object.values(props.shiftPlan ?? {})
+    }
+}
+
+/**
+ * Reaktiv bleiben, wenn Inertia neue Days/ShiftPlan via Props liefert
+ */
+watch(
+    () => props.days,
+    (v) => {
+        days.value = v ?? []
+    },
+    { deep: true }
+)
+
+watch(
+    () => props.shiftPlan,
+    (v) => {
+        shiftPlanCopy.value = Array.isArray(v)
+            ? [...v]
+            : Object.values(v ?? {})
+    },
+    { deep: true }
+)
+
+/**
+ * Modale / Aktionen
+ */
+const openAddShiftForRoomAndDay = (day: string, roomId: number) => {
     shiftToEdit.value = null;
     roomForShiftAdd.value = roomId;
     dayForShiftAdd.value = day;
@@ -303,7 +373,7 @@ const closeAddShiftModal = () => {
     dayForShiftAdd.value = null;
 }
 
-const openNewEventModalWithBaseData = (day, roomId) => {
+const openNewEventModalWithBaseData = (day: string, roomId: number) => {
     eventToEdit.value = false
     wantedRoom.value = roomId;
     wantedDate.value = day;
@@ -317,68 +387,65 @@ const eventComponentClosed = () => {
     wantedDate.value = null;
 };
 
-const  changeDailyViewMode = () => {
-    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
-    }, {
-        preserveScroll: false,
-        preserveState: false
-    })
+/**
+ * Daily View Mode
+ */
+const changeDailyViewMode = () => {
+    router.patch(
+        route('user.update.daily_view', usePage().props.auth.user.id),
+        { daily_view: dailyViewMode.value },
+        {
+            preserveScroll: false,
+            preserveState: false
+        }
+    )
 };
 
-const filterShiftsByCraft = (shifts) => {
+const filterShiftsByCraft = (shifts: any[]) => {
     if (!shifts) return [];
 
-    // If craft_ids is populated in user_filters, filter shifts by craft
     if (props.user_filters.craft_ids && props.user_filters.craft_ids.length > 0) {
         return shifts.filter(shift => {
-            console.log(shift);
-            // Check if the shift's craft_id is in the user_filters.craft_ids array
             return props.user_filters.craft_ids.includes(shift.craft?.id);
         });
     }
 
-    // If no craft_ids filter is set, return all shifts
     return shifts;
 };
 
-// Daily view mode management
-const changeDailyViewModeValue = (newValue) => {
+const changeDailyViewModeValue = (newValue: boolean) => {
     dailyViewMode.value = newValue;
-    router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
-    }, {
-        preserveScroll: false,
-        preserveState: false
-    });
+    router.patch(
+        route('user.update.daily_view', usePage().props.auth.user.id),
+        { daily_view: dailyViewMode.value },
+        {
+            preserveScroll: false,
+            preserveState: false
+        }
+    );
 };
 
-// Shortcut functions for the three icons (adapted from ShiftPlanFunctionBar)
+/**
+ * Shortcuts (Heute / aktuelle Woche / Monat)
+ */
 const jumpToToday = () => {
     const today = new Date().toISOString().slice(0, 10);
 
-    // Switch to daily mode if not already in daily mode
     if (!dailyViewMode.value) {
         changeDailyViewModeValue(true);
-        // Update dates after mode change
         setTimeout(() => {
-            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-                start_date: today,
-                end_date: today,
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            });
+            router.patch(
+                route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+                { start_date: today, end_date: today },
+                { preserveScroll: true, preserveState: false }
+            );
         }, 100);
     } else {
-        // If already in daily mode, just update the dates
-        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-            start_date: today,
-            end_date: today,
-        }, {
-            preserveScroll: true,
-            preserveState: false
-        });
+        router.patch(
+            route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+            { start_date: today, end_date: today },
+            { preserveScroll: true, preserveState: false }
+        );
     }
 };
 
@@ -387,22 +454,24 @@ const jumpToCurrentWeek = () => {
     const currentWeekStart = new Date(today);
     const currentWeekEnd = new Date(today);
 
-    // Calculate start of week (Monday)
     const dayOfWeek = today.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     currentWeekStart.setDate(today.getDate() - daysToMonday);
 
-    // Calculate end of week (Sunday)
     const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
     currentWeekEnd.setDate(today.getDate() + daysToSunday);
 
-    router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-        start_date: currentWeekStart.toISOString().slice(0, 10),
-        end_date: currentWeekEnd.toISOString().slice(0, 10),
-    }, {
-        preserveScroll: true,
-        preserveState: false
-    });
+    router.patch(
+        route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+        {
+            start_date: currentWeekStart.toISOString().slice(0, 10),
+            end_date: currentWeekEnd.toISOString().slice(0, 10),
+        },
+        {
+            preserveScroll: true,
+            preserveState: false
+        }
+    );
 };
 
 const jumpToCurrentMonth = () => {
@@ -410,41 +479,50 @@ const jumpToCurrentMonth = () => {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    // Switch to normal mode (not daily mode) if in daily mode (month is longer than 7 days)
     if (dailyViewMode.value) {
         changeDailyViewModeValue(false);
-        // Update dates after mode change
         setTimeout(() => {
-            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-                start_date: monthStart.toISOString().slice(0, 10),
-                end_date: monthEnd.toISOString().slice(0, 10),
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            });
+            router.patch(
+                route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+                {
+                    start_date: monthStart.toISOString().slice(0, 10),
+                    end_date: monthEnd.toISOString().slice(0, 10),
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: false
+                }
+            );
         }, 100);
     } else {
-        // If already in normal mode, just update the dates
-        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-            start_date: monthStart.toISOString().slice(0, 10),
-            end_date: monthEnd.toISOString().slice(0, 10),
-        }, {
-            preserveScroll: true,
-            preserveState: false
-        });
+        router.patch(
+            route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+            {
+                start_date: monthStart.toISOString().slice(0, 10),
+                end_date: monthEnd.toISOString().slice(0, 10),
+            },
+            {
+                preserveScroll: true,
+                preserveState: false
+            }
+        );
     }
 };
 
-
-onMounted(() => {
+onMounted(async () => {
     setTimeout(() => {
         showCalendarWarning.value = ''
     }, 5000)
 
+    // Schichtplan & Tage initial laden (falls leer)
+    await initializeDailyShiftPlan()
+
+    // Listener initialisieren – bekommt die ref auf shiftPlanCopy
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy);
     ShiftCalendarListener.init();
 })
 </script>
+
 
 <style scoped>
 

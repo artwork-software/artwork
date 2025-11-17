@@ -31,7 +31,8 @@ const props = defineProps<{
     component?: any
 }>()
 
-const documents = ref<ProjectFile[]>(props.project?.project_files_tab ?? [])
+const initialDocuments = props.project?.project_files_tab ?? []
+const documents = ref<ProjectFile[]>([...initialDocuments])
 const documentForm = reactive<{ errors: Record<string, string[] | string> }>({ errors: {} })
 const uploadDocumentFeedback = ref('')
 const deletingFile = ref(false)
@@ -46,19 +47,76 @@ const page = usePage()
 const userId = computed(() => (page.props as any)?.auth?.user?.id ?? null)
 const { appContext } = getCurrentInstance()!
 const $role = (appContext?.config?.globalProperties as any)?.$role as ((name: string) => boolean) | undefined
+const remoteProjectWriteIds = ref<Array<number | string>>(props.projectWriteIds ?? [])
+const remoteProjectManagerIds = ref<Array<number | string>>(props.projectManagerIds ?? [])
+const effectiveProjectWriteIds = computed(
+    () => (remoteProjectWriteIds.value.length ? remoteProjectWriteIds.value : (props.projectWriteIds ?? []))
+)
+const effectiveProjectManagerIds = computed(
+    () => (remoteProjectManagerIds.value.length ? remoteProjectManagerIds.value : (props.projectManagerIds ?? []))
+)
 
 const canEdit = computed(() =>
-    !!props.canEditComponent || !!$role?.('artwork admin') || (props.projectWriteIds?.includes(userId.value) ?? false)
+    !!props.canEditComponent ||
+    !!$role?.('artwork admin') ||
+    (effectiveProjectWriteIds.value?.includes(userId.value ?? -1) ?? false)
 )
 const canEditFull = computed(() =>
-    canEdit.value || (props.projectManagerIds?.includes(userId.value) ?? false)
+    canEdit.value || (effectiveProjectManagerIds.value?.includes(userId.value ?? -1) ?? false)
 )
 
+const isLoadingDocuments = ref(false)
+const loadDocumentsError = ref('')
+
 onMounted(() => {
-    useProjectDocumentListener(documents.value, props.project.id).init()
+    if (props.project?.id) {
+        useProjectDocumentListener(documents.value, props.project.id).init()
+    }
 
     window.addEventListener('keydown', onKey);
 })
+
+watch(
+    () => [props.project?.id, props.component?.id],
+    () => {
+        fetchDocuments()
+    },
+    { immediate: true }
+)
+
+async function fetchDocuments() {
+    const projectId = props.project?.id
+    const componentInTabId = props.component?.id ?? (props.component)?.component_in_tab_id
+
+    if (!projectId || !componentInTabId) {
+        return
+    }
+
+    isLoadingDocuments.value = true
+    loadDocumentsError.value = ''
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.documents', { project: projectId, componentInTab: componentInTabId })
+        )
+        const fetchedDocuments = data?.documents ?? []
+        documents.value.splice(0, documents.value.length, ...fetchedDocuments)
+
+        if (Array.isArray(data?.projectWriteIds)) {
+            remoteProjectWriteIds.value = data.projectWriteIds
+        }
+
+        if (Array.isArray(data?.projectManagerIds)) {
+            remoteProjectManagerIds.value = data.projectManagerIds
+        }
+    } catch (error) {
+        console.error(error)
+        loadDocumentsError.value = (page.props as any)?.errors?.documents
+            ?? 'Unable to load project documents.'
+    } finally {
+        isLoadingDocuments.value = false
+    }
+}
 
 function selectNewFiles() { fileInputEl.value?.click() }
 async function uploadChosenDocuments(e: Event) {
@@ -86,6 +144,7 @@ async function validateTypeAndUpload(files: File[]) {
         try { await uploadDocumentToProject(f); uploadedCount.value++ } catch {}
     }
     isUploading.value = false
+    await fetchDocuments()
 }
 async function uploadDocumentToProject(file: File) {
     const formData = new FormData()
@@ -114,7 +173,10 @@ function closeConfirmDeleteModal() { deletingFile.value = false; selectedFile.va
 function deleteFile() {
     if (!selectedFile.value?.id) return
     router.delete(route('project_files.destroy', { project_file: selectedFile.value.id }), {
-        preserveScroll: true, preserveState: true, onFinish: closeConfirmDeleteModal
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: closeConfirmDeleteModal,
+        onSuccess: fetchDocuments
     })
 }
 
@@ -203,6 +265,12 @@ function closePreview() {
         <div class="flex items-center justify-between">
             <BasePageTitle title="Documents" description="Here you can upload and download documents for the project." />
             <InfoButtonComponent :component="component" />
+        </div>
+        <div v-if="loadDocumentsError" class="text-xs text-rose-600">
+            {{ loadDocumentsError }}
+        </div>
+        <div v-else-if="isLoadingDocuments" class="text-xs text-secondary">
+            {{ $t('Loading data...') }}
         </div>
 
         <!-- Errors -->

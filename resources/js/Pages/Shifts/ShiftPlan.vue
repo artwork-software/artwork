@@ -698,9 +698,6 @@ const { attach, detach } = useSyncedHorizontalScroll(
     { roomNameOffsetPx: 200 },
 )
 
-/**
- * IntersectionObserver für horizontales Monats-Lazy-Loading
- */
 const monthObserver = ref<IntersectionObserver | null>(null)
 const watchedMonths = new Map<Element, string>()
 
@@ -791,8 +788,6 @@ async function loadMonth(direction: LoadDirection) {
 
     const newDays = data.days ?? []
     const newRooms = data.shiftPlan ?? []
-
-    // Tage mergen – Dubletten vermeiden
     if (direction === 'next') {
         const existing = new Set(days.value.map(d => d.fullDay ?? d.withoutFormat))
         const toAdd = newDays.filter((d: any) => !existing.has(d.fullDay ?? d.withoutFormat))
@@ -803,7 +798,6 @@ async function loadMonth(direction: LoadDirection) {
         days.value = [...toAdd, ...days.value]
     }
 
-    // Räume + Schichten mergen
     const roomsById = new Map<number | string, any>()
 
     for (const r of rooms.value) {
@@ -819,9 +813,6 @@ async function loadMonth(direction: LoadDirection) {
             roomsById.set(id, nr)
             continue
         }
-
-        // TODO: falls du eine feinere Struktur hast (z.B. per Tag),
-        // hier entsprechend mergen. Placeholder:
         if (Array.isArray(existingRoom.days) && Array.isArray(nr.days)) {
             existingRoom.days = [...existingRoom.days, ...nr.days]
         }
@@ -830,14 +821,9 @@ async function loadMonth(direction: LoadDirection) {
     }
 
     rooms.value = Array.from(roomsById.values())
-
-    // daysRef für Scroll-Sync aktualisieren
     daysRef.value = days.value
 }
 
-/**
- * Notice / Toast-Icons
- */
 const noticeIcon = computed(() => {
     switch (notice.kind) {
         case 'error':
@@ -855,9 +841,6 @@ const noticeIconClass = computed(() => ({
     'text-blue-400': notice.kind === 'info',
 }))
 
-/**
- * Crafts / Mitarbeiter-Sortierung
- */
 const craftsToDisplay = computed(() => {
     const crafts = (props.crafts ?? []).map((craft: any) => ({
         id: craft.id,
@@ -898,7 +881,6 @@ const computedShiftPlanWorkerSortEnums = computed(() => {
 const { getSortEnumTranslation } = useSortEnumTranslation()
 
 async function initializeShiftPlan() {
-    // Wenn vom Server nichts mitkommt, initial über API laden
     const hasInitialDays = Array.isArray(props.days) && props.days.length > 0
     const hasInitialShiftPlan =
         props.shiftPlan && (
@@ -935,14 +917,8 @@ async function initializeShiftPlan() {
     setCurrentDayRef(currentDayOnView.value)
 }
 
-/**
- * Lifecycle
- */
 onMounted(async () => {
-    // 1) Initialen Zeitraum laden (falls Props leer sind)
     await initializeShiftPlan()
-
-    // 2) currentDayRef initialisieren + auf Änderungen hören
     currentDayRef.value = currentDayOnView.value
     watch(
         () => currentDayOnView.value,
@@ -950,8 +926,6 @@ onMounted(async () => {
             currentDayRef.value = v
         },
     )
-
-    // 3) Wenn Props-Days später über Inertia neu kommen, lokale days synchron halten
     watch(
         () => props.days,
         (v) => {
@@ -961,10 +935,7 @@ onMounted(async () => {
         { deep: true },
     )
 
-    // 4) Scroll-Sync aktivieren – jetzt greifen direkt die Template-Refs
     attach()
-
-    // 5) ShiftCalendarListener initialisieren
     const shiftPlanArray = Array.isArray(newShiftPlanData.value)
         ? newShiftPlanData.value
         : Object.values(newShiftPlanData.value ?? {})
@@ -972,11 +943,7 @@ onMounted(async () => {
     const shiftPlanDataRef = ref(shiftPlanArray)
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanDataRef)
     ShiftCalendarListener.init()
-
-    // 6) Inertia-Navigationsschutz
     setupInertiaNavigationGuard()
-
-    // 7) Hinweisbanner automatisch ausblenden
     setTimeout(() => {
         showCalendarWarning.value = ''
     }, 5000)
@@ -990,9 +957,6 @@ onBeforeUnmount(() => {
     }
 })
 
-/**
- * Diverse Funktionen
- */
 function changeDailyViewMode() {
     router.patch(
         route('user.update.daily_view', usePage().props.auth.user.id),
@@ -1368,9 +1332,6 @@ function openFullscreen() {
     }
 }
 
-/**
- * Zeitbereiche / Navigation (vor/zurück)
- */
 function previousTimeRange() {
     const dateDifference = calculateDateDifference()
     props.dateValue[0] = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')

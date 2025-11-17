@@ -37,8 +37,12 @@ const props = defineProps<{
 }>()
 
 /** Fallback auf project_files_all, falls project_files_tab nicht geliefert wird */
-const initialDocs = props.project?.project_files_tab ?? props.project?.project_files_all ?? []
+const initialDocs = props.project?.project_files_all ?? []
 const documents = ref<ProjectFile[]>(initialDocs)
+const isLoadingDocuments = ref(false)
+const loadDocumentsError = ref('')
+const remoteProjectWriteIds = ref<Array<number | string>>(props.projectWriteIds ?? [])
+const remoteProjectManagerIds = ref<Array<number | string>>(props.projectManagerIds ?? [])
 
 const documentForm = reactive<{ errors: Record<string, string[] | string> }>({ errors: {} })
 const uploadDocumentFeedback = ref('')
@@ -59,10 +63,57 @@ const userId = computed(() => (page.props as any)?.auth?.user?.id ?? null)
 const { appContext } = getCurrentInstance()!
 const $role = (appContext?.config?.globalProperties as any)?.$role as ((name: string) => boolean) | undefined
 
-const canEdit = computed(
-    () => !!props.canEditComponent || !!$role?.('artwork admin') || (props.projectWriteIds?.includes(userId.value) ?? false),
+const effectiveProjectWriteIds = computed(
+    () => (remoteProjectWriteIds.value.length ? remoteProjectWriteIds.value : (props.projectWriteIds ?? []))
 )
-const canEditFull = computed(() => canEdit.value || (props.projectManagerIds?.includes(userId.value) ?? false))
+const effectiveProjectManagerIds = computed(
+    () => (remoteProjectManagerIds.value.length ? remoteProjectManagerIds.value : (props.projectManagerIds ?? []))
+)
+
+const canEdit = computed(
+    () => !!props.canEditComponent || !!$role?.('artwork admin') || (effectiveProjectWriteIds.value?.includes(userId.value) ?? false),
+)
+const canEditFull = computed(() => canEdit.value || (effectiveProjectManagerIds.value?.includes(userId.value) ?? false))
+
+watch(
+    () => props.project?.id,
+    () => {
+        fetchDocuments()
+    },
+    { immediate: true }
+)
+
+async function fetchDocuments() {
+    const projectId = props.project?.id
+
+    if (!projectId) {
+        return
+    }
+
+    isLoadingDocuments.value = true
+    loadDocumentsError.value = ''
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.all-documents', { project: projectId })
+        )
+        const fetchedDocuments = data?.documents ?? []
+        documents.value.splice(0, documents.value.length, ...fetchedDocuments)
+
+        if (Array.isArray(data?.projectWriteIds)) {
+            remoteProjectWriteIds.value = data.projectWriteIds
+        }
+
+        if (Array.isArray(data?.projectManagerIds)) {
+            remoteProjectManagerIds.value = data.projectManagerIds
+        }
+    } catch (error) {
+        console.error(error)
+        loadDocumentsError.value = 'Unable to load project documents.'
+    } finally {
+        isLoadingDocuments.value = false
+    }
+}
 
 onMounted(() => {
     useProjectDocumentListener(documents.value, props.project.id).init()
@@ -110,6 +161,7 @@ async function validateTypeAndUpload(files: File[]) {
         }
     }
     isUploading.value = false
+    await fetchDocuments()
 }
 
 async function uploadDocumentToProject(file: File) {
@@ -156,6 +208,7 @@ function deleteFile() {
         preserveScroll: true,
         preserveState: true,
         onFinish: closeConfirmDeleteModal,
+        onSuccess: fetchDocuments
     })
 }
 
@@ -249,6 +302,12 @@ function closePreview() {
                 description="Here you can upload and download documents for the project."
             />
             <InfoButtonComponent :component="component" />
+        </div>
+        <div v-if="loadDocumentsError" class="mb-2 text-xs text-rose-600">
+            {{ loadDocumentsError }}
+        </div>
+        <div v-else-if="isLoadingDocuments" class="mb-2 text-xs text-secondary">
+            {{ $t('Loading data...') }}
         </div>
 
         <!-- Fehlermeldungen -->

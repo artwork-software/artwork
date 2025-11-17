@@ -1,6 +1,12 @@
 <!-- components/ProjectMaterialIssuesSection.vue -->
 <template>
     <section class="space-y-5">
+        <div v-if="loadMaterialsError" class="mb-2 text-xs text-rose-600">
+            {{ loadMaterialsError }}
+        </div>
+        <div v-else-if="isLoadingMaterials" class="mb-2 text-xs text-secondary">
+            {{ $t('Loading data...') }}
+        </div>
         <!-- Top-Bar -->
         <div class="flex items-center justify-between">
             <div>
@@ -391,7 +397,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, watch, onMounted } from 'vue'
+import axios from 'axios'
 import {
     IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
@@ -425,7 +432,7 @@ type Project = {
 
 const props = defineProps<{
     project: Project
-    materials: InternalIssue[]
+    materials?: InternalIssue[]
     defaultOpen?: boolean
 }>()
 
@@ -437,6 +444,9 @@ const emit = defineEmits<{
 
 const showIssueOfMaterialModal = ref(false)
 const materialIssueToEdit = ref(null)
+const isLoadingMaterials = ref(false)
+const loadMaterialsError = ref('')
+const localMaterials = ref<InternalIssue[]>(props.materials ?? [])
 
 /** Article Lightbox State */
 const articleLightboxImages = ref([])
@@ -457,8 +467,39 @@ const responsiveOptions = ref([
     }
 ])
 
+watch(
+    () => props.project?.id,
+    () => {
+        fetchMaterials()
+    },
+    { immediate: true }
+)
+
+async function fetchMaterials() {
+    const projectId = props.project?.id
+
+    if (!projectId) {
+        return
+    }
+
+    isLoadingMaterials.value = true
+    loadMaterialsError.value = ''
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.material-issues', { project: projectId })
+        )
+        localMaterials.value = data?.materials ?? []
+    } catch (error) {
+        console.error(error)
+        loadMaterialsError.value = 'Unable to load material issues.'
+    } finally {
+        isLoadingMaterials.value = false
+    }
+}
+
 /** Nur Issues, die zu diesem Projekt gehören */
-const projectIssues = computed(() => props.materials.filter(m => String(m.project_id ?? '') === String(props.project.id)))
+const projectIssues = computed(() => localMaterials.value.filter(m => String(m.project_id ?? '') === String(props.project.id)))
 
 /** Expand/Collapse State */
 const openSet = ref<Set<number>>(new Set())

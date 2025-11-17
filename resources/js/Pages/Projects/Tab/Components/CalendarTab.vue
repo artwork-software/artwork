@@ -5,15 +5,15 @@
                 <CalendarComponent
                     initial-view="day"
                     :project="project ?? headerObject.project"
-                    :selected-date="selectedDate ?? loadedProjectInformation['CalendarTab'].selectedDate"
-                    :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].dateValue"
-                    :eventTypes="eventTypes ?? loadedProjectInformation['CalendarTab'].eventTypes"
-                    :events="events.events ?? loadedProjectInformation['CalendarTab'].events.events"
-                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
+                    :selected-date="selectedDate ?? effectiveCalendarData.selectedDate"
+                    :dateValue="dateValue ?? effectiveCalendarData.dateValue"
+                    :eventTypes="eventTypes ?? effectiveCalendarData.eventTypes"
+                    :events="events.events ?? effectiveCalendarData.events?.events"
+                    :rooms="rooms ?? effectiveCalendarData.rooms"
                     :events-without-room="eventsWithoutRoom ?? headerObject.eventsWithoutRoom"
-                    :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filterOptions"
-                    :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
-                    :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
+                    :filter-options="filterOptions ?? effectiveCalendarData.filterOptions"
+                    :personal-filters="personalFilters ?? effectiveCalendarData.personalFilters"
+                    :user_filters="user_filters ?? effectiveCalendarData.user_filters"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                     :event-statuses="eventStatuses"
                     :can-edit-component="canEditComponent"/>
@@ -21,26 +21,26 @@
             <div v-else class="pl-16">
                 <BaseCalendar v-if="!atAGlance"
                               :project="project ?? headerObject.project"
-                              :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
-                              :days="days ?? loadedProjectInformation['CalendarTab'].days"
-                              :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
+                              :rooms="rooms ?? effectiveCalendarData.rooms"
+                              :days="days ?? effectiveCalendarData.days"
+                              :calendar-data="calendar ?? effectiveCalendarData.calendar"
                               :event-statuses="eventStatuses"
-                              :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"
+                              :events-without-room="eventsWithoutRoom ?? effectiveCalendarData.eventsWithoutRoom"
                               :can-edit-component="canEditComponent"
                 />
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :event-statuses="eventStatuses"
                                                      :atAGlance="atAGlance"
                                                      :project="project ?? headerObject.project"
-                                                     :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
-                                                     :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].dateValue"
-                                                     :eventTypes="eventTypes ?? loadedProjectInformation['CalendarTab'].eventTypes"
-                                                     :eventsAtAGlance="eventsAtAGlance ?? loadedProjectInformation['CalendarTab'].eventsAtAGlance"
-                                                     :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filterOptions"
-                                                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
-                                                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                                                     :first_project_tab_id="first_project_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_tab_id"
-                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id"
+                                                     :rooms="rooms ?? effectiveCalendarData.rooms"
+                                                     :dateValue="dateValue ?? effectiveCalendarData.dateValue"
+                                                     :eventTypes="eventTypes ?? effectiveCalendarData.eventTypes"
+                                                     :eventsAtAGlance="eventsAtAGlance ?? effectiveCalendarData.eventsAtAGlance"
+                                                     :filter-options="filterOptions ?? effectiveCalendarData.filterOptions"
+                                                     :personal-filters="personalFilters ?? effectiveCalendarData.personalFilters"
+                                                     :user_filters="user_filters ?? effectiveCalendarData.user_filters"
+                                                     :first_project_tab_id="first_project_tab_id ?? effectiveCalendarData.first_project_tab_id"
+                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id ?? effectiveCalendarData.first_project_calendar_tab_id"
                                                      :isCalendarViewRoute="false"
                                                      :can-edit-component="canEditComponent"/>
             </div>
@@ -50,7 +50,8 @@
 
 <script setup>
 import {usePage} from "@inertiajs/vue3";
-import {provide, ref} from "vue";
+import {provide, ref, onMounted, computed} from "vue";
+import axios from 'axios';
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
@@ -82,13 +83,52 @@ const props = defineProps([
 ]),
 atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 
-provide('eventTypes', props.eventTypes ?? props.loadedProjectInformation['CalendarTab'].eventTypes);
-provide('dateValue', props.dateValue ?? props.loadedProjectInformation['CalendarTab'].dateValue);
-provide('first_project_tab_id', props.first_project_tab_id ?? props.loadedProjectInformation['CalendarTab'].first_project_tab_id);
-provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id ?? props.loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id);
-provide('user_filters', props.user_filters ?? props.loadedProjectInformation['CalendarTab'].user_filters);
-provide('personalFilters', props.personalFilters ?? props.loadedProjectInformation['CalendarTab'].personalFilters);
-provide('filterOptions', props.filterOptions ?? props.loadedProjectInformation['CalendarTab'].filterOptions);
-provide('eventStatuses', props.eventStatuses ?? props.loadedProjectInformation['CalendarTab'].eventStatuses);
-provide('event_properties', props.loadedProjectInformation['CalendarTab'].event_properties);
+const isLoadingCalendar = ref(false);
+const loadCalendarError = ref('');
+const localCalendarData = ref(props.loadedProjectInformation?.['CalendarTab'] || null);
+
+const effectiveCalendarData = computed(() => {
+    return localCalendarData.value || props.loadedProjectInformation?.['CalendarTab'] || {};
+});
+
+async function fetchCalendarData() {
+    if (localCalendarData.value) {
+        return;
+    }
+
+    const projectId = props.project?.id;
+    if (!projectId) {
+        return;
+    }
+
+    isLoadingCalendar.value = true;
+    loadCalendarError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.calendar', { project: projectId }),
+            { params: { atAGlance: atAGlance.value } }
+        );
+        localCalendarData.value = data?.CalendarTab || null;
+    } catch (error) {
+        console.error(error);
+        loadCalendarError.value = 'Unable to load calendar data.';
+    } finally {
+        isLoadingCalendar.value = false;
+    }
+}
+
+onMounted(() => {
+    fetchCalendarData();
+});
+
+provide('eventTypes', props.eventTypes ?? effectiveCalendarData.value.eventTypes);
+provide('dateValue', props.dateValue ?? effectiveCalendarData.value.dateValue);
+provide('first_project_tab_id', props.first_project_tab_id ?? effectiveCalendarData.value.first_project_tab_id);
+provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id ?? effectiveCalendarData.value.first_project_calendar_tab_id);
+provide('user_filters', props.user_filters ?? effectiveCalendarData.value.user_filters);
+provide('personalFilters', props.personalFilters ?? effectiveCalendarData.value.personalFilters);
+provide('filterOptions', props.filterOptions ?? effectiveCalendarData.value.filterOptions);
+provide('eventStatuses', props.eventStatuses ?? effectiveCalendarData.value.eventStatuses);
+provide('event_properties', effectiveCalendarData.value.event_properties);
 </script>

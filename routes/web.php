@@ -32,6 +32,20 @@ use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\ProjectTabController;
+use App\Http\Controllers\ProjectTab\ProjectArtistNameController;
+use App\Http\Controllers\ProjectTab\ProjectArtistResidenciesController;
+use App\Http\Controllers\ProjectTab\ProjectBudgetController;
+use App\Http\Controllers\ProjectTab\ProjectBudgetInformationController;
+use App\Http\Controllers\ProjectTab\ProjectBulkEditController;
+use App\Http\Controllers\ProjectTab\ProjectCalendarController;
+use App\Http\Controllers\ProjectTab\ProjectChecklistController;
+use App\Http\Controllers\ProjectTab\ProjectCommentController;
+use App\Http\Controllers\ProjectTab\ProjectDocumentsController;
+use App\Http\Controllers\ProjectTab\ProjectMaterialIssueController;
+use App\Http\Controllers\ProjectTab\ProjectShiftController;
+use App\Http\Controllers\ProjectTab\ProjectShiftContactsController;
+use App\Http\Controllers\ProjectTab\ProjectStatusController;
+use App\Http\Controllers\ProjectTab\ProjectTeamController;
 use App\Http\Controllers\RowCommentController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
@@ -433,6 +447,50 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //ProjectTabs
     Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
         ->name('projects.tab')
+        ->middleware(CanViewProject::class);
+
+    Route::group([
+        'prefix' => '/projects/{project}/tabs',
+        'middleware' => CanViewProject::class,
+    ], function (): void {
+        Route::get('/team', [ProjectTeamController::class, 'show'])
+            ->name('projects.tabs.team');
+        Route::get('/components/{componentInTab}/documents', [ProjectDocumentsController::class, 'index'])
+            ->name('projects.tabs.documents');
+        Route::get('/all-documents', [ProjectDocumentsController::class, 'all'])
+            ->name('projects.tabs.all-documents');
+        Route::get('/status', [ProjectStatusController::class, 'show'])
+            ->name('projects.tabs.status');
+        Route::get('/artist-name', [ProjectArtistNameController::class, 'show'])
+            ->name('projects.tabs.artist-name');
+        Route::get('/shift-contacts', [ProjectShiftContactsController::class, 'show'])
+            ->name('projects.tabs.shift-contacts');
+        Route::get('/components/{componentInTab}/checklists', [ProjectChecklistController::class, 'index'])
+            ->name('projects.tabs.checklists');
+        Route::get('/all-checklists', [ProjectChecklistController::class, 'all'])
+            ->name('projects.tabs.all-checklists');
+        Route::get('/material-issues', [ProjectMaterialIssueController::class, 'show'])
+            ->name('projects.tabs.material-issues');
+        Route::get('/artist-residencies', [ProjectArtistResidenciesController::class, 'show'])
+            ->name('projects.tabs.artist-residencies');
+        Route::get('/components/{componentInTab}/comments', [ProjectCommentController::class, 'index'])
+            ->name('projects.tabs.comments');
+        Route::get('/all-comments', [ProjectCommentController::class, 'all'])
+            ->name('projects.tabs.all-comments');
+        Route::get('/budget-informations', [ProjectBudgetInformationController::class, 'show'])
+            ->name('projects.tabs.budget-informations');
+        Route::get('/bulk-edit', [ProjectBulkEditController::class, 'show'])
+            ->name('projects.tabs.bulk-edit');
+        Route::get('/calendar', [ProjectCalendarController::class, 'show'])
+            ->name('projects.tabs.calendar');
+        Route::get('/budget', [ProjectBudgetController::class, 'show'])
+            ->name('projects.tabs.budget');
+        Route::get('/shift', [ProjectShiftController::class, 'show'])
+            ->name('projects.tabs.shift');
+    });
+
+    Route::get('/projects/{project}/history', [ProjectController::class, 'history'])
+        ->name('projects.history')
         ->middleware(CanViewProject::class);
 
     //ProjectFiles

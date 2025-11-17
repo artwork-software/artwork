@@ -346,6 +346,31 @@ const users = ref(props.assignedUsers.map(u => ({
 
 const departments = ref(props.assignedDepartments.map(d => ({ ...d })))
 
+// Halte lokale Kopien mit Props synchron, z. B. wenn Daten asynchron geladen werden oder beim Öffnen des Modals
+watch(() => props.assignedUsers, (newUsers) => {
+    users.value = (newUsers || []).map(u => ({
+        ...u,
+        openedMenu: u.openedMenu ?? false,
+        openedMenuRoles: u.openedMenuRoles ?? false,
+    }))
+}, { deep: true })
+
+watch(() => props.assignedDepartments, (newDeps) => {
+    departments.value = (newDeps || []).map(d => ({ ...d }))
+}, { deep: true })
+
+// Beim Öffnen des Modals auf den neuesten Stand bringen
+watch(() => props.show, (isOpen) => {
+    if (isOpen) {
+        users.value = (props.assignedUsers || []).map(u => ({
+            ...u,
+            openedMenu: u.openedMenu ?? false,
+            openedMenuRoles: u.openedMenuRoles ?? false,
+        }))
+        departments.value = (props.assignedDepartments || []).map(d => ({ ...d }))
+    }
+})
+
 // --- computed ---
 const page = usePage()
 const authUserId = computed(() => page.props.auth.user.id)

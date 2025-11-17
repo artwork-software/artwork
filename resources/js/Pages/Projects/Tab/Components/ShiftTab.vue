@@ -10,7 +10,7 @@
                     <div class="flex w-full items-center justify-between gap-6">
                         <!-- Commit Switch -->
                         <SwitchGroup
-                            v-if="loadedProjectInformation['ShiftTab']?.events_with_relevant?.length > 0 && checkCommitted() && (can('can commit shifts') || isAdmin)"
+                            v-if="effectiveShiftData?.events_with_relevant?.length > 0 && checkCommitted() && (can('can commit shifts') || isAdmin)"
                             as="div"
                             class="flex items-center gap-2"
                         >
@@ -68,7 +68,7 @@
                 </span>
                             </div>
                             <MenuItem
-                                v-for="type in loadedProjectInformation['ShiftTab'].shift_sort_types"
+                                v-for="type in effectiveShiftData.shift_sort_types"
                                 :key="type"
                                 v-slot="{ active }"
                             >
@@ -202,7 +202,7 @@
                                 </div>
                             </div>
 
-                            <CraftFilter is_tiny :crafts="loadedProjectInformation['ShiftTab'].crafts" />
+                            <CraftFilter is_tiny :crafts="effectiveShiftData.crafts" />
                         </div>
 
                         <div class="my-2 h-px w-full bg-[#3A374D]" />
@@ -273,22 +273,22 @@
             <!-- /User Window -->
 
             <!-- Empty State -->
-            <div class="xsDark mt-5" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
+            <div class="xsDark mt-5" v-if="effectiveShiftData.events_with_relevant?.length === 0">
                 {{ $t('So far, there are no shift-relevant events for this project.') }}
             </div>
 
             <!-- Events -->
             <div class="mt-5">
                 <SingleRelevantEvent
-                    v-for="event in loadedProjectInformation['ShiftTab'].events_with_relevant"
+                    v-for="event in effectiveShiftData.events_with_relevant"
                     :key="event.event?.id"
-                    :crafts="loadedProjectInformation['ShiftTab'].crafts"
-                    :currentUserCrafts="loadedProjectInformation['ShiftTab'].current_user_crafts"
+                    :crafts="effectiveShiftData.crafts"
+                    :currentUserCrafts="effectiveShiftData.current_user_crafts"
                     :event="event"
                     :relevant-event-id="relevantEventId"
                     :event-types="headerObject.eventTypes"
-                    :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
-                    :shift-time-presets="loadedProjectInformation['ShiftTab'].shift_time_presets"
+                    :shift-qualifications="effectiveShiftData.shift_qualifications"
+                    :shift-time-presets="effectiveShiftData.shift_time_presets"
                     :can-edit-component="can('can plan shifts') || isAdmin"
                     @dropFeedback="showDropFeedback"
                 />
@@ -305,6 +305,7 @@ import { usePage, router } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
 import { MenuItem, Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
+import axios from 'axios'
 
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
@@ -324,6 +325,63 @@ const props = defineProps({
     headerObject: { type: Object, required: true },
     canEditComponent: { type: Boolean, required: false, default: true },
 })
+
+const isLoadingShift = ref(false)
+const loadShiftError = ref('')
+const localShiftData = ref(props.loadedProjectInformation?.['ShiftTab'] || null)
+
+const effectiveShiftData = computed(() => {
+    return localShiftData.value || props.loadedProjectInformation?.['ShiftTab'] || {}
+})
+
+async function fetchShiftData() {
+    if (localShiftData.value) {
+        return
+    }
+
+    const projectId = props.headerObject?.project?.id
+    if (!projectId) {
+        return
+    }
+
+    isLoadingShift.value = true
+    loadShiftError.value = ''
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.shift', { project: projectId })
+        )
+        localShiftData.value = data?.ShiftTab || null
+
+        // Update headerObject with shift-related data
+        if (data?.shift_relevant_event_types && props.headerObject?.project) {
+            props.headerObject.project.shift_relevant_event_types = data.shift_relevant_event_types
+        }
+        if (data?.shift_tab_available_sortings && props.headerObject) {
+            props.headerObject.shift_tab_available_sortings = data.shift_tab_available_sortings
+        }
+        if (data?.shift_contacts && props.headerObject?.project) {
+            props.headerObject.project.shift_contacts = data.shift_contacts
+        }
+        if (data?.project_managers && props.headerObject?.project) {
+            props.headerObject.project.project_managers = data.project_managers
+        }
+        if (data?.shiftDescription !== undefined && props.headerObject?.project) {
+            props.headerObject.project.shiftDescription = data.shiftDescription
+        }
+        if (data?.freelancers && props.headerObject?.project) {
+            props.headerObject.project.freelancers = data.freelancers
+        }
+        if (data?.serviceProviders && props.headerObject?.project) {
+            props.headerObject.project.serviceProviders = data.serviceProviders
+        }
+    } catch (error) {
+        console.error(error)
+        loadShiftError.value = 'Unable to load shift data.'
+    } finally {
+        isLoadingShift.value = false
+    }
+}
 
 const { getSortEnumTranslation } = useSortEnumTranslation()
 
@@ -350,23 +408,23 @@ const isAdmin = computed(() => (roles.value || []).some(r => (typeof r === 'stri
 // ---------- COMPUTEDS ----------
 const dropUsers = computed(() => {
     const users = []
-    const tab = props.loadedProjectInformation['ShiftTab']
+    const tab = effectiveShiftData.value
     if (!tab) return users
 
     const noFilters = !showIntern.value && !showExtern.value && !showProvider.value
 
     if (showIntern.value || noFilters) {
-        tab.users_for_shifts.forEach(user => {
+        (tab.users_for_shifts || []).forEach(user => {
             users.push({ element: user.user, type: 0, plannedWorkingHours: user.plannedWorkingHours })
         })
     }
     if (showExtern.value || noFilters) {
-        tab.freelancers_for_shifts.forEach(freelancer => {
+        (tab.freelancers_for_shifts || []).forEach(freelancer => {
             users.push({ element: freelancer.freelancer, type: 1, plannedWorkingHours: freelancer.plannedWorkingHours })
         })
     }
     if (showProvider.value || noFilters) {
-        tab.service_providers_for_shifts.forEach(sp => {
+        (tab.service_providers_for_shifts || []).forEach(sp => {
             users.push({ element: sp.service_provider, type: 2, plannedWorkingHours: sp.plannedWorkingHours })
         })
     }
@@ -375,9 +433,9 @@ const dropUsers = computed(() => {
 
 const conflictMessage = computed(() => {
     const conflicts = []
-    props.loadedProjectInformation['ShiftTab'].events_with_relevant.forEach(event => {
-        event.shifts.forEach(shift => {
-            shift.users.forEach(user => {
+    effectiveShiftData.value?.events_with_relevant?.forEach(event => {
+        (event.shifts || []).forEach(shift => {
+            (shift.users || []).forEach(user => {
                 if (user.formatted_vacation_days?.includes(shift.event_start_day)) {
                     conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
                 }
@@ -392,7 +450,7 @@ const usersWithNoCrafts = computed(() =>
 )
 
 const craftsToDisplay = computed(() => {
-    const tab = props.loadedProjectInformation['ShiftTab']
+    const tab = effectiveShiftData.value
     const all = tab?.crafts?.map(craft => ({
         name: craft.name,
         id: craft.id,
@@ -438,7 +496,7 @@ const searchUserWithCrafts = computed(() =>
 
 // hat es uncommitted Shifts?
 const hasUncommittedShift = computed(() =>
-    props.loadedProjectInformation['ShiftTab']?.events_with_relevant.some(event =>
+    effectiveShiftData.value?.events_with_relevant?.some(event =>
         event.shifts.find(shift => shift.is_committed === false)
     )
 )
@@ -455,7 +513,8 @@ watch(userSearch, v => {
 })
 
 // ---------- LIFECYCLE ----------
-onMounted(() => {
+onMounted(async () => {
+    await fetchShiftData()
     // Drag behavior for the floating panel
     makeContainerDraggable()
 
@@ -519,7 +578,7 @@ function toggleCompactMode() {
     )
 }
 function checkCommitted() {
-    return props.loadedProjectInformation['ShiftTab'].events_with_relevant?.length > 0
+    return effectiveShiftData.value?.events_with_relevant?.length > 0
 }
 function showDropFeedback(feedback) {
     dropFeedback.value = feedback
@@ -532,7 +591,7 @@ function updateCommitmentOfShifts() {
         route('update.shift.commitment'),
         {
             project_id: props.headerObject.project.id,
-            shifts: props.loadedProjectInformation['ShiftTab']?.events_with_relevant.flatMap(e => e.shifts.map(s => s.id)),
+            shifts: effectiveShiftData.value?.events_with_relevant?.flatMap(e => e.shifts.map(s => s.id)) || [],
             is_committed: hasUncommittedShift.value, // entspricht deiner ursprünglichen Logik
             committing_user_id: page.props.auth.user.id,
         },
@@ -595,7 +654,7 @@ function openUserWindow() {
 </script>
 
 <style scoped>
-.shiftUserWindow { overflow: overlay; }
+.shiftUserWindow { overflow: auto; }
 
 /* Sticky header container */
 .stickyHeader {

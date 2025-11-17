@@ -66,7 +66,10 @@ const showCalendarFilterModal = ref(false);
 const checkIfAnyFilterIsActive = computed(() => {
     const ignoredKeys = ['start_date', 'end_date', 'created_at', 'updated_at', 'id', 'user_id', 'filter_type'];
 
-    return Object.entries(props.user_filters).some(([key, value]) => {
+    // Guard against undefined/null user_filters
+    const filters = props.user_filters ?? {};
+
+    return Object.entries(filters).some(([key, value]) => {
         if (ignoredKeys.includes(key)) {
             return false;
         }

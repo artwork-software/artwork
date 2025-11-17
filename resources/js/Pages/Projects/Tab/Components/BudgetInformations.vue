@@ -7,7 +7,7 @@
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
-                :collecting-societies="loadedProjectInformation['BudgetInformation']?.collecting_societies ?? project.collecting_societies"
+                :collecting-societies="effectiveBudgetInformation?.collecting_societies ?? project.collecting_societies"
             />
         </div>
         <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
@@ -18,7 +18,7 @@
         </div>
         <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
         <hr class="my-10 border-darkGray">
-        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformation'].project_manager_ids.includes(this.$page.props.auth.user.id)">
+        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.effectiveBudgetInformation?.project_manager_ids?.includes(this.$page.props.auth.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
@@ -28,11 +28,11 @@
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
                                     :project-id="project.id"
-                                    :budget-access="loadedProjectInformation['BudgetInformation']?.access_budget ?? project.access_budget"/>
+                                    :budget-access="effectiveBudgetInformation?.access_budget ?? project.access_budget"/>
         </div>
-        <div v-if="showProjectFiles">
-            <div v-if="loadedProjectInformation['BudgetInformation'].project_files.length > 0">
-                <div v-for="projectFile in loadedProjectInformation['BudgetInformation'].project_files">
+            <div v-if="showProjectFiles">
+            <div v-if="effectiveBudgetInformation?.project_files?.length > 0">
+                <div v-for="projectFile in effectiveBudgetInformation.project_files">
                     <div
                         v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
@@ -72,15 +72,15 @@
                 <ContractUploadModal
                     :show="showContractUploadModal"
                     :project-id="project.id"
-                    :budget-access="this.loadedProjectInformation['BudgetInformation']?.access_budget ?? project.access_budget"
-                    :contract-types="this.loadedProjectInformation['BudgetInformation']?.contract_types ?? project.contract_types"
-                    :company-types="this.loadedProjectInformation['BudgetInformation']?.company_types ?? project.company_types"
-                    :currencies="this.loadedProjectInformation['BudgetInformation']?.currencies ?? project.currencies"
+                    :budget-access="this.effectiveBudgetInformation?.access_budget ?? project.access_budget"
+                    :contract-types="this.effectiveBudgetInformation?.contract_types ?? project.contract_types"
+                    :company-types="this.effectiveBudgetInformation?.company_types ?? project.company_types"
+                    :currencies="this.effectiveBudgetInformation?.currencies ?? project.currencies"
                     @close-modal="closeContractUploadModal"/>
             </div>
             <div v-if="showContracts">
-                <div v-if="this.loadedProjectInformation['BudgetInformation'].contracts.length > 0">
-                    <div v-for="contract in this.loadedProjectInformation['BudgetInformation'].contracts">
+                <div v-if="this.effectiveBudgetInformation?.contracts?.length > 0">
+                    <div v-for="contract in this.effectiveBudgetInformation.contracts">
                         <div
                             v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
@@ -94,9 +94,9 @@
                                                :show="showContractEditModal === contract?.id"
                                                :close-modal="closeContractEditModal"
                                                :contract="contract"
-                                               :contract-types="this.loadedProjectInformation['BudgetInformation']?.contract_types ?? project.contract_types"
-                                               :company-types="this.loadedProjectInformation['BudgetInformation']?.company_types ?? project.company_types"
-                                               :currencies="this.loadedProjectInformation['BudgetInformation']?.currencies ?? project.currencies"/>
+                                               :contract-types="this.effectiveBudgetInformation?.contract_types ?? project.contract_types"
+                                               :company-types="this.effectiveBudgetInformation?.company_types ?? project.company_types"
+                                               :currencies="this.effectiveBudgetInformation?.currencies ?? project.currencies"/>
                             <IconCircleX class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>
@@ -113,9 +113,9 @@
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
                 <div v-if="showMoneySources">
-                    <div v-if="this.loadedProjectInformation['BudgetInformation'].project_money_sources.length > 0">
+                    <div v-if="this.effectiveBudgetInformation?.project_money_sources?.length > 0">
                         <div class="w-full flex items-center mb-2 text-secondary"
-                             v-for="moneySource in this.loadedProjectInformation['BudgetInformation'].project_money_sources">
+                             v-for="moneySource in this.effectiveBudgetInformation.project_money_sources">
                             <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
                                   class="cursor-pointer hover:text-secondaryHover text-linkOnDarkColor  underline" :href="route('money_sources.show', {moneySource: moneySource.id})">
                                 {{moneySource.name}}
@@ -147,6 +147,7 @@ import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vu
 import Permissions from "@/Mixins/Permissions.vue";
 import {Link} from '@inertiajs/vue3';
 import IconLib from "@/Mixins/IconLib.vue";
+import axios from 'axios';
 
 export default {
     mixins: [Permissions, IconLib],
@@ -186,12 +187,55 @@ export default {
             showContractEditModal: null,
             showCopyrightModal: false,
             projectFileToEdit: null,
-            projectFileToDelete: null
+            projectFileToDelete: null,
+            isLoadingBudgetInfo: false,
+            loadBudgetInfoError: '',
+            localBudgetInformation: this.loadedProjectInformation?.['BudgetInformation'] || null
         }
     },
+    computed: {
+        effectiveBudgetInformation() {
+            return this.localBudgetInformation || this.loadedProjectInformation?.['BudgetInformation'] || {};
+        }
+    },
+    mounted() {
+        this.fetchBudgetInformation();
+    },
     methods: {
+        async fetchBudgetInformation() {
+            if (this.localBudgetInformation) {
+                return;
+            }
+
+            const projectId = this.project?.id;
+            if (!projectId) {
+                return;
+            }
+
+            this.isLoadingBudgetInfo = true;
+            this.loadBudgetInfoError = '';
+
+            try {
+                const { data } = await axios.get(
+                    route('projects.tabs.budget-informations', { project: projectId })
+                );
+                this.localBudgetInformation = data?.BudgetInformation || null;
+                if (data?.collectingSociety) {
+                    this.project.collecting_society = data.collectingSociety;
+                }
+            } catch (error) {
+                console.error(error);
+                this.loadBudgetInfoError = 'Unable to load budget information.';
+            } finally {
+                this.isLoadingBudgetInfo = false;
+            }
+        },
         hasBudgetAccess() {
-            return this.loadedProjectInformation['BudgetInformation'].access_budget.filter(
+            const budgetInfo = this.effectiveBudgetInformation;
+            if (!budgetInfo?.access_budget) {
+                return false;
+            }
+            return budgetInfo.access_budget.filter(
                 (user) => user.id === this.$page.props.auth.user.id
             ).length > 0;
         },

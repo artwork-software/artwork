@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\ArtistResidency\Models\Accommodation;
+use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\Project\Models\Project;
 

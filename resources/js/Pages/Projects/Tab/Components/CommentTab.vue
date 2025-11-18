@@ -134,7 +134,7 @@
 
 <script setup>
 import { onMounted, ref, computed, getCurrentInstance, watch } from "vue";
-import { useForm } from "@inertiajs/vue3";
+import { useForm, router } from "@inertiajs/vue3";
 import axios from "axios";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { useCommentListener } from "@/Composeables/Listener/useCommentListener.js";
@@ -249,17 +249,12 @@ function addCommentToProject() {
 
 function deleteCommentFromProject(comment) {
     if (!comment?.id) return;
-    const deleteFn = window?.Inertia
-        ? window.Inertia.delete
-        : proxy?.$inertia?.delete;
-
-    if (deleteFn) {
-        deleteFn(`/comments/${comment.id}`, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: fetchComments
-        });
-    }
+    // Use Inertia router directly to perform deletion
+    router.delete(`/comments/${comment.id}`, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: fetchComments,
+    });
 }
 </script>
 

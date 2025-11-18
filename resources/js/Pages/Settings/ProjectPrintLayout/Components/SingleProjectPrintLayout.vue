@@ -10,7 +10,7 @@
             </div>
             <div>
                 <BaseMenu has-no-offset>
-                    <BaseMenuItem title="Edit" @click="showCreateOrUpdateModal = true"/>
+                    <BaseMenuItem title="Edit" icon="IconEdit" white-menu-background  @click="showCreateOrUpdateModal = true"/>
                     <BaseMenuItem title="Delete" :icon="IconTrash" @click="showDeleteModal = true"/>
                 </BaseMenu>
             </div>

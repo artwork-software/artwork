@@ -66,6 +66,10 @@ class ComponentController extends Controller
         // Cache invalidieren, damit neue Komponenten sichtbar werden
         Cache::forget('settings_components_not_special');
         Cache::forget('settings_components_special');
+        // Auch Drucklayout-bezogene Caches leeren
+        Cache::forget('print_layout_components_not_special');
+        Cache::forget('print_layout_components_special');
+        Cache::forget('print_layout_all_components');
     }
 
     public function update(Request $request, Component $component): void
@@ -85,6 +89,10 @@ class ComponentController extends Controller
         // Cache invalidieren, damit Änderungen unmittelbar sichtbar werden
         Cache::forget('settings_components_not_special');
         Cache::forget('settings_components_special');
+        // Auch Drucklayout-bezogene Caches leeren
+        Cache::forget('print_layout_components_not_special');
+        Cache::forget('print_layout_components_special');
+        Cache::forget('print_layout_all_components');
     }
 
     public function destroy(Component $component): void
@@ -117,5 +125,9 @@ class ComponentController extends Controller
         // Cache invalidieren, damit gelöschte Komponenten nicht weiter angezeigt werden
         Cache::forget('settings_components_not_special');
         Cache::forget('settings_components_special');
+        // Auch Drucklayout-bezogene Caches leeren
+        Cache::forget('print_layout_components_not_special');
+        Cache::forget('print_layout_components_special');
+        Cache::forget('print_layout_all_components');
     }
 }

@@ -2205,20 +2205,23 @@ class ProjectController extends Controller
             : [];
 
         $headerObject->event_properties = $eventPropertyService->getAll();
-        $latestChange = array_map(
-            static function ($history) {
-                return [
-                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                    'changer'    => $history->changer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first(),
-                ];
-            },
-            [$project->historyChanges()->first()]
-        );
+
+        // Safely fetch latest history entry; can be null if no history exists
+        $latestHistory = $project->historyChanges()->first();
+        $latestChange  = [];
+        if ($latestHistory !== null) {
+            $latestChange = [[
+                'changes'    => $latestHistory->changes
+                    ? json_decode($latestHistory->changes, false, 512, JSON_THROW_ON_ERROR)
+                    : null,
+                'created_at' => $latestHistory->created_at->diffInHours() < 24
+                    ? $latestHistory->created_at->diffForHumans()
+                    : $latestHistory->created_at->format('d.m.Y, H:i'),
+                'changer'    => $latestHistory->changer()
+                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                    ->first(),
+            ]];
+        }
         $headerObject->project_history = $latestChange;
 
         return inertia('Projects/Tab/TabContent', [

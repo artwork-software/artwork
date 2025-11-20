@@ -1,9 +1,13 @@
 <template>
-    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
+    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed || hasAdminRole()">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
-                <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
-                    <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+                <div
+                    class="py-1.5 px-1 pr-2 cursor-pointer rounded-l-lg"
+                    :style="{ backgroundColor: `${returnCraftColor}` }"
+                    v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+                >
+                    <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -37,39 +41,50 @@
         </Float>
     </Popover>
 
-    <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
-        <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
-            <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+    <div v-else class="gap-x-1 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
+        <div
+            class="py-1.5 px-1 rounded-l-lg"
+            :style="{ backgroundColor: `${returnCraftColor}` }"
+            v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+        >
+            <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2 group">
+    <div class="flex w-full gap-x-2 group">
         <div class="text-xs truncate col-span-1 flex items-center gap-x-3">
             <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
                 [{{ person.pivot?.craft_abbreviation }}]
             </span>
             {{ person.name || person.full_name }}
-            <div v-if="can('can plan shifts') || is('artwork admin')" class="hidden group-hover:block ml-1">
-                <span class="flex items-center justify-center">
-                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="deleteUserFromShift(person)"/>
-                    </span>
-                </span>
-            </div>
+
         </div>
 
-        <div class="flex items-center gap-x-1 col-span-1">
-            <PropertyIcon :name="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
-            {{ findShiftQualification(person.pivot?.shift_qualification_id)?.name }}
+        <div class="flex items-center">
+            <ToolTipComponent
+                :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
+                :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
+                icon-size="size-4"
+                black-icon
+                classes-button=""
+            />
         </div>
-        <div class=" col-span-2">
+        <div class=" items-center flex col-span-2">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                    <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full text-gray-500 !ring-0 border-none">
-                        <component :is="IconNote"
-                                   class="size-4 min-h-4 min-w-4 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out cursor-pointer"
+                    <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full !ring-0 border-none">
+                        <component
+                            :is="IconNote"
+                            class="size-4 min-h-4 min-w-4 transition-all duration-150 ease-in-out cursor-pointer"
+                            :class="hasCollision ? person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-700'"
+                            v-tooltip.bottom="descriptionTooltip"
                         />
-                        <span class="truncate">{{ person.pivot?.short_description || 'Keine Beschreibung' }}</span>
+                        <span
+                            v-if="!hasCollision"
+                            class="truncate max-w-72 xsDark"
+                            v-tooltip.bottom="descriptionTooltip"
+                        >
+                            {{ person.pivot?.short_description}}
+                        </span>
                     </PopoverButton>
 
                     <transition enter-active-class="transition ease-out duration-100"
@@ -99,6 +114,13 @@
             </Popover>
 
         </div>
+        <div v-if="can('can plan shifts') || is('artwork admin')" class="hidden items-center pt-1 group-hover:block ml-1">
+                <span class="flex items-center justify-center">
+                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="deleteUserFromShift(person)"/>
+                    </span>
+                </span>
+        </div>
     </div>
 
 
@@ -125,8 +147,8 @@ import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTim
 import {computed, ref} from "vue";
 import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
     person: {
@@ -137,17 +159,40 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    // Kann als Array oder Objekt kommen – wir normalisieren unten zu Array
     shiftQualifications: {
-        type: Object,
+        type: [Array, Object],
         required: true
+    },
+    // Wenn mind. 2 Termine nebeneinander (Kollision), Beschreibung ausblenden und Icon schwarz
+    hasCollision: {
+        type: Boolean,
+        default: false
     }
 })
 
 
+// Normalisierte Liste der Qualifikationen (Array)
+const shiftQualificationsArray = computed(() =>
+    Array.isArray(props.shiftQualifications)
+        ? props.shiftQualifications
+        : Object.values(props.shiftQualifications || {})
+);
+
 const findShiftQualification = (id) =>
-    props.shiftQualifications.find(q => q.id === id);
+    shiftQualificationsArray.value.find(q => q.id === id);
 
 const showRequestWorkTimeChangeModal = ref(false);
+
+// Tooltip-Binding für die (ggf. gekürzte) Kurzbeschreibung
+const descriptionTooltip = computed(() => ({
+    value: props.person?.pivot?.short_description || '',
+    disabled: !props.person?.pivot?.short_description,
+    appendTo: 'body',
+    class: 'aw-tooltip',
+    position: 'bottom',
+    useTranslation: false,
+}));
 
 
 const saveIndividualShiftTime = (closePopover) => {
@@ -208,7 +253,7 @@ const returnCraftColor = computed(() => {
     return `${color}60`; // Farbe mit Transparenz
 });
 
-const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = false) => {
+const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = true) => {
 
     const userType = user.type === 'user' ? 0 : user.type === 'freelancer' ? 1 : 2;
     const usersPivotId = user.pivot.id;
@@ -226,10 +271,13 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
                 removeFromSingleShift: removeFromSingleShift
             },
             preserveScroll: true,
-            preserveState: preserveState,
+            // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
+            preserveState: true,
         }
     );
 }
+
+const hasAdminRole = () => props.isAdmin || usePage().props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 </script>
 
 <style scoped>

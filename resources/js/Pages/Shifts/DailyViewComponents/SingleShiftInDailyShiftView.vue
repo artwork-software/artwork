@@ -1,50 +1,75 @@
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 w-full rounded-lg select-none"
-         :style="{ backgroundColor: `${shift.craft.color}50` }">
-        <div class="flex items-center gap-x-2">
-            <div class="bg-gray-500 py-1.5 px-2 rounded-l-lg" :style="{ backgroundColor: `${shift.craft.color}90` }">
-                {{ shift.start }} - {{ shift.end }}
+    <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
+    <div :class="['w-full min-w-64 rounded-lg select-none border', containerPadding]"
+         :style="{ backgroundColor: `${shift.craft.color}50`, borderColor: borderColor }">
+        <!-- Linke Spalte: Zeilenstruktur -->
+        <div class="flex flex-col w-full gap-y-0.5">
+            <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
+            <div class="flex items-center min-w-0 justify-between">
+                <div class="flex items-center min-w-0">
+                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${shift.craft.color}90` }">
+                        {{ shift.start }} - {{ shift.end }}
+                    </div>
+                    <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                        ({{ shift.shiftGroup.name }})
+                    </div>
+                    <span
+                        :class="['ml-1 block truncate text-gray-800 cursor-pointer', titleTextClass]"
+                        v-tooltip.bottom="{ value: craftTitleFull, class: 'aw-tooltip' }"
+                        :aria-label="craftTitleFull"
+                        @click.stop="toggleShiftDetails"
+                    >
+                        {{ shift.craft.name }}
+                    </span>
+                </div>
+                <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
+                <div class="flex items-center min-w-0 pr-1">
+                    <div class="flex transition-opacity duration-150">
+                        <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
+                            <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
+                            <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete shift')" />
+                        </BaseMenu>
+                    </div>
+                </div>
             </div>
 
-            <Link class="text-blue-500 font-semibold underline" v-if="shift?.project" :href="route('projects.tab', { project: shift?.project?.id, projectTab: first_project_calendar_tab_id })">
-                {{ shift.project.name }}
-            </Link>
-            <div class="text-gray-700 font-semibold">
-                <span v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag">({{ shift.shiftGroup.name }})</span>
-                [{{ shift.craft.abbreviation }}] {{ shift.craft.name }}
+            <!-- Zeile 2: Gewerkname (gleiches Typo-Level wie Termin-/Projektname) -->
+            <div class="min-w-0">
+
+
             </div>
-        </div>
-        <div class="flex justify-between items-center w-full px-3">
-            <div class="flex items-center gap-x-4">
+
+            <!-- Zeile 3: Funktionen (Badges/Liste) -->
+            <div class="flex justify-between flex-wrap items-center gap-1 ml-2 mt-0.5">
+                <div class="flex gap-x-1">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
                     <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
-                        <component :is="findShiftQualification(qualification.shift_qualification_id)?.icon" class="size-3" />
+
                         <div>
                             {{
                                 qualification.value -
                                 (getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount ?? 0)
                             }}/{{ qualification.value }}
                         </div>
-                        {{ findShiftQualification(qualification.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}
+                        <ToolTipComponent
+                            :icon="findShiftQualification(qualification.shift_qualification_id)?.icon"
+                            :tooltip-text="findShiftQualification(qualification.shift_qualification_id)?.name || ''"
+                            icon-size="size-5"
+                            black-icon
+                            classes-button=""
+                        />
                     </div>
                 </div>
-            </div>
-            <div class="flex items-center justify-end px-3 gap-x-4">
-                <component :is="IconEdit"
-                           class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
-                           @click.stop="showAddShiftModal = true" />
-                <component :is="IconChevronDown"
-                           @click.stop="toggleShiftDetails"
-                           class="size-5 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-150 ease-in-out"
-                           :class="{ 'rotate-180': showShiftDetails }"/>
+                </div>
+                <!-- Aktionen bei Kollision entfallen hier, da Menü nun am Ende der ersten Zeile platziert ist -->
             </div>
         </div>
     </div>
 
-        <div v-if="showShiftDetails" class="mt-1 ml-4 space-y-1">
+        <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
                 <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${shift.craft.color}20` }">
-                    <SingleEntityInShift :person="person" :shift="shift" :shift-qualifications="shiftQualifications" />
+                    <SingleEntityInShift :person="person" :shift="shift" :shift-qualifications="shiftQualifications" :has-collision="hasCollision" />
                 </div>
             </template>
 
@@ -52,18 +77,21 @@
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true)">
-                            <div class="py-1.5 px-3 min-w-28 w-28 rounded-l-lg bg-red-200">
-                                <div class="text-xs text-left flex items-center gap-x-1">
-                                    <component :is="IconInfoTriangle" class="size-4 text-red-600" />
-                                    {{ $t('Unoccupied') }}
+                            <!-- Unbesetzt-Balken: gleiche Breite wie Zeit-Pill der zugewiesenen Entity -->
+                            <div
+                                class="py-1.5 pl-1 pr-0.75 rounded-l-lg bg-red-200"
+                            >
+                                <div
+                                    class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
+                                    v-tooltip.bottom="{ value: $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
+                                >
+                                    <component :is="IconInfoTriangle" class="size-4 text-red-600 shrink-0" />
+                                    <span class="truncate block">{{ $t('Unoccupied') }}</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 w-full gap-x-2">
-                                <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }} {{ $t('Unoccupied') }}</p>
-                                <div class="flex items-center gap-x-1">
-                                    <PropertyIcon :name="findShiftQualification(drop.shift_qualification_id)?.icon" class="size-3" />
-                                    {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}
-                                </div>
+                            <div class="w-full gap-x-2">
+                                <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}</p>
+
                             </div>
                         </MenuButton>
                         <transition enter-active-class="transition ease-out duration-100"
@@ -120,7 +148,6 @@
                         </transition>
                     </Float>
                 </Menu>
-
             </div>
         </div>
 
@@ -137,10 +164,18 @@
         :shift-plan-modal="true"
         :edit="shift !== null"
     />
+
+    <!-- Bestätigungsmodal: Schicht löschen -->
+    <ConfirmationComponent
+        v-if="showConfirmDeleteModal"
+        titel="Schicht löschen"
+        description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        @closed="handleConfirmDelete"
+    />
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, nextTick} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -152,18 +187,29 @@ import {useI18n} from "vue-i18n";
 import {
     IconAlertTriangle,
     IconBuildingCommunity,
-    IconChevronDown,
-    IconClock, IconEdit,
+    IconClock, IconEdit, IconTrash,
     IconId,
     IconInfoTriangle
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+const ConfirmationComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
+    delay: 200,
+});
 
 const props = defineProps({
     shift: Object,
-    shiftQualifications: Array,
+    // Kann als Array ODER als Objekt (Map) geliefert werden → wir normalisieren unten
+    shiftQualifications: [Array, Object],
     crafts: Object,
     first_project_calendar_tab_id: Number | String | null,
+    // hasCollision wird von DailyRoomSplitTimeline gesetzt und steuert das kompaktere Design
+    hasCollision: {
+        type: Boolean,
+        default: false
+    },
 });
 
 // Initialize i18n
@@ -171,6 +217,7 @@ const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
+const showConfirmDeleteModal = ref(false);
 const droppedUser = ref({});
 const seriesShiftData = ref(null);
 // Initialisiere Cache mit leeren Arrays pro Qualifikation
@@ -196,10 +243,21 @@ const lastRequestTime = ref(
     }, {})
 );
 
-const toggleShiftDetails = () => showShiftDetails.value = !showShiftDetails.value;
+const emit = defineEmits(['toggle']);
+const toggleShiftDetails = () => {
+    showShiftDetails.value = !showShiftDetails.value;
+    emit('toggle', showShiftDetails.value);
+};
+
+// Normalisiere Qualifikationsliste in ein Array, falls als Objekt/Map geliefert
+const shiftQualificationsArray = computed(() =>
+    Array.isArray(props.shiftQualifications)
+        ? props.shiftQualifications
+        : Object.values(props.shiftQualifications || {})
+);
 
 const findShiftQualification = (id) =>
-    props.shiftQualifications.find(q => q.id === id);
+    shiftQualificationsArray.value.find(q => q.id === id);
 
 const computedShiftQualificationDropElements = computed(() => {
     return props.shift.shifts_qualifications.map(sq => {
@@ -459,6 +517,20 @@ const AddShiftModal = defineAsyncComponent({
     delay: 200,
 })
 
+// Öffnet das Bestätigungsmodal zum Löschen der Schicht
+const openConfirmDeleteModal = () => {
+    showConfirmDeleteModal.value = true;
+}
+
+// Handler für Confirm/Cancel aus ConfirmationComponent
+const handleConfirmDelete = (confirmed) => {
+    showConfirmDeleteModal.value = false;
+    if (!confirmed) return;
+    router.delete(route('shifts.destroy', { shift: props.shift.id }), {
+        preserveScroll: true,
+    });
+}
+
 // Funktion, um Kollisionen für alle Qualifikationen mit leeren Slots zu prüfen
 const checkAllShiftCollisions = (forceRefresh = false) => {
     // Validate that the shift has the minimum required properties before checking for collisions
@@ -482,6 +554,15 @@ onMounted(() => {
     // Force refresh on initial load to ensure we have the latest data
     checkAllShiftCollisions(true);
 });
+
+
+const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')
+// Konsistente Hierarchie wie bei Terminen
+const titleTextClass = computed(() => props.hasCollision ? 'text-sm font-semibold' : 'text-base font-semibold')
+const subtitleTextClass = computed(() => props.hasCollision ? 'text-xs' : 'text-sm')
+const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-gray-300 bg-white' : 'text-xs border-gray-300 bg-white')
+const craftTitleFull = computed(() => `[${props.shift?.craft?.abbreviation}] ${props.shift?.craft?.name}`)
+const borderColor = computed(() => props.hasCollision ? `${props.shift?.craft?.color ?? '#999999'}A0` : 'transparent')
 
 // Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
 watch(() => props.shift, () => {

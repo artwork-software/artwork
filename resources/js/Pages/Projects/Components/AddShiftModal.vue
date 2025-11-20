@@ -18,6 +18,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
 const { t: $t } = useI18n()
 
@@ -50,10 +51,13 @@ const props = defineProps({
     shiftQualifications: Array,
     shiftTimePresets: Array,
     room: [String, Number, Object],
+    rooms: { type: [Array, Object], default: () => [] },
     day: String,
     shiftPlanModal: Boolean,
     multiAddMode: Boolean,
     roomsAndDatesForMultiEdit: [Array, Object],
+    // Neues Prop: aktuelles Projekt aus dem Projekt-Schichttab
+    project: { type: Object, required: false, default: null },
 })
 
 // Emits
@@ -93,7 +97,12 @@ const globalQualificationsComputed = computed(() => {
 
 const globalQualifications = ref(globalQualificationsComputed.value)
 
-const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
+// Projekt vorbelegen: Priorität -> Schicht-Projekt (Edit) > übergebenes Projekt (Projekt-Tab) > Event-Projekt
+const selectedProject = ref(
+    props.shift?.project
+        ? props.shift.project
+        : (props.project ?? (props.event?.project ?? null))
+);
 
 const shiftGroups = ref(usePage().props.shiftGroups || []);
 const selectedShiftGroup = ref(props.shift?.shiftGroupId ? shiftGroups.value.find((sg) => sg.id === props.shift?.shiftGroupId) : null);
@@ -126,8 +135,22 @@ const shiftForm = useForm({
     globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
-    project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
+    project_id: props.shift && props.shift.project
+        ? props.shift.project.id
+        : (props.event && props.event.project
+            ? props.event.project.id
+            : (props.project ? props.project.id : null)),
     shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
+})
+
+// Falls das Projekt-Prop später gesetzt wird (asynchron), synchronisiere Auswahl und Formular
+watch(() => props.project, (p) => {
+    if (!selectedProject.value && p) {
+        selectedProject.value = p
+        if (!shiftForm.project_id) {
+            shiftForm.project_id = p.id ?? null
+        }
+    }
 })
 
 const initialShiftSnapshot = ref<null | {
@@ -153,6 +176,58 @@ const { breakMinutes } = useLegalBreak(
 const initComputedShiftQualifications = computed(() => {
     return getInitialQualificationValue()
 })
+
+// ----------------------
+// Raum-Auswahl (analog EventComponent)
+// ----------------------
+const selectedRoom = ref<any | null>(null)
+const roomsList = computed<any[]>(() => Array.isArray(props.rooms) ? (props.rooms as any[]) : Object.values(props.rooms || {}))
+
+function findRoomById(rawId: any) {
+    if (rawId === null || typeof rawId === 'undefined') return null
+    const rid = Number(rawId)
+    if (isNaN(rid)) return null
+    const list = roomsList.value || []
+    // Räume können id oder roomId verwenden, Name kann name oder roomName sein
+    return list.find((r: any) => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
+}
+
+function initSelectedRoom() {
+    if (selectedRoom.value) return
+    if (props.room && typeof props.room === 'object') {
+        selectedRoom.value = props.room as any
+    } else if (props.room !== null && typeof props.room !== 'undefined') {
+        // Zahl/String → über rooms finden
+        const found = findRoomById(props.room)
+        if (found) selectedRoom.value = found
+    } else if (props.shift?.roomId) {
+        const found = findRoomById(props.shift.roomId)
+        if (found) selectedRoom.value = found
+    }
+
+    // Falls selektierter Raum gesetzt, room_id synchronisieren
+    if (selectedRoom.value && !shiftForm.room_id) {
+        shiftForm.room_id = selectedRoom.value.id ?? selectedRoom.value.roomId ?? null
+    }
+}
+
+function onRoomSelected(room: any) {
+    selectedRoom.value = room
+}
+
+// Sync: wenn selectedRoom wechselt, setze room_id im Formular
+watch(selectedRoom, (r) => {
+    shiftForm.room_id = r ? (r.id ?? r.roomId ?? null) : null
+})
+
+// Reagiere auf Änderungen an rooms/room-Prop (spätes Laden möglich)
+watch(() => props.rooms, () => initSelectedRoom(), { deep: true })
+watch(() => props.room, () => {
+    selectedRoom.value = null
+    initSelectedRoom()
+})
+
+onMounted(() => initSelectedRoom())
 
 function getInitialQualificationValue() {
     const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
@@ -350,9 +425,12 @@ function takeTimePreset(preset) {
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = p.id === preset.id })
 }
 
-function closeModal(bool){
+function closeModal(bool = false){
+    // Modal sofort ausblenden, um UI-Latenz zu vermeiden
+    open.value = false
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = false })
     singleShiftPresets.value.forEach(p => { p.active = false })
+    // Parent benachrichtigen (true = erfolgreich gespeichert, false = nur geschlossen)
     emit('closed', bool)
 }
 
@@ -484,6 +562,10 @@ function validate() {
 function saveShift() {
     if (validate()) return
 
+    // Modal direkt schließen, damit es nicht sichtbar bleibt, während die Liste bereits aktualisiert ist
+    // (z. B. wenn im Hintergrund die neue Schicht schon gerendert wurde)
+    open.value = false
+
     if (!props.shiftPlanModal && props.event?.is_series) {
         if (!props.buffer?.onlyThisDay) {
             shiftForm.changeAll = true
@@ -554,7 +636,10 @@ function saveShift() {
             preserveState: false,
             onSuccess: () => {
                 shiftForm.reset()
-                router.reload({ only: ['loadedProjectInformation'] })
+                // Im Shift-Plan (Daily View) per WebSockets aktualisieren – kein Reload nötig
+                if (!props.shiftPlanModal) {
+                    router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
+                }
                 closeModal(true)
             },
             onError: (e) => console.log(e),
@@ -566,7 +651,7 @@ function saveShift() {
             preserveState: true,
             onSuccess: () => {
                 shiftForm.reset()
-                router.reload({ only: ['loadedProjectInformation'] })
+                router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
                 closeModal(true)
             },
             onError: (e) => console.log(e),
@@ -933,7 +1018,6 @@ const lockOrUnlockShift = (commit = false) => {
                         </div>
                     </transition>
                 </section>
-
                 <!-- Sektion: Basisdaten -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3 mb-3">
@@ -944,6 +1028,18 @@ const lockOrUnlockShift = (commit = false) => {
                             </p>
                         </div>
                     </div>
+                    <!-- Room -->
+
+                        <div class="grid grid-cols-1 my-4 gap-2">
+                            <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
+                            <div v-else
+                                 class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
+                                <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
+                                <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
+                                    <IconX class="size-4" />
+                                </button>
+                            </div>
+                        </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Start -->

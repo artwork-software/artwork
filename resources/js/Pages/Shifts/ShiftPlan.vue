@@ -465,6 +465,7 @@
         :shift-qualifications="usePage().props.shiftQualifications"
         @closed="closeAddShiftModal"
         :shift-time-presets="usePage().props.shiftTimePresets"
+        :rooms="rooms"
         :room="roomForShiftAdd"
         :day="dayForShiftAdd"
         :shift-plan-modal="true"
@@ -1047,6 +1048,8 @@ function setupInertiaNavigationGuard() {
     }
 
     router.visit = async (url: string, options: any = {}) => {
+        // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
+        options = { preserveScroll: true, ...options }
         if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
             preventNextNavigation.value = true
             try {
@@ -1463,6 +1466,7 @@ function closeMultiEditCellModal(eventData: any) {
         multiEditCellByDayAndUser.value = {}
         router.reload({
             only: ['shifts', 'users', 'rooms', 'days', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+            preserveScroll: true,
         })
     }
 }

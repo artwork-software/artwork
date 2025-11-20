@@ -41,6 +41,8 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
+use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -121,6 +123,7 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
@@ -2087,7 +2090,8 @@ class ProjectController extends Controller
         AreaService $areaService,
         EventService $eventService,
         ProjectCreateSettings $projectCreateSettings,
-        EventPropertyService $eventPropertyService
+        EventPropertyService $eventPropertyService,
+        ShiftTimePresetService $shiftTimePresetService
     ): Response|ResponseFactory {
         // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
         $headerObject = new stdClass();
@@ -2224,6 +2228,34 @@ class ProjectController extends Controller
         }
         $headerObject->project_history = $latestChange;
 
+        // Zusätzliche Props für den Schicht-Tab (Daily View) analog EventController::viewShiftPlan
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+        $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
+        $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
+
+        // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
+        /** @var CalendarDataService $calendarDataService */
+        $calendarDataService = app(CalendarDataService::class);
+        $rooms = $calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true
+        );
+
+        $dateValue = [
+            $startDate ? $startDate->format('Y-m-d') : null,
+            $endDate ? $endDate->format('Y-m-d') : null,
+        ];
+
+        // Verlaufseinträge (für Historie im Shift-Plan)
+        $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
+
         return inertia('Projects/Tab/TabContent', [
             'currentTab'                  => $projectTab,
             'headerObject'                => $headerObject,
@@ -2236,6 +2268,32 @@ class ProjectController extends Controller
             'createSettings'              => app(ProjectCreateSettings::class),
             'printLayouts'                => $this->projectPrintLayoutService->getAll(),
             'project'                       => $headerObject->project,
+            // Zusätzliche Daten für ShiftPlanDailyView im Projektkontext
+            'history' => $history,
+            'crafts' => $craftService->getAll([
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+                'users', 'freelancers', 'serviceProviders', 'qualifications'
+            ]),
+            'rooms' => $rooms,
+            'eventTypes' => $this->eventTypeService->getAll(),
+            'eventStatuses' => app(EventSettings::class)->enable_status
+                ? EventStatus::orderBy('order')->get()
+                : [],
+            'event_properties' => $eventPropertyService->getAll(),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'dateValue' => $dateValue,
+            'user_filters' => $userCalendarFilter,
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'firstProjectShiftTabId' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'projectId' => $project->id,
+            'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
+                $craftService->getAssignableByAllCrafts()
+            ),
+            'shiftTimePresets' => $shiftTimePresetService->getAll(),
         ]);
     }
 

@@ -1,6 +1,6 @@
 <template>
     <div class="relative w-full">
-        <ShiftHeader>
+        <component :is="props.project ? 'div' : ShiftHeader">
             <transition name="fade" appear>
                 <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
                     <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
@@ -15,43 +15,52 @@
                     </div>
                 </div>
             </transition>
-            <!-- topbar with date range selector -->
-            <div class="card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none">
+            <!-- topbar with date range selector or project period -->
+            <div :class="topBarContainerClass">
                 <div class="flex items-center pr-5 gap-x-5 justify-between">
                     <div class="flex items-center gap-x-4">
-                        <!-- Date Shortcuts - 3 vertical icons -->
-                        <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
-
-                        <div class="flex gap-x-1 mx-2">
-                            <ToolTipComponent
-                                direction="right"
-                                :tooltip-text="$t('Today')"
-                                :icon="IconCalendar"
-                                icon-size="h-5 w-5"
-                                @click="jumpToToday"
-                                classesButton="ui-button"
-                            />
-                            <ToolTipComponent
-                                direction="right"
-                                :tooltip-text="$t('Current week')"
-                                :icon="IconCalendarWeek"
-                                icon-size="h-5 w-5"
-                                @click="jumpToCurrentWeek"
-                                classesButton="ui-button"
-                            />
-                            <ToolTipComponent
-                                direction="right"
-                                :tooltip-text="$t('Current month')"
-                                :icon="IconCalendarMonth"
-                                icon-size="h-5 w-5"
-                                @click="jumpToCurrentMonth"
-                                classesButton="ui-button"
-                            />
+                        <!-- In Projekt-Kontext: nur Projektzeitraum anzeigen -->
+                        <div v-if="props.project" class="ml-1 text-sm font-lexend font-semibold text-gray-700">
+                            {{ $t('Projektzeitraum') }} {{ formatDate(projectStart) }} - {{ formatDate(projectEnd) }}
                         </div>
+
+                        <!-- Globaler Kontext: DatePicker + Shortcuts -->
+                        <template v-else>
+                            <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+
+                            <div class="flex gap-x-1 mx-2">
+                                <ToolTipComponent
+                                    direction="right"
+                                    :tooltip-text="$t('Today')"
+                                    :icon="IconCalendar"
+                                    icon-size="h-5 w-5"
+                                    @click="jumpToToday"
+                                    classesButton="ui-button"
+                                />
+                                <ToolTipComponent
+                                    direction="right"
+                                    :tooltip-text="$t('Current week')"
+                                    :icon="IconCalendarWeek"
+                                    icon-size="h-5 w-5"
+                                    @click="jumpToCurrentWeek"
+                                    classesButton="ui-button"
+                                />
+                                <ToolTipComponent
+                                    direction="right"
+                                    :tooltip-text="$t('Current month')"
+                                    :icon="IconCalendarMonth"
+                                    icon-size="h-5 w-5"
+                                    @click="jumpToCurrentMonth"
+                                    classesButton="ui-button"
+                                />
+                            </div>
+                        </template>
                     </div>
 
                     <div class="flex items-center gap-x-5 ">
+                        <!-- Im Projekt: kein Umschalter zwischen Tages- und Normalansicht -->
                         <SwitchIconTooltip
+                            v-if="!props.project"
                             v-model="dailyViewMode"
                             :tooltip-text="$t('Daily view')"
                             size="md"
@@ -94,43 +103,23 @@
                             </div>
                         </div>
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="card glassy p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-5">
-                                    <div class="card white p-5 text-xs col-span-1">
-                                        <div class="space-y-2" v-if="room.content[day.fullDay]?.events?.length > 0">
-                                            <div v-for="event in room.content[day.fullDay]?.events" :key="event.id">
-                                                <SingleEventInDailyShiftView
-                                                    :event="event"
-                                                    :eventTypes="eventTypes"
-                                                    :rooms="rooms"
-                                                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                                    :event-statuses="eventStatuses"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div v-else>
-                                            <div class="text-gray-300 text-center">{{ $t('No events for this day') }}</div>
-                                        </div>
-                                        <div class="mt-5">
-                                            <BaseUIButton :label="$t('Add Event')" is-add-button :icon="IconCalendarPlus" @click="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)" />
-                                        </div>
-                                    </div>
-                                    <div class="card white p-5 text-xs font-lexend col-span-2">
-                                        <div class="space-y-2" v-if="room.content[day.fullDay]?.shifts?.length > 0">
-                                            <div v-for="shift in filterShiftsByCraft(room.content[day.fullDay]?.shifts)" :key="shift.id">
-                                                <SingleShiftInDailyShiftView :shift="shift" :shift-qualifications="shiftQualifications" :first_project_calendar_tab_id="first_project_calendar_tab_id" :crafts="crafts"/>
-                                            </div>
-                                        </div>
-                                        <div v-else>
-                                            <div class="text-gray-300 text-center">{{ $t('No shifts for this day') }}</div>
-                                        </div>
-                                        <div class="mt-5">
-                                            <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)" />
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="card glassy p-4 w-full">
+                                <DailyRoomSplitTimeline
+                                    :day="day.fullDay"
+                                    :events="room.content[day.fullDay]?.events || []"
+                                    :shifts="filterShiftsByCraft(room.content[day.fullDay]?.shifts || [])"
+                                    :event-types="eventTypes"
+                                    :rooms="rooms"
+                                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                    :event-statuses="eventStatuses"
+                                    :crafts="crafts"
+                                    :shift-qualifications="shiftQualificationsArray"
+                                    :px-per-min="1.0"
+                                    :gap-threshold-min="90"
+                                    @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
+                                    @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
+                                />
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -147,19 +136,21 @@
                 :shift-qualifications="usePage().props.shiftQualifications"
                 @closed="closeAddShiftModal"
                 :shift-time-presets="usePage().props.shiftTimePresets"
+                :rooms="roomsArray"
                 :room="roomForShiftAdd"
                 :day="dayForShiftAdd"
                 :shift-plan-modal="true"
                 :edit="shiftToEdit !== null"
+                :project="props.project"
             />
 
             <EventComponent
                 v-if="showEventComponent"
                 :showHints="usePage().props.show_hints"
                 :eventTypes="eventTypes"
-                :rooms="rooms"
+                :rooms="roomsArray"
                 :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
-                :project="null"
+                :project="props.project"
                 :event="eventToEdit"
                 :wantedRoomId="wantedRoom"
                 :isAdmin="can('artwork admin')"
@@ -173,7 +164,7 @@
 
             />
 
-        </ShiftHeader>
+        </component>
 
     </div>
 </template>
@@ -181,7 +172,7 @@
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import SingleEventInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue";
-import { ref, provide, onMounted, watch } from "vue";
+import { ref, provide, onMounted, watch, computed } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -203,67 +194,79 @@ import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
+import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
+import dayjs from "dayjs";
 
 const props = defineProps({
+    project: {
+        type: Object as any,
+        required: false,
+        default: null
+    },
     days: {
         type: Array,
-        required: true,
+        required: false,
         default: () => []
     },
     dateValue: {
         type: Array,
-        required: true,
+        required: false,
         default: () => []
     },
     shiftPlan: {
         type: [Object, Array],
-        required: true,
+        required: false,
         default: () => ({})
     },
     shiftQualifications: {
         type: [Object, Array],
-        required: true,
-        default: () => ({})
+        required: false,
+        default: () => (usePage().props.shiftQualifications ?? {})
     },
     crafts: {
         type: [Object, Array],
-        required: true,
-        default: () => ({})
+        required: false,
+        default: () => (usePage().props.crafts ?? {})
     },
     rooms: {
         type: [Object, Array],
-        required: true
+        required: false,
+        default: () => (usePage().props.rooms ?? [])
     },
     eventStatuses: {
         type: [Object, Array],
-        required: true
+        required: false,
+        default: () => (usePage().props.eventStatuses ?? [])
     },
     eventTypes: {
         type: [Object, Array],
-        required: true
+        required: false,
+        default: () => (usePage().props.eventTypes ?? [])
     },
     event_properties: {
         type: Object,
-        required: true
+        required: false,
+        default: () => (usePage().props.event_properties ?? {})
     },
     first_project_calendar_tab_id: {
         type: Number,
-        required: true
+        required: false,
+        default: () => (usePage().props.first_project_calendar_tab_id ?? 0)
     },
     filterOptions: {
         type: Object,
-        required: true,
-        default: () => ({})
+        required: false,
+        default: () => (usePage().props.filterOptions ?? {})
     },
     personalFilters: {
         type: Object,
-        required: true,
-        default: () => ({})
+        required: false,
+        default: () => (usePage().props.personalFilters ?? {})
     },
     user_filters: {
         type: Object,
-        required: true,
-        default: () => ({})
+        required: false,
+        default: () => (usePage().props.user_filters ?? {})
     },
     calendarWarningText: {
         type: String,
@@ -301,6 +304,24 @@ const dailyViewMode = ref<boolean>(usePage().props.auth.user.daily_view ?? false
 
 provide('event_properties', props.event_properties)
 
+// Normalisiere rooms zu einem Array (wie im BaseCalendar), damit EventComponent stets ein Array erhält
+const roomsArray = computed(() => {
+    const fromProp = Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms ?? {})
+    if (fromProp && fromProp.length > 0) return fromProp
+    // Fallback: aus dem geladenen ShiftPlan ableiten
+    const derived = (shiftPlanCopy.value || []).map((r: any) => ({ id: r.roomId ?? r.id, name: r.roomName ?? r.name }))
+    const map = new Map<any, any>()
+    derived.forEach(r => { if (r && r.id !== undefined) map.set(r.id, r) })
+    return Array.from(map.values())
+})
+
+// Normalisierte Qualifikationsliste als Array
+const shiftQualificationsArray = computed(() =>
+    Array.isArray(props.shiftQualifications)
+        ? props.shiftQualifications
+        : Object.values(props.shiftQualifications || {})
+)
+
 /**
  * Initiales Laden des Tages-Schichtplans über API, wenn Props leer sind
  */
@@ -317,8 +338,8 @@ const initializeDailyShiftPlan = async () => {
             params: {
                 start_date: props.dateValue[0],
                 end_date: props.dateValue[1],
-                // falls du hier projektabhängig filtern willst, kannst du das anpassen:
-                projectId: usePage().props.currentProject?.id ?? null
+                // Projektfilter priorisieren, wenn Komponente im Projektkontext verwendet wird
+                projectId: (props.project as any)?.id ?? usePage().props.currentProject?.id ?? null
             }
         })
 
@@ -520,6 +541,42 @@ onMounted(async () => {
     // Listener initialisieren – bekommt die ref auf shiftPlanCopy
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy);
     ShiftCalendarListener.init();
+})
+
+// ---- Projektzeitraum-Helfer ----
+const projectStart = computed(() => {
+    // Priorität: übergebener DateRange -> HeaderObject.firstEventInProject.start_time -> Fallbacks im Projekt
+    const headerObj: any = (usePage().props as any)?.headerObject || {}
+    const fromRange = Array.isArray(props.dateValue) ? props.dateValue[0] : null
+    const fromHeader = headerObj?.firstEventInProject?.start_time
+    const p: any = props.project || {}
+    return fromRange || fromHeader || p.start_date || p.startDate || p.start || p.starts_at || p.startsAt || null
+})
+
+const projectEnd = computed(() => {
+    const headerObj: any = (usePage().props as any)?.headerObject || {}
+    const fromRange = Array.isArray(props.dateValue) ? props.dateValue[1] : null
+    const fromHeader = headerObj?.lastEventInProject?.end_time
+    const p: any = props.project || {}
+    return fromRange || fromHeader || p.end_date || p.endDate || p.end || p.ends_at || p.endsAt || null
+})
+
+function formatDate(dateLike: any) {
+    if (!dateLike) return '-'
+    try {
+        const d = typeof dateLike === 'string' ? dayjs(dateLike) : dayjs(dateLike)
+        return d.isValid() ? d.format('DD.MM.YYYY') : '-'
+    } catch (e) {
+        return '-'
+    }
+}
+
+// Optik der Top-Bar: im Projektkontext nahezu randlos, sonst Standard-Karte
+const topBarContainerClass = computed(() => {
+    if (props.project) {
+        return 'w-full sticky top-0 z-40 px-3 py-2 bg-transparent'
+    }
+    return 'card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none'
 })
 </script>
 

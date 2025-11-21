@@ -794,11 +794,15 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
+        $pivot = $this->shiftUserRepository->findByUserIdAndShiftId($userId, $shiftId);
+
+        // Falls kein Pivot-Eintrag existiert, ist nichts zu entfernen -> idempotent beenden
+        if (!$pivot instanceof ShiftUser) {
+            return;
+        }
+
         $this->removeFromShift(
-            $this->shiftUserRepository->findByUserIdAndShiftId(
-                $userId,
-                $shiftId
-            ),
+            $pivot,
             true,
             $notificationService,
             $shiftCountService,

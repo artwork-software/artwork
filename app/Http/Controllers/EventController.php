@@ -283,6 +283,7 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
+            false // Calendar view: only events determine occupancy
         );
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -346,6 +347,7 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
+            false // Calendar API: only events determine occupancy
         );
 
         $calendar = ($isPlanning
@@ -430,6 +432,7 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
+            false // Planning calendar: only events determine occupancy
         );
 
         $this->eventPlanningCalendarService->filterRoomsEvents(
@@ -493,26 +496,30 @@ class EventController extends Controller
 
     public function shiftPlanEventAPI(Request $request): JsonResponse
     {
-
-        if ($request->get('projectId')) {
-            $project = $this->projectService->findById($request->get('projectId'));
-        } else {
-            $project = null;
-        }
+        $project = $request->get('projectId')
+            ? $this->projectService->findById($request->get('projectId'))
+            : null;
 
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
 
-        [$startDate, $endDate] = $this->calendarDataService
-            ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        // Wenn ein exakter Zeitraum angefragt wird, diesen respektieren (Projekt-Tab lädt Projektzeitraum)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+            $endDate   = Carbon::parse($request->get('end_date'))->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        }
 
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
             $userCalendarSettings,
             $startDate,
             $endDate,
+            true // Shift plan: consider standalone shifts for occupancy
         );
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
@@ -527,16 +534,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             $userCalendarSettings,
-            $user->getAttribute('daily_view')
-        );
-
-        $this->shiftCalendarService->filterRoomsEventsAnShifts(
-            $rooms,
-            $userCalendarFilter,
-            $startDate,
-            $endDate,
-            $userCalendarSettings,
-            $user->getAttribute('daily_view')
+            $user->getAttribute('daily_view'),
+            $project
         );
 
         $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
@@ -599,6 +598,7 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
+            true // Shift plan view: consider standalone shifts for occupancy
         );
 
         $dateValue = [
@@ -618,7 +618,7 @@ class EventController extends Controller
                 'managingServiceProviders',
                 'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
-            //'rooms' => $rooms,
+            'rooms' => $rooms,
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, toRef } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
 import { useLegalBreak} from "@/Composeables/useLegalBreak";
@@ -18,6 +18,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
 const { t: $t } = useI18n()
 
@@ -50,10 +51,16 @@ const props = defineProps({
     shiftQualifications: Array,
     shiftTimePresets: Array,
     room: [String, Number, Object],
+    rooms: { type: [Array, Object], default: () => [] },
     day: String,
     shiftPlanModal: Boolean,
     multiAddMode: Boolean,
     roomsAndDatesForMultiEdit: [Array, Object],
+    // Neues Prop: aktuelles Projekt aus dem Projekt-Schichttab
+    project: { type: Object, required: false, default: null },
+    // Optional direkt übergebene Datenquellen (Fallback zu usePage().props)
+    shiftGroups: { type: [Array, Object], required: false, default: () => [] },
+    globalQualifications: { type: [Array, Object], required: false, default: () => [] },
 })
 
 // Emits
@@ -78,7 +85,13 @@ const showShiftSearchbar = ref(false)
 const searchShiftPreset = ref('');
 
 const globalQualificationsComputed = computed(() => {
-    const all = page?.props?.globalQualifications ?? []
+    // Priorität: Props (vom Aufrufer) > usePage().props
+    const fromProp = Array.isArray(props.globalQualifications)
+        ? props.globalQualifications
+        : (props.globalQualifications ? Object.values(props.globalQualifications as any) : [])
+    const all = (fromProp && fromProp.length > 0)
+        ? fromProp
+        : (page?.props?.globalQualifications ?? [])
     const shiftQualis = props.shift?.globalQualifications ?? []
 
     return all.map(gq => {
@@ -93,10 +106,61 @@ const globalQualificationsComputed = computed(() => {
 
 const globalQualifications = ref(globalQualificationsComputed.value)
 
-const selectedProject = ref(props.shift?.project ? props.shift?.project : null);
+// Reagiere auf spätes Laden/Änderungen
+watch(() => props.globalQualifications, () => {
+    globalQualifications.value = globalQualificationsComputed.value
+}, { deep: true })
 
-const shiftGroups = ref(usePage().props.shiftGroups || []);
-const selectedShiftGroup = ref(props.shift?.shiftGroupId ? shiftGroups.value.find((sg) => sg.id === props.shift?.shiftGroupId) : null);
+// Projekt vorbelegen: Priorität -> Schicht-Projekt (Edit) > übergebenes Projekt (Projekt-Tab) > Event-Projekt
+const selectedProject = ref(
+    props.shift?.project
+        ? props.shift.project
+        : (props.project ?? (props.event?.project ?? null))
+);
+
+function normalizeToArray(val: any): any[] {
+    if (Array.isArray(val)) return val
+    if (val && typeof val === 'object') return Object.values(val)
+    return []
+}
+
+// Schichtgruppen: Props bevorzugen, sonst usePage().props
+const resolveInitialShiftGroups = (): any[] => {
+    const fromProp = normalizeToArray(props.shiftGroups)
+    if (fromProp.length > 0) return fromProp
+    return normalizeToArray(usePage().props.shiftGroups)
+}
+const shiftGroups = ref<any[]>(resolveInitialShiftGroups())
+
+const selectedShiftGroup = ref<any | null>(
+    props.shift?.shiftGroupId
+        ? (shiftGroups as any).value?.find
+            ? (shiftGroups as any).value.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+            : shiftGroups.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+        : null
+)
+
+// Aktualisieren, wenn Props nachgeladen werden
+watch(() => props.shiftGroups, (v) => {
+    // @ts-ignore
+    shiftGroups.value = normalizeToArray(v)
+    if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+        // @ts-ignore
+        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+    }
+}, { deep: true })
+
+// Fallback: wenn usePage().props sich füllt
+watch(() => usePage().props.shiftGroups, (v: any) => {
+    if (!props.shiftGroups || normalizeToArray(props.shiftGroups).length === 0) {
+        // @ts-ignore
+        shiftGroups.value = normalizeToArray(v)
+        if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+            // @ts-ignore
+            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+        }
+    }
+}, { deep: true })
 
 const selectedCraft = ref(props.shift ? props.shift.craft : null)
 
@@ -126,8 +190,22 @@ const shiftForm = useForm({
     globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
-    project_id: props.shift && props.shift.project ? props.shift.project.id : (props.event && props.event.project ? props.event.project.id : null),
+    project_id: props.shift && props.shift.project
+        ? props.shift.project.id
+        : (props.event && props.event.project
+            ? props.event.project.id
+            : (props.project ? props.project.id : null)),
     shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
+})
+
+// Falls das Projekt-Prop später gesetzt wird (asynchron), synchronisiere Auswahl und Formular
+watch(() => props.project, (p) => {
+    if (!selectedProject.value && p) {
+        selectedProject.value = p
+        if (!shiftForm.project_id) {
+            shiftForm.project_id = p.id ?? null
+        }
+    }
 })
 
 const initialShiftSnapshot = ref<null | {
@@ -153,6 +231,58 @@ const { breakMinutes } = useLegalBreak(
 const initComputedShiftQualifications = computed(() => {
     return getInitialQualificationValue()
 })
+
+// ----------------------
+// Raum-Auswahl (analog EventComponent)
+// ----------------------
+const selectedRoom = ref<any | null>(null)
+const roomsList = computed<any[]>(() => Array.isArray(props.rooms) ? (props.rooms as any[]) : Object.values(props.rooms || {}))
+
+function findRoomById(rawId: any) {
+    if (rawId === null || typeof rawId === 'undefined') return null
+    const rid = Number(rawId)
+    if (isNaN(rid)) return null
+    const list = roomsList.value || []
+    // Räume können id oder roomId verwenden, Name kann name oder roomName sein
+    return list.find((r: any) => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
+}
+
+function initSelectedRoom() {
+    if (selectedRoom.value) return
+    if (props.room && typeof props.room === 'object') {
+        selectedRoom.value = props.room as any
+    } else if (props.room !== null && typeof props.room !== 'undefined') {
+        // Zahl/String → über rooms finden
+        const found = findRoomById(props.room)
+        if (found) selectedRoom.value = found
+    } else if (props.shift?.roomId) {
+        const found = findRoomById(props.shift.roomId)
+        if (found) selectedRoom.value = found
+    }
+
+    // Falls selektierter Raum gesetzt, room_id synchronisieren
+    if (selectedRoom.value && !shiftForm.room_id) {
+        shiftForm.room_id = selectedRoom.value.id ?? selectedRoom.value.roomId ?? null
+    }
+}
+
+function onRoomSelected(room: any) {
+    selectedRoom.value = room
+}
+
+// Sync: wenn selectedRoom wechselt, setze room_id im Formular
+watch(selectedRoom, (r) => {
+    shiftForm.room_id = r ? (r.id ?? r.roomId ?? null) : null
+})
+
+// Reagiere auf Änderungen an rooms/room-Prop (spätes Laden möglich)
+watch(() => props.rooms, () => initSelectedRoom(), { deep: true })
+watch(() => props.room, () => {
+    selectedRoom.value = null
+    initSelectedRoom()
+})
+
+onMounted(() => initSelectedRoom())
 
 function getInitialQualificationValue() {
     const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
@@ -286,7 +416,7 @@ function qualStats(preset: any) {
 }
 
 // Übernahme einer Schichtvorlage in die Felder (inkl. 0-Werte)
-function takeShiftPreset(preset: any) {
+async function takeShiftPreset(preset: any) {
     if (!preset) return
 
     // Zeiten + Pause (trim seconds to HH:MM)
@@ -302,6 +432,10 @@ function takeShiftPreset(preset: any) {
     const targetCraft = props.crafts?.find(c => c.id === preset.craft_id) ?? null
     if (targetCraft) selectedCraft.value = targetCraft
 
+    // Warten, bis der Watcher auf selectedCraft die computedShiftQualifications
+    // neu aufgebaut hat, damit wir danach die Mengen korrekt setzen können.
+    await nextTick()
+
     // Beschreibung
     shiftForm.description = preset.description ?? ''
 
@@ -310,9 +444,7 @@ function takeShiftPreset(preset: any) {
     for (const q of normalizePresetQualifications(preset)) {
         const id = typeof q?.id === 'number' ? q.id : q?.shift_qualification_id
         if (id == null) continue
-        const qty = (typeof q?.pivot?.quantity === 'number') ? q.pivot.quantity
-            : (typeof q?.quantity === 'number') ? q.quantity
-                : 0
+        const qty = (typeof (q as any)?.quantity === 'number') ? (q as any).quantity : 0
         map.set(Number(id), Math.max(0, qty))
     }
     computedShiftQualifications.value.forEach(q => {
@@ -354,9 +486,12 @@ function takeTimePreset(preset) {
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = p.id === preset.id })
 }
 
-function closeModal(bool){
+function closeModal(bool = false){
+    // Modal sofort ausblenden, um UI-Latenz zu vermeiden
+    open.value = false
     ;(props.shiftTimePresets || []).forEach((p) => { p.active = false })
     singleShiftPresets.value.forEach(p => { p.active = false })
+    // Parent benachrichtigen (true = erfolgreich gespeichert, false = nur geschlossen)
     emit('closed', bool)
 }
 
@@ -488,6 +623,10 @@ function validate() {
 function saveShift() {
     if (validate()) return
 
+    // Modal direkt schließen, damit es nicht sichtbar bleibt, während die Liste bereits aktualisiert ist
+    // (z. B. wenn im Hintergrund die neue Schicht schon gerendert wurde)
+    open.value = false
+
     if (!props.shiftPlanModal && props.event?.is_series) {
         if (!props.buffer?.onlyThisDay) {
             shiftForm.changeAll = true
@@ -558,7 +697,10 @@ function saveShift() {
             preserveState: false,
             onSuccess: () => {
                 shiftForm.reset()
-                router.reload({ only: ['loadedProjectInformation'] })
+                // Im Shift-Plan (Daily View) per WebSockets aktualisieren – kein Reload nötig
+                if (!props.shiftPlanModal) {
+                    router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
+                }
                 closeModal(true)
             },
             onError: (e) => console.log(e),
@@ -570,7 +712,7 @@ function saveShift() {
             preserveState: true,
             onSuccess: () => {
                 shiftForm.reset()
-                router.reload({ only: ['loadedProjectInformation'] })
+                router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
                 closeModal(true)
             },
             onError: (e) => console.log(e),
@@ -594,8 +736,28 @@ function closeShiftSearchbar() {
     searchShiftPreset.value = ''
 }
 function normalizePresetQualifications(preset) {
+    // Unterstützt beide möglichen Quellen und normalisiert auf { id, quantity }
     const raw = preset?.shifts_qualifications ?? preset?.shift_qualifications ?? []
-    return Array.isArray(raw) ? raw : []
+    if (!Array.isArray(raw)) return []
+    return raw.map((q) => {
+        // Falls nur die ID übergeben wird (z. B. [1,2,3])
+        if (typeof q === 'number') {
+            return { id: q, quantity: 0 }
+        }
+
+        // Falls Objekt — ID und Menge robust ermitteln
+        if (q && typeof q === 'object') {
+            const id = typeof q.id === 'number' ? q.id : (q.shift_qualification_id ?? Number(q.id))
+            const quantity =
+                (q.pivot && typeof q.pivot.quantity === 'number' ? q.pivot.quantity : undefined) ??
+                (typeof q.quantity === 'number' ? q.quantity : 0)
+            return { id: Number(id), quantity: Math.max(0, Number(quantity)) }
+        }
+
+        // Fallback
+        const num = Number(q)
+        return { id: isNaN(num) ? 0 : num, quantity: 0 }
+    })
 }
 
 function resetTimePresetSelection() {
@@ -917,7 +1079,6 @@ const lockOrUnlockShift = (commit = false) => {
                         </div>
                     </transition>
                 </section>
-
                 <!-- Sektion: Basisdaten -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3 mb-3">
@@ -928,6 +1089,18 @@ const lockOrUnlockShift = (commit = false) => {
                             </p>
                         </div>
                     </div>
+                    <!-- Room -->
+
+                        <div class="grid grid-cols-1 my-4 gap-2">
+                            <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
+                            <div v-else
+                                 class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
+                                <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
+                                <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
+                                    <IconX class="size-4" />
+                                </button>
+                            </div>
+                        </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Start -->

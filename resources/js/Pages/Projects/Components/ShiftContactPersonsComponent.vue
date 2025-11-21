@@ -7,7 +7,13 @@
                                @click="openContactModal"/>
             </div>
         </div>
-        <div v-if="this.project?.project_managers?.length > 0" class="my-2" v-for="projectManager in this.project?.project_managers">
+        <div v-if="loadError" class="text-xs text-rose-600 mt-2">
+            {{ loadError }}
+        </div>
+        <div v-else-if="loading" class="text-xs text-secondary mt-2">
+            {{ $t('Loading data...') }}
+        </div>
+        <div v-if="shiftProject?.project_managers?.length > 0" class="my-2" v-for="projectManager in shiftProject?.project_managers">
             <div class="flex w-full">
                 <div class="mr-4">
                     <img :data-tooltip-target="projectManager?.id" :src="projectManager?.profile_photo_url"
@@ -37,7 +43,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="this.project?.shift_contacts?.length > 0" class="my-2" v-for="contact in this.project?.shift_contacts">
+        <div v-if="shiftProject?.shift_contacts?.length > 0" class="my-2" v-for="contact in shiftProject?.shift_contacts">
             <div class="flex w-full">
                 <div class="mr-4">
                     <img :src="contact?.profile_photo_url" :alt="contact?.name"
@@ -65,9 +71,9 @@
         </div>
         <ShiftContactModal
             :show="showContactModal"
-            :assigned-shift-contacts="this.project.shift_contacts"
-            :project-id="this.project.id"
-            :project-managers="this.project?.project_managers"
+            :assigned-shift-contacts="shiftProject?.shift_contacts ?? []"
+            :project-id="currentProjectId()"
+            :project-managers="shiftProject?.project_managers ?? []"
             @close-modal="closeContactModal"
         />
     </div>
@@ -75,6 +81,7 @@
 
 <script>
 import {defineComponent} from "vue";
+import axios from "axios";
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftContactModal from "@/Layouts/Components/ShiftContactModal.vue";
 import {IconEdit} from "@tabler/icons-vue";
@@ -87,17 +94,92 @@ export default defineComponent({
         ShiftContactModal,
         PencilAltIcon
     },
-    props: [
-        'project',
-        'inSidebar',
-        'canEditComponent'
-    ],
+    props: {
+        project: {
+            type: Object,
+            default: null
+        },
+        projectId: {
+            type: [Number, String],
+            default: null
+        },
+        inSidebar: {
+            type: Boolean,
+            default: false
+        },
+        canEditComponent: {
+            type: Boolean,
+            default: false
+        }
+    },
     data() {
+        const hasInitialData =
+            this.project &&
+            (Array.isArray(this.project.shift_contacts) || Array.isArray(this.project.project_managers));
         return {
-            showContactModal: false
+            showContactModal: false,
+            loading: false,
+            loadError: null,
+            localProject: hasInitialData ? this.project : null
         };
     },
+    computed: {
+        shiftProject() {
+            return this.localProject ?? this.project ?? {};
+        }
+    },
+    watch: {
+        project: {
+            deep: true,
+            immediate: true,
+            handler(newProject) {
+                if (this.hasShiftContactsData(newProject)) {
+                    this.localProject = newProject;
+                }
+            }
+        }
+    },
+    mounted() {
+        this.ensureShiftContactsData();
+    },
     methods: {
+        async ensureShiftContactsData() {
+            if (this.hasShiftContactsData(this.shiftProject)) {
+                return;
+            }
+
+            const id = this.currentProjectId();
+            if (!id) {
+                return;
+            }
+
+            this.loading = true;
+            this.loadError = null;
+
+            try {
+                const response = await axios.get(route('projects.tabs.shift-contacts', {project: id}));
+                this.localProject = {
+                    ...this.project,
+                    shift_contacts: response.data.shift_contacts ?? [],
+                    project_managers: response.data.project_managers ?? []
+                };
+            } catch (e) {
+                this.loadError = this.$t
+                    ? this.$t('Kontaktdaten konnten nicht geladen werden.')
+                    : 'Failed to load contact data.';
+            } finally {
+                this.loading = false;
+            }
+        },
+        hasShiftContactsData(project) {
+            return project && (
+                (Array.isArray(project.shift_contacts) && project.shift_contacts.length > 0) ||
+                (Array.isArray(project.project_managers) && project.project_managers.length > 0)
+            );
+        },
+        currentProjectId() {
+            return this.project?.id ?? this.projectId ?? this.shiftProject?.id ?? null;
+        },
         openContactModal() {
             this.showContactModal = true
         },

@@ -69,6 +69,21 @@
                     />
                 </div>
             </div>
+            <!-- Globale Qualifikationen anzeigen (analog Daily-View): Anzahl erfüllt/benötigt + Icon -->
+            <div class="w-full flex flex-row flex-wrap text-[10px] text-zinc-400 mt-0.5">
+                <div
+                    v-for="gq in demandedGlobalQualifications"
+                    :key="'gq-' + gq.id"
+                    class="flex items-center mr-2"
+                >
+                    {{ countAssignedForGlobalQualification(gq.id) }}/{{ getGlobalQuantity(gq) }}
+                    <PropertyIcon
+                        stroke-width="1"
+                        class="text-black size-3 mx-1"
+                        :name="findGlobalQualification(gq.id)?.icon"
+                    />
+                </div>
+            </div>
         </div>
 
         <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
@@ -168,6 +183,62 @@ const page = usePage()
 const { proxy } = getCurrentInstance() || {}
 
 /* ---------------- Computed ---------------- */
+// Meta-Infos zu globalen Qualifikationen (Icon/Name)
+const globalQualificationsMeta = computed(() => {
+    const list = page?.props?.globalQualifications ?? []
+    return Array.isArray(list) ? list : Object.values(list || {})
+})
+
+const findGlobalQualification = (id: number) =>
+    globalQualificationsMeta.value.find((q: any) => q.id === id)
+
+// Geforderte globale Qualifikationen dieser Schicht
+const demandedGlobalQualifications = computed(() => {
+    const arr = Array.isArray(props.shift?.globalQualifications)
+        ? props.shift.globalQualifications
+        : Object.values(props.shift?.globalQualifications || {})
+    return arr.filter((gq: any) => (gq?.pivot?.quantity ?? gq?.quantity ?? 0) > 0)
+})
+
+const getGlobalQuantity = (gq: any) => (gq?.pivot?.quantity ?? gq?.quantity ?? 0)
+
+// Hilfsfunktion: IDs der globalen Qualifikationen einer Person ermitteln (verschiedene Shapes erlauben)
+function getPersonGlobalQualificationIds(person: any): number[] {
+    const raw = person?.globalQualifications ?? person?.global_qualifications ?? person?.globalQualificationIds ?? person?.global_qualification_ids ?? []
+    if (Array.isArray(raw) && raw.every((x: any) => typeof x === 'number')) return raw as number[]
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {})
+    let ids = arr
+        .map((x: any) => (typeof x === 'number' ? x : x?.id ?? x?.global_qualification_id ?? null))
+        .filter((v: any) => typeof v === 'number' && Number.isFinite(v)) as number[]
+    if (ids.length === 0 && raw && !Array.isArray(raw) && typeof raw === 'object') {
+        ids = Object.keys(raw).map((k) => Number(k)).filter((n) => Number.isFinite(n))
+    }
+    return ids
+}
+
+// Basiszählung: Wie viele aktuell zugewiesene Personen besitzen eine bestimmte GQ?
+function countAssignedForGlobalQualificationBase(globalQualificationId: number): number {
+    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []]
+    return groups.reduce((acc, list: any[]) => acc + list.filter((p: any) => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0)
+}
+
+// Optimistische Deltas, damit Zähler nach Zuweisung sofort steigen
+const globalQualificationDeltas = ref<Record<number, number>>({})
+
+function countAssignedForGlobalQualification(globalQualificationId: number): number {
+    const base = countAssignedForGlobalQualificationBase(globalQualificationId)
+    const delta = globalQualificationDeltas.value[globalQualificationId] ?? 0
+    return base + delta
+}
+
+function adjustDeltaForUser(person: any, direction = 1) {
+    if (!person) return
+    const demanded = new Set((demandedGlobalQualifications.value || []).map((g: any) => g.id))
+    getPersonGlobalQualificationIds(person).forEach((id) => {
+        if (!demanded.has(id)) return
+        globalQualificationDeltas.value[id] = (globalQualificationDeltas.value[id] ?? 0) + direction
+    })
+}
 const computedMaxWorkerCount = computed(() => {
     let maxWorkerCount = 0
     props.shift?.shifts_qualifications?.forEach((sq: any) => {
@@ -431,6 +502,8 @@ function assignUser(user: any, shiftQualificationId: number) {
             craft_abbreviation: user.craft_abbreviation
         }
     ).then(() => {
+        // Optimistisch GQ-Zähler erhöhen, wenn Nutzer geforderte globale Qualifikationen besitzt
+        adjustDeltaForUser(user, +1)
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
     })
 }

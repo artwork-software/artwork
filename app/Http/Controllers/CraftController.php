@@ -44,7 +44,26 @@ class CraftController extends Controller
 
 
         if ($craftStoreRequest->has('qualifications')) {
-            $craft->qualifications()->sync($craftStoreRequest->qualifications);
+            // Der Request liefert Qualifikationen als Array von Objekten
+            // (mit je einem "id"-Feld). Für belongsToMany::sync() benötigen
+            // wir jedoch ein reines Array von IDs. Andernfalls versucht Eloquent,
+            // die Objekt-Felder als Pivot-Attribute zu speichern, was zu
+            // SQL-Fehlern (z. B. unbekannte Spalten wie "available") führt.
+
+            $qualificationIds = collect($craftStoreRequest->input('qualifications', []))
+                ->map(function ($qualification) {
+                    // Erwartet wird ein Array mit ['id' => int]. Falls doch
+                    // nur eine ID geliefert wird, übernehmen wir diese.
+                    if (is_array($qualification)) {
+                        return $qualification['id'] ?? null;
+                    }
+                    return $qualification; // Fallback: bereits eine ID
+                })
+                ->filter(fn ($id) => !is_null($id))
+                ->values()
+                ->all();
+
+            $craft->qualifications()->sync($qualificationIds);
         }
 
         $craft->update([

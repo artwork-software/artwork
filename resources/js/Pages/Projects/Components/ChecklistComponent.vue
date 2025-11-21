@@ -1,5 +1,11 @@
 <template>
     <div class="py-10 px-20">
+        <div v-if="loadChecklistsError" class="mb-2 text-xs text-rose-600">
+            {{ loadChecklistsError }}
+        </div>
+        <div v-else-if="isLoadingChecklists" class="mb-2 text-xs text-secondary">
+            {{ $t('Loading data...') }}
+        </div>
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"
@@ -7,7 +13,7 @@
             :is-admin="isAdmin"
             :project="project"
             :tab_id="tab_id"
-            :checklist_templates="checklist_templates"
+            :checklist_templates="localChecklistTemplates"
         >
             <template #search>
                 <div v-if="!showSearch" @click="openSearchBar" class="ui-button">
@@ -50,14 +56,14 @@
             </template>
         </ChecklistFunctionBar>
 
-        <div v-if="usePage().props.auth.user.checklist_style === 'list'">
+        <div v-if="checklistStyle === 'list'">
             <ChecklistListView
                 :checklists="filteredChecklists"
                 :can-edit-component="canEditComponent"
                 :project-can-write-ids="projectCanWriteIds"
                 :project-manager-ids="projectManagerIds"
                 :is-admin="isAdmin"
-                :checklist_templates="checklist_templates"
+                :checklist_templates="localChecklistTemplates"
                 :project="project"
                 :tab_id="tab_id"
             />
@@ -69,7 +75,7 @@
                 :project-can-write-ids="projectCanWriteIds"
                 :project-manager-ids="projectManagerIds"
                 :is-admin="isAdmin"
-                :checklist_templates="checklist_templates"
+                :checklist_templates="localChecklistTemplates"
                 :project="project"
                 :tab_id="tab_id"
             />
@@ -78,8 +84,9 @@
 </template>
 
 <script setup>
-import {ref, computed, nextTick} from 'vue';
+import {ref, computed, nextTick, watch, onMounted} from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
 import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
@@ -98,38 +105,83 @@ const props = defineProps({
     checklist_templates: Array,
     projectManagerIds: Array,
     tab_id: Number,
-    canEditComponent: Boolean
+    canEditComponent: Boolean,
+    component: Object
 });
 
-const { $page } = usePage().props;
 const {role} = usePermission(usePage().props)
 
 const showSearch = ref(false);
 const search = ref('');
 
+const isLoadingChecklists = ref(false);
+const loadChecklistsError = ref('');
+const localOpenedChecklists = ref(props.opened_checklists ?? []);
+const localChecklistTemplates = ref(props.checklist_templates ?? []);
+const localPublicChecklists = ref([]);
+const localPrivateChecklists = ref([]);
+
 const isAdmin = computed(() => role('artwork admin'));
 const currentSort = ref(0)
+const checklistStyle = computed(() => {
+    const page = usePage();
+    return page?.props?.auth?.user?.checklist_style ?? 'list';
+});
 const projectCanWriteIds = computed(() => {
     let canWriteArray = [];
-    props.project.write_auth?.forEach(write => {
-        canWriteArray.push(write.id);
-    });
+    if (props.project?.write_auth && Array.isArray(props.project.write_auth)) {
+        props.project.write_auth.forEach(write => {
+            if (write?.id) {
+                canWriteArray.push(write.id);
+            }
+        });
+    }
     return canWriteArray;
 });
 
-const allChecklists = computed(() => {
-    // For the regular Checklist component, prefer tab-scoped lists.
-    const publicLists = Array.isArray(props?.project?.public_checklists?.data)
-        ? props.project.public_checklists.data
-        : (Array.isArray(props?.project?.public_all_checklists)
-            ? props.project.public_all_checklists
-            : []);
+watch(
+    () => [props.project?.id, props.component?.id],
+    () => {
+        fetchChecklists();
+    },
+    { immediate: true }
+);
 
-    const privateLists = Array.isArray(props?.project?.private_checklists?.data)
-        ? props.project.private_checklists.data
-        : (Array.isArray(props?.project?.private_all_checklists)
-            ? props.project.private_all_checklists
-            : []);
+async function fetchChecklists() {
+    const projectId = props.project?.id;
+    const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
+
+    if (!projectId || !componentInTabId) {
+        return;
+    }
+
+    isLoadingChecklists.value = true;
+    loadChecklistsError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.checklists', { project: projectId, componentInTab: componentInTabId })
+        );
+        localOpenedChecklists.value = data?.opened_checklists ?? [];
+        localChecklistTemplates.value = data?.checklist_templates ?? [];
+        localPublicChecklists.value = data?.public_checklists ?? [];
+        localPrivateChecklists.value = data?.private_checklists ?? [];
+    } catch (error) {
+        console.error(error);
+        loadChecklistsError.value = 'Unable to load checklists.';
+    } finally {
+        isLoadingChecklists.value = false;
+    }
+}
+
+const allChecklists = computed(() => {
+    const publicLists = Array.isArray(localPublicChecklists.value)
+        ? localPublicChecklists.value
+        : [];
+
+    const privateLists = Array.isArray(localPrivateChecklists.value)
+        ? localPrivateChecklists.value
+        : [];
 
     return publicLists.concat(privateLists);
 });
@@ -137,17 +189,30 @@ const allChecklists = computed(() => {
 
 const filteredChecklists = computed(() => {
     const checklists = allChecklists.value.filter(checklist => {
+        if (!checklist) return false;
         let include = true;
         if (search.value) {
-            include = checklist.name.toLowerCase().includes(search.value.toLowerCase()) || checklist.tasks.some(task => task.name.toLowerCase().includes(search.value.toLowerCase()));
+            const nameMatch = checklist.name?.toLowerCase().includes(search.value.toLowerCase()) ?? false;
+            const taskMatch = Array.isArray(checklist.tasks) 
+                ? checklist.tasks.some(task => task?.name?.toLowerCase().includes(search.value.toLowerCase()))
+                : false;
+            include = nameMatch || taskMatch;
         }
         return include;
     });
 
     if (currentSort.value === 1) {
-        return checklists.sort((a, b) => a.name.localeCompare(b.name));
+        return checklists.sort((a, b) => {
+            const nameA = a?.name ?? '';
+            const nameB = b?.name ?? '';
+            return nameA.localeCompare(nameB);
+        });
     } else if (currentSort.value === 2) {
-        return checklists.sort((a, b) => b.name.localeCompare(a.name));
+        return checklists.sort((a, b) => {
+            const nameA = a?.name ?? '';
+            const nameB = b?.name ?? '';
+            return nameB.localeCompare(nameA);
+        });
     } else {
         return checklists;
     }

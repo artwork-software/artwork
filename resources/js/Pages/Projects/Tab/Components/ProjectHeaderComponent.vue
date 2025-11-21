@@ -76,7 +76,7 @@
                                             {{ $t('No appointments within this project yet') }}
                                         </span>
                                     </div>
-                                    <div class="mt-2 flex items-center text-[13px] text-zinc-600" v-if="headerObject.project_history.length">
+                                    <div class="mt-2 flex items-center text-[13px] text-zinc-600" v-if="headerObject.project_history">
                                         <span>{{ $t('last modified') }}:</span>
                                         <UserPopoverTooltip
                                             :user="headerObject.project_history[0]?.changer"
@@ -215,8 +215,7 @@
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"
-            :project_history="headerObject.project_history"
-            :access_budget="headerObject.project.access_budget"
+            :project_id="project.id"
         />
 
         <ArtworkBaseModal @close="closeDeleteProjectModal" v-if="deletingProject" :title="$t('Delete project')" :description="$t('Are you sure you want to delete the project?', [projectToDelete.name])">
@@ -339,10 +338,6 @@ function openCreateNewProjectInGroupModal() {
     projectForCreateModal.value = null;
     selectedGroup.value = props.project;
     editingProject.value = true;
-}
-
-function hasBudgetAccess() {
-    return props.headerObject.project.access_budget.filter((user) => user.id === usePage().props.auth.user?.id).length > 0;
 }
 
 function openProjectHistoryModal() {

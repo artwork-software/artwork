@@ -271,8 +271,7 @@
         />
         <project-history-component
             v-if="showProjectHistory"
-            :project_history="projectHistoryToDisplay"
-            :access_budget="projectBudgetAccess"
+            :project_id="selectedProjectId"
             @closed="closeProjectHistoryModal"
         />
         <export-modal v-if="showExportModal"
@@ -434,7 +433,6 @@ export default defineComponent({
             project_search: route().params.query,
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
-            projectBudgetAccess: {},
             projectFilters: [{'name': this.$t('All projects')}, {'name': this.$t('My projects')}],
             projectFilter: {'name': this.$t('All projects')},
             isSingleTab: true,
@@ -449,7 +447,7 @@ export default defineComponent({
             showSuccessModal2: false,
             nameOfDeletedProject: "",
             showProjectHistory: false,
-            projectHistoryToDisplay: [],
+            selectedProjectId: null,
             hasGroup: false,
             selectedGroup: null,
             showOnlyMyProjects: this.userProjectManagementSetting?.project_filters.showOnlyMyProjects,
@@ -562,13 +560,12 @@ export default defineComponent({
             this.closeSearchbar()
         },
         openProjectHistoryModal(project) {
-            this.projectHistoryToDisplay = project.project_history;
-            this.projectBudgetAccess = project.access_budget;
-            this.showProjectHistory = true;
+            this.selectedProjectId = project?.id ?? null;
+            this.showProjectHistory = !!this.selectedProjectId;
         },
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
-            this.projectHistoryToDisplay = [];
+            this.selectedProjectId = null;
         },
         openExportModal() {
             this.showExportModal = true;

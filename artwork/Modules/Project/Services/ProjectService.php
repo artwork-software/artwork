@@ -150,11 +150,10 @@ class ProjectService
                     $projectFilters?->contains('showOnlyMyProjects'),
                     function (Builder $builder): void {
                         $userId = $this->userService->getAuthUserId();
-                        $builder->where(function ($query) use ($userId) {
-                            $query->where('user_id', $userId)
-                                  ->orWhereHas('users', function ($query) use ($userId) {
-                                      $query->where('user_id', $userId);
-                                  });
+                        // Only show projects where the auth user is part of the project team.
+                        // The creator (user_id) must be ignored completely for this filter.
+                        $builder->whereHas('users', function ($query) use ($userId) {
+                            $query->where('user_id', $userId);
                         });
                     }
                 )
@@ -735,7 +734,15 @@ class ProjectService
             }
 
             foreach ($event->shifts as $shift) {
-                $shift->load('shiftsQualifications');
+                // Eager Load: Schicht- und Personen-bezogene Relationen, damit
+                // die zugewiesenen Personen ihre globalen Qualifikationen im Payload enthalten
+                $shift->load([
+                    'shiftsQualifications',
+                    // Personen inkl. globaler Qualifikationen
+                    'users.globalQualifications',
+                    'freelancer.globalQualifications',
+                    'serviceProvider.globalQualifications',
+                ]);
 
                 foreach ($shift->users as $user) {
                     $user->formatted_vacation_days = $user->getFormattedVacationDays();

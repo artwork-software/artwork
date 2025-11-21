@@ -41,6 +41,8 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
+use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -58,7 +60,6 @@ use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
-use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -91,7 +92,6 @@ use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
-use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
@@ -117,12 +117,15 @@ use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
+use Artwork\Modules\Shift\Services\ShiftGroupService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Services\TaskService;
@@ -453,9 +456,14 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
-
-        $this->projectService->attachUserToProject($project, $this->authManager->id(), $is_manager);
+        // Do not automatically add the creator to the project team.
+        // Only attach the creator if they are explicitly included in assignedUsers.
+        $assignedUsers = collect($request->get('assignedUsers'));
+        if ($assignedUsers->contains(Auth::id())) {
+            // If the creator is explicitly assigned, they should be a manager
+            // as per previous behaviour when present in assignedUsers.
+            $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
+        }
 
         if (!empty($request->assignedUsers)) {
             $this->projectService->attachManagementUsersWithoutSelf(
@@ -2084,7 +2092,8 @@ class ProjectController extends Controller
         AreaService $areaService,
         EventService $eventService,
         ProjectCreateSettings $projectCreateSettings,
-        EventPropertyService $eventPropertyService
+        EventPropertyService $eventPropertyService,
+        ShiftTimePresetService $shiftTimePresetService
     ): Response|ResponseFactory {
         // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
         $headerObject = new stdClass();
@@ -2144,215 +2153,13 @@ class ProjectController extends Controller
         foreach ($projectTabComponents as $componentInTab) {
             $component = $componentInTab->component;
 
-            switch ($component->type) {
-                case ProjectTabComponentEnum::CHECKLIST->value:
-                    $headerObject = $this->checklistService
-                        ->getProjectChecklists($project, $headerObject, $componentInTab);
-                    break;
-
-                case ProjectTabComponentEnum::CHECKLIST_ALL->value:
-                    $headerObject = $this->checklistService
-                        ->getProjectChecklistsAll($project, $headerObject);
-                    break;
-
-                case ProjectTabComponentEnum::COMMENT_TAB->value:
-                    $headerObject->project->comments = $project->comments()
-                        ->whereIn('tab_id', $componentInTab->scope)
-                        ->with('user')
-                        ->orderBy('created_at', 'DESC')
-                        ->get();
-                    break;
-
-                case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
-                    $headerObject->project->comments_all = $project->comments()
-                        ->with('user')
-                        ->orderBy('created_at', 'DESC')
-                        ->get();
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
-                    $headerObject->project->project_files_tab = $project->project_files()
-                        ->whereIn('tab_id', $componentInTab->scope)
-                        ->get();
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
-                    $headerObject->project->project_files_all = $project->project_files;
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                    $headerObject->project->state = ProjectState::find($project->state);
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_TEAM->value:
-                    $this->loadProjectTeamData($headerObject, $project);
-                    break;
-
-                case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
-                    Inertia::share([
-                        // 'roomTypes' => TypOfRoom::cases(),
-                        'artists'            => Artist::all(),
-                        'accommodations'     => Accommodation::with('roomTypes')->get(),
-                        'artist_residencies' => $project->artistResidencies()
-                            ->with(['accommodation', 'accommodation.roomTypes', 'artist', 'roomType'])
-                            ->get(),
-                    ]);
-                    break;
-
-                case ProjectTabComponentEnum::BULK_EDIT->value:
-                    $userBulkSortId      = (int) ($authUser?->getAttribute('bulk_sort_id') ?? 0);
-                    $userCalendarFilter  = $authUser?->userFilters()->calendarFilter()->first();
-
-                    // Events-Query mit Filtern
-                    $eventsQuery = $project->events()
-                        ->with(['event_type', 'room', 'eventStatus'])
-                        ->without(['series', 'subEvents', 'creator'])
-                        // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
-                        ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
-                            $q->whereIn('event_type_id', $userCalendarFilter->event_type_ids);
-                        })
-                        // Raumfilter via whereHas(Room …) anwenden – nutzt deine bestehenden Room-Scopes
-                        ->when(
-                            !empty($userCalendarFilter?->room_ids)
-                            || !empty($userCalendarFilter?->room_attribute_ids)
-                            || !empty($userCalendarFilter?->area_ids)
-                            || !empty($userCalendarFilter?->room_category_ids),
-                            function ($q) use ($userCalendarFilter) {
-                                $q->whereHas('room', function ($rq) use ($userCalendarFilter) {
-                                    $rq->select(['id']) // minimal
-                                    ->unlessRoomIds($userCalendarFilter?->room_ids)
-                                        ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
-                                        ->unlessAreaIds($userCalendarFilter?->area_ids)
-                                        ->unlessRoomCategoryIds($userCalendarFilter?->room_category_ids);
-                                });
-                            }
-                        );
-
-                    // Laden + Minimal-Resource anreichern
-                    $eventsUnsorted = $eventsQuery->get()->map(
-                    /** @return array<string,mixed> */
-                        fn (Event $event) => array_merge(
-                            $event->toArray(),
-                            MinimalCalendarEventResource::make($event)->resolve()
-                        )
-                    );
-
-                    Inertia::share([
-                        'user_filters'    => $userCalendarFilter,
-                        'personalFilters' => fn () => $this->filterService
-                            ->getPersonalFilter($authUser, UserFilterTypes::CALENDAR_FILTER->value),
-                        'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
-                    ]);
-
-                    // Sortierung bleibt wie gehabt
-                    $eventsSorted = match ($userBulkSortId) {
-                        1       => $eventsUnsorted->sortBy('roomName')->values(),
-                        2       => $eventsUnsorted->sortBy('eventTypeName')->values(),
-                        3       => $eventsUnsorted->sortBy('startTime')->values(),
-                        default => $eventsUnsorted,
-                    };
-
-                    $headerObject->project->events = $eventsSorted;
-
-                    // IDs der zuletzt bearbeiteten Events bestimmen (unverändert)
-                    $lastUpdatedEvent = $project->events()->orderBy('updated_at', 'DESC')->first();
-                    $lastEditEventIds = [];
-                    if ($lastUpdatedEvent) {
-                        $lastEditEventIds = $project->events()
-                            ->where('updated_at', $lastUpdatedEvent->updated_at)
-                            ->pluck('id')
-                            ->toArray();
-                    }
-                    $headerObject->project->lastEditEventIds = $lastEditEventIds;
-                    break;
-
-                case ProjectTabComponentEnum::CALENDAR->value:
-                    // bleibt bewusst wie gehabt (atAGlance wird vom Nutzer-Flag gesteuert)
-                    $request->boolean('atAGlance'); // beibehalten, falls irgendwo ausgewertet
-                    $loadedProjectInformation['CalendarTab'] =
-                        $authUser?->getAttribute('at_a_glance')
-                            ? $eventService->createEventManagementDtoForAtAGlance(
-                                $calendarService,
-                                $roomService,
-                                $userService,
-                                $filterService,
-                                $this->projectTabService,
-                                $eventTypeService,
-                                $areaService,
-                                $projectService,
-                                $projectCreateSettings,
-                                $eventPropertyService,
-                                $project
-                            )
-                            : $eventService->createEventManagementDto(
-                                $roomService,
-                                $userService,
-                                $filterService,
-                                $this->projectTabService,
-                                $eventTypeService,
-                                $areaService,
-                                $projectService,
-                                $projectCreateSettings,
-                                $eventPropertyService,
-                                $project
-                            );
-                    break;
-
-                case ProjectTabComponentEnum::BUDGET->value:
-                    $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
-                        $project,
-                        $loadedProjectInformation
-                    );
-                    $headerObject->project->users = $this->mapProjectUsers($project);
-                    break;
-
-                case ProjectTabComponentEnum::SHIFT_TAB->value:
-                    $this->loadShiftTabData($headerObject, $project);
-                    $this->singleShiftPresetService->shareSingleShiftPresets();
-                    $loadedProjectInformation['ShiftTab'] = $this->projectTabService->getShiftTab(
-                        $project,
-                        $shiftQualificationService,
-                        $projectService,
-                        $userService,
-                        $freelancerService,
-                        $serviceProviderService,
-                        $craftService
-                    );
-                    break;
-
-                case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
-                    $headerObject->project->shift_contacts   = $project->shift_contact;
-                    $headerObject->project->project_managers = $project->managerUsers;
-                    break;
-
-                case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
-                    $headerObject->project->artist_name = $project->artists;
-                    break;
-
-                case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                    $headerObject->project->collecting_society = $project->collectingSociety;
-                    $loadedProjectInformation['BudgetInformation'] = $this->projectTabService->getBudgetInformationDto(
-                        $project,
-                        $contractTypeService,
-                        $companyTypeService,
-                        $currencyService,
-                        $collectingSocietyService
-                    );
-                    break;
-
-                case ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT->value:
-                    $headerObject->project->first_event = $firstEvent;
-                    $headerObject->project->last_event  = $lastEvent;
-                    $headerObject->materials = InternalIssue::where('project_id', $project->id)
-                        ->with(['articles.images', 'specialItems', 'files', 'responsibleUsers'])
-                        ->get();
-                    break;
+            if ($component->type == ProjectTabComponentEnum::SHIFT_TAB->value) {
+                $this->singleShiftPresetService->shareSingleShiftPresets();
             }
         }
 
         // Gruppenausgabe, Historie & weitere Metadaten füllen
         $groupOutput = $this->getGroupOutput($project);
-        $this->addHistoryToHeaderObject($headerObject, $project);
 
         $headerObject->firstEventInProject = $firstEvent;
         $headerObject->lastEventInProject  = $lastEvent;
@@ -2372,11 +2179,10 @@ class ProjectController extends Controller
         $headerObject->projectGenres       = $project->genres;
 
         $headerObject->sectors             = $this->sectorService->getAll();
-        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed();
+        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed(); //Scheint wohl nicht gebraucht zu sein
         $headerObject->projectSectors      = $project->sectors;
 
         $headerObject->projectState        = $project->state;
-        $headerObject->access_budget       = $project->access_budget;
 
         $tabInformation = [];
         ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation){
@@ -2406,6 +2212,52 @@ class ProjectController extends Controller
 
         $headerObject->event_properties = $eventPropertyService->getAll();
 
+        // Safely fetch latest history entry; can be null if no history exists
+        $latestHistory = $project->historyChanges()->first();
+        $latestChange  = [];
+        if ($latestHistory !== null) {
+            $latestChange = [[
+                'changes'    => $latestHistory->changes
+                    ? json_decode($latestHistory->changes, false, 512, JSON_THROW_ON_ERROR)
+                    : null,
+                'created_at' => $latestHistory->created_at->diffInHours() < 24
+                    ? $latestHistory->created_at->diffForHumans()
+                    : $latestHistory->created_at->format('d.m.Y, H:i'),
+                'changer'    => $latestHistory->changer()
+                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                    ->first(),
+            ]];
+        }
+        $headerObject->project_history = $latestChange;
+
+        // Zusätzliche Props für den Schicht-Tab (Daily View) analog EventController::viewShiftPlan
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+        $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
+        $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
+
+        // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
+        /** @var CalendarDataService $calendarDataService */
+        $calendarDataService = app(CalendarDataService::class);
+        $rooms = $calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true
+        );
+
+        $dateValue = [
+            $startDate ? $startDate->format('Y-m-d') : null,
+            $endDate ? $endDate->format('Y-m-d') : null,
+        ];
+
+        // Verlaufseinträge (für Historie im Shift-Plan)
+        $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
+
         return inertia('Projects/Tab/TabContent', [
             'currentTab'                  => $projectTab,
             'headerObject'                => $headerObject,
@@ -2418,42 +2270,62 @@ class ProjectController extends Controller
             'createSettings'              => app(ProjectCreateSettings::class),
             'printLayouts'                => $this->projectPrintLayoutService->getAll(),
             'project'                       => $headerObject->project,
+            // Zusätzliche Daten für ShiftPlanDailyView im Projektkontext
+            'history' => $history,
+            'crafts' => $craftService->getAll([
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+                'users', 'freelancers', 'serviceProviders', 'qualifications'
+            ]),
+            'rooms' => $rooms,
+            'eventTypes' => $this->eventTypeService->getAll(),
+            'eventStatuses' => app(EventSettings::class)->enable_status
+                ? EventStatus::orderBy('order')->get()
+                : [],
+            'event_properties' => $eventPropertyService->getAll(),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'dateValue' => $dateValue,
+            'user_filters' => $userCalendarFilter,
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'firstProjectShiftTabId' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'projectId' => $project->id,
+            'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
+                $craftService->getAssignableByAllCrafts()
+            ),
+            'shiftTimePresets' => $shiftTimePresetService->getAll(),
+            // Für AddShiftModal und Anzeige benötigt: globale Qualifikationen & Schichtgruppen
+            'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
+            'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
         ]);
     }
 
-    /**
-     * Team-Daten für den Projekt-Header befüllen.
-     */
-    private function loadProjectTeamData(stdClass $headerObject, Project $project): void
+    public function history(Project $project): JsonResponse
     {
-        $headerObject->project->usersArray = $project->users()->get()->map(
-            fn (User $user) => [
-                'id'                    => $user->id,
-                'first_name'            => $user->first_name,
-                'last_name'             => $user->last_name,
-                'profile_photo_url'     => $user->profile_photo_url,
-                'email'                 => $user->email,
-                'departments'           => $user->departments,
-                'description'           => $user->description,
-                'position'              => $user->position,
-                'pronouns'              => $user->pronouns,
-                'email_private'         => (bool) $user->email_private,
-                'phone_private'         => (bool) $user->phone_private,
-                'phone_number'          => $user->phone_number,
-                'project_management'    => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-                'pivot_access_budget'   => (bool) ($user->pivot?->access_budget),
-                'pivot_is_manager'      => (bool) ($user->pivot?->is_manager),
-                'pivot_can_write'       => (bool) ($user->pivot?->can_write),
-                'pivot_delete_permission' => (bool) ($user->pivot?->delete_permission),
-                'pivot_roles'           => (array) ($user->pivot?->roles),
-            ]
+        $historyComplete = $project->historyChanges()->all();
+        $history = array_map(
+            static function ($history) {
+                return [
+                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                    'changer'    => $history->changer()
+                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                        ->first(),
+                ];
+            },
+            $historyComplete
         );
 
-        $headerObject->project->departments               = DepartmentIndexResource::collection($project->departments)->resolve();
-        $headerObject->project->project_managers          = $project->managerUsers;
-        $headerObject->project->write_auth                = $project->writeUsers;
-        $headerObject->project->delete_permission_users   = $project->delete_permission_users;
-        $headerObject->project->projectRoles              = ProjectRole::all();
+         $access_budget = $project->access_budget;
+
+        return response()->json([
+            'history' => $history,
+            'access_budget' => $access_budget,
+        ]);
     }
 
     /**
@@ -2509,31 +2381,6 @@ class ProjectController extends Controller
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
     }
-
-    /**
-     * Historie für den Header befüllen (Formatierung beibehalten).
-     */
-    private function addHistoryToHeaderObject(stdClass &$headerObject, Project $project): void
-    {
-        $historyComplete = $project->historyChanges()->all();
-
-        $headerObject->project_history = array_map(
-            static function ($history) {
-                return [
-                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                    'changer'    => $history->changer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first(),
-                ];
-            },
-            $historyComplete
-        );
-    }
-
-
 
     public function addTimeLineRow(Event $event): void
     {

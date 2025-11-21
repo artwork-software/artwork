@@ -26,6 +26,7 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use stdClass;
 
@@ -43,11 +44,44 @@ class ProjectPrintLayoutController extends Controller
      */
     public function index()
     {
+        $excluded = [6, 7, 9, 13, 15, 17];
+
+        // Komponentenlisten verschlankt und gecacht (10 Minuten)
+        $components = Cache::remember('print_layout_components_not_special', 600, function () use ($excluded) {
+            return Component::notSpecial()
+                ->without(['users', 'departments'])
+                ->whereNotIn('id', $excluded)
+                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                ->orderBy('type')
+                ->orderBy('name')
+                ->get()
+                ->groupBy('type');
+        });
+
+        $componentsSpecial = Cache::remember('print_layout_components_special', 600, function () use ($excluded) {
+            return Component::isSpecial()
+                ->without(['users', 'departments'])
+                ->whereNotIn('id', $excluded)
+                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                ->orderBy('name')
+                ->get();
+        });
+
+        $allComponents = Cache::remember('print_layout_all_components', 600, function () use ($excluded) {
+            return Component::query()
+                ->without(['users', 'departments'])
+                ->whereNotIn('id', $excluded)
+                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                ->orderBy('type')
+                ->orderBy('name')
+                ->get();
+        });
+
         return Inertia::render('Settings/ProjectPrintLayout/Index', [
-            'components' => Component::notSpecial()->whereNotIn('id', [6,7,9,13,15,17])->get()->groupBy('type'),
-            'componentsSpecial' => Component::isSpecial()->whereNotIn('id', [6,7,9,13,15,17])->get(),
+            'components' => $components,
+            'componentsSpecial' => $componentsSpecial,
             'layouts' => $this->projectService->getProjectPrintLayouts(),
-            'allComponents' => Component::whereNotIn('id', [6,7,9,13,15,17])->get(),
+            'allComponents' => $allComponents,
         ]);
     }
 

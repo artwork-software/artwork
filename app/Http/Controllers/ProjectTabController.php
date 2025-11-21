@@ -12,6 +12,7 @@ use Artwork\Modules\Project\Models\SidebarTabComponent;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Illuminate\Support\Facades\Cache;
 
 class ProjectTabController extends Controller
 {
@@ -25,14 +26,86 @@ class ProjectTabController extends Controller
 
     public function index(): ResponseFactory|Response
     {
-        return inertia('Settings/ProjectTab/Index', [
-            'tabs' => ProjectTab::with([
+        // Tabs + Relationen gezielt und schlank laden
+        $tabs = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
+            ->select(['id', 'name', 'order', 'default'])
+            ->orderBy('order')
+            ->with([
+                // Haupt-Komponenten im Tab
                 'components' => function ($query): void {
-                    $query->orderBy('order');
+                    /** @var \Illuminate\Database\Eloquent\Builder $query */
+                    $query
+                        ->without(['component', 'disclosureComponents']) // Standard-$with reduzieren
+                        ->select(['id', 'project_tab_id', 'component_id', 'order', 'scope', 'note'])
+                        ->orderBy('order')
+                        ->with([
+                            // Zugehörige Component minimal laden
+                            'component' => function ($q): void {
+                                $q->without(['users', 'departments'])
+                                    ->select(['id', 'name', 'type', 'data']);
+                            },
+                            // Disclosure-Komponenten inkl. zugehöriger Component
+                            'disclosureComponents' => function ($q): void {
+                                $q->without(['component'])
+                                    ->select(['id', 'disclosure_id', 'component_id', 'order'])
+                                    ->orderBy('order')
+                                    ->with([
+                                        'component' => function ($qc): void {
+                                            $qc->without(['users', 'departments'])
+                                                ->select(['id', 'name', 'type', 'data']);
+                                        },
+                                    ]);
+                            },
+                        ]);
                 },
-            ])->orderBy('order')->get(),
-            'components' => Component::notSpecial()->get()->groupBy('type'),
-            'componentsSpecial' => Component::isSpecial()->get(),
+                // Sidebar-Tabs und deren Komponenten
+                'sidebarTabs' => function ($query): void {
+                    /** @var \Illuminate\Database\Eloquent\Builder $query */
+                    $query
+                        ->without(['componentsInSidebar'])
+                        ->select(['id', 'project_tab_id', 'name', 'order'])
+                        ->orderBy('order')
+                        ->with([
+                            'componentsInSidebar' => function ($q): void {
+                                $q->without(['component'])
+                                    ->select(['id', 'project_tab_sidebar_id', 'component_id', 'order'])
+                                    ->orderBy('order')
+                                    ->with([
+                                        'component' => function ($qc): void {
+                                            $qc->without(['users', 'departments'])
+                                                ->select(['id', 'name', 'type', 'data']);
+                                        },
+                                    ]);
+                            },
+                        ]);
+                },
+            ])
+            ->get();
+
+        // Komponentenlisten verschlankt und optional gecacht
+        $components = Cache::remember('settings_components_not_special', 600, function () {
+            return Component::notSpecial()
+                ->without(['users', 'departments'])
+                ->select(['id', 'name', 'type', 'data'])
+                ->orderBy('type')
+                ->orderBy('name')
+                ->get()
+                ->groupBy('type');
+        });
+
+        $componentsSpecial = Cache::remember('settings_components_special', 600, function () {
+            return Component::isSpecial()
+                ->without(['users', 'departments'])
+                ->select(['id', 'name', 'type', 'data'])
+                ->orderBy('name')
+                ->get();
+        });
+
+        return inertia('Settings/ProjectTab/Index', [
+            'tabs' => $tabs,
+            'components' => $components,
+            'componentsSpecial' => $componentsSpecial,
         ]);
     }
 

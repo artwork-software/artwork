@@ -44,6 +44,15 @@ class ShiftDTO extends Data
 
     public static function fromModel(Shift $shift): ShiftDTO
     {
+        // Ensure global qualifications of assigned persons are loaded so the frontend
+        // can compute personGlobalQualificationsInDemand correctly.
+        // We keep the payload minimal by selecting only the id on the related models.
+        $shift->loadMissing([
+            'users.globalQualifications:id',
+            'freelancer.globalQualifications:id',
+            'serviceProvider.globalQualifications:id',
+        ]);
+
         return new self(
             id: $shift->id,
             startDate: $shift->start_date,

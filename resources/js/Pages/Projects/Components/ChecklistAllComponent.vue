@@ -1,5 +1,11 @@
 <template>
     <div :class="usePage().props.auth.user.checklist_style !== 'list' ? '-mx-5 py-10 px-20 bg-lightBackgroundGray' : 'ml-14 pt-4 pr-14'" class="print:bg-white print:ml-0 print:mr-0 print:pt-0 print:pr-0 print:px-0 print:py-0">
+        <div v-if="loadChecklistsError" class="mb-2 text-xs text-rose-600">
+            {{ loadChecklistsError }}
+        </div>
+        <div v-else-if="isLoadingChecklists" class="mb-2 text-xs text-secondary">
+            {{ $t('Loading data...') }}
+        </div>
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"
@@ -75,8 +81,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
 import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
@@ -106,6 +113,45 @@ const search = ref('');
 const currentSort = ref(0);
 const isAdmin = computed(() => role('artwork admin'));
 
+const isLoadingChecklists = ref(false);
+const loadChecklistsError = ref('');
+const localOpenedChecklists = ref(props.opened_checklists ?? []);
+const localPublicAllChecklists = ref([]);
+const localPrivateAllChecklists = ref([]);
+
+watch(
+    () => props.project?.id,
+    () => {
+        fetchAllChecklists();
+    },
+    { immediate: true }
+);
+
+async function fetchAllChecklists() {
+    const projectId = props.project?.id;
+
+    if (!projectId) {
+        return;
+    }
+
+    isLoadingChecklists.value = true;
+    loadChecklistsError.value = '';
+
+    try {
+        const { data } = await axios.get(
+            route('projects.tabs.all-checklists', { project: projectId })
+        );
+        localOpenedChecklists.value = data?.opened_checklists ?? [];
+        localPublicAllChecklists.value = data?.public_all_checklists ?? [];
+        localPrivateAllChecklists.value = data?.private_all_checklists ?? [];
+    } catch (error) {
+        console.error(error);
+        loadChecklistsError.value = 'Unable to load checklists.';
+    } finally {
+        isLoadingChecklists.value = false;
+    }
+}
+
 const projectCanWriteIds = computed(() => {
     let canWriteArray = [];
     props.project.write_auth?.forEach(write => {
@@ -115,17 +161,13 @@ const projectCanWriteIds = computed(() => {
 });
 
 const allChecklists = computed(() => {
-    const publicLists = Array.isArray(props?.project?.public_all_checklists)
-        ? props.project.public_all_checklists
-        : (Array.isArray(props?.project?.public_checklists?.data)
-            ? props.project.public_checklists.data
-            : []);
+    const publicLists = Array.isArray(localPublicAllChecklists.value)
+        ? localPublicAllChecklists.value
+        : [];
 
-    const privateLists = Array.isArray(props?.project?.private_all_checklists)
-        ? props.project.private_all_checklists
-        : (Array.isArray(props?.project?.private_checklists?.data)
-            ? props.project.private_checklists.data
-            : []);
+    const privateLists = Array.isArray(localPrivateAllChecklists.value)
+        ? localPrivateAllChecklists.value
+        : [];
 
     return publicLists.concat(privateLists);
 });

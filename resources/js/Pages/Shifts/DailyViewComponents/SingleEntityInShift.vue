@@ -164,6 +164,9 @@ import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
+// Emits
+const emit = defineEmits(['userRemoved'])
+
 const props = defineProps({
     person: {
         type: Object,
@@ -332,6 +335,10 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
             preserveScroll: true,
             // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
             preserveState: true,
+            onSuccess: () => {
+                // Informiere Parent, damit z. B. globale Qualifikationszähler sofort aktualisiert werden können
+                emit('userRemoved', { person: props.person })
+            }
         }
     );
 }

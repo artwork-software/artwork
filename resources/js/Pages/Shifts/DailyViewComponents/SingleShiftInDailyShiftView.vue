@@ -88,7 +88,13 @@
         <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
                 <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${shift.craft.color}20` }">
-                    <SingleEntityInShift :person="person" :shift="shift" :shift-qualifications="shiftQualifications" :has-collision="hasCollision" />
+                    <SingleEntityInShift
+                        :person="person"
+                        :shift="shift"
+                        :shift-qualifications="shiftQualifications"
+                        :has-collision="hasCollision"
+                        @userRemoved="onChildUserRemoved"
+                    />
                 </div>
             </template>
 
@@ -331,10 +337,30 @@ const getPersonGlobalQualificationIds = (person) => {
     return ids;
 };
 
-const countAssignedForGlobalQualification = (globalQualificationId) => {
+// Lokale Deltas, um Zähler für globale Qualifikationen sofort (optimistisch) zu aktualisieren
+const globalQualificationDeltas = ref({})
+
+const demandedGlobalQualificationIdsSet = computed(() => new Set(demandedGlobalQualifications.value.map(gq => gq.id)))
+
+const countAssignedForGlobalQualificationBase = (globalQualificationId) => {
     const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []];
     return groups.reduce((acc, list) => acc + list.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0);
-};
+}
+
+const countAssignedForGlobalQualification = (globalQualificationId) => {
+    const base = countAssignedForGlobalQualificationBase(globalQualificationId)
+    const delta = globalQualificationDeltas.value[globalQualificationId] ?? 0
+    return base + delta
+}
+
+const adjustDeltaForUser = (person, direction = 1) => {
+    if (!person) return
+    const ids = getPersonGlobalQualificationIds(person)
+    ids.forEach(id => {
+        if (!demandedGlobalQualificationIdsSet.value.has(id)) return
+        globalQualificationDeltas.value[id] = (globalQualificationDeltas.value[id] ?? 0) + direction
+    })
+}
 
 const computedShiftQualificationDropElements = computed(() => {
     return props.shift.shifts_qualifications.map(sq => {
@@ -565,10 +591,10 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
         craft_universally_applicable: craft?.universally_applicable ?? false,
         craft_abbreviation: craft.abbreviation ?? '',
     };
-    assignUser(droppedUser, shiftQualificationId);
+    assignUser(droppedUser, shiftQualificationId, user);
 }
 
-const assignUser = (droppedUser, shiftQualificationId) => {
+const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
 
     router.post(
         route('shift.assignUserByType', {shift: props.shift.id}),
@@ -583,7 +609,10 @@ const assignUser = (droppedUser, shiftQualificationId) => {
         {
             preserveScroll: true,
             onSuccess: () => {
-
+                // Optimistisch Zähler erhöhen, falls Nutzer geforderte globale Qualifikationen besitzt
+                if (sourceUser) {
+                    adjustDeltaForUser(sourceUser, +1)
+                }
             }
         },
     )
@@ -645,7 +674,16 @@ const borderColor = computed(() => props.hasCollision ? `${props.shift?.craft?.c
 watch(() => props.shift, () => {
     // Cache zurücksetzen wenn sich die Schichtdaten ändern
     assignablePeopleCache.value = {};
+    // Optimistische Deltas zurücksetzen – echte Werte kommen via Props
+    globalQualificationDeltas.value = {}
     // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
     checkAllShiftCollisions(true);
 }, { deep: true });
+
+// Event-Handler: Wenn Kind-Komponente meldet, dass ein User entfernt wurde, Zähler sofort dekrementieren
+const onChildUserRemoved = (payload) => {
+    const person = payload?.person
+    if (!person) return
+    adjustDeltaForUser(person, -1)
+}
 </script>

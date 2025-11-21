@@ -7,6 +7,8 @@ use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
+use Artwork\Modules\Shift\Services\ShiftGroupService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\User\Services\UserService;
@@ -23,6 +25,8 @@ class ProjectTabShiftService
         private readonly FreelancerService $freelancerService,
         private readonly ServiceProviderService $serviceProviderService,
         private readonly CraftService $craftService,
+        private readonly GlobalQualificationService $globalQualificationService,
+        private readonly ShiftGroupService $shiftGroupService,
     ) {
     }
 
@@ -53,6 +57,9 @@ class ProjectTabShiftService
             'shiftDescription' => $project->shift_description,
             'freelancers' => Freelancer::all(),
             'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            // Ergänzt für ShiftPlanDailyView/AddShiftModal im Schichttab
+            'globalQualifications' => $this->globalQualificationService->getAll(),
+            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
         ];
     }
 }

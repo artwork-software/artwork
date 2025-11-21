@@ -63,10 +63,24 @@
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
                 :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
-                icon-size="size-4"
+                icon-size="size-5"
+                :stroke="1.75"
                 black-icon
                 classes-button=""
             />
+            <!-- Globale Qualifikationen der Person (nur wenn in dieser Schicht gefordert > 0) -->
+            <div class="flex items-center gap-x-1 ml-1">
+                <ToolTipComponent
+                    v-for="gq in personGlobalQualificationsInDemand"
+                    :key="'person-gq-' + gq.id"
+                    :icon="gq.icon"
+                    :tooltip-text="gq.name || ''"
+                    icon-size="size-5"
+                    :stroke="1.75"
+                    black-icon
+                    classes-button=""
+                />
+            </div>
         </div>
         <div class=" items-center flex col-span-2">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
@@ -193,6 +207,51 @@ const descriptionTooltip = computed(() => ({
     position: 'bottom',
     useTranslation: false,
 }));
+
+// ----- Globale Qualifikationen: Ermittlung der in der Schicht geforderten und der von der Person besessenen -----
+const globalQualificationsMeta = computed(() => {
+    const list = usePage()?.props?.globalQualifications ?? [];
+    return Array.isArray(list) ? list : Object.values(list || {});
+});
+
+const demandedGlobalQualificationIds = computed(() => {
+    const arr = Array.isArray(props.shift?.globalQualifications)
+        ? props.shift.globalQualifications
+        : Object.values(props.shift?.globalQualifications || {});
+    return arr
+        .filter(gq => (gq?.pivot?.quantity ?? gq?.quantity ?? 0) > 0)
+        .map(gq => gq.id);
+});
+
+// IDs der globalen Qualifikationen der Person ermitteln – verschiedene Datenformen unterstützen
+const personGlobalQualificationIds = computed(() => {
+    // Unterstütze mehrere mögliche Property-Namen (camelCase, snake_case, bereits-normalisierte ID-Listen)
+    const raw =
+        props.person?.globalQualifications ??
+        props.person?.global_qualifications ??
+        props.person?.globalQualificationIds ??
+        props.person?.global_qualification_ids ??
+        [];
+
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
+    return arr
+        .map((x) => {
+            if (typeof x === 'number') return x;
+            // Häufige Shapes abdecken
+            return x?.id ?? x?.global_qualification_id ?? null;
+        })
+        .filter((v) => typeof v === 'number' && Number.isFinite(v));
+});
+
+const personGlobalQualificationsInDemand = computed(() => {
+    const demanded = new Set(demandedGlobalQualificationIds.value);
+    const personIds = personGlobalQualificationIds.value;
+    // Schnittmenge bilden und auf Meta (Name/Icon) mappen
+    return personIds
+        .filter(id => demanded.has(id))
+        .map(id => globalQualificationsMeta.value.find(m => m.id === id))
+        .filter(Boolean);
+});
 
 
 const saveIndividualShiftTime = (closePopover) => {

@@ -463,6 +463,8 @@
         :currentUserCrafts="usePage().props.currentUserCrafts"
         :buffer="null"
         :shift-qualifications="usePage().props.shiftQualifications"
+        :shift-groups="usePage().props.shiftGroups"
+        :global-qualifications="usePage().props.globalQualifications"
         @closed="closeAddShiftModal"
         :shift-time-presets="usePage().props.shiftTimePresets"
         :rooms="rooms"

@@ -117,6 +117,8 @@ use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
+use Artwork\Modules\Shift\Services\GlobalQualificationService;
+use Artwork\Modules\Shift\Services\ShiftGroupService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -2294,6 +2296,9 @@ class ProjectController extends Controller
                 $craftService->getAssignableByAllCrafts()
             ),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
+            // Für AddShiftModal und Anzeige benötigt: globale Qualifikationen & Schichtgruppen
+            'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
+            'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
         ]);
     }
 

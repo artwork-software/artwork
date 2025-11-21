@@ -58,6 +58,9 @@ const props = defineProps({
     roomsAndDatesForMultiEdit: [Array, Object],
     // Neues Prop: aktuelles Projekt aus dem Projekt-Schichttab
     project: { type: Object, required: false, default: null },
+    // Optional direkt übergebene Datenquellen (Fallback zu usePage().props)
+    shiftGroups: { type: [Array, Object], required: false, default: () => [] },
+    globalQualifications: { type: [Array, Object], required: false, default: () => [] },
 })
 
 // Emits
@@ -82,7 +85,13 @@ const showShiftSearchbar = ref(false)
 const searchShiftPreset = ref('');
 
 const globalQualificationsComputed = computed(() => {
-    const all = page?.props?.globalQualifications ?? []
+    // Priorität: Props (vom Aufrufer) > usePage().props
+    const fromProp = Array.isArray(props.globalQualifications)
+        ? props.globalQualifications
+        : (props.globalQualifications ? Object.values(props.globalQualifications as any) : [])
+    const all = (fromProp && fromProp.length > 0)
+        ? fromProp
+        : (page?.props?.globalQualifications ?? [])
     const shiftQualis = props.shift?.globalQualifications ?? []
 
     return all.map(gq => {
@@ -97,6 +106,11 @@ const globalQualificationsComputed = computed(() => {
 
 const globalQualifications = ref(globalQualificationsComputed.value)
 
+// Reagiere auf spätes Laden/Änderungen
+watch(() => props.globalQualifications, () => {
+    globalQualifications.value = globalQualificationsComputed.value
+}, { deep: true })
+
 // Projekt vorbelegen: Priorität -> Schicht-Projekt (Edit) > übergebenes Projekt (Projekt-Tab) > Event-Projekt
 const selectedProject = ref(
     props.shift?.project
@@ -104,8 +118,49 @@ const selectedProject = ref(
         : (props.project ?? (props.event?.project ?? null))
 );
 
-const shiftGroups = ref(usePage().props.shiftGroups || []);
-const selectedShiftGroup = ref(props.shift?.shiftGroupId ? shiftGroups.value.find((sg) => sg.id === props.shift?.shiftGroupId) : null);
+function normalizeToArray(val: any): any[] {
+    if (Array.isArray(val)) return val
+    if (val && typeof val === 'object') return Object.values(val)
+    return []
+}
+
+// Schichtgruppen: Props bevorzugen, sonst usePage().props
+const resolveInitialShiftGroups = (): any[] => {
+    const fromProp = normalizeToArray(props.shiftGroups)
+    if (fromProp.length > 0) return fromProp
+    return normalizeToArray(usePage().props.shiftGroups)
+}
+const shiftGroups = ref<any[]>(resolveInitialShiftGroups())
+
+const selectedShiftGroup = ref<any | null>(
+    props.shift?.shiftGroupId
+        ? (shiftGroups as any).value?.find
+            ? (shiftGroups as any).value.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+            : shiftGroups.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+        : null
+)
+
+// Aktualisieren, wenn Props nachgeladen werden
+watch(() => props.shiftGroups, (v) => {
+    // @ts-ignore
+    shiftGroups.value = normalizeToArray(v)
+    if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+        // @ts-ignore
+        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+    }
+}, { deep: true })
+
+// Fallback: wenn usePage().props sich füllt
+watch(() => usePage().props.shiftGroups, (v: any) => {
+    if (!props.shiftGroups || normalizeToArray(props.shiftGroups).length === 0) {
+        // @ts-ignore
+        shiftGroups.value = normalizeToArray(v)
+        if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+            // @ts-ignore
+            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+        }
+    }
+}, { deep: true })
 
 const selectedCraft = ref(props.shift ? props.shift.craft : null)
 

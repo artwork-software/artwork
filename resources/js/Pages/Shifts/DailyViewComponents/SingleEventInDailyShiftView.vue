@@ -4,7 +4,7 @@
         {{$t('All day')}}
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
-    <div :class="['w-full min-w-64 select-none rounded-lg border', containerPadding]"
+    <div :class="['w-full min-w-64 select-none rounded-lg border']"
          :style="{ backgroundColor: hexColor + '40', borderColor: borderColor }">
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
@@ -206,7 +206,6 @@ watch(() => showEventDetails.value, (val, oldVal) => {
 }, { flush: 'post', immediate: true })
 
 // Einheitliche UI-States (verwende nur das bisherige "bei Kollision" Styling)
-const containerPadding = computed(() => '')
 const timePillPadding = computed(() => 'py-2 pr-2 pl-1 text-xs')
 // Titeltypografie konsistent
 const titleTextClass = computed(() => 'text-sm font-semibold')

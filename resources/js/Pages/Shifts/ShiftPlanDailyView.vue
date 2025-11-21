@@ -86,7 +86,6 @@
                 </div>
             </div>
 
-
             <div v-for="day in days" :key="day.withoutFormat" class="flex flex-col w-full h-full relative ml-1">
                 <!-- tages balken -->
                 <div v-if="!day.isExtraRow">
@@ -95,7 +94,7 @@
                             {{ day.dayString }}, {{ day.fullDay }}
                         </div>
                     </div>
-                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in shiftPlanCopy">
+                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in roomsForDay(day.fullDay)">
                         <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
                             <!-- Raumnamen von unten nach oben -->
                             <div :key="room.roomName" class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
@@ -134,6 +133,8 @@
                 :currentUserCrafts="usePage().props.currentUserCrafts"
                 :buffer="null"
                 :shift-qualifications="usePage().props.shiftQualifications"
+                :shift-groups="usePage().props.shiftGroups"
+                :global-qualifications="usePage().props.globalQualifications"
                 @closed="closeAddShiftModal"
                 :shift-time-presets="usePage().props.shiftTimePresets"
                 :rooms="roomsArray"
@@ -445,6 +446,35 @@ const changeDailyViewModeValue = (newValue: boolean) => {
         }
     );
 };
+
+/**
+ * Einstellung: Leere Räume ausblenden (pro Tag)
+ * Wenn aktiviert, werden für jeden Tag nur jene Räume gerendert,
+ * die entweder Events oder (nach Craft-Filter gefilterte) Shifts enthalten.
+ */
+const hideUnoccupiedRooms = computed<boolean>(() => {
+    try {
+        return usePage().props.auth?.user?.calendar_settings?.hide_unoccupied_rooms === true
+    } catch (e) {
+        return false
+    }
+})
+
+const roomsForDay = (dayLabel: string): any[] => {
+    const rooms = shiftPlanCopy.value || []
+    if (!hideUnoccupiedRooms.value) return rooms
+
+    return rooms.filter((room: any) => {
+        const dayContent = room?.content?.[dayLabel]
+        if (!dayContent) return false
+
+        const events: any[] = Array.isArray(dayContent.events) ? dayContent.events : []
+        const shiftsRaw: any[] = Array.isArray(dayContent.shifts) ? dayContent.shifts : []
+        const shifts = filterShiftsByCraft(shiftsRaw)
+
+        return (events?.length ?? 0) > 0 || (shifts?.length ?? 0) > 0
+    })
+}
 
 /**
  * Shortcuts (Heute / aktuelle Woche / Monat)

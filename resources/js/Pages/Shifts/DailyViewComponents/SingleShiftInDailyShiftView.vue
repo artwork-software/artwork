@@ -1,6 +1,6 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div :class="['w-full min-w-64 rounded-lg select-none border', containerPadding]"
+    <div :class="['w-full min-w-64 rounded-lg select-none border']"
          :style="{ backgroundColor: `${shift.craft.color}50`, borderColor: borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full gap-y-0.5">
@@ -41,7 +41,7 @@
 
             <!-- Zeile 3: Funktionen (Badges/Liste) -->
             <div class="flex justify-between flex-wrap items-center gap-1 ml-2 mt-0.5">
-                <div class="flex gap-x-1">
+                <div class="flex gap-x-2">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
                     <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
 
@@ -49,19 +49,38 @@
                             {{
                                 qualification.value -
                                 (getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount ?? 0)
-                            }}/{{ qualification.value }}
+                            }}/{{ qualification.value ? qualification.value : '0' }}
                         </div>
                         <ToolTipComponent
                             :icon="findShiftQualification(qualification.shift_qualification_id)?.icon"
                             :tooltip-text="findShiftQualification(qualification.shift_qualification_id)?.name || ''"
                             icon-size="size-5"
+                            :stroke="1.75"
                             black-icon
                             classes-button=""
                         />
                     </div>
                 </div>
                 </div>
-                <!-- Aktionen bei Kollision entfallen hier, da Menü nun am Ende der ersten Zeile platziert ist -->
+
+                <!-- Globale Qualifikationen (nur Zahlen z.B. 0/2 + Icon mit Tooltip) -->
+                <div class="flex gap-x-2 pr-4">
+                    <div v-for="gq in demandedGlobalQualifications" :key="'gq-' + gq.id">
+                        <div class="text-gray-500 text-[10px] flex items-center gap-x-1">
+                            <div>
+                                {{ countAssignedForGlobalQualification(gq.id) }}/{{ getGlobalQuantity(gq) }}
+                            </div>
+                            <ToolTipComponent
+                                :icon="findGlobalQualification(gq.id)?.icon"
+                                :tooltip-text="findGlobalQualification(gq.id)?.name || ''"
+                                icon-size="size-5"
+                                :stroke="1.75"
+                                black-icon
+                                classes-button=""
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -159,6 +178,8 @@
         :currentUserCrafts="usePage().props.currentUserCrafts"
         :buffer="null"
         :shift-qualifications="usePage().props.shiftQualifications"
+        :shift-groups="usePage().props.shiftGroups"
+        :global-qualifications="usePage().props.globalQualifications"
         @closed="showAddShiftModal = false"
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
@@ -258,6 +279,62 @@ const shiftQualificationsArray = computed(() =>
 
 const findShiftQualification = (id) =>
     shiftQualificationsArray.value.find(q => q.id === id);
+
+// ----- Globale Qualifikationen: Meta + geforderte Qualis und Zählung -----
+const globalQualificationsMeta = computed(() => {
+    const page = usePage();
+    const list = page?.props?.globalQualifications ?? [];
+    return Array.isArray(list) ? list : Object.values(list || {});
+});
+
+const findGlobalQualification = (id) =>
+    globalQualificationsMeta.value.find(q => q.id === id);
+
+const demandedGlobalQualifications = computed(() => {
+    const arr = Array.isArray(props.shift?.globalQualifications)
+        ? props.shift.globalQualifications
+        : Object.values(props.shift?.globalQualifications || {});
+    return arr.filter(gq => (gq?.pivot?.quantity ?? gq?.quantity ?? 0) > 0);
+});
+
+const getGlobalQuantity = (gq) => (gq?.pivot?.quantity ?? gq?.quantity ?? 0);
+
+const getPersonGlobalQualificationIds = (person) => {
+    // Unterstütze mehrere mögliche Property-Namen (camelCase, snake_case, bereits-normalisierte ID-Listen)
+    const raw =
+        person?.globalQualifications ??
+        person?.global_qualifications ??
+        person?.globalQualificationIds ??
+        person?.global_qualification_ids ??
+        [];
+
+    // Wenn bereits eine Liste von IDs vorliegt
+    if (Array.isArray(raw) && raw.every((x) => typeof x === 'number')) {
+        return raw;
+    }
+
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
+    let ids = arr
+        .map((x) => {
+            if (typeof x === 'number') return x;
+            return x?.id ?? x?.global_qualification_id ?? null;
+        })
+        .filter((v) => typeof v === 'number' && Number.isFinite(v));
+
+    // Fallback: falls raw ein Objekt wie {"3": true, "5": 1} ist
+    if (ids.length === 0 && raw && !Array.isArray(raw) && typeof raw === 'object') {
+        ids = Object.keys(raw)
+            .map((k) => Number(k))
+            .filter((n) => Number.isFinite(n));
+    }
+
+    return ids;
+};
+
+const countAssignedForGlobalQualification = (globalQualificationId) => {
+    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []];
+    return groups.reduce((acc, list) => acc + list.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0);
+};
 
 const computedShiftQualificationDropElements = computed(() => {
     return props.shift.shifts_qualifications.map(sq => {

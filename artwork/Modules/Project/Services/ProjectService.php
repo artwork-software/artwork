@@ -734,7 +734,15 @@ class ProjectService
             }
 
             foreach ($event->shifts as $shift) {
-                $shift->load('shiftsQualifications');
+                // Eager Load: Schicht- und Personen-bezogene Relationen, damit
+                // die zugewiesenen Personen ihre globalen Qualifikationen im Payload enthalten
+                $shift->load([
+                    'shiftsQualifications',
+                    // Personen inkl. globaler Qualifikationen
+                    'users.globalQualifications',
+                    'freelancer.globalQualifications',
+                    'serviceProvider.globalQualifications',
+                ]);
 
                 foreach ($shift->users as $user) {
                     $user->formatted_vacation_days = $user->getFormattedVacationDays();

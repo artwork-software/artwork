@@ -1,9 +1,13 @@
 <template>
-    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
+    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed || hasAdminRole()">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
-                <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
-                    <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+                <div
+                    class="py-1.5 px-1 pr-2 cursor-pointer rounded-l-lg"
+                    :style="{ backgroundColor: `${returnCraftColor}` }"
+                    v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+                >
+                    <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -37,39 +41,88 @@
         </Float>
     </Popover>
 
-    <div v-else class="gap-x-2 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
-        <div class="py-1.5 px-3 min-w-28 rounded-l-lg" :style="{ backgroundColor: `${returnCraftColor}` }">
-            <p class="text-xs text-left font-lexend">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+    <div v-else class="gap-x-1 font-lexend rounded-lg" @click="showRequestWorkTimeChangeModal = true">
+        <div
+            class="py-1.5 px-1 rounded-l-lg"
+            :style="{ backgroundColor: `${returnCraftColor}` }"
+            v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
+        >
+            <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 w-full gap-x-2 group">
+    <div class="flex w-full gap-x-2 group relative pr-5 sm:pr-6 overflow-visible" ref="rowRef">
         <div class="text-xs truncate col-span-1 flex items-center gap-x-3">
             <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
                 [{{ person.pivot?.craft_abbreviation }}]
             </span>
             {{ person.name || person.full_name }}
-            <div v-if="can('can plan shifts') || is('artwork admin')" class="hidden group-hover:block ml-1">
-                <span class="flex items-center justify-center">
-                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="deleteUserFromShift(person)"/>
-                    </span>
-                </span>
-            </div>
+
         </div>
 
-        <div class="flex items-center gap-x-1 col-span-1">
-            <PropertyIcon :name="findShiftQualification(person.pivot?.shift_qualification_id)?.icon" class="size-3" />
-            {{ findShiftQualification(person.pivot?.shift_qualification_id)?.name }}
+        <div class="flex items-center min-w-0">
+            <ToolTipComponent
+                :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
+                :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
+                icon-size="size-5"
+                :stroke="1.75"
+                black-icon
+                classes-button=""
+            />
+            <!-- Globale Qualifikationen der Person (nur wenn in dieser Schicht gefordert > 0) -->
+            <div class="flex items-center gap-x-1 ml-1 min-w-0">
+                <!-- Normale Anzeige: einzelne GQ-Icons, solange genug Platz -->
+                <template v-if="!collapseGQIcons">
+                    <ToolTipComponent
+                        v-for="gq in personGlobalQualificationsInDemand"
+                        :key="'person-gq-' + gq.id"
+                        :icon="gq.icon"
+                        :tooltip-text="gq.name || ''"
+                        icon-size="size-5"
+                        :stroke="1.75"
+                        black-icon
+                        classes-button=""
+                    />
+                </template>
+                <!-- Kompakte Anzeige: Chevron + Hover-Tooltip mit allen GQ-Icons -->
+                <template v-else>
+                    <div class="relative" @mouseenter="showGQTooltip = true" @mouseleave="showGQTooltip = false">
+                        <component :is="IconChevronDown" class="size-4 text-gray-600 hover:text-gray-800" />
+                        <div v-show="showGQTooltip"
+                             class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                            <div class="flex items-center gap-1">
+                                <ToolTipComponent
+                                    v-for="gq in personGlobalQualificationsInDemand"
+                                    :key="'person-gq-tooltip-' + gq.id"
+                                    :icon="gq.icon"
+                                    :tooltip-text="gq.name || ''"
+                                    icon-size="size-5"
+                                    :stroke="1.75"
+                                    black-icon
+                                    classes-button=""
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
-        <div class=" col-span-2">
+        <div class=" items-center flex col-span-2 min-w-0 flex-1">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                    <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full text-gray-500 !ring-0 border-none">
-                        <component :is="IconNote"
-                                   class="size-4 min-h-4 min-w-4 text-gray-500 hover:text-gray-700 transition-all duration-150 ease-in-out cursor-pointer"
+                    <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full !ring-0 border-none">
+                        <component
+                            :is="IconNote"
+                            class="size-4 min-h-4 min-w-4 transition-all duration-150 ease-in-out cursor-pointer"
+                            :class="hasCollision ? person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-700'"
+                            v-tooltip.bottom="descriptionTooltip"
                         />
-                        <span class="truncate">{{ person.pivot?.short_description || 'Keine Beschreibung' }}</span>
+                        <span
+                            v-if="!hasCollision"
+                            class="truncate max-w-72 xsDark"
+                            v-tooltip.bottom="descriptionTooltip"
+                        >
+                            {{ person.pivot?.short_description}}
+                        </span>
                     </PopoverButton>
 
                     <transition enter-active-class="transition ease-out duration-100"
@@ -99,6 +152,23 @@
             </Popover>
 
         </div>
+        <!-- Immer sichtbares 3‑Punkt‑Menü für Benutzeraktionen (analog zum Menü in der Schicht-Ecke) -->
+        <div
+            v-if="can('can plan shifts') || is('artwork admin')"
+            class="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-auto"
+        >
+            <BaseMenu has-no-offset white-menu-background dots-size="size-4"
+                      :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''"
+                      menu-width="w-fit"
+            >
+                <BaseMenuItem
+                    white-menu-background
+                    :icon="IconTrash"
+                    title="User von Schicht entfernen"
+                    @click="deleteUserFromShift(person)"
+                />
+            </BaseMenu>
+        </div>
     </div>
 
 
@@ -122,11 +192,13 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref} from "vue";
-import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
+import {computed, ref, onMounted, onBeforeUnmount, watch} from "vue";
+import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
-import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const props = defineProps({
     person: {
@@ -137,17 +209,123 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    // Kann als Array oder Objekt kommen – wir normalisieren unten zu Array
     shiftQualifications: {
-        type: Object,
+        type: [Array, Object],
         required: true
+    },
+    // Wenn mind. 2 Termine nebeneinander (Kollision), Beschreibung ausblenden und Icon schwarz
+    hasCollision: {
+        type: Boolean,
+        default: false
     }
 })
 
 
+// Normalisierte Liste der Qualifikationen (Array)
+const shiftQualificationsArray = computed(() =>
+    Array.isArray(props.shiftQualifications)
+        ? props.shiftQualifications
+        : Object.values(props.shiftQualifications || {})
+);
+
 const findShiftQualification = (id) =>
-    props.shiftQualifications.find(q => q.id === id);
+    shiftQualificationsArray.value.find(q => q.id === id);
 
 const showRequestWorkTimeChangeModal = ref(false);
+
+// UI: Platzmangel-Erkennung für GQ-Icons → auf Chevron zusammenfalten
+const rowRef = ref(null)
+const collapseGQIcons = ref(false)
+const showGQTooltip = ref(false)
+let resizeObserver = null
+
+const checkOverflow = () => {
+    const el = rowRef.value
+    if (!el) return
+    // Nur umschalten, wenn überhaupt GQ-Icons existieren
+    const hasGQ = personGlobalQualificationsInDemand.value?.length > 0
+    if (!hasGQ) {
+        collapseGQIcons.value = false
+        return
+    }
+    // Wenn der Container horizontal überläuft → Icons einklappen
+    collapseGQIcons.value = el.scrollWidth > el.clientWidth
+}
+
+onMounted(() => {
+    checkOverflow()
+    if ('ResizeObserver' in window) {
+        // @ts-ignore
+        resizeObserver = new ResizeObserver(() => checkOverflow())
+        if (rowRef.value) resizeObserver.observe(rowRef.value)
+    } else {
+        window.addEventListener('resize', checkOverflow)
+    }
+})
+
+onBeforeUnmount(() => {
+    if (resizeObserver && rowRef.value) {
+        resizeObserver.unobserve(rowRef.value)
+    }
+    if (resizeObserver) resizeObserver.disconnect?.()
+    window.removeEventListener('resize', checkOverflow)
+})
+
+// Tooltip-Binding für die (ggf. gekürzte) Kurzbeschreibung
+const descriptionTooltip = computed(() => ({
+    value: props.person?.pivot?.short_description || '',
+    disabled: !props.person?.pivot?.short_description,
+    appendTo: 'body',
+    class: 'aw-tooltip',
+    position: 'bottom',
+    useTranslation: false,
+}));
+
+// ----- Globale Qualifikationen: Ermittlung der in der Schicht geforderten und der von der Person besessenen -----
+const globalQualificationsMeta = computed(() => {
+    const list = usePage()?.props?.globalQualifications ?? [];
+    return Array.isArray(list) ? list : Object.values(list || {});
+});
+
+const demandedGlobalQualificationIds = computed(() => {
+    const arr = Array.isArray(props.shift?.globalQualifications)
+        ? props.shift.globalQualifications
+        : Object.values(props.shift?.globalQualifications || {});
+    return arr
+        .filter(gq => (gq?.pivot?.quantity ?? gq?.quantity ?? 0) > 0)
+        .map(gq => gq.id);
+});
+
+// IDs der globalen Qualifikationen der Person ermitteln – verschiedene Datenformen unterstützen
+const personGlobalQualificationIds = computed(() => {
+    // Unterstütze mehrere mögliche Property-Namen (camelCase, snake_case, bereits-normalisierte ID-Listen)
+    const raw =
+        props.person?.globalQualifications ??
+        props.person?.global_qualifications ??
+        props.person?.globalQualificationIds ??
+        props.person?.global_qualification_ids ??
+        [];
+
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
+    return arr
+        .map((x) => {
+            if (typeof x === 'number') return x;
+            // Häufige Shapes abdecken
+            return x?.id ?? x?.global_qualification_id ?? null;
+        })
+        .filter((v) => typeof v === 'number' && Number.isFinite(v));
+});
+
+const personGlobalQualificationsInDemand = computed(() => {
+    const demanded = new Set(demandedGlobalQualificationIds.value);
+    const personIds = personGlobalQualificationIds.value;
+    // Schnittmenge bilden und auf Meta (Name/Icon) mappen
+    return personIds
+        .filter(id => demanded.has(id))
+        .map(id => globalQualificationsMeta.value.find(m => m.id === id))
+        .filter(Boolean);
+});
 
 
 const saveIndividualShiftTime = (closePopover) => {
@@ -208,7 +386,7 @@ const returnCraftColor = computed(() => {
     return `${color}60`; // Farbe mit Transparenz
 });
 
-const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = false) => {
+const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = true) => {
 
     const userType = user.type === 'user' ? 0 : user.type === 'freelancer' ? 1 : 2;
     const usersPivotId = user.pivot.id;
@@ -226,10 +404,13 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
                 removeFromSingleShift: removeFromSingleShift
             },
             preserveScroll: true,
-            preserveState: preserveState,
+            // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
+            preserveState: true,
         }
     );
 }
+
+const hasAdminRole = () => props.isAdmin || usePage().props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 </script>
 
 <style scoped>

@@ -411,6 +411,7 @@ class UpdateArtwork extends Command
 
         $shifts = Shift::with(['event', 'event.project'])->whereNull('room_id')->whereNotNull('event_id')->get();
 
+        /** @var Shift $shift */
         foreach ($shifts as $shift) {
             // get project id form event and save it in shift->project_id, set event_id to null
             if ($shift->event && $shift->event->project) {
@@ -421,6 +422,14 @@ class UpdateArtwork extends Command
                 ]);
                 $this->info("Shift ID {$shift->id} remapped to Project ID {$shift->project_id}");
             }
+
+            // remove all users assigned to shift event
+            $shift->serviceProvider()->detach();
+            $shift->users()->detach();
+            $shift->freelancer()->detach();
+
+            // detach qualifications from shift event
+            $shift->shiftsQualifications()->delete();
         }
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider;
+use Artwork\Modules\Shift\Providers\ShiftChangeServiceProvider;
 use Illuminate\Support\Facades\Facade;
 
 return [
@@ -184,6 +185,8 @@ return [
         Artwork\Modules\Holidays\HolidayServiceProvider::class,
         Artwork\Core\Api\ServiceProvider\ApiAuthServiceProvider::class,
         Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
+
+        ShiftChangeServiceProvider::class,
     ],
 
     /*

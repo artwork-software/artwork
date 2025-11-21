@@ -16,16 +16,22 @@ class ShiftUserRepository extends BaseRepository
         string $craftAbbreviation,
         Shift $shift
     ): ShiftUser {
+        // Sicherstellen, dass alle Felder gesetzt sind
+        $startDate = $shift->start_date ?? now();
+        $endDate = $shift->end_date ?? $startDate;
+        $startTime = $shift->start ?? '00:00';
+        $endTime = $shift->end ?? '23:59';
+
         $shiftUser = new ShiftUser([
             'shift_id' => $shiftId,
             'user_id' => $userId,
             'shift_qualification_id' => $shiftQualificationId,
             'craft_abbreviation' => $craftAbbreviation,
             'short_description' => null,
-            'start_date' => $shift->start_date,
-            'end_date' => $shift->end_date,
-            'start_time' => $shift->start,
-            'end_time' => $shift->end,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
         ]);
 
         $this->save($shiftUser);

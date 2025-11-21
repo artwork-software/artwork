@@ -533,6 +533,7 @@ import { can, is } from 'laravel-permission-to-vuejs'
 import { useUserOverviewLayout } from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import { useSyncedHorizontalScroll } from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 defineOptions({
@@ -540,7 +541,6 @@ defineOptions({
     mixins: [Permissions, IconLib],
 })
 
-const { t } = useI18n()
 
 type ShiftPlanProps = {
     events?: any[]
@@ -1021,6 +1021,7 @@ function closeAddShiftModal() {
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
+    shiftToEdit.value = null
     multiEditCalendarDays.value = []
 }
 

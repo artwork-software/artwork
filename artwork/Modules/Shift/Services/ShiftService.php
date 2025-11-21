@@ -12,6 +12,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
+use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -21,9 +22,12 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 use stdClass;
+use Illuminate\Support\Collection as SupportCollection;
 
 class ShiftService
 {
@@ -38,6 +42,7 @@ class ShiftService
         private readonly ShiftFreelancerService $shiftFreelancerService,
         private readonly ShiftServiceProviderService $shiftServiceProviderService,
         private readonly ShiftCountService $shiftCountService,
+        protected AuthManager $authManager
     ) {
     }
 
@@ -411,12 +416,11 @@ class ShiftService
                 ),
             };
         }
-
     }
 
-    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate): void
+    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate, int $craftId): void
     {
-        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->get();
+        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->where('craft_id', $craftId)->get();
 
         if ($shifts->isEmpty()) {
             return;
@@ -471,5 +475,82 @@ class ShiftService
                 }
             }
         }
+    }
+
+    public function handleGlobalQualificationChange(SupportCollection $globalQualification, Shift $shift): void
+    {
+        if ($globalQualification->isEmpty()) {
+            return;
+        }
+
+        $recorder = app(ShiftChangeRecorder::class);
+
+        $shift->load('globalQualifications');
+        $before = $shift->globalQualifications
+            ->pluck('pivot.quantity', 'id')
+            ->mapWithKeys(fn ($qty, $id) => [(int) $id => (int) $qty])
+            ->toArray();
+
+        $syncPayload = $globalQualification
+            ->filter(fn ($item) => !empty($item['global_qualification_id']))
+            ->mapWithKeys(fn ($item) => [
+                (int) $item['global_qualification_id'] => ['quantity' => (int) $item['quantity']],
+            ])
+            ->toArray();
+
+        $shift->globalQualifications()->sync($syncPayload);
+
+        $shift->load('globalQualifications');
+        $after = $shift->globalQualifications
+            ->pluck('pivot.quantity', 'id')
+            ->mapWithKeys(fn ($qty, $id) => [(int) $id => (int) $qty])
+            ->toArray();
+
+        $recorder->recordGlobalQualificationDiff($shift, $before, $after);
+        $allIds = array_unique(array_merge(array_keys($before), array_keys($after)));
+
+        foreach ($allIds as $id) {
+            $old = $before[$id] ?? 0;
+            $new = $after[$id] ?? 0;
+
+            if ($old === $new) {
+                continue;
+            }
+
+            $qualification = GlobalQualification::find($id);
+
+            $this->logActivity($shift, $qualification, $old, $new);
+        }
+    }
+
+    protected function logActivity(Shift $shift, GlobalQualification $qualification, $old, $new): void
+    {
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->authManager->user())
+            ->event('updated')
+            ->tap(function (Activity $activity) use ($shift, $qualification, $old, $new): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => 'Global qualification {0} changed from {1} to {2} for shift {3}',
+                    'translation_key_placeholder_values' => [
+                        $qualification?->name ?? 'Unbenannte Qualifikation',
+                        $old,
+                        $new,
+                        $shift->craft->name . ' (' . $shift->craft->abbreviation . ')',
+                    ],
+                    'context'            => $shift->is_committed
+                        ? 'post_commit'
+                        : ($shift->in_workflow ? 'in_workflow' : 'normal'),
+                    'shift_id'           => $shift->id,
+                    'craft_id'           => $shift->craft_id,
+                    'project_id'         => $shift->project_id,
+                    'current_request_id' => $shift->current_request_id,
+                    'global_qualification_id'   => $qualification?->id,
+                    'global_qualification_name' => $qualification?->name,
+                    'old_quantity'              => $old,
+                    'new_quantity'              => $new,
+                ]);
+            })
+            ->log('Global qualification quantity updated');
     }
 }

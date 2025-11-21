@@ -17,8 +17,17 @@
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
+
                         <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
-                        <div class="text-[11px]">
+                        <div class="text-[11px] flex items-center gap-x-1.5 w-full">
+                            <component :is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
+                            <ToolTipComponent
+                                v-if="shift.inWorkflow && !shift.isCommitted"
+                                :icon="IconGitPullRequest"
+                                icon-size="w-3 h-3"
+                                :tooltip-text="$t('This shift is currently in a workflow.')"
+                                direction="top"
+                            />
                             <span>
                                 {{ shift.craft.abbreviation }}
                                 {{ shift.start }} - {{ shift.end }}
@@ -34,11 +43,13 @@
                                 'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount
                               }">
                         </span>
+
+
+
                     </div>
                     <div v-else-if="room" class="truncate">
                         , {{ room?.name }}
                     </div>
-                    <component :is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
                 </div>
             </div>
         </div>
@@ -87,7 +98,7 @@ import axios from 'axios'
 
 // UI / Components
 import { CheckIcon } from '@heroicons/vue/outline'
-import { IconLock } from '@tabler/icons-vue'
+import {IconGitPullRequest, IconId, IconLock} from '@tabler/icons-vue'
 import VueMathjax from 'vue-mathjax-next'
 import ChooseUserSeriesShift from '@/Pages/Projects/Components/ChooseUserSeriesShift.vue'
 import ShiftQualificationIconCollection from '@/Layouts/Components/ShiftQualificationIconCollection.vue'
@@ -99,6 +110,7 @@ import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({

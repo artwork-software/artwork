@@ -19,6 +19,7 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
+use Illuminate\Auth\AuthManager;
 
 class ShiftUserService
 {
@@ -29,6 +30,7 @@ class ShiftUserService
         private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
         private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
+        protected AuthManager $auth,
     ) {
     }
 
@@ -61,6 +63,25 @@ class ShiftUserService
             $craftAbbreviation,
             $shift
         );
+        // Manuelles Activitylog: User zugewiesen
+        if ($shift->is_committed || $shift->in_workflow) {
+            activity('shift')
+                ->performedOn($shift)
+                ->causedBy($this->auth->user())
+                ->event('assigned')
+                ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
+                    $activity->properties = $activity->properties->merge([
+                        'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+                        'translation_key_placeholder_values' => [
+                            $shiftUserPivot->user->getFullNameAttribute(),
+                            $shiftUserPivot->shiftQualification->name,
+                            $shift->craft->name,
+                            $shiftUserPivot->craft_abbreviation
+                        ],
+                    ]);
+                })
+                ->log('User removed from shift');
+        }
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
             $shift->getAttribute('id'),
@@ -178,7 +199,7 @@ class ShiftUserService
         $notificationService->setPriority(3);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ]);
@@ -221,7 +242,7 @@ class ShiftUserService
                 ], $craftUser->language);
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setBroadcastMessage([
-                    'id' => rand(1, 1000000),
+                    'id' => random_int(1, 1000000),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ]);
@@ -258,7 +279,7 @@ class ShiftUserService
             $notificationService
                 ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $notificationService->setBroadcastMessage([
-                'id' => rand(1, 1000000),
+                'id' => random_int(1, 1000000),
                 'type' => 'error',
                 'message' => $notificationTitle
             ]);
@@ -266,10 +287,10 @@ class ShiftUserService
                 1 => [
                     'type' => 'string',
                     'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $user->language
-                        ) . $user->getFullNameAttribute(),
+                        'notification.keyWords.concerns',
+                        [],
+                        $user->language
+                    ) . $user->getFullNameAttribute(),
                     'href' => null
                 ],
                 2 => [
@@ -302,10 +323,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $adminUser->language
-                            ) . $user->getFullNameAttribute(),
+                            'notification.keyWords.concerns',
+                            [],
+                            $adminUser->language
+                        ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -342,10 +363,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $craftUser->language
-                            ) . $user->getFullNameAttribute(),
+                            'notification.keyWords.concerns',
+                            [],
+                            $craftUser->language
+                        ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -386,7 +407,7 @@ class ShiftUserService
             $notificationService
                 ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $notificationService->setBroadcastMessage([
-                'id' => rand(1, 1000000),
+                'id' => random_int(1, 1000000),
                 'type' => 'error',
                 'message' => $notificationTitle
             ]);
@@ -394,10 +415,10 @@ class ShiftUserService
                 1 => [
                     'type' => 'string',
                     'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $user->language
-                        ) . $user->getFullNameAttribute(),
+                        'notification.keyWords.concerns',
+                        [],
+                        $user->language
+                    ) . $user->getFullNameAttribute(),
                     'href' => null
                 ],
                 2 => [
@@ -430,7 +451,7 @@ class ShiftUserService
             foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
                 $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => random_int(1, 1000000),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -438,10 +459,10 @@ class ShiftUserService
                     1 => [
                         'type' => 'string',
                         'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $user->language
-                            ) . $user->getFullNameAttribute(),
+                            'notification.keyWords.concerns',
+                            [],
+                            $user->language
+                        ) . $user->getFullNameAttribute(),
                         'href' => null
                     ],
                     2 => [
@@ -476,7 +497,7 @@ class ShiftUserService
                     }
                     $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $craftUser->language);
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => random_int(1, 1000000),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -484,10 +505,10 @@ class ShiftUserService
                         1 => [
                             'type' => 'string',
                             'title' => __(
-                                    'notification.keyWords.concerns',
-                                    [],
-                                    $craftUser->language
-                                ) . $user->getFullNameAttribute(),
+                                'notification.keyWords.concerns',
+                                [],
+                                $craftUser->language
+                            ) . $user->getFullNameAttribute(),
                             'href' => null
                         ],
                         2 => [
@@ -594,15 +615,15 @@ class ShiftUserService
         int $shiftQualificationId
     ): int {
         return $this->shiftUserRepository->getCountForShiftIdAndShiftQualificationId(
-                $shiftId,
-                $shiftQualificationId
-            ) + $this->shiftFreelancerRepository->getCountForShiftIdAndShiftQualificationId(
-                $shiftId,
-                $shiftQualificationId
-            ) + $this->shiftServiceProviderRepository->getCountForShiftIdAndShiftQualificationId(
-                $shiftId,
-                $shiftQualificationId
-            );
+            $shiftId,
+            $shiftQualificationId
+        ) + $this->shiftFreelancerRepository->getCountForShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        ) + $this->shiftServiceProviderRepository->getCountForShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
     }
 
     public function removeFromShift(
@@ -617,14 +638,41 @@ class ShiftUserService
         $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
             $this->shiftUserRepository->getById($usersPivot) :
             $usersPivot;
-
-        /** @var Shift $shift */
+        if (!$shiftUserPivot) {
+            return; // Pivot nicht gefunden -> nichts zu tun
+        }
+        /** @var Shift|null $shift */
         $shift = $shiftUserPivot->shift;
-        /** @var User $user */
+        if (!$shift) {
+            return;
+        }
+        /** @var User|null $user */
         $user = $shiftUserPivot->user;
+        if (!$user) {
+            return;
+        }
+
+        // Manuelles Activitylog: User entfernt (vor Löschung, damit Pivot-Daten verfügbar sind)
+        if ($shift->is_committed || $shift->in_workflow) {
+            activity('shift')
+                ->performedOn($shift)
+                ->causedBy($this->auth->user())
+                ->event('removed')
+                ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
+                    $activity->properties = $activity->properties->merge([
+                        'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
+                        'translation_key_placeholder_values' => [
+                            $shiftUserPivot->user->getFullNameAttribute(),
+                            $shiftUserPivot->shiftQualification->name,
+                            $shift->craft->name,
+                            $shiftUserPivot->craft_abbreviation
+                        ],
+                    ]);
+                })
+                ->log('User removed from shift');
+        }
 
         $this->forceDelete($shiftUserPivot);
-        $shiftCountService->handleShiftUsersShiftCount($shift, $user->id);
 
         if ($shift->is_committed) {
             $this->handleRemovedFromShift(
@@ -659,6 +707,40 @@ class ShiftUserService
                     );
                 }
             }
+        }
+    }
+
+    public function changeQualification(
+        ShiftUser $shiftUser,
+        int $newQualificationId
+    ): void {
+        $oldQualification = $shiftUser->shift_qualification_id;
+        if ($oldQualification === $newQualificationId) {
+            return; // keine Änderung
+        }
+        $shiftUser->shift_qualification_id = $newQualificationId;
+        $shiftUser->save();
+        $shift = $shiftUser->shift;
+        if ($shift->is_committed || $shift->in_workflow) {
+            $context = 'normal';
+            if ($shift->is_committed) {
+                $context = 'post_commit';
+            } elseif ($shift->in_workflow) {
+                $context = 'workflow';
+            }
+            activity('shift_user')
+                ->performedOn($shiftUser)
+                ->causedBy(optional($shiftUser->user))
+                ->event('qualification_changed')
+                ->withProperties([
+                    'shift_id' => $shift->id,
+                    'user_id' => $shiftUser->user_id,
+                    'old_shift_qualification_id' => $oldQualification,
+                    'new_shift_qualification_id' => $newQualificationId,
+                    'context' => $context,
+                    'current_request_id' => $shift->current_request_id,
+                ])
+                ->log('Qualification changed for shift user');
         }
     }
 
@@ -770,7 +852,7 @@ class ShiftUserService
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ]);

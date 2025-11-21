@@ -634,7 +634,6 @@ export default defineComponent({
         IconPlus,
         IconGripVertical,
         addUserToWorkflow(user) {
-            console.log('Adding user to workflow:', user);
             if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {
                 console.warn('User is already in the workflow or form is processing.');
                 return;

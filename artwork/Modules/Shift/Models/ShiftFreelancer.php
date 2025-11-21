@@ -8,10 +8,14 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShiftFreelancer extends Pivot
 {
     use SoftDeletes;
+
 
     protected $table = 'shifts_freelancers';
 
@@ -34,6 +38,7 @@ class ShiftFreelancer extends Pivot
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
+
 
     public function shift(): BelongsTo
     {

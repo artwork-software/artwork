@@ -28,6 +28,7 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -83,9 +84,7 @@ class ShiftController extends Controller
             data: $request->all(),
         );
 
-        if ($request->get('globalQualifications')) {
-            $shift->globalQualifications()->sync($request->get('globalQualifications'));
-        }
+        $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
 
         $shift->event_start_day = Carbon::parse($event->start_time)->format('Y-m-d');
         $shift->event_end_day = Carbon::parse($event->end_time)->format('Y-m-d');
@@ -203,10 +202,7 @@ class ShiftController extends Controller
             'description',
         ]));
 
-        if ($request->get('globalQualifications')) {
-            $shift->globalQualifications()->detach();
-            $shift->globalQualifications()->sync($request->get('globalQualifications'));
-        }
+        $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
 
         $this->shiftService->save($shift);
 
@@ -346,10 +342,7 @@ class ShiftController extends Controller
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
 
-        if ($request->get('globalQualifications')) {
-            $shift->globalQualifications()->detach();
-            $shift->globalQualifications()->sync($request->get('globalQualifications'));
-        }
+        $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
 
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
 
@@ -1320,9 +1313,7 @@ class ShiftController extends Controller
 
         $this->shiftService->save($shift);
 
-        if ($request->get('globalQualifications')) {
-            $shift->globalQualifications()->sync($request->get('globalQualifications'));
-        }
+        $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
 
         $shiftSave = $shift->fresh();
 
@@ -1547,9 +1538,7 @@ class ShiftController extends Controller
                 day: Carbon::parse($roomAndDate['day'])->format('Y-m-d'),
             );
 
-            if ($request->get('globalQualifications')) {
-                $shift->globalQualifications()->sync($request->get('globalQualifications'));
-            }
+            $this->shiftService->handleGlobalQualificationChange($request->collect('globalQualifications'), $shift);
 
             $shiftUuid = Str::uuid();
             $shift->shift_uuid = $shiftUuid;
@@ -1636,4 +1625,5 @@ class ShiftController extends Controller
 
         return back();
     }
+
 }

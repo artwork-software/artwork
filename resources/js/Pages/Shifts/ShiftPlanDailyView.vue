@@ -16,7 +16,7 @@
                 </div>
             </transition>
             <!-- topbar with date range selector or project period -->
-            <div :class="topBarContainerClass">
+            <div :class="topBarContainerClass" :style="topBarStyle" ref="topBarEl">
                 <div class="flex items-center pr-5 gap-x-5 justify-between">
                     <div class="flex items-center gap-x-4">
                         <!-- In Projekt-Kontext: nur Projektzeitraum anzeigen -->
@@ -89,7 +89,7 @@
             <div v-for="day in days" :key="day.withoutFormat" class="flex flex-col w-full h-full relative ml-1">
                 <!-- tages balken -->
                 <div v-if="!day.isExtraRow">
-                    <div class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 top-[72px] z-30">
+                    <div class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30" :style="dayHeaderStyle">
                         <div class="px-16 font-lexend text-sm font-bold py-4">
                             {{ day.dayString }}, {{ day.fullDay }}
                         </div>
@@ -173,7 +173,7 @@
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import SingleEventInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue";
-import { ref, provide, onMounted, watch, computed } from "vue";
+import { ref, provide, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -273,6 +273,12 @@ const props = defineProps({
         type: String,
         required: false,
         default: ''
+    },
+    // Optionaler zusätzlicher Offset in Pixeln für Sticky-Elemente oben (z.B. Höhe der Tab-Leiste)
+    stickyOffsetTopPx: {
+        type: Number,
+        required: false,
+        default: 0
     }
 })
 
@@ -604,10 +610,43 @@ function formatDate(dateLike: any) {
 // Optik der Top-Bar: im Projektkontext nahezu randlos, sonst Standard-Karte
 const topBarContainerClass = computed(() => {
     if (props.project) {
-        return 'w-full sticky top-0 z-40 px-3 py-2 bg-transparent'
+        // Im Projekt-/ShiftTab-Kontext soll die Toolbar einen weißen Hintergrund haben
+        // Kein vertikaler Zwischenraum zur darunterliegenden Tages-/Raumleiste: unten kein Padding
+        return 'w-full sticky top-0 z-40 px-3 pt-2 pb-0 bg-white'
     }
     return 'card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none'
 })
+
+// Dynamischer Top-Offset der Top-Bar (berücksichtigt z.B. die Tabs-Leiste)
+const topBarStyle = computed(() => ({
+    top: `${props.stickyOffsetTopPx}px`
+}))
+
+// Toolbar-Höhe dynamisch messen, um exakten Abstand für den Tageskopf zu setzen
+const topBarEl = ref<HTMLElement | null>(null)
+const topBarHeightPx = ref<number>(72)
+
+function measureTopBarHeight() {
+    const h = topBarEl.value?.offsetHeight
+    if (typeof h === 'number' && h > 0) {
+        topBarHeightPx.value = h
+    }
+}
+
+onMounted(async () => {
+    await nextTick()
+    measureTopBarHeight()
+    window.addEventListener('resize', measureTopBarHeight)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', measureTopBarHeight)
+})
+
+// Dynamischer Top-Offset für den Tageskopf: gemessene Top-Bar-Höhe + zusätzlicher Offset
+const dayHeaderStyle = computed(() => ({
+    top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`
+}))
 </script>
 
 

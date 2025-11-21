@@ -50,7 +50,7 @@
             <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
-    <div class="flex w-full gap-x-2 group">
+    <div class="flex w-full gap-x-2 group relative pr-5 sm:pr-6 overflow-visible" ref="rowRef">
         <div class="text-xs truncate col-span-1 flex items-center gap-x-3">
             <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
                 [{{ person.pivot?.craft_abbreviation }}]
@@ -59,7 +59,7 @@
 
         </div>
 
-        <div class="flex items-center">
+        <div class="flex items-center min-w-0">
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
                 :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
@@ -69,20 +69,44 @@
                 classes-button=""
             />
             <!-- Globale Qualifikationen der Person (nur wenn in dieser Schicht gefordert > 0) -->
-            <div class="flex items-center gap-x-1 ml-1">
-                <ToolTipComponent
-                    v-for="gq in personGlobalQualificationsInDemand"
-                    :key="'person-gq-' + gq.id"
-                    :icon="gq.icon"
-                    :tooltip-text="gq.name || ''"
-                    icon-size="size-5"
-                    :stroke="1.75"
-                    black-icon
-                    classes-button=""
-                />
+            <div class="flex items-center gap-x-1 ml-1 min-w-0">
+                <!-- Normale Anzeige: einzelne GQ-Icons, solange genug Platz -->
+                <template v-if="!collapseGQIcons">
+                    <ToolTipComponent
+                        v-for="gq in personGlobalQualificationsInDemand"
+                        :key="'person-gq-' + gq.id"
+                        :icon="gq.icon"
+                        :tooltip-text="gq.name || ''"
+                        icon-size="size-5"
+                        :stroke="1.75"
+                        black-icon
+                        classes-button=""
+                    />
+                </template>
+                <!-- Kompakte Anzeige: Chevron + Hover-Tooltip mit allen GQ-Icons -->
+                <template v-else>
+                    <div class="relative" @mouseenter="showGQTooltip = true" @mouseleave="showGQTooltip = false">
+                        <component :is="IconChevronDown" class="size-4 text-gray-600 hover:text-gray-800" />
+                        <div v-show="showGQTooltip"
+                             class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                            <div class="flex items-center gap-1">
+                                <ToolTipComponent
+                                    v-for="gq in personGlobalQualificationsInDemand"
+                                    :key="'person-gq-tooltip-' + gq.id"
+                                    :icon="gq.icon"
+                                    :tooltip-text="gq.name || ''"
+                                    icon-size="size-5"
+                                    :stroke="1.75"
+                                    black-icon
+                                    classes-button=""
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
-        <div class=" items-center flex col-span-2">
+        <div class=" items-center flex col-span-2 min-w-0 flex-1">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                     <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full !ring-0 border-none">
@@ -128,12 +152,22 @@
             </Popover>
 
         </div>
-        <div v-if="can('can plan shifts') || is('artwork admin')" class="hidden items-center pt-1 group-hover:block ml-1">
-                <span class="flex items-center justify-center">
-                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="deleteUserFromShift(person)"/>
-                    </span>
-                </span>
+        <!-- Immer sichtbares 3‑Punkt‑Menü für Benutzeraktionen (analog zum Menü in der Schicht-Ecke) -->
+        <div
+            v-if="can('can plan shifts') || is('artwork admin')"
+            class="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-auto"
+        >
+            <BaseMenu has-no-offset white-menu-background dots-size="size-4"
+                      :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''"
+                      menu-width="w-fit"
+            >
+                <BaseMenuItem
+                    white-menu-background
+                    :icon="IconTrash"
+                    title="User von Schicht entfernen"
+                    @click="deleteUserFromShift(person)"
+                />
+            </BaseMenu>
         </div>
     </div>
 
@@ -158,14 +192,13 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref} from "vue";
-import {IconDeviceFloppy, IconNote, IconX} from "@tabler/icons-vue";
+import {computed, ref, onMounted, onBeforeUnmount, watch} from "vue";
+import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-
-// Emits
-const emit = defineEmits(['userRemoved'])
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const props = defineProps({
     person: {
@@ -200,6 +233,44 @@ const findShiftQualification = (id) =>
     shiftQualificationsArray.value.find(q => q.id === id);
 
 const showRequestWorkTimeChangeModal = ref(false);
+
+// UI: Platzmangel-Erkennung für GQ-Icons → auf Chevron zusammenfalten
+const rowRef = ref(null)
+const collapseGQIcons = ref(false)
+const showGQTooltip = ref(false)
+let resizeObserver = null
+
+const checkOverflow = () => {
+    const el = rowRef.value
+    if (!el) return
+    // Nur umschalten, wenn überhaupt GQ-Icons existieren
+    const hasGQ = personGlobalQualificationsInDemand.value?.length > 0
+    if (!hasGQ) {
+        collapseGQIcons.value = false
+        return
+    }
+    // Wenn der Container horizontal überläuft → Icons einklappen
+    collapseGQIcons.value = el.scrollWidth > el.clientWidth
+}
+
+onMounted(() => {
+    checkOverflow()
+    if ('ResizeObserver' in window) {
+        // @ts-ignore
+        resizeObserver = new ResizeObserver(() => checkOverflow())
+        if (rowRef.value) resizeObserver.observe(rowRef.value)
+    } else {
+        window.addEventListener('resize', checkOverflow)
+    }
+})
+
+onBeforeUnmount(() => {
+    if (resizeObserver && rowRef.value) {
+        resizeObserver.unobserve(rowRef.value)
+    }
+    if (resizeObserver) resizeObserver.disconnect?.()
+    window.removeEventListener('resize', checkOverflow)
+})
 
 // Tooltip-Binding für die (ggf. gekürzte) Kurzbeschreibung
 const descriptionTooltip = computed(() => ({
@@ -335,10 +406,6 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
             preserveScroll: true,
             // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
             preserveState: true,
-            onSuccess: () => {
-                // Informiere Parent, damit z. B. globale Qualifikationszähler sofort aktualisiert werden können
-                emit('userRemoved', { person: props.person })
-            }
         }
     );
 }

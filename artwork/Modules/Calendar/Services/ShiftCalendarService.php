@@ -29,7 +29,8 @@ class ShiftCalendarService
         $startDate,
         $endDate,
         ?UserCalendarSettings $userCalendarSettings = null,
-        ?bool $addTimeline = false
+        ?bool $addTimeline = false,
+        ?\Artwork\Modules\Project\Models\Project $project = null
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
@@ -57,6 +58,7 @@ class ShiftCalendarService
         ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
+            ->when($project !== null, fn($q) => $q->where('project_id', $project->id))
             ->where(function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('start_time', [$startDate, $endDate])
                     ->orWhereBetween('end_time', [$startDate, $endDate])
@@ -69,7 +71,9 @@ class ShiftCalendarService
             ->get();
 
 
-        $shifts = Shift::where('event_id', null)->whereIn('room_id', $roomIds)
+        $shifts = Shift::where('event_id', null)
+            ->whereIn('room_id', $roomIds)
+            ->when($project !== null, fn($q) => $q->where('project_id', $project->id))
             ->where(function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('shifts.start_date', [$startDate, $endDate])
                     ->orWhereBetween('shifts.end_date', [$startDate, $endDate])

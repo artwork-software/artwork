@@ -12,9 +12,9 @@
                     <PropertyIcon
                         :name="icon"
                         class="cursor-pointer"
-                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : (!blackIcon ? 'text-artwork-buttons-context' : ''))]"
                         :stroke-width="stroke"
-                        :style="iconStyle"
+                        :style="[iconStyle, blackIcon ? { color: '#27233C' } : null]"
                     />
                 </button>
             </div>
@@ -29,9 +29,9 @@
                     <PropertyIcon
                         :name="icon"
                         class="cursor-pointer"
-                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : (!blackIcon ? 'text-artwork-buttons-context' : ''))]"
                         :stroke-width="stroke"
-                        :style="iconStyle"
+                        :style="[iconStyle, blackIcon ? { color: '#27233C' } : null]"
                     />
                 </button>
             </div>
@@ -45,9 +45,9 @@
                     <PropertyIcon
                         :name="icon"
                         class="cursor-pointer"
-                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : (!blackIcon ? 'text-artwork-buttons-context' : ''))]"
                         :stroke-width="stroke"
-                        :style="iconStyle"
+                        :style="[iconStyle, blackIcon ? { color: '#27233C' } : null]"
                     />
                 </button>
             </div>
@@ -61,9 +61,9 @@
                     <PropertyIcon
                         :name="icon"
                         class="cursor-pointer"
-                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                        :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : (!blackIcon ? 'text-artwork-buttons-context' : ''))]"
                         :stroke-width="stroke"
-                        :style="iconStyle"
+                        :style="[iconStyle, blackIcon ? { color: '#27233C' } : null]"
                     />
                 </button>
             </div>
@@ -80,9 +80,9 @@
             <PropertyIcon
                 :name="icon"
                 class="cursor-pointer"
-                :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : 'text-artwork-buttons-context')]"
+                :class="[iconSize, classes, whiteIcon ? 'text-white' : (grayIcon ? 'text-gray-400' : (!blackIcon ? 'text-artwork-buttons-context' : ''))]"
                 :stroke-width="stroke"
-                :style="iconStyle"
+                :style="[iconStyle, blackIcon ? { color: '#27233C' } : null]"
             />
         </button>
     </div>
@@ -112,6 +112,8 @@ const props = defineProps({
     stroke: { type: [String, Number], default: '1' },
     whiteIcon: { type: Boolean, default: false },
     grayIcon: { type: Boolean, default: false },
+    // Neues Flag: erzwingt schwarze Icon-Farbe (#27233C)
+    blackIcon: { type: Boolean, default: false },
     noRelative: { type: Boolean, default: false },
     tooltipCssClass: { type: String, default: 'w-fit' }, // bleibt erhalten, falls du es extern nutzt
     noTooltip: { type: Boolean, default: false },

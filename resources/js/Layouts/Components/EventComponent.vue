@@ -231,6 +231,11 @@
                         <h3 class="ui-card-title">{{ $t('Project') }}</h3>
                     </header>
 
+                    <!-- Fehlerhinweis immer oben beim Abschnittstitel anzeigen -->
+                    <div class="mt-1">
+                        <p class="ui-error" v-if="errorMsg('projectId')" v-html="errorMsg('projectId')" />
+                    </div>
+
                     <!-- Aktivierung -->
                     <label for="showProjectInfo" class="flex items-center gap-2 mt-1 cursor-pointer">
                         <input id="showProjectInfo" type="checkbox" v-model="showProjectInfo" class="ui-checkbox" />
@@ -317,7 +322,6 @@
                         <p class="ui-hint" v-if="creatingProject">
                             {{ $t('The project will be created when saving the event.') }}
                         </p>
-                        <p class="ui-error" v-if="errorMsg('projectId')" v-html="errorMsg('projectId')" />
                         <p class="ui-error" v-if="errorMsg('projectName')" v-html="errorMsg('projectName')" />
                     </div>
                 </section>
@@ -557,7 +561,8 @@ const { t } = useI18n(), $t = t;
 const props = defineProps({
     showHints: { type: Boolean, default: false },
     eventTypes: { type: Array, required: true },
-    rooms: { type: Array, required: true },
+    // Rooms can arrive a bit later depending on the caller. Provide a safe default.
+    rooms: { type: Array, required: false, default: () => [] },
     isAdmin: { type: Boolean, default: false },
     event: { type: [Object, Boolean], default: null, required: false },
     project: { type: Object, default: null },
@@ -648,8 +653,10 @@ function setEndFromDuration() {
     endAutoFilled.value = true
 }
 // --- Computeds
+// Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
+const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
 const isRoomAdmin = computed(() => {
-    return props.rooms.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
+    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
@@ -707,17 +714,32 @@ const requestDisabled = computed(() => {
 // --- Watches / Mount
 watch(selectedRoom, () => checkChanges(), { deep: true })
 watch(() => props.event, () => openModal(), { deep: true, immediate: true })
+// Falls Räume asynchron/als Map eintreffen: gewünschten Raum nachtragen
+watch(
+    () => props.rooms,
+    (roomsNow) => {
+        if (selectedRoom.value || !props.wantedRoomId) return
+        const list = Array.isArray(roomsNow) ? roomsNow : Object.values(roomsNow || {})
+        const rid = Number(props.wantedRoomId)
+        const found = list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
+        if (found) selectedRoom.value = found
+    },
+    { deep: false }
+)
 
 onMounted(() => {
+    console.log(props)
     if (props.wantedDate) {
         startDate.value = props.wantedDate
         startTime.value = '09:00'
         setEndFromDuration()
     }
     if (props.wantedRoomId) {
-        selectedRoom.value = props.rooms.find(r => r.id === Number(props.wantedRoomId)) || null
+        const rid = Number(props.wantedRoomId)
+        selectedRoom.value = findRoomById(rid)
     } else if (props.event) {
-        selectedRoom.value = props.rooms.find(r => r.id === props.event.roomId) || null
+        const rid = Number(props.event.roomId)
+        selectedRoom.value = findRoomById(rid)
     }
 })
 
@@ -733,13 +755,34 @@ function convertDateFormat(dateString) {
     if (parts.length !== 3) return dateString
     return `${parts[2]}.${parts[1]}.${parts[0]}`
 }
+// Hilfsfunktion: robustes Finden eines Raums anhand id/roomId, inkl. Typ-Coercion
+function findRoomById(rawId) {
+    const rid = Number(rawId)
+    if (!Number.isFinite(rid)) return null
+    const list = roomsList.value || []
+    return list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
+}
 function openModal() {
     canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole()
 
     if (!props.event) {
         selectedEventType.value = props.eventTypes?.[0] ?? null
         selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
-        if (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id) {
+        // Direkt vorbelegen: Datum/Zeit und Raum, falls gewünscht
+        if (props.wantedDate) {
+            startDate.value = props.wantedDate
+            startTime.value = '09:00'
+            setEndFromDuration()
+        }
+        if (props.wantedRoomId && !selectedRoom.value) {
+            const rid = Number(props.wantedRoomId)
+            selectedRoom.value = findRoomById(rid)
+        }
+        // NEU: Wenn ein Projekt-Prop gesetzt ist (z. B. im Projekt-Schichttab), Projekt vorauswählen
+        if (props.project && !selectedProject.value) {
+            selectedProject.value = { id: props.project.id, name: props.project.name }
+            showProjectInfo.value = true
+        } else if (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id) {
             selectedProject.value = { id: page.props.auth.user.calendar_settings.time_period_project_id, name: page.props.projectNameOfCalendarProject }
         }
         return
@@ -786,9 +829,11 @@ function openModal() {
     if (selectedProject.value?.id) showProjectInfo.value = true
 
     if (props.wantedRoomId) {
-        selectedRoom.value = props.rooms.find(r => r.id === Number(props.wantedRoomId)) || null
+        const rid = Number(props.wantedRoomId)
+        selectedRoom.value = findRoomById(rid)
     } else {
-        selectedRoom.value = props.rooms.find(r => r.id === props.event.roomId) || null
+        const rid = Number(props.event.roomId)
+        selectedRoom.value = findRoomById(rid)
     }
 
     if (props.wantedDate) {

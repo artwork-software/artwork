@@ -16,7 +16,6 @@ class ShiftFreelancer extends Pivot
 {
     use SoftDeletes;
 
-
     protected $table = 'shifts_freelancers';
 
     protected $fillable = [
@@ -38,7 +37,6 @@ class ShiftFreelancer extends Pivot
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
-
 
     public function shift(): BelongsTo
     {

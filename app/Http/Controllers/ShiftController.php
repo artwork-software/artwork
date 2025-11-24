@@ -245,7 +245,7 @@ class ShiftController extends Controller
                         'projectName' => $shift?->event?->project?->name ?? __('notification.shift.without_project'),
                         'craftAbbreviation' => $shift->craft->abbreviation
                     ],
-                    $user->language
+                    $user?->language
                 );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
@@ -255,7 +255,7 @@ class ShiftController extends Controller
                 $notificationDescription = [
                     1 => [
                         'type' => 'string',
-                        'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
+                        'title' => __('notification.keyWords.concerns_shift', [], $user?->language) .
                             Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
                             Carbon::parse($shift->end)->format('d.m.Y H:i'),
                         'href' => null
@@ -271,6 +271,7 @@ class ShiftController extends Controller
 
             $craft = $shift->craft()->first();
 
+            /** @var User $craftUser */
             foreach ($craft->users()->get() as $craftUser) {
                 if (Auth::id() !== $craftUser->id) {
                     $notificationTitle = __(
@@ -290,7 +291,7 @@ class ShiftController extends Controller
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
+                            'title' => __('notification.keyWords.concerns_shift', [], $craftUser?->language) .
                                 Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
                                 Carbon::parse($shift->end)->format('d.m.Y H:i'),
                             'href' => null

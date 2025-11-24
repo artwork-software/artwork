@@ -113,6 +113,7 @@ class ShiftChangeRecorder
                 'in_workflow'        => (bool) $shift->in_workflow,
                 'current_request_id' => $shift->current_request_id,
                 'is_committed'       => (bool) $shift->is_committed,
+                'affected_user_type' => \Artwork\Modules\User\Models\User::class,
                 'affected_user_id'   => $model->user_id,
                 'changed_by_user_id' => Auth::id(),
                 'fields_to_watch'    => [
@@ -146,7 +147,8 @@ class ShiftChangeRecorder
                 'in_workflow'        => (bool) $shift->in_workflow,
                 'current_request_id' => $shift->current_request_id,
                 'is_committed'       => (bool) $shift->is_committed,
-                'affected_user_id'   => null,
+                'affected_user_type' => \Artwork\Modules\Freelancer\Models\Freelancer::class,
+                'affected_user_id'   => $model->freelancer_id ?? null,
                 'changed_by_user_id' => Auth::id(),
                 'fields_to_watch'    => [
                     'shift_id',
@@ -179,7 +181,8 @@ class ShiftChangeRecorder
                 'in_workflow'        => (bool) $shift->in_workflow,
                 'current_request_id' => $shift->current_request_id,
                 'is_committed'       => (bool) $shift->is_committed,
-                'affected_user_id'   => null,
+                'affected_user_type' => \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+                'affected_user_id'   => $model->service_provider_id ?? null,
                 'changed_by_user_id' => Auth::id(),
                 'fields_to_watch'    => [
                     'shift_id',
@@ -640,7 +643,7 @@ class ShiftChangeRecorder
      */
     protected function recordCommittedChange(array $meta, array $fieldChanges, string $eventName): void
     {
-
+        // 1) Immer einen "globalen" CommittedShiftChange schreiben
         CommittedShiftChange::create([
             'craft_id'                => $meta['craft_id'],
             'shift_id'                => $meta['shift_id'],
@@ -648,13 +651,15 @@ class ShiftChangeRecorder
             'subject_id'              => $meta['subject_id'],
             'change_type'             => $eventName,
             'field_changes'           => $fieldChanges,
-            'affected_user_id'        => $meta['affected_user_id'],
+            'affected_user_type'      => $meta['affected_user_type'] ?? null,
+            'affected_user_id'        => $meta['affected_user_id'] ?? null,
             'changed_by_user_id'      => $meta['changed_by_user_id'],
             'changed_at'              => now(),
             'acknowledged_at'         => null,
             'acknowledged_by_user_id' => null,
         ]);
     }
+
 
     /**
      * Normalisiert Datumsfelder im _initial-Array auf lokales Y-m-d.

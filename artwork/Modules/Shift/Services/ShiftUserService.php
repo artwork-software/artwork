@@ -8,14 +8,15 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
+use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
-use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
@@ -34,6 +35,9 @@ class ShiftUserService
     ) {
     }
 
+    /**
+     * User einer Schicht zuweisen (inkl. Serienlogik).
+     */
     public function assignToShift(
         Shift $shift,
         int $userId,
@@ -44,15 +48,9 @@ class ShiftUserService
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
-        array|null $seriesShiftData = null
+        ?array $seriesShiftData = null
     ): void {
-        // check if user is already assigned to shift
-        if (
-            $shift->users()
-                ->get(['users.id'])
-                ->pluck('id')
-                ->contains($userId)
-        ) {
+        if ($this->isUserAlreadyAssignedToShift($shift, $userId)) {
             return;
         }
 
@@ -63,25 +61,12 @@ class ShiftUserService
             $craftAbbreviation,
             $shift
         );
-        // Manuelles Activitylog: User zugewiesen
-        if ($shift->is_committed || $shift->in_workflow) {
-            activity('shift')
-                ->performedOn($shift)
-                ->causedBy($this->auth->user())
-                ->event('assigned')
-                ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
-                    $activity->properties = $activity->properties->merge([
-                        'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
-                        'translation_key_placeholder_values' => [
-                            $shiftUserPivot->user->getFullNameAttribute(),
-                            $shiftUserPivot->shiftQualification->name,
-                            $shift->craft->name,
-                            $shiftUserPivot->craft_abbreviation
-                        ],
-                    ]);
-                })
-                ->log('User removed from shift');
-        }
+
+
+        /** @var User $user */
+        $user = $shiftUserPivot->user;
+
+
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
             $shift->getAttribute('id'),
@@ -89,9 +74,6 @@ class ShiftUserService
         );
 
         $shiftCountService->handleShiftUsersShiftCount($shift, $userId);
-
-        /** @var User $user */
-        $user = $shiftUserPivot->user;
         $this->assignUserToProjectIfNecessary($shift, $user);
 
         if ($shift->is_committed) {
@@ -106,11 +88,7 @@ class ShiftUserService
             );
         }
 
-        if (
-            $seriesShiftData !== null &&
-            isset($seriesShiftData['onlyThisDay']) &&
-            $seriesShiftData['onlyThisDay'] === false
-        ) {
+        if ($this->shouldHandleSeriesShift($seriesShiftData)) {
             $this->handleSeriesShiftData(
                 $shift,
                 Carbon::parse($seriesShiftData['start'])->startOfDay(),
@@ -126,6 +104,56 @@ class ShiftUserService
                 $changeService
             );
         }
+
+
+        $this->logCommittedShiftAssignmentChange(
+            $shift,
+            $user,
+            'user_assigned_to_shift',
+            $shiftUserPivot
+        );
+
+        $this->logManualAssignmentActivity($shift, $shiftUserPivot);
+
+    }
+
+    private function isUserAlreadyAssignedToShift(Shift $shift, int $userId): bool
+    {
+        return $shift->users()
+            ->get(['users.id'])
+            ->pluck('id')
+            ->contains($userId);
+    }
+
+    private function shouldHandleSeriesShift(?array $seriesShiftData): bool
+    {
+        return $seriesShiftData !== null
+            && isset($seriesShiftData['onlyThisDay'])
+            && $seriesShiftData['onlyThisDay'] === false;
+    }
+
+    private function logManualAssignmentActivity(Shift $shift, ShiftUser $shiftUserPivot): void
+    {
+        if (! $shift->is_committed && ! $shift->in_workflow) {
+            return;
+        }
+
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->auth->user())
+            ->event('assigned')
+            ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+                    'translation_key_placeholder_values' => [
+                        $shiftUserPivot->user->getFullNameAttribute(),
+                        $shiftUserPivot->shiftQualification->name,
+                        $shift->craft->name,
+                        $shiftUserPivot->craft_abbreviation,
+                    ],
+                ]);
+            })
+            ->log('User assigned to shift');
     }
 
     private function handleAssignedToShift(
@@ -150,19 +178,17 @@ class ShiftUserService
                         $user->getFullNameAttribute(),
                         $shift->craft->abbreviation,
                         $shift->event->eventName ?? '',
-                        $shiftQualification->name
+                        $shiftQualification->name,
                     ])
             );
         }
+
         $this->createAssignedToShiftNotification($shift, $user, $notificationService);
-        if (
-            $user->vacations()
-                ->where('date', '<=', $shift?->event_start_day ?? $shift->start_date)
-                ->where('date', '>=', $shift?->event_end_day ?? $shift->end_date)
-                ->count() > 0
-        ) {
+
+        if ($this->userHasVacationConflictWithShift($shift, $user)) {
             $this->createVacationConflictNotification($shift, $user, $notificationService);
         }
+
         $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
         $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
 
@@ -172,10 +198,19 @@ class ShiftUserService
         broadcast(new ShiftAssigned($user, $shift));
     }
 
+    private function userHasVacationConflictWithShift(Shift $shift, User $user): bool
+    {
+        return $user->vacations()
+                ->where('date', '<=', $shift?->event_start_day ?? $shift->start_date)
+                ->where('date', '>=', $shift?->event_end_day ?? $shift->end_date)
+                ->count() > 0;
+    }
+
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
     {
         $project = $shift->event?->project;
-        if ($project && !$project->users->contains($user->id)) {
+
+        if ($project && ! $project->users->contains($user->id)) {
             $project->users()->attach($user->id);
         }
     }
@@ -189,27 +224,30 @@ class ShiftUserService
             $notificationService->setProjectId($shift->event?->project->id);
             $notificationService->setEventId($shift->event->id);
         }
+
         $notificationService->setShiftId($shift->id);
+
         $notificationTitle = __('notification.shift.new_shift_add', [
-            'craftName' => $shift->craft->name,
-            'craftAbbreviation' => $shift->craft->abbreviation
+            'craftName'         => $shift->craft->name,
+            'craftAbbreviation' => $shift->craft->abbreviation,
         ], $user->language);
+
         $notificationService->setTitle($notificationTitle);
         $notificationService->setIcon('green');
         $notificationService->setPriority(3);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
-            'id' => random_int(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
+            'id'      => random_int(1, 1000000),
+            'type'    => 'success',
+            'message' => $notificationTitle,
         ]);
         $notificationService->setDescription([
             1 => [
-                'type' => 'string',
+                'type'  => 'string',
                 'title' => __('notification.keyWords.your_shift') .
                     Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
                     Carbon::parse($shift->end)->format('d.m.Y H:i'),
-                'href' => null
+                'href'  => null,
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -224,43 +262,47 @@ class ShiftUserService
     ): void {
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
-        $notificationService
-            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
-
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
         $notificationService->setButtons(['change_shift_conflict']);
+
         $usersWhichGotNotification = [];
+
         foreach ($user->crafts as $craft) {
             foreach ($craft->users as $craftUser) {
-                if (in_array($craftUser->id, $usersWhichGotNotification)) {
+                if (in_array($craftUser->id, $usersWhichGotNotification, true)) {
                     continue;
                 }
+
                 $notificationTitle = __('notification.shift.conflict_shift_withName', [
-                    'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
-                    'projectName' => $shift?->event?->project?->name ??
-                        __('notification.shift.without_project'),
-                    'craftAbbreviation' => $shift->craft->abbreviation
+                    'date'              => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                    'projectName'       => $shift?->event?->project?->name
+                        ?? __('notification.shift.without_project'),
+                    'craftAbbreviation' => $shift->craft->abbreviation,
                 ], $craftUser->language);
+
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setBroadcastMessage([
-                    'id' => random_int(1, 1000000),
-                    'type' => 'success',
-                    'message' => $notificationTitle
+                    'id'      => random_int(1, 1000000),
+                    'type'    => 'success',
+                    'message' => $notificationTitle,
                 ]);
                 $notificationService->setDescription([
                     1 => [
-                        'type' => 'string',
+                        'type'  => 'string',
                         'title' => __(
                             'notification.keyWords.not_available',
                             ['username' => $user->getFullNameAttribute()]
                         ),
-                        'href' => null
+                        'href'  => null,
                     ],
                 ]);
+
                 $notificationService->setNotificationTo($craftUser);
                 $notificationService->createNotification();
                 $usersWhichGotNotification[] = $craftUser->id;
             }
         }
+
         $notificationService->clearNotificationData();
     }
 
@@ -271,124 +313,146 @@ class ShiftUserService
     ): void {
         $shiftBreakCheck = $notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
 
-        if ($shiftBreakCheck->shortBreak) {
-            $notificationTitle = __('notification.shift.your_short_break', [], $user->language);
+        if (! $shiftBreakCheck->shortBreak) {
+            return;
+        }
+
+        $this->notifyShortBreakUser($shiftBreakCheck, $user, $notificationService);
+        $this->notifyShortBreakAdmins($shiftBreakCheck, $user, $notificationService);
+        $this->notifyShortBreakCraftUsers($shiftBreakCheck, $shift, $user, $notificationService);
+
+        $notificationService->clearNotificationData();
+    }
+
+    private function notifyShortBreakUser($shiftBreakCheck, User $user, NotificationService $notificationService): void
+    {
+        $notificationTitle = __('notification.shift.your_short_break', [], $user->language);
+
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon('blue');
+        $notificationService->setPriority(1);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+        $notificationService->setBroadcastMessage([
+            'id'      => random_int(1, 1000000),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setDescription([
+            1 => [
+                'type'  => 'string',
+                'title' => __(
+                    'notification.keyWords.concerns',
+                    [],
+                    $user->language
+                ) . $user->getFullNameAttribute(),
+                'href'  => null,
+            ],
+            2 => [
+                'type'  => 'string',
+                'title' => __(
+                    'notification.keyWords.concerns_time_period',
+                    [
+                        'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
+                        'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    ],
+                    $user->language
+                ),
+                'href'  => null,
+            ],
+        ]);
+        $notificationService->setNotificationTo($user);
+        $notificationService->createNotification();
+    }
+
+    private function notifyShortBreakAdmins($shiftBreakCheck, User $user, NotificationService $notificationService): void
+    {
+        $notificationService->setPriority(1);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+        $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+
+        foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
+            $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
+
             $notificationService->setTitle($notificationTitle);
-            $notificationService->setIcon('blue');
-            $notificationService->setPriority(1);
-            $notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
-            $notificationService->setBroadcastMessage([
-                'id' => random_int(1, 1000000),
-                'type' => 'error',
-                'message' => $notificationTitle
-            ]);
             $notificationService->setDescription([
                 1 => [
-                    'type' => 'string',
+                    'type'  => 'string',
                     'title' => __(
                         'notification.keyWords.concerns',
                         [],
-                        $user->language
+                        $adminUser->language
                     ) . $user->getFullNameAttribute(),
-                    'href' => null
+                    'href'  => null,
                 ],
                 2 => [
-                    'type' => 'string',
+                    'type'  => 'string',
                     'title' => __(
                         'notification.keyWords.concerns_time_period',
                         [
-                            'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
-                            'end' => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y')
+                            'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
+                                ->format('d.m.Y'),
+                            'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
+                                ->format('d.m.Y'),
                         ],
-                        $user->language
+                        $adminUser->language
                     ),
-                    'href' => null
+                    'href'  => null,
                 ],
             ]);
-            $notificationService->setNotificationTo($user);
+            $notificationService->setNotificationTo($adminUser);
             $notificationService->createNotification();
+        }
+    }
 
-            // send same notification to admin
+    private function notifyShortBreakCraftUsers(
+        $shiftBreakCheck,
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $usersWhichGotNotification = [];
 
-            $notificationService->setPriority(1);
-            $notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
-            $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
-
-            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
-                $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
-                $notificationService->setTitle($notificationTitle);
-                $notificationService->setDescription([
-                    1 => [
-                        'type' => 'string',
-                        'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $adminUser->language
-                        ) . $user->getFullNameAttribute(),
-                        'href' => null
-                    ],
-                    2 => [
-                        'type' => 'string',
-                        'title' => __(
-                            'notification.keyWords.concerns_time_period',
-                            [
-                                'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
-                                    ->format('d.m.Y'),
-                                'end' => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
-                                    ->format('d.m.Y')
-                            ],
-                            $adminUser->language
-                        ),
-                        'href' => null
-                    ],
-                ]);
-                $notificationService->setNotificationTo($adminUser);
-                $notificationService->createNotification();
+        foreach ($shift->craft->users as $craftUser) {
+            if ($craftUser->id === $user->id) {
+                continue;
             }
 
-            $usersWhichGotNotification = [];
-
-            foreach ($shift->craft->users as $craftUser) {
-                if ($craftUser->id === $user->id) {
-                    continue;
-                }
-                if (in_array($craftUser->id, $usersWhichGotNotification)) {
-                    continue;
-                }
-                $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
-                $notificationService->setTitle($notificationTitle);
-                $notificationService->setDescription([
-                    1 => [
-                        'type' => 'string',
-                        'title' => __(
-                            'notification.keyWords.concerns',
-                            [],
-                            $craftUser->language
-                        ) . $user->getFullNameAttribute(),
-                        'href' => null
-                    ],
-                    2 => [
-                        'type' => 'string',
-                        'title' => __(
-                            'notification.keyWords.concerns_time_period',
-                            [
-                                'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
-                                    ->format('d.m.Y'),
-                                'end' => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
-                                    ->format('d.m.Y')
-                            ],
-                            $craftUser->language
-                        ),
-                        'href' => null
-                    ],
-                ]);
-                $notificationService->setNotificationTo($craftUser);
-                $notificationService->createNotification();
-                $usersWhichGotNotification[] = $craftUser->id;
+            if (in_array($craftUser->id, $usersWhichGotNotification, true)) {
+                continue;
             }
-            $notificationService->clearNotificationData();
+
+            $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
+
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setDescription([
+                1 => [
+                    'type'  => 'string',
+                    'title' => __(
+                        'notification.keyWords.concerns',
+                        [],
+                        $craftUser->language
+                    ) . $user->getFullNameAttribute(),
+                    'href'  => null,
+                ],
+                2 => [
+                    'type'  => 'string',
+                    'title' => __(
+                        'notification.keyWords.concerns_time_period',
+                        [
+                            'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
+                                ->format('d.m.Y'),
+                            'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
+                                ->format('d.m.Y'),
+                        ],
+                        $craftUser->language
+                    ),
+                    'href'  => null,
+                ],
+            ]);
+
+            $notificationService->setNotificationTo($craftUser);
+            $notificationService->createNotification();
+            $usersWhichGotNotification[] = $craftUser->id;
         }
     }
 
@@ -399,143 +463,168 @@ class ShiftUserService
     ): void {
         $shiftCheck = $notificationService->checkIfUserInMoreThanTenShifts($user, $shift);
 
-        if ($shiftCheck->moreThanTenShifts) {
-            $notificationTitle = __('notification.shift.more_than_ten_days', [], $user->language);
-            $notificationService->setTitle($notificationTitle);
-            $notificationService->setIcon('red');
-            $notificationService->setPriority(2);
-            $notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
-            $notificationService->setBroadcastMessage([
-                'id' => random_int(1, 1000000),
-                'type' => 'error',
-                'message' => $notificationTitle
-            ]);
-            $notificationService->setDescription([
+        if (! $shiftCheck->moreThanTenShifts) {
+            $notificationService->clearNotificationData();
+
+            return;
+        }
+
+        $this->notifyMoreThanTenShiftsUser($shiftCheck, $user, $notificationService);
+        $this->notifyMoreThanTenShiftsAdmins($shiftCheck, $user, $notificationService);
+        $this->notifyMoreThanTenShiftsCraftUsers($shiftCheck, $user, $notificationService);
+
+        $notificationService->clearNotificationData();
+    }
+
+    private function notifyMoreThanTenShiftsUser($shiftCheck, User $user, NotificationService $notificationService): void
+    {
+        $notificationTitle = __('notification.shift.more_than_ten_days', [], $user->language);
+
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon('red');
+        $notificationService->setPriority(2);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+        $notificationService->setBroadcastMessage([
+            'id'      => random_int(1, 1000000),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setDescription([
+            1 => [
+                'type'  => 'string',
+                'title' => __(
+                    'notification.keyWords.concerns',
+                    [],
+                    $user->language
+                ) . $user->getFullNameAttribute(),
+                'href'  => null,
+            ],
+            2 => [
+                'type'  => 'string',
+                'title' => __(
+                    'notification.keyWords.concerns_time_period',
+                    [
+                        'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)
+                            ->format('d.m.Y'),
+                        'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
+                            ->format('d.m.Y'),
+                    ],
+                    $user->language
+                ),
+                'href'  => null,
+            ],
+        ]);
+
+        $notificationService->setNotificationTo($user);
+        $notificationService->createNotification();
+    }
+
+    private function notifyMoreThanTenShiftsAdmins($shiftCheck, User $user, NotificationService $notificationService): void
+    {
+        $notificationService->setIcon('blue');
+        $notificationService->setPriority(1);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+        $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+
+        foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
+            $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
+
+            $broadcastMessage = [
+                'id'      => random_int(1, 1000000),
+                'type'    => 'error',
+                'message' => $notificationTitle,
+            ];
+            $notificationDescription = [
                 1 => [
-                    'type' => 'string',
+                    'type'  => 'string',
                     'title' => __(
                         'notification.keyWords.concerns',
                         [],
                         $user->language
                     ) . $user->getFullNameAttribute(),
-                    'href' => null
+                    'href'  => null,
                 ],
                 2 => [
-                    'type' => 'string',
+                    'type'  => 'string',
                     'title' => __(
                         'notification.keyWords.concerns_time_period',
                         [
                             'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)
                                 ->format('d.m.Y'),
-                            'end' => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
-                                ->format('d.m.Y')
+                            'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
+                                ->format('d.m.Y'),
                         ],
                         $user->language
                     ),
-                    'href' => null
+                    'href'  => null,
                 ],
-            ]);
+            ];
 
-            $notificationService->setNotificationTo($user);
+            $notificationService->setBroadcastMessage($broadcastMessage);
+            $notificationService->setDescription($notificationDescription);
+            $notificationService->setNotificationTo($adminUser);
             $notificationService->createNotification();
+        }
+    }
 
-            $notificationService->setTitle($notificationTitle);
-            $notificationService->setIcon('blue');
-            $notificationService->setPriority(1);
-            $notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+    private function notifyMoreThanTenShiftsCraftUsers(
+        $shiftCheck,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $usersWhichGotNotification = [];
 
-            $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+        foreach ($user->crafts as $craft) {
+            foreach ($craft->users as $craftUser) {
+                if ($craftUser->id === $user->id) {
+                    continue;
+                }
 
-            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
-                $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
+                if (in_array($craftUser->id, $usersWhichGotNotification, true)) {
+                    continue;
+                }
+
+                $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $craftUser->language);
+
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
-                    'type' => 'error',
-                    'message' => $notificationTitle
+                    'id'      => random_int(1, 1000000),
+                    'type'    => 'error',
+                    'message' => $notificationTitle,
                 ];
                 $notificationDescription = [
                     1 => [
-                        'type' => 'string',
+                        'type'  => 'string',
                         'title' => __(
                             'notification.keyWords.concerns',
                             [],
-                            $user->language
+                            $craftUser->language
                         ) . $user->getFullNameAttribute(),
-                        'href' => null
+                        'href'  => null,
                     ],
                     2 => [
-                        'type' => 'string',
+                        'type'  => 'string',
                         'title' => __(
                             'notification.keyWords.concerns_time_period',
                             [
                                 'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)
                                     ->format('d.m.Y'),
-                                'end' => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
-                                    ->format('d.m.Y')
+                                'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
+                                    ->format('d.m.Y'),
                             ],
-                            $user->language
+                            $craftUser->language
                         ),
-                        'href' => null
+                        'href'  => null,
                     ],
                 ];
+
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setDescription($notificationDescription);
-                $notificationService->setNotificationTo($adminUser);
+                $notificationService->setNotificationTo($craftUser);
                 $notificationService->createNotification();
-            }
 
-            $usersWhichGotNotification = [];
-            foreach ($user->crafts as $craft) {
-                foreach ($craft->users as $craftUser) {
-                    if ($craftUser->id === $user->id) {
-                        continue;
-                    }
-                    if (in_array($craftUser->id, $usersWhichGotNotification)) {
-                        continue;
-                    }
-                    $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $craftUser->language);
-                    $broadcastMessage = [
-                        'id' => random_int(1, 1000000),
-                        'type' => 'error',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationDescription = [
-                        1 => [
-                            'type' => 'string',
-                            'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $craftUser->language
-                            ) . $user->getFullNameAttribute(),
-                            'href' => null
-                        ],
-                        2 => [
-                            'type' => 'string',
-                            'title' => __(
-                                'notification.keyWords.concerns_time_period',
-                                [
-                                    'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)
-                                        ->format('d.m.Y'),
-                                    'end' => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)
-                                        ->format('d.m.Y')
-                                ],
-                                $craftUser->language
-                            ),
-                            'href' => null
-                        ],
-                    ];
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setDescription($notificationDescription);
-                    $notificationService->setNotificationTo($craftUser);
-                    $notificationService->createNotification();
-                    $usersWhichGotNotification[] = $craftUser->id;
-                }
+                $usersWhichGotNotification[] = $craftUser->id;
             }
         }
-
-        $notificationService->clearNotificationData();
     }
 
     private function handleSeriesShiftData(
@@ -553,61 +642,58 @@ class ShiftUserService
         ChangeService $changeService
     ): void {
         /** @var Shift $shiftBetweenDates */
-        foreach (
-            $this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates
-        ) {
+        foreach ($this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates) {
             if (
-                //same shift is found, user already assigned, continue
-                $shiftBetweenDates->id === $shift->id ||
-                //if day of week is given and is not "all" compare it to shift, if not matching continue
-                (
-                    $dayOfWeek !== 'all' &&
-                    Carbon::parse($shiftBetweenDates->event_start_day)->dayOfWeek !== ((int) $dayOfWeek)
-                ) ||
-                //if user already assigned to shift continue
-                $shiftBetweenDates->users()
-                    ->get(['users.id'])
-                    ->pluck('id')
-                    ->contains($userId)
+                $this->isSameShift($shift, $shiftBetweenDates) ||
+                $this->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
+                $this->isUserAlreadyAssignedToShift($shiftBetweenDates, $userId)
             ) {
                 continue;
             }
 
-            //get value of shifts qualifications by shiftQualificationId and shiftId to determine how many users
-            //can be assigned in total
-            $shiftsQualificationsValue = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
-                $shiftBetweenDates->id,
-                $shiftQualificationId
-            )?->value;
+            $shiftsQualificationsValue = $this->shiftsQualificationsRepository
+                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId)?->value;
 
-            //if shiftsQualifications value is null or 0 continue
             if ($shiftsQualificationsValue === null || $shiftsQualificationsValue === 0) {
                 continue;
             }
 
-            //determine if a slot is available, get all shift_user, shifts_freelancers and shifts_service_providers
-            //entries containing shiftId and shiftQualificationId and count them
             if (
                 $this->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
                     $shiftBetweenDates->id,
                     $shiftQualificationId
-                ) < $shiftsQualificationsValue
+                ) >= $shiftsQualificationsValue
             ) {
-                //call assignToShift without seriesShiftData to make sure only this user is assigned to shift and same
-                //logic is applied for each user
-                $this->assignToShift(
-                    $shiftBetweenDates,
-                    $userId,
-                    $shiftQualificationId,
-                    $craftAbbreviation,
-                    $notificationService,
-                    $shiftCountService,
-                    $vacationConflictService,
-                    $availabilityConflictService,
-                    $changeService
-                );
+                continue;
             }
+
+            // Nur für diese Schicht zuweisen (ohne Serienlogik erneut anzustoßen)
+            $this->assignToShift(
+                $shiftBetweenDates,
+                $userId,
+                $shiftQualificationId,
+                $craftAbbreviation,
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
         }
+    }
+
+    private function isSameShift(Shift $shift, Shift $otherShift): bool
+    {
+        return $otherShift->id === $shift->id;
+    }
+
+    private function isDayOfWeekFilteredOut(string $dayOfWeek, Shift $shift): bool
+    {
+        if ($dayOfWeek === 'all') {
+            return false;
+        }
+
+        return Carbon::parse($shift->event_start_day)->dayOfWeek !== (int) $dayOfWeek;
     }
 
     private function getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
@@ -626,6 +712,9 @@ class ShiftUserService
         );
     }
 
+    /**
+     * Entfernt einen User aus einer Schicht (inkl. Serienlogik).
+     */
     public function removeFromShift(
         ShiftUser|int $usersPivot,
         bool $removeFromSingleShift,
@@ -635,42 +724,34 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
-            $this->shiftUserRepository->getById($usersPivot) :
-            $usersPivot;
-        if (!$shiftUserPivot) {
-            return; // Pivot nicht gefunden -> nichts zu tun
-        }
-        /** @var Shift|null $shift */
-        $shift = $shiftUserPivot->shift;
-        if (!$shift) {
-            return;
-        }
-        /** @var User|null $user */
-        $user = $shiftUserPivot->user;
-        if (!$user) {
+        $shiftUserPivot = ! $usersPivot instanceof ShiftUser
+            ? $this->shiftUserRepository->getById($usersPivot)
+            : $usersPivot;
+
+        if (! $shiftUserPivot) {
             return;
         }
 
-        // Manuelles Activitylog: User entfernt (vor Löschung, damit Pivot-Daten verfügbar sind)
-        if ($shift->is_committed || $shift->in_workflow) {
-            activity('shift')
-                ->performedOn($shift)
-                ->causedBy($this->auth->user())
-                ->event('removed')
-                ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
-                    $activity->properties = $activity->properties->merge([
-                        'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
-                        'translation_key_placeholder_values' => [
-                            $shiftUserPivot->user->getFullNameAttribute(),
-                            $shiftUserPivot->shiftQualification->name,
-                            $shift->craft->name,
-                            $shiftUserPivot->craft_abbreviation
-                        ],
-                    ]);
-                })
-                ->log('User removed from shift');
+        /** @var Shift|null $shift */
+        $shift = $shiftUserPivot->shift;
+        if (! $shift) {
+            return;
         }
+
+        /** @var User|null $user */
+        $user = $shiftUserPivot->user;
+        if (! $user) {
+            return;
+        }
+
+        $this->logManualRemovalActivity($shift, $shiftUserPivot);
+
+        $this->logCommittedShiftAssignmentChange(
+            $shift,
+            $user,
+            'user_removed_from_shift',
+            $shiftUserPivot
+        );
 
         $this->forceDelete($shiftUserPivot);
 
@@ -684,96 +765,63 @@ class ShiftUserService
                 $changeService
             );
         }
-        //broadcast(new ShiftAssigned($user, $shift));
-        if (!$removeFromSingleShift) {
-            foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
-                if ($shiftByUuid->id === $shift->id) {
-                    continue;
-                }
 
-                //find additional shift user pivot by shift and given user id, if found call this function again
-                //with removeFromSingleShift set to true making sure same logic is applied for each pivot which is
-                //deleted
-                $shiftUserPivotByUuid = $this->shiftRepository->getShiftUserPivotById($shiftByUuid, $user->id);
-                if ($shiftUserPivotByUuid instanceof ShiftUser) {
-                    $this->removeFromShift(
-                        $shiftUserPivotByUuid,
-                        true,
-                        $notificationService,
-                        $shiftCountService,
-                        $vacationConflictService,
-                        $availabilityConflictService,
-                        $changeService
-                    );
-                }
-            }
+        if (! $removeFromSingleShift) {
+            $this->removeUserFromAllShiftsWithSameUuid(
+                $shift,
+                $user,
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
         }
     }
 
-    public function changeQualification(
-        ShiftUser $shiftUser,
-        int $newQualificationId
-    ): void {
-        $oldQualification = $shiftUser->shift_qualification_id;
-        if ($oldQualification === $newQualificationId) {
-            return; // keine Änderung
-        }
-        $shiftUser->shift_qualification_id = $newQualificationId;
-        $shiftUser->save();
-        $shift = $shiftUser->shift;
-        if ($shift->is_committed || $shift->in_workflow) {
-            $context = 'normal';
-            if ($shift->is_committed) {
-                $context = 'post_commit';
-            } elseif ($shift->in_workflow) {
-                $context = 'workflow';
-            }
-            activity('shift_user')
-                ->performedOn($shiftUser)
-                ->causedBy(optional($shiftUser->user))
-                ->event('qualification_changed')
-                ->withProperties([
-                    'shift_id' => $shift->id,
-                    'user_id' => $shiftUser->user_id,
-                    'old_shift_qualification_id' => $oldQualification,
-                    'new_shift_qualification_id' => $newQualificationId,
-                    'context' => $context,
-                    'current_request_id' => $shift->current_request_id,
-                ])
-                ->log('Qualification changed for shift user');
-        }
-    }
-
-    public function getShiftByUserPivotId(int $usersPivot): Shift
+    private function logManualRemovalActivity(Shift $shift, ShiftUser $shiftUserPivot): void
     {
-        $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
-            $this->shiftUserRepository->getById($usersPivot) :
-            $usersPivot;
+        if (! $shift->is_committed && ! $shift->in_workflow) {
+            return;
+        }
 
-        /** @var Shift $shiftUserPivot */
-        return $shiftUserPivot->shift;
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->auth->user())
+            ->event('removed')
+            ->tap(function ($activity) use ($shift, $shiftUserPivot): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => '{0} removed from shift as {1} for {2} ({3})',
+                    'translation_key_placeholder_values' => [
+                        $shiftUserPivot->user->getFullNameAttribute(),
+                        $shiftUserPivot->shiftQualification->name,
+                        $shift->craft->name,
+                        $shiftUserPivot->craft_abbreviation,
+                    ],
+                ]);
+            })
+            ->log('User removed from shift');
     }
 
-    public function removeAllUsersFromShift(
+    private function removeUserFromAllShiftsWithSameUuid(
         Shift $shift,
+        User $user,
         NotificationService $notificationService,
         ShiftCountService $shiftCountService,
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
-        $shift->users()->each(
-            function (User $user) use (
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            ): void {
-                //call remove from shift with removeFromSingleShift set to true making sure same logic is applied
-                //for each pivot which is deleted
+        foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
+            if ($shiftByUuid->id === $shift->id) {
+                continue;
+            }
+
+            $shiftUserPivotByUuid = $this->shiftRepository->getShiftUserPivotById($shiftByUuid, $user->id);
+
+            if ($shiftUserPivotByUuid instanceof ShiftUser) {
                 $this->removeFromShift(
-                    $user->pivot,
+                    $shiftUserPivotByUuid,
                     true,
                     $notificationService,
                     $shiftCountService,
@@ -782,7 +830,47 @@ class ShiftUserService
                     $changeService
                 );
             }
-        );
+        }
+    }
+
+    public function getShiftByUserPivotId(int $usersPivot): Shift
+    {
+        $shiftUserPivot = ! $usersPivot instanceof ShiftUser
+            ? $this->shiftUserRepository->getById($usersPivot)
+            : $usersPivot;
+
+        /** @var Shift $shiftUserPivot */
+        return $shiftUserPivot->shift;
+    }
+
+    /**
+     * Alle User aus einer Schicht entfernen (inkl. Notifications).
+     */
+    public function removeAllUsersFromShift(
+        Shift $shift,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
+        $shift->users()->each(function (User $user) use (
+            $notificationService,
+            $shiftCountService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
+        ): void {
+            $this->removeFromShift(
+                $user->pivot,
+                true,
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
+        });
     }
 
     public function removeFromShiftByUserIdAndShiftId(
@@ -796,8 +884,7 @@ class ShiftUserService
     ): void {
         $pivot = $this->shiftUserRepository->findByUserIdAndShiftId($userId, $shiftId);
 
-        // Falls kein Pivot-Eintrag existiert, ist nichts zu entfernen -> idempotent beenden
-        if (!$pivot instanceof ShiftUser) {
+        if (! $pivot instanceof ShiftUser) {
             return;
         }
 
@@ -832,7 +919,7 @@ class ShiftUserService
                     ->setTranslationKeyPlaceholderValues([
                         $user->getFullNameAttribute(),
                         $shift->craft->abbreviation,
-                        $shift->event?->eventName
+                        $shift->event?->eventName,
                     ])
             );
 
@@ -840,33 +927,34 @@ class ShiftUserService
             $notificationService->setEventId($shift?->event?->id);
         }
 
-
         $notificationService->setShiftId($shift->id);
+
         $notificationTitle = __(
             'notification.shift.shift_staffing_deleted',
             [
-                'projectName' => $shift?->event?->project?->name ??
+                'projectName'       => $shift?->event?->project?->name ??
                     __('notification.shift.without_project'),
-                'craftAbbreviation' => $shift->craft->abbreviation
+                'craftAbbreviation' => $shift->craft->abbreviation,
             ],
             $user->language
         );
+
         $notificationService->setTitle($notificationTitle);
         $notificationService->setIcon('red');
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
-            'id' => random_int(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
+            'id'      => random_int(1, 1000000),
+            'type'    => 'success',
+            'message' => $notificationTitle,
         ]);
         $notificationService->setDescription([
             1 => [
-                'type' => 'string',
+                'type'  => 'string',
                 'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
                     Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
                     Carbon::parse($shift->end)->format('d.m.Y H:i'),
-                'href' => null
+                'href'  => null,
             ],
         ]);
         $notificationService->setNotificationTo($user);
@@ -891,4 +979,115 @@ class ShiftUserService
     {
         return $this->shiftUserRepository->restore($shiftUser);
     }
+
+    /**
+     * Logging von Änderungen an Schicht-Zuweisungen nach Commit.
+     */
+    protected function logCommittedShiftAssignmentChange(
+        Shift $shift,
+        User $user,
+        string $changeType,
+        ?ShiftUser $pivot = null
+    ): void {
+        if (! $shift->is_committed) {
+            return;
+        }
+
+        $fieldChanges = [
+            'assignment' => [
+                'user_id'             => $user->id,
+                'user_name'           => $user->full_name,
+                'profile_picture_url' => $user->profile_photo_url,
+            ],
+        ];
+
+        if ($pivot) {
+            $fieldChanges['assignment']['shift_qualification_id']   = $pivot->shift_qualification_id;
+            $fieldChanges['assignment']['shift_qualification_name'] = optional($pivot->shiftQualification)->name;
+            $fieldChanges['assignment']['craft_abbreviation']       = $pivot->craft_abbreviation;
+
+            $fieldChanges['assignment']['start_date'] = optional($pivot->start_date)?->format('Y-m-d');
+            $fieldChanges['assignment']['end_date']   = optional($pivot->end_date)?->format('Y-m-d');
+            $fieldChanges['assignment']['start_time'] = $pivot->start_time
+                ? Carbon::parse($pivot->start_time)->format('H:i')
+                : null;
+            $fieldChanges['assignment']['end_time']   = $pivot->end_time
+                ? Carbon::parse($pivot->end_time)->format('H:i')
+                : null;
+
+            // 💡 Arbeitszeit-Label auf Basis von Pivot/Shift bauen
+            $workingTimeLabel = $this->formatWorkingTimeLabel($shift, $pivot);
+
+            if ($workingTimeLabel) {
+                // Bei Zuweisung: vorher "free", nachher Arbeitszeit
+                if ($changeType === 'user_assigned_to_shift') {
+                    $fieldChanges['assignment']['before_label'] = 'free';
+                    $fieldChanges['assignment']['after_label']  = $workingTimeLabel;
+                }
+
+                // Beim Entfernen: vorher Arbeitszeit, nachher "free"
+                if ($changeType === 'user_removed_from_shift') {
+                    $fieldChanges['assignment']['before_label'] = $workingTimeLabel;
+                    $fieldChanges['assignment']['after_label']  = 'free';
+                }
+            }
+        }
+
+        CommittedShiftChange::create([
+            'craft_id'                => $shift->craft_id,
+            'shift_id'                => $shift->getKey(),
+            'subject_type'            => Shift::class,
+            'subject_id'              => $shift->getKey(),
+            'change_type'             => $changeType,
+            'field_changes'           => $fieldChanges,
+            'affected_user_type'      => \Artwork\Modules\User\Models\User::class,
+            'affected_user_id'        => $user->id,
+            'changed_by_user_id'      => $this->auth->id(),
+            'changed_at'              => now(),
+            'acknowledged_at'         => null,
+            'acknowledged_by_user_id' => null,
+        ]);
+    }
+
+    /**
+     * Baut ein kompaktes Arbeitszeit-Label aus Pivot-/Schichtdaten,
+     * z.B. "21.11.2025 10:00 - 18:00" oder mit Enddatum, falls abweichend.
+     */
+    private function formatWorkingTimeLabel(Shift $shift, ?ShiftUser $pivot): ?string
+    {
+        // Fallback auf Shift, falls im Pivot nichts/teilweise gesetzt ist
+        $startDate = $pivot?->start_date ?? $shift->start_date;
+        $endDate   = $pivot?->end_date ?? $shift->end_date;
+        $startTime = $pivot?->start_time ?? $shift->start;
+        $endTime   = $pivot?->end_time ?? $shift->end;
+
+        if (! $startDate || ! $endDate || ! $startTime || ! $endTime) {
+            return null;
+        }
+
+        $startDateCarbon = $startDate instanceof Carbon ? $startDate : Carbon::parse($startDate);
+        $endDateCarbon   = $endDate instanceof Carbon ? $endDate : Carbon::parse($endDate);
+        $startTimeCarbon = $startTime instanceof Carbon ? $startTime : Carbon::parse($startTime);
+        $endTimeCarbon   = $endTime instanceof Carbon ? $endTime : Carbon::parse($endTime);
+
+        // Gleicher Tag → "21.11.2025 10:00 - 18:00"
+        if ($startDateCarbon->isSameDay($endDateCarbon)) {
+            return sprintf(
+                '%s %s - %s',
+                $startDateCarbon->format('d.m.Y'),
+                $startTimeCarbon->format('H:i'),
+                $endTimeCarbon->format('H:i')
+            );
+        }
+
+        // Mehrtägig → "21.11.2025 10:00 - 22.11.2025 18:00"
+        return sprintf(
+            '%s %s - %s %s',
+            $startDateCarbon->format('d.m.Y'),
+            $startTimeCarbon->format('H:i'),
+            $endDateCarbon->format('d.m.Y'),
+            $endTimeCarbon->format('H:i')
+        );
+    }
+
 }

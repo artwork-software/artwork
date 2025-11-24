@@ -108,7 +108,7 @@ const props = defineProps({
 const showDeclineWorkTimeRequestModal = ref(false);
 
 const approveRequest = () => {
-    router.post(route('worktime.change-request.approve', props.request.id), {
+    router.post(route('worktime.change-request.approve', {workTimeChangeRequest: props.request.id}), {
         preserveScroll: true,
         onSuccess: () => {
         },

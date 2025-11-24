@@ -740,6 +740,24 @@ function registerMonthSentinel(el: HTMLElement | null, day: any) {
     initMonthObserver()
 
     const monthKey = day.monthNumber ?? day.monthKey ?? day.fullDay?.slice(0, 7)
+
+    // If user selected a fixed date range, skip observing months that are completely outside that range
+    try {
+        const selectedStart = props.dateValue && props.dateValue[0] ? dayjs(props.dateValue[0]).startOf('day') : null
+        const selectedEnd = props.dateValue && props.dateValue[1] ? dayjs(props.dateValue[1]).endOf('day') : null
+
+        if (selectedStart && selectedEnd && monthKey) {
+            const monthStart = dayjs(monthKey + '-01')
+            const monthEnd = monthStart.endOf('month')
+            if (monthEnd.isBefore(selectedStart, 'day') || monthStart.isAfter(selectedEnd, 'day')) {
+                // Do not observe months outside selected range
+                return
+            }
+        }
+    } catch (e) {
+        // parsing failed - fall back to observing
+    }
+
     watchedMonths.set(el, monthKey)
 
     monthObserver.value?.observe(el)
@@ -779,6 +797,31 @@ async function loadMonth(direction: LoadDirection) {
         const lastOfPrevMonth = start.subtract(1, 'day').endOf('month')
         rangeEnd = lastOfPrevMonth
         rangeStart = lastOfPrevMonth.startOf('month')
+    }
+
+    // Guard: only load months that intersect the user-selected range (props.dateValue)
+    try {
+        const selectedStart = props.dateValue && props.dateValue[0] ? dayjs(props.dateValue[0]) : null
+        const selectedEnd = props.dateValue && props.dateValue[1] ? dayjs(props.dateValue[1]) : null
+
+        if (selectedStart && selectedEnd) {
+            // If the candidate range is completely outside the selected range -> skip loading
+            if (rangeEnd.isBefore(selectedStart, 'day') || rangeStart.isAfter(selectedEnd, 'day')) {
+                return
+            }
+
+            // Clamp the requested range to the selected range so we never request outside of it
+            if (rangeStart.isBefore(selectedStart, 'day')) {
+                rangeStart = selectedStart.startOf('day')
+            }
+            if (rangeEnd.isAfter(selectedEnd, 'day')) {
+                rangeEnd = selectedEnd.endOf('day')
+            }
+        }
+    } catch (e) {
+        // dayjs parsing error - fall back to original behavior (do not block loading)
+        // eslint-disable-next-line no-console
+        console.debug('loadMonth: could not parse props.dateValue, proceeding without range guard', e)
     }
 
     const { data } = await axios.get(route('shift.plan.all'), {

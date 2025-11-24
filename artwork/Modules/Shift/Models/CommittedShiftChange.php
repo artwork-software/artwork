@@ -16,6 +16,7 @@ class CommittedShiftChange extends Model
         'subject_id',
         'change_type',
         'field_changes',
+        'affected_user_type',
         'affected_user_id',
         'changed_by_user_id',
         'changed_at',
@@ -39,9 +40,10 @@ class CommittedShiftChange extends Model
         return $this->belongsTo(Shift::class, 'shift_id', 'id', 'shifts');
     }
 
-    public function affectedUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function affectedUser(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
-        return $this->belongsTo(User::class, 'affected_user_id', 'id', 'users');
+        // Polymorphe Relation: affected_user kann User, Freelancer oder ServiceProvider sein
+        return $this->morphTo(null, 'affected_user_type', 'affected_user_id');
     }
 
     public function changedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -16,26 +16,28 @@ class ShiftUserRepository extends BaseRepository
         string $craftAbbreviation,
         Shift $shift
     ): ShiftUser {
-        // Sicherstellen, dass alle Felder gesetzt sind
         $startDate = $shift->start_date ?? now();
-        $endDate = $shift->end_date ?? $startDate;
+        $endDate   = $shift->end_date ?? $startDate;
         $startTime = $shift->start ?? '00:00';
-        $endTime = $shift->end ?? '23:59';
+        $endTime   = $shift->end ?? '23:59';
 
         $shiftUser = new ShiftUser([
-            'shift_id' => $shiftId,
-            'user_id' => $userId,
+            'shift_id'              => $shiftId,
+            'user_id'               => $userId,
             'shift_qualification_id' => $shiftQualificationId,
-            'craft_abbreviation' => $craftAbbreviation,
-            'short_description' => null,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'start_time' => $startTime,
-            'end_time' => $endTime,
+            'craft_abbreviation'    => $craftAbbreviation,
+            'short_description'     => null,
+            'start_date'            => $startDate,
+            'end_date'              => $endDate,
+            'start_time'            => $startTime,
+            'end_time'              => $endTime,
         ]);
 
-        $this->save($shiftUser);
-        return $shiftUser;
+        // direkt speichern – keine Magie, keine Query mit leerem PK
+        $shiftUser->save();
+
+        // falls du sicherstellen willst, dass Relations direkt da sind:
+        return $shiftUser->load(['user', 'shift', 'shiftQualification']);
     }
 
     public function getShiftByUserPivotId(int $pivotId): ?ShiftUser

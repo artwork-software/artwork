@@ -92,6 +92,7 @@ export function useShiftPlanRequest() {
             qualifications: t('Qualification'),
             in_workflow: t('In approval workflow'),
             workflow_rejection_reason: t('workflow_rejection_reason'),
+            shift_qualification_id: t('shift_qualification_id')
         };
         return map[fieldName] || fieldName;
     };

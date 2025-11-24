@@ -6,10 +6,12 @@ use App\Http\Requests\StoreShiftPlanRequestRequest;
 use App\Http\Requests\UpdateShiftPlanRequestRequest;
 use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
@@ -68,9 +70,11 @@ class ShiftPlanRequestController extends Controller
             ->where('status', 'pending')
             ->first();
 
+        $service = app(ShiftPlanRequestService::class);
+
         // 2. Wenn keines existiert → neues anlegen, sonst vorhandenes nutzen
         if (! $shiftPlanRequest) {
-            $shiftPlanRequest = ShiftPlanRequest::create($data);
+            $shiftPlanRequest = $service->createRequestWithShifts($data, [], true);
         }
 
         // 3. Start/Ende der KW holen
@@ -85,12 +89,12 @@ class ShiftPlanRequestController extends Controller
             ->where('craft_id', $shiftPlanRequest->craft_id)
             ->startAndEndDateOverlap($start->toDateString(), $end->toDateString())
             ->where('in_workflow', false)
-            ->where(function ($q) {
+            ->where(function ($q): void {
                 $q
                     // komplett "freie" Schichten
                     ->whereNull('current_request_id')
                     // oder Schichten, die einem abgelehnten Request zugeordnet waren
-                    ->orWhereHas('currentRequest', function ($sub) {
+                    ->orWhereHas('currentRequest', function ($sub): void {
                         $sub->where('status', 'rejected');
                     });
             });
@@ -102,6 +106,8 @@ class ShiftPlanRequestController extends Controller
         $shifts = $shiftsQuery
             ->with('currentRequest') // wichtig für History-Log
             ->get();
+
+        $shiftIdsToAttach = [];
 
         foreach ($shifts as $shift) {
             $previousRequest = null;
@@ -148,10 +154,15 @@ class ShiftPlanRequestController extends Controller
             }
 
             $activity->log('Shift added to shift plan request');
+
+            $shiftIdsToAttach[] = $shift->id;
         }
 
         // 6. Performantes Massenupdate (nachdem geloggt wurde)
-        if ($shifts->isNotEmpty()) {
+        if (! empty($shiftIdsToAttach)) {
+            // Attach shifts to request (history pivot)
+            $service->attachShiftsToRequest($shiftPlanRequest, $shiftIdsToAttach, true);
+
             $shiftsQuery->update([
                 'current_request_id' => $shiftPlanRequest->id,
                 'in_workflow'        => true,
@@ -176,6 +187,7 @@ class ShiftPlanRequestController extends Controller
             'craft',
             'requestedBy',
             'reviewedBy',
+            'requestedShifts'
         ]);
 
         // Tage der KW berechnen (Mo–So)
@@ -195,7 +207,7 @@ class ShiftPlanRequestController extends Controller
 
         // Alle Schichten, die zu diesem Request gehören
         $shifts = Shift::query()
-            ->where('current_request_id', $shiftPlanRequest->id)
+            ->whereIn('id', $shiftPlanRequest->requestedShifts->pluck('id')->toArray())
             ->with([
                 'users',
                 'freelancer',
@@ -618,4 +630,56 @@ class ShiftPlanRequestController extends Controller
         return back()->with('success', __('Shift plan request rejected successfully.'));
     }
 
+    public function changes(?Craft $craft = null): \Inertia\Response
+    {
+        $allCrafts = Craft::orderBy('name')->get();
+
+        $changesQuery = CommittedShiftChange::query()
+            ->with(['shift', 'changedBy']) // Relationships musst du im Model definieren
+            ->when($craft, fn ($q) => $q->where('craft_id', $craft->id))
+            ->whereNotNull('affected_user_id')
+            ->orderByDesc('changed_at');
+
+        $changes = $changesQuery->get()->map(function (CommittedShiftChange $change) {
+            $fieldChanges = $change->field_changes ?? [];
+
+            $assignment = $fieldChanges['assignment'] ?? [];
+
+
+            return [
+                'id'                     => $change->id,
+                'change_type'            => $change->change_type,
+                'affected_name'        => $assignment['user_name'] ?? null,
+                'profile_picture_url'  => $assignment['profile_picture_url'] ?? null,
+                'before_label'           => $assignment['before_label'] ?? null,
+                'after_label'            => $assignment['after_label'] ?? null,
+                'changed_by_name'        => optional($change->changedBy)->full_name,
+                'changed_at'             => optional($change->changed_at)?->toIso8601String(),
+                'changed_at_formatted'   => optional($change->changed_at)?->format('d.m.Y H:i'),
+                'acknowledged_at'        => optional($change->acknowledged_at)?->toIso8601String(),
+                'acknowledged'           => ! is_null($change->acknowledged_at),
+            ];
+        });
+
+        return Inertia::render('ShiftPlanRequests/Changes', [
+            'allCrafts' => $allCrafts,
+            'craft'     => $craft,
+            'changes'   => $changes,
+        ]);
+    }
+
+
+    /**
+     * Nachträgliche Zustimmung zu einer Änderung.
+     */
+    public function acknowledge(CommittedShiftChange $change): \Illuminate\Http\RedirectResponse
+    {
+        if (is_null($change->acknowledged_at)) {
+            $change->acknowledged_at = now();
+            $change->acknowledged_by_user_id = auth()->id();
+            $change->save();
+        }
+
+        return back()->with('success', __('Änderung wurde bestätigt.'));
+    }
 }

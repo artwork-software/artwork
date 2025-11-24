@@ -77,7 +77,7 @@
                                       :class="change.acknowledged_at ? 'bg-emerald-400' : 'bg-red-400'"></span>
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[11px] font-medium">{{ $t('Change') }} #{{ count + 1 }}</span>
+                                        <span class="text-[11px] font-medium">{{ $t('Changes') }} #{{ count + 1 }}</span>
                                         <!--<span
                                             class="inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5"
                                             :class="change.acknowledged_at ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">

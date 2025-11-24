@@ -52,6 +52,19 @@ class ShiftPlanRequest extends Model
         return $this->hasMany(Shift::class, 'shift_plan_request_id', 'id', 'shifts');
     }
 
+    /**
+     * Historical requested shifts (snapshot/pivot)
+     */
+    public function requestedShifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Shift\Models\Shift::class,
+            'shift_plan_request_shifts',
+            'shift_plan_request_id',
+            'shift_id'
+        )->withPivot(['snapshot'])->withTimestamps();
+    }
+
     public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Craft::class, 'craft_id', 'id', 'crafts');

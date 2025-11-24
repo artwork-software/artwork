@@ -38,7 +38,6 @@ class ShiftServiceProvider extends Pivot
         'end_time' => 'datetime:H:i',
     ];
 
-
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);

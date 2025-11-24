@@ -36,11 +36,9 @@ return new class extends Migration
             // Feldänderungen als JSON-Diff
             $table->json('field_changes');
 
-            // Betroffener Benutzer (Mitarbeiter in der Schicht, kann gelöscht werden)
-            $table->foreignId('affected_user_id')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            // Betroffener Benutzer (kann User, Freelancer oder ServiceProvider sein) — polymorph
+            $table->string('affected_user_type')->nullable();
+            $table->unsignedBigInteger('affected_user_id')->nullable();
 
             // Ausführender Benutzer (wer hat die Änderung vorgenommen)
             $table->foreignId('changed_by_user_id')
@@ -66,6 +64,10 @@ return new class extends Migration
             $table->index(['subject_type', 'subject_id']);
             $table->index(['changed_at']);
             $table->index(['acknowledged_at']);
+
+            // Index für polymorphe affected_user
+            // Explicit shorter index name to avoid MySQL identifier length limit
+            $table->index(['affected_user_type', 'affected_user_id'], 'committed_shift_changes_aff_user_idx');
         });
     }
 

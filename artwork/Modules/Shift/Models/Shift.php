@@ -399,4 +399,17 @@ class Shift extends Model
     {
         return $this->belongsTo(ShiftPlanRequest::class, 'current_request_id', 'id', 'shift_plan_requests');
     }
+
+    /**
+     * Historical requests this shift was part of
+     */
+    public function requestHistories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Shift\Models\ShiftPlanRequest::class,
+            'shift_plan_request_shifts',
+            'shift_id',
+            'shift_plan_request_id'
+        )->withPivot(['snapshot'])->withTimestamps();
+    }
 }

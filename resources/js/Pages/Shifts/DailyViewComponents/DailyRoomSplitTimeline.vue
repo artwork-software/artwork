@@ -346,8 +346,8 @@ function getShiftItemHeightPx(item: any, block: any) {
   const timeHeight = Math.max(24, Math.round((item.endMin - item.startMin) * props.pxPerMin))
   const expanded = !!shiftsExpanded.value[item.id]
   const minH = expanded ? estimateShiftExpandedMinPx(item?.payload) : COLLAPSED_MIN_SHIFT
-  // Ohne Kollision: keine zeitproportionale Höhe
-  if (!item?.hasCollision) return minH
+  // Immer zeitproportionale Höhe berücksichtigen, damit Schichten relativ zu Terminen skaliert werden
+  // (Minimum bleibt je nach Expand-Status erhalten)
   return Math.max(timeHeight, minH)
 }
 
@@ -394,9 +394,21 @@ function buildCompactSegments(block: any): CompactSegment[] {
   let y = 0
   for (let i = 0; i < merged.length; i++) {
     const m = merged[i]
-    // Ermitteln, ob innerhalb dieses Intervalls Kollisionen stattfinden (in Events oder Shifts)
+    // Ermitteln, ob innerhalb dieses Intervalls zeitliche Überschneidungen zwischen IRGENDWELCHEN Items stattfinden
+    // (spaltenübergreifend: Events <-> Shifts). Dadurch wird die vertikale Zeitachse
+    // auch dann proportional, wenn sich nur ein Event mit einer Schicht überschneidet.
     const itemsInSeg = items.filter(it => it.startMin < m.e && it.endMin > m.s)
-    const anyCollision = itemsInSeg.some(it => !!it.hasCollision)
+    let anyCollision = false
+    for (let a = 0; a < itemsInSeg.length && !anyCollision; a++) {
+      for (let b = a + 1; b < itemsInSeg.length; b++) {
+        const A = itemsInSeg[a]
+        const B = itemsInSeg[b]
+        if (A.startMin < B.endMin && A.endMin > B.startMin) {
+          anyCollision = true
+          break
+        }
+      }
+    }
 
     let heightPx: number
     if (anyCollision) {
@@ -472,7 +484,18 @@ function getSegmentForMinute(block: any, minute: number): CompactSegment | null 
 function getTopForItem(item: any, block: any): number {
   const seg = getSegmentForMinute(block, item.startMin)
   if (!seg) return 0
-  if (seg.proportional) return topWithinBlock(block, item.startMin)
+  if (seg.proportional) {
+    // Falls im proportionalen Segment bereits justierte Tops berechnet wurden, diese verwenden,
+    // damit expandierte Karten direkt anliegende nach unten schieben und nichts überlappt.
+    if (item.type === 'event') {
+      const adj = (seg as any).eventAdjustedTop?.[item.id]
+      if (typeof adj === 'number') return adj
+    } else {
+      const adj = (seg as any).shiftAdjustedTop?.[item.id]
+      if (typeof adj === 'number') return adj
+    }
+    return topWithinBlock(block, item.startMin)
+  }
   // nicht-proportional: per Stack-Position
   if (item.type === 'event') {
     const off = seg.eventStack?.[item.id]
@@ -487,6 +510,76 @@ const layoutBlocks = computed(() => {
   return (blocks.value || []).map((b: any) => {
     // Kompakt-Segmente vorbereiten (immer neu berechnen, da Min-Höhen dynamisch sind)
     b.compactSegments = buildCompactSegments(b)
+
+    // Innerhalb proportionaler Segmente sicherstellen, dass direkt anliegende (nicht überlappende)
+    // Items mit ihren Mindesthöhen nicht übereinander laufen. Wir justieren pro Spalte (Events/Shifts)
+    // die Top-Offsets nach unten und vergrößern ggf. die Segmenthöhe. Nach jeder Segmentanpassung
+    // werden die folgenden Segmente entsprechend nach unten verschoben.
+    let runningBase = 0
+    const pxPerMinLocal = props.pxPerMin
+    for (const seg of b.compactSegments) {
+      // Basisposition für dieses Segment setzen (inkl. Verschiebungen aus vorherigen Segmenten)
+      seg.baseTopPx = (seg.baseTopPx ?? 0) + runningBase
+
+      if (seg.proportional) {
+        // Event-Spalte anpassen
+        const evsInSeg: any[] = (b.eventItems || []).filter((it: any) => it.startMin < seg.endMin && it.startMin >= seg.startMin)
+        evsInSeg.sort((a: any, b: any) => a.startMin - b.startMin || (a.id ?? 0) - (b.id ?? 0))
+        let lastChainEndMinEv = seg.startMin
+        let chainBottomEv = seg.baseTopPx
+        let maxBottomEv = seg.baseTopPx
+        seg.eventAdjustedTop = seg.eventAdjustedTop || {}
+        for (const it of evsInSeg) {
+          const baseTop = seg.baseTopPx + Math.round((it.startMin - seg.startMin) * pxPerMinLocal)
+          // nur drücken, wenn nicht-überlappend mit vorheriger Kette
+          if (it.startMin >= lastChainEndMinEv) {
+            // Kette kann aktualisiert werden
+            chainBottomEv = Math.max(chainBottomEv, maxBottomEv)
+          }
+          const top = Math.max(baseTop, chainBottomEv)
+          const h = getEventItemHeightPx(it, b)
+          const bottom = top + h
+          seg.eventAdjustedTop[it.id as number] = top
+          maxBottomEv = Math.max(maxBottomEv, bottom)
+          // End-Minuten nur für Ketten ohne Überlappung aktualisieren
+          lastChainEndMinEv = Math.max(lastChainEndMinEv, it.endMin)
+        }
+
+        // Shift-Spalte anpassen
+        const shsInSeg: any[] = (b.shiftItems || []).filter((it: any) => it.startMin < seg.endMin && it.startMin >= seg.startMin)
+        shsInSeg.sort((a: any, b: any) => a.startMin - b.startMin || (a.id ?? 0) - (b.id ?? 0))
+        let lastChainEndMinSh = seg.startMin
+        let chainBottomSh = seg.baseTopPx
+        let maxBottomSh = seg.baseTopPx
+        seg.shiftAdjustedTop = seg.shiftAdjustedTop || {}
+        for (const it of shsInSeg) {
+          const baseTop = seg.baseTopPx + Math.round((it.startMin - seg.startMin) * pxPerMinLocal)
+          if (it.startMin >= lastChainEndMinSh) {
+            chainBottomSh = Math.max(chainBottomSh, maxBottomSh)
+          }
+          const top = Math.max(baseTop, chainBottomSh)
+          const h = getShiftItemHeightPx(it, b)
+          const bottom = top + h
+          seg.shiftAdjustedTop[it.id as number] = top
+          maxBottomSh = Math.max(maxBottomSh, bottom)
+          lastChainEndMinSh = Math.max(lastChainEndMinSh, it.endMin)
+        }
+
+        // Segmenthöhe ggf. erhöhen, damit justierte Bottoms hinein passen
+        const needed = Math.max(maxBottomEv, maxBottomSh) - seg.baseTopPx
+        if (needed > seg.heightPx) {
+          const delta = needed - seg.heightPx
+          seg.heightPx = needed
+          runningBase += delta
+        }
+      }
+
+      // Nach Abschluss dieses Segments Basis für das nächste Segment setzen
+      runningBase += 0 // bereits in proportionalen Fällen oben berücksichtigt
+      // Für nicht-proportionale Segmente wird heightPx durch buildCompactSegments korrekt gesetzt
+    }
+
+    // Gesamthöhe des Blocks auf Basis der tatsächlich verwendeten Tops/Höhen berechnen
     let maxBottom = 0
     for (const it of b.eventItems || []) {
       const top = getTopForItem(it, b)

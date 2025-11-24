@@ -3534,5 +3534,8 @@
     "shift_updated": "Schicht aktualisiert",
     "assignment_updated": "Zuweisung aktualisiert",
     "shift_time_updated": "Schichtzeit aktualisiert",
-    "Free": "Frei"
+    "Free": "Frei",
+    "{0} removed from shift as {1} for {2} ({3})": "{0} wurde von der Schicht als {1} für {2} ({3}) entfernt",
+    "free": "Frei",
+    "Assignment": "Zuweisung"
 }

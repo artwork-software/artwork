@@ -3526,5 +3526,8 @@
     "service_provider_removed_from_shift": "Service provider removed from shift",
     "shift_updated": "Shift updated",
     "assignment_updated": "Assignment updated",
-    "Free": "Free"
+    "Free": "Free",
+    "{0} removed from shift as {1} for {2} ({3})": "{0} removed from shift as {1} for {2} ({3})",
+    "free": "Free",
+    "Assignment": "Assignment"
 }

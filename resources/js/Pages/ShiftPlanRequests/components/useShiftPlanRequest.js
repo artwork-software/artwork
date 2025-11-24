@@ -92,14 +92,21 @@ export function useShiftPlanRequest() {
             qualifications: t('Qualification'),
             in_workflow: t('In approval workflow'),
             workflow_rejection_reason: t('workflow_rejection_reason'),
-            shift_qualification_id: t('shift_qualification_id')
+            shift_qualification_id: t('shift_qualification_id'),
+            assignment: t('Assignment'),
         };
         return map[fieldName] || fieldName;
     };
 
     const formatFieldValue = (fieldName, value) => {
         if (value === null || typeof value === 'undefined') return '–';
-        if (['start', 'end', 'start_time', 'end_time'].includes(fieldName)) return t(String(value));
+
+        // Zeiten
+        if (['start', 'end', 'start_time', 'end_time'].includes(fieldName)) {
+            return t(String(value));
+        }
+
+        // Pause
         if (fieldName === 'break_minutes') {
             const minutes = Number(value) || 0;
             if (!minutes) return t('No break');
@@ -108,10 +115,38 @@ export function useShiftPlanRequest() {
             if (h === 0) return `${m} min`;
             return `${h} h ${m} min`;
         }
-        if (fieldName.includes('date') || fieldName.endsWith('_day')) return formatDateShort(value);
-        if (['string', 'number', 'boolean'].includes(typeof value)) return t(String(value));
-        try {return JSON.stringify(value); } catch { return t(String(value)); }
+
+        // Datumsfelder
+        if (fieldName.includes('date') || fieldName.endsWith('_day')) {
+            return formatDateShort(value);
+        }
+
+        // Primitive Werte
+        if (['string', 'number', 'boolean'].includes(typeof value)) {
+            return t(String(value));
+        }
+
+        // Objekt mit Label-Feldern (z.B. assignment, wenn du mal direkt ein Objekt bekommst)
+        if (value && typeof value === 'object') {
+            const labelCandidate = value.label || value.before_label || value.after_label;
+            if (labelCandidate) {
+                return t(String(labelCandidate));
+            }
+            try {
+                return JSON.stringify(value);
+            } catch {
+                return t(String(value));
+            }
+        }
+
+        // Fallback
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return t(String(value));
+        }
     };
+
 
     const hasOpenPostCommitChange = (shift, affectedUserId = null) => {
         const changes = shift.committed_shift_changes || [];
@@ -136,16 +171,10 @@ export function useShiftPlanRequest() {
         const entries = [];
 
         const translateIfPossible = (value) => {
-            // null/undefined -> null
-            if (value === null || value === undefined) {
-                return null;
-            }
-
-            // Nur Strings übersetzen, alles andere unverändert zurückgeben
+            if (value === null || value === undefined) return null;
             if (typeof value === 'string' && value.trim() !== '') {
                 return t(value);
             }
-
             return value;
         };
 
@@ -188,14 +217,81 @@ export function useShiftPlanRequest() {
                 return;
             }
 
+            // NEU: Spezieller Fall: assignment
+            if (fieldName === 'assignment' && field && typeof field === 'object') {
+                const buildLabelFromPayload = (payload, { fallbackKey = 'before_label', includeUser = false } = {}) => {
+                    if (!payload || typeof payload !== 'object') return null;
+
+                    // Basis-Label über Keys wie before_label / after_label
+                    let base =
+                        payload.label ||
+                        payload[fallbackKey] ||
+                        payload.before_label ||
+                        payload.after_label ||
+                        null;
+
+                    // Falls noch kein Label, baue eins aus Datum + Zeit
+                    if (!base) {
+                        const parts = [];
+                        const date = payload.start_date || payload.event_start_day;
+                        const startTime = payload.start_time || payload.start;
+                        const endTime = payload.end_time || payload.end;
+
+                        if (date) parts.push(date);
+                        if (startTime || endTime) {
+                            parts.push([startTime, endTime].filter(Boolean).join(' - '));
+                        }
+
+                        base = parts.length ? parts.join(' ') : null;
+                    }
+
+                    const pieces = [];
+
+                    // WICHTIG: Nur in "Vorher" den Usernamen anzeigen
+                    if (includeUser && payload.user_name) {
+                        pieces.push(payload.user_name);
+                    }
+
+                    if (base) {
+                        pieces.push(base);
+                    }
+
+                    return pieces.length ? pieces.join(' · ') : null;
+                };
+
+                // zwei mögliche Shapes:
+                // 1) { old: {...}, new: {...} }
+                // 2) { before_label: '...', after_label: '...', ... } – dann steckt alles direkt in field
+                const oldPayload = 'old' in field ? field.old : field;
+                const newPayload = 'new' in field ? field.new : field;
+
+                const oldLabel = buildLabelFromPayload(oldPayload, {
+                    fallbackKey: 'before_label',
+                    includeUser: true,  // -> Hier wird "Max Schmidt" etc. eingefügt
+                });
+
+                const newLabel = buildLabelFromPayload(newPayload, {
+                    fallbackKey: 'after_label',
+                    includeUser: false, // -> Nachher nur "free" o.ä.
+                });
+
+                entries.push({
+                    fieldName,
+                    old: null,
+                    new: null,
+                    old_label: translateIfPossible(oldLabel),
+                    new_label: translateIfPossible(newLabel),
+                });
+
+                return;
+            }
+
             // Generischer Fall: { old: ..., new: ..., old_label, new_label }
             if (field && typeof field === 'object' && ('old' in field || 'new' in field)) {
                 entries.push({
                     fieldName,
-                    // nur übersetzen, wenn sinnvoll
                     old: translateIfPossible(field.old),
                     new: translateIfPossible(field.new),
-                    // Labels optional übersetzen – wenn deine Labels i18n-Keys sind:
                     new_label: translateIfPossible(field.new_label),
                     old_label: translateIfPossible(field.old_label),
                 });
@@ -213,6 +309,7 @@ export function useShiftPlanRequest() {
 
         return entries;
     };
+
 
 
     const extractInitialState = (fieldChanges = {}) => fieldChanges && typeof fieldChanges === 'object' ? fieldChanges._initial || null : null;

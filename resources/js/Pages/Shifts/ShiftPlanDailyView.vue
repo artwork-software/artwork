@@ -102,7 +102,12 @@
                             </div>
                         </div>
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="card glassy p-4 w-full">
+                            <!--
+                              Add relative positioning and extra bottom padding to the timeline card so that
+                              expanded details (e.g., SingleEntityOfShifts) have room and do not overlap the
+                              next room's row. This ensures the row below is pushed down when an item expands.
+                            -->
+                            <div class="card glassy p-4 w-full relative pb-28 md:pb-32">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
                                     :events="room.content[day.fullDay]?.events || []"

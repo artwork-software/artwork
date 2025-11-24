@@ -125,7 +125,24 @@
                                         <div class="text-sm text-gray-900">
                                             {{ $t(subKey) }}
                                         </div>
-                                        <div class="flex items-center gap-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="hidden md:flex items-center gap-2 mr-2">
+                                                <button
+                                                    type="button"
+                                                    class="text-[11px] text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                    @click.stop="selectAllInSubcategory(mainKey, subKey)"
+                                                >
+                                                    {{ $t('Select all') }}
+                                                </button>
+                                                <span class="text-zinc-300 text-xs">•</span>
+                                                <button
+                                                    type="button"
+                                                    class="text-[11px] text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                    @click.stop="deselectAllInSubcategory(mainKey, subKey)"
+                                                >
+                                                    {{ $t('Deselect all') }}
+                                                </button>
+                                            </div>
                                             <span
                                                 class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
                                                 :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'"
@@ -467,6 +484,20 @@ const removeSpaceFromKey = (key: string) => key.replace(/\s/g, '')
 const removeActiveFilter = (filterToRemove: any) => {
     filterToRemove.checked = false;
 };
+
+// Alle auswählen/abwählen innerhalb einer Subkategorie
+const mutateSubcategory = (mainKey: string, subKey: string, value: boolean) => {
+    const group = filteredOptionsByCategories.value as Record<string, Record<string, any[]>>;
+    const sub = group?.[mainKey]?.[subKey];
+    if (!Array.isArray(sub)) return;
+    sub.forEach((item: any) => {
+        // Nur boolean toggeln, keine Struktur verändern
+        item.checked = value;
+    });
+};
+
+const selectAllInSubcategory = (mainKey: string, subKey: string) => mutateSubcategory(mainKey, subKey, true);
+const deselectAllInSubcategory = (mainKey: string, subKey: string) => mutateSubcategory(mainKey, subKey, false);
 
 const changePaperOrientation = (orientation: { id: 'portrait' | 'landscape'; title: string }) => {
     selectedPaperOrientation.value = orientation

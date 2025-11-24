@@ -141,6 +141,81 @@ class ExportPDFController extends Controller
         // Für den Header
         $project = $projectId ? $this->projectService->findById($projectId) : null;
 
+        // Einheitliche Zeilenhöhe pro Raum+Slot (morgens/mitte/abends) über alle Seiten hinweg bestimmen
+        // Idee: Für jeden Raum und Slot die maximale benötigte "Event-Höhe" über alle Tage berechnen
+        // und als min-height für jede entsprechende Zeile setzen.
+        $rowHeights = [];
+        try {
+            $perEventHeight = 18; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
+            $baseMinHeight  = 18; // px, Mindesthöhe wenn keine Events vorhanden sind
+
+            // Liste der Tag-Strings (Format wie im View: d.m.Y)
+            $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
+
+            // Kalender-Räume-Struktur aus DTO
+            $calendarRooms = $calendar->rooms ?? [];
+
+            // Hilfs-Lookup: roomId -> calendar room block
+            $calendarRoomLookup = [];
+            foreach ($calendarRooms as $roomBlock) {
+                $rid = $roomBlock['roomId'] ?? null;
+                if ($rid !== null) {
+                    $calendarRoomLookup[$rid] = $roomBlock;
+                }
+            }
+
+            foreach ($rooms as $room) {
+                $rid = $room->id;
+                $maxPerSlot = [
+                    'morning' => 0,
+                    'noon'    => 0,
+                    'evening' => 0,
+                ];
+
+                $roomBlock = $calendarRoomLookup[$rid] ?? null;
+                if (!$roomBlock) {
+                    // Falls keine Inhalte vorhanden sind, auf Basis-Mindesthöhe setzen
+                    $rowHeights[$rid] = [
+                        'morning' => $baseMinHeight,
+                        'noon'    => $baseMinHeight,
+                        'evening' => $baseMinHeight,
+                    ];
+                    continue;
+                }
+
+                foreach ($allDayStrings as $dayDisplay) {
+                    $events = $roomBlock['content'][$dayDisplay]['events'] ?? [];
+                    if (empty($events)) {
+                        // Keine Events für diesen Tag
+                        continue;
+                    }
+
+                    // Zähle Events, die je Slot in diesen Tag fallen
+                    foreach (['morning', 'noon', 'evening'] as $slot) {
+                        $count = 0;
+                        foreach ($events as $event) {
+                            if (self::eventOverlapsSlot($event, $dayDisplay, $slot)) {
+                                $count++;
+                            }
+                        }
+                        if ($count > $maxPerSlot[$slot]) {
+                            $maxPerSlot[$slot] = $count;
+                        }
+                    }
+                }
+
+                // Berechne Pixelhöhen pro Slot
+                $rowHeights[$rid] = [
+                    'morning' => max($baseMinHeight, $maxPerSlot['morning'] * $perEventHeight),
+                    'noon'    => max($baseMinHeight, $maxPerSlot['noon']    * $perEventHeight),
+                    'evening' => max($baseMinHeight, $maxPerSlot['evening'] * $perEventHeight),
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Fallback, falls Struktur sich ändert – View erhält dann nur Basiswerte
+            $rowHeights = [];
+        }
+
         // PDF rendern
         $pdf = $this->domPdf->loadView(
             'pdf.calendar',
@@ -160,6 +235,7 @@ class ExportPDFController extends Controller
                     'areas'            => $filteredAreas,
                 ],
                 'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
+                'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
             ]
         )
             ->setPaper(

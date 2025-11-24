@@ -75,6 +75,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
         if (updated) {
             router.reload({
                 only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+                preserveScroll: true,
             });
         }
     }
@@ -186,6 +187,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
         if (updated) {
             router.reload({
                 only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+                preserveScroll: true,
             });
         }
     }

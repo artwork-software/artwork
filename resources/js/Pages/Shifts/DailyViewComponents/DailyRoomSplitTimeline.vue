@@ -333,6 +333,17 @@ function estimateShiftExpandedMinPx(shift: any): number {
   return Math.max(EXPANDED_MIN_SHIFT, estimated)
 }
 
+// Schätzung für expandierte Mindesthöhe eines Events anhand seiner Timelines
+function estimateEventExpandedMinPx(event: any): number {
+  if (!event) return EXPANDED_MIN_EVENT
+  const timelines = Array.isArray(event?.timelines) ? event.timelines.length : 0
+  const headerPx = COLLAPSED_MIN_EVENT
+  const rowsPx = timelines * SHIFT_ROW_PX
+  const gapsPx = Math.max(0, timelines - 1) * SHIFT_ROW_GAP_PX + SHIFT_ROW_GAP_PX
+  const estimated = headerPx + rowsPx + gapsPx
+  return Math.max(EXPANDED_MIN_EVENT, estimated)
+}
+
 function getEventItemHeightPx(item: any, block: any) {
   const timeHeight = Math.max(24, Math.round((item.endMin - item.startMin) * props.pxPerMin))
   const expanded = !!eventsExpanded.value[item.id]
@@ -394,52 +405,9 @@ function buildCompactSegments(block: any): CompactSegment[] {
   let y = 0
   for (let i = 0; i < merged.length; i++) {
     const m = merged[i]
-    // Ermitteln, ob innerhalb dieses Intervalls zeitliche Überschneidungen zwischen IRGENDWELCHEN Items stattfinden
-    // (spaltenübergreifend: Events <-> Shifts). Dadurch wird die vertikale Zeitachse
-    // auch dann proportional, wenn sich nur ein Event mit einer Schicht überschneidet.
-    const itemsInSeg = items.filter(it => it.startMin < m.e && it.endMin > m.s)
-    let anyCollision = false
-    for (let a = 0; a < itemsInSeg.length && !anyCollision; a++) {
-      for (let b = a + 1; b < itemsInSeg.length; b++) {
-        const A = itemsInSeg[a]
-        const B = itemsInSeg[b]
-        if (A.startMin < B.endMin && A.endMin > B.startMin) {
-          anyCollision = true
-          break
-        }
-      }
-    }
-
-    let heightPx: number
-    if (anyCollision) {
-      // Zeitproportional abbilden
-      heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
-    } else {
-      // Kein zeitproportionales Mapping nötig: Segmenthöhe = max sichtbare Kartenhöhe in diesem Segment
-      const eventStack: Record<number, number> = {}
-      const shiftStack: Record<number, number> = {}
-      let evY = 0
-      let shY = 0
-      const evs = itemsInSeg.filter(it => it.type === 'event').sort((a,b)=> a.startMin - b.startMin)
-      const shs = itemsInSeg.filter(it => it.type === 'shift').sort((a,b)=> a.startMin - b.startMin)
-      for (const it of evs) {
-        eventStack[it.id as number] = evY
-        evY += getEventItemHeightPx(it, block) + STACK_GAP_PX
-      }
-      for (const it of shs) {
-        shiftStack[it.id as number] = shY
-        shY += getShiftItemHeightPx(it, block) + STACK_GAP_PX
-      }
-      // letzte Lücke abziehen
-      if (evY > 0) evY -= STACK_GAP_PX
-      if (shY > 0) shY -= STACK_GAP_PX
-      heightPx = Math.max(1, Math.round(Math.max(evY, shY, 1)))
-      segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: false, eventStack, shiftStack })
-      y += heightPx
-      if (i < merged.length - 1) y += SEGMENT_GAP_PX
-      continue
-    }
-    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: anyCollision })
+    // Ab jetzt IMMER zeitproportionale Segmente, damit zeitliche Relativität erhalten bleibt
+    const heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
+    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: true })
     y += heightPx
     if (i < merged.length - 1) y += SEGMENT_GAP_PX
   }
@@ -484,25 +452,10 @@ function getSegmentForMinute(block: any, minute: number): CompactSegment | null 
 function getTopForItem(item: any, block: any): number {
   const seg = getSegmentForMinute(block, item.startMin)
   if (!seg) return 0
-  if (seg.proportional) {
-    // Falls im proportionalen Segment bereits justierte Tops berechnet wurden, diese verwenden,
-    // damit expandierte Karten direkt anliegende nach unten schieben und nichts überlappt.
-    if (item.type === 'event') {
-      const adj = (seg as any).eventAdjustedTop?.[item.id]
-      if (typeof adj === 'number') return adj
-    } else {
-      const adj = (seg as any).shiftAdjustedTop?.[item.id]
-      if (typeof adj === 'number') return adj
-    }
-    return topWithinBlock(block, item.startMin)
-  }
-  // nicht-proportional: per Stack-Position
-  if (item.type === 'event') {
-    const off = seg.eventStack?.[item.id]
-    return seg.baseTopPx + (off ?? 0)
-  }
-  const off = seg.shiftStack?.[item.id]
-  return seg.baseTopPx + (off ?? 0)
+  // In proportionalen Segmenten: rein zeitbasierter Top-Offset
+  if (seg.proportional) return topWithinBlock(block, item.startMin)
+  // Fallback (sollte nicht mehr vorkommen): Start oben im Segment
+  return seg.baseTopPx
 }
 
 // Blöcke um Layout-Höhe erweitern (Pixelhöhe = max Bottom beider Spalten)
@@ -511,73 +464,49 @@ const layoutBlocks = computed(() => {
     // Kompakt-Segmente vorbereiten (immer neu berechnen, da Min-Höhen dynamisch sind)
     b.compactSegments = buildCompactSegments(b)
 
-    // Innerhalb proportionaler Segmente sicherstellen, dass direkt anliegende (nicht überlappende)
-    // Items mit ihren Mindesthöhen nicht übereinander laufen. Wir justieren pro Spalte (Events/Shifts)
-    // die Top-Offsets nach unten und vergrößern ggf. die Segmenthöhe. Nach jeder Segmentanpassung
-    // werden die folgenden Segmente entsprechend nach unten verschoben.
-    let runningBase = 0
-    const pxPerMinLocal = props.pxPerMin
-    for (const seg of b.compactSegments) {
-      // Basisposition für dieses Segment setzen (inkl. Verschiebungen aus vorherigen Segmenten)
-      seg.baseTopPx = (seg.baseTopPx ?? 0) + runningBase
+    // Visuelle Metriken (Top/Height/Bottom) pro Item berechnen –
+    // Kollisionen werden anhand ausgeklappter Mindesthöhen beurteilt.
+    const timeHeightPx = (it: any) => Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
+    const expandedMinPx = (it: any) => it.type === 'shift'
+      ? estimateShiftExpandedMinPx(it?.payload)
+      : estimateEventExpandedMinPx(it?.payload)
 
-      if (seg.proportional) {
-        // Event-Spalte anpassen
-        const evsInSeg: any[] = (b.eventItems || []).filter((it: any) => it.startMin < seg.endMin && it.startMin >= seg.startMin)
-        evsInSeg.sort((a: any, b: any) => a.startMin - b.startMin || (a.id ?? 0) - (b.id ?? 0))
-        let lastChainEndMinEv = seg.startMin
-        let chainBottomEv = seg.baseTopPx
-        let maxBottomEv = seg.baseTopPx
-        seg.eventAdjustedTop = seg.eventAdjustedTop || {}
-        for (const it of evsInSeg) {
-          const baseTop = seg.baseTopPx + Math.round((it.startMin - seg.startMin) * pxPerMinLocal)
-          // nur drücken, wenn nicht-überlappend mit vorheriger Kette
-          if (it.startMin >= lastChainEndMinEv) {
-            // Kette kann aktualisiert werden
-            chainBottomEv = Math.max(chainBottomEv, maxBottomEv)
+    const computeVisualMetrics = (arr: any[]) => {
+      for (const it of arr) {
+        const top = getTopForItem(it, b)
+        const vH = Math.max(timeHeightPx(it), expandedMinPx(it))
+        ;(it as any)._vTop = top
+        ;(it as any)._vHeight = vH
+        ;(it as any)._vBottom = top + vH
+      }
+    }
+    computeVisualMetrics(b.eventItems || [])
+    computeVisualMetrics(b.shiftItems || [])
+
+    // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
+    const assignVisualLanesByRect = (arr: any[]) => {
+      const items = (arr || []).slice().sort((a, b) => (a._vTop ?? 0) - (b._vTop ?? 0) || (a.id ?? 0) - (b.id ?? 0))
+      const laneBottoms: number[] = []
+      for (const it of items) {
+        let placed = false
+        for (let i = 0; i < laneBottoms.length; i++) {
+          if ((it._vTop ?? 0) >= laneBottoms[i]) {
+            it._vLaneIndex = i
+            laneBottoms[i] = Math.max(laneBottoms[i], it._vBottom ?? ((it._vTop ?? 0) + (it._vHeight ?? 0)))
+            placed = true
+            break
           }
-          const top = Math.max(baseTop, chainBottomEv)
-          const h = getEventItemHeightPx(it, b)
-          const bottom = top + h
-          seg.eventAdjustedTop[it.id as number] = top
-          maxBottomEv = Math.max(maxBottomEv, bottom)
-          // End-Minuten nur für Ketten ohne Überlappung aktualisieren
-          lastChainEndMinEv = Math.max(lastChainEndMinEv, it.endMin)
         }
-
-        // Shift-Spalte anpassen
-        const shsInSeg: any[] = (b.shiftItems || []).filter((it: any) => it.startMin < seg.endMin && it.startMin >= seg.startMin)
-        shsInSeg.sort((a: any, b: any) => a.startMin - b.startMin || (a.id ?? 0) - (b.id ?? 0))
-        let lastChainEndMinSh = seg.startMin
-        let chainBottomSh = seg.baseTopPx
-        let maxBottomSh = seg.baseTopPx
-        seg.shiftAdjustedTop = seg.shiftAdjustedTop || {}
-        for (const it of shsInSeg) {
-          const baseTop = seg.baseTopPx + Math.round((it.startMin - seg.startMin) * pxPerMinLocal)
-          if (it.startMin >= lastChainEndMinSh) {
-            chainBottomSh = Math.max(chainBottomSh, maxBottomSh)
-          }
-          const top = Math.max(baseTop, chainBottomSh)
-          const h = getShiftItemHeightPx(it, b)
-          const bottom = top + h
-          seg.shiftAdjustedTop[it.id as number] = top
-          maxBottomSh = Math.max(maxBottomSh, bottom)
-          lastChainEndMinSh = Math.max(lastChainEndMinSh, it.endMin)
-        }
-
-        // Segmenthöhe ggf. erhöhen, damit justierte Bottoms hinein passen
-        const needed = Math.max(maxBottomEv, maxBottomSh) - seg.baseTopPx
-        if (needed > seg.heightPx) {
-          const delta = needed - seg.heightPx
-          seg.heightPx = needed
-          runningBase += delta
+        if (!placed) {
+          it._vLaneIndex = laneBottoms.length
+          laneBottoms.push(it._vBottom ?? ((it._vTop ?? 0) + (it._vHeight ?? 0)))
         }
       }
-
-      // Nach Abschluss dieses Segments Basis für das nächste Segment setzen
-      runningBase += 0 // bereits in proportionalen Fällen oben berücksichtigt
-      // Für nicht-proportionale Segmente wird heightPx durch buildCompactSegments korrekt gesetzt
+      return Math.max(1, laneBottoms.length)
     }
+
+    b.eventVisualLaneCount = assignVisualLanesByRect(b.eventItems || [])
+    b.shiftVisualLaneCount = assignVisualLanesByRect(b.shiftItems || [])
 
     // Gesamthöhe des Blocks auf Basis der tatsächlich verwendeten Tops/Höhen berechnen
     let maxBottom = 0
@@ -602,22 +531,27 @@ const hasAny = computed(() => hasEvents.value || hasShifts.value)
 
 // style helpers
 function getEventItemStyle(item: any, block: any) {
-  // Dynamische Breite/Position für Events basierend auf den tatsächlich zeitgleich
-  // aktiven Events – und dabei links nach rechts nach Dauer sortiert (längster links).
-  const overlapping: any[] = (() => {
-    const arr: any[] = Array.isArray(block?.eventItems) ? block.eventItems : []
-    return arr.filter((it) => it.startMin < item.endMin && it.endMin > item.startMin)
-  })()
-  const byDurationDesc = (a: any, b: any) => {
-    const durA = (a.endMin - a.startMin)
-    const durB = (b.endMin - b.startMin)
-    if (durA !== durB) return durB - durA // länger zuerst
-    if (a.startMin !== b.startMin) return a.startMin - b.startMin // früherer Start links
-    return (a.id ?? 0) - (b.id ?? 0) // stabiler Tie-Breaker
+  // Breite/Position für Events basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
+  // Dadurch werden Events nebeneinander dargestellt, wenn ihre ausgeklappten Höhen kollidieren –
+  // auch ohne direkte Zeitüberschneidung.
+  const ensureVisualMetrics = (it: any) => {
+    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
+      const top = getTopForItem(it, block)
+      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
+      const vH = Math.max(timeH, EXPANDED_MIN_EVENT)
+      it._vTop = top
+      it._vHeight = vH
+      it._vBottom = top + vH
+    }
   }
-  const ordered = overlapping.slice().sort(byDurationDesc)
-  const activeCount = Math.max(1, ordered.length)
-  const rank = Math.max(0, ordered.findIndex((it) => it === item))
+  const arr: any[] = Array.isArray(block?.eventItems) ? block.eventItems : []
+  for (const it of arr) ensureVisualMetrics(it)
+  ensureVisualMetrics(item)
+  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
+  const overlapping = arr.filter(it => overlapsRect(it, item))
+  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
+  const activeCount = Math.max(1, activeLaneIndices.length)
+  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
   const widthPct = 100 / activeCount
   const leftPct = widthPct * rank
   const topPx = getTopForItem(item, block)
@@ -638,32 +572,30 @@ function getEventItemStyle(item: any, block: any) {
 }
 
 function getShiftItemStyle(item: any, block: any) {
-  // Dynamische Breite pro Item abhängig von den tatsächlich zeitgleich aktiven Shift-Lanes.
-  // Dadurch erhält eine Schicht volle Breite, wenn sie zum betreffenden Zeitpunkt alleine ist –
-  // auch wenn später im Block mehrere parallele Schichten stattfinden.
-  const activeLaneIndices: number[] = (() => {
-    const set = new Set<number>()
-    const items: any[] = Array.isArray(block?.shiftItems) ? block.shiftItems : []
-    for (const it of items) {
-      const lane = (it?.laneIndex ?? 0) as number
-      // Überschneidung: strikt wie in markCollisions
-      const overlaps = it.startMin < item.endMin && it.endMin > item.startMin
-      if (overlaps) set.add(lane)
+  // Breite/Position für Schichten basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
+  const ensureVisualMetrics = (it: any) => {
+    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
+      const top = getTopForItem(it, block)
+      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
+      const vH = Math.max(timeH, estimateShiftExpandedMinPx(it?.payload))
+      it._vTop = top
+      it._vHeight = vH
+      it._vBottom = top + vH
     }
-    // Sicherstellen, dass mindestens die eigene Lane berücksichtigt wird
-    set.add((item?.laneIndex ?? 0) as number)
-    return Array.from(set).sort((a, b) => a - b)
-  })()
-
+  }
+  const arr: any[] = Array.isArray(block?.shiftItems) ? block.shiftItems : []
+  for (const it of arr) ensureVisualMetrics(it)
+  ensureVisualMetrics(item)
+  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
+  const overlapping = arr.filter(it => overlapsRect(it, item))
+  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
   const activeCount = Math.max(1, activeLaneIndices.length)
-  const rank = Math.max(0, activeLaneIndices.indexOf(item?.laneIndex ?? 0))
+  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
   const widthPct = 100 / activeCount
   const leftPct = widthPct * rank
   const topPx = getTopForItem(item, block)
   const heightPx = getShiftItemHeightPx(item, block)
-  // hasCollision an Kinder weitergeben (Dokumentation):
-  // SingleShiftInDailyShiftView nutzt diese Prop, um kompaktes Design bei Überschneidungen zu aktivieren.
-  if (item?.props) item.props.hasCollision = !!item.hasCollision
+  // Wichtig laut Vorgabe: Schicht-Styling ändert sich nicht bei Kollisionen; daher kein hasCollision-Prop.
   // Hintergrundfarbe gemäß Gewerk-Farbe (mit schwacher Opacity) – analog zu getEventItemStyle
   const craftHex: string | undefined = item?.payload?.craft?.color || item?.props?.shift?.craft?.color
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'
@@ -678,7 +610,7 @@ function getShiftItemStyle(item: any, block: any) {
 
 // Block-Container-Stile mit Mindestbreite pro Lane
 function getEventBlockStyle(block: any) {
-  const lanes = Math.max(1, block.eventLaneCount || 1)
+  const lanes = Math.max(1, block.eventVisualLaneCount || block.eventLaneCount || 1)
   const minW = Math.max(LANE_MIN_WIDTH_PX, lanes * LANE_MIN_WIDTH_PX)
   return {
     height: block.pixelHeight + 'px',
@@ -687,7 +619,7 @@ function getEventBlockStyle(block: any) {
 }
 
 function getShiftBlockStyle(block: any) {
-  const lanes = Math.max(1, block.shiftLaneCount || 1)
+  const lanes = Math.max(1, block.shiftVisualLaneCount || block.shiftLaneCount || 1)
   const minW = Math.max(LANE_MIN_WIDTH_PX, lanes * LANE_MIN_WIDTH_PX)
   return {
     height: block.pixelHeight + 'px',

@@ -49,7 +49,17 @@
                         <div class="text-[11px] text-gray-500">{{ $t('Reviewed at') }} {{ formatDateTime(request.reviewed_at) }}</div>
                     </div>
                 </div>
+
                 <div v-if="request.review_comment" class="max-w-xs text-right text-[11px] text-gray-500">“{{ request.review_comment }}”</div>
+
+                <!-- show who requested if not my request -->
+                <div v-if="!isMyRequest && request.requested_by" class="flex items-center gap-2 mt-2">
+                    <img v-if="request.requested_by.profile_photo_url" :src="request.requested_by.profile_photo_url" alt="" class="h-7 w-7 rounded-full object-cover" />
+                    <div class="text-right">
+                        <div class="font-medium text-gray-900">{{ request.requested_by.full_name || request.requested_by.first_name }}</div>
+                        <div class="text-[11px] text-gray-500">{{ $t('Requested at') }} {{ formatDateTime(request.requested_at) }}</div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="flex items-center gap-2 text-xs text-gray-500">

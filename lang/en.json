@@ -3529,5 +3529,11 @@
     "Free": "Free",
     "{0} removed from shift as {1} for {2} ({3})": "{0} removed from shift as {1} for {2} ({3})",
     "free": "Free",
-    "Assignment": "Assignment"
+    "Assignment": "Assignment",
+    "User {0} removed from shift": "User {0} removed from shift",
+    "User {0} added to shift": "User {0} added to shift",
+    "Shift updated ({0})": "Shift updated ({0})",
+    "Change reverted ({0})": "Change reverted ({0})",
+    "committed_shift_change_reverted": "committed shift change reverted",
+    "Confirm rejection": "Confirm rejection"
 }

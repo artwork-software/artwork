@@ -5,7 +5,7 @@
                 <Link
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                    :href="route('shifts.approvals.review')"
+                    :href="!isMyRequest ? route('shifts.approvals.review') : route('shifts.approvals.requests')"
                 >
                     <IconArrowLeft class="h-4 w-4"/>
                     <span>{{ $t('Back to shift plan requests') }}</span>

@@ -3541,5 +3541,7 @@
     "User {0} removed from shift": "Nutzer*in {0} aus der Schicht entfernt",
     "User {0} added to shift": "Nutzer*in {0} der Schicht hinzugefügt",
     "Shift updated ({0})": "Schicht aktualisiert ({0})",
-    "Change reverted ({0})": "Änderung rückgängig gemacht ({0})"
+    "Change reverted ({0})": "Änderung rückgängig gemacht ({0})",
+    "committed_shift_change_reverted": "Rückgängig gemachte festgeschriebene Schichtänderung",
+    "Confirm rejection": "Abgelehnte bestätigen"
 }

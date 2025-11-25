@@ -190,6 +190,8 @@
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
+        :rooms="usePage().props.rooms"
+        :room="shift?.roomId ?? shift?.room_id ?? null"
     />
 
     <!-- Bestätigungsmodal: Schicht löschen -->

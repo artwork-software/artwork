@@ -3535,5 +3535,8 @@
     "Shift updated ({0})": "Shift updated ({0})",
     "Change reverted ({0})": "Change reverted ({0})",
     "committed_shift_change_reverted": "committed shift change reverted",
-    "Confirm rejection": "Confirm rejection"
+    "Confirm rejection": "Confirm rejection",
+    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency",
+    "Select a room type": "Select a room type",
+    "Enter room type name": "Enter room type name"
 }

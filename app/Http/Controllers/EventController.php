@@ -664,11 +664,10 @@ class EventController extends Controller
                 $startDate,
                 $endDate,
                 UserShiftPlanResource::class,
-                true
+                true,
+                $user
             ),
-            'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
-                $this->craftService->getAssignableByAllCrafts()
-            ),
+            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'calendarWarningText' => $calendarWarningText,
             'globalQualifications' => $this->globalQualificationService->getAll(),
@@ -3407,5 +3406,28 @@ class EventController extends Controller
         ));
 
         return Redirect::back();
+    }
+
+    /**
+     * Get crafts that the current user is allowed to assign in shift planning.
+     *
+     * @param User $user
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    private function getCurrentUserCrafts(User $user): \Illuminate\Database\Eloquent\Collection
+    {
+        // If user is admin, return all crafts with qualifications
+        if ($user->hasRole('artwork admin') || $user->hasPermissionTo('artwork admin')) {
+            return $this->craftService->getAll(['qualifications']);
+        }
+
+        // Get crafts that are assignable by all (not restricted)
+        $assignableByAllCrafts = $this->craftService->getAssignableByAllCrafts();
+
+        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
+        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
+
+        // Merge both collections and remove duplicates by craft id
+        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 }

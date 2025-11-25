@@ -44,7 +44,7 @@
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" @edit-residency="editResidency" :key="artist_residency.id"/>
+                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
                         </tbody>
                     </table>
                 </div>

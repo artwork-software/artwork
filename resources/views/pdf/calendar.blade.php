@@ -73,12 +73,17 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
+            table-layout: fixed;   /* <--- WICHTIG */
             border: 1px solid #404040;
-            /* Alle Schriften innerhalb der Tabelle wie Event-Header */
             font-size: 6px;
             font-weight: 500;
         }
+
+        /* Damit Inhalte nicht über die Zelle hinausquellen */
+        th, td {
+            word-wrap: break-word;
+        }
+
 
         thead th {
             border-bottom: 1px solid #404040;
@@ -135,9 +140,7 @@
 
         /* Raumspalte links */
         .td-room {
-            width: 60px;
-            max-width: 60px;
-            padding: 4px;
+            padding: 2px;
             vertical-align: top;
         }
 
@@ -153,20 +156,16 @@
 
         /* Slot/Zeitraum Spalte (jetzt schlanker) */
         .td-slot-label {
-            /* Minimale Breite so, dass "Nachmittag" passt */
-            width: 42px;
-            max-width: 42px;
-            min-width: 42px;
             font-size: 6px;
             line-height: 1.2;
             color: #4b5563;
             font-weight: 500;
-            vertical-align: top;
-            padding: 2px 2px;
-            word-wrap: break-word;
-            white-space: nowrap; /* kein Zeilenumbruch innerhalb der Slot-Bezeichnung */
+            vertical-align: middle;
+            text-align: center;
+            padding: 1px;
+            white-space: nowrap;
             /* gleiche Mindesthöhe wie Eventzellen */
-            min-height: 16px;
+            min-height: 32px;
         }
 
         .slot-cell {
@@ -175,13 +174,13 @@
             line-height: 1.25;
             padding: 3px;
             word-wrap: break-word;
-            /* Mindesthöhe für leere Zeilen: Platz für genau ein Event-Bubble */
-            min-height: 16px;
+            /* Mindesthöhe für leere Zeilen: Platz für einen 4-zeiligen Termin */
+            min-height: 80px;
         }
 
         /* Innen-Wrapper in Slot-Zellen, damit DomPDF min-height zuverlässig anwendet */
         .slot-inner {
-            min-height: 18px; /* genug Platz für ein Event */
+            min-height: 64px;
         }
 
         /* Event Bubble ----------------------------------------------*/
@@ -212,7 +211,6 @@
             font-weight: 500;
             font-size: 6px;
             line-height: 1.2;
-            white-space: nowrap;
             word-wrap: break-word;
         }
     </style>
@@ -296,7 +294,7 @@
                 $startHuman = $startCarbon->format('d.m. H:i');
                 $endHuman   = $endCarbon->format('d.m. H:i');
 
-                echo e($startHuman).'<br>'.e($endHuman);
+                echo e($startHuman).' – '.e($endHuman);
             } else {
                 echo e($timeString);
             }
@@ -339,13 +337,7 @@
                                 Zeitraum: {{ $firstDay }} – {{ $lastDay }}
                             @endif
                         </div>
-                        <div class="chunk-info">
-                            Räume {{ $firstRoomName }} – {{ $lastRoomName }}
-                            • Tage {{ $firstDayOnPage }} – {{ $lastDayOnPage }}
-                            • Seite {{ $currentPageNumber }} von {{ $totalPages }}
-                        </div>
                     </td>
-
                     <td class="header-right">
                         <div class="chunk-info">Erstellt von {{ $created_by }}</div>
                         <div class="chunk-info">Erstellt am {{ \Illuminate\Support\Carbon::now()->format('d.m.Y H:i') }}</div>
@@ -353,23 +345,24 @@
                 </tr>
             </table>
 
-            {{-- Filtertags im Export entfernt --}}
-
-
             {{-- TABELLE --}}
             <table>
-                <thead>
-                <tr>
-                    {{-- Linke Kopfspalte: Raum --}}
-                    <th class="th-room-head" style="width: 60px; max-width: 60px;">
+                    <thead>
+                    <tr>
+                                    {{-- Linke Kopfspalte: Raum --}}
+                    <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:9px; font-weight:700;">
                         Raum
                     </th>
                     {{-- Slot/Zeitraum Kopf (jetzt sehr klein) --}}
-                    <th class="th-room-head time-col-bg" style="width: 42px !important; max-width: 42px !important; min-width: 42px !important; padding: 2px 2px; font-size: 6px; line-height: 1.2; background-color:#f4f4f5; white-space: nowrap;">
+                    <th class="th-room-head time-col-bg" style="padding: 1px; font-size: 9px; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
                         Zeit
                     </th>
 
                     {{-- Dann pro Tag EINE Spalte --}}
+                    @php
+                        // Berechne die Breite für jede Tagesspalte, damit alle gleich breit sind
+                        $dayCount = count($daysPage);
+                    @endphp
                     @foreach($daysPage as $dayInfo)
                         @php
                             $isWeekend = !empty($dayInfo['isWeekend']);
@@ -377,9 +370,9 @@
                         <th class="th-daygroup {{ $isWeekend ? 'weekend-bg-top' : '' }}"
                             style="
                                 {{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}
-                                font-size:6px;
+                                font-size:9px;
                                 line-height:1.3;
-                                font-weight:500;
+                                font-weight:700;
                                 padding:4px 2px;
                                 text-align:center;
                             "
@@ -397,29 +390,26 @@
                 @foreach($roomChunkPage as $room)
                     @php
                         $roomName = $room->name;
-                        $roomFontSize = '6px';
                     @endphp
 
                     {{-- Zeile 1: Morgens --}}
                     @php $hMorning = $rowHeights[$room->id]['morning'] ?? 20; @endphp
                     <tr>
-                        {{-- Raumzelle pro Slot-Zeile (kein rowspan wegen DomPDF-Seitenumbruch) --}}
+                        {{-- Leerer Platzhalter für Morgens-Zeile --}}
                         <td class="td-room"
                             style="
-                                font-size:{{ $roomFontSize }};
-                                font-weight:500;
-                                line-height:1.2;
-                                word-break:break-word;
-                                max-height:24px;
-                                overflow:hidden;
+                                text-align:center;
+                                vertical-align:top;
+                                border-right:1px solid #404040;
+                                border-bottom:none;
                             "
                         >
-                            {{ $roomName }}
+                            &nbsp;
                         </td>
 
                         {{-- Slot-Label Morgens --}}
-                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5;">
-                            <div class="slot-inner" style="min-height: {{ $hMorning }}px;">Morgens</div>
+                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hMorning }}px;">
+                            Morgens
                         </td>
 
                         {{-- Für jeden Tag die Events Morgens --}}
@@ -443,20 +433,24 @@
                     {{-- Zeile 2: Nachmittag --}}
                     @php $hNoon = $rowHeights[$room->id]['noon'] ?? 20; @endphp
                     <tr>
+                        {{-- Raumzelle für Nachmittag-Zeile mit Raumnamen (größer und dicker) --}}
                         <td class="td-room"
                             style="
-                                font-size:{{ $roomFontSize }};
-                                font-weight:500;
+                                font-size:9px;
+                                font-weight:700;
                                 line-height:1.2;
                                 word-break:break-word;
-                                max-height:24px;
-                                overflow:hidden;
+                                text-align:center;
+                                vertical-align:middle;
+                                border-right:1px solid #404040;
+                                border-bottom:none;
                             "
                         >
                             {{ $roomName }}
                         </td>
-                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5;">
-                            <div class="slot-inner" style="min-height: {{ $hNoon }}px;">Nachmittag</div>
+
+                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hNoon }}px;">
+                            Mittags
                         </td>
 
                         @foreach($daysPage as $dayInfo)
@@ -479,20 +473,20 @@
                     {{-- Zeile 3: Abends --}}
                     @php $hEvening = $rowHeights[$room->id]['evening'] ?? 20; @endphp
                     <tr>
+                        {{-- Leerer Platzhalter für Abends-Zeile --}}
                         <td class="td-room"
                             style="
-                                font-size:{{ $roomFontSize }};
-                                font-weight:500;
-                                line-height:1.2;
-                                word-break:break-word;
-                                max-height:24px;
-                                overflow:hidden;
+                                text-align:center;
+                                vertical-align:top;
+                                border-right:1px solid #404040;
+                                border-bottom:1px solid #404040;
                             "
                         >
-                            {{ $roomName }}
+                            &nbsp;
                         </td>
-                        <td class="td-slot-label time-col-bg" style="border-bottom:1px solid #404040; background-color:#f4f4f5;">
-                            <div class="slot-inner" style="min-height: {{ $hEvening }}px;">Abends</div>
+
+                        <td class="td-slot-label time-col-bg" style="border-bottom:1px solid #404040; background-color:#f4f4f5; min-height: {{ $hEvening }}px;">
+                            Abends
                         </td>
 
                         @foreach($daysPage as $dayInfo)

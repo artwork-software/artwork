@@ -131,12 +131,11 @@ class ExportPDFController extends Controller
         }
 
         // Horizontaler Chunk: wie viele Tage pro Seite sichtbar sein sollen
-        $DAYS_PER_PAGE = $request->integer('daysPerPage') ?: 5;
+        $DAYS_PER_PAGE = $request->integer('daysPerPage') ?: 7;
         $dayChunks = array_chunk($days, $DAYS_PER_PAGE);
 
         // Vertikaler Chunk: wie viele Räume pro Seite
-        $roomsPerPage = $request->integer('roomsPerPage') ?: 8;
-        $roomChunks   = $rooms->chunk($roomsPerPage)->values();
+        $roomChunks   = $rooms->chunk(8)->values();
 
         // Für den Header
         $project = $projectId ? $this->projectService->findById($projectId) : null;
@@ -147,7 +146,7 @@ class ExportPDFController extends Controller
         $rowHeights = [];
         try {
             $perEventHeight = 18; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
-            $baseMinHeight  = 18; // px, Mindesthöhe wenn keine Events vorhanden sind
+            $baseMinHeight  = 36; // px, Mindesthöhe wenn keine Events vorhanden sind
 
             // Liste der Tag-Strings (Format wie im View: d.m.Y)
             $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);

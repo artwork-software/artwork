@@ -50,13 +50,16 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['editResidency']);
+const emit = defineEmits(['editResidency', 'deleted', 'duplicated']);
 
 const showAddEditArtistResidenciesModal = ref(false);
 
 
 const duplicate = () => {
-    router.post(route('artist_residencies.duplicate', {artistResidency: props.artist_residency.id}), {
+    router.post(route('artist_residencies.duplicate', {artistResidency: props.artist_residency.id}), {}, {
+        onSuccess: () => {
+            emit('duplicated');
+        }
     });
 }
 
@@ -68,6 +71,10 @@ const deleteArtistResidency = () => {
 
 const sendDelete = () => {
     router.delete(route('artist-residency.destroy', {artistResidency: props.artist_residency.id}), {
+        onSuccess: () => {
+            showDeleteConfirmation.value = false;
+            emit('deleted');
+        }
     });
 }
 

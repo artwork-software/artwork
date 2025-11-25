@@ -675,7 +675,8 @@ class EventController extends Controller
                 $startDate,
                 $endDate,
                 UserShiftPlanResource::class,
-                true
+                true,
+                $user
             ),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),

@@ -50,8 +50,21 @@ readonly class FreelancerService
     ): array {
         $freelancersWithPlannedWorkingHours = [];
 
+        // Get all freelancer workers with shift qualifications loaded
+        $freelancers = $this->freelancerRepository->getWorkers()->load('shiftQualifications');
+
+        // Filter freelancers by shift qualifications if currentUser has selected qualifications
+        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
+            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
+            $freelancers = $freelancers->filter(function ($freelancer) use ($selectedQualifications) {
+                // Check if freelancer has at least one of the selected qualifications
+                $freelancerQualificationIds = $freelancer->shiftQualifications->pluck('id')->toArray();
+                return !empty(array_intersect($selectedQualifications, $freelancerQualificationIds));
+            });
+        }
+
         /** @var Freelancer $freelancer */
-        foreach ($this->freelancerRepository->getWorkers() as $freelancer) {
+        foreach ($freelancers as $freelancer) {
             $desiredFreelancerResource = $desiredResourceClass::make($freelancer);
 
             if ($desiredFreelancerResource instanceof FreelancerShiftPlanResource) {

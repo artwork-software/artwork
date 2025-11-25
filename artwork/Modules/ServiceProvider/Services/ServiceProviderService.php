@@ -42,8 +42,21 @@ readonly class ServiceProviderService
     ): array {
         $serviceProvidersWithPlannedWorkingHours = [];
 
+        // Get all service provider workers with shift qualifications loaded
+        $serviceProviders = $this->serviceProviderRepository->getWorkers()->load('shiftQualifications');
+
+        // Filter service providers by shift qualifications if currentUser has selected qualifications
+        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
+            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
+            $serviceProviders = $serviceProviders->filter(function ($serviceProvider) use ($selectedQualifications) {
+                // Check if service provider has at least one of the selected qualifications
+                $serviceProviderQualificationIds = $serviceProvider->shiftQualifications->pluck('id')->toArray();
+                return !empty(array_intersect($selectedQualifications, $serviceProviderQualificationIds));
+            });
+        }
+
         /** @var ServiceProvider $serviceProvider */
-        foreach ($this->serviceProviderRepository->getWorkers() as $serviceProvider) {
+        foreach ($serviceProviders as $serviceProvider) {
             $desiredServiceProviderResource = $desiredResourceClass::make($serviceProvider);
 
             if ($desiredServiceProviderResource instanceof ServiceProviderShiftPlanResource) {

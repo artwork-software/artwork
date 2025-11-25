@@ -246,7 +246,18 @@ class WorkingHourService
                 });
             },
             'dayServices',
+            'shiftQualifications',
         ]);
+
+        // Filter workers by shift qualifications if currentUser has selected qualifications
+        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
+            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
+            $workers = $workers->filter(function ($worker) use ($selectedQualifications) {
+                // Check if worker has at least one of the selected qualifications
+                $workerQualificationIds = $worker->shiftQualifications->pluck('id')->toArray();
+                return !empty(array_intersect($selectedQualifications, $workerQualificationIds));
+            });
+        }
 
         // Precompute expected minutes for all users
         $expectedMinutesCache = []; //$this->precomputeExpectedMinutes($workers, $startDate, $endDate);

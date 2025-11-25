@@ -308,14 +308,7 @@
                         <BaseInput
                             id="daysPerPage"
                             v-model="pdf.daysPerPage"
-                            :label="$t('Tage pro Seite (Standard: 5)')"
-                        />
-                    </div>
-                    <div>
-                        <BaseInput
-                            id="roomsPerPage"
-                            v-model="pdf.roomsPerPage"
-                            :label="$t('Räume pro Seite (Standard: 8)')"
+                            :label="$t('Days per page')"
                         />
                     </div>
                 </div>
@@ -382,8 +375,7 @@ const pdf = useForm({
     paperOrientation: null as string | null,
     project: null as number | null,
     dpi: 72,
-    daysPerPage: 5,
-    roomsPerPage: 8,
+    daysPerPage: 7,
     filter: {} as Record<string, number[] | null>
 })
 

@@ -159,7 +159,7 @@
                 :project="props.project"
                 :event="eventToEdit"
                 :wantedRoomId="wantedRoom"
-                :isAdmin="can('artwork admin')"
+                :isAdmin="hasAdminRole()"
                 :roomCollisions="roomCollisions"
                 :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 :requires-axios-requests="true"
@@ -286,7 +286,7 @@ const props = defineProps({
         default: 0
     }
 })
-
+const hasAdminRole = () => is('artwork admin')
 /**
  * Lokale State-Refs – damit wir per API nachladen können
  */

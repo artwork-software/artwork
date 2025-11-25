@@ -67,6 +67,8 @@
         @close="closeAddEditArtistResidenciesModal"
         :project="project"
         :artist_residency="artistResidencyToEdit"
+        :accommodations="localAccommodations"
+        :artists="localArtists"
     />
 
     <ExportArtistResidenciesModal
@@ -151,15 +153,6 @@ async function fetchArtistResidencies() {
         localArtistResidencies.value = data?.artist_residencies ?? [];
         localArtists.value = data?.artists ?? [];
         localAccommodations.value = data?.accommodations ?? [];
-        
-        // Share with Inertia for other components that might use usePage().props
-        if (window.Inertia) {
-            window.Inertia.share({
-                artist_residencies: localArtistResidencies.value,
-                artists: localArtists.value,
-                accommodations: localAccommodations.value
-            });
-        }
     } catch (error) {
         console.error(error);
         loadResidenciesError.value = 'Unable to load artist residencies.';

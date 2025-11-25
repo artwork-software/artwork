@@ -3425,5 +3425,8 @@
     "Choose a contract for the user.": "Wähle einen Vertrag für die Nutzer*in.",
     "Search contracts...": "Verträge suchen...",
     "Select project tab": "Projekt-Tab auswählen",
-    "Deselect project group": "Projektgruppenauswahl aufheben"
+    "Deselect project group": "Projektgruppenauswahl aufheben",
+    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "Du musst zuerst mindestens eine Unterkunft in der Nutzerverwaltung unter „Unterkünfte“ erstellen, bevor du einen Künstleraufenthalt pflegen kannst.",
+    "Select a room type": "Wähle einen Raumtyp",
+    "Enter room type name": "Gib den Raumtyp-Namen ein"
 }

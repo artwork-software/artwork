@@ -6,7 +6,7 @@
         :title="artistResidency.id ? $t('Edit artist residency') : $t('Add artist residency')"
         :description="artistResidency.id ? $t('Edit the artist residency for this project.') : $t('Add a new artist residency for this project.')"
     >
-        <form @submit.prevent="createOrUpdateArtistResidency" v-if="usePage().props.accommodations.length > 0">
+        <form @submit.prevent="createOrUpdateArtistResidency" v-if="props.accommodations.length > 0">
             <div class="px-6 pb-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- FORM -->
@@ -122,7 +122,7 @@
                                 <div>
                                     <ArtworkBaseListbox
                                         v-model="selectedAccommodation"
-                                        :items="usePage().props.accommodations"
+                                        :items="props.accommodations"
                                         by="id"
                                         label="Accommodation"
                                     />
@@ -404,6 +404,16 @@ const props = defineProps({
         type: Object,
         required: false,
         defaults: null
+    },
+    accommodations: {
+        type: Array,
+        required: true,
+        default: () => []
+    },
+    artists: {
+        type: Array,
+        required: true,
+        default: () => []
     }
 })
 
@@ -418,8 +428,8 @@ const formatDate = (date) => {
 }
 
 const emit = defineEmits(['close'])
-const selectedAccommodation = ref(usePage().props.accommodations.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || usePage().props.accommodations[0])
-const selectedRoomType = ref(selectedAccommodation.value?.room_types.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
+const selectedAccommodation = ref(props.accommodations.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || props.accommodations[0] || null)
+const selectedRoomType = ref(selectedAccommodation.value?.room_types?.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
 const selectArtist = ref(false)
 const selectedArtist = ref(props.artist_residency?.artist || null)
 const validationErrors = ref({})
@@ -525,11 +535,10 @@ const createOrUpdateArtistResidency = () => {
 
 
 const artistSearch = ref('')
-const allArtists = usePage().props.artists
 
 const filteredArtists = computed(() => {
-    if (!artistSearch.value) return allArtists
-    return allArtists.filter(a =>
+    if (!artistSearch.value) return props.artists
+    return props.artists.filter(a =>
         a.name.toLowerCase().includes(artistSearch.value.toLowerCase()) ||
         (a.civil_name && a.civil_name.toLowerCase().includes(artistSearch.value.toLowerCase()))
     )

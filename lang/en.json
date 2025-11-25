@@ -3421,5 +3421,8 @@
     "Choose a contract for the user.": "Choose a contract for the user.",
     "Search contracts...": "Search contracts...",
     "Select project tab": "Select project tab",
-    "Deselect project group": "Deselect project group"
+    "Deselect project group": "Deselect project group",
+    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency",
+    "Select a room type": "Select a room type",
+    "Enter room type name": "Enter room type name"
 }

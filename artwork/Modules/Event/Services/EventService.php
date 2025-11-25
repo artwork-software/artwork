@@ -1090,7 +1090,8 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true
+                    true,
+                    $user
                 )
             )
             ->setFreelancersForShifts(

@@ -2615,6 +2615,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::post('/{shiftPlanRequest}/reject', [ShiftPlanRequestController::class, 'reject'])
                 ->name('reject');
+
+            // My views (read-only index + show for planners)
+            Route::get('/my', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
+                ->name('my.index');
+
+            Route::get('/my/{shiftPlanRequest}', [\App\Http\Controllers\ShiftPlanRequestController::class, 'myShow'])
+                ->name('my.show');
         });
 
 
@@ -2622,6 +2629,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/{change}/acknowledge',
         [ShiftPlanRequestController::class, 'acknowledge']
     )->name('committed-shift-changes.acknowledge');
+
+    Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
+        ->name('shift-plan-requests.change.revert');
 
     Route::post('/commit-shift-workflow-request', [\App\Http\Controllers\ShiftPlanRequestController::class, 'store'])
         ->name('commit-shift-workflow-request.store');
@@ -2647,5 +2657,4 @@ Route::get(
 // /shift/check-collisions
 Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->name('shift.check-collisions');
-
 

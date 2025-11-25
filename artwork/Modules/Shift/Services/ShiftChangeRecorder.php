@@ -82,7 +82,6 @@ class ShiftChangeRecorder
                 'affected_user_id'   => null,
                 'changed_by_user_id' => Auth::id(),
                 'fields_to_watch'    => [
-                    'event_id',
                     'start_date',
                     'end_date',
                     'start',

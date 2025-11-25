@@ -15,6 +15,7 @@
             <!-- Header Card -->
             <ShiftPlanRequestHeader
                 :request="request"
+                :is-my-request="isMyRequest"
                 @accept="acceptRequest"
                 @start-reject="startReject"
             />
@@ -47,6 +48,7 @@
             :open="historyDrawer.open"
             :request="request"
             :shift="selectedShift"
+            :is-my-request="isMyRequest"
             @close="closeHistoryDrawer"
             @reject-change="rejectRequestChange"
         />
@@ -93,6 +95,7 @@ const props = defineProps({
     request: {type: Object, required: true},
     shifts: {type: Array, required: true},
     days: {type: Array, required: true},
+    isMyRequest: {type: Boolean, required: false, default: false},
 });
 
 const daysComputed = computed(() => props.days);
@@ -156,7 +159,6 @@ const updateGlobalComment = (val) => {
 const startReject = () => {
     rejectState.active = true;
     rejectState.modalOpen = true;
-    console.log('Reject mode started');
 };
 const cancelReject = () => {
     rejectState.active = false;
@@ -166,7 +168,6 @@ const cancelReject = () => {
     rejectState.dayReasons = {};
     rejectState.shiftSelections = {};
     rejectState.shiftReasons = {};
-    console.log('Reject mode cancelled');
 };
 
 const confirmReject = () => {
@@ -347,6 +348,21 @@ const selectedShift = computed(() => props.shifts.find(s => s.id === historyDraw
 
 // Stub-Funktion für Einzel-Änderung Reject (Drawer)
 const rejectRequestChange = (change) => {
-    console.log('Reject single workflow change clicked', change);
+    router.patch(
+        route('shift-plan-requests.change.revert', {
+            shiftPlanRequest: props.request.id,
+            shiftChange: change.id,
+        }),
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                // z.B. Liste der Changes aktualisieren
+            },
+            onError: (errors) => {
+                console.error('Fehler beim Zurücksetzen der Änderung:', errors);
+            },
+        },
+    );
 };
 </script>

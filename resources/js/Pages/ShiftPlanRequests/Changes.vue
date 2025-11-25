@@ -195,7 +195,7 @@
                                                 {{ change.affected_name || t('Affects shift') }}
                                             </span>
                                             <span class="text-xs text-gray-500">
-                                                {{ t(change.change_type) }}
+                                                {{ describeChange(change) }}
                                             </span>
                                         </div>
                                     </div>
@@ -326,7 +326,7 @@
                                     </span>
                                 </div>
                                 <p class="mt-0.5 text-xs text-gray-500">
-                                    {{ t(change.change_type) }}
+                                    {{ describeChange(change) }}
                                 </p>
                             </div>
                         </div>
@@ -435,6 +435,71 @@ const filteredChanges = computed(() => {
     }
     return props.changes;
 });
+
+const describeChange = (change) => {
+    const fieldChanges = change.field_changes || {};
+
+    // Relevante Keys (ohne _initial)
+    const keys = Object.keys(fieldChanges).filter((k) => k !== '_initial');
+
+    // Mapping Feldname -> Label (alles über $t())
+    const fieldLabel = (key) => {
+        switch (key) {
+            case 'start':
+                return t('Start time');
+            case 'end':
+                return t('End time');
+            case 'break_minutes':
+                return t('Break');
+            case 'qualifications':
+                return t('Qualifications');
+            case 'global_qualifications':
+                return t('Global qualifications');
+            case 'assignment':
+                return t('Assignment');
+            default:
+                return key;
+        }
+    };
+
+    // Liste der Feld-Labels (ohne assignment, das behandeln wir separat)
+    const changedFieldLabels = keys
+        .filter((k) => k !== 'assignment')
+        .map((k) => fieldLabel(k));
+
+    const fieldList = changedFieldLabels.join(', ');
+
+    switch (change.change_type) {
+        case 'user_removed_from_shift':
+            if (change.affected_name) {
+                return t('User {0} removed from shift', [change.affected_name]);
+            }
+            return t('User removed from shift');
+
+        case 'user_added_to_shift':
+            if (change.affected_name) {
+                return t('User {0} added to shift', [change.affected_name]);
+            }
+            return t('User added to shift');
+
+        case 'updated':
+            if (fieldList) {
+                return t('Shift updated ({0})', [fieldList]);
+            }
+            return t('Shift updated');
+
+        case 'revert':
+            if (fieldList) {
+                return t('Change reverted ({0})', [fieldList]);
+            }
+            return t('Change reverted');
+
+        default:
+            // Fallback: einfach den change_type übersetzen, falls es einen Key gibt
+            return t(change.change_type);
+    }
+};
+
 
 const openCraftSelector = () => {
     showCraftSelector.value = true;

@@ -153,7 +153,7 @@
                                         </div>
                                     </div>
                                     <button type="button"
-                                            v-if="request.status !== 'approved'"
+                                            v-if="request.status !== 'approved' && !isMyRequest"
                                             class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[8px] font-medium text-rose-700 hover:bg-rose-100 hover:border-rose-300 transition"
                                             @click.stop="$emit('reject-change', change)">
                                         <IconX class="h-3 w-3"/>
@@ -284,6 +284,10 @@ const props = defineProps({
     request:{
         type: Object,
         default: null
+    },
+    isMyRequest: {
+        type: Boolean,
+        default: false
     }
 });
 const {

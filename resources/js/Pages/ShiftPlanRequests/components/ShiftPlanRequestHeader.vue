@@ -31,6 +31,7 @@
                         @click="$emit('accept')"
                         icon="IconCheck"
                         :label="$t('Accept')"
+                        v-if="!isMyRequest"
                     />
                     <BaseUIButton
                         type="button"
@@ -38,6 +39,7 @@
                         @click="$emit('start-reject')"
                         icon="IconCancel"
                         :label="$t('Reject')"
+                        v-if="!isMyRequest"
                     />
                 </div>
                 <div class="flex items-center gap-2" v-if="request.reviewed_by">
@@ -61,7 +63,7 @@ import { useShiftPlanRequest } from './useShiftPlanRequest.js';
 import { useI18n } from 'vue-i18n';
 import { IconCalendarWeek, IconClock, IconInfoCircle, IconX, IconCheck } from '@tabler/icons-vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-const props = defineProps({ request: { type: Object, required: true } });
+const props = defineProps({ request: { type: Object, required: true }, isMyRequest: { type: Boolean, default: false } });
 const emits = defineEmits(['accept','start-reject']);
 const { t } = useI18n();
 const { statusClasses, formatDateTime } = useShiftPlanRequest();

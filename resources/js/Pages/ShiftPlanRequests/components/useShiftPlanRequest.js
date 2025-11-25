@@ -334,9 +334,30 @@ export function useShiftPlanRequest() {
     };
 
     const extractActivityChanges = (activity) => {
-        const attrs = activity?.properties?.attributes || {};
-        const old = activity?.properties?.old || {};
-        return Object.keys(attrs).map((fieldName) => ({ fieldName, old: old[fieldName], new: attrs[fieldName] }));
+        const props = activity?.properties || {};
+
+        // 1) Klassischer Fall: attributes + old (z.B. von deinen anderen Activity-Logs)
+        if (props.attributes && props.old) {
+            const attrs = props.attributes;
+            const old = props.old;
+
+            return Object.keys(attrs).map((fieldName) => ({
+                fieldName,
+                old: old[fieldName],
+                new: attrs[fieldName],
+                old_label: null,
+                new_label: null,
+            }));
+        }
+
+        // 2) Neuer Fall: field_changes (z.B. dein "committed_shift_change_reverted")
+        if (props.field_changes && typeof props.field_changes === 'object') {
+            // Reuse der bestehenden Logik – gleiche Struktur wie bei den anderen Tabellen
+            return extractFieldEntries(props.field_changes);
+        }
+
+        // 3) Fallback: keine detaillierten Änderungen
+        return [];
     };
 
     const hasActivityTranslations = (activity) => !!activity?.properties?.translation_key;

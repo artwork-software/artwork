@@ -3537,5 +3537,9 @@
     "Free": "Frei",
     "{0} removed from shift as {1} for {2} ({3})": "{0} wurde von der Schicht als {1} für {2} ({3}) entfernt",
     "free": "Frei",
-    "Assignment": "Zuweisung"
+    "Assignment": "Zuweisung",
+    "User {0} removed from shift": "Nutzer*in {0} aus der Schicht entfernt",
+    "User {0} added to shift": "Nutzer*in {0} der Schicht hinzugefügt",
+    "Shift updated ({0})": "Schicht aktualisiert ({0})",
+    "Change reverted ({0})": "Änderung rückgängig gemacht ({0})"
 }

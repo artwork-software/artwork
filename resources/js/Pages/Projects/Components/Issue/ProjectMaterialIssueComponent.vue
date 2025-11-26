@@ -36,9 +36,72 @@
             </div>
         </div>
 
+        <!-- Tag-Filter -->
+        <div v-if="availableTags.length" class="flex flex-col gap-1 mt-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-zinc-500">
+                    {{ $t('Filter by tags') }}:
+                </span>
+
+                <button
+                    v-for="tag in availableTags"
+                    :key="tag.id"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
+                    :style="tagChipStyle(tag)"
+                    :class="selectedTagIds.includes(tag.id)
+                        ? 'bg-opacity-20'
+                        : 'bg-white/80 hover:bg-white'"
+                    @click="toggleTag(tag.id)"
+                >
+                    <span
+                        class="inline-block h-2 w-2 rounded-full border border-white/60"
+                        :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                    />
+                    <span class="truncate max-w-[120px]">
+                        {{ tag.name }}
+                    </span>
+                </button>
+
+                <button
+                    v-if="selectedTagIds.length"
+                    type="button"
+                    class="ml-1 text-[11px] text-zinc-500 hover:text-zinc-800 underline underline-offset-2"
+                    @click="clearTags"
+                >
+                    {{ $t('Reset tag filter') }}
+                </button>
+            </div>
+
+            <!-- 👇 Aktive Tag-Filter anzeigen -->
+            <div v-if="selectedTagIds.length" class="flex flex-wrap items-center gap-2 pl-1">
+                <span class="text-[11px] text-zinc-500">
+                    {{ $t('Active tag filters') }}:
+                </span>
+
+                <button
+                    v-for="tag in activeTags"
+                    :key="tag.id"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
+                    :style="tagChipStyle(tag)"
+                    @click="toggleTag(tag.id)"
+                >
+                    <span
+                        class="inline-block h-1.5 w-1.5 rounded-full border border-white/60"
+                        :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                    />
+                    <span class="truncate max-w-[100px]">
+                        {{ tag.name }}
+                    </span>
+                    <span class="text-[10px] opacity-70">×</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Empty -->
         <div
-            v-if="projectIssues.length === 0"
+            v-if="filteredIssues.length === 0"
             class="rounded-2xl border border-zinc-200 bg-white/60 backdrop-blur p-12 text-center shadow-sm"
         >
             <IconPackage class="mx-auto mb-3 size-8 text-zinc-400" />
@@ -48,7 +111,7 @@
 
         <!-- List -->
         <article
-            v-for="issue in projectIssues"
+            v-for="issue in filteredIssues"
             :key="issue.id"
             class="group rounded-2xl border border-white/50 ring-1 ring-zinc-200/60 bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
         >
@@ -202,6 +265,27 @@
                                       <IconHome class="size-3.5" /> {{ a.room.name }}
                                     </span>
                                 </div>
+
+                                        <!-- Tags des Artikels -->
+                                        <div
+                                            v-if="a.tags && a.tags.length"
+                                            class="mt-1 flex flex-wrap items-center gap-1"
+                                        >
+                                        <span
+                                            v-for="tag in a.tags"
+                                            :key="tag.id"
+                                            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border"
+                                            :style="tagChipStyle(tag)"
+                                        >
+                                            <span
+                                                class="inline-block h-1.5 w-1.5 rounded-full border border-white/60"
+                                                :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                                            />
+                                            <span class="truncate max-w-[100px]">
+                                                {{ tag.name }}
+                                            </span>
+                                        </span>
+                                        </div>
 
                                 <!-- KPIs -->
                                 <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
@@ -366,6 +450,7 @@
         </div>
     </teleport>
 
+
     <!-- Article Images Galleria -->
     <Galleria
         v-model:activeIndex="articleActiveIndex"
@@ -409,14 +494,21 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import Galleria from "primevue/galleria";
+import {usePage} from "@inertiajs/vue3";
 
 type Manufacturer = { id:number; name:string }
 type Room = { id:number; name:string }
+
+// 🔹 Tag-Typ
+type Tag = { id:number; name:string; color?:string | null }
+
 type ArticlePivot = { quantity:number } & Record<string, unknown>
 type Article = {
     id:number; name:string; description?:string|null; quantity:number;
     room?:Room|null; manufacturer?:Manufacturer|null; pivot?:ArticlePivot|null;
     images?: { image: string; alt?: string }[] | null;
+    // 🔹 Tags an Artikeln
+    tags?: Tag[] | null;
 }
 type SpecialItem = { id:number; name:string; quantity:number; description?:string|null }
 type InternalIssue = {
@@ -435,6 +527,9 @@ const props = defineProps<{
     materials?: InternalIssue[]
     defaultOpen?: boolean
 }>()
+
+const tags = ref(usePage().props.tags ?? [])
+const tagGroups = ref(usePage().props.tagGroups ?? [])
 
 const emit = defineEmits<{
     (e:'create-issue', payload:{ project_id:number|string }):void
@@ -499,18 +594,29 @@ async function fetchMaterials() {
 }
 
 /** Nur Issues, die zu diesem Projekt gehören */
-const projectIssues = computed(() => localMaterials.value.filter(m => String(m.project_id ?? '') === String(props.project.id)))
-
+// 🔹 Issues dieses Projekts (wie gehabt)
+const projectIssues = computed(() =>
+    localMaterials.value.filter(m => String(m.project_id ?? '') === String(props.project.id))
+)
 /** Expand/Collapse State */
 const openSet = ref<Set<number>>(new Set())
 const initiallyOpen = props.defaultOpen ?? true
-projectIssues.value.forEach(i => { if (initiallyOpen) openSet.value.add(i.id) })
+
 function isOpen(id:number){ return openSet.value.has(id) }
 function toggle(id:number){ openSet.value.has(id) ? openSet.value.delete(id) : openSet.value.add(id) }
 function toggleAll(open:boolean){
     openSet.value = new Set()
-    if(open) projectIssues.value.forEach(i => openSet.value.add(i.id))
+    if (open) filteredIssues.value.forEach(i => openSet.value.add(i.id))
 }
+
+// 🔹 wenn Issues geladen / geändert werden, initial öffnen
+watch(projectIssues, (issues) => {
+    if (!initiallyOpen) return
+    if (!issues?.length) return
+    if (openSet.value.size === 0) {
+        openSet.value = new Set(issues.map(i => i.id))
+    }
+})
 
 function padTime(t?: string | null, fallback: string = '00:00:00'): string {
     if (!t) return fallback;
@@ -739,6 +845,75 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 const downloadFile = (file: FileItem) => {
     window.open(fileUrl(file), '_blank')
 }
+
+// 🔹 ausgewählte Tag-IDs
+const selectedTagIds = ref<number[]>([])
+
+
+const availableTags = computed<Tag[]>(() => {
+    return (tags.value as any[])
+        .filter((t) => !!t) // safety
+        .map((t) => ({
+            id: t.id,
+            name: t.name,
+            color: t.color ?? null,
+        }))
+})
+
+// 🔹 nach Tags gefilterte Issues
+const filteredIssues = computed(() => {
+    if (!selectedTagIds.value.length) {
+        return projectIssues.value
+    }
+
+    return projectIssues.value.filter(issue =>
+        // Issue muss *alle* ausgewählten Tags irgendwo in seinen Artikeln haben
+        selectedTagIds.value.every(tagId => issueHasTag(issue, tagId))
+    )
+})
+
+// 🔹 Tag-Helpers
+const toggleTag = (tagId: number) => {
+    const idx = selectedTagIds.value.indexOf(tagId)
+    if (idx === -1) {
+        selectedTagIds.value.push(tagId)
+    } else {
+        selectedTagIds.value.splice(idx, 1)
+    }
+}
+
+const clearTags = () => {
+    selectedTagIds.value = []
+}
+
+// 🔹 Tag-Chip-Style
+const tagChipStyle = (tag: Tag) => {
+    const base = tag.color || '#2563eb'
+    return {
+        backgroundColor: base + '10',
+        borderColor: base + '40',
+        color: base,
+    }
+}
+
+// 🔹 aktuell aktive Tags (ausgewählt)
+const activeTags = computed<Tag[]>(() => {
+    const map = new Map<number, Tag>()
+    for (const t of availableTags.value) {
+        if (selectedTagIds.value.includes(t.id)) {
+            map.set(t.id, t)
+        }
+    }
+    return Array.from(map.values())
+})
+
+// 🔹 Hilfsfunktion: hat Issue diesen Tag in irgendeinem Artikel?
+function issueHasTag(issue: InternalIssue, tagId: number): boolean {
+    return (issue.articles || []).some(a =>
+        (a.tags || []).some(t => t.id === tagId)
+    )
+}
+
 </script>
 
 <style scoped>

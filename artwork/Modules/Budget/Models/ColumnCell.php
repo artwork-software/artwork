@@ -73,6 +73,16 @@ class ColumnCell extends Model
         return $this->hasMany(CellCalculation::class, 'cell_id', 'id');
     }
 
+    public function linkedMoneySource(): BelongsTo
+    {
+        return $this->belongsTo(
+            \Artwork\Modules\MoneySource\Models\MoneySource::class,
+            'linked_money_source_id',
+            'id',
+            'linkedMoneySource'
+        );
+    }
+
     public function sageAssignedData(): HasMany
     {
         return $this->hasMany(

@@ -59,6 +59,12 @@ export default defineComponent({
                     current: route().current('inventory-management.settings.status'),
                     permission: true
                 },
+                {
+                    name: this.$t('Tags'),
+                    href: route('settings.inventory-tags.index'),
+                    current: route().current('settings.inventory-tags.index'),
+                    permission: true
+                },
             ]
         }
     }

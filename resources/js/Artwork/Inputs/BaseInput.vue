@@ -35,7 +35,7 @@
         <div v-if="isClearable" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
             <button
                 type="button"
-                @click="model = ''"
+                @click="handleClear"
                 tabindex="-1"
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
                 :aria-label="$t ? $t('Clear input') : 'Clear input'"
@@ -257,6 +257,23 @@ function maybeAutofillTime(e) {
         if (e?.target) e.target.value = next
         if (inputEl?.value) inputEl.value.value = next
         model.value = next
+    }
+}
+
+/** Clear-Handler: Wert leeren und blur explizit auslösen (Firefox-Fix) */
+function handleClear() {
+    model.value = ''
+    // Blur explizit auslösen und focusout-Event manuell dispatchen (Firefox-Fix)
+    if (inputEl?.value) {
+        const element = inputEl.value
+        element.blur()
+        // Focusout-Event manuell dispatchen, da Firefox blur() nicht immer in focusout übersetzt
+        const focusoutEvent = new FocusEvent('focusout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: null
+        })
+        element.dispatchEvent(focusoutEvent)
     }
 }
 </script>

@@ -2,7 +2,7 @@
     <ArtworkBaseModal @close="closeModal" v-if="true" title="Details" description="">
             <div class="mx-4">
                 <div>
-                    <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell.column.is_locked"/>
+                    <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell?.column?.is_locked"/>
                     <div class="mb-4">
                         <div class="hidden sm:block">
                             <div class="border-gray-200">
@@ -30,7 +30,7 @@
                         />
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
-                            <div @mouseover="!cell.column.is_locked ? calculationHovered = calculation.id : null"
+                            <div @mouseover="!cell?.column?.is_locked ? calculationHovered = calculation.id : null"
                                  @mouseout="calculationHovered = null">
                                 <div class="h-1.5 my-2 bg-silverGray"/>
                                 <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
@@ -38,13 +38,13 @@
                                         <TextInputComponent type="text"
                                                v-model="calculation.name"
                                                :label="$t('Name')" id="name"
-                                               :disabled="cell.column.is_locked"
+                                               :disabled="cell?.column?.is_locked"
                                         />
                                     </div>
                                     <div class="col-span-1">
                                         <NumberInputComponent
                                                v-model="calculation.value"
-                                               :disabled="cell.column.is_locked"
+                                               :disabled="cell?.column?.is_locked"
                                                :label="$t('Value')" :max="300000000"
                                                id="value"/>
                                     </div>
@@ -52,7 +52,7 @@
                                 <div class="col-span-full pt-4">
                                     <TextareaComponent :label="$t('Comment')"
                                                        v-model="calculation.description"
-                                                       :disabled="cell.column.is_locked"
+                                                       :disabled="cell?.column?.is_locked"
                                                        rows="4"
                                                        id="description"
                                     />
@@ -62,8 +62,8 @@
                             <div class="grid grid-cols-2 group h-2">
                                 <div class="hidden group-hover:block col-span-1">
                                     <div class="w-full relative">
-                                        <div @click="addCalculation(cell.id, calculation.position)"
-                                             v-if="!cell.column.is_locked"
+                                        <div @click="addCalculation(cell?.id, calculation.position)"
+                                             v-if="!cell?.column?.is_locked"
                                              class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
                                                 <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
@@ -79,7 +79,7 @@
                                 <div class="hidden group-hover:block col-span-1">
                                     <div class="w-full relative">
                                         <div @click="deleteCalculationFromCell(calculation)"
-                                             v-if="!cell.column.is_locked"
+                                             v-if="!cell?.column?.is_locked"
                                              class="cursor-pointer h-1 border-dashed border-t-2 border-red-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
                                                 <div class="uppercase text-red-500 text-xs font-semibold -ml-12">
@@ -96,10 +96,10 @@
                             </div>
                         </div>
                         <!-- if no calculations are present -->
-                        <div class="group h-2" v-show="this.cell.calculations?.length < 0">
+                        <div class="group h-2" v-show="this.cell.calculations?.length === 0">
                             <div class="hidden group-hover:block col-span-1">
                                 <div class="w-full relative">
-                                    <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked"
+                                    <div @click="addCalculation(cell?.id)" v-if="!cell?.column?.is_locked"
                                          class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                         <div class="flex flex-col justify-center absolute -top-7 left-1/2">
                                             <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
@@ -125,7 +125,7 @@
                             <FormButton
                                 @click="saveCalculation()"
                                 :text="$t('Save')"
-                                :disabled="cell.column.is_locked"
+                                :disabled="cell?.column?.is_locked"
                             ></FormButton>
                         </div>
                     </div>
@@ -168,7 +168,7 @@
                         </div>
                         <div class="flex justify-center">
                             <FormButton @click="addCommentToCell()" :text="$t('Save')"
-                                        :disabled="this.commentForm.description === null && this.commentForm.description === ''"
+                                        :disabled="this.commentForm.description === null || this.commentForm.description === ''"
                             ></FormButton>
                         </div>
                     </div>
@@ -178,13 +178,13 @@
                             {{ $t('Keep track of your funding sources. You can add the value to the source.') }}
                         </h2>
                         <div class="flex items-center justify-start my-6">
-                            <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"
+                            <input v-model="isLinked" type="checkbox" :disabled="cell?.column?.is_locked"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isLinked ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto text-sm">{{ $t('Link to funding source') }}</p>
                         </div>
                         <div v-if="isLinked" class="flex w-full">
-                            <div class="flex w-full" v-if="!cell.column.is_locked">
+                            <div class="flex w-full" v-if="!cell?.column?.is_locked">
                                 <div class="relative w-full">
                                     <div class="w-full flex">
                                         <Listbox as="div" v-model="linkedType" id="linked_type">
@@ -270,7 +270,7 @@
                             <FormButton
                                 :text="$t('Save')"
                                 @click="updateMoneySourceLink()"
-                                :disabled="cell.column.is_locked || selectedMoneySource === null"
+                                :disabled="cell?.column?.is_locked || selectedMoneySource === null"
                             />
                         </div>
                     </div>
@@ -339,8 +339,8 @@ export default {
     },
     data() {
         return {
-            isLinked: this.cell.linked_money_source_id !== null,
-            linkedType: this.cell.linked_type === 'EARNING' ?
+            isLinked: this.cell?.linked_money_source_id !== null,
+            linkedType: this.cell?.linked_type === 'EARNING' ?
                 {
                     name: '+',
                     type: 'EARNING'
@@ -358,19 +358,19 @@ export default {
                     type: 'COST'
                 }
             ],
-            selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
-            isCalculateTab: this.openTab === 'calculation' || (this.cell.column.type === 'empty' && this.openTab !== 'comment' && this.openTab !== 'moneySource'),
-            isCommentTab: this.openTab === 'comment' || this.cell.column.type !== 'empty' && this.openTab !== 'moneySource' && this.openTab !== 'calculation',
+            selectedMoneySource: this.cell?.linked_money_source_id !== null ? this.moneySources?.find(moneySource => moneySource.id === this.cell?.linked_money_source_id) : null,
+            isCalculateTab: this.openTab === 'calculation' || (this.cell?.column?.type === 'empty' && this.openTab !== 'comment' && this.openTab !== 'moneySource'),
+            isCommentTab: this.openTab === 'comment' || this.cell?.column?.type !== 'empty' && this.openTab !== 'moneySource' && this.openTab !== 'calculation',
             isExcludeTab: false,
             isLinkTab: this.openTab === 'moneySource',
             hoveredBorder: false,
-            isExcluded: this.cell.commented,
+            isExcluded: this.cell?.commented,
             cellComment: null,
             commentHovered: null,
             calculationHovered: null,
             commentForm: useForm({
                 description: '',
-                cellId: this.cell.id
+                cellId: this.cell?.id
             }),
             moneySource_query: '',
             moneySource_search_results: [],
@@ -386,13 +386,14 @@ export default {
     ],
     emits: ['closed'],
     mounted() {
-        if (this.cell.calculations.length === 0) {
+        if (this.cell?.calculations?.length === 0) {
             console.log('mounted')
             this.$inertia.post(
                 route('project.budget.cell-calculation.add', this.cell.id),
                 {},
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    preserveState: false
                 }
             )
         }
@@ -417,7 +418,7 @@ export default {
     },
     computed: {
         tabs() {
-            if (this.cell.column.type === 'empty') {
+            if (this.cell?.column?.type === 'empty') {
                 return [
                     {name: this.$t('Calculation'), href: '#', current: this.isCalculateTab},
                     {name: this.$t('Comment'), href: '#', current: this.isCommentTab},
@@ -432,7 +433,7 @@ export default {
         },
         sumCalculated() {
             let sum = 0;
-            this.cell.calculations.forEach((calculation) => {
+            this.cell?.calculations?.forEach((calculation) => {
                 sum += parseInt(calculation.value);
             });
 
@@ -455,12 +456,13 @@ export default {
             this.closeModal(true);
         },
         openModal() {
-            if (this.cell.calculations.length === 0) {
+            if (this.cell?.calculations?.length === 0) {
                 this.$inertia.post(
                     route('project.budget.cell-calculation.add', this.cell.id),
                     {},
                     {
-                        preserveScroll: true
+                        preserveScroll: true,
+                        preserveState: false
                     }
                 )
             }
@@ -489,19 +491,21 @@ export default {
             this.$inertia.patch(
                 route('project.budget.cell-source.update'),
                 {
-                    cell_id: this.cell.id,
-                    linked_type: this.isLinked ? this.linkedType.type : null,
-                    money_source_id: this.isLinked ? this.selectedMoneySource.id : null
+                    cell_id: this.cell?.id,
+                    linked_type: this.isLinked ? this.linkedType?.type : null,
+                    money_source_id: this.isLinked ? this.selectedMoneySource?.id : null
                 },
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    preserveState: false,
+                    onSuccess: () => {
+                        this.closeModal(true);
+                    }
                 }
             );
-
-            this.closeModal(true);
         },
         addCalculation(cellId, position) {
-            if (this.cell.calculations?.length > 0) {
+            if (this.cell?.calculations?.length > 0) {
                 this.$inertia.patch(
                     route('project.budget.cell-calculation.update'),
                     {
@@ -509,22 +513,30 @@ export default {
                     },
                     {
                         preserveScroll: true,
-                        preserveState: true,
+                        preserveState: false,
                         onSuccess: () => {
                             this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
                                 position: position
                             }, {
                                 preserveScroll: true,
-                                preserveState: true,
+                                preserveState: false,
                             })
                         }
                     }
                 );
+            } else {
+                // Wenn keine Kalkulationen vorhanden sind, direkt eine neue hinzufügen
+                this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
+                    position: position
+                }, {
+                    preserveScroll: true,
+                    preserveState: false,
+                })
             }
 
         },
         saveCalculation() {
-            const cellValue = Number(this.cell.value ?? this.cell.sage_value ?? this.cell.current_value);
+            const cellValue = Number(this.cell?.value ?? this.cell?.sage_value ?? this.cell?.current_value);
             if (cellValue === 0) {
                 this.saveAllCalculations();
             } else {
@@ -535,7 +547,7 @@ export default {
             router.patch(
                 route('project.budget.cell-calculation.update'),
                 {
-                    calculations: this.cell.calculations,
+                    calculations: this.cell?.calculations,
                 },
                 {
                     preserveScroll: true,
@@ -554,12 +566,13 @@ export default {
             this.$inertia.delete(
                 route('project.budget.cell.comment.delete', {cellComment: comment.id}),
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    preserveState: false
                 }
             );
         },
         deleteCalculationFromCell(calculation) {
-            if (this.cell.calculations?.length > 0) {
+            if (this.cell?.calculations?.length > 0) {
                 this.$inertia.patch(
                     route('project.budget.cell-calculation.update'),
                     {
@@ -567,13 +580,13 @@ export default {
                     },
                     {
                         preserveScroll: true,
-                        preserveState: true,
+                        preserveState: false,
                         onSuccess: () => {
                             this.$inertia.delete(
                                 route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}),
                                 {
                                     preserveScroll: true,
-                                    preserveState: true,
+                                    preserveState: false,
                                 }
                             );
                         }
@@ -587,16 +600,19 @@ export default {
                 return;
             }
             this.commentForm.post(
-                route('project.budget.cell.comment.store', {columnCell: this.cell.id}),
+                route('project.budget.cell.comment.store', {columnCell: this.cell?.id}),
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    preserveState: false,
+                    onSuccess: () => {
+                        this.commentForm.reset('description');
+                    }
                 }
             );
-            this.commentForm.reset('description');
         },
         updateCommentedStatus() {
             this.$inertia.patch(
-                route('project.budget.cell.commented', {columnCell: this.cell.id}),
+                route('project.budget.cell.commented', {columnCell: this.cell?.id}),
                 {
                     commented: this.isExcluded
                 }, {

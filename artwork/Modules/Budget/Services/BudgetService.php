@@ -429,7 +429,15 @@ class BudgetService
                                     'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
                                         return $hasMany->orderBy('created_at', 'desc');
                                     },
-                                    'sageAssignedData.comments.user'
+                                    'sageAssignedData.comments.user',
+                                    'calculations' => function ($calculations): void {
+                                        $calculations->orderBy('position', 'asc');
+                                    },
+                                    'comments.user',
+                                    'comments' => function ($query): void {
+                                        $query->orderBy('created_at', 'desc');
+                                    },
+                                    'linkedMoneySource'
                                 ])
                                 // sage cells should be at the end
                                 ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
@@ -447,11 +455,16 @@ class BudgetService
                         'mainPositions.subPositions.subPositionRows.cells.column',
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations' => function ($calculations): void {
-                    $calculations->orderBy('position', 'asc');
-                }, 'comments.user', 'comments', 'column' => function ($query): void {
-                    $query->orderBy('created_at', 'desc');
-                }]),
+                'selectedCell' => $selectedCell?->load([
+                    'calculations' => function ($calculations): void {
+                        $calculations->orderBy('position', 'asc');
+                    },
+                    'comments.user',
+                    'comments',
+                    'column' => function ($query): void {
+                        $query->orderBy('created_at', 'desc');
+                    }
+                ])->loadMissing('linkedMoneySource'),
                 'selectedSumDetail' => $selectedSumDetail,
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query): void {
                     $query->orderBy('created_at', 'desc');

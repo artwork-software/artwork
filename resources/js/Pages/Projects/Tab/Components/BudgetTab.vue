@@ -101,8 +101,17 @@ export default{
             this.loadBudgetError = '';
 
             try {
+                // Query-Parameter aus URL auslesen
+                const urlParams = new URLSearchParams(window.location.search);
+                const selectedCell = urlParams.get('selectedCell');
+
                 const { data } = await axios.get(
-                    route('projects.tabs.budget', { project: projectId })
+                    route('projects.tabs.budget', { project: projectId }),
+                    {
+                        params: {
+                            selectedCell: selectedCell
+                        }
+                    }
                 );
                 this.localBudgetData = data?.BudgetTab || null;
                 if (data?.users && this.headerObject?.project) {

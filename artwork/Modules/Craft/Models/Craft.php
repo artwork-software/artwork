@@ -7,6 +7,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -131,5 +132,14 @@ class Craft extends Model
     public function managingServiceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'craft_manager');
+    }
+
+    public function shiftPlanRequests(): HasMany
+    {
+        return $this->hasMany(
+            ShiftPlanRequest::class,
+            'craft_id',
+            'id'
+        );
     }
 }

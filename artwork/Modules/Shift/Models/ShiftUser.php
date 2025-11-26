@@ -8,6 +8,9 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShiftUser extends Pivot
 {
@@ -34,6 +37,7 @@ class ShiftUser extends Pivot
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
+
 
     public function shift(): BelongsTo
     {

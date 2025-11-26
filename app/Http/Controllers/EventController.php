@@ -2,22 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
+use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
-use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
-use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
-use Artwork\Modules\Calendar\DTO\ProjectDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
-use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
@@ -26,7 +22,6 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\EventCreated;
-use Artwork\Modules\Event\Events\EventDeleted;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
@@ -45,18 +40,15 @@ use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Services\EventPropertyService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -76,19 +68,16 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftWorkerService;
-use Artwork\Modules\Shift\Services\ShiftPresetService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Services\SubEventService;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
@@ -103,7 +92,6 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -148,6 +136,7 @@ class EventController extends Controller
         private readonly GeneralSettingsService $generalSettingsService,
         protected GlobalQualificationService $globalQualificationService,
         protected ShiftGroupService $shiftGroupService,
+        protected HelperService $helperService,
     ) {
     }
 
@@ -1026,19 +1015,19 @@ class EventController extends Controller
 
     public function commitShifts(Request $request): void
     {
-        $request->validate([
-            'start' => 'required|date',
-            'end' => 'required|date|after_or_equal:start',
-        ]);
+        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $request->week_number,
+            $request->year
+        );
 
-        $startDate = Carbon::parse($request->start)->startOfDay();
-        $endDate = Carbon::parse($request->end)->endOfDay();
+        $craftId = $request->get('craft_id');
 
-        $this->shiftService->commitShiftsByDate($startDate, $endDate);
+        $this->shiftService->commitShiftsByDate($start, $end, $craftId);
     }
 
     public function changeCommitShifts(Request $request, Shift $shift): void
     {
+
         $shift->update(['is_committed' => $request->boolean('commit')]);
     }
 

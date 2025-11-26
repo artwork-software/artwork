@@ -4,6 +4,7 @@ namespace Artwork\Core\Http\Middleware;
 
 use App\Settings\EventSettings;
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Permission\Models\Permission;
@@ -15,6 +16,7 @@ use Artwork\Modules\User\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -83,7 +85,49 @@ class HandleInertiaRequests extends Middleware
             $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;
         }
 
-        $isUserWorkFlowUser = $user ? ShiftCommitWorkflowUser::where('user_id', $user->id)->exists() : false;
+        $shiftCommitWorkflowEnabled = (bool) $generalSettings->shift_commit_workflow_enabled;
+
+        $isUserWorkFlowUser = false;
+        $hasCraftPlanningRights = false;
+        $isGlobalShiftPlanner = false;
+
+        if ($user) {
+            // Cache-Key pro User
+            $cacheKey = "user:{$user->id}:shift_workflow_flags";
+
+            [
+                $isUserWorkFlowUser,
+                $hasCraftPlanningRights,
+                $isGlobalShiftPlanner,
+            ] = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user) {
+                $isWorkflowUser = ShiftCommitWorkflowUser::where('user_id', $user->id)->exists();
+                $hasCraftPlanning = Craft::whereHas('craftShiftPlaner', function ($q) use ($user): void {
+                    $q->where('user_id', $user->id);
+                })->exists();
+                $isGlobalPlanner =
+                    $user->can('can view shift plan')
+                    || $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+
+                return [
+                    $isWorkflowUser,
+                    $hasCraftPlanning,
+                    $isGlobalPlanner,
+                ];
+            });
+        }
+
+        $canSeeShiftPlanReview = $shiftCommitWorkflowEnabled && (
+                $isUserWorkFlowUser
+                || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
+            );
+
+        $canSeeShiftPlanChangeList = $canSeeShiftPlanReview;
+
+        $canSeeShiftPlanRequestedPlans = $shiftCommitWorkflowEnabled && (
+                $isGlobalShiftPlanner
+                || $hasCraftPlanningRights
+                || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
+            );
 
         return array_merge(
             parent::share($request),
@@ -105,7 +149,6 @@ class HandleInertiaRequests extends Middleware
                 'businessEmail' => $generalSettings->business_email,
                 'playingTimeWindowStart' => $generalSettings->playing_time_window_start,
                 'playingTimeWindowEnd' => $generalSettings->playing_time_window_end,
-                'shiftCommitWorkflow' => $generalSettings->shift_commit_workflow_enabled,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
@@ -125,10 +168,21 @@ class HandleInertiaRequests extends Middleware
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
                 'calendarHours' => $hours,
-                'permissions' => json_decode(auth()->check() ? auth()->user()->jsPermissions() : '{}', true, 512, JSON_THROW_ON_ERROR),
+                'permissions' => json_decode(
+                    auth()->check() ?
+                        auth()->user()?->jsPermissions() :
+                    '{}',
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR
+                ),
                 // chatUsers only on reload and not on page change
                 'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
-                'isUserWorkFlowUser' => $isUserWorkFlowUser,
+                'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
+                'isUserWorkFlowUser'           => $isUserWorkFlowUser,
+                'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
+                'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,
+                'canSeeShiftPlanRequestedPlans' => $canSeeShiftPlanRequestedPlans,
             ]
         );
     }

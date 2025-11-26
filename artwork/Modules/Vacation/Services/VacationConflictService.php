@@ -54,7 +54,7 @@ readonly class VacationConflictService
 
         foreach ($shifts as $shift) {
             if ($user) {
-                $shiftCommittedBy = $shift->committedBy()->first();
+                $shiftCommittedBy = $shift->committedBy;
                 $notificationTitle = __(
                     'notification.shift.conflict',
                     [],
@@ -71,7 +71,7 @@ readonly class VacationConflictService
                         'title' => __(
                             'notification.shift.conflict_text',
                             [
-                                'username' => $shiftCommittedBy->full_name,
+                                'username' => $shiftCommittedBy?->full_name,
                                 'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
                                 'from' => $shift->start,
                                 'to' => $shift->end

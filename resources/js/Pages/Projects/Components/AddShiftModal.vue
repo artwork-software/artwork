@@ -336,9 +336,15 @@ watch(selectedCraft, () => {
 
 watch(breakMinutes, (v) => {
     // nur überschreiben, wenn Start/Ende gefüllt sind
-    if (shiftForm.start && shiftForm.end) {
+    if (shiftForm.start && shiftForm.end && !shiftForm.break_minutes) {
         shiftForm.break_minutes = v
     }
+
+    // if v is greater than 0 and shiftForm.break_minutes is less than v, set shiftForm.break_minutes to v
+    if (typeof v === 'number' && v > 0 && (typeof shiftForm.break_minutes !== 'number' || shiftForm.break_minutes < v)) {
+        shiftForm.break_minutes = v
+    }
+
 }, { immediate: true, deep: true })
 
 onMounted(() => {

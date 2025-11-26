@@ -4,10 +4,14 @@ namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\QueryBuilders\ShiftsQualificationsBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $shift_id
@@ -34,9 +38,19 @@ class ShiftsQualifications extends Model
         );
     }
 
-    public function shiftQualification(): HasOne
+    public function shiftQualification(): BelongsTo
     {
-        return $this->hasOne(ShiftQualification::class);
+        return $this->belongsTo(
+            ShiftQualification::class,
+            'shift_qualification_id', // FK auf DIESER Tabelle
+            'id',                      // PK auf shift_qualifications
+            'shiftQualifications'      // Relation Name
+        );
+    }
+
+    public function newEloquentBuilder($query): ShiftsQualificationsBuilder
+    {
+        return new ShiftsQualificationsBuilder($query);
     }
 
     public function scopeByShiftIdAndShiftQualificationId(

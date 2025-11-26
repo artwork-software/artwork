@@ -40,6 +40,7 @@ use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\ProjectDTO;
+use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
@@ -2179,7 +2180,7 @@ class ProjectController extends Controller
         $headerObject->projectGenres       = $project->genres;
 
         $headerObject->sectors             = $this->sectorService->getAll();
-        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed(); //Scheint wohl nicht gebraucht zu sein
+        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed([], ['events', 'admins']); //Scheint wohl nicht gebraucht zu sein
         $headerObject->projectSectors      = $project->sectors;
 
         $headerObject->projectState        = $project->state;
@@ -2250,6 +2251,14 @@ class ProjectController extends Controller
             true
         );
 
+        // Transform Room models to RoomDTOs for frontend compatibility
+        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
+            id: $room->id,
+            name: $room->name,
+            has_events: $room->events_count > 0,
+            admins: $room->admins->pluck('id')->toArray()
+        ));
+
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
             $endDate ? $endDate->format('Y-m-d') : null,
@@ -2278,7 +2287,7 @@ class ProjectController extends Controller
                 'managingServiceProviders',
                 'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
-            'rooms' => $rooms,
+            'rooms' => $roomDTOs,
             'eventTypes' => $this->eventTypeService->getAll(),
             'eventStatuses' => app(EventSettings::class)->enable_status
                 ? EventStatus::orderBy('order')->get()

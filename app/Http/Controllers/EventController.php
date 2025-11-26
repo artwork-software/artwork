@@ -13,6 +13,7 @@ use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\DTO\EventWithoutRoomDTO;
+use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
@@ -286,12 +287,20 @@ class EventController extends Controller
             false // Calendar view: only events determine occupancy
         );
 
+        // Transform Room models to RoomDTOs for frontend compatibility
+        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
+            id: $room->id,
+            name: $room->name,
+            has_events: $room->events_count > 0,
+            admins: $room->admins->pluck('id')->toArray()
+        ));
+
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
 
         return Inertia::render('Calendar/Index', [
             'period'                 => $period,
             'months'                 => $months,
-            'rooms'                  => $rooms,
+            'rooms'                  => $roomDTOs,
             'dateValue'              => $dateValue,
             'user_filters'           => $userCalendarFilter,
             'calendarWarningText'    => $calendarWarningText,
@@ -450,6 +459,13 @@ class EventController extends Controller
             $endDate,
         );
 
+        // Transform Room models to RoomDTOs for frontend compatibility
+        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
+            id: $room->id,
+            name: $room->name,
+            has_events: $room->events_count > 0,
+            admins: $room->admins->pluck('id')->toArray()
+        ));
 
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
@@ -465,7 +481,7 @@ class EventController extends Controller
 
         return Inertia::render('PlanningCalendar/Index', [
             'period' => $period,
-            'rooms' => $rooms,
+            'rooms' => $roomDTOs,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
             'personalFilters' => Inertia::always(fn() => $this->filterService
                 ->getPersonalFilter($user, UserFilterTypes::PLANNING_FILTER->value)),
@@ -601,6 +617,14 @@ class EventController extends Controller
             true // Shift plan view: consider standalone shifts for occupancy
         );
 
+        // Transform Room models to RoomDTOs for frontend compatibility
+        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
+            id: $room->id,
+            name: $room->name,
+            has_events: $room->events_count > 0,
+            admins: $room->admins->pluck('id')->toArray()
+        ));
+
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
             $endDate ? $endDate->format('Y-m-d') : null
@@ -618,7 +642,7 @@ class EventController extends Controller
                 'managingServiceProviders',
                 'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
-            'rooms' => $rooms,
+            'rooms' => $roomDTOs,
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),

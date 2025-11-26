@@ -156,13 +156,15 @@ readonly class CalendarDataService
     /**
      * Optimierte Room-Liste:
      * - nur benötigte Spalten
-     * - `withExists` liefert `has_events` ohne N+1
+     * - `withCount('events')` für effiziente has_events Prüfung ohne N+1
      * - `with('admins')` um N+1 für Admins zu vermeiden
      */
     public function getFilteredRooms(UserFilter $filter, $userCalendarSettings, $startDate, $endDate, bool $considerShiftsForOccupancy = false)
     {
         $userCalendarFilter = $filter;
         $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
+            ->with(['admins'])
+            ->withCount('events')
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($userCalendarFilter?->room_ids)
             ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
@@ -247,12 +249,7 @@ readonly class CalendarDataService
             return $this->datesOverlap($room->start_date, $room->end_date, $startDate, $endDate);
         });
 
-        return $filteredRooms->map(fn($room) => new RoomDTO(
-            id: $room->id,
-            name: $room->name,
-            has_events: $room->events->isNotEmpty(),
-            admins: $room->admins->pluck('id')->toArray()
-        ));
+        return $filteredRooms;
     }
 
     public function getCalendarDateRange(

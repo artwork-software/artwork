@@ -39,7 +39,7 @@
         <!-- Tag-Filter -->
         <div v-if="availableTags.length" class="flex flex-col gap-1 mt-2">
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-lexend text-zinc-500">
+                <span class="text-xs text-zinc-500">
                     {{ $t('Filter by tags') }}:
                 </span>
 

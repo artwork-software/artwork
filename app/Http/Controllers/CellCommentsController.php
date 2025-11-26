@@ -16,19 +16,39 @@ class CellCommentsController extends Controller
     {
     }
 
-    public function store(Request $request, ColumnCell $columnCell): RedirectResponse
+    public function store(Request $request, ColumnCell $columnCell)
     {
-        $columnCell->comments()->create([
+        $comment = $columnCell->comments()->create([
             'user_id' => Auth::id(),
             'description' => $request->description
         ]);
 
+        // Lade User-Relation für die Response
+        $comment->load('user');
+
+        // Wenn AJAX-Request: JSON-Response
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'comment' => $comment,
+                'message' => 'Comment saved successfully'
+            ]);
+        }
+
         return Redirect::back();
     }
 
-    public function destroy(CellComment $cellComment): RedirectResponse
+    public function destroy(CellComment $cellComment)
     {
         $this->cellCommentService->delete($cellComment);
+
+        // Wenn AJAX-Request: JSON-Response
+        if (request()->wantsJson() || request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment deleted successfully'
+            ]);
+        }
 
         return Redirect::back();
     }

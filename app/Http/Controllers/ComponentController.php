@@ -17,8 +17,8 @@ class ComponentController extends Controller
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
         $components = Cache::remember('settings_components_not_special', 600, static function () {
             return Component::notSpecial()
-                ->without(['users', 'departments'])
-                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                ->with(['users', 'departments'])
+                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
                 ->orderBy('type')
                 ->orderBy('name')
                 ->get()
@@ -27,8 +27,8 @@ class ComponentController extends Controller
 
         $componentsSpecial = Cache::remember('settings_components_special', 600, static function () {
             return Component::isSpecial()
-                ->without(['users', 'departments'])
-                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
+                ->with(['users', 'departments'])
+                ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
                 ->orderBy('name')
                 ->get();
         });

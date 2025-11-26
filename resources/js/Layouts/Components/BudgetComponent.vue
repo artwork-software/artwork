@@ -410,14 +410,13 @@
                             </tr>
                             </tbody>
                         </table>
-
                     </div>
                     <div class="ml-5 w-full bg-secondaryHover" v-else>
                         <div class="headline4 my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
                                 <IconChevronUp stroke-width="1.5" v-if="costsOpened"
-                                               class="h-6 w-6 text-primary my-auto"/>
+                                                   class="h-6 w-6 text-primary my-auto"/>
                                 <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
@@ -681,13 +680,14 @@
         :table="table"
         @closed="closeAddColumnModal()"
     />
-    <cell-detail-component
-        v-if="showCellDetailModal"
-        :cell="selectedCell"
-        :moneySources="moneySources"
+    <cell-detail-modal
+        v-if="showCellDetailModal && tempCellData"
+        :cell="tempCellData"
         :project-id="project.id"
-        :openTab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
+        @comment-saved="handleCommentSaved"
+        @comment-deleted="handleCommentDeleted"
+        @calculations-saved="handleCalculationsSaved"
     />
     <sum-detail-component
         :selectedSumDetail="selectedSumDetail"
@@ -761,7 +761,7 @@ import {
 } from '@heroicons/vue/outline';
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, PlusIcon} from "@heroicons/vue/solid";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
-import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
+import CellDetailModal from "@/Layouts/Components/CellDetailModal.vue";
 import {
     Listbox,
     ListboxButton,
@@ -824,7 +824,7 @@ export default {
         UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
         ConfirmationComponent,
-        CellDetailComponent,
+        CellDetailModal,
         AddColumnComponent,
         ChevronDownIcon,
         ChevronUpIcon,
@@ -883,6 +883,7 @@ export default {
             positionDefault: {
                 position: 0
             },
+            tempCellData: null,  // Temporäre Cell-Daten für Modal
             colors: {
                 whiteColumn: 'whiteColumn',
                 darkBlueColumn: 'darkBlueColumn',
@@ -973,6 +974,29 @@ export default {
         }
     },
     watch: {
+        // selectedCell Watch nicht mehr benötigt - wir laden Daten direkt
+        /*
+        selectedCell: {
+            handler(newSelectedCell) {
+                console.log('selectedCell changed:', newSelectedCell);
+
+                if (newSelectedCell && typeof newSelectedCell === 'object' && newSelectedCell.column && newSelectedCell.id) {
+                    console.log('Opening modal with valid cell data');
+                    this.showCellDetailModal = true;
+                } else {
+                    if (this.showCellDetailModal) {
+                        console.log('Closing modal - invalid cell data');
+                        this.showCellDetailModal = false;
+                    }
+
+                    if (newSelectedCell && typeof newSelectedCell === 'object') {
+                        console.warn('selectedCell is incomplete:', newSelectedCell);
+                    }
+                }
+            },
+            immediate: false
+        },
+        */
         userExcludeCommentedBudgetItems: {
             handler(excludeHiddenItems) {
                 if (this.$page.props.auth.user.commented_budget_items_setting === null) {
@@ -1353,21 +1377,71 @@ export default {
                 preserveState: true
             });
         },
-        openCellDetailModal(cell, type) {
-            router.get(
-                route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
-                {
-                    selectedCell: cell.id,
-                },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.cellDetailOpenTab = type;
-                        this.showCellDetailModal = true;
+        async openCellDetailModal(cell, type) {
+            console.log('openCellDetailModal called with cell:', cell, 'type:', type);
+            this.cellDetailOpenTab = type;
+
+            // 1. Finde die vollständige Cell in der Tabelle
+            const fullCell = this.findCellInTable(cell.id);
+
+            if (!fullCell) {
+                console.error('Cell not found in table:', cell.id);
+                alert(this.$t('Cell not found. Please refresh the page.'));
+                return;
+            }
+
+            console.log('Full cell found:', fullCell);
+
+            // 2. Öffne Modal SOFORT mit vorhandenen Daten
+            this.tempCellData = fullCell;
+            this.showCellDetailModal = true;
+
+            // KEIN automatisches Laden von Kalkulationen mehr!
+            // User soll selbst auf "Add calculation item" klicken
+        },
+
+        updateCellInTable(cellId, updatesOrCallback) {
+            // Finde und aktualisiere die Cell in der lokalen Tabellenstruktur
+            for (const mainPosition of this.table.main_positions || []) {
+                for (const subPosition of mainPosition.sub_positions || []) {
+                    for (const row of subPosition.sub_position_rows || []) {
+                        const cellIndex = row.cells?.findIndex(c => c.id === cellId);
+                        if (cellIndex !== -1) {
+                            const cell = row.cells[cellIndex];
+
+                            // Wenn es eine Funktion ist, rufe sie mit der Cell auf
+                            if (typeof updatesOrCallback === 'function') {
+                                updatesOrCallback(cell);
+                            } else {
+                                // Sonst: Reaktive Aktualisierung mit Object
+                                row.cells[cellIndex] = {
+                                    ...cell,
+                                    ...updatesOrCallback
+                                };
+                            }
+
+                            console.log('Cell updated in table:', cellId);
+                            return true;
+                        }
                     }
                 }
-            );
+            }
+            return false;
+        },
+
+        findCellInTable(cellId) {
+            // Durchsuche alle MainPositions > SubPositions > Rows > Cells
+            for (const mainPosition of this.table.main_positions || []) {
+                for (const subPosition of mainPosition.sub_positions || []) {
+                    for (const row of subPosition.sub_position_rows || []) {
+                        const cell = row.cells?.find(c => c.id === cellId);
+                        if (cell) {
+                            return cell;
+                        }
+                    }
+                }
+            }
+            return null;
         },
         openBudgetSumDetailModal(type, column, tab = 'comment') {
             router.get(route('projects.tab', {
@@ -1420,7 +1494,99 @@ export default {
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
+            this.tempCellData = null;  // Clear temporäre Daten
         },
+
+        handleCommentSaved(data) {
+            console.log('Comment saved event received:', data);
+
+            // Aktualisiere tempCellData (Modal-Daten) sofort
+            if (this.tempCellData && this.tempCellData.id === data.cellId) {
+                if (!this.tempCellData.comments) {
+                    this.tempCellData.comments = [];
+                }
+                // Prüfe, ob Kommentar bereits existiert (verhindert Duplikate)
+                const exists = this.tempCellData.comments.some(c => c.id === data.comment.id);
+                if (!exists) {
+                    this.tempCellData.comments.unshift(data.comment);
+                    console.log('Comment added to modal tempCellData, total:', this.tempCellData.comments.length);
+                } else {
+                    console.log('Comment already exists in tempCellData, skipping duplicate');
+                }
+            }
+
+            // Aktualisiere auch die Cell in der Tabelle für zukünftige Öffnungen
+            const success = this.updateCellInTable(data.cellId, (cell) => {
+                if (!cell.comments) {
+                    cell.comments = [];
+                }
+                // Prüfe, ob Kommentar bereits existiert (verhindert Duplikate)
+                const exists = cell.comments.some(c => c.id === data.comment.id);
+                if (!exists) {
+                    cell.comments.unshift(data.comment);
+                    console.log('Comment added to table cell, total:', cell.comments.length);
+                } else {
+                    console.log('Comment already exists in table cell, skipping duplicate');
+                }
+            });
+
+            if (success) {
+                console.log('Table updated with new comment');
+            }
+        },
+
+        handleCommentDeleted(data) {
+            console.log('Comment deleted event received:', data);
+
+            // Aktualisiere tempCellData (Modal-Daten) sofort
+            if (this.tempCellData && this.tempCellData.id === data.cellId) {
+                if (this.tempCellData.comments) {
+                    const index = this.tempCellData.comments.findIndex(c => c.id === data.commentId);
+                    if (index !== -1) {
+                        this.tempCellData.comments.splice(index, 1);
+                        console.log('Comment removed from modal tempCellData, remaining:', this.tempCellData.comments.length);
+                    }
+                }
+            }
+
+            // Aktualisiere auch die Cell in der Tabelle
+            const success = this.updateCellInTable(data.cellId, (cell) => {
+                if (cell.comments) {
+                    const index = cell.comments.findIndex(c => c.id === data.commentId);
+                    if (index !== -1) {
+                        cell.comments.splice(index, 1);
+                        console.log('Comment removed from table cell, remaining:', cell.comments.length);
+                    }
+                }
+            });
+
+            if (success) {
+                console.log('Table updated - comment removed');
+            }
+        },
+
+        handleCalculationsSaved(data) {
+            console.log('Calculations saved event received:', data);
+
+            // Aktualisiere tempCellData mit den neuen Kalkulationen
+            if (this.tempCellData && this.tempCellData.id === data.cellId) {
+                this.tempCellData.calculations = data.calculations;
+                this.tempCellData.value = data.cellValue;
+                console.log('Calculations updated in modal tempCellData, total:', data.calculations.length);
+            }
+
+            // Aktualisiere auch die Cell in der Tabelle
+            const success = this.updateCellInTable(data.cellId, (cell) => {
+                cell.calculations = data.calculations;
+                cell.value = data.cellValue;
+                console.log('Calculations updated in table cell, total:', data.calculations.length);
+            });
+
+            if (success) {
+                console.log('Table updated with new calculations');
+            }
+        },
+
         openDeleteRowModal(row) {
             this.confirmationTitle = this.$t('Delete row');
             this.confirmationDescription = this.$t('Are you sure you want to delete this line? All links etc. will also be deleted.');

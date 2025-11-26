@@ -531,6 +531,22 @@ watch(selectedType, (val) => {
     textDataResetTo(val?.availableFields ?? {})
 })
 
+/* Watch: componentToEdit änderungen -> Daten neu setzen */
+watch(() => props.componentToEdit, (newComponent) => {
+    if (!newComponent || isCreateMode.value) return
+
+    // Name aktualisieren
+    componentName.value = newComponent.name ?? ''
+
+    // textData aktualisieren
+    textDataResetTo(newComponent.data ?? {})
+
+    // Berechtigungen aktualisieren
+    modulePermissions.permission_type = newComponent.permission_type ?? 'allSeeAndEdit'
+    modulePermissions.users = deepClone(newComponent.users ?? [])
+    modulePermissions.departments = deepClone(newComponent.departments ?? [])
+}, { immediate: true, deep: true })
+
 /* Actions */
 function closeModal() {
     emit('close')

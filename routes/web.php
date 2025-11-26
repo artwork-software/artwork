@@ -2692,3 +2692,5 @@ Route::get(
 Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->name('shift.check-collisions');
 
+Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])
+    ->name('generate-avatar-image');

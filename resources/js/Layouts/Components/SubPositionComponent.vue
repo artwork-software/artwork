@@ -711,7 +711,7 @@ export default {
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true
             });
         },
@@ -842,7 +842,7 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: false
             });
         },
         checkCellColor(cell, mainPosition, subPosition) {

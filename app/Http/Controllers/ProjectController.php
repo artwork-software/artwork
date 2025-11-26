@@ -1504,7 +1504,7 @@ class ProjectController extends Controller
         Request $request,
         MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
         MoneySourceCalculationService $moneySourceCalculationService
-    ): void {
+    ) {
         ColumnCell::find($request->cell_id)
             ->update([
                 'linked_type' => $request->linked_type,
@@ -1518,6 +1518,14 @@ class ProjectController extends Controller
                     $moneySourceCalculationService,
                     $this->notificationService
                 );
+        }
+
+        // Wenn AJAX-Request: JSON-Response
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cell source updated successfully'
+            ]);
         }
     }
 
@@ -1920,26 +1928,77 @@ class ProjectController extends Controller
         }
     }
 
-    public function updateCellCalculation(Request $request): RedirectResponse
+    public function updateCellCalculation(Request $request)
     {
-        if ($request->calculations) {
-            foreach ($request->calculations as $calculation) {
-                $cellCalculation = CellCalculation::find($calculation['id']);
-                $cellCalculation->update([
-                    'name' => $calculation['name'] ?? '',
-                    'value' => $calculation['value'] ?? 0,
-                    'description' => $calculation['description'] ?? ''
-                ]);
+        // Hole cell_id aus Request (wird jetzt immer mitgesendet)
+        $cellId = $request->input('cell_id');
+        $calculations = $request->input('calculations', []);
+        $sentCalculationIds = []; // Sammle IDs der gesendeten Kalkulationen
+
+        // Verarbeite Kalkulationen nur wenn welche vorhanden sind
+        if (is_array($calculations) && count($calculations) > 0) {
+            foreach ($calculations as $calculation) {
+                // Prüfe ob Kalkulation eine ID hat (existierend) oder neu ist
+                if (isset($calculation['id']) && !empty($calculation['id']) && is_numeric($calculation['id'])) {
+                    // Existierende Kalkulation aktualisieren
+                    $cellCalculation = CellCalculation::find($calculation['id']);
+                    if ($cellCalculation) {
+                        $cellCalculation->update([
+                            'name' => $calculation['name'] ?? '',
+                            'value' => $calculation['value'] ?? 0,
+                            'description' => $calculation['description'] ?? '',
+                            'position' => $calculation['position'] ?? 0
+                        ]);
+                        $sentCalculationIds[] = $calculation['id']; // Merke diese ID
+                    }
+                } else {
+                    // Neue Kalkulation erstellen (hat keine ID oder tempId)
+                    if ($cellId) {
+                        $cellCalculation = CellCalculation::create([
+                            'cell_id' => $cellId,
+                            'name' => $calculation['name'] ?? '',
+                            'value' => $calculation['value'] ?? 0,
+                            'description' => $calculation['description'] ?? '',
+                            'position' => $calculation['position'] ?? 0
+                        ]);
+                        $sentCalculationIds[] = $cellCalculation->id; // Merke neue ID
+                    }
+                }
+            }
+        }
+
+        // Lösche alle Kalkulationen der Cell, die NICHT im Request enthalten sind
+        if ($cellId) {
+            if (count($sentCalculationIds) > 0) {
+                // Lösche nur die nicht gesendeten Kalkulationen
+                CellCalculation::where('cell_id', $cellId)
+                    ->whereNotIn('id', $sentCalculationIds)
+                    ->delete();
+            } else {
+                // Leeres Array: Lösche ALLE Kalkulationen für diese Cell
+                CellCalculation::where('cell_id', $cellId)->delete();
             }
 
-            $cell = ColumnCell::find($request->calculations[0]['cell_id']);
-            $cell->update(['value' => $cell->calculations()->sum('value')]);
+            // Aktualisiere den Cell-Value auf die Summe aller Kalkulationen
+            $cell = ColumnCell::find($cellId);
+            if ($cell) {
+                $cell->update(['value' => $cell->calculations()->sum('value')]);
+            }
+
+            // Wenn AJAX-Request: JSON-Response
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Calculations saved successfully',
+                    'cell_value' => $cell ? $cell->value : null
+                ]);
+            }
         }
 
         return Redirect::back();
     }
 
-    public function addCalculation(ColumnCell $cell, Request $request): void
+    public function addCalculation(ColumnCell $cell, Request $request)
     {
         $position = $request->integer('position');
 
@@ -1957,6 +2016,18 @@ class ProjectController extends Controller
             ->where('position', '>', $position)
             ->where('id', '!=', $newCalculation->id)
             ->increment('position');
+
+        // Wenn es ein AJAX-Request ist, gib JSON zurück statt Inertia-Reload
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'calculation' => $newCalculation,
+                'calculations' => $cell->fresh()->calculations()->orderBy('position', 'asc')->get()
+            ]);
+        }
+
+        // Für normale Requests: Void (backward compatible)
+        return;
     }
 
     /**

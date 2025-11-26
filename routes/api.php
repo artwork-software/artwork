@@ -32,10 +32,6 @@ Route::get('/timeline-preset/search', [
 ])->name('timeline-preset.search');
 
 
-Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])
-    ->name('generate-avatar-image');
-
-
 Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
 Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
 Route::middleware('auth:sanctum')->post('/chat/message/{message}/read', [ChatController::class, 'markAsRead'])->name('chat-system.mark-as-read');

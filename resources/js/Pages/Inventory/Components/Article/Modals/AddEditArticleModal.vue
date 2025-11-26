@@ -61,6 +61,90 @@
                 </div>
             </div>
 
+            <!-- tags -->
+            <div class="px-6 pb-4 border-t border-gray-100 pt-5">
+                <BasePageTitle
+                    :title="$t('Tags')"
+                    :description="$t('Use tags to better organize this article. Depending on tag permissions, saving may be restricted. You can only assign tags for which you have permission.')"
+                />
+
+                <!-- Ausgewählte Tags -->
+                <div class="mt-3 flex flex-wrap gap-2 min-h-[2rem]">
+                    <button
+                        v-for="tag in selectedTags"
+                        :key="tag.id"
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border bg-white transition"
+                        :style="{
+                            backgroundColor: (tag.color || '#4f46e5') + '10',
+                            borderColor: (tag.color || '#4f46e5') + '40',
+                            color: tag.color || '#4f46e5'
+                        }"
+                        @click="toggleTag(tag)">
+                    <span class="inline-flex h-2 w-2 rounded-full" :style="{ backgroundColor: tag.color || '#4f46e5' }"/>
+                        <span class="truncate max-w-[150px]">{{ tag.name }}</span>
+                        <IconLock v-if="tag.has_restricted_permissions" class="h-3 w-3"/>
+                        <span class="ml-1 text-[10px] opacity-70 hover:opacity-100" @click.stop="toggleTag(tag)">×</span>
+                    </button>
+
+                    <span v-if="!selectedTags.length" class="text-[11px] text-gray-400">
+                        {{ $t('No tags assigned yet. Select tags from the list below.') }}
+                    </span>
+                </div>
+
+                <!-- Tag-Suche & Auswahl -->
+                <div class="mt-4 space-y-3">
+                    <BaseInput
+                        v-model="tagSearch"
+                        :label="$t('Search tags')"
+                        :placeholder="$t('Search by tag name')"
+                        id="tag-search"
+                    />
+
+                    <div class="max-h-44 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs">
+                        <template v-for="group in tagGroupsForSelection" :key="group.key">
+                            <p class="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white shadow-sm">
+                                    <IconTag class="h-3.5 w-3.5 text-gray-400" />
+                                </span>
+                                <span class="truncate">
+                                    {{ group.label }}
+                                </span>
+                            </p>
+
+                            <div class="flex flex-wrap gap-1.5">
+                                <button
+                                    v-for="tag in group.tags"
+                                    :key="tag.id"
+                                    type="button"
+                                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 bg-white hover:bg-gray-50 transition"
+                                    :class="{
+                                        'opacity-40 cursor-not-allowed': tag.has_restricted_permissions && !userCanUseTag(tag)
+                                    }"
+                                    :style="{ borderColor: (tag.color || '#4f46e5') + '40' }"
+                                    @click="canSelectTag(tag) && toggleTag(tag)">
+                                    <span class="inline-flex h-1.5 w-1.5 rounded-full" :style="{ backgroundColor: tag.color || '#4f46e5' }"/>
+                                    <span class="truncate max-w-[140px]">{{ tag.name }}</span>
+                                    <IconLock v-if="tag.has_restricted_permissions" class="h-3 w-3" :class="userCanUseTag(tag) ? 'text-amber-500' : 'text-gray-300'"/>
+                                </button>
+                            </div>
+                        </template>
+
+                        <p v-if="!tagGroupsForSelection.length || !tagGroupsForSelection.some(g => g.tags.length)" class="text-[11px] text-gray-400 mt-1">
+                            {{ $t('No tags match your search.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Hinweis bei fehlenden Berechtigungen -->
+                <BaseAlertComponent
+                    v-if="forbiddenTags.length"
+                    class="mt-3"
+                    type="error"
+                    :message="$t('You do not have permission to use one or more of the selected tags. Please remove them or contact your administrator.')"
+                />
+            </div>
+
             <div class="bg-gray-50 px-10 -mx-4 py-6 mb-5">
                 <div class="mb-5">
                     <ArtworkBaseListbox
@@ -197,6 +281,8 @@
                     </div>
                 </div>
             </div>
+
+
 
             <!-- category properties -->
             <div class="px-6"
@@ -912,11 +998,11 @@
 
             </div>
             <div class="flex items-center justify-center my-10">
-                <FormButton type="submit" :text="article ? $t('Update') : $t('Create')"
+                <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
                             :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
                             (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
-                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity))"
-                            :class="articleForm.processing ? 'bg-gray-200 hover:bg-gray-300' : ''"/>
+                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
+                />
             </div>
         </form>
 
@@ -936,6 +1022,7 @@
             @delete="removeDetailedArticle"
             @closed="confirmSingleDeleteModalOpen = null"
         />
+
     </ArtworkBaseModal>
 
 
@@ -943,7 +1030,7 @@
 
 <script setup>
 
-import {useForm} from '@inertiajs/vue3'
+import {useForm, usePage} from '@inertiajs/vue3'
 import {computed, inject, onMounted, ref, watch, nextTick} from 'vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -959,9 +1046,24 @@ import InventoryStylelessCombobox
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
-import {IconClick, IconCopy, IconInfoCircle, IconPhoto, IconPhotoPlus, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {
+    IconClick,
+    IconCopy,
+    IconInfoCircle,
+    IconPhoto,
+    IconPhotoPlus,
+    IconPlus,
+    IconTrash,
+    IconTag,
+    IconLock
+} from '@tabler/icons-vue'
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
 
+
+const $t = useTranslation()
 const acrossValues = ref({})
 const props = defineProps({article: {type: Object, required: false, default: null}})
 
@@ -970,6 +1072,10 @@ const categories = inject('categories')
 const rooms = inject('rooms')
 const manufacturers = inject('manufacturers')
 const statuses = inject('statuses')
+
+// inject tag groups and tags
+const tagGroups = inject('tagGroups', [])
+const tags = inject('tags', [])
 
 const emits = defineEmits(['close'])
 
@@ -1037,6 +1143,9 @@ const articleForm = useForm({
     oldImages: [],
     newImages: [],
     removed_image_ids: [],
+
+    // 🔴 NEU: Tags am Artikel
+    tag_ids: props.article?.tags?.map(t => t.id) ?? [],
     properties: props.article ? props.article.properties.map(p => ({
         id: p.id,
         name: p.name,
@@ -1229,6 +1338,13 @@ const capitalizeFirstLetter = (v) => String(v).charAt(0).toUpperCase() + String(
 
 
 const submit = () => {
+
+    if (!canSaveWithTags.value) {
+        // Optional: Scroll zum Tag-Bereich oder Toast
+        return
+    }
+
+
     articleForm.main_image_index = currentMainImage.value
     articleForm.inventory_sub_category_id = selectedSubCategory.value?.id ?? null
 
@@ -1693,6 +1809,109 @@ const bulkDeleteSelected = () => {
   activeDetailedArticleForEditing.value = arr.length ? arr[0] : null
 }
 
+
+const page = usePage()
+const currentUser = computed(() => page.props.auth?.user || null)
+const currentUserDepartmentIds = computed(() =>
+    (page.props.auth?.user?.department_ids || [])
+)
+
+// 🔹 Tag-Auswahl-States
+const tagSearch = ref('')
+
+const selectedTagIds = computed({
+    get: () => articleForm.tag_ids || [],
+    set: (val) => { articleForm.tag_ids = val || [] }
+})
+
+const allTags = computed(() => tags || [])
+
+const selectedTags = computed(() =>
+    allTags.value.filter(t => selectedTagIds.value.includes(t.id))
+)
+
+const availableTags = computed(() => {
+    const q = tagSearch.value.toLowerCase()
+    return allTags.value.filter(tag => {
+        if (selectedTagIds.value.includes(tag.id)) return false
+        if (!q) return true
+        return (tag.name || '').toLowerCase().includes(q)
+    })
+})
+
+// 🔹 Tags nach Gruppen für Auswahl gruppieren
+const tagGroupsForSelection = computed(() => {
+    const map = new Map()
+
+    ;(tagGroups || []).forEach(g => {
+        map.set(g.id, {
+            key: `g-${g.id}`,
+            label: g.name,
+            tags: []
+        })
+    })
+
+    const ungrouped = {
+        key: 'ungrouped',
+        label: $t('Ungrouped tags'),
+        tags: []
+    }
+
+    availableTags.value.forEach(tag => {
+        const gid = tag.inventory_tag_group_id
+        if (gid && map.has(gid)) {
+            map.get(gid).tags.push(tag)
+        } else {
+            ungrouped.tags.push(tag)
+        }
+    })
+
+    const result = Array.from(map.values()).filter(g => g.tags.length)
+    if (ungrouped.tags.length) result.push(ungrouped)
+
+    return result
+})
+
+// 🔹 Berechtigungsprüfung je Tag
+const userCanUseTag = (tag) => {
+    if (!tag?.has_restricted_permissions) return true
+
+    const user = currentUser.value
+    if (!user) return false
+
+    // explizit freigegebene User
+    if ((tag.allowed_users || []).some(u => u.id === user.id)) {
+        return true
+    }
+
+    // Departments (Teams)
+    const deptIds = currentUserDepartmentIds.value
+    if (!deptIds.length) return false
+
+    return (tag.allowed_departments || []).some(d => deptIds.includes(d.id))
+}
+
+// 🔹 Tags, für die der User KEINE Berechtigung hat
+const forbiddenTags = computed(() =>
+    selectedTags.value.filter(t => !userCanUseTag(t))
+)
+
+// 🔹 darf gespeichert werden?
+const canSaveWithTags = computed(() => forbiddenTags.value.length === 0)
+
+// 🔹 kann Tag angeklickt werden?
+const canSelectTag = (tag) => userCanUseTag(tag)
+
+// 🔹 Tag toggeln
+const toggleTag = (tag) => {
+    const ids = new Set(selectedTagIds.value)
+    if (ids.has(tag.id)) {
+        ids.delete(tag.id)
+    } else {
+        ids.add(tag.id)
+    }
+    selectedTagIds.value = Array.from(ids)
+}
 </script>
 
 

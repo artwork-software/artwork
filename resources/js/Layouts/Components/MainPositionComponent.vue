@@ -421,7 +421,7 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: false
             });
         },
         addMainPosition(mainPosition) {
@@ -431,7 +431,7 @@ export default {
                 positionBefore: mainPosition.position
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: false
             });
         },
         openSubPositionSumDetailModal(subPosition, column, type) {

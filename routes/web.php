@@ -1,5 +1,7 @@
 <?php
 
+use Artwork\Modules\Inventory\Http\Controllers\InventoryTagController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryTagGroupController;
 use App\Http\Controllers\HelperController;
 use App\Http\Controllers\ShiftPlanRequestController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
@@ -1631,6 +1633,38 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'inventory/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevantForInventory']
         )->name('event-type.update.inventory.relevant');
+
+
+        Route::group(['prefix' => 'inventory-tags'], static function (): void {
+            Route::get('/', [InventoryTagGroupController::class, 'index'])
+                ->name('settings.inventory-tags.index');
+
+            // inventory.tag-groups.store
+            Route::post('/tag-groups/store', [InventoryTagGroupController::class, 'store'])
+                ->name('settings.inventory-tag-groups.store');
+
+            // settings.inventory-tags.store
+            Route::post('/store', [InventoryTagController::class, 'store'])
+                ->name('settings.inventory-tags.store');
+
+            // settings.inventory-tags.update
+            Route::patch('/{inventoryTag}/update', [InventoryTagController::class, 'update'])
+                ->name('settings.inventory-tags.update');
+
+            Route::post('settings/inventory-tag-groups/reorder', [InventoryTagGroupController::class, 'reorderGroups'])
+                ->name('settings.inventory-tag-groups.reorder');
+
+            Route::post('settings/inventory-tags/reorder', [InventoryTagController::class, 'reorderTags'])
+                ->name('settings.inventory-tags.reorder');
+
+            // settings.inventory-tag-groups.destroy
+            Route::delete('/tag-groups/{inventoryTagGroup}/delete', [InventoryTagGroupController::class, 'destroy'])
+                ->name('settings.inventory-tag-groups.destroy');
+
+            // settings.inventory-tags.destroy
+            Route::delete('/{inventoryTag}/delete', [InventoryTagController::class, 'destroy'])
+                ->name('settings.inventory-tags.destroy');
+        });
     });
 
     Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
@@ -2658,3 +2692,5 @@ Route::get(
 Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->name('shift.check-collisions');
 
+Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])
+    ->name('generate-avatar-image');

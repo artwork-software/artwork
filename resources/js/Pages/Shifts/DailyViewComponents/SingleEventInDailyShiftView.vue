@@ -83,7 +83,7 @@
         :project="null"
         :event="event"
         :wantedRoomId="wantedRoom"
-        :isAdmin="can('artwork admin')"
+        :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         :requires-axios-requests="true"
@@ -165,6 +165,7 @@ const wantedDate = ref(null);
 const isPlanning = ref(false);
 const roomCollisions = ref([]);
 
+const hasAdminRole = () => is('artwork admin')
 
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue'),

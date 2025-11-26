@@ -17,6 +17,7 @@ use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
+use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\ProductBasket;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
@@ -292,6 +293,7 @@ class User extends Model implements
         'full_name',
         'type',
         'formated_work_time_balance',
+        'department_ids',
         //'assigned_craft_ids',
     ];
 
@@ -413,6 +415,11 @@ class User extends Model implements
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
+    }
+
+    public function getDepartmentIdsAttribute(): array
+    {
+        return $this->departments()->pluck('departments.id')->toArray();
     }
 
     public function projects(): BelongsToMany
@@ -814,6 +821,16 @@ class User extends Model implements
     public function scopeExcludeDeletedPlaceholder(Builder $builder): Builder
     {
         return $builder->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+    }
+
+    public function inventoryTagsWithEditPermission(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            InventoryTag::class,
+            'inventory_tag_user',
+            'user_id',
+            'inventory_tag_id'
+        );
     }
 
 }

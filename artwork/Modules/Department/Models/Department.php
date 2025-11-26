@@ -5,6 +5,7 @@ namespace Artwork\Modules\Department\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Models\ChecklistTemplate;
+use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
@@ -75,5 +76,15 @@ class Department extends Model
         return [
             'name' => $this->name,
         ];
+    }
+
+    public function inventoryTagsWithEditPermission(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            InventoryTag::class,
+            'inventory_tag_department',
+            'department_id',
+            'inventory_tag_id'
+        );
     }
 }

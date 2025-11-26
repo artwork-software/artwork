@@ -10,6 +10,8 @@ use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
+use Artwork\Modules\Inventory\Models\InventoryTag;
+use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
@@ -101,6 +103,15 @@ class InventoryCategoryController extends Controller
             'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
             'countsByStatus' => $this->articleService->getCountsByStatus($articles),
             'productBaskets' => $this->productBasketService->getUserBasket(),
+            'tagGroups' => InventoryTagGroup::with([
+                'tags' => function ($query): void {
+                    $query->with(['allowedUsers', 'allowedDepartments'])
+                        ->orderBy('position');
+                }
+            ])->orderBy('position')->get(),
+            'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
+                ->orderBy('position')
+                ->get()
         ]);
     }
 

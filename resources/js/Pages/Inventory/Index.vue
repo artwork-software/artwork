@@ -66,7 +66,7 @@
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
                     </div>
                     <div v-if="props.articles.data.length > 0">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4" v-if="gridLayout">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4 items-stretch" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <div class="relative">
                                     <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-zinc-500/30 rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
@@ -226,6 +226,16 @@ const props = defineProps({
         type: Object,
         required: false,
         default: () => ({})
+    },
+    tagGroups: {
+        type: Object,
+        required: false,
+        default: () => ({})
+    },
+    tags: {
+        type: Object,
+        required: false,
+        default: () => ({})
     }
 })
 
@@ -234,6 +244,10 @@ provide('rooms', props.rooms)
 provide('manufacturers', props.manufacturers)
 provide('categories', props.categories)
 provide('statuses', props.statuses)
+
+// provide tag groups and tags for articles
+provide('tagGroups', props.tagGroups)
+provide('tags', props.tags)
 
 
 

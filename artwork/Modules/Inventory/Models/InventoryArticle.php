@@ -10,6 +10,7 @@ use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
@@ -308,6 +309,16 @@ class InventoryArticle extends Model
             'reserved'  => $usedQuantity,
             'quantity'  => $total,
         ];
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            InventoryTag::class,
+            'inventory_article_inventory_tag',
+            'inventory_article_id',
+            'inventory_tag_id'
+        )->withTimestamps();
     }
 
 

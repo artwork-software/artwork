@@ -3428,7 +3428,7 @@ class EventController extends Controller
     private function getCurrentUserCrafts(User $user): \Illuminate\Database\Eloquent\Collection
     {
         // If user is admin, return all crafts with qualifications
-        if ($user->hasRole('artwork admin') || $user->hasPermissionTo('artwork admin')) {
+        if ($user->hasRole('artwork admin')) {
             return $this->craftService->getAll(['qualifications']);
         }
 

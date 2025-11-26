@@ -35,6 +35,11 @@ class StoreInventoryArticleRequest extends FormRequest
             'statusValues' => ['nullable', 'array'],
             'statusValues.*.id' => ['required', 'integer', 'exists:inventory_article_statuses,id'],
 
+
+            // 🔹 NEU: Tags am Artikel
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:inventory_tags,id'],
+
         ];
     }
 }

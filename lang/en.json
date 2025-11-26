@@ -3578,5 +3578,13 @@
     "Tags help you filter your inventory more precisely and control who is allowed to create, edit or delete tagged items.": "Tags help you filter your inventory more precisely and control who is allowed to create, edit or delete tagged items.",
     "Are you sure you want to delete the tag group “{0}”? Tags will remain, but no longer be grouped.": "Are you sure you want to delete the tag group “{0}”? Tags will remain, but no longer be grouped.",
     "Are you sure you want to delete the tag “{0}”? It will be removed from all items.": "Are you sure you want to delete the tag “{0}”? It will be removed from all items.",
-    "Delete tag group": "Delete tag group"
+    "Delete tag group": "Delete tag group",
+    "Use tags to better organize this article. Depending on tag permissions, saving may be restricted. You can only assign tags for which you have permission.": "Use tags to better organize this article. Depending on tag permissions, saving may be restricted. You can only assign tags for which you have permission.",
+    "No tags assigned yet. Select tags from the list below.": "No tags assigned yet. Select tags from the list below.",
+    "Search tags": "Search tags",
+    "No tags match your search.": "No tags match your search.",
+    "You do not have permission to use one or more of the selected tags. Please remove them or contact your administrator.": "You do not have permission to use one or more of the selected tags. Please remove them or contact your administrator.",
+    "Filter by tags": "Filter by tags",
+    "Reset tag filter": "Reset tag filter",
+    "Active tag filters": "Active tag filters"
 }

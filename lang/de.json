@@ -3586,5 +3586,13 @@
     "Tags help you filter your inventory more precisely and control who is allowed to create, edit or delete tagged items.": "Tags helfen dir, dein Inventar präziser zu filtern und zu steuern, wer markierte Artikel erstellen, bearbeiten oder löschen darf.",
     "Are you sure you want to delete the tag group “{0}”? Tags will remain, but no longer be grouped.": "Möchtest du die Tag-Gruppe „{0}“ wirklich löschen? Tags bleiben erhalten, werden aber nicht mehr gruppiert.",
     "Are you sure you want to delete the tag “{0}”? It will be removed from all items.": "Möchtest du den Tag „{0}“ wirklich löschen? Er wird von allen Artikeln entfernt.",
-    "Delete tag group": "Lösche Tag-Gruppe"
+    "Delete tag group": "Lösche Tag-Gruppe",
+    "Use tags to better organize this article. Depending on tag permissions, saving may be restricted. You can only assign tags for which you have permission.": "Verwende Tags, um diesen Artikel besser zu organisieren. Je nach Tag-Berechtigungen kann das Speichern eingeschränkt sein. Du kannst nur Tags zuweisen, für die du eine Berechtigung hast.",
+    "No tags assigned yet. Select tags from the list below.": "Noch keine Tags zugewiesen. Wähle Tags aus der Liste unten aus.",
+    "Search tags": "Tags suchen",
+    "No tags match your search.": "Keine Tags entsprechen deiner Suche.",
+    "You do not have permission to use one or more of the selected tags. Please remove them or contact your administrator.": "Du hast keine Berechtigung, einen oder mehrere der ausgewählten Tags zu verwenden. Bitte entferne sie oder kontaktiere deinen Administrator.",
+    "Filter by tags": "Nach Tags filtern",
+    "Reset tag filter": "Tag-Filter zurücksetzen",
+    "Active tag filters": "Aktive Tag-Filter"
 }

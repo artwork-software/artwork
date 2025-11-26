@@ -10,7 +10,17 @@ class ProjectTabMaterialIssueService
     public function buildMaterialIssuePayload(Project $project): array
     {
         $materials = InternalIssue::where('project_id', $project->id)
-            ->with(['articles.images', 'specialItems', 'files', 'responsibleUsers'])
+            ->with([
+                'articles.images',
+                // 🔹 Tags der Artikel
+                'articles.tags',
+                // falls du auch Berechtigungen an den Tags brauchst:
+                'articles.tags.allowedUsers',
+                'articles.tags.allowedDepartments',
+                'specialItems',
+                'files',
+                'responsibleUsers',
+            ])
             ->get();
 
         return [

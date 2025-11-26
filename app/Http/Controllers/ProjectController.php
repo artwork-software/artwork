@@ -60,6 +60,8 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
+use Artwork\Modules\Inventory\Models\InventoryTag;
+use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
@@ -2287,6 +2289,15 @@ class ProjectController extends Controller
                 'managingServiceProviders',
                 'users', 'freelancers', 'serviceProviders', 'qualifications'
             ]),
+            'tagGroups' => InventoryTagGroup::with([
+                'tags' => function ($query): void {
+                    $query->with(['allowedUsers', 'allowedDepartments'])
+                        ->orderBy('position');
+                }
+            ])->orderBy('position')->get(),
+            'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
+                ->orderBy('position')
+                ->get(),
             'rooms' => $roomDTOs,
             'eventTypes' => $this->eventTypeService->getAll(),
             'eventStatuses' => app(EventSettings::class)->enable_status

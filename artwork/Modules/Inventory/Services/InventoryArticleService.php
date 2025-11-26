@@ -5,10 +5,13 @@ namespace Artwork\Modules\Inventory\Services;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
+use Artwork\Modules\Inventory\Repositories\InventoryCategoryRepository;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class InventoryArticleService
 {
@@ -23,8 +27,10 @@ class InventoryArticleService
      * @param InventoryArticleRepository $articleRepository
      */
     public function __construct(
-        protected readonly InventoryArticleRepository $articleRepository
-    ) {}
+        protected readonly InventoryArticleRepository $articleRepository,
+        protected readonly AuthManager $auth,
+    ) {
+    }
 
     /**
      * Get paginated list of articles with optional filters
@@ -42,22 +48,37 @@ class InventoryArticleService
     ): LengthAwarePaginator {
         $query = $this->buildArticleQuery($category, $subCategory, $search);
 
-        // Optimiere durch Eager Loading aller benötigten Relationen
         $query->with([
             'category',
             'subCategory',
             'properties',
-            'images' => function ($query) {
+            'images' => function ($query): void {
                 $query->orderBy('is_main_image', 'desc')->orderBy('id');
             },
             'statusValues',
             'detailedArticleQuantities.status',
+            'tags',
+            'tags.allowedUsers',
+            'tags.allowedDepartments',
         ]);
 
+        // Property-Filter
         $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
         $query = $this->articleRepository->applyFilters($query, $filters);
 
-        //per_page = api, entitiesPerPage = frontend
+        // 🔹 Tag-Filter
+        $tagIds = Request::input('tag_ids', []);
+
+        if (!empty($tagIds) && is_array($tagIds)) {
+            $tagIds = array_filter(array_map('intval', $tagIds));
+
+            if (!empty($tagIds)) {
+                $query->whereHas('tags', function ($q) use ($tagIds): void {
+                    $q->whereIn('inventory_tags.id', $tagIds);
+                });
+            }
+        }
+
         $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
 
         return $query->paginate($perPage);
@@ -75,8 +96,7 @@ class InventoryArticleService
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
         ?string $search = ''
-    ): Builder|HasMany
-    {
+    ): Builder|HasMany {
         $query = $this->articleRepository->baseQuery();
 
         if ($search) {
@@ -139,8 +159,7 @@ class InventoryArticleService
                     'name'  => $d->status->name,
                     'color' => $d->status->color ?? '#ccc',
                     'count' => (int) ($d->quantity ?? 0),
-                ])
-            )
+                ]))
             ->groupBy('id')
             ->map(static fn ($rows) => [
                 'name'  => $rows->first()['name'],
@@ -188,7 +207,10 @@ class InventoryArticleService
             $this->processArticleProperties($article, $request);
             $this->processStatusValues($article, $request->get('statusValues', []));
 
-            return $article->load(['properties', 'images', 'statusValues']);
+            // 🔹 NEU: Tags verarbeiten & Berechtigungen prüfen
+            $this->processArticleTags($article, $request->input('tag_ids', []));
+
+            return $article->load(['properties', 'images', 'statusValues', 'tags']);
         });
     }
 
@@ -222,9 +244,10 @@ class InventoryArticleService
             if ($article && isset($article->detailedArticleQuantities)) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
                     // Stelle sicher, dass detailed, status und id existieren
-                    if ($detailed && isset($detailed->status) && isset($detailed->status->id) &&
-                        $detailed->status->id == 1 && isset($detailed->id)) {
-
+                    if (
+                        $detailed && isset($detailed->status) && isset($detailed->status->id) &&
+                        $detailed->status->id == 1 && isset($detailed->id)
+                    ) {
                         // Sicheres Zugreifen auf pivot und value
                         if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
                             $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value;
@@ -258,7 +281,11 @@ class InventoryArticleService
             $this->processArticleProperties($article->fresh(), $request);
             $this->processStatusValues($article, $request->get('statusValues', []));
 
-            $article = $article->fresh(['detailedArticleQuantities.status', 'statusValues']);
+            // 🔹 NEU: Tags verarbeiten + Berechtigungen prüfen
+            $this->processArticleTags($article, $request->input('tag_ids', []));
+
+            // Artikel neu laden inkl. Status, Detailed-Status und Tags
+            $article = $article->fresh(['detailedArticleQuantities.status', 'statusValues', 'tags']);
 
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
@@ -468,7 +495,7 @@ class InventoryArticleService
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
      * @return void
      */
-    protected function processArticleImages(InventoryArticle $article, $request): void
+    protected function processArticleImages(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
     {
         $images = $request->file('newImages') ?? [];
         if (count($images) > 0) {
@@ -484,7 +511,7 @@ class InventoryArticleService
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
      * @return void
      */
-    protected function processArticleProperties(InventoryArticle $article, $request): void
+    protected function processArticleProperties(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
     {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
         $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
@@ -600,5 +627,74 @@ class InventoryArticleService
     public function getAvailableStock(InventoryArticle $article, string $startDate, string $endDate): array
     {
         return $this->articleRepository->getAvailableStock($article, $startDate, $endDate);
+    }
+
+    /**
+     * Verknüpft Tags mit dem Artikel und prüft, ob der aktuelle User diese Tags verwenden darf.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function processArticleTags(InventoryArticle $article, array $tagIds): void
+    {
+        // Kein Tag übergeben → alles detach(en)
+        if (empty($tagIds)) {
+            if (method_exists($article, 'tags')) {
+                $article->tags()->sync([]);
+            }
+            return;
+        }
+
+        /** @var \Artwork\Modules\User\Models\User|\App\Models\User|null $user */
+        $user = $this->auth->user();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'tag_ids' => [__('You must be logged in to assign tags.')],
+            ]);
+        }
+
+        // Tags + Berechtigungs-Beziehungen laden
+        $tags = InventoryTag::query()
+            ->with([
+                'allowedUsers:id',
+                'allowedDepartments:id',
+            ])
+            ->whereIn('id', $tagIds)
+            ->get();
+
+        // Departments des aktuellen Users (Relation-Namen bitte ggf. anpassen)
+        $userDepartmentIds = method_exists($user, 'departments')
+            ? $user->departments()->pluck('departments.id')->all()
+            : [];
+
+        $unauthorized = [];
+
+        foreach ($tags as $tag) {
+            // Unrestricted Tags → immer erlaubt
+            if (! $tag->has_restricted_permissions) {
+                continue;
+            }
+
+            $allowedUserIds = $tag->allowedUsers->pluck('id')->all();
+            $allowedDepartmentIds = $tag->allowedDepartments->pluck('id')->all();
+
+            $isUserExplicitlyAllowed = in_array($user->id, $allowedUserIds, true);
+            $hasMatchingDepartment = ! empty(array_intersect($userDepartmentIds, $allowedDepartmentIds));
+
+            if (! $isUserExplicitlyAllowed && ! $hasMatchingDepartment) {
+                $unauthorized[] = $tag;
+            }
+        }
+
+        if (! empty($unauthorized)) {
+            throw ValidationException::withMessages([
+                'tag_ids' => [__('You are not allowed to use one or more selected tags.')],
+            ]);
+        }
+
+        // Alles OK → Tags syncen
+        if (method_exists($article, 'tags')) {
+            $article->tags()->sync($tags->pluck('id')->all());
+        }
     }
 }

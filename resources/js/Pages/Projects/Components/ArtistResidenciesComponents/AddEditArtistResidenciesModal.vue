@@ -428,8 +428,9 @@ const formatDate = (date) => {
 }
 
 const emit = defineEmits(['close'])
-const selectedAccommodation = ref(props.accommodations.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || props.accommodations[0] || null)
+const selectedAccommodation = ref(props.accommodations?.find(accommodation => accommodation.id === props.artist_residency?.accommodation_id) || props.accommodations[0] || null)
 const selectedRoomType = ref(selectedAccommodation.value?.room_types?.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
+
 const selectArtist = ref(false)
 const selectedArtist = ref(props.artist_residency?.artist || null)
 const validationErrors = ref({})

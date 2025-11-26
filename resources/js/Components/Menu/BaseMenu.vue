@@ -86,11 +86,13 @@
             >
                 <MenuItems
                     class="z-50 mt-2 origin-top-right focus:outline-none"
-                    :class="[menuWidth]"
                 >
                     <div
                         class="rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5"
-                        :class="[needsMaxHeight ? 'max-h-72 overflow-auto xl:max-h-none' : '']"
+                        :class="[
+                            menuWidth,
+                            needsMaxHeight ? 'max-h-72 overflow-auto xl:max-h-none' : ''
+                        ]"
                     >
                         <slot />
                     </div>
@@ -141,7 +143,7 @@ const props = withDefaults(defineProps<{
     dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,
-    menuWidth: 'w-fit',
+    menuWidth: '!w-fit max-w-xs',
     whiteIcon: false,
     hasNoOffset: false,
     showCustomIcon: false,

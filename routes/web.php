@@ -2,6 +2,8 @@
 
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryTagGroupController;
+use App\Http\Controllers\HelperController;
+use App\Http\Controllers\ShiftPlanRequestController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
@@ -675,7 +677,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
-    Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])->name('dashboard.redirect-to-calendar');
+    Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])
+        ->name('dashboard.redirect-to-calendar');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
@@ -1617,6 +1620,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'updateShiftSettingsUseFirstNameForSort'
             ]
         )->name('shift.settings.update.shift-settings.use-first-name-for-sort');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
@@ -2549,7 +2553,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'store']
     )->name('shifts.requestWorkTimeChange');
 
-    Route::group(['prefix' => 'work-time-request'], function (): void {
+    Route::group(['prefix' => 'work-time-request'], static function (): void {
         // work-time-request.index
         Route::get('/', [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'index'])
             ->name('work-time-request.index');
@@ -2614,6 +2618,63 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ShiftSettingsController::class, 'saveWarningMultipleAssignments']
     )->name('shift-settings.update-warn-multiple-assignments');
 
+    Route::prefix('shifts/approvals')->name('shifts.approvals.')->group(function (): void {
+        Route::get('/review', [\App\Http\Controllers\ShiftPlanRequestController::class, 'index'])
+            ->name('review');          // Prüfungsanfragen
+
+        Route::get('/changes', [\App\Http\Controllers\ShiftPlanRequestController::class, 'changes'])
+            ->name('changes');         // Änderungsliste
+
+        Route::get('/{craft?}/changes', [\App\Http\Controllers\ShiftPlanRequestController::class, 'changes'])
+            ->name('changes-craft');         // Änderungsliste
+
+        Route::get('/requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
+            ->name('requests');        // Angefragte Dienstpläne
+    });
+
+
+
+    Route::prefix('shift-plan-requests')
+        ->name('shift-plan-requests.')
+        ->group(function (): void {
+            /*Route::get('/', [ShiftPlanRequestController::class, 'index'])
+                ->name('index');*/
+
+            Route::get('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'show'])
+                ->name('show');
+
+            // accept
+            Route::post('/{shiftPlanRequest}/accept', [ShiftPlanRequestController::class, 'accept'])
+                ->name('accept');
+
+            Route::post('/{shiftPlanRequest}/reject', [ShiftPlanRequestController::class, 'reject'])
+                ->name('reject');
+
+            // My views (read-only index + show for planners)
+            Route::get('/my', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
+                ->name('my.index');
+
+            Route::get('/my/{shiftPlanRequest}', [\App\Http\Controllers\ShiftPlanRequestController::class, 'myShow'])
+                ->name('my.show');
+        });
+
+
+    Route::post(
+        '/committed-shift-changes/{change}/acknowledge',
+        [ShiftPlanRequestController::class, 'acknowledge']
+    )->name('committed-shift-changes.acknowledge');
+
+    Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
+        ->name('shift-plan-requests.change.revert');
+
+    Route::post('/commit-shift-workflow-request', [\App\Http\Controllers\ShiftPlanRequestController::class, 'store'])
+        ->name('commit-shift-workflow-request.store');
+
+
+    Route::group(['prefix' => 'api/helper'], function (): void {
+        Route::get('/calendar-week', [HelperController::class, 'getDateRangeByCalendarWeekAndYear'])
+            ->name('api.helper.calendar-week');
+    });
 });
 
 Route::get(
@@ -2630,3 +2691,4 @@ Route::get(
 // /shift/check-collisions
 Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->name('shift.check-collisions');
+

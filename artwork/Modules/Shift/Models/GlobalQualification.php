@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Models;
 
+use Artwork\Modules\Shift\QueryBuilders\ShiftsQualificationsBuilder;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -64,4 +65,10 @@ class GlobalQualification extends Model
             'qualifiable_id'
         );
     }
+
+    public function newEloquentBuilder($query): ShiftsQualificationsBuilder
+    {
+        return new ShiftsQualificationsBuilder($query);
+    }
+
 }

@@ -22,6 +22,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -63,6 +66,8 @@ class Shift extends Model
     use HasFactory;
     use HasChangesHistory;
     use SoftDeletes;
+    use LogsActivity;
+
 
     protected $fillable = [
         'event_id',
@@ -80,13 +85,17 @@ class Shift extends Model
         'committing_user_id',
         'room_id',
         'project_id',
-        'shift_group_id'
+        'shift_group_id',
+        'in_workflow',
+        'current_request_id',
+        'workflow_rejection_reason'
     ];
 
     protected $casts = [
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
         'is_committed' => 'boolean',
+        'in_workflow'   => 'boolean',
         'start_date' => 'datetime:d. M Y',
         'end_date' => 'datetime:d. M Y',
     ];
@@ -106,6 +115,37 @@ class Shift extends Model
         'max_users',
         'days_of_shift'
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('shift')
+            ->logOnly([
+                'start_date',
+                'end_date',
+                'start',
+                'end',
+                'break_minutes',
+                'craft.name',
+                'description',
+                'room.name',
+                'project.name',
+                'shiftGroup.name',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $activity->properties = $activity->properties->merge([
+            'context'       => $this->is_committed ? 'post_commit' : ($this->in_workflow ? 'in_workflow' : 'normal'),
+            'shift_id'      => $this->id,
+            'craft_id'      => $this->craft_id,
+            'project_id'    => $this->project_id,
+            'current_request_id' => $this->current_request_id,
+        ]);
+    }
 
     public function committedBy(): BelongsTo
     {
@@ -218,7 +258,7 @@ class Shift extends Model
 
     public function shiftsQualifications(): HasMany
     {
-        return $this->hasMany(ShiftsQualifications::class);
+        return $this->hasMany(ShiftsQualifications::class, 'shift_id', 'id');
     }
 
     public function getHistoryAttribute(): Collection
@@ -338,6 +378,38 @@ class Shift extends Model
     public function shiftRuleViolations(): HasMany
     {
         return $this->hasMany(ShiftRuleViolation::class);
+    }
 
+    public function shiftPlanRequestChanges(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(
+            ShiftPlanRequestChange::class,
+            'subject',
+            'subject_type',
+            'subject_id'
+        );
+    }
+
+    public function committedShiftChanges(): HasMany
+    {
+        return $this->hasMany(CommittedShiftChange::class, 'shift_id', 'id');
+    }
+
+    public function currentRequest()
+    {
+        return $this->belongsTo(ShiftPlanRequest::class, 'current_request_id', 'id', 'shift_plan_requests');
+    }
+
+    /**
+     * Historical requests this shift was part of
+     */
+    public function requestHistories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Shift\Models\ShiftPlanRequest::class,
+            'shift_plan_request_shifts',
+            'shift_id',
+            'shift_plan_request_id'
+        )->withPivot(['snapshot'])->withTimestamps();
     }
 }

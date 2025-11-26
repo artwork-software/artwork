@@ -12,6 +12,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
+use Artwork\Modules\Shift\Models\CommittedShiftChange;
+use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -21,9 +23,12 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 use stdClass;
+use Illuminate\Support\Collection as SupportCollection;
 
 class ShiftService
 {
@@ -38,6 +43,7 @@ class ShiftService
         private readonly ShiftFreelancerService $shiftFreelancerService,
         private readonly ShiftServiceProviderService $shiftServiceProviderService,
         private readonly ShiftCountService $shiftCountService,
+        protected AuthManager $authManager
     ) {
     }
 
@@ -375,7 +381,238 @@ class ShiftService
 
     public function save(Shift $shift): Shift
     {
-        return $this->shiftRepository->save($shift);
+        // Nur relevant, wenn Schicht bereits existiert
+        $hadOriginal = $shift->exists;
+
+        $originalStartDate = $hadOriginal ? $shift->getOriginal('start_date') : null;
+        $originalEndDate   = $hadOriginal ? $shift->getOriginal('end_date')   : null;
+        $originalStart     = $hadOriginal ? $shift->getOriginal('start')      : null;
+        $originalEnd       = $hadOriginal ? $shift->getOriginal('end')        : null;
+
+        // Vor dem Speichern checken, ob sich Zeit-Felder geändert haben
+        $timeWasDirty = $hadOriginal && $shift->isDirty(['start_date', 'end_date', 'start', 'end']);
+
+        /** @var Shift $savedShift */
+        $savedShift = $this->shiftRepository->save($shift);
+
+        if ($timeWasDirty && $originalStartDate && $originalEndDate && $originalStart && $originalEnd) {
+            $this->syncPivotTimesAndLogCommittedChanges(
+                $savedShift,
+                $originalStartDate,
+                $originalEndDate,
+                $originalStart,
+                $originalEnd
+            );
+        }
+
+        return $savedShift;
+    }
+
+    /**
+     * Sync Pivot-Zeiten (User/Freelancer/ServiceProvider), wenn sie noch exakt
+     * der alten Schichtzeit entsprechen und ggf. CommittedShiftChange-Logs erzeugen.
+     */
+    protected function syncPivotTimesAndLogCommittedChanges(
+        Shift $shift,
+        mixed $originalStartDate,
+        mixed $originalEndDate,
+        mixed $originalStart,
+        mixed $originalEnd,
+    ): void {
+        // Alte und neue Zeiten als Carbon kombinieren
+        $oldStart = $this->combineDateAndTime($originalStartDate, $originalStart);
+        $oldEnd   = $this->combineDateAndTime($originalEndDate, $originalEnd);
+
+        $newStart = $this->combineDateAndTime($shift->start_date, $shift->start);
+        $newEnd   = $this->combineDateAndTime($shift->end_date, $shift->end);
+
+        if (! $oldStart || ! $oldEnd || ! $newStart || ! $newEnd) {
+            return;
+        }
+
+        $oldWorkTime = $oldEnd->diffInMinutes($oldStart);
+        $newWorkTime = $newEnd->diffInMinutes($newStart);
+
+        $changedByUserId = Auth::id();
+
+        // Relationen laden inkl. Pivot
+        $shift->load(['users', 'freelancer', 'serviceProvider']);
+
+        // Flag, ob Schicht committed ist (nach Änderung)
+        $isCommitted = (bool) $shift->is_committed;
+
+        // 1) Users (shift_user pivot)
+        foreach ($shift->users as $user) {
+            $pivot = $user->pivot;
+
+            $pivotStart = $this->combineDateAndTime($pivot->start_date, $pivot->start_time);
+            $pivotEnd   = $this->combineDateAndTime($pivot->end_date, $pivot->end_time);
+
+            // Nur anfassen, wenn Pivot-Zeit exakt der alten Schichtzeit entspricht
+            if (! $pivotStart || ! $pivotEnd) {
+                continue;
+            }
+
+            if ($pivotStart->equalTo($oldStart) && $pivotEnd->equalTo($oldEnd)) {
+                // Pivot auf neue Zeiten setzen
+                $pivot->start_date = $newStart->toDateString();
+                $pivot->end_date   = $newEnd->toDateString();
+                $pivot->start_time = $newStart;
+                $pivot->end_time   = $newEnd;
+                $pivot->save();
+
+                if ($isCommitted) {
+                    CommittedShiftChange::create([
+                        'craft_id'                => $shift->craft_id,
+                        'shift_id'                => $shift->getKey(),
+                        'subject_type'            => Shift::class,
+                        'subject_id'              => $shift->getKey(),
+                        'change_type'             => 'shift_time_updated',
+                        'field_changes'           => [
+                            'work_time' => [
+                                'old' => $oldWorkTime,
+                                'new' => $newWorkTime,
+                            ],
+                            'start' => [
+                                'old' => $oldStart->toDateTimeString(),
+                                'new' => $newStart->toDateTimeString(),
+                            ],
+                            'end' => [
+                                'old' => $oldEnd->toDateTimeString(),
+                                'new' => $newEnd->toDateTimeString(),
+                            ],
+                        ],
+                        'affected_user_type'     => User::class,
+                        'affected_user_id'       => $user->id,
+                        'changed_by_user_id'      => $changedByUserId,
+                        'changed_at'              => now(),
+                        'acknowledged_at'         => null,
+                        'acknowledged_by_user_id' => null,
+                    ]);
+                }
+            }
+        }
+
+        // 2) Freelancer (shifts_freelancers pivot)
+        foreach ($shift->freelancer as $freelancer) {
+            $pivot = $freelancer->pivot;
+
+            $pivotStart = $this->combineDateAndTime($pivot->start_date, $pivot->start_time);
+            $pivotEnd   = $this->combineDateAndTime($pivot->end_date, $pivot->end_time);
+
+            if (! $pivotStart || ! $pivotEnd) {
+                continue;
+            }
+
+            if ($pivotStart->equalTo($oldStart) && $pivotEnd->equalTo($oldEnd)) {
+                $pivot->start_date = $newStart->toDateString();
+                $pivot->end_date   = $newEnd->toDateString();
+                $pivot->start_time = $newStart;
+                $pivot->end_time   = $newEnd;
+                $pivot->save();
+
+                if ($isCommitted) {
+                    CommittedShiftChange::create([
+                        'craft_id'                => $shift->craft_id,
+                        'shift_id'                => $shift->getKey(),
+                        'subject_type'            => Shift::class,
+                        'subject_id'              => $shift->getKey(),
+                        'change_type'             => 'shift_time_updated',
+                        'field_changes'           => [
+                            'work_time' => [
+                                'old' => $oldWorkTime,
+                                'new' => $newWorkTime,
+                            ],
+                            'start' => [
+                                'old' => $oldStart->toDateTimeString(),
+                                'new' => $newStart->toDateTimeString(),
+                            ],
+                            'end' => [
+                                'old' => $oldEnd->toDateTimeString(),
+                                'new' => $newEnd->toDateTimeString(),
+                            ],
+                        ],
+                        'affected_user_type'     => \Artwork\Modules\Freelancer\Models\Freelancer::class,
+                        'affected_user_id'       => $freelancer->id,
+                        'changed_by_user_id'      => $changedByUserId,
+                        'changed_at'              => now(),
+                        'acknowledged_at'         => null,
+                        'acknowledged_by_user_id' => null,
+                    ]);
+                }
+            }
+        }
+
+        // 3) ServiceProvider (shifts_service_providers pivot)
+        foreach ($shift->serviceProvider as $serviceProvider) {
+            $pivotStart = $this->combineDateAndTime(
+                $serviceProvider->pivot->start_date,
+                $serviceProvider->pivot->start_time
+            );
+            $pivotEnd   = $this->combineDateAndTime(
+                $serviceProvider->pivot->end_date,
+                $serviceProvider->pivot->end_time
+            );
+
+            if (! $pivotStart || ! $pivotEnd) {
+                continue;
+            }
+
+            if ($pivotStart->equalTo($oldStart) && $pivotEnd->equalTo($oldEnd)) {
+                $serviceProvider->pivot->start_date = $newStart->toDateString();
+                $serviceProvider->pivot->end_date   = $newEnd->toDateString();
+                $serviceProvider->pivot->start_time = $newStart;
+                $serviceProvider->pivot->end_time   = $newEnd;
+                $serviceProvider->pivot->save();
+
+                if ($isCommitted) {
+                    CommittedShiftChange::create([
+                        'craft_id'                => $shift->craft_id,
+                        'shift_id'                => $shift->getKey(),
+                        'subject_type'            => Shift::class,
+                        'subject_id'              => $shift->getKey(),
+                        'change_type'             => 'shift_time_updated',
+                        'field_changes'           => [
+                            'work_time' => [
+                                'old' => $oldWorkTime,
+                                'new' => $newWorkTime,
+                            ],
+                            'start' => [
+                                'old' => $oldStart->toDateTimeString(),
+                                'new' => $newStart->toDateTimeString(),
+                            ],
+                            'end' => [
+                                'old' => $oldEnd->toDateTimeString(),
+                                'new' => $newEnd->toDateTimeString(),
+                            ],
+                        ],
+                        'affected_user_type'     => \Artwork\Modules\Shift\Models\ShiftServiceProvider::class,
+                        'affected_user_id'       => $serviceProvider->id,
+                        'changed_by_user_id'      => $changedByUserId,
+                        'changed_at'              => now(),
+                        'acknowledged_at'         => null,
+                        'acknowledged_by_user_id' => null,
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Hilfsfunktion: Date + Time (irgendwas: string|Carbon) zu einem Carbon kombinieren.
+     */
+    protected function combineDateAndTime(mixed $date, mixed $time): ?Carbon
+    {
+        if (! $date || ! $time) {
+            return null;
+        }
+
+        $dateCarbon = $date instanceof Carbon ? $date->copy() : Carbon::parse($date);
+        $timeCarbon = $time instanceof Carbon ? $time->copy() : Carbon::parse($time);
+
+        return Carbon::parse(
+            $dateCarbon->format('Y-m-d') . ' ' . $timeCarbon->format('H:i:s')
+        );
     }
 
     public function detachFromShifts(
@@ -411,12 +648,11 @@ class ShiftService
                 ),
             };
         }
-
     }
 
-    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate): void
+    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate, int $craftId): void
     {
-        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->get();
+        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->where('craft_id', $craftId)->get();
 
         if ($shifts->isEmpty()) {
             return;
@@ -471,5 +707,82 @@ class ShiftService
                 }
             }
         }
+    }
+
+    public function handleGlobalQualificationChange(SupportCollection $globalQualification, Shift $shift): void
+    {
+        if ($globalQualification->isEmpty()) {
+            return;
+        }
+
+        $recorder = app(ShiftChangeRecorder::class);
+
+        $shift->load('globalQualifications');
+        $before = $shift->globalQualifications
+            ->pluck('pivot.quantity', 'id')
+            ->mapWithKeys(fn ($qty, $id) => [(int) $id => (int) $qty])
+            ->toArray();
+
+        $syncPayload = $globalQualification
+            ->filter(fn ($item) => !empty($item['global_qualification_id']))
+            ->mapWithKeys(fn ($item) => [
+                (int) $item['global_qualification_id'] => ['quantity' => (int) $item['quantity']],
+            ])
+            ->toArray();
+
+        $shift->globalQualifications()->sync($syncPayload);
+
+        $shift->load('globalQualifications');
+        $after = $shift->globalQualifications
+            ->pluck('pivot.quantity', 'id')
+            ->mapWithKeys(fn ($qty, $id) => [(int) $id => (int) $qty])
+            ->toArray();
+
+        $recorder->recordGlobalQualificationDiff($shift, $before, $after);
+        $allIds = array_unique(array_merge(array_keys($before), array_keys($after)));
+
+        foreach ($allIds as $id) {
+            $old = $before[$id] ?? 0;
+            $new = $after[$id] ?? 0;
+
+            if ($old === $new) {
+                continue;
+            }
+
+            $qualification = GlobalQualification::find($id);
+
+            $this->logActivity($shift, $qualification, $old, $new);
+        }
+    }
+
+    protected function logActivity(Shift $shift, GlobalQualification $qualification, $old, $new): void
+    {
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->authManager->user())
+            ->event('updated')
+            ->tap(function (Activity $activity) use ($shift, $qualification, $old, $new): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => 'Global qualification {0} changed from {1} to {2} for shift {3}',
+                    'translation_key_placeholder_values' => [
+                        $qualification?->name ?? 'Unbenannte Qualifikation',
+                        $old,
+                        $new,
+                        $shift->craft->name . ' (' . $shift->craft->abbreviation . ')',
+                    ],
+                    'context'            => $shift->is_committed
+                        ? 'post_commit'
+                        : ($shift->in_workflow ? 'in_workflow' : 'normal'),
+                    'shift_id'           => $shift->id,
+                    'craft_id'           => $shift->craft_id,
+                    'project_id'         => $shift->project_id,
+                    'current_request_id' => $shift->current_request_id,
+                    'global_qualification_id'   => $qualification?->id,
+                    'global_qualification_name' => $qualification?->name,
+                    'old_quantity'              => $old,
+                    'new_quantity'              => $new,
+                ]);
+            })
+            ->log('Global qualification quantity updated');
     }
 }

@@ -142,7 +142,6 @@
                                             stroke-width="1.5"
                                             text-with-margin-left
                                             :translation-key="item.name"
-                                            menu-width="!w-64"
                                             :menu-button-text="item.name"
                                             :show-menu-button-text="isFullSideBar"
                                             no-relative
@@ -481,12 +480,32 @@ const navigation = ref([
                 current: route().current('work-time-request.index'),
                 has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
             },
+
+            // --- NEU: Prüfungsanfragen ---
             {
-                name: 'Shift commitment requests',
-                href: route('shifts.commit-requests.index'),
+                name: 'Shift plan Review requests',
+                href: route('shifts.approvals.review'),
                 icon: 'IconLockSquareRounded',
-                current: route().current('shifts.commit-requests.index'),
-                has_permission: usePage().props.isUserWorkFlowUser && usePage().props.shiftCommitWorkflow || is('artwork admin') && usePage().props.shiftCommitWorkflow,
+                current: route().current('shifts.approvals.review'),
+                has_permission: usePage().props.canSeeShiftPlanReview,
+            },
+
+            // --- NEU: Änderungsliste ---
+            {
+                name: 'Shift plan Change list',
+                href: route('shifts.approvals.changes'),
+                icon: 'IconListCheck',
+                current: route().current('shifts.approvals.changes'),
+                has_permission: usePage().props.canSeeShiftPlanChangeList,
+            },
+
+            // --- NEU: Angefragte Dienstpläne ---
+            {
+                name: 'Requested duty rosters',
+                href: route('shifts.approvals.requests'),
+                icon: 'IconCalendarCheck',
+                current: route().current('shifts.approvals.requests'),
+                has_permission: usePage().props.canSeeShiftPlanRequestedPlans,
             },
         ]
     },

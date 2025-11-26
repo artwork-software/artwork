@@ -1605,6 +1605,9 @@ class ShiftController extends Controller
             'service_provider' => ShiftServiceProvider::find($shiftId),
             default => null
         };
+        if (!$query) {
+            return;
+        }
 
         // Update the pivot with new short description
         $query->update([

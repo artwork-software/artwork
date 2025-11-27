@@ -114,7 +114,9 @@ class ComponentController extends Controller
         $component->componentInDisclosures()->delete();
 
         // first check if the component has projectValues attached
-        $component->projectValue()->delete();
+        if ($component->projectValue) {
+            $component->projectValue->delete();
+        }
 
         $component->componentInPrintLayouts()->delete();
 

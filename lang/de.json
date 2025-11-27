@@ -3666,5 +3666,10 @@
     "No availabilities are registered for this day.": "Es sind keine Verfügbarkeiten für diesen Tag registriert.",
     "Delete series": "Lösche Serie",
     "When deleted, all associated individual times are irrevocably removed.": "Beim Löschen werden alle zugehörigen individuellen Zeiten unwiderruflich entfernt.",
-    "Update series": "Aktualisiere Serie"
+    "Update series": "Aktualisiere Serie",
+    "Set a unified availability status for all selected cells.": "Setze einen einheitlichen Verfügbarkeitsstatus für alle ausgewählten Zellen.",
+    "If you do not select a status, the availability will not be changed.": "Wenn du keinen Status auswählst, wird die Verfügbarkeit nicht geändert.",
+    "Optional: define custom times that will be applied to all selected cells.": "Optional: Definiere benutzerdefinierte Zeiten, die auf alle ausgewählten Zellen angewendet werden.",
+    "Add time": "Zeit hinzufügen",
+    "Optional note that will be saved for all affected cells.": "Optionale Notiz, die für alle betroffenen Zellen gespeichert wird."
 }

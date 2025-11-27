@@ -6,6 +6,7 @@ use Artwork\Core\Casts\TimeWithoutSeconds;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class IndividualTime extends Model
@@ -13,7 +14,16 @@ class IndividualTime extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'start_time', 'end_time', 'start_date', 'end_date', 'full_day', 'working_time_minutes'
+        'title',
+        'start_time',
+        'end_time',
+        'start_date',
+        'end_date',
+        'full_day',
+        'working_time_minutes',
+        'series_uuid',
+        'timeable_type',
+        'timeable_id'
     ];
 
     protected $hidden = [
@@ -75,5 +85,15 @@ class IndividualTime extends Model
         }
 
         return $days;
+    }
+
+    public function series(): BelongsTo
+    {
+        return $this->belongsTo(
+            IndividualTimeSeries::class,
+            'series_uuid',
+            'uuid',
+            'series'
+        );
     }
 }

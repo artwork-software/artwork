@@ -214,6 +214,14 @@
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background px-3 py-3" :style="{ top: calculateTopPositionOfUserOverView }">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" :icon="IconPencil"/>
+                                <ToolTipComponent
+                                    direction="right"
+                                    :tooltip-text="$t('Create individual time series')"
+                                    :icon="IconClockShield"
+                                    icon-size="h-5 w-5"
+                                    @click="showIndividualTimeSeriesModal = true"
+                                    classesButton="ui-button"
+                                />
                                 <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
                                     <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')" size="md" @change="toggleDayServiceMode" :icon="selectedDayService?.icon"/>
                                     <DayServiceFilter :current-selected-day-service="selectedDayService" :day-services="dayServices" @update:current-selected-day-service="updateSelectedDayService"/>
@@ -475,13 +483,18 @@
         :multi-add-mode="multiEditModeCalendar"
         :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
+
+    <IndividualTimeSeriesModal
+        v-if="showIndividualTimeSeriesModal"
+        @close="showIndividualTimeSeriesModal = false"
+        @updated="handleSeriesUpdated"
+    />
 </template>
 
 <script setup lang="ts">
 
 import Permissions from '@/Mixins/Permissions.vue'
 import { ChevronDownIcon } from '@heroicons/vue/outline'
-import SingleShiftPlanEvent from '@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue'
 import axios from 'axios'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
@@ -511,7 +524,7 @@ import {
     IconPlus,
     IconX,
     IconChevronUp,
-    IconCheck,
+    IconCheck, IconCalendarMonth, IconClockShield,
 } from '@tabler/icons-vue'
 import CraftFilter from '@/Components/Filter/CraftFilter.vue'
 import SingleEventInShiftPlan from '@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'
@@ -536,6 +549,7 @@ import { can, is } from 'laravel-permission-to-vuejs'
 import { useUserOverviewLayout } from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import { useSyncedHorizontalScroll } from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 import { useI18n } from 'vue-i18n'
+import IndividualTimeSeriesModal from "@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue";
 const { t } = useI18n()
 
 
@@ -643,6 +657,7 @@ const showFreelancers = ref(true)
 const multiEditCellByDayAndUser = ref<Record<string, any>>({})
 const showCellMultiEditModal = ref(false)
 const openCellMultiEditDelete = ref(false)
+const showIndividualTimeSeriesModal = ref(false)
 const preventNextNavigation = ref(false)
 const originalVisit = ref<any | null>(null)
 const showShiftQualificationFilter = ref(false)
@@ -1851,6 +1866,13 @@ function saveShiftQualificationFilter(event: any) {
         { show_qualifications: list },
         { preserveScroll: true, preserveState: true },
     )
+}
+
+function handleSeriesUpdated() {
+    showIndividualTimeSeriesModal.value = false;
+    router.reload({
+        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+    });
 }
 
 </script>

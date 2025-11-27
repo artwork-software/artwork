@@ -77,7 +77,7 @@ readonly class ServiceProviderService
                 //'plannedWorkingHours' => $plannedWorkingHours,
                 'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
-                'individual_times' => $serviceProvider->individualTimes()
+                'individual_times' => $serviceProvider->individualTimes()->with(['series'])
                     ->individualByDateRange($startDate, $endDate)->get(),
                 'shift_comments' => $serviceProvider->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];

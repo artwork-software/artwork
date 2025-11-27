@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal :title="title" :description="description" @close="$emit('close')">
+    <ArtworkBaseModal :title="title" :description="description" z-index="999999999999999999999" @close="$emit('close')">
         <div>
             <BaseAlertComponent message="This action cannot be undone." use-translation type="error" />
         </div>

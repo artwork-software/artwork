@@ -98,7 +98,7 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th v-for="day in days" :ref="el => registerMonthSentinel(el as HTMLElement, day)" :key="`head-${day.fullDay}-${day.weekNumber}`" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px" class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
-                                        <div v-if="day.isExtraRow" :style="{ width: '200px' }">
+                                        <div v-if="day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }">
                                             <span class="text-[9px] font-bold">KW{{ day.weekNumber }}</span>
                                         </div>
                                         <div v-else :style="{ width: '200px' }" class="ml-2 flex h-full items-center justify-between calendarRoomHeaderBold">
@@ -128,19 +128,19 @@
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300" :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
-                                    <th :id="'roomNameContainer_' + index" class="xsDark w-48 table-cell align-middle" :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                        <div class="ml-4 flex items-center font-semibold">
-                                            {{ room.roomName }}
+                                    <th :id="'roomNameContainer_' + index" class="xsDark table-cell align-middle" :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        <div class="flex items-center font-semibold"  style="width: 191.5px; max-width: 191.5px">
+                                            <span class="pl-3">{{ room.roomName }}</span>
                                         </div>
                                     </th>
-                                    <td v-for="day in days" :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`" :data-day="day.fullDay" class="day-container relative table-cell align-top px-[1px] border-gray-400"
+                                    <td v-for="day in days" :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`" :style="{ width: '202px', maxWidth: '202px' }" :data-day="day.fullDay" class="day-container relative table-cell align-top px-[1px] border-gray-400"
                                         :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : '', multiEditModeCalendar ? '' : '', usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-28']">
                                         <div v-if="!day.isExtraRow && multiEditModeCalendar" class="absolute h-full w-full"
                                             :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
                                             checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"></div>
-                                        <div v-if="day.isExtraRow" class="mb-3 h-full min-w-full bg-background-gray2 border-l-2 border-gray-800" :style="{ width: '202px', maxWidth: '202px' }"></div>
-                                        <div v-else style="width: 200px" class="cell group" :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                        <div v-if="day.isExtraRow" class="mb-3 h-full min-w-full bg-background-gray2 border-gray-800"></div>
+                                        <div v-else class="cell group" :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
                                             <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events">
                                                 <div v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                     <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', {project: group.id,projectTab: firstProjectShiftTabId})" class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white">
@@ -1526,8 +1526,7 @@ function closeMultiEditCellModal(eventData: any) {
     if (eventData && eventData.saved) {
         multiEditCellByDayAndUser.value = {}
         router.reload({
-            only: ['shifts', 'users', 'rooms', 'days', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-            preserveScroll: true,
+            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
         })
     }
 }
@@ -1766,17 +1765,33 @@ async function resolveQualificationFor(desiredShift: any) {
     const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
     const required = desiredShift.shifts_qualifications ?? []
     if (required.length === 0) return null
+    const shiftCraftId =
+        desiredShift.craft_id ??
+        desiredShift.craftId ??
+        desiredShift.craft?.id ??
+        null
+    const available = userQualis.filter((uq: any) => {
+        const matchesQualification = required.some(
+            (req: any) => req.shift_qualification_id === uq.id,
+        )
 
-    const available = userQualis.filter((uq: any) => required.some((req: any) => req.shift_qualification_id === uq.id))
+        if (!matchesQualification) return false
+        if (!shiftCraftId) return true
+
+        const uqCraftId = uq.pivot?.craft_id ?? null
+        if (uqCraftId === null) return true
+        return uqCraftId === shiftCraftId
+    })
+
     if (available.length === 0) return null
     if (available.length === 1) return available[0].id
-
     if (openQualificationPicker) {
         const picked = await openQualificationPicker(desiredShift, available)
         return picked?.id ?? null
     }
     return available[0].id
 }
+
 
 function openQualificationPicker(desiredShift: any, options: any[]) {
     if (waitForModalClose.value) return Promise.resolve(null)

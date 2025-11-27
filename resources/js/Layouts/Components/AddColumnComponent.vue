@@ -195,6 +195,12 @@ export default {
                     {
                         column_type: this.selectedType,
                         table_id: this.table.id
+                    },
+                    {
+                        onSuccess: () => {
+                            this.closeModal(true);
+                            window.location.reload();
+                        }
                     }
                 );
             } else {
@@ -205,10 +211,15 @@ export default {
                         second_column_id: this.selectedSecondColumn.id,
                         column_type: this.selectedType,
                         table_id: this.table.id
+                    },
+                    {
+                        onSuccess: () => {
+                            this.closeModal(true);
+                            window.location.reload();
+                        }
                     }
                 );
             }
-            this.closeModal(true);
         }
     },
 }

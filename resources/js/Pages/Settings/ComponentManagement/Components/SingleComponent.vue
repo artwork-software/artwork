@@ -63,7 +63,7 @@
         v-if="showEditComponentModal"
         :show="showEditComponentModal"
         mode="edit"
-        :component-to-edit="component"
+        :component-id="component.id"
         @close="showEditComponentModal = false"
     />
 </template>

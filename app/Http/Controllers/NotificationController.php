@@ -52,29 +52,33 @@ class NotificationController extends Controller
         if (request('showHistory')) {
             if (request('historyType') === 'project') {
                 $project = Project::find(request('modelId'));
-                $historyComplete = $project->historyChanges()->all();
-                foreach ($historyComplete as $history) {
-                    $historyObjects[] = [
-                        'changes' => json_decode($history->changes),
-                        'change_by' => $history->changer,
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
+                if ($project !== null) {
+                    $historyComplete = $project->historyChanges()->all();
+                    foreach ($historyComplete as $history) {
+                        $historyObjects[] = [
+                            'changes' => json_decode($history->changes),
+                            'change_by' => $history->changer,
+                            'created_at' => $history->created_at->diffInHours() < 24
+                                ? $history->created_at->diffForHumans()
+                                : $history->created_at->format('d.m.Y, H:i'),
+                        ];
+                    }
                 }
             }
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));
-                $historyComplete = $event->historyChanges()->all();
-                foreach ($historyComplete as $history) {
-                    $historyObjects[] = [
-                        'changes' => json_decode($history->changes),
-                        'change_by' => $history->changer,
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
+                if ($event !== null) {
+                    $historyComplete = $event->historyChanges()->all();
+                    foreach ($historyComplete as $history) {
+                        $historyObjects[] = [
+                            'changes' => json_decode($history->changes),
+                            'change_by' => $history->changer,
+                            'created_at' => $history->created_at->diffInHours() < 24
+                                ? $history->created_at->diffForHumans()
+                                : $history->created_at->format('d.m.Y, H:i'),
+                        ];
+                    }
                 }
             }
 
@@ -162,10 +166,11 @@ class NotificationController extends Controller
         /** @var DatabaseNotification $wantedNotification */
         $wantedNotification = $databaseNotificationService->find($request->string('notificationId'));
 
-        if (
-            !is_null($wantedNotification) &&
-            $wantedNotification->getAttribute('data')['buttons'] > 0
-        ) {
+        if (is_null($wantedNotification)) {
+            return;
+        }
+
+        if ($wantedNotification->getAttribute('data')['buttons'] > 0) {
             return;
         }
 
@@ -176,6 +181,11 @@ class NotificationController extends Controller
     public function setOnReadAll(Request $request): void
     {
         $user = User::find(Auth::id());
+
+        if ($user === null) {
+            return;
+        }
+
         $notifications = $user->notifications()->whereIn('id', $request->notificationIds)->get();
         foreach ($notifications as $notification) {
             if (count($notification->data['buttons']) > 0) {

@@ -383,7 +383,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import axios from 'axios'
 import {
@@ -405,12 +405,15 @@ const props = defineProps({
     show: { type: Boolean, required: true },
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
     tabComponentTypes: { type: Object, default: () => ({}) },
-    componentToEdit: { type: Object, default: null }
+    componentToEdit: { type: Object, default: null }, // Legacy: for backward compatibility
+    componentId: { type: [Number, String], default: null } // New: for lazy loading
 })
 const emit = defineEmits(['close'])
 
 /* Helpers */
 const isCreateMode = computed(() => props.mode === 'create')
+const loadedComponent = ref(null) // Stores the lazy-loaded component data
+const componentToEdit = computed(() => loadedComponent.value || props.componentToEdit)
 const typesArray = computed(() => {
     // tabComponentTypes kann Map oder Objekt sein; wir nehmen Objekt -> Array
     if (!props.tabComponentTypes) return []
@@ -423,21 +426,51 @@ const selectedType = ref(
 )
 
 /* Name */
-const componentName = ref(isCreateMode.value ? '' : (props.componentToEdit?.name ?? ''))
+const componentName = ref('')
 const helpTexts = reactive({ name: null })
 
 /* Text-/Konfig-Daten (Fields) */
-const textData = reactive(
-    isCreateMode.value
-        ? deepClone(selectedType.value?.availableFields ?? {})
-        : deepClone(props.componentToEdit?.data ?? {})
-)
+const textData = reactive({})
 
 /* Permissions */
 const modulePermissions = reactive({
-    permission_type: isCreateMode.value ? 'allSeeAndEdit' : (props.componentToEdit?.permission_type ?? 'allSeeAndEdit'),
-    users: isCreateMode.value ? [] : deepClone(props.componentToEdit?.users ?? []),
-    departments: isCreateMode.value ? [] : deepClone(props.componentToEdit?.departments ?? [])
+    permission_type: 'allSeeAndEdit',
+    users: [],
+    departments: []
+})
+
+/* Lazy Loading Logic */
+onMounted(async () => {
+    if (isCreateMode.value) {
+        // Initialize for create mode
+        componentName.value = ''
+        textDataResetTo(selectedType.value?.availableFields ?? {})
+        modulePermissions.permission_type = 'allSeeAndEdit'
+        modulePermissions.users = []
+        modulePermissions.departments = []
+    } else if (props.componentId) {
+        // Lazy load component data via API
+        try {
+            const { data } = await axios.get(route('component.show', { component: props.componentId }))
+            loadedComponent.value = data
+
+            // Initialize form with loaded data
+            componentName.value = data.name ?? ''
+            textDataResetTo(data.data ?? {})
+            modulePermissions.permission_type = data.permission_type ?? 'allSeeAndEdit'
+            modulePermissions.users = deepClone(data.users ?? [])
+            modulePermissions.departments = deepClone(data.departments ?? [])
+        } catch (error) {
+            console.error('Failed to load component:', error)
+        }
+    } else if (props.componentToEdit) {
+        // Legacy: use passed component object
+        componentName.value = props.componentToEdit.name ?? ''
+        textDataResetTo(props.componentToEdit.data ?? {})
+        modulePermissions.permission_type = props.componentToEdit.permission_type ?? 'allSeeAndEdit'
+        modulePermissions.users = deepClone(props.componentToEdit.users ?? [])
+        modulePermissions.departments = deepClone(props.componentToEdit.departments ?? [])
+    }
 })
 
 /* Permission-Eignung */
@@ -448,7 +481,7 @@ const isQualifiedForPermissions = computed(() => {
         const name = selectedType.value?.name
         return name ? !excluded.includes(name) : false
     }
-    const t = props.componentToEdit?.type
+    const t = componentToEdit.value?.type
     return t ? !excluded.includes(t) : false
 })
 
@@ -531,22 +564,6 @@ watch(selectedType, (val) => {
     textDataResetTo(val?.availableFields ?? {})
 })
 
-/* Watch: componentToEdit änderungen -> Daten neu setzen */
-watch(() => props.componentToEdit, (newComponent) => {
-    if (!newComponent || isCreateMode.value) return
-
-    // Name aktualisieren
-    componentName.value = newComponent.name ?? ''
-
-    // textData aktualisieren
-    textDataResetTo(newComponent.data ?? {})
-
-    // Berechtigungen aktualisieren
-    modulePermissions.permission_type = newComponent.permission_type ?? 'allSeeAndEdit'
-    modulePermissions.users = deepClone(newComponent.users ?? [])
-    modulePermissions.departments = deepClone(newComponent.departments ?? [])
-}, { immediate: true, deep: true })
-
 /* Actions */
 function closeModal() {
     emit('close')
@@ -590,7 +607,8 @@ function updateOrSaveComponent() {
     if (isCreateMode.value) {
         router.post(route('component.store'), payload, options)
     } else {
-        router.patch(route('component.update', { component: props.componentToEdit.id }), payload, options)
+        const componentId = props.componentId || componentToEdit.value?.id
+        router.patch(route('component.update', { component: componentId }), payload, options)
     }
 }
 

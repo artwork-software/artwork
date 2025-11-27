@@ -1818,6 +1818,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
                 ->name('component.index');
+            // component.show - lazy load single component with relations
+            Route::get('/{component}', [ComponentController::class, 'show'])
+                ->name('component.show');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])

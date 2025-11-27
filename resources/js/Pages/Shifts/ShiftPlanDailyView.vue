@@ -177,31 +177,26 @@
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import SingleEventInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue";
 import { ref, provide, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import { can } from "laravel-permission-to-vuejs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import SingleShiftInDailyShiftView from "@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue";
 import {
     IconAlertSquareRounded,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
     IconX,
-    IconCalendarPlus,
-    IconCalendarUser
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
+import { is } from 'laravel-permission-to-vuejs'
 
 const props = defineProps({
     project: {

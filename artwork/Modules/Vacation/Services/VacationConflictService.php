@@ -145,21 +145,37 @@ readonly class VacationConflictService
         ?Freelancer $freelancer = null,
     ): void {
 
+        $shiftStartDate = $shift?->event_start_day ?? $shift->start_date;
+        $shiftEndDate = $shift?->event_end_day ?? $shift->end_date;
+
         $vacations = collect();
         if ($user) {
+            // Only get vacations that overlap with the shift date range
             $vacations = $user
                 ->vacations()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
         if ($freelancer) {
+            // Only get vacations that overlap with the shift date range
             $vacations = $freelancer
                 ->vacations()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
+        // Only proceed if there are actual vacation conflicts
+        if ($vacations->count() === 0) {
+            return;
+        }
+
+        $shiftCommittedBy = $shift->committedBy()->first();
+        $hasConflict = false;
+
         if ($user) {
-            $shiftCommittedBy = $shift->committedBy()->first();
             $notificationTitle = __(
                 'notification.shift.conflict',
                 [],
@@ -196,13 +212,30 @@ readonly class VacationConflictService
             $notificationService->setButtons(['see_shift']);
             $notificationService->setShiftId($shift->id);
         }
-        if ($vacations->count() > 0) {
-            foreach ($vacations as $vacation) {
-                $vacation->conflicts()->each(function ($conflict): void {
-                    $conflict->delete();
-                });
-                // check if vacation is full_day
-                if ($vacation->full_day) {
+
+        foreach ($vacations as $vacation) {
+            $vacation->conflicts()->each(function ($conflict): void {
+                $conflict->delete();
+            });
+            // check if vacation is full_day
+            if ($vacation->full_day) {
+                $this->create([
+                    'vacation_id' => $vacation->id,
+                    'shift_id' => $shift->id,
+                    'user_name' => $shiftCommittedBy->full_name,
+                    'date' => $shift?->event_start_day ?? $shift->start_date,
+                    'start_time' => $shift->start,
+                    'end_time' => $shift->end,
+                ]);
+                $hasConflict = true;
+            } else {
+                // check if shift is on vacation time
+                $start = Carbon::parse($vacation->start_time);
+                $end = Carbon::parse($vacation->end_time);
+                if (
+                    $start->between($shift->start, $shift->end) ||
+                    $end->between($shift->start, $shift->end)
+                ) {
                     $this->create([
                         'vacation_id' => $vacation->id,
                         'shift_id' => $shift->id,
@@ -211,33 +244,15 @@ readonly class VacationConflictService
                         'start_time' => $shift->start,
                         'end_time' => $shift->end,
                     ]);
-                    if ($user) {
-                        $notificationService->setNotificationTo($user);
-                        $notificationService->createNotification();
-                    }
-                } else {
-                    // check if shift is on vacation time
-                    $start = Carbon::parse($vacation->start_time);
-                    $end = Carbon::parse($vacation->end_time);
-                    if (
-                        $start->between($shift->start, $shift->end) ||
-                        $end->between($shift->start, $shift->end)
-                    ) {
-                        $this->create([
-                            'vacation_id' => $vacation->id,
-                            'shift_id' => $shift->id,
-                            'user_name' => $shiftCommittedBy->full_name,
-                            'date' => $shift?->event_start_day ?? $shift->start_date,
-                            'start_time' => $shift->start,
-                            'end_time' => $shift->end,
-                        ]);
-                        if ($user) {
-                            $notificationService->setNotificationTo($user);
-                            $notificationService->createNotification();
-                        }
-                    }
+                    $hasConflict = true;
                 }
             }
+        }
+
+        // Only send one notification if there was any conflict
+        if ($hasConflict && $user) {
+            $notificationService->setNotificationTo($user);
+            $notificationService->createNotification();
         }
     }
 }

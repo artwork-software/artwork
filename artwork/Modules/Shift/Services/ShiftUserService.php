@@ -185,10 +185,6 @@ class ShiftUserService
 
         $this->createAssignedToShiftNotification($shift, $user, $notificationService);
 
-        if ($this->userHasVacationConflictWithShift($shift, $user)) {
-            $this->createVacationConflictNotification($shift, $user, $notificationService);
-        }
-
         $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
         $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
 
@@ -196,14 +192,6 @@ class ShiftUserService
         $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
 
         broadcast(new ShiftAssigned($user, $shift));
-    }
-
-    private function userHasVacationConflictWithShift(Shift $shift, User $user): bool
-    {
-        return $user->vacations()
-                ->where('date', '<=', $shift?->event_start_day ?? $shift->start_date)
-                ->where('date', '>=', $shift?->event_end_day ?? $shift->end_date)
-                ->count() > 0;
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
@@ -252,57 +240,6 @@ class ShiftUserService
         ]);
         $notificationService->setNotificationTo($user);
         $notificationService->createNotification();
-        $notificationService->clearNotificationData();
-    }
-
-    private function createVacationConflictNotification(
-        Shift $shift,
-        User $user,
-        NotificationService $notificationService
-    ): void {
-        $notificationService->setIcon('blue');
-        $notificationService->setPriority(1);
-        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
-        $notificationService->setButtons(['change_shift_conflict']);
-
-        $usersWhichGotNotification = [];
-
-        foreach ($user->crafts as $craft) {
-            foreach ($craft->users as $craftUser) {
-                if (in_array($craftUser->id, $usersWhichGotNotification, true)) {
-                    continue;
-                }
-
-                $notificationTitle = __('notification.shift.conflict_shift_withName', [
-                    'date'              => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
-                    'projectName'       => $shift?->event?->project?->name
-                        ?? __('notification.shift.without_project'),
-                    'craftAbbreviation' => $shift->craft->abbreviation,
-                ], $craftUser->language);
-
-                $notificationService->setTitle($notificationTitle);
-                $notificationService->setBroadcastMessage([
-                    'id'      => random_int(1, 1000000),
-                    'type'    => 'success',
-                    'message' => $notificationTitle,
-                ]);
-                $notificationService->setDescription([
-                    1 => [
-                        'type'  => 'string',
-                        'title' => __(
-                            'notification.keyWords.not_available',
-                            ['username' => $user->getFullNameAttribute()]
-                        ),
-                        'href'  => null,
-                    ],
-                ]);
-
-                $notificationService->setNotificationTo($craftUser);
-                $notificationService->createNotification();
-                $usersWhichGotNotification[] = $craftUser->id;
-            }
-        }
-
         $notificationService->clearNotificationData();
     }
 

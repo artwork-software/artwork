@@ -155,22 +155,43 @@
                                                 </div>
                                             </template>
                                             <div class="space-y-0.5">
-                                                <template v-if="room.content[day.fullDay]?.shifts">
-                                                    <div v-for="shift in room.content[day.fullDay].shifts" :key="shift.id || shift.dwId || shift.uuid">
-                                                        <div v-if="shift.daysOfShift.includes(day.fullDay)" class="rounded-lg border border-gray-100 bg-gray-50 py-0.5">
-                                                            <SingleShiftInRoom
-                                                                :multiEditMode="multiEditMode"
-                                                                :user-for-multi-edit="userForMultiEdit"
-                                                                :highlightMode="highlightMode"
-                                                                :highlighted-id="idToHighlight"
-                                                                :highlighted-type="typeToHighlight"
-                                                                :shift="shift"
-                                                                :shift-qualifications="shiftQualifications"
-                                                                :day-string="day"
-                                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                @dropFeedback="showDropFeedback"
-                                                                @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
-                                                                @click-on-edit="openEditShiftModal"/>
+                                                <template v-if="room.content[day.fullDay]?.shifts?.length">
+                                                    <!-- 1. Ebene: Projekt-Gruppen -->
+                                                    <div v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)" :key="group.projectId ?? `no-project-${day.fullDay}`">
+                                                        <!-- Projekt-Gruppen-Container -->
+                                                        <div class="rounded-lg border duration-200 ease-in-out" :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'">
+                                                            <!-- Kopfzeile: Projekt / „ohne Projekt“ -->
+                                                            <div>
+                                                                <div v-if="group.project" class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
+                                                                    <span>{{ group.project.name }}</span>
+                                                                    <span class="text-[10px] text-sky-600">
+                                                                        ({{ group.shifts.length }})
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- 2. Ebene: einzelne Schichten der Gruppe -->
+                                                            <div class="space-y-0.5 px-1" :class="group.project ? 'divide-y divide-sky-100' : 'divide-y divide-gray-100'">
+                                                                <div v-for="shift in group.shifts"
+                                                                    :key="shift.id || shift.dwId || shift.uuid"
+                                                                    class="rounded-lg duration-200 ease-in-out"
+                                                                    :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'">
+                                                                    <SingleShiftInRoom
+                                                                        :multiEditMode="multiEditMode"
+                                                                        :user-for-multi-edit="userForMultiEdit"
+                                                                        :highlightMode="highlightMode"
+                                                                        :highlighted-id="idToHighlight"
+                                                                        :highlighted-type="typeToHighlight"
+                                                                        :shift="shift"
+                                                                        :shift-qualifications="shiftQualifications"
+                                                                        :day-string="day"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                        @dropFeedback="showDropFeedback"
+                                                                        @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                                                        @click-on-edit="openEditShiftModal"
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </template>
@@ -715,6 +736,48 @@ const { attach, detach } = useSyncedHorizontalScroll(
     currentDayRef,
     { roomNameOffsetPx: 200 },
 )
+
+
+type ShiftGroup = {
+    project: any | null
+    projectId: number | null
+    shifts: any[]
+}
+
+function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
+    const groupsMap = new Map<string, ShiftGroup>()
+    const PROJECTLESS_KEY = 'no_project'
+
+    for (const shift of shifts) {
+        // nur Schichten für den aktuellen Tag
+        if (!shift.daysOfShift?.includes(dayLabel)) continue
+
+        const hasProject = !!shift.project
+        const key = hasProject ? `project_${shift.project.id}` : PROJECTLESS_KEY
+
+        if (!groupsMap.has(key)) {
+            groupsMap.set(key, {
+                project: hasProject ? shift.project : null,
+                projectId: hasProject ? shift.project.id : null,
+                shifts: [],
+            })
+        }
+
+        groupsMap.get(key)!.shifts.push(shift)
+    }
+
+    const groups = Array.from(groupsMap.values())
+
+    // Sortierung: erst Projekte (optional nach Name), dann "ohne Projekt"
+    return groups.sort((a, b) => {
+        if (a.project && !b.project) return -1
+        if (!a.project && b.project) return 1
+        if (a.project && b.project) {
+            return (a.project.name || '').localeCompare(b.project.name || '')
+        }
+        return 0
+    })
+}
 
 const monthObserver = ref<IntersectionObserver | null>(null)
 const watchedMonths = new Map<Element, string>()

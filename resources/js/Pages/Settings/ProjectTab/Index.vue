@@ -26,6 +26,7 @@ const { t } = useI18n();
 
 // Lokale States
 const searchComponent = ref("");
+const debouncedSearch = ref("");
 const showAddEditModal = ref(false);
 const dragging = ref(false);
 
@@ -38,25 +39,56 @@ watch(
     }
 );
 
-// Gefilterte normale Komponenten (in Gruppen nach Key)
+// Debouncing für Search (300ms Verzögerung)
+let debounceTimeout = null;
+watch(searchComponent, (newVal) => {
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+        debouncedSearch.value = newVal;
+    }, 300);
+});
+
+// Gefilterte normale Komponenten (in Gruppen nach Key) - mit Early Return
 const filteredComponents = computed(() => {
-    const search = searchComponent.value.toLowerCase();
+    const search = searchComponent.value.toLowerCase().trim();
+
+    // Early return wenn keine Suche
+    if (!search) {
+        return Object.keys(props.components).reduce((acc, key) => {
+            acc[key] = {
+                name: key,
+                components: props.components[key],
+                closed: false
+            };
+            return acc;
+        }, {});
+    }
+
+    // Filter mit Suche - nur Gruppen mit Treffern zurückgeben
     return Object.keys(props.components).reduce((acc, key) => {
         const filtered = props.components[key].filter((component) =>
             String(component.name).toLowerCase().includes(search)
         );
-        acc[key] = {
-            name: key,
-            components: filtered,
-            closed: filtered.length === 0,
-        };
+
+        // Nur nicht-leere Gruppen hinzufügen
+        if (filtered.length > 0) {
+            acc[key] = {
+                name: key,
+                components: filtered,
+                closed: false
+            };
+        }
         return acc;
     }, {});
 });
 
-// Gefilterte Special Components (mit Übersetzung)
+// Gefilterte Special Components (mit Debouncing für Translation)
 const filteredSpecialComponents = computed(() => {
-    const search = searchComponent.value.toLowerCase();
+    const search = debouncedSearch.value.toLowerCase().trim();
+
+    // Early return wenn keine Suche
+    if (!search) return props.componentsSpecial;
+
     return props.componentsSpecial.filter((component) =>
         t(component.name).toLowerCase().includes(search)
     );

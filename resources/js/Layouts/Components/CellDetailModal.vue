@@ -350,20 +350,17 @@
 
             <!-- Footer Actions -->
             <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button
+                <BaseUIButton is-cancel-button
                     @click="handleClose"
-                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
                 >
                     {{ $t('Cancel') }}
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton is-add-button icon="IconDeviceFloppy"
                     @click="saveAndClose"
                     :disabled="cell?.column?.is_locked"
-                    class="px-6 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                 >
-                    <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                     {{ $t('Save & Close') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -386,10 +383,12 @@ import {
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue';
 import { router } from '@inertiajs/vue3';
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: 'CellDetailModal',
     components: {
+        BaseUIButton,
         ArtworkBaseModal,
         IconLock,
         IconCalculator,
@@ -415,6 +414,10 @@ export default {
         projectId: {
             type: Number,
             required: true
+        },
+        initialTab: {
+            type: String,
+            default: null
         }
     },
     data() {
@@ -471,9 +474,21 @@ export default {
     mounted() {
         this.initializeData();
 
-        // Set default tab
-        if (this.cell?.column?.type !== 'empty') {
-            this.activeTab = 'comment';
+        // Set tab based on initialTab prop or default logic
+        if (this.initialTab) {
+            // Map type names to tab IDs
+            const tabMapping = {
+                'comment': 'comment',
+                'calculation': 'calculation',
+                'moneySource': 'linking',
+                'linking': 'linking'
+            };
+            this.activeTab = tabMapping[this.initialTab] || this.initialTab;
+        } else {
+            // Set default tab
+            if (this.cell?.column?.type !== 'empty') {
+                this.activeTab = 'comment';
+            }
         }
     },
     watch: {

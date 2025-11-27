@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,9 +16,9 @@ class ComponentController extends Controller
     {
         $tabComponentTypes = ProjectTabComponentEnum::getValues();
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
+        // Users und Departments werden nicht mehr eager geladen - stattdessen lazy loading beim Öffnen des Edit-Modals
         $components = Cache::remember('settings_components_not_special', 600, static function () {
             return Component::notSpecial()
-                ->with(['users', 'departments'])
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
                 ->orderBy('type')
                 ->orderBy('name')
@@ -27,7 +28,6 @@ class ComponentController extends Controller
 
         $componentsSpecial = Cache::remember('settings_components_special', 600, static function () {
             return Component::isSpecial()
-                ->with(['users', 'departments'])
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
                 ->orderBy('name')
                 ->get();
@@ -38,6 +38,18 @@ class ComponentController extends Controller
             'componentsSpecial' => $componentsSpecial,
             'tabComponentTypes' => $tabComponentTypes
         ]);
+    }
+
+    /**
+     * Show a single component with its users and departments relations.
+     * Used for lazy-loading when editing a component.
+     */
+    public function show(Component $component): JsonResponse
+    {
+        // Load relations only when needed (on-demand for edit modal)
+        $component->load(['users', 'departments']);
+
+        return response()->json($component);
     }
 
     /**
@@ -102,7 +114,9 @@ class ComponentController extends Controller
         $component->componentInDisclosures()->delete();
 
         // first check if the component has projectValues attached
-        $component->projectValue()->delete();
+        if ($component->projectValue) {
+            $component->projectValue->delete();
+        }
 
         $component->componentInPrintLayouts()->delete();
 

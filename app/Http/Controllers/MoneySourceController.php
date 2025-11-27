@@ -85,8 +85,22 @@ class MoneySourceController extends Controller
     {
         $filteredObjects = [];
         $this->authorize('viewAny', User::class);
+
+        $query = $request->input('query');
+
+        // Try Scout search first, fallback to database query if Scout fails
+        try {
+            $moneySources = MoneySource::search($query)->get();
+        } catch (\Exception $e) {
+            // Fallback to database query if Scout/Meilisearch is not available
+            if (!empty($query)) {
+                $moneySources = MoneySource::where('name', 'LIKE', '%' . $query . '%')->get();
+            } else {
+                $moneySources = MoneySource::all();
+            }
+        }
+
         if ($request->input('type') === 'single') {
-            $moneySources = MoneySource::search($request->input('query'))->get();
             foreach ($moneySources as $moneySource) {
                 if ($moneySource->is_group === 1 || $moneySource->is_group === true) {
                     continue;
@@ -95,7 +109,6 @@ class MoneySourceController extends Controller
             }
             return $filteredObjects;
         } elseif ($request->input('type') === 'group') {
-            $moneySources = MoneySource::search($request->input('query'))->get();
             foreach ($moneySources as $moneySource) {
                 if ($moneySource->is_group === 1 || $moneySource->is_group === true) {
                     $filteredObjects[] = $moneySource;
@@ -103,9 +116,8 @@ class MoneySourceController extends Controller
             }
             return $filteredObjects;
         } else {
-            $moneySources = MoneySource::search($request->input('query'))->get();
             foreach ($moneySources as $moneySource) {
-                if ($moneySource->projects->contains($request->projectId)) {
+                if ($moneySource->projects->contains($request->input('projectId'))) {
                     $filteredObjects[] = $moneySource;
                 }
             }

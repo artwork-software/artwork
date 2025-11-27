@@ -684,6 +684,7 @@
         v-if="showCellDetailModal && tempCellData"
         :cell="tempCellData"
         :project-id="project.id"
+        :initial-tab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
         @comment-saved="handleCommentSaved"
         @comment-deleted="handleCommentDeleted"

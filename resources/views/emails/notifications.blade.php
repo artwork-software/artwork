@@ -79,13 +79,13 @@
                             <p>
                                 @if(!empty($body['body']['event']))
                                     @if(!empty($body['body']['event']['room_id']))
-                                        {{ \Artwork\Modules\Room\Models\Room::query()->find($body['body']['event']['room_id'])->first()?->name ?? 'Termin ohne Raum' }},
+                                        {{ \Artwork\Modules\Room\Models\Room::query()->find($body['body']['event']['room_id'])?->name ?? 'Termin ohne Raum' }},
                                     @endif
-                                    {{ \Artwork\Modules\EventType\Models\EventType::query()->find($body['body']['event']['event_type_id'])->first()?->name }}
+                                    {{ \Artwork\Modules\EventType\Models\EventType::query()->find($body['body']['event']['event_type_id'])?->name }}
                                     |
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::query()->find($body['body']['event']['project_id'])->first()?->name ?? 'Kein Projekt' }}
+                                        {{ \Artwork\Modules\Project\Models\Project::query()->find($body['body']['event']['project_id'])?->name ?? 'Kein Projekt' }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}

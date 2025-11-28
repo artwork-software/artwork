@@ -64,10 +64,7 @@ class Component extends Model
     ];
 
 
-    protected $with = [
-        'users',
-        'departments',
-    ];
+    protected $with = [];
 
     /**
      * Get the project value associated with the component.
@@ -122,8 +119,7 @@ class Component extends Model
         return $this->belongsToMany(Department::class)
             ->using(ComponentDepartment::class)
             ->withPivot(['can_write'])
-            ->withTimestamps()
-            ->with(['users']);
+            ->withTimestamps();
     }
 
     /**

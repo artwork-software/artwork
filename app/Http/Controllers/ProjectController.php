@@ -2197,7 +2197,7 @@ class ProjectController extends Controller
             },
             // WICHTIG: Berechtigungsdaten der Hauptkomponenten
             'components.component.users',
-            'components.component.departments.users',
+            'components.component.departments.users.departments',
 
             // Sidebar-Komponenten inkl. ProjectValue
             'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
@@ -2205,14 +2205,14 @@ class ProjectController extends Controller
             },
             // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten
             'sidebarTabs.componentsInSidebar.component.users',
-            'sidebarTabs.componentsInSidebar.component.departments.users',
+            'sidebarTabs.componentsInSidebar.component.departments.users.departments',
 
             // Disclosure-Komponenten (falls angezeigt)
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
             'components.disclosureComponents.component.users',
-            'components.disclosureComponents.component.departments.users',
+            'components.disclosureComponents.component.departments.users.departments',
         ]);
 
         // Alle Komponenten des Tabs inkl. Sidebar (unique, Reihenfolge beibehalten)

@@ -26,7 +26,6 @@ const { t } = useI18n();
 
 // Lokale States
 const searchComponent = ref("");
-const debouncedSearch = ref("");
 const showAddEditModal = ref(false);
 const dragging = ref(false);
 
@@ -39,7 +38,8 @@ watch(
     }
 );
 
-// Debouncing für Search (300ms Verzögerung)
+// Debouncing für Search (300ms Verzögerung) - vereinheitlicht für beide Filter
+const debouncedSearch = ref("");
 let debounceTimeout = null;
 watch(searchComponent, (newVal) => {
     if (debounceTimeout) clearTimeout(debounceTimeout);
@@ -48,50 +48,72 @@ watch(searchComponent, (newVal) => {
     }, 300);
 });
 
-// Gefilterte normale Komponenten (in Gruppen nach Key) - mit Early Return
+// Gefilterte normale Komponenten (in Gruppen nach Key) - optimiert mit debouncedSearch
 const filteredComponents = computed(() => {
-    const search = searchComponent.value.toLowerCase().trim();
+    const search = debouncedSearch.value.toLowerCase().trim();
 
-    // Early return wenn keine Suche
+    // Early return wenn keine Suche - Original-Struktur direkt zurückgeben
     if (!search) {
-        return Object.keys(props.components).reduce((acc, key) => {
-            acc[key] = {
+        const result = {};
+        for (const key in props.components) {
+            result[key] = {
                 name: key,
                 components: props.components[key],
                 closed: false
             };
-            return acc;
-        }, {});
+        }
+        return result;
     }
 
-    // Filter mit Suche - nur Gruppen mit Treffern zurückgeben
-    return Object.keys(props.components).reduce((acc, key) => {
-        const filtered = props.components[key].filter((component) =>
-            String(component.name).toLowerCase().includes(search)
-        );
+    // Filter mit Suche - optimiert ohne reduce
+    const result = {};
+    for (const key in props.components) {
+        const components = props.components[key];
+        const filtered = [];
+
+        for (let i = 0; i < components.length; i++) {
+            if (String(components[i].name).toLowerCase().includes(search)) {
+                filtered.push(components[i]);
+            }
+        }
 
         // Nur nicht-leere Gruppen hinzufügen
         if (filtered.length > 0) {
-            acc[key] = {
+            result[key] = {
                 name: key,
                 components: filtered,
                 closed: false
             };
         }
-        return acc;
-    }, {});
+    }
+    return result;
 });
 
-// Gefilterte Special Components (mit Debouncing für Translation)
+// Vorab-berechnete Translations für Special Components (Performance-Optimierung)
+const specialComponentsWithTranslations = computed(() => {
+    return props.componentsSpecial.map(component => ({
+        ...component,
+        translatedName: t(component.name).toLowerCase()
+    }));
+});
+
+// Gefilterte Special Components (optimiert mit gecachten Translations)
 const filteredSpecialComponents = computed(() => {
     const search = debouncedSearch.value.toLowerCase().trim();
 
     // Early return wenn keine Suche
     if (!search) return props.componentsSpecial;
 
-    return props.componentsSpecial.filter((component) =>
-        t(component.name).toLowerCase().includes(search)
-    );
+    const filtered = [];
+    const components = specialComponentsWithTranslations.value;
+
+    for (let i = 0; i < components.length; i++) {
+        if (components[i].translatedName.includes(search)) {
+            filtered.push(props.componentsSpecial[i]);
+        }
+    }
+
+    return filtered;
 });
 
 // Reorder-Handler

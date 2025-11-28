@@ -6,6 +6,8 @@ use App\Http\Requests\StoreShiftPlanRequestRequest;
 use App\Http\Requests\UpdateShiftPlanRequestRequest;
 use Artwork\Core\Services\HelperService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
@@ -114,7 +116,6 @@ class ShiftPlanRequestController extends Controller
 
         foreach ($shifts as $shift) {
             $previousRequest = null;
-
             // Falls die Schicht aus einem abgelehnten Request kommt, merken wir uns diesen
             if ($shift->currentRequest && $shift->currentRequest->status === 'rejected') {
                 $previousRequest = $shift->currentRequest;
@@ -170,6 +171,15 @@ class ShiftPlanRequestController extends Controller
                 'current_request_id' => $shiftPlanRequest->id,
                 'in_workflow'        => true,
             ]);
+        }
+
+        // 7. Websockets: Alle betroffenen Schichten updaten
+        foreach ($shifts as $shift) {
+            $freshedShift = $shift->fresh(); // sicherstellen, dass wir aktuelle Daten haben
+            broadcast(new UpdateShiftInShiftPlan(
+                $freshedShift,
+                $freshedShift->room_id ?? $freshedShift->event->room_id
+            ));
         }
 
         return back()->with(
@@ -629,6 +639,8 @@ class ShiftPlanRequestController extends Controller
                     ]);
                 })
                 ->log('Shift rejected as part of shift plan request');
+
+            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
         }
 
         return back()->with('success', __('Shift plan request rejected successfully.'));
@@ -859,7 +871,7 @@ class ShiftPlanRequestController extends Controller
      * @param int $changeId
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function revertChange(ShiftPlanRequest $shiftPlanRequest, ShiftPlanRequestChange $shiftChange)
+    public function revertChange(ShiftPlanRequest $shiftPlanRequest, ShiftPlanRequestChange $shiftChange): \Illuminate\Http\RedirectResponse
     {
         /** @var User $user */
         $user = $this->auth->user();

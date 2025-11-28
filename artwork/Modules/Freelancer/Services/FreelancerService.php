@@ -85,7 +85,7 @@ readonly class FreelancerService
                 //'plannedWorkingHours' => $plannedWorkingHours, //$freelancer->plannedWorkingHours($startDate, $endDate),
                 'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $freelancer->dayServices?->groupBy('pivot.date'),
-                'individual_times' => $freelancer->individualTimes()
+                'individual_times' => $freelancer->individualTimes()->with(['series'])
                     ->individualByDateRange($startDate, $endDate)->get(),
                 'shift_comments' => $freelancer->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];

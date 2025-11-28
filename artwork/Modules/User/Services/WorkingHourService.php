@@ -233,7 +233,7 @@ class WorkingHourService
             'shifts',
             'shifts.shiftGroup',
             'individualTimes' => function ($query) use ($startDate, $endDate): void {
-                $query->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
+                $query->with(['series'])->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },
             'workTimeBookings' => function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()]);

@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full group/shift bg-background-gray hover:bg-gray-50 duration-300 ease-in-out cursor-pointer">
+    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
         <div
             :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
             class="flex items-center xsLight text-shiftText subpixel-antialiased"
@@ -20,13 +20,15 @@
 
                         <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
-                            <component :is="IconLock" class="text-right h-3 w-3" v-if="shift.isCommitted" />
+                            <component :is="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
                             <ToolTipComponent
                                 v-if="shift.inWorkflow && !shift.isCommitted"
                                 :icon="IconGitPullRequest"
-                                icon-size="w-3 h-3"
+                                icon-size="w-3 h-3 !text-black"
+                                :stroke="2"
                                 :tooltip-text="$t('This shift is currently in a workflow.')"
                                 direction="top"
+                                black-icon
                             />
                             <span>
                                 {{ shift.craft.abbreviation }}

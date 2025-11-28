@@ -98,7 +98,7 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th v-for="day in days" :ref="el => registerMonthSentinel(el as HTMLElement, day)" :key="`head-${day.fullDay}-${day.weekNumber}`" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px" class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
-                                        <div v-if="day.isExtraRow" :style="{ width: '200px' }">
+                                        <div v-if="day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }">
                                             <span class="text-[9px] font-bold">KW{{ day.weekNumber }}</span>
                                         </div>
                                         <div v-else :style="{ width: '200px' }" class="ml-2 flex h-full items-center justify-between calendarRoomHeaderBold">
@@ -128,19 +128,19 @@
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300" :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
-                                    <th :id="'roomNameContainer_' + index" class="xsDark w-48 table-cell align-middle" :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                        <div class="ml-4 flex items-center font-semibold">
-                                            {{ room.roomName }}
+                                    <th :id="'roomNameContainer_' + index" class="xsDark table-cell align-middle" :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        <div class="flex items-center font-semibold"  style="width: 191.5px; max-width: 191.5px">
+                                            <span class="pl-3">{{ room.roomName }}</span>
                                         </div>
                                     </th>
-                                    <td v-for="day in days" :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`" :data-day="day.fullDay" class="day-container relative table-cell align-top px-[1px] border-gray-400"
+                                    <td v-for="day in days" :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`" :style="{ width: '202px', maxWidth: '202px' }" :data-day="day.fullDay" class="day-container relative table-cell align-top px-[1px] border-gray-400"
                                         :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : '', multiEditModeCalendar ? '' : '', usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-28']">
                                         <div v-if="!day.isExtraRow && multiEditModeCalendar" class="absolute h-full w-full"
                                             :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
                                             checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"></div>
-                                        <div v-if="day.isExtraRow" class="mb-3 h-full min-w-full bg-background-gray2 border-l-2 border-gray-800" :style="{ width: '202px', maxWidth: '202px' }"></div>
-                                        <div v-else style="width: 200px" class="cell group" :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                        <div v-if="day.isExtraRow" class="mb-3 h-full min-w-full bg-background-gray2 border-gray-800"></div>
+                                        <div v-else class="cell group" :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
                                             <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events">
                                                 <div v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
                                                     <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', {project: group.id,projectTab: firstProjectShiftTabId})" class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white">
@@ -155,22 +155,43 @@
                                                 </div>
                                             </template>
                                             <div class="space-y-0.5">
-                                                <template v-if="room.content[day.fullDay]?.shifts">
-                                                    <div v-for="shift in room.content[day.fullDay].shifts" :key="shift.id || shift.dwId || shift.uuid">
-                                                        <div v-if="shift.daysOfShift.includes(day.fullDay)" class="rounded-lg border border-gray-100 bg-gray-50 py-0.5">
-                                                            <SingleShiftInRoom
-                                                                :multiEditMode="multiEditMode"
-                                                                :user-for-multi-edit="userForMultiEdit"
-                                                                :highlightMode="highlightMode"
-                                                                :highlighted-id="idToHighlight"
-                                                                :highlighted-type="typeToHighlight"
-                                                                :shift="shift"
-                                                                :shift-qualifications="shiftQualifications"
-                                                                :day-string="day"
-                                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                @dropFeedback="showDropFeedback"
-                                                                @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
-                                                                @click-on-edit="openEditShiftModal"/>
+                                                <template v-if="room.content[day.fullDay]?.shifts?.length">
+                                                    <!-- 1. Ebene: Projekt-Gruppen -->
+                                                    <div v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)" :key="group.projectId ?? `no-project-${day.fullDay}`">
+                                                        <!-- Projekt-Gruppen-Container -->
+                                                        <div class="rounded-lg border duration-200 ease-in-out" :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'">
+                                                            <!-- Kopfzeile: Projekt / „ohne Projekt“ -->
+                                                            <div>
+                                                                <div v-if="group.project" class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
+                                                                    <span>{{ group.project.name }}</span>
+                                                                    <span class="text-[10px] text-sky-600">
+                                                                        ({{ group.shifts.length }})
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- 2. Ebene: einzelne Schichten der Gruppe -->
+                                                            <div class="space-y-0.5 px-1" :class="group.project ? 'divide-y divide-sky-100' : 'divide-y divide-gray-100'">
+                                                                <div v-for="shift in group.shifts"
+                                                                    :key="shift.id || shift.dwId || shift.uuid"
+                                                                    class="rounded-lg duration-200 ease-in-out"
+                                                                    :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'">
+                                                                    <SingleShiftInRoom
+                                                                        :multiEditMode="multiEditMode"
+                                                                        :user-for-multi-edit="userForMultiEdit"
+                                                                        :highlightMode="highlightMode"
+                                                                        :highlighted-id="idToHighlight"
+                                                                        :highlighted-type="typeToHighlight"
+                                                                        :shift="shift"
+                                                                        :shift-qualifications="shiftQualifications"
+                                                                        :day-string="day"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                        @dropFeedback="showDropFeedback"
+                                                                        @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
+                                                                        @click-on-edit="openEditShiftModal"
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </template>
@@ -214,6 +235,14 @@
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background px-3 py-3" :style="{ top: calculateTopPositionOfUserOverView }">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" :icon="IconPencil"/>
+                                <ToolTipComponent
+                                    direction="right"
+                                    :tooltip-text="$t('Create individual time series')"
+                                    :icon="IconClockShield"
+                                    icon-size="h-5 w-5"
+                                    @click="showIndividualTimeSeriesModal = true"
+                                    classesButton="ui-button"
+                                />
                                 <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
                                     <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')" size="md" @change="toggleDayServiceMode" :icon="selectedDayService?.icon"/>
                                     <DayServiceFilter :current-selected-day-service="selectedDayService" :day-services="dayServices" @update:current-selected-day-service="updateSelectedDayService"/>
@@ -475,13 +504,18 @@
         :multi-add-mode="multiEditModeCalendar"
         :rooms-and-dates-for-multi-edit="multiEditCalendarDays"
     />
+
+    <IndividualTimeSeriesModal
+        v-if="showIndividualTimeSeriesModal"
+        @close="showIndividualTimeSeriesModal = false"
+        @updated="handleSeriesUpdated"
+    />
 </template>
 
 <script setup lang="ts">
 
 import Permissions from '@/Mixins/Permissions.vue'
 import { ChevronDownIcon } from '@heroicons/vue/outline'
-import SingleShiftPlanEvent from '@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue'
 import axios from 'axios'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
@@ -511,7 +545,7 @@ import {
     IconPlus,
     IconX,
     IconChevronUp,
-    IconCheck,
+    IconCheck, IconCalendarMonth, IconClockShield,
 } from '@tabler/icons-vue'
 import CraftFilter from '@/Components/Filter/CraftFilter.vue'
 import SingleEventInShiftPlan from '@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'
@@ -536,6 +570,7 @@ import { can, is } from 'laravel-permission-to-vuejs'
 import { useUserOverviewLayout } from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import { useSyncedHorizontalScroll } from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 import { useI18n } from 'vue-i18n'
+import IndividualTimeSeriesModal from "@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue";
 const { t } = useI18n()
 
 
@@ -643,6 +678,7 @@ const showFreelancers = ref(true)
 const multiEditCellByDayAndUser = ref<Record<string, any>>({})
 const showCellMultiEditModal = ref(false)
 const openCellMultiEditDelete = ref(false)
+const showIndividualTimeSeriesModal = ref(false)
 const preventNextNavigation = ref(false)
 const originalVisit = ref<any | null>(null)
 const showShiftQualificationFilter = ref(false)
@@ -700,6 +736,48 @@ const { attach, detach } = useSyncedHorizontalScroll(
     currentDayRef,
     { roomNameOffsetPx: 200 },
 )
+
+
+type ShiftGroup = {
+    project: any | null
+    projectId: number | null
+    shifts: any[]
+}
+
+function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
+    const groupsMap = new Map<string, ShiftGroup>()
+    const PROJECTLESS_KEY = 'no_project'
+
+    for (const shift of shifts) {
+        // nur Schichten für den aktuellen Tag
+        if (!shift.daysOfShift?.includes(dayLabel)) continue
+
+        const hasProject = !!shift.project
+        const key = hasProject ? `project_${shift.project.id}` : PROJECTLESS_KEY
+
+        if (!groupsMap.has(key)) {
+            groupsMap.set(key, {
+                project: hasProject ? shift.project : null,
+                projectId: hasProject ? shift.project.id : null,
+                shifts: [],
+            })
+        }
+
+        groupsMap.get(key)!.shifts.push(shift)
+    }
+
+    const groups = Array.from(groupsMap.values())
+
+    // Sortierung: erst Projekte (optional nach Name), dann "ohne Projekt"
+    return groups.sort((a, b) => {
+        if (a.project && !b.project) return -1
+        if (!a.project && b.project) return 1
+        if (a.project && b.project) {
+            return (a.project.name || '').localeCompare(b.project.name || '')
+        }
+        return 0
+    })
+}
 
 const monthObserver = ref<IntersectionObserver | null>(null)
 const watchedMonths = new Map<Element, string>()
@@ -1511,8 +1589,7 @@ function closeMultiEditCellModal(eventData: any) {
     if (eventData && eventData.saved) {
         multiEditCellByDayAndUser.value = {}
         router.reload({
-            only: ['shifts', 'users', 'rooms', 'days', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-            preserveScroll: true,
+            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
         })
     }
 }
@@ -1751,17 +1828,33 @@ async function resolveQualificationFor(desiredShift: any) {
     const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
     const required = desiredShift.shifts_qualifications ?? []
     if (required.length === 0) return null
+    const shiftCraftId =
+        desiredShift.craft_id ??
+        desiredShift.craftId ??
+        desiredShift.craft?.id ??
+        null
+    const available = userQualis.filter((uq: any) => {
+        const matchesQualification = required.some(
+            (req: any) => req.shift_qualification_id === uq.id,
+        )
 
-    const available = userQualis.filter((uq: any) => required.some((req: any) => req.shift_qualification_id === uq.id))
+        if (!matchesQualification) return false
+        if (!shiftCraftId) return true
+
+        const uqCraftId = uq.pivot?.craft_id ?? null
+        if (uqCraftId === null) return true
+        return uqCraftId === shiftCraftId
+    })
+
     if (available.length === 0) return null
     if (available.length === 1) return available[0].id
-
     if (openQualificationPicker) {
         const picked = await openQualificationPicker(desiredShift, available)
         return picked?.id ?? null
     }
     return available[0].id
 }
+
 
 function openQualificationPicker(desiredShift: any, options: any[]) {
     if (waitForModalClose.value) return Promise.resolve(null)
@@ -1851,6 +1944,13 @@ function saveShiftQualificationFilter(event: any) {
         { show_qualifications: list },
         { preserveScroll: true, preserveState: true },
     )
+}
+
+function handleSeriesUpdated() {
+    showIndividualTimeSeriesModal.value = false;
+    router.reload({
+        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+    });
 }
 
 </script>

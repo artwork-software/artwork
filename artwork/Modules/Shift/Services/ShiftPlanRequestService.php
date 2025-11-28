@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Illuminate\Support\Arr;
@@ -95,6 +96,7 @@ class ShiftPlanRequestService
             }
 
             $attachPayload[$shift->id] = $payload;
+            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
         }
 
         // idempotent attach

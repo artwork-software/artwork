@@ -17,6 +17,7 @@ class ComponentController extends Controller
         $tabComponentTypes = ProjectTabComponentEnum::getValues();
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
         // Users und Departments werden nicht mehr eager geladen - stattdessen lazy loading beim Öffnen des Edit-Modals
+        // Performance-Optimierung: $with-Array im Component Model wurde geleert, daher kein ->without() mehr nötig
         $components = Cache::remember('settings_components_not_special', 600, static function () {
             return Component::notSpecial()
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])

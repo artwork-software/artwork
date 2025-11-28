@@ -20,7 +20,10 @@ class ProjectManagementBuilderController extends Controller
     {
         return Inertia::render('Settings/ProjectManagementBuilder/Index', [
             'componentsInGrid' => $this->projectManagementBuilderService->getProjectManagementBuilder(),
-            'availableComponents' => Component::all(),
+            'availableComponents' => Component::query()
+                ->without(['users', 'departments'])
+                ->select(['id', 'name', 'type', 'special'])
+                ->get(),
         ]);
     }
 

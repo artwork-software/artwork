@@ -110,7 +110,7 @@
                             <div class="card glassy p-4 w-full relative pb-28 md:pb-32">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
-                                    :events="room.content[day.fullDay]?.events || []"
+                                    :events="getEventsForDay(room, day.fullDay)"
                                     :shifts="filterShiftsByCraft(room.content[day.fullDay]?.shifts || [])"
                                     :event-types="eventTypes"
                                     :rooms="rooms"
@@ -197,6 +197,72 @@ import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import { is } from 'laravel-permission-to-vuejs'
+
+// Hilfsfunktion: Extrahiert Datum aus verschiedenen Formaten und normalisiert zu "YYYY-MM-DD"
+function extractDate(raw: any): string | null {
+    if (!raw) return null
+    const s = String(raw).trim()
+    const datePart = s.split(' ')[0] // "YYYY-MM-DD HH:MM" -> "YYYY-MM-DD" oder "DD.MM.YYYY HH:MM" -> "DD.MM.YYYY"
+
+    // ISO-Format: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart
+
+    // Deutsches Format: DD.MM.YYYY -> umwandeln zu YYYY-MM-DD
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(datePart)) {
+        const [day, month, year] = datePart.split('.')
+        return `${year}-${month}-${day}`
+    }
+
+    return null
+}
+
+// Hilfsfunktion: Gibt alle Events für einen Tag zurück, inkl. mehrtägiger Events
+function getEventsForDay(room: any, targetDay: string): any[] {
+    // Normalisiere targetDay zu ISO-Format (YYYY-MM-DD)
+    const normalizedTargetDay = extractDate(targetDay)
+
+    if (!normalizedTargetDay) {
+        return []
+    }
+
+    const result: any[] = []
+    const seenIds = new Set<number>()
+
+    // Events, die direkt diesem Tag zugeordnet sind
+    const directEvents = room.content?.[targetDay]?.events || []
+    for (const e of directEvents) {
+        if (!seenIds.has(e.id)) {
+            result.push(e)
+            seenIds.add(e.id)
+        }
+    }
+
+    // Alle Events aus allen Tagen in room.content durchgehen
+    if (room.content) {
+        for (const dayKey of Object.keys(room.content)) {
+            const dayEvents = room.content[dayKey]?.events || []
+
+            for (const e of dayEvents) {
+                // Überspringen, wenn bereits hinzugefügt
+                if (seenIds.has(e.id)) continue
+
+                // Prüfen, ob das Event mehrtägig ist und targetDay überschneidet
+                const startDate = extractDate(e.start || e.startDate || e.start_date)
+                const endDate = extractDate(e.end || e.endDate || e.end_date)
+
+                if (startDate && endDate && startDate !== endDate) {
+                    // Mehrtägiges Event: prüfen, ob normalizedTargetDay im Bereich liegt
+                    if (normalizedTargetDay >= startDate && normalizedTargetDay <= endDate) {
+                        result.push(e)
+                        seenIds.add(e.id)
+                    }
+                }
+            }
+        }
+    }
+
+    return result
+}
 
 const props = defineProps({
     project: {
@@ -471,11 +537,11 @@ const roomsForDay = (dayLabel: string): any[] => {
     if (!hideUnoccupiedRooms.value) return rooms
 
     return rooms.filter((room: any) => {
-        const dayContent = room?.content?.[dayLabel]
-        if (!dayContent) return false
+        // Verwende getEventsForDay(), um auch mehrtägige Events zu berücksichtigen
+        const events = getEventsForDay(room, dayLabel)
 
-        const events: any[] = Array.isArray(dayContent.events) ? dayContent.events : []
-        const shiftsRaw: any[] = Array.isArray(dayContent.shifts) ? dayContent.shifts : []
+        const dayContent = room?.content?.[dayLabel]
+        const shiftsRaw: any[] = Array.isArray(dayContent?.shifts) ? dayContent.shifts : []
         const shifts = filterShiftsByCraft(shiftsRaw)
 
         return (events?.length ?? 0) > 0 || (shifts?.length ?? 0) > 0

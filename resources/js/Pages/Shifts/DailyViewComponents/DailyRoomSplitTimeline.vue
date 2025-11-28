@@ -24,7 +24,8 @@
             <div v-for="(block, bIdx) in layoutBlocks" :key="'ev-block-' + bIdx" class="">
               <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getEventBlockStyle(block)">
                 <template v-for="item in block.eventItems" :key="item.key">
-                  <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)">
+
+                    <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)">
                     <SingleEventInDailyShiftView
                       v-bind="item.props"
                       @toggle="onEventToggle(item.id, $event)"
@@ -116,58 +117,196 @@ const human = (mins: number) => {
 // Build separate lists for events and shifts with normalized timing
 type Item = any
 
+// ---- Datums-Helfer: alles auf "YYYY-MM-DD" normalisieren -------------------
+function normalizeToYmd(raw: any): string | null {
+    if (!raw) return null
+    const s = String(raw).trim()
+    const datePart = s.split(' ')[0] // "YYYY-MM-DD HH:MM" -> "YYYY-MM-DD", "09.11.2025 00:00" -> "09.11.2025"
+
+    // ISO: 2025-11-09
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart
+
+    // Deutsch: 09.11.2025
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(datePart)) {
+        const [d, m, y] = datePart.split('.')
+        return `${y}-${m}-${d}` // -> 2025-11-09
+    }
+
+    return null
+}
+
+// Aktueller Tag der Daily-Ansicht in Normalform
+const currentDayYmd = computed(() => normalizeToYmd(props.day))
+
 const eventItems = computed<Item[]>(() => {
-  const items: Item[] = []
-  for (const e of (props.events as any[] || [])) {
-    if (e.allDay) continue
-    const start = clampDay(toMin(e?.formattedDates?.startTime || e?.start || e?.start_time))
-    const endRaw = clampDay(toMin(e?.formattedDates?.endTime || e?.end || e?.end_time))
-    if (start === null || endRaw === null) continue
-    const end = Math.max(start + 15, endRaw)
-    items.push({
-      key: `event-${e.id}`,
-      id: e.id,
-      type: 'event',
-      startMin: start,
-      endMin: end,
-      payload: e,
-      props: {
-        event: e,
-        eventTypes: props.eventTypes,
-        rooms: props.rooms,
-        first_project_calendar_tab_id: props.first_project_calendar_tab_id,
-        eventStatuses: props.eventStatuses,
-      },
-    })
-  }
-  return items.sort((a, b) => a.startMin - b.startMin)
+
+    const items: Item[] = []
+    const dayYmd = currentDayYmd.value
+
+    for (const e of (props.events as any[] || [])) {
+        if (e.allDay) continue
+
+        // Event hat IMMER raw start/end im Format "YYYY-MM-DD HH:MM"
+        const [rawStartDate, rawStartTime] = String(e.start || '').split(' ')
+        const [rawEndDate, rawEndTime]     = String(e.end   || '').split(' ')
+
+        const startDate = rawStartDate        // 2025-10-19
+        const endDate   = rawEndDate          // 2025-10-20
+
+
+        const start = clampDay(toMin(rawStartTime)) // z.B. 18:00 → 1080
+        const endRaw = clampDay(toMin(rawEndTime))  // z.B. 02:00 → 120
+
+        if (start === null || endRaw === null) continue
+
+        const isMultiDay = !!startDate && !!endDate && startDate !== endDate
+
+        let adjustedStart = start
+        let adjustedEnd = endRaw
+        let dayRole: 'single' | 'start' | 'middle' | 'end' = 'single'
+
+        if (isMultiDay) {
+            if (!dayYmd) continue
+            // Tag nur anzeigen, wenn innerhalb [startDate, endDate]
+            if (dayYmd < startDate || dayYmd > endDate!) continue
+
+            if (dayYmd === startDate) {
+                // Starttag: Original-Start → 24:00
+                adjustedStart = start
+                adjustedEnd   = 1440
+                dayRole = 'start'
+            } else if (dayYmd === endDate) {
+                // Endtag: 00:00 → Endzeit
+                adjustedStart = 0
+                adjustedEnd   = Math.max(15, endRaw)
+                dayRole = 'end'
+            } else {
+                // Mitteltag(e): 00:00 → 24:00
+                adjustedStart = 0
+                adjustedEnd   = 1440
+                dayRole = 'middle'
+            }
+        } else {
+            // Eintages-Event: nur am Starttag anzeigen (falls Datum gesetzt)
+            if (startDate && dayYmd && dayYmd !== startDate) continue
+
+            let end = endRaw
+            if (end <= start) end = 1440
+            adjustedStart = start
+            adjustedEnd   = Math.max(start + 15, end)
+        }
+        items.push({
+            key: `event-${e.id}`,
+            id: e.id,
+            type: 'event',
+            startMin: adjustedStart,
+            endMin: adjustedEnd,
+            isMultiDay,
+            dayRole,
+            payload: e,
+            props: {
+                event: e,
+                eventTypes: props.eventTypes,
+                rooms: props.rooms,
+                first_project_calendar_tab_id: props.first_project_calendar_tab_id,
+                eventStatuses: props.eventStatuses,
+            },
+        })
+    }
+
+    return items.sort((a, b) => a.startMin - b.startMin)
 })
 
+
+
+
+
+
+
+
 const shiftItems = computed<Item[]>(() => {
-  const items: Item[] = []
-  for (const s of (props.shifts as any[] || [])) {
-    const start = clampDay(toMin(s?.start))
-    let end = clampDay(toMin(s?.end))
-    if (start === null || end === null) continue
-    if (end <= start) end = 1440
-    const endMin = Math.max(start + 15, end)
-    items.push({
-      key: `shift-${s.id}`,
-      id: s.id,
-      type: 'shift',
-      startMin: start,
-      endMin,
-      payload: s,
-      props: {
-        shift: s,
-        shiftQualifications: props.shiftQualifications,
-        first_project_calendar_tab_id: props.first_project_calendar_tab_id,
-        crafts: props.crafts,
-      },
-    })
-  }
-  return items.sort((a, b) => a.startMin - b.startMin)
+    const items: Item[] = []
+    const dayYmd = currentDayYmd.value
+
+    for (const s of (props.shifts as any[] || [])) {
+        const startDate = normalizeToYmd(
+            s.startDate ??
+            s.start_date ??
+            s.date ??
+            s?.formattedDates?.startDate ??
+            s?.formattedDates?.start
+        )
+        const endDate = normalizeToYmd(
+            s.endDate ??
+            s.end_date ??
+            s?.formattedDates?.endDate ??
+            s?.formattedDates?.end
+        )
+
+        const start  = clampDay(toMin(s?.start))
+        const endRaw = clampDay(toMin(s?.end))
+        if (start === null || endRaw === null) continue
+
+        let adjustedStart = start
+        let adjustedEnd   = Math.max(start + 15, endRaw)
+
+        const isMultiDay = !!startDate && !!endDate && startDate !== endDate
+        let dayRole: 'single' | 'start' | 'middle' | 'end' = 'single'
+
+        if (isMultiDay) {
+            if (!dayYmd) continue
+            if (dayYmd < startDate || dayYmd > endDate) continue
+
+            if (dayYmd === startDate) {
+                // Starttag: original Start -> 24:00
+                adjustedStart = start
+                adjustedEnd   = 1440
+                dayRole = 'start'
+            } else if (dayYmd === endDate) {
+                // Endtag: 00:00 -> Endzeit
+                adjustedStart = 0
+                adjustedEnd   = Math.max(15, endRaw)
+                dayRole = 'end'
+            } else {
+                // Mitteltag
+                adjustedStart = 0
+                adjustedEnd   = 1440
+                dayRole = 'middle'
+            }
+        } else {
+            // Eintags-Schicht nur am Starttag anzeigen, falls Datum vorhanden
+            if (startDate && dayYmd && dayYmd !== startDate) continue
+
+            let end = endRaw
+            if (end <= start) end = 1440
+            adjustedStart = start
+            adjustedEnd   = Math.max(start + 15, end)
+        }
+
+        items.push({
+            key: `shift-${s.id}`,
+            id: s.id,
+            type: 'shift',
+            startMin: adjustedStart,
+            endMin: adjustedEnd,
+            isMultiDay,
+            dayRole,
+            payload: s,
+            props: {
+                shift: s,
+                shiftQualifications: props.shiftQualifications,
+                first_project_calendar_tab_id: props.first_project_calendar_tab_id,
+                crafts: props.crafts,
+            },
+        })
+    }
+
+    return items.sort((a, b) => a.startMin - b.startMin)
 })
+
+
+
+
 
 const allDayEvents = computed(() => (props.events as any[] || []).filter((e: any) => e.allDay))
 
@@ -344,23 +483,43 @@ function estimateEventExpandedMinPx(event: any): number {
   return Math.max(EXPANDED_MIN_EVENT, estimated)
 }
 
+function getDailyTimeHeight(item: any): number {
+    const duration = item.endMin - item.startMin
+    return Math.max(24, Math.round(duration * props.pxPerMin))
+}
+
+
+
+
+
 function getEventItemHeightPx(item: any, block: any) {
-  const timeHeight = Math.max(24, Math.round((item.endMin - item.startMin) * props.pxPerMin))
-  const expanded = !!eventsExpanded.value[item.id]
-  const minH = expanded ? EXPANDED_MIN_EVENT : COLLAPSED_MIN_EVENT
-  // Anpassung laut Issue: Jeder Termin soll immer – egal ob mit oder ohne Kollision –
-  // eine zur Dauer passende Höhe besitzen. Daher immer zeitproportional, aber nicht
-  // kleiner als die jeweilige Minimalhöhe (collapsed/expanded).
-  return Math.max(timeHeight, minH)
+    const timeHeight = getDailyTimeHeight(item)
+
+    // Multi-Day: keine riesigen Expanded-Höhen erzwingen,
+    // nur mind. Headerhöhe
+    if (item.isMultiDay) {
+        return Math.max(timeHeight, COLLAPSED_MIN_EVENT)
+    }
+
+    const expanded = !!eventsExpanded.value[item.id]
+    const minH = expanded ? EXPANDED_MIN_EVENT : COLLAPSED_MIN_EVENT
+    return Math.max(timeHeight, minH)
 }
+
 function getShiftItemHeightPx(item: any, block: any) {
-  const timeHeight = Math.max(24, Math.round((item.endMin - item.startMin) * props.pxPerMin))
-  const expanded = !!shiftsExpanded.value[item.id]
-  const minH = expanded ? estimateShiftExpandedMinPx(item?.payload) : COLLAPSED_MIN_SHIFT
-  // Immer zeitproportionale Höhe berücksichtigen, damit Schichten relativ zu Terminen skaliert werden
-  // (Minimum bleibt je nach Expand-Status erhalten)
-  return Math.max(timeHeight, minH)
+    const timeHeight = getDailyTimeHeight(item)
+
+    if (item.isMultiDay) {
+        return Math.max(timeHeight, COLLAPSED_MIN_SHIFT)
+    }
+
+    const expanded = !!shiftsExpanded.value[item.id]
+    const minH = expanded ? estimateShiftExpandedMinPx(item?.payload) : COLLAPSED_MIN_SHIFT
+    return Math.max(timeHeight, minH)
 }
+
+
+
 
 // Kompakt-Mapping innerhalb eines Blocks:
 // Nur Zeiten, in denen mindestens ein Item aktiv ist, werden zeitlich proportional dargestellt.
@@ -464,26 +623,22 @@ const layoutBlocks = computed(() => {
     // Kompakt-Segmente vorbereiten (immer neu berechnen, da Min-Höhen dynamisch sind)
     b.compactSegments = buildCompactSegments(b)
 
-    // Visuelle Metriken (Top/Height/Bottom) pro Item berechnen –
-    // Kollisionen werden anhand ausgeklappter Mindesthöhen beurteilt.
-    const timeHeightPx = (it: any) => Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
-    const expandedMinPx = (it: any) => it.type === 'shift'
-      ? estimateShiftExpandedMinPx(it?.payload)
-      : estimateEventExpandedMinPx(it?.payload)
-
-    const computeVisualMetrics = (arr: any[]) => {
-      for (const it of arr) {
-        const top = getTopForItem(it, b)
-        const vH = Math.max(timeHeightPx(it), expandedMinPx(it))
-        ;(it as any)._vTop = top
-        ;(it as any)._vHeight = vH
-        ;(it as any)._vBottom = top + vH
+      const computeVisualMetrics = (arr: any[], type: 'event' | 'shift') => {
+          for (const it of arr) {
+              const top = getTopForItem(it, b)
+              const vH = type === 'shift'
+                  ? getShiftItemHeightPx(it, b)
+                  : getEventItemHeightPx(it, b)
+              ;(it as any)._vTop = top
+              ;(it as any)._vHeight = vH
+              ;(it as any)._vBottom = top + vH
+          }
       }
-    }
-    computeVisualMetrics(b.eventItems || [])
-    computeVisualMetrics(b.shiftItems || [])
+      computeVisualMetrics(b.eventItems || [], 'event')
+      computeVisualMetrics(b.shiftItems || [], 'shift')
 
-    // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
+
+      // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
     const assignVisualLanesByRect = (arr: any[]) => {
       const items = (arr || []).slice().sort((a, b) => (a._vTop ?? 0) - (b._vTop ?? 0) || (a.id ?? 0) - (b.id ?? 0))
       const laneBottoms: number[] = []

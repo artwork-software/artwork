@@ -146,73 +146,73 @@ function updateComponentOrder(components) {
             </button>
         </template>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <!-- Tab components -->
-                <div class="w-full col-span-1">
+            <!-- Tab components -->
+            <div class="w-full col-span-1">
 
-                    <div class="card white p-5">
-                        <draggable
-                            ghost-class="opacity-50"
-                            key="draggableKey"
-                            item-key="id"
-                            :list="tabsLocal"
-                            @start="dragging = true"
-                            @end="dragging = false"
-                            @change="updateComponentOrder(tabsLocal)"
-                        >
-                            <template #item="{ element }">
-                                <div class="mb-2">
-                                    <div :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
-                                        <SingleTabComponent :all-tabs="tabsLocal" :tab="element" />
-                                    </div>
+                <div class="card white p-5">
+                    <draggable
+                        ghost-class="opacity-50"
+                        key="draggableKey"
+                        item-key="id"
+                        :list="tabsLocal"
+                        @start="dragging = true"
+                        @end="dragging = false"
+                        @change="updateComponentOrder(tabsLocal)"
+                    >
+                        <template #item="{ element }">
+                            <div class="mb-2">
+                                <div :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                                    <SingleTabComponent :all-tabs="tabsLocal" :tab="element" />
                                 </div>
-                            </template>
-                        </draggable>
-                    </div>
+                            </div>
+                        </template>
+                    </draggable>
                 </div>
+            </div>
 
-                <!-- Components List -->
-                <div class="col-span-1 card glassy p-5">
-                    <div class="card white p-5 space-y-3">
-                        <div class="flex items-center justify-end w-full mb-3">
-                            <div class="w-44 md:w-56 lg:w-72">
-                                <BaseInput
-                                    id="search"
-                                    type="text"
-                                    name="search"
-                                    v-model="searchComponent"
-                                    :label="t('Search')"
-                                />
-                            </div>
+            <!-- Components List -->
+            <div class="col-span-1 card glassy p-5">
+                <div class="card white p-5 space-y-3">
+                    <div class="flex items-center justify-end w-full mb-3">
+                        <div class="w-44 md:w-56 lg:w-72">
+                            <BaseInput
+                                id="search"
+                                type="text"
+                                name="search"
+                                v-model="searchComponent"
+                                :label="t('Search')"
+                            />
                         </div>
+                    </div>
 
-                        <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
-                            <div>
-                                <div class="flex items-center gap-x-4 cursor-pointer">
-                                    <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
-                                </div>
-                                <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
-                                    <DragComponentElement
-                                        v-for="component in componentsArray.components"
-                                        :key="component.id"
-                                        :component="component"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
+                    <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
                         <div>
-                            <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
+                            <div class="flex items-center gap-x-4 cursor-pointer">
+                                <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
+                            </div>
                             <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                                 <DragComponentElement
-                                    v-for="component in filteredSpecialComponents"
-                                    :key="component.id || component.name"
+                                    v-for="component in componentsArray.components"
+                                    :key="component.id"
                                     :component="component"
                                 />
                             </div>
                         </div>
                     </div>
+
+                    <div>
+                        <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
+                        <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                            <DragComponentElement
+                                v-for="component in filteredSpecialComponents"
+                                :key="component.id || component.name"
+                                :component="component"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
         <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
     </ProjectSettingsHeader>
 </template>

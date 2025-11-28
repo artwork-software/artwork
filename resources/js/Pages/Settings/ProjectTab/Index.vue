@@ -26,7 +26,6 @@ const { t } = useI18n();
 
 // Lokale States
 const searchComponent = ref("");
-const debouncedSearch = ref("");
 const showAddEditModal = ref(false);
 const dragging = ref(false);
 
@@ -39,7 +38,8 @@ watch(
     }
 );
 
-// Debouncing für Search (300ms Verzögerung)
+// Debouncing für Search (300ms Verzögerung) - vereinheitlicht für beide Filter
+const debouncedSearch = ref("");
 let debounceTimeout = null;
 watch(searchComponent, (newVal) => {
     if (debounceTimeout) clearTimeout(debounceTimeout);
@@ -48,50 +48,72 @@ watch(searchComponent, (newVal) => {
     }, 300);
 });
 
-// Gefilterte normale Komponenten (in Gruppen nach Key) - mit Early Return
+// Gefilterte normale Komponenten (in Gruppen nach Key) - optimiert mit debouncedSearch
 const filteredComponents = computed(() => {
-    const search = searchComponent.value.toLowerCase().trim();
+    const search = debouncedSearch.value.toLowerCase().trim();
 
-    // Early return wenn keine Suche
+    // Early return wenn keine Suche - Original-Struktur direkt zurückgeben
     if (!search) {
-        return Object.keys(props.components).reduce((acc, key) => {
-            acc[key] = {
+        const result = {};
+        for (const key in props.components) {
+            result[key] = {
                 name: key,
                 components: props.components[key],
                 closed: false
             };
-            return acc;
-        }, {});
+        }
+        return result;
     }
 
-    // Filter mit Suche - nur Gruppen mit Treffern zurückgeben
-    return Object.keys(props.components).reduce((acc, key) => {
-        const filtered = props.components[key].filter((component) =>
-            String(component.name).toLowerCase().includes(search)
-        );
+    // Filter mit Suche - optimiert ohne reduce
+    const result = {};
+    for (const key in props.components) {
+        const components = props.components[key];
+        const filtered = [];
+
+        for (let i = 0; i < components.length; i++) {
+            if (String(components[i].name).toLowerCase().includes(search)) {
+                filtered.push(components[i]);
+            }
+        }
 
         // Nur nicht-leere Gruppen hinzufügen
         if (filtered.length > 0) {
-            acc[key] = {
+            result[key] = {
                 name: key,
                 components: filtered,
                 closed: false
             };
         }
-        return acc;
-    }, {});
+    }
+    return result;
 });
 
-// Gefilterte Special Components (mit Debouncing für Translation)
+// Vorab-berechnete Translations für Special Components (Performance-Optimierung)
+const specialComponentsWithTranslations = computed(() => {
+    return props.componentsSpecial.map(component => ({
+        ...component,
+        translatedName: t(component.name).toLowerCase()
+    }));
+});
+
+// Gefilterte Special Components (optimiert mit gecachten Translations)
 const filteredSpecialComponents = computed(() => {
     const search = debouncedSearch.value.toLowerCase().trim();
 
     // Early return wenn keine Suche
     if (!search) return props.componentsSpecial;
 
-    return props.componentsSpecial.filter((component) =>
-        t(component.name).toLowerCase().includes(search)
-    );
+    const filtered = [];
+    const components = specialComponentsWithTranslations.value;
+
+    for (let i = 0; i < components.length; i++) {
+        if (components[i].translatedName.includes(search)) {
+            filtered.push(props.componentsSpecial[i]);
+        }
+    }
+
+    return filtered;
 });
 
 // Reorder-Handler
@@ -124,73 +146,73 @@ function updateComponentOrder(components) {
             </button>
         </template>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <!-- Tab components -->
-                <div class="w-full col-span-1">
+            <!-- Tab components -->
+            <div class="w-full col-span-1">
 
-                    <div class="card white p-5">
-                        <draggable
-                            ghost-class="opacity-50"
-                            key="draggableKey"
-                            item-key="id"
-                            :list="tabsLocal"
-                            @start="dragging = true"
-                            @end="dragging = false"
-                            @change="updateComponentOrder(tabsLocal)"
-                        >
-                            <template #item="{ element }">
-                                <div class="mb-2">
-                                    <div :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
-                                        <SingleTabComponent :all-tabs="tabsLocal" :tab="element" />
-                                    </div>
+                <div class="card white p-5">
+                    <draggable
+                        ghost-class="opacity-50"
+                        key="draggableKey"
+                        item-key="id"
+                        :list="tabsLocal"
+                        @start="dragging = true"
+                        @end="dragging = false"
+                        @change="updateComponentOrder(tabsLocal)"
+                    >
+                        <template #item="{ element }">
+                            <div class="mb-2">
+                                <div :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                                    <SingleTabComponent :all-tabs="tabsLocal" :tab="element" />
                                 </div>
-                            </template>
-                        </draggable>
-                    </div>
+                            </div>
+                        </template>
+                    </draggable>
                 </div>
+            </div>
 
-                <!-- Components List -->
-                <div class="col-span-1 card glassy p-5">
-                    <div class="card white p-5 space-y-3">
-                        <div class="flex items-center justify-end w-full mb-3">
-                            <div class="w-44 md:w-56 lg:w-72">
-                                <BaseInput
-                                    id="search"
-                                    type="text"
-                                    name="search"
-                                    v-model="searchComponent"
-                                    :label="t('Search')"
-                                />
-                            </div>
+            <!-- Components List -->
+            <div class="col-span-1 card glassy p-5">
+                <div class="card white p-5 space-y-3">
+                    <div class="flex items-center justify-end w-full mb-3">
+                        <div class="w-44 md:w-56 lg:w-72">
+                            <BaseInput
+                                id="search"
+                                type="text"
+                                name="search"
+                                v-model="searchComponent"
+                                :label="t('Search')"
+                            />
                         </div>
+                    </div>
 
-                        <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
-                            <div>
-                                <div class="flex items-center gap-x-4 cursor-pointer">
-                                    <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
-                                </div>
-                                <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
-                                    <DragComponentElement
-                                        v-for="component in componentsArray.components"
-                                        :key="component.id"
-                                        :component="component"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
+                    <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
                         <div>
-                            <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
+                            <div class="flex items-center gap-x-4 cursor-pointer">
+                                <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
+                            </div>
                             <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                                 <DragComponentElement
-                                    v-for="component in filteredSpecialComponents"
-                                    :key="component.id || component.name"
+                                    v-for="component in componentsArray.components"
+                                    :key="component.id"
                                     :component="component"
                                 />
                             </div>
                         </div>
                     </div>
+
+                    <div>
+                        <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
+                        <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                            <DragComponentElement
+                                v-for="component in filteredSpecialComponents"
+                                :key="component.id || component.name"
+                                :component="component"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
         <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
     </ProjectSettingsHeader>
 </template>

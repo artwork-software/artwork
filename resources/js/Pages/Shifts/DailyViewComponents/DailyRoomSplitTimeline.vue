@@ -138,19 +138,6 @@ function normalizeToYmd(raw: any): string | null {
 // Aktueller Tag der Daily-Ansicht in Normalform
 const currentDayYmd = computed(() => normalizeToYmd(props.day))
 
-
-function addDaysToYmd(ymd: string | null, days: number): string | null {
-    if (!ymd) return null
-    const [y, m, d] = ymd.split('-').map(n => parseInt(n, 10))
-    if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return null
-    const date = new Date(y, m - 1, d + days)
-    const yy = date.getFullYear()
-    const mm = String(date.getMonth() + 1).padStart(2, '0')
-    const dd = String(date.getDate()).padStart(2, '0')
-    return `${yy}-${mm}-${dd}`
-}
-
-
 const eventItems = computed<Item[]>(() => {
 
     const items: Item[] = []
@@ -159,45 +146,36 @@ const eventItems = computed<Item[]>(() => {
     for (const e of (props.events as any[] || [])) {
         if (e.allDay) continue
 
-        const startDate = normalizeToYmd(
-            e.startDate ??
-            e.start_date ??
-            e.date ??
-            e?.formattedDates?.startDate ??
-            e?.formattedDates?.start
-        )
-        const endDateRaw = normalizeToYmd(
-            e.endDate ??
-            e.end_date ??
-            e?.formattedDates?.endDate ??
-            e?.formattedDates?.end
-        )
+        // Event hat IMMER raw start/end im Format "YYYY-MM-DD HH:MM"
+        const [rawStartDate, rawStartTime] = String(e.start || '').split(' ')
+        const [rawEndDate, rawEndTime]     = String(e.end   || '').split(' ')
 
-        const start  = clampDay(toMin(e?.formattedDates?.startTime || e?.start || e?.start_time))
-        const endRaw = clampDay(toMin(e?.formattedDates?.endTime   || e?.end   || e?.end_time))
+        const startDate = rawStartDate        // 2025-10-19
+        const endDate   = rawEndDate          // 2025-10-20
+
+
+        const start = clampDay(toMin(rawStartTime)) // z.B. 18:00 → 1080
+        const endRaw = clampDay(toMin(rawEndTime))  // z.B. 02:00 → 120
+
         if (start === null || endRaw === null) continue
 
+        const isMultiDay = !!startDate && !!endDate && startDate !== endDate
+
         let adjustedStart = start
-        let adjustedEnd   = Math.max(start + 15, endRaw)
-
-        const isMultiDayRaw = !!startDate && !!endDateRaw && startDate !== endDateRaw
-        // WICHTIG: inclusive Enddatum = „sichtbarer letzter Tag“
-        const inclusiveEndDate = isMultiDayRaw ? addDaysToYmd(endDateRaw, 1) : endDateRaw
-        const isMultiDay = !!startDate && !!inclusiveEndDate && startDate !== inclusiveEndDate
-
+        let adjustedEnd = endRaw
         let dayRole: 'single' | 'start' | 'middle' | 'end' = 'single'
 
         if (isMultiDay) {
             if (!dayYmd) continue
-            // Tag nur anzeigen, wenn innerhalb [startDate, inclusiveEndDate]
-            if (dayYmd < startDate || dayYmd > inclusiveEndDate!) continue
+            // Tag nur anzeigen, wenn innerhalb [startDate, endDate]
+            if (dayYmd < startDate || dayYmd > endDate!) continue
 
             if (dayYmd === startDate) {
                 // Starttag: Original-Start → 24:00
                 adjustedStart = start
                 adjustedEnd   = 1440
                 dayRole = 'start'
-            } else if (dayYmd === inclusiveEndDate) {
+            } else if (dayYmd === endDate) {
                 // Endtag: 00:00 → Endzeit
                 adjustedStart = 0
                 adjustedEnd   = Math.max(15, endRaw)
@@ -217,7 +195,6 @@ const eventItems = computed<Item[]>(() => {
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
-        console.log('Event', e.id, { startDate, endDateRaw, inclusiveEndDate, dayYmd })
         items.push({
             key: `event-${e.id}`,
             id: e.id,

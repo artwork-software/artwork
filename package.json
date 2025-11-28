@@ -41,6 +41,7 @@
         "vue-cal": "^4.8.1",
         "vue-i18n": "^11.1.12",
         "vue-mathjax-next": "^0.0.6",
+        "vue-virtual-scroller": "^2.0.0-beta.8",
         "vue3-colorpicker": "^2.3.0",
         "vuedraggable": "^4.1.0"
     }

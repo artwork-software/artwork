@@ -54,7 +54,8 @@ class IndividualTimeService
             $isFullDay = true;
         }
 
-        return $individualTime->update([
+        // Wenn die Zeit zu einer Serie gehört, entferne die series_uuid beim Update
+        $updateData = [
             'title' => $title,
             'start_time' => $startTime,
             'end_time' => $endTime,
@@ -62,7 +63,11 @@ class IndividualTimeService
             'end_date' => $endTimeConverted->format('Y-m-d'),
             'full_day' => $isFullDay,
             'working_time_minutes' => $workingTimeInMinutes,
-        ]);
+        ];
+        if (!empty($individualTime->series_uuid)) {
+            $updateData['series_uuid'] = null;
+        }
+        return $individualTime->update($updateData);
     }
 
     public function createForModel(
@@ -126,7 +131,7 @@ class IndividualTimeService
      * @param Carbon|null $endDate
      * @return Carbon[]
      */
-    private function processTimes(Carbon $startDate, ?string $startTime, ?string $endTime, ?Carbon $endDate): array
+    public function processTimes(Carbon $startDate, ?string $startTime, ?string $endTime, ?Carbon $endDate): array
     {
         $endDay = clone $startDate;
         $startTime = Carbon::parse($startTime);

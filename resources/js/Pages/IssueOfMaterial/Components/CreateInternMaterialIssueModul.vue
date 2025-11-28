@@ -77,6 +77,8 @@
                         @select="addProject"
                     />
 
+
+
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
@@ -487,6 +489,7 @@ import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsag
 import Galleria from "primevue/galleria";
 import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import dayjs from "dayjs";
 
 // Ensure time values are always in HH:mm format (strip seconds if present)
 function normalizeTime(value) {
@@ -754,6 +757,8 @@ type ProjectLike = {
     last_event?: { formatted_dates?: { end_without_time?: string; endTime?: string } };
     firstEventInProject?: { start_time?: string; [key: string]: any };
     lastEventInProject?: { end_time?: string; [key: string]: any };
+    firstEventStart?: string;
+    lastEventEnd?: string;
 };
 
 const DEFAULT_START = '00:00';
@@ -776,7 +781,7 @@ const addProject = (project?: ProjectLike) => {
     let startTime: string | null = null;
 
     // Try first_event format (from project search)
-    const fdStart = project.first_event?.formatted_dates;
+    const fdStart = project.first_event?.formatted_dates ;
     if (fdStart?.start_without_time) {
         startDate = fdStart.start_without_time;
         startTime = fdStart.startTime ?? DEFAULT_START;
@@ -819,11 +824,42 @@ const addProject = (project?: ProjectLike) => {
         }
     }
 
+
+
+
     // Set end date/time only if empty
     if (isEmpty(internMaterialIssue.end_date) && endDate) {
         internMaterialIssue.end_date = endDate;
         internMaterialIssue.end_time = endTime ?? DEFAULT_END;
     }
+
+    // if start empty check if project has project.firstEventStart ("14.11.2025") format it and set it
+    if (isEmpty(internMaterialIssue.start_date) && project.firstEventStart) {
+        const iso = dotDateToIso(project.firstEventStart);
+        if (iso) {
+            internMaterialIssue.start_date = iso;
+            internMaterialIssue.start_time = DEFAULT_START;
+        }
+    }
+
+// if end empty check if project has project.lastEventEnd ("20.11.2025")  format it and set it
+    if (isEmpty(internMaterialIssue.end_date) && project.lastEventEnd) {
+        const iso = dotDateToIso(project.lastEventEnd);
+        if (iso) {
+            internMaterialIssue.end_date = iso;
+            internMaterialIssue.end_time = DEFAULT_END;
+        }
+    }
+};
+
+const dotDateToIso = (value: string | null | undefined): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(trimmed);
+    if (!match) return null;
+
+    const [, dd, mm, yyyy] = match;
+    return `${yyyy}-${mm}-${dd}`;
 };
 
 
@@ -1290,6 +1326,8 @@ function readyForUseCount(article: any): number {
         return 0;
     }
 }
+
+
 
 
 const openArticleDetailModal = async (article) => {

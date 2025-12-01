@@ -1776,6 +1776,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/add/disclosure/component', [ProjectTabController::class, 'addDisclosureComponent'])
                 ->name('project-management-builder.add.disclosure.component');
 
+            // post project-management-builder.add.disclosure.component.with.scopes
+            Route::post('/add/disclosure/component/with/scopes', [ProjectTabController::class, 'addDisclosureComponentWithScopes'])
+                ->name('project-management-builder.add.disclosure.component.with.scopes');
+
             // tab.destroy
             Route::delete('/{projectTab}/destroy', [ProjectTabController::class, 'destroy'])
                 ->name('tab.destroy');

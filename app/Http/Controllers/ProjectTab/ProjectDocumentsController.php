@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ProjectTab;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\ComponentInTab;
+use Artwork\Modules\Project\Models\DisclosureComponents;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabDocumentService;
 use Illuminate\Http\JsonResponse;
@@ -17,14 +18,29 @@ class ProjectDocumentsController extends Controller
     ) {
     }
 
-    public function index(Project $project, ComponentInTab $componentInTab): JsonResponse
+    public function index(Project $project, int $componentInTab): JsonResponse
     {
-        if ($componentInTab->component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
+        // Try to find as ComponentInTab first
+        $componentInTabModel = ComponentInTab::find($componentInTab);
+
+        // If not found, try as DisclosureComponents
+        if (!$componentInTabModel) {
+            $disclosureComponent = DisclosureComponents::find($componentInTab);
+            if (!$disclosureComponent || $disclosureComponent->component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
+                throw new NotFoundHttpException();
+            }
+
+            // Create a virtual ComponentInTab-like structure for disclosure components
+            $componentInTabModel = new ComponentInTab();
+            $componentInTabModel->id = $disclosureComponent->id;
+            $componentInTabModel->component_id = $disclosureComponent->component_id;
+            $componentInTabModel->setRelation('component', $disclosureComponent->component);
+        } elseif ($componentInTabModel->component?->type !== ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
             throw new NotFoundHttpException();
         }
 
         return response()->json(
-            $this->projectTabDocumentService->buildDocumentPayload($project, $componentInTab)
+            $this->projectTabDocumentService->buildDocumentPayload($project, $componentInTabModel)
         );
     }
 

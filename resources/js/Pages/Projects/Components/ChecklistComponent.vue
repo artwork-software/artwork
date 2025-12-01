@@ -141,8 +141,11 @@ const projectCanWriteIds = computed(() => {
 
 watch(
     () => [props.project?.id, props.component?.id],
-    () => {
-        fetchChecklists();
+    ([projectId, componentId]) => {
+        // Only fetch when we have both a valid project and component ID
+        if (projectId && componentId) {
+            fetchChecklists();
+        }
     },
     { immediate: true }
 );
@@ -151,6 +154,7 @@ async function fetchChecklists() {
     const projectId = props.project?.id;
     const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
 
+    // Only fetch if we have both projectId and a valid componentInTabId
     if (!projectId || !componentInTabId) {
         return;
     }
@@ -193,7 +197,7 @@ const filteredChecklists = computed(() => {
         let include = true;
         if (search.value) {
             const nameMatch = checklist.name?.toLowerCase().includes(search.value.toLowerCase()) ?? false;
-            const taskMatch = Array.isArray(checklist.tasks) 
+            const taskMatch = Array.isArray(checklist.tasks)
                 ? checklist.tasks.some(task => task?.name?.toLowerCase().includes(search.value.toLowerCase()))
                 : false;
             include = nameMatch || taskMatch;

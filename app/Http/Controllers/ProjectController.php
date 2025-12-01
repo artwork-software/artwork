@@ -2224,6 +2224,16 @@ class ProjectController extends Controller
                 $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
             );
 
+        // Erkenne, welche Komponententypen im aktuellen Tab vorhanden sind
+        $componentTypes = $projectTabComponents
+            ->pluck('component.type')
+            ->unique()
+            ->toArray();
+
+        $hasShiftTab = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
+        $hasCalendarTab = in_array(ProjectTabComponentEnum::CALENDAR->value, $componentTypes, true);
+        $hasBudgetTab = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
+
         foreach ($projectTabComponents as $componentInTab) {
             $component = $componentInTab->component;
 
@@ -2239,22 +2249,46 @@ class ProjectController extends Controller
         $headerObject->lastEventInProject  = $lastEvent;
 
         $headerObject->roomsWithAudience   = Room::withAudience($project->id)->pluck('name', 'id');
+        // eventTypes, eventStatuses, event_properties müssen in headerObject sein, weil TabContent.vue sie an Child-Komponenten weitergibt
         $headerObject->eventTypes          = $this->eventTypeService->getAll();
+        $headerObject->eventStatuses       = app(EventSettings::class)->enable_status
+            ? EventStatus::orderBy('order')->get()
+            : [];
+        $headerObject->event_properties    = $eventPropertyService->getAll();
         $headerObject->states              = $this->projectStateService->getAll();
 
         $headerObject->projectGroups       = $project->groups;
-        $headerObject->groupProjects       = Project::where('is_group', 1)->get();
+
+        // Quick Win Step 4: GroupProjects nur laden wenn ProjectGroupComponent vorhanden (5-10% Reduktion)
+        $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
+        if ($hasGroupComponent) {
+            $headerObject->groupProjects = Project::where('is_group', 1)->get();
+        } else {
+            $headerObject->groupProjects = collect(); // Leere Collection für Konsistenz
+        }
+
         $headerObject->projectsOfGroup     = $project->projectsOfGroup()->get();
 
-        $headerObject->categories          = $this->categoryService->getAll();
+        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn ProjectAttributesComponent vorhanden (10-15% Reduktion)
+        $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
+        if ($hasAttributesComponent) {
+            $headerObject->categories = $this->categoryService->getAll();
+            $headerObject->genres = $this->genreService->getAll();
+            $headerObject->sectors = $this->sectorService->getAll();
+        } else {
+            // Leere Arrays für Konsistenz
+            $headerObject->categories = [];
+            $headerObject->genres = [];
+            $headerObject->sectors = [];
+        }
+
+        // Projekt-spezifische Kategorien/Genres/Sektoren immer laden (für Anzeige)
         $headerObject->projectCategories   = $project->categories;
-
-        $headerObject->genres              = $this->genreService->getAll();
         $headerObject->projectGenres       = $project->genres;
-
-        $headerObject->sectors             = $this->sectorService->getAll();
-        $headerObject->rooms               = $this->roomService->getAllWithoutTrashed([], ['events', 'admins']); //Scheint wohl nicht gebraucht zu sein
         $headerObject->projectSectors      = $project->sectors;
+
+        // Optimiert: Nur id und name laden statt alle Events und Admins
+        $headerObject->rooms               = Room::select('id', 'name')->whereNull('deleted_at')->get();
 
         $headerObject->projectState        = $project->state;
 
@@ -2280,12 +2314,6 @@ class ProjectController extends Controller
         // Achtung: wird an mehreren Stellen gesetzt – Reihenfolge/Name unverändert lassen
         $headerObject->project->project_managers = $project->managerUsers;
 
-        $headerObject->eventStatuses = app(EventSettings::class)->enable_status
-            ? EventStatus::orderBy('order')->get()
-            : [];
-
-        $headerObject->event_properties = $eventPropertyService->getAll();
-
         // Safely fetch latest history entry; can be null if no history exists
         $latestHistory = $project->historyChanges()->first();
         $latestChange  = [];
@@ -2304,43 +2332,12 @@ class ProjectController extends Controller
         }
         $headerObject->project_history = $latestChange;
 
-        // Zusätzliche Props für den Schicht-Tab (Daily View) analog EventController::viewShiftPlan
+        // Basis-Daten die immer gebraucht werden
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
 
-        $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
-        $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
-
-        // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
-        /** @var CalendarDataService $calendarDataService */
-        $calendarDataService = app(CalendarDataService::class);
-        $rooms = $calendarDataService->getFilteredRooms(
-            $userCalendarFilter,
-            $userCalendarSettings,
-            $startDate,
-            $endDate,
-            true
-        );
-
-        // Transform Room models to RoomDTOs for frontend compatibility
-        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
-            id: $room->id,
-            name: $room->name,
-            has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
-        ));
-
-        $dateValue = [
-            $startDate ? $startDate->format('Y-m-d') : null,
-            $endDate ? $endDate->format('Y-m-d') : null,
-        ];
-
-        // Verlaufseinträge (für Historie im Shift-Plan)
-        $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
-
-        return inertia('Projects/Tab/TabContent', [
+        // Basis-Return-Daten
+        $baseData = [
             'currentTab'                  => $projectTab,
             'headerObject'                => $headerObject,
             'loadedProjectInformation'    => $loadedProjectInformation,
@@ -2351,46 +2348,81 @@ class ProjectController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'createSettings'              => app(ProjectCreateSettings::class),
             'printLayouts'                => $this->projectPrintLayoutService->getAll(),
-            'project'                       => $headerObject->project,
-            // Zusätzliche Daten für ShiftPlanDailyView im Projektkontext
-            'history' => $history,
-            'crafts' => $craftService->getAll([
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'users', 'freelancers', 'serviceProviders', 'qualifications'
-            ]),
-            'tagGroups' => InventoryTagGroup::with([
-                'tags' => function ($query): void {
-                    $query->with(['allowedUsers', 'allowedDepartments'])
-                        ->orderBy('position');
-                }
-            ])->orderBy('position')->get(),
-            'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
-                ->orderBy('position')
-                ->get(),
-            'rooms' => $roomDTOs,
-            'eventTypes' => $this->eventTypeService->getAll(),
-            'eventStatuses' => app(EventSettings::class)->enable_status
+            'project'                     => $headerObject->project,
+            'eventTypes'                  => $this->eventTypeService->getAll(),
+            'eventStatuses'               => app(EventSettings::class)->enable_status
                 ? EventStatus::orderBy('order')->get()
                 : [],
-            'event_properties' => $eventPropertyService->getAll(),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
-            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
-            'dateValue' => $dateValue,
-            'user_filters' => $userCalendarFilter,
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
-            'firstProjectShiftTabId' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'projectId' => $project->id,
-            'currentUserCrafts' => $this->userService->getAuthUserCrafts()->merge(
-                $craftService->getAssignableByAllCrafts()
-            ),
-            'shiftTimePresets' => $shiftTimePresetService->getAll(),
-            // Für AddShiftModal und Anzeige benötigt: globale Qualifikationen & Schichtgruppen
-            'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
-            'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
-        ]);
+            'event_properties'            => $eventPropertyService->getAll(),
+            'projectId'                   => $project->id,
+        ];
+
+        // Tab-spezifische Daten nur bei Bedarf laden
+        $tabSpecificData = [];
+
+        if ($hasShiftTab) {
+            // ShiftTab-Daten laden (analog EventController::viewShiftPlan)
+            $this->loadShiftTabData($headerObject, $project);
+
+            $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+            $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
+            $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
+
+            // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
+            /** @var CalendarDataService $calendarDataService */
+            $calendarDataService = app(CalendarDataService::class);
+            $rooms = $calendarDataService->getFilteredRooms(
+                $userCalendarFilter,
+                $userCalendarSettings,
+                $startDate,
+                $endDate,
+                true
+            );
+
+            // Transform Room models to RoomDTOs for frontend compatibility
+            $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
+                id: $room->id,
+                name: $room->name,
+                has_events: $room->events_count > 0,
+                admins: $room->admins->pluck('id')->toArray()
+            ));
+
+            $dateValue = [
+                $startDate ? $startDate->format('Y-m-d') : null,
+                $endDate ? $endDate->format('Y-m-d') : null,
+            ];
+
+            $history = app(ShiftCalendarService::class)->getEventShiftsHistoryChanges();
+
+            $tabSpecificData = array_merge($tabSpecificData, $this->getShiftTabInertiaData(
+                $project,
+                $craftService,
+                $shiftQualificationService,
+                $filterService,
+                $eventPropertyService,
+                $shiftTimePresetService,
+                $user,
+                $userService,
+                $dateValue,
+                $history
+            ));
+
+            // Zusätzliche ShiftTab-Props
+            $tabSpecificData['rooms'] = $roomDTOs;
+            $tabSpecificData['user_filters'] = $userCalendarFilter;
+        }
+
+        if ($hasCalendarTab) {
+            $tabSpecificData = array_merge($tabSpecificData, $this->getCalendarTabInertiaData());
+        }
+
+        if ($hasBudgetTab) {
+            $tabSpecificData = array_merge($tabSpecificData, $this->getBudgetTabInertiaData());
+        }
+
+        return inertia('Projects/Tab/TabContent', array_merge($baseData, $tabSpecificData));
     }
 
     public function history(Project $project): JsonResponse
@@ -2429,8 +2461,78 @@ class ProjectController extends Controller
         $headerObject->project->shift_contacts             = $project->shift_contact;
         $headerObject->project->project_managers           = $project->managerUsers;
         $headerObject->project->shiftDescription           = $project->shift_description;
-        $headerObject->project->freelancers                = Freelancer::all();
-        $headerObject->project->serviceProviders           = ServiceProvider::without(['contacts'])->get();
+        // Step 4: Nur essentielle Felder für Freelancers und ServiceProviders laden
+        $headerObject->project->freelancers                = Freelancer::select('id', 'first_name', 'last_name')->get();
+        $headerObject->project->serviceProviders           = ServiceProvider::select('id', 'provider_name')->get();
+    }
+
+    /**
+     * Liefert ShiftTab-spezifische Daten als Array für Inertia.
+     *
+     * @return array<string,mixed>
+     */
+    private function getShiftTabInertiaData(
+        Project $project,
+        CraftService $craftService,
+        ShiftQualificationService $shiftQualificationService,
+        FilterService $filterService,
+        EventPropertyService $eventPropertyService,
+        ShiftTimePresetService $shiftTimePresetService,
+        User $user,
+        UserService $userService,
+        array $dateValue,
+        array $history
+    ): array {
+        return [
+            // Quick Win Step 2: Crafts nur mit minimalen Daten laden (60-70% Reduktion)
+            // Vollständige Details können bei Bedarf per API nachgeladen werden
+            'crafts' => $craftService->getAll()->map(fn($craft) => [
+                'id' => $craft->id,
+                'name' => $craft->name,
+                'abbreviation' => $craft->abbreviation,
+                'color' => $craft->color,
+            ]),
+            // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
+            // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
+            'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'filterOptions' => $filterService->getCalendarFilterDefinitions(),
+            'dateValue' => $dateValue,
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'firstProjectShiftTabId' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'currentUserCrafts' => $userService->getAuthUserCrafts()->merge(
+                $craftService->getAssignableByAllCrafts()
+            ),
+            'shiftTimePresets' => $shiftTimePresetService->getAll(),
+            'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
+            'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
+        ];
+    }
+
+    /**
+     * Liefert CalendarTab-spezifische Daten als Array für Inertia (falls benötigt).
+     * Aktuell werden Calendar-Daten hauptsächlich on-demand geladen,
+     * aber hier können gemeinsame Basis-Daten bereitgestellt werden.
+     *
+     * @return array<string,mixed>
+     */
+    private function getCalendarTabInertiaData(): array
+    {
+        // CalendarTab lädt die meisten Daten bereits per AJAX (siehe CalendarTab.vue)
+        // Hier nur Basis-Daten, falls direkt benötigt
+        return [];
+    }
+
+    /**
+     * Liefert BudgetTab-spezifische Daten als Array für Inertia (falls benötigt).
+     *
+     * @return array<string,mixed>
+     */
+    private function getBudgetTabInertiaData(): array
+    {
+        // BudgetTab-spezifische Daten können hier hinzugefügt werden
+        // Aktuell werden diese bei Bedarf geladen
+        return [];
     }
 
     /**

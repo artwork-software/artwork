@@ -31,7 +31,7 @@ class ProjectTabDocumentService
     private function loadDocuments(Project $project, ?array $scope): Collection
     {
         if (empty($scope)) {
-            return $project->project_files()->newCollection();
+            return new Collection();
         }
 
         return $project->project_files()

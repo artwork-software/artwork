@@ -550,7 +550,7 @@ class EventController extends Controller
             $startDate,
             $endDate,
             $userCalendarSettings,
-            $user->getAttribute('daily_view'),
+            true, // Always load timelines for shift plan API - required by ShiftPlanDailyView
             $project
         );
 

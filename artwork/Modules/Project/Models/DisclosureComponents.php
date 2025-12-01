@@ -14,7 +14,12 @@ class DisclosureComponents extends Model
     protected $fillable = [
         'disclosure_id',
         'component_id',
-        'order'
+        'order',
+        'scope'
+    ];
+
+    protected $casts = [
+        'scope' => 'array'
     ];
 
     protected $with = ['component'];

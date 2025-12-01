@@ -78,15 +78,18 @@ onMounted(() => {
 
 watch(
     () => [props.project?.id, props.component?.id],
-    () => {
-        fetchDocuments()
+    ([projectId, componentId]) => {
+        // Only fetch when we have both a valid project and component ID
+        if (projectId && componentId) {
+            fetchDocuments()
+        }
     },
     { immediate: true }
 )
 
 async function fetchDocuments() {
     const projectId = props.project?.id
-    const componentInTabId = props.component?.id ?? (props.component)?.component_in_tab_id
+    const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id
 
     if (!projectId || !componentInTabId) {
         return

@@ -9,10 +9,10 @@
                 <component :is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
             </div>
         </DisclosureButton>
-        <DisclosurePanel v-show="open" class="px-4 py-2 bg-gray-50 rounded-b-lg">
-            <div v-for="(disclosureComponent, index) in component.disclosure_components" :key="component.id" class="">
+        <DisclosurePanel class="px-4 py-2 bg-gray-50 rounded-b-lg">
+            <div v-for="(disclosureComponent, index) in component.disclosure_components" :key="disclosureComponent.id" class="">
                 <Component
-                    v-if="canSeeComponent(disclosureComponent.component)"
+                    v-if="disclosureComponent?.id && canSeeComponent(disclosureComponent.component) && componentMapping[disclosureComponent.component?.type]"
                     :is="componentMapping[disclosureComponent.component?.type]"
                     :can-edit-component="canEditComponent(disclosureComponent.component)"
                     :project="headerObject.project"
@@ -63,6 +63,7 @@ import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
 import Title from "@/Pages/Projects/Tab/Components/Title.vue";
 import TextArea from "@/Pages/Projects/Tab/Components/TextArea.vue";
 import DropDown from "@/Pages/Projects/Tab/Components/DropDown.vue";
+import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
 import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
 import CalendarTab from "@/Pages/Projects/Tab/Components/CalendarTab.vue";
 import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
@@ -72,8 +73,9 @@ import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorCompone
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
-import RelevantDatesForShiftPlanningComponent
-    from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+// Component can be removed - kept for backwards compatibility if still configured in customer projects
+// import RelevantDatesForShiftPlanningComponent
+//     from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
 import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
 import CommentTab from "@/Pages/Projects/Tab/Components/CommentTab.vue";
@@ -132,6 +134,7 @@ const componentMapping = {
     Title,
     TextArea,
     DropDown,
+    Link: LinkComponent,
     ProjectStateComponent,
     CalendarTab,
     ShiftTab,
@@ -141,7 +144,7 @@ const componentMapping = {
     ProjectGroupComponent,
     ProjectTeamComponent,
     ProjectAttributesComponent,
-    RelevantDatesForShiftPlanningComponent,
+    // RelevantDatesForShiftPlanningComponent, // Commented out - component can be removed
     ShiftContactPersonsComponent,
     GeneralShiftInformationComponent,
     CommentTab,

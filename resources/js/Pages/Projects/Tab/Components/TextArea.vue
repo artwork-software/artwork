@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick, getCurrentInstance } from "vue";
-import { router } from "@inertiajs/vue3";
+import axios from 'axios';
 import { useI18n } from "vue-i18n";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
 
@@ -99,20 +99,22 @@ watch(
     { deep: true }
 );
 
-// Patch-Aufruf an Inertia (wie zuvor)
-function updateTextData() {
-    router.patch(
-        route("project.tab.component.update", {
-            project: props.projectId,
-            component: props.data.id,
-        }),
-        { data: { text: text.value } },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => (descriptionClicked.value = false),
-        }
-    );
+// Patch-Aufruf mit axios (ohne Page Reload)
+async function updateTextData() {
+    try {
+        await axios.patch(
+            route("project.tab.component.update", {
+                project: props.projectId,
+                component: props.data.id,
+            }),
+            { data: { text: text.value } }
+        );
+        // Editor schließen nach erfolgreichem Update
+        descriptionClicked.value = false;
+        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren:', error);
+    }
 }
 
 // Klick-Handler: nur bei Berechtigung in den Edit-Modus

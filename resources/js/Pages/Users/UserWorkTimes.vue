@@ -13,24 +13,28 @@
             </div>
         </div>
         <div class="flex items-center justify-between mb-5">
-            <div class="flex items-center gap-x-2">
-                <BaseInput
-                    id="work_time_start_date"
-                    v-model="dateRangeCopy.start"
-                    type="date"
-                    :label="$t('Start date')"
-                    @focusout="updateWorkTimeDateRange"
-                />
-                <BaseInput
-                    id="work_time_end_date"
-                    v-model="dateRangeCopy.end"
-                    type="date"
-                    :label="$t('End date')"
-                    @focusout="updateWorkTimeDateRange"
-                />
-            </div>
+            <DatePickerComponent
+                :dateValueArray="[dateRange.start, dateRange.end]"
+                :project="false"
+                :is_work_times="true"
+            />
 
             <WorkTimeTimerComponent :totals="totals" />
+        </div>
+
+        <!-- Monthly breakdown when range > 1 month -->
+        <div v-if="isMultiMonth" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ $t('Monthly Breakdown') }}</h3>
+            <div class="space-y-2">
+                <div v-for="(month, index) in monthlyBreakdown" :key="index" class="flex items-center justify-between text-sm">
+                    <span class="font-medium text-gray-600">{{ month.name }}</span>
+                    <span class="text-gray-900">
+                        <span class="font-semibold">{{ month.worked }}</span>
+                        <span class="text-gray-500 mx-1">-</span>
+                        <span class="font-semibold">{{ month.wanted }}</span>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="space-y-12">
@@ -38,7 +42,12 @@
 
             <!-- Kalenderwochen -->
             <div v-for="(week, weekKey) in workTimes" :key="weekKey">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-300 border-dashed pb-1 font-lexend">{{ weekKey }}</h2>
+                <h2 class="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-300 border-dashed pb-1 font-lexend">
+                    {{ weekKey }}
+                    <span class="text-sm font-normal text-gray-600 ml-3">
+                        ({{ $t('Total') }}: {{ weeklySums[weekKey].worked }} - {{ weeklySums[weekKey].wanted }})
+                    </span>
+                </h2>
 
                 <div class="divide-y divide-gray-200">
                     <div
@@ -157,15 +166,13 @@
 <script setup>
 
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import WorkingTimePostEntryModal from "@/Pages/Users/Components/WorkingTimePostEntryModal.vue";
-import {ref} from "vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {router} from "@inertiajs/vue3";
+import {ref, computed} from "vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTimerComponent from "@/Pages/Users/Components/WorkTimeTimerComponent.vue";
 import {IconAlarmPlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -186,13 +193,6 @@ const props = defineProps({
     }
 })
 
-const dateRangeCopy = ref({
-    start: props.dateRange.start,
-    end: props.dateRange.end
-})
-
-const totalCopy = ref(props.totals)
-
 const showWorkingTimePostEntryModal = ref(false)
 
 // Function to check if a date is in the past
@@ -203,26 +203,81 @@ const isDateInPast = (dateString) => {
     return checkDate < today;
 }
 
-const updateWorkTimeDateRange = () => {
+// Check if date range spans more than 1 month
+const isMultiMonth = computed(() => {
+    const start = new Date(props.dateRange.start);
+    const end = new Date(props.dateRange.end);
 
-    // Ensure the date range is valid
-    if (new Date(dateRangeCopy.value.start) > new Date(dateRangeCopy.value.end)) {
-        return;
+    // Calculate difference in months
+    const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+
+    return monthsDiff > 0;
+});
+
+// Calculate monthly breakdown
+const monthlyBreakdown = computed(() => {
+    if (!isMultiMonth.value) {
+        return [];
     }
 
-    // Update the router with the new date range
-    if (dateRangeCopy.value.start === props.dateRange.start && dateRangeCopy.value.end === props.dateRange.end) {
-        return; // No change, do nothing
-    }
+    const months = {};
 
-    // Use the router to reload the page with the new date range
-    router.reload({
-        data: {
-            start: dateRangeCopy.value.start,
-            end: dateRangeCopy.value.end
-        },
-        preserveState: true,
-    })
+    // Iterate through all weeks and days
+    Object.values(props.workTimes).forEach(week => {
+        Object.values(week).forEach(entry => {
+            const date = new Date(entry.date);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const monthName = date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+            if (!months[monthKey]) {
+                months[monthKey] = {
+                    name: monthName,
+                    worked: 0,
+                    wanted: 0
+                };
+            }
+
+            months[monthKey].worked += entry.worked_hours || 0;
+            months[monthKey].wanted += entry.daily_target_minutes || 0;
+        });
+    });
+
+    // Convert to array and format hours
+    return Object.values(months).map(month => ({
+        name: month.name,
+        worked: convertMinutesToHoursAndMinutes(month.worked),
+        wanted: convertMinutesToHoursAndMinutes(month.wanted)
+    }));
+});
+
+// Calculate weekly sums for each week
+const weeklySums = computed(() => {
+    const sums = {};
+
+    Object.entries(props.workTimes).forEach(([weekKey, week]) => {
+        let totalWorked = 0;
+        let totalWanted = 0;
+
+        Object.values(week).forEach(entry => {
+            totalWorked += entry.worked_hours || 0;
+            totalWanted += entry.daily_target_minutes || 0;
+        });
+
+        sums[weekKey] = {
+            worked: convertMinutesToHoursAndMinutes(totalWorked),
+            wanted: convertMinutesToHoursAndMinutes(totalWanted)
+        };
+    });
+
+    return sums;
+});
+
+// Helper function to convert minutes to HH:MM format
+const convertMinutesToHoursAndMinutes = (minutes) => {
+    const hours = Math.floor(Math.abs(minutes) / 60);
+    const mins = Math.abs(minutes) % 60;
+    const sign = minutes < 0 ? '-' : '';
+    return `${sign}${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 </script>
 

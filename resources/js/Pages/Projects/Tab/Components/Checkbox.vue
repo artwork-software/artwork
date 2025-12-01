@@ -1,4 +1,5 @@
 <script>
+import axios from 'axios';
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 
@@ -25,15 +26,23 @@ export default {
         useProjectDataListener(this.projectData, this.projectId).init();
     },
     methods: {
-        updateCheckedData() {
-            this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
-                data: {
-                    checked: this.checked
-                }
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            })
+        async updateCheckedData() {
+            try {
+                await axios.patch(
+                    route('project.tab.component.update', {
+                        project: this.projectId,
+                        component: this.data.id
+                    }),
+                    {
+                        data: {
+                            checked: this.checked
+                        }
+                    }
+                );
+                // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
+            } catch (error) {
+                console.error('Fehler beim Aktualisieren:', error);
+            }
         }
     },
     watch: {

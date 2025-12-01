@@ -20,6 +20,15 @@
             Zum hinzufügen hier loslassen
         </span>
     </div>
+    <SelectTabsModalForDisclosure
+        v-if="showSelectTabsModal"
+        :tabs="allTabs"
+        :current-tab="currentTab"
+        :position="index"
+        :component-data="componentData"
+        :disclosure-id="element.component.id"
+        @close="showSelectTabsModal = false"
+    />
 </template>
 
 <script setup>
@@ -27,6 +36,7 @@
 import {onMounted, onUnmounted, ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
+import SelectTabsModalForDisclosure from "@/Pages/Settings/Components/SelectTabsModalForDisclosure.vue";
 
 const props = defineProps({
     element: {
@@ -36,10 +46,22 @@ const props = defineProps({
     index: {
         type: Number,
         required: true,
+    },
+    allTabs: {
+        type: Array,
+        required: false,
+        default: () => []
+    },
+    currentTab: {
+        type: Object,
+        required: false,
+        default: null
     }
 })
 
 const dropOver = ref(false);
+const showSelectTabsModal = ref(false);
+const componentData = ref(null);
 const { isDragging, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();
 let listeners = null;
 
@@ -82,6 +104,13 @@ const onDrop = (event) => {
         return false;
     }
 
+    // Check if component requires scope selection (CommentTab, ChecklistComponent, or ProjectDocumentsComponent)
+    if(data.type === 'ProjectDocumentsComponent' || data.type === 'CommentTab' || data.type === 'ChecklistComponent') {
+        componentData.value = data;
+        showSelectTabsModal.value = true;
+        dropOver.value = false;
+        return;
+    }
 
     router.post(route('project-management-builder.add.disclosure.component'), {
         order: props.index,

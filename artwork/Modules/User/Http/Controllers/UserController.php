@@ -190,6 +190,7 @@ class UserController extends Controller
                 ? User::search($searchQuery)
                 ->query(function ($query) use ($sortEnum): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
+                    $query->with('departments');
                     // Exclude the placeholder "Deleted user"
                     $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
 
@@ -213,6 +214,7 @@ class UserController extends Controller
                 ->get()
                 : User::query()
                 ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                ->with('departments')
                 // Exclude the placeholder "Deleted user"
                 ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {

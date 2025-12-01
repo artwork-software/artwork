@@ -77,7 +77,7 @@ import {
     ListboxOptions,
 } from "@headlessui/vue";
 import { computed, onMounted, ref, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import axios from 'axios';
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import {IconChevronDown , IconCircleCheck} from "@tabler/icons-vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
@@ -120,18 +120,19 @@ watch(
     { deep: true }
 );
 
-function updateTextData(value) {
-    router.patch(
-        route("project.tab.component.update", {
-            project: props.projectId,
-            component: props.data.id,
-        }),
-        { data: { selected: value } },
-        {
-            preserveScroll: true,
-            preserveState: true,
-        }
-    );
+async function updateTextData(value) {
+    try {
+        await axios.patch(
+            route("project.tab.component.update", {
+                project: props.projectId,
+                component: props.data.id,
+            }),
+            { data: { selected: value } }
+        );
+        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren:', error);
+    }
 }
 </script>
 

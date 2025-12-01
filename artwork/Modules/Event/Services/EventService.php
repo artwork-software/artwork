@@ -75,6 +75,7 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
+use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
@@ -738,8 +739,8 @@ readonly class EventService
             if ($extraRow){
                 if ($period->isMonday()) {
                     $periodArray[] = [
-                        'is_extra_row' => true,
-                        'week_number' => $period->weekOfYear,
+                        'isExtraRow' => true,
+                        'weekNumber' => $period->weekOfYear,
                     ];
                 }
             }
@@ -748,20 +749,20 @@ readonly class EventService
 
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
-                'day_string' => $period->shortDayName,
-                'is_weekend' => $period->isWeekend(),
-                'full_day' => $period->format('d.m.Y'),
-                'short_day' => $period->format('d.m'),
-                'without_format' => $period->format('Y-m-d'),
-                'full_day_display' => $period->format('d.m.y'),
-                'week_number' => $period->weekOfYear,
-                'is_monday' => $period->isMonday(),
-                'month_number' => $period->month,
-                'is_sunday' => $period->isSunday(),
-                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
-                'add_week_separator' => $period->isSunday(),
+                'dayString' => $period->shortDayName,
+                'isWeekend' => $period->isWeekend(),
+                'fullDay' => $period->format('d.m.Y'),
+                'shortDay' => $period->format('d.m'),
+                'withoutFormat' => $period->format('Y-m-d'),
+                'fullDayDisplay' => $period->format('d.m.y'),
+                'weekNumber' => $period->weekOfYear,
+                'isMonday' => $period->isMonday(),
+                'monthNumber' => $period->month,
+                'isSunday' => $period->isSunday(),
+                'isFirstDayOfMonth' => $period->isSameDay($period->copy()->startOfMonth()),
+                'addWeekSeparator' => $period->isSunday(),
                 'holidays' => $holidays,
-                'hours_of_day' => $user->getAttribute('daily_view')
+                'hoursOfDay' => $user->getAttribute('daily_view')
                     ? collect(range(0, 23))->map(function ($hour) {
                         return Carbon::createFromTime($hour)->format('H:i');
                     })->toArray()
@@ -794,7 +795,7 @@ readonly class EventService
         ));
     }
 
-    public function fetchFilteredRooms(UserShiftCalendarFilter|UserCalendarFilter $filter, $startDate, $endDate, UserCalendarSettings|null $userCalendarSettings = null)
+    public function fetchFilteredRooms(UserFilter $filter, $startDate, $endDate, UserCalendarSettings|null $userCalendarSettings = null)
     {
         $userCalendarFilter = $filter;
 
@@ -827,7 +828,7 @@ readonly class EventService
 
     public function filterRoomsEventsAndShifts(
         $rooms,
-        UserShiftCalendarFilter|UserCalendarFilter $filter,
+        UserFilter $filter,
         $startDate,
         $endDate,
         UserCalendarSettings $userCalendarSettings = null,
@@ -901,11 +902,18 @@ readonly class EventService
                     'occupancy_option' => $event->occupancy_option,
                     'allDay' => $event->allDay,
                     'eventProperties' => $event->getAttribute('eventProperties'),
-                    'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
-                    'event_type_color' => $eventType->getAttribute('hex_code'),
+                    'eventTypeColorBackground' => ($eventType?->getAttribute('hex_code') ?? '#cccccc') . '33',
+                    'event_type_color' => $eventType?->getAttribute('hex_code') ?? '#cccccc',
+                    'eventType' => $eventType ? [
+                        'id' => $eventType->id,
+                        'name' => $eventType->name,
+                        'hex_code' => $eventType->hex_code,
+                        'abbreviation' => $eventType->abbreviation,
+                    ] : null,
                     'days_of_event' => $event->days_of_event,
                     'option_string' => $event->option_string,
                     'formatted_dates' => $event->formatted_dates,
+                    'formattedDates' => $event->formatted_dates,
                     'timesWithoutDates' => $event->timesWithoutDates,
                     'is_series' => $event->is_series,
                     'series' => $this->aggregateSeriesEvents($event),
@@ -936,17 +944,18 @@ readonly class EventService
             $filterEventPropertyIds = $filter->getAttribute('event_properties') ?? [];
 
             $roomEvents = $roomEvents
-                ->when(count($filterEventPropertyIds) > 0)
-                ->filter(function ($event) use ($filterEventPropertyIds) {
-                    // Stelle sicher, dass eventProperties als Array vorhanden ist
-                    $eventProperties = $event['eventProperties'] ?? [];
+                ->when(count($filterEventPropertyIds) > 0, function ($collection) use ($filterEventPropertyIds) {
+                    return $collection->filter(function ($event) use ($filterEventPropertyIds) {
+                        // Stelle sicher, dass eventProperties als Array vorhanden ist
+                        $eventProperties = $event['eventProperties'] ?? [];
 
-                    foreach ($eventProperties as $eventProperty) {
-                        if (in_array($eventProperty['id'], $filterEventPropertyIds)) {
-                            return true;
+                        foreach ($eventProperties as $eventProperty) {
+                            if (in_array($eventProperty['id'], $filterEventPropertyIds)) {
+                                return true;
+                            }
                         }
-                    }
-                    return false;
+                        return false;
+                    });
                 });
             $room->events = $roomEvents;
         }

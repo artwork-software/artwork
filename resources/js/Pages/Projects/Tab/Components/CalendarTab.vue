@@ -1,7 +1,18 @@
 <template>
     <div class="mt-6">
         <div class="mt-6 ">
-            <div v-if="calendarType && calendarType === 'daily'">
+            <!-- Loading State -->
+            <div v-if="isLoadingCalendar" class="pl-16 py-8 text-center">
+                <div class="text-gray-600">{{ $t('Loading calendar data...') }}</div>
+            </div>
+
+            <!-- Error State -->
+            <div v-else-if="loadCalendarError" class="pl-16 py-8 text-center text-red-600">
+                {{ loadCalendarError }}
+            </div>
+
+            <!-- Daily Calendar View -->
+            <div v-else-if="calendarType && calendarType === 'daily'">
                 <CalendarComponent
                     initial-view="day"
                     :project="project ?? headerObject.project"
@@ -18,7 +29,9 @@
                     :event-statuses="eventStatuses"
                     :can-edit-component="canEditComponent"/>
             </div>
-            <div v-else class="pl-16">
+
+            <!-- Monthly/Weekly Calendar View -->
+            <div v-else-if="hasRequiredCalendarData" class="pl-16">
                 <BaseCalendar v-if="!atAGlance"
                               :project="project ?? headerObject.project"
                               :rooms="rooms ?? effectiveCalendarData.rooms"
@@ -43,6 +56,11 @@
                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id ?? effectiveCalendarData.first_project_calendar_tab_id"
                                                      :isCalendarViewRoute="false"
                                                      :can-edit-component="canEditComponent"/>
+            </div>
+
+            <!-- Fallback if data is missing -->
+            <div v-else class="pl-16 py-8 text-center text-gray-600">
+                {{ $t('Calendar data is not available.') }}
             </div>
         </div>
     </div>
@@ -89,6 +107,24 @@ const localCalendarData = ref(props.loadedProjectInformation?.['CalendarTab'] ||
 
 const effectiveCalendarData = computed(() => {
     return localCalendarData.value || props.loadedProjectInformation?.['CalendarTab'] || {};
+});
+
+const hasRequiredCalendarData = computed(() => {
+    // Check if we have the required data for BaseCalendar
+    const calData = effectiveCalendarData.value;
+
+    // For BaseCalendar, we need days, rooms, and calendar data
+    const hasDays = props.days || (calData.days && (Array.isArray(calData.days) || typeof calData.days === 'object'));
+    const hasRooms = props.rooms || (calData.rooms && (Array.isArray(calData.rooms) || typeof calData.rooms === 'object'));
+    const hasCalendar = props.calendar || (calData.calendar && (Array.isArray(calData.calendar) || typeof calData.calendar === 'object'));
+
+    // For AtAGlance, we need different data
+    if (atAGlance.value) {
+        const hasEventsAtAGlance = props.eventsAtAGlance || calData.eventsAtAGlance;
+        return hasRooms && hasEventsAtAGlance;
+    }
+
+    return hasDays && hasRooms && hasCalendar;
 });
 
 async function fetchCalendarData() {

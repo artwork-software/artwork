@@ -51,12 +51,11 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
-import { router } from "@inertiajs/vue3";
+import axios from 'axios';
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import { Link } from "@inertiajs/vue3";
 import { IconEdit } from "@tabler/icons-vue";
 
 // Für DevTools
@@ -88,22 +87,22 @@ onMounted(() => {
     useProjectDataListener(props.data, props.projectId).init();
 });
 
-// Server-Update (entspricht updateTextData)
-function updateTextData() {
-    router.patch(
-        route("project.tab.component.update", {
-            project: props.projectId,
-            component: props.data.id,
-        }),
-        { data: { text: text.value } },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                showTextField.value = false;
-            },
-        }
-    );
+// Server-Update mit axios (ohne Page Reload)
+async function updateTextData() {
+    try {
+        await axios.patch(
+            route("project.tab.component.update", {
+                project: props.projectId,
+                component: props.data.id,
+            }),
+            { data: { text: text.value } }
+        );
+        // Edit-Modus schließen nach erfolgreichem Update
+        showTextField.value = false;
+        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren:', error);
+    }
 }
 
 // Deep-Watch: wenn projectData geändert wird, Text synchronisieren

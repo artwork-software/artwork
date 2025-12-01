@@ -83,7 +83,7 @@ function updateDefaultTab() {
 
                     <div class="flex flex-col items-start min-w-0">
                         <div class="flex items-center gap-2">
-                            <h3 class="headline3 text-zinc-900 truncate">{{ tab.name }}</h3>
+                            <h3 class="headline3 text-zinc-900 truncate" :title="tab.name">{{ tab.name }}</h3>
                             <!-- Default Badge -->
                             <span v-if="tab.default"
                                 class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-emerald-300/70 bg-emerald-50/70 text-emerald-700">

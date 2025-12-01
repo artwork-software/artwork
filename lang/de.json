@@ -3671,5 +3671,8 @@
     "If you do not select a status, the availability will not be changed.": "Wenn du keinen Status auswählst, wird die Verfügbarkeit nicht geändert.",
     "Optional: define custom times that will be applied to all selected cells.": "Optional: Definiere benutzerdefinierte Zeiten, die auf alle ausgewählten Zellen angewendet werden.",
     "Add time": "Zeit hinzufügen",
-    "Optional note that will be saved for all affected cells.": "Optionale Notiz, die für alle betroffenen Zellen gespeichert wird."
+    "Optional note that will be saved for all affected cells.": "Optionale Notiz, die für alle betroffenen Zellen gespeichert wird.",
+    "Monthly Breakdown": "Monatliche Aufschlüsselung",
+    "Loading calendar data...": "Lade Kalenderdaten...",
+    "Calendar data is not available.": "Kalenderdaten sind nicht verfügbar."
 }

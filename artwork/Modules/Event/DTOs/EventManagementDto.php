@@ -42,7 +42,7 @@ class EventManagementDto extends BaseDto
 
     public ?SupportCollection $personalFilters = null;
 
-    public ?UserCalendarFilter $userFilters = null;
+    public ?UserFilter $userFilters = null;
 
     public ?int $firstProjectTabId = null;
 

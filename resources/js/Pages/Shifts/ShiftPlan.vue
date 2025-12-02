@@ -742,25 +742,16 @@ import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
-import DragElement from '@/Pages/Projects/Components/DragElement.vue'
-import HighlightUserCell from '@/Pages/Shifts/Components/HighlightUserCell.vue'
 import {MenuItem} from '@headlessui/vue'
-import MultiEditUserCell from '@/Pages/Shifts/Components/MultiEditUserCell.vue'
 import Table from '@/Components/Table/Table.vue'
 import TableHead from '@/Components/Table/TableHead.vue'
 import TableBody from '@/Components/Table/TableBody.vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
-import CraftFilter from '@/Components/Filter/CraftFilter.vue'
-import SingleEventInShiftPlan from '@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'
-import DayServiceFilter from '@/Components/Filter/DayServiceFilter.vue'
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch, getCurrentInstance, defineAsyncComponent} from 'vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import ShiftPlanCell from '@/Pages/Shifts/Components/ShiftPlanCell.vue'
-import HolidayToolTip from '@/Components/ToolTips/HolidayToolTip.vue'
-import SingleShiftInRoom from '@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
@@ -771,6 +762,60 @@ import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHor
 defineOptions({
     name: 'ShiftPlan',
     mixins: [Permissions],
+})
+
+const DragElement = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/DragElement.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const ShiftPlanCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftPlanCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const SingleShiftInRoom = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const HolidayToolTip = defineAsyncComponent({
+    loader: () => import('@/Components/ToolTips/HolidayToolTip.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const HighlightUserCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/HighlightUserCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const MultiEditUserCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/MultiEditUserCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const CraftFilter = defineAsyncComponent({
+    loader: () => import('@/Components/Filter/CraftFilter.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const SingleEventInShiftPlan = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const DayServiceFilter = defineAsyncComponent({
+    loader: () => import('@/Components/Filter/DayServiceFilter.vue'),
+    delay: 200,
+    timeout: 3000,
 })
 
 const ShowUserShiftsModal = defineAsyncComponent({

@@ -48,7 +48,7 @@ function loadTablerModule() {
 function resolveTablerIcon(nameLike: unknown): Component {
     const n = unref(nameLike) as any
 
-    if (n == null) return IconTag
+    if (n == null) return 'IconTag'
 
     // Wenn bereits eine Komponente übergeben wird: direkt verwenden
     if (isVueComponent(n)) return n as Component

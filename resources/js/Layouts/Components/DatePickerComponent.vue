@@ -108,10 +108,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import {ref, computed, watch, onMounted, defineAsyncComponent} from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useTranslation} from "@/Composeables/Translation.js";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -132,6 +131,12 @@ const props = defineProps({
         default: false
     }
 });
+
+const VueDatePicker = defineAsyncComponent({
+    loader: () => import('@vuepic/vue-datepicker'),
+    delay: 200,
+    timeout: 3000
+})
 
 // Refs & State
 const dateValue = ref(props.dateValueArray ? [...props.dateValueArray] : []);

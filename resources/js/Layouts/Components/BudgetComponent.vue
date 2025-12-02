@@ -290,7 +290,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')"
+                                    <a v-show="!tableIsEmpty && !table.is_template"
                                        @click="openAddBudgetTemplateModal()"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <IconFilePlus class="mr-3 h-5 w-5 text-primaryText"/>

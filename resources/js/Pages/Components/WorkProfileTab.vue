@@ -290,6 +290,7 @@
                                         <SwitchIconTooltip
                                             :modelValue="isCraftQualificationAssigned(craft.id, q.id)"
                                             @update:modelValue="toggleCraftQualification(craft.id, q.id, $event)"
+                                            :tooltip-text="q.name"
                                             size="md"
                                             :icon="!craftSettingsForm.canBeAssignedToShifts ? IconX : IconCheck"
                                         />

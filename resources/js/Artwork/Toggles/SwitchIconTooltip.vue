@@ -62,7 +62,7 @@ defineOptions({ name: 'SwitchIconTooltip' })
 const props = defineProps({
     modelValue: { type: Boolean, required: true }, // v-model
     roomMode: { type: Boolean, default: false },
-    tooltipText: { type: String, default: 'At a glance' },
+    tooltipText: { type: String, default: 'Activate' },
     icon: { type: [Object, Function, String], default: () => IconList },
     size: { type: String, default: 'sm' }, // 'sm' | 'md'
     disabled: { type: Boolean, default: false },

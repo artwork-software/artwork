@@ -101,7 +101,7 @@ const displayName = computed(() => t(props.component.name));
 
                 <!-- Text & Meta -->
                 <div class="min-w-0">
-                    <div class="text-sm font-semibold truncate">
+                    <div class="text-sm font-semibold truncate" :title="displayName">
                         {{ displayName }}
                     </div>
 

@@ -126,6 +126,10 @@ const props = defineProps({
     is_planning: {
         type: Boolean,
         default: false
+    },
+    is_work_times: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -347,7 +351,22 @@ function updateTimes() {
         hasError.value = false;
 
         const userId = usePage().props.auth.user.id;
-        if (props.is_shift_plan) {
+        if (props.is_work_times) {
+            // Format dates to YYYY-MM-DD for work times
+            const formatToYYYYMMDD = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            router.reload({
+                data: {
+                    start: formatToYYYYMMDD(startDateObj),
+                    end: formatToYYYYMMDD(endDateObj)
+                },
+                preserveState: true,
+            });
+        } else if (props.is_shift_plan) {
             router.patch(route('update.user.shift.calendar.filter.dates', userId), {
                 start_date: startDateObj,
                 end_date: endDateObj,

@@ -192,15 +192,18 @@ const sortedComments = computed(() => {
 
 watch(
     () => [props.project?.id, props.component?.id],
-    () => {
-        fetchComments();
+    ([projectId, componentId]) => {
+        // Only fetch when we have both a valid project and component ID
+        if (projectId && componentId) {
+            fetchComments();
+        }
     },
     { immediate: true }
 );
 
 async function fetchComments() {
     const projectId = props.project?.id;
-    const componentInTabId = props.component?.id ?? (props.component)?.component_in_tab_id;
+    const componentInTabId = props.component?.id ?? props.component?.component_in_tab_id;
 
     if (!projectId || !componentInTabId) {
         return;

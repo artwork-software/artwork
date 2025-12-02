@@ -3,7 +3,7 @@
         <div class="my-10 w-full">
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="removeML(component.component?.type)">
                 <Component
-                    v-if="canSeeComponent(component.component)"
+                    v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
                     :is="componentMapping[component.component?.type]"
                     :can-edit-component="canEditComponent(component.component)"
                     :project="project"
@@ -60,7 +60,7 @@
                 <div class="px-3">
                     <div v-for="(component, sidx) in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar" :key="component?.id ?? component?.component?.id ?? sidx">
                         <Component
-                            v-if="canSeeComponent(component.component)"
+                            v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
                             :is="componentMapping[component.component?.type]"
                             :can-edit-component="canEditComponent(component.component)"
                             :project="project"
@@ -109,8 +109,9 @@ import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorCompone
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
-import RelevantDatesForShiftPlanningComponent
-  from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+// Component can be removed - kept for backwards compatibility if still configured in customer projects
+// import RelevantDatesForShiftPlanningComponent
+//   from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
 import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
@@ -152,7 +153,7 @@ const componentMapping = {
     ProjectGroupComponent,
     ProjectTeamComponent,
     ProjectAttributesComponent,
-    RelevantDatesForShiftPlanningComponent,
+    // RelevantDatesForShiftPlanningComponent, // Commented out - component can be removed
     ShiftContactPersonsComponent,
     GeneralShiftInformationComponent,
     CommentTab,

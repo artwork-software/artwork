@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, computed } from "vue";
-import { router } from "@inertiajs/vue3";
+import axios from 'axios';
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import { useProjectDataListener } from "@/Composeables/Listener/useProjectDataListener.js";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
@@ -32,23 +32,24 @@ onMounted(() => {
     useProjectDataListener(props.data, props.projectId).init();
 });
 
-// Patch-Aufruf (entspricht deiner Methode updateTextData)
-function updateTextData() {
-    router.patch(
-        route("project.tab.component.update", {
-            project: props.projectId,
-            component: props.data.id,
-        }),
-        {
-            data: {
-                text: text.value,
-            },
-        },
-        {
-            preserveScroll: true,
-            preserveState: true,
-        }
-    );
+// Patch-Aufruf mit axios (ohne Page Reload)
+async function updateTextData() {
+    try {
+        await axios.patch(
+            route("project.tab.component.update", {
+                project: props.projectId,
+                component: props.data.id,
+            }),
+            {
+                data: {
+                    text: text.value,
+                },
+            }
+        );
+        // Keine weitere Aktion nötig - der Broadcast aktualisiert die Komponente
+    } catch (error) {
+        console.error('Fehler beim Aktualisieren:', error);
+    }
 }
 
 // Deep-Watch auf eingehende Daten (entspricht deinem watcher auf projectData)

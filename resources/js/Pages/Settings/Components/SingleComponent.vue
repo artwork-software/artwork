@@ -87,7 +87,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                     <div class="min-w-0">
                         <!-- Titel + Badges -->
                         <div class="">
-                            <div class="text-sm font-semibold text-zinc-900 truncate">
+                            <div class="text-sm font-semibold text-zinc-900 truncate" :title="element.component.name">
                                 {{ element.component.name }}
                             </div>
 
@@ -170,35 +170,35 @@ function requestDeleteComponentInDisclosure(componentId) {
                                 </DisclosureButton>
 
                                 <!-- Dropzone sichtbar, wenn geschlossen -->
-                                <DropComponentInDisclosureComponentElement v-if="!open" :element="element" :index="1" class="mt-2" />
+                                <DropComponentInDisclosureComponentElement v-if="!open" :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mt-2" />
 
                                 <DisclosurePanel class="mt-2">
-                                    <DropComponentInDisclosureComponentElement :element="element" :index="1" class="mb-2" />
+                                    <DropComponentInDisclosureComponentElement :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mb-2" />
                                     <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="mb-2">
-                                        <div class="flex items-center justify-between gap-4 group/component">
-                                            <div>
-                                                <div class="flex items-center gap-1 text-sm text-zinc-800">
-                                                    <IconRadiusBottomLeft class="size-3 -mt-1 text-zinc-500" />
-                                                    <ComponentIcons :type="component.component.type" />
-                                                    {{ $t(component.component.name) }}
-                                                </div>
-                                                <div class="text-[11px] text-zinc-500">
-                                                    {{ $t(component.component.type) }}
-                                                </div>
+                                        <div class="flex items-center gap-2 group/component">
+                                            <div class="flex items-center gap-1 text-sm text-zinc-800 min-w-0 flex-1">
+                                                <IconRadiusBottomLeft class="size-3 -mt-1 text-zinc-500 shrink-0" />
+                                                <ComponentIcons :type="component.component.type" class="shrink-0" />
+                                                <span class="truncate" :title="$t(component.component.name)">{{ $t(component.component.name) }}</span>
                                             </div>
                                             <button
                                                 type="button"
-                                                class="invisible group-hover/component:visible rounded-md p-1 hover:bg-red-50"
+                                                class="rounded-md p-1 hover:bg-red-50 shrink-0"
                                                 @click="requestDeleteComponentInDisclosure(component.id)"
                                                 :aria-label="$t('Delete')"
                                             >
                                                 <IconTrash class="size-5 text-zinc-500 hover:text-red-500" />
                                             </button>
                                         </div>
+                                        <div class="text-[11px] text-zinc-500 ml-4">
+                                            {{ $t(component.component.type) }}
+                                        </div>
 
                                         <DropComponentInDisclosureComponentElement
                                             :element="element"
                                             :index="component.order + 1"
+                                            :all-tabs="allTabs"
+                                            :current-tab="tab"
                                             class="mt-2"
                                         />
                                     </div>
@@ -211,10 +211,10 @@ function requestDeleteComponentInDisclosure(componentId) {
                 <!-- Right: Actions -->
                 <div class="flex items-start gap-3 shrink-0 pl-2">
                     <!-- Drag-Handle (visuell) -->
-                    <IconDragDrop class="h-5 w-5 text-zinc-400 hidden group-hover:block" aria-hidden="true" />
+                    <IconDragDrop class="h-5 w-5 text-zinc-400" aria-hidden="true" />
 
                     <!-- Menu -->
-                    <div class="invisible group-hover:visible">
+                    <div>
                         <BaseMenu has-no-offset>
                             <MenuItem v-slot="{ active }">
                                 <a

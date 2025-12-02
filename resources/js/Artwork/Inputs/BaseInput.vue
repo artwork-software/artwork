@@ -40,14 +40,14 @@
                 class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
                 :aria-label="$t ? $t('Clear input') : 'Clear input'"
             >
-                <IconX :class="density.iconSize" />
+                <PropertyIcon name="IconX" :class="density.iconSize" />
             </button>
         </div>
 
         <!-- Loading Spinner -->
         <div v-if="isLoadingIcon" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
             <div class="animate-spin">
-                <IconLoader2 :class="['text-gray-500', density.iconSize]" />
+                <PropertyIcon name="IconLoader2" :class="['text-gray-500', density.iconSize]" />
             </div>
         </div>
 
@@ -67,7 +67,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { IconX, IconLoader2 } from '@tabler/icons-vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 /** v-model */
 const model = defineModel({ default: '' })

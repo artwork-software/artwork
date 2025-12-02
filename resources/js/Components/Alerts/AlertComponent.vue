@@ -1,6 +1,6 @@
 <script setup>
-import { IconInfoCircle, IconCirclePlus } from '@tabler/icons-vue';
 import {computed} from 'vue';
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     showIcon: {
@@ -38,17 +38,17 @@ const props = defineProps({
 const icon = computed(() => {
     switch (props.type) {
         case 'info':
-            return IconInfoCircle;
+            return 'IconInfoCircle';
         case 'warning':
-            return IconInfoCircle;
+            return 'IconInfoCircle';
         case 'error':
-            return IconInfoCircle;
+            return 'IconInfoCircle';
         case 'success':
-            return IconInfoCircle;
+            return 'IconInfoCircle';
         case 'plus':
-            return IconCirclePlus;
+            return 'IconCirclePlus';
         default:
-            return IconInfoCircle;
+            return 'IconInfoCircle';
     }
 });
 
@@ -74,7 +74,7 @@ const textColor = computed(() => {
 
 <template>
     <div class="flex items-start gap-x-1" :class="[textColor, textSize, classes]">
-        <component :is="icon" :class="iconSize" v-if="showIcon" />
+        <PropertyIcon name="icon" :class="iconSize" v-if="showIcon" />
         <span v-if="text">
             {{ text }}
         </span>

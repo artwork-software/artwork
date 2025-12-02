@@ -51,7 +51,6 @@
 <script setup>
 import { computed } from 'vue'
 import { Switch } from '@headlessui/vue'
-import { IconList } from '@tabler/icons-vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 
 defineOptions({ name: 'SwitchIconTooltip' })
@@ -63,7 +62,7 @@ const props = defineProps({
     modelValue: { type: Boolean, required: true }, // v-model
     roomMode: { type: Boolean, default: false },
     tooltipText: { type: String, default: 'At a glance' },
-    icon: { type: [Object, Function, String], default: () => IconList },
+    icon: { type: [Object, Function, String], default: () => 'IconList' },
     size: { type: String, default: 'sm' }, // 'sm' | 'md'
     disabled: { type: Boolean, default: false },
     label: { type: String, default: '' }

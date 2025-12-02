@@ -9,9 +9,10 @@
             <!-- Button: Text + Chevron -->
             <MenuButton v-if="!onlyIcon" class="w-52 border-white">
                 <span class="float-left text-sm font-medium text-zinc-800 dark:text-zinc-100">Filter</span>
-                <IconChevronDown
+                <PropertyIcon
+                    name="IconChevronDown"
                     stroke-width="1.5"
-                    class="h-5 w-5 text-zinc-500 dark:text-zinc-400 float-right"
+                    class="h-6 w-6 text-zinc-500 dark:text-zinc-400 float-right"
                     aria-hidden="true"
                 />
             </MenuButton>
@@ -21,11 +22,11 @@
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
-                    :icon="IconFilter"
+                    icon="IconFilter"
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
-                    icon-size="size-5"
-                    classes-button="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context"
+                    icon-size="size-6"
+                    classes-button="ui-button-small hover:!bg-white text-artwork-buttons-context"
                 />
             </MenuButton>
         </div>
@@ -62,9 +63,9 @@
 <script setup>
 import { defineProps } from 'vue'
 import { Menu, MenuButton, MenuItems } from '@headlessui/vue'
-import { IconChevronDown, IconFilter } from '@tabler/icons-vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {Float} from "@headlessui-float/vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     onlyIcon: { type: Boolean, default: false },

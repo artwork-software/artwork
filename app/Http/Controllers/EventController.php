@@ -99,6 +99,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Spatie\Activitylog\Models\Activity;
 use Throwable;
 
 class EventController extends Controller
@@ -544,12 +545,11 @@ class EventController extends Controller
             $user,
         );
 
-        $this->shiftCalendarService->filterRoomsEventsAnShifts(
+        $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $rooms,
             $userCalendarFilter,
             $startDate,
             $endDate,
-            $userCalendarSettings,
             $user->getAttribute('daily_view'),
             $project
         );
@@ -570,6 +570,7 @@ class EventController extends Controller
         return response()->json([
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
+
         ]);
     }
 
@@ -635,21 +636,16 @@ class EventController extends Controller
         }
 
         return Inertia::render($renderViewName, [
-            'history' => $this->shiftCalendarService->getEventShiftsHistoryChanges(),
+            'history' => [],
             'crafts' => $this->craftService->getAll([
                 'managingUsers',
                 'managingFreelancers',
                 'managingServiceProviders',
-                'users', 'freelancers', 'serviceProviders', 'qualifications'
+                'qualifications'
             ]),
             'rooms' => $roomDTOs,
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            //'days' => $period,
-            //'shiftPlan' => $calendarData->rooms,
             'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,

@@ -40,7 +40,7 @@
                 <div class="flex items-center justify-end w-fit gap-2 absolute right-2 top-2">
                     <div v-if="type === 0 && item.is_freelancer || type === 1">
                         <ToolTipComponent
-                            :icon="IconId"
+                            icon="IconId"
                             icon-size="w-4 h-4"
                             tooltip-text="Freelancer*in"
                             direction="top"
@@ -48,7 +48,7 @@
                         />
                     </div>
                     <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)" class="">
-                        <IconCalendarShare class="w-4 h-4" />
+                        <PropertyIcon name="IconCalendarShare" class="w-4 h-4" />
                     </a>
                 </div>
 
@@ -62,11 +62,11 @@
 import {defineComponent} from 'vue'
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconCalendarShare, IconId} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: "MultiEditUserCell",
-    components: {IconCalendarShare, ToolTipComponent},
+    components: {PropertyIcon, ToolTipComponent},
     mixins: [ColorHelper],
     props: [
         'item',
@@ -119,7 +119,6 @@ export default defineComponent({
         }
     },
     methods: {
-        IconId,
         changeUserForMultiEdit(event) {
             if (!event.target.checked) {
                 this.$emit('addUserToMultiEdit', null);

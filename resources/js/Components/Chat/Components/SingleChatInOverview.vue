@@ -12,9 +12,8 @@
                 :src="getUserWhereAreNotMe?.profile_photo_url"
                 alt="Profilbild"
             />
-            <component
+            <PropertyIcon name="IconUsersGroup"
                 v-else
-                :is="IconUsersGroup"
                 class="size-10 rounded-xl p-2.5 bg-blue-50 text-blue-900 border border-blue-100 ring-2 ring-white shadow-sm"
                 aria-hidden="true"
             />
@@ -64,6 +63,7 @@
 import { computed, ref, watchEffect } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { IconUsersGroup } from '@tabler/icons-vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     chat: {

@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, unref, type Component } from 'vue'
-import { IconTag } from '@tabler/icons-vue' // Fallback, sofort verfügbar
 
 // name kann String | Component | Ref davon sein
 const props = defineProps<{ name?: unknown }>()
@@ -64,9 +63,9 @@ function resolveTablerIcon(nameLike: unknown): Component {
         loader: async () => {
             try {
                 const mod = await loadTablerModule()
-                return mod?.[exportName] ?? IconTag
+                return mod?.[exportName] ?? 'IconTag'
             } catch {
-                return IconTag
+                return 'IconTag'
             }
         },
         delay: 0,

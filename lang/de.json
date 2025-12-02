@@ -2047,7 +2047,7 @@
     "Please also enter an end time here.": "Bitte gib hier auch eine Endzeit an.",
     "Please also enter a start time here.": "Bitte gib hier auch eine Startzeit an.",
     "Intern extern ascending": "Alphabetisch Intern/Extern aufsteigend",
-    "Intern extern descending": "Alphabetisch Intern/Extern absteigend",
+    "Intern extern descending": "Separate alphabetically Intern/Extern",
     "Alphabetically name ascending": "Alphabetisch aufsteigend nach {0}",
     "Alphabetically name descending": "Alphabetisch absteigend nach {0}",
     "Sort by first name": "Alphabetische Sortierung nach Vornamen",

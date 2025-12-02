@@ -59,7 +59,6 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <!-- Static sidebar for desktop -->
     <div
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
@@ -101,6 +100,7 @@
                                 <Link
                                     v-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
+                                    :prefetch="item.prefetch"
                                     :aria-current="item.current ? 'page' : undefined"
                                     :class="[
                                       'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
@@ -399,6 +399,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: true,
+        prefetch: false
     },
     {
         name: 'Projects',
@@ -408,6 +409,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('projects'),
+        prefetch: ['projects']
     },
     {
         name: 'Calendar',
@@ -417,6 +419,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('room_assignment'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Calendar',
@@ -449,6 +452,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Duty rosters',
@@ -517,6 +521,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('inventory'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Inventory',
@@ -549,6 +554,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('tasks'),
+        prefetch: false,
     },
     {
         name: 'Sources of funding',
@@ -558,6 +564,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: can('view edit add money_sources | can edit and delete money sources') || moduleIsVisible('sources_of_funding'),
+        prefetch: false,
     },
     {
         name: 'Users',
@@ -567,6 +574,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('users'),
+        prefetch: false,
     },
     {
         name: 'Contracts',
@@ -576,6 +584,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: can('view edit upload contracts | can see and download contract modules') || moduleIsVisible('contracts'),
+        prefetch: false,
     },
     {
         name: 'System',
@@ -584,6 +593,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
+        prefetch: false,
         has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit') || is('artwork admin'),
         subMenus: [
             {
@@ -673,6 +683,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: is('artwork admin'),
+        prefetch: false,
     },
 ])
 

@@ -39,7 +39,7 @@
                                 {{ multiEditCellForm.vacation_type.name }}
                             </span>
                         </div>
-                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true" />
+                        <PropertyIcon name="ChevronDownIcon" class="h-5 w-5 text-primary" aria-hidden="true" />
                     </ListboxButton>
                     <ListboxOptions
                         class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm"
@@ -60,7 +60,7 @@
                                     {{ type.name }}
                                 </span>
                             </div>
-                            <CheckIcon
+                            <PropertyIcon name="CheckIcon"
                                 v-if="selected"
                                 class="h-5 w-5 text-success"
                                 aria-hidden="true"
@@ -91,7 +91,7 @@
                         class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                         @click="addIndividualTime"
                     >
-                        <IconCirclePlus class="h-3.5 w-3.5" stroke-width="2" />
+                        <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
                         <span>{{ $t('Add time') }}</span>
                     </button>
                 </div>
@@ -146,7 +146,7 @@
                                     class="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                     @click="deleteIndividualTimeByIndex(index)"
                                 >
-                                    <IconTrash class="h-4 w-4" stroke-width="1.5" />
+                                    <PropertyIcon name="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
                             </div>
                         </div>
@@ -162,7 +162,7 @@
                             class="inline-flex items-center gap-1 text-xs xsLight hover:text-artwork-buttons-hover transition-colors"
                             @click="addIndividualTime"
                         >
-                            <IconCirclePlus class="h-5 w-5" stroke-width="2" />
+                            <PropertyIcon name="IconCirclePlus" class="h-5 w-5" stroke-width="2" />
                             <span>{{ $t('Add time') }}</span>
                         </button>
                     </div>
@@ -225,14 +225,13 @@ import {
     ListboxOptions,
 } from '@headlessui/vue';
 import { useForm } from '@inertiajs/vue3';
-import { CheckIcon, ChevronDownIcon } from '@heroicons/vue/solid';
 
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
-import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     multiEditCellByDayAndUser: {

@@ -62,7 +62,7 @@
                               :assigned-users="teamProject?.usersArray ? teamProject.usersArray : []"
                               :assigned-departments="teamProject.departments ? teamProject.departments : []"
                               :project-id="currentProjectId()"
-                              :userIsProjectManager="this.userIsProjectManager"
+                              :userIsProjectManager="this.userIsProjectManager()"
                               @closed="this.showTeamModal = false"
                               :projectRoles="teamProject.projectRoles || []"
         />

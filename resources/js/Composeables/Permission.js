@@ -54,8 +54,7 @@ export function usePermission(pageProps) {
             hasAdminRole() ||
             component.permission_type === null ||
             component.permission_type === 'allSeeAndEdit' ||
-            component.permission_type === 'allSeeSomeEdit' ||
-            can('view projects')
+            component.permission_type === 'allSeeSomeEdit'
         ) {
             return true;
         }

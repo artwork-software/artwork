@@ -2195,24 +2195,45 @@ class ProjectController extends Controller
             'components' => function ($query): void {
                 $query->orderBy('order');
             },
-            // WICHTIG: Berechtigungsdaten der Hauptkomponenten
-            'components.component.users',
-            'components.component.departments.users.departments',
+            // WICHTIG: Berechtigungsdaten der Hauptkomponenten (nur ID und can_write vom Pivot)
+            'components.component.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
+            },
+            'components.component.departments' => function ($query): void {
+                $query->select('departments.id', 'departments.name', 'departments.svg_name')->withPivot('can_write');
+            },
+            'components.component.departments.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name');
+            },
 
             // Sidebar-Komponenten inkl. ProjectValue
             'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
-            // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten
-            'sidebarTabs.componentsInSidebar.component.users',
-            'sidebarTabs.componentsInSidebar.component.departments.users.departments',
+            // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten (nur ID und can_write vom Pivot)
+            'sidebarTabs.componentsInSidebar.component.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
+            },
+            'sidebarTabs.componentsInSidebar.component.departments' => function ($query): void {
+                $query->select('departments.id', 'departments.name', 'departments.svg_name')->withPivot('can_write');
+            },
+            'sidebarTabs.componentsInSidebar.component.departments.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name');
+            },
 
             // Disclosure-Komponenten (falls angezeigt)
             'components.disclosureComponents.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
-            'components.disclosureComponents.component.users',
-            'components.disclosureComponents.component.departments.users.departments',
+            'components.disclosureComponents.component.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
+            },
+            'components.disclosureComponents.component.departments' => function ($query): void {
+                $query->select('departments.id', 'departments.name', 'departments.svg_name')->withPivot('can_write');
+            },
+            'components.disclosureComponents.component.departments.users' => function ($query): void {
+                $query->select('users.id', 'users.first_name', 'users.last_name');
+            },
         ]);
 
         // Alle Komponenten des Tabs inkl. Sidebar (unique, Reihenfolge beibehalten)

@@ -13,8 +13,8 @@ use Illuminate\Support\Carbon;
  * @property string material_value
  * @property int issued_by_id
  * @property int received_by_id
- * @property string issue_date
- * @property string return_date
+ * @property \Illuminate\Support\Carbon|null issue_date
+ * @property \Illuminate\Support\Carbon|null return_date
  * @property string return_remarks
  * @property string external_name
  * @property string external_address
@@ -39,6 +39,8 @@ class ExternalIssue extends Model
         'issued_by_id' => 'integer',
         'received_by_id' => 'integer',
         'special_items_done' => 'boolean',
+        'issue_date' => 'date',
+        'return_date' => 'date',
     ];
 
     protected $appends = [

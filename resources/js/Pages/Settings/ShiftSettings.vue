@@ -33,7 +33,7 @@
 
 
                         <div>
-                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex items-center gap-4 mt-3">
+                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex flex-wrap items-center gap-4 mt-3">
                                 <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
                                     <div class="flex items-center">
                                         <div>
@@ -634,7 +634,10 @@ export default defineComponent({
         IconPlus,
         IconGripVertical,
         addUserToWorkflow(user) {
-            if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {
+            // Check if user already exists in shiftCommitWorkflowUsers prop
+            const userAlreadyExists = this.shiftCommitWorkflowUsers.some(workflowUser => workflowUser.user.id === user.id);
+
+            if (this.userForWorkflowForm.processing || userAlreadyExists) {
                 console.warn('User is already in the workflow or form is processing.');
                 return;
             }

@@ -20,10 +20,10 @@
 
                         <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
-                            <component :is="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
+                            <PropertyIcon name="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
                             <ToolTipComponent
                                 v-if="shift.inWorkflow && !shift.isCommitted"
-                                :icon="IconGitPullRequest"
+                                icon="IconGitPullRequest"
                                 icon-size="w-3 h-3 !text-black"
                                 :stroke="2"
                                 :tooltip-text="$t('This shift is currently in a workflow.')"
@@ -113,16 +113,8 @@ import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
-// UI / Components
-import { CheckIcon } from '@heroicons/vue/outline'
-import {IconGitPullRequest, IconId, IconLock} from '@tabler/icons-vue'
-import VueMathjax from 'vue-mathjax-next'
 import ChooseUserSeriesShift from '@/Pages/Projects/Components/ChooseUserSeriesShift.vue'
-import ShiftQualificationIconCollection from '@/Layouts/Components/ShiftQualificationIconCollection.vue'
 import MultipleShiftQualificationSlotsAvailable from '@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue'
-import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
-
 // Mixins weiterverwenden (liefert z.B. $can / hasAdminRole o.ä.)
 import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'

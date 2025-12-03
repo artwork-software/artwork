@@ -1,10 +1,8 @@
 <template>
     <div class="w-full">
-        <div :class="page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12'" draggable="true" @dragstart="onDragStart"
+        <div :class="[page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12', { 'border-dashed': item.is_freelancer || type === 1}]" draggable="true" @dragstart="onDragStart"
             class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg border" :style="{backgroundColor: backgroundColorWithOpacityOld(color), borderColor : color+'80'}">
-            <div class="text-white" v-if="!page.props.auth.user.compact_mode">
-                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6"/>
-            </div>
+
 
             <div class="text-left cursor-pointer flex items-center gap-2 w-full">
                 <div>
@@ -43,16 +41,17 @@
             <div class="flex items-center justify-end w-fit gap-2 absolute right-2 top-2">
                 <div v-if="(type === 0 && item.is_freelancer) || type === 1">
                     <ToolTipComponent
-                        :icon="IconId"
+                        icon="IconId"
                         icon-size="w-4 h-4"
                         tooltip-text="Freelancer*in"
                         direction="top"
-                        classes="text-white"
+                        stroke="2"
+                        icon-color="text-white"
                     />
                 </div>
 
                 <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
-                    <IconCalendarShare class="w-4 h-4" />
+                    <PropertyIcon name="IconCalendarShare" class="w-4 h-4" />
                 </a>
             </div>
         </div>
@@ -63,8 +62,8 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
-import { IconId, IconCalendarShare } from '@tabler/icons-vue';
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const {
     backgroundColorWithOpacityOld
 } = useColorHelper();

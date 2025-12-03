@@ -26,7 +26,7 @@
                 @click="openChat"
                 class="relative group grid place-items-center size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg ring-1 ring-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
-                <component :is="IconMessage" class="size-6" />
+                <PropertyIcon name="IconMessage" class="size-6" />
                 <span
                     v-if="totalUnreadCount > 0"
                     class="absolute -top-1.5 -right-1.5 inline-flex"
@@ -49,7 +49,7 @@
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
                                 <div class="grid size-8 place-items-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-                                    <component :is="IconMessage" class="size-4" />
+                                    <PropertyIcon name="IconMessage" class="size-4" />
                                 </div>
                                 <div class="min-w-0">
                                     <div class="text-sm font-semibold text-zinc-900 truncate">
@@ -79,7 +79,7 @@
                                 >
                                     <ToolTipComponent
                                         direction="top"
-                                        :icon="IconPlus"
+                                        icon="IconPlus"
                                         :tooltip-text="$t('Add new Chat')"
                                         icon-class="size-4"
                                     />
@@ -89,7 +89,7 @@
                                 <button @click="enableOrDisablePushNotification" class="btn-icon" aria-label="Toggle notifications">
                                     <ToolTipComponent
                                         direction="top"
-                                        :icon="usePage().props.auth.user.chat_push_notification ? IconBellOff : IconBell"
+                                        :icon="usePage().props.auth.user.chat_push_notification ? 'IconBellOff' : 'IconBell'"
                                         :tooltip-text="usePage().props.auth.user.chat_push_notification ? $t('Disable Notifications') : $t('Enable Notifications')"
                                         icon-class="size-4"
                                     />
@@ -99,7 +99,7 @@
                                 <button @click="showPositionPicker = true" class="btn-icon" aria-label="Change position">
                                     <ToolTipComponent
                                         direction="top"
-                                        :icon="IconArrowsMove"
+                                        icon="IconArrowsMove"
                                         :tooltip-text="$t('Change Chat position')"
                                         icon-class="size-4"
                                     />
@@ -107,7 +107,7 @@
 
                                 <!-- Close -->
                                 <button @click="closeChat" class="btn-icon" aria-label="Close chat">
-                                    <component :is="IconX" class="size-4 text-zinc-500 group-hover:text-zinc-700 transition-colors" />
+                                    <PropertyIcon name="IconX" class="size-4 text-zinc-500 group-hover:text-zinc-700 transition-colors" />
                                 </button>
                             </div>
                         </div>
@@ -122,8 +122,7 @@
                                 class="form-input pl-9"
                                 :placeholder="$t('Search in chats')"
                             />
-                            <component
-                                :is="IconSearch"
+                            <PropertyIcon name="IconSearch"
                                 class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400"
                             />
                         </div>
@@ -154,15 +153,14 @@
                                 </div>
                             </div>
                             <button class="btn-subtle" @click="goBackToChatList">
-                                <component :is="IconChevronLeft" class="size-4" />
+                                <PropertyIcon name="IconChevronLeft" class="size-4" />
                                 <span class="text-xs">{{ $t('Back') }}</span>
                             </button>
                         </div>
 
                         <div v-else class="flex items-center justify-between">
                             <div class="flex items-center gap-3 min-w-0">
-                                <component
-                                    :is="IconUsersGroup"
+                                <PropertyIcon name="IconUsersGroup"
                                     class="size-10 rounded-xl p-2.5 bg-blue-50 text-blue-600 border border-blue-100"
                                 />
                                 <div class="min-w-0">
@@ -178,7 +176,7 @@
                                 <button class="btn-icon" @click="showRenameModal = true" aria-label="Rename group">
                                     <ToolTipComponent
                                         direction="top"
-                                        :icon="IconEdit"
+                                        icon="IconEdit"
                                         :tooltip-text="$t('Rename Group Chat')"
                                         icon-size="size-4"
                                         class="chat-tooltip-black-icon"
@@ -187,14 +185,14 @@
                                 <button class="btn-icon" @click="showDeleteConfirm = true" aria-label="Delete group">
                                     <ToolTipComponent
                                         direction="top"
-                                        :icon="IconTrash"
+                                        icon="IconTrash"
                                         :tooltip-text="$t('Delete Group Chat')"
                                         icon-size="size-4"
                                         class="chat-tooltip-black-icon"
                                     />
                                 </button>
                                 <button class="btn-subtle" @click="goBackToChatList">
-                                    <component :is="IconChevronLeft" class="size-4" />
+                                    <PropertyIcon name="IconChevronLeft" class="size-4" />
                                     <span class="text-xs">{{ $t('Back') }}</span>
                                 </button>
                             </div>
@@ -206,7 +204,7 @@
                 <div class="bg-zinc-50/60 min-h-96">
                     <!-- Loader -->
                     <div v-if="isLoading" class="grid place-items-center max-h-96 min-h-96 w-full">
-                        <component :is="IconLoaderQuarter" class="motion-safe:animate-spin text-zinc-400" />
+                        <PropertyIcon name="IconLoaderQuarter" class="motion-safe:animate-spin text-zinc-400" />
                     </div>
 
                     <!-- Content -->
@@ -241,7 +239,7 @@
                                 <div v-else class="p-4">
                                     <div class="rounded-md border border-red-100 bg-red-50 p-3">
                                         <div class="flex items-start gap-2">
-                                            <component :is="IconInfoSquareRoundedFilled" class="size-5 text-red-400 mt-0.5" />
+                                            <PropertyIcon name="IconInfoSquareRoundedFilled" class="size-5 text-red-400 mt-0.5" />
                                             <p class="text-xs font-medium text-red-800">
                                                 {{ $t("No chats found. Click the plus icon to start a new chat.") }}
                                             </p>
@@ -300,7 +298,7 @@
                             class="grid place-items-center rounded-xl p-2.5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:brightness-105 transition-all shadow-sm hover:shadow-md"
                             aria-label="Send message"
                         >
-                            <component :is="IconBrandTelegram" class="size-5" />
+                            <PropertyIcon name="IconBrandTelegram" class="size-5" />
                         </button>
                     </div>
                 </div>
@@ -334,7 +332,7 @@
             <button class="picker-spot bottom-4 left-1/2 -translate-x-1/2" :title="$t('Bottom center')" @click="setChatPosition('bottom-center')" />
 
             <div class="absolute top-3 right-3">
-                <component :is="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
+                <PropertyIcon name="IconSquareRoundedX" class="size-6 text-white cursor-pointer" @click="showPositionPicker = false" />
             </div>
         </div>
     </div>
@@ -361,16 +359,7 @@ import {computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, re
 import {router, usePage} from "@inertiajs/vue3";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {
-    IconArrowsMove, IconBrandTelegram, IconMessage, IconBell, IconBellOff,
-    IconChevronLeft,
-    IconEdit, IconInfoSquareRoundedFilled,
-    IconLoaderQuarter,
-    IconPlus,
-    IconSearch, IconSquareRoundedX,
-    IconTrash, IconUsersGroup,
-    IconX
-} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const { getUserStatus } = useUserStatus()
 
 

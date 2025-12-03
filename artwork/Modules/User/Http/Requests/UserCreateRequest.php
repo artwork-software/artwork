@@ -42,7 +42,8 @@ class UserCreateRequest extends FormRequest
             'business' => $this->input('business'),
             'description' => $this->input('description'),
             'opened_checklists' => [],
-            'opened_areas' => []
+            'opened_areas' => [],
+            'use_chat' => true,
         ];
     }
 }

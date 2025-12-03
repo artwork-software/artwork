@@ -31,7 +31,7 @@
                     <!-- Iconbereich -->
                     <template v-if="showIcon">
                         <!-- Standard: Dots -->
-                        <IconDotsVertical
+                        <PropertyIcon name="IconDotsVertical"
                             v-if="!showSortIcon && !showCustomIcon"
                             :stroke-width="strokeWidth"
                             class="flex-shrink-0"
@@ -44,7 +44,7 @@
                             v-else-if="!showCustomIcon"
                             :direction="tooltipDirection"
                             :tooltip-text="$t('Sorting')"
-                            :icon="IconSortDescending"
+                            icon="IconSortDescending"
                             :icon-size="dotsSize"
                             :white-icon="whiteIcon"
                             :stroke="strokeWidth"
@@ -107,7 +107,7 @@ import { ref, computed, type Component } from 'vue'
 import { Menu, MenuButton, MenuItems } from '@headlessui/vue'
 import { Float } from '@headlessui-float/vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconSortDescending, IconDotsVertical } from '@tabler/icons-vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 type IconProp = string | Component
 
@@ -171,9 +171,4 @@ const computedOffset = computed(() => props.hasNoOffset ? 8 : 10)
 /** ref momentan optional – gelassen, falls du in Zukunft messen willst */
 const menuButtonRef = ref<HTMLDivElement | null>(null)
 
-/** Export für Template-Nutzung der Icons (falls extern gebraucht) */
-defineExpose({
-    IconSortDescending,
-    IconDotsVertical,
-})
 </script>

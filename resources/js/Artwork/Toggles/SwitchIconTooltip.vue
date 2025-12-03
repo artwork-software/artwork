@@ -51,7 +51,6 @@
 <script setup>
 import { computed } from 'vue'
 import { Switch } from '@headlessui/vue'
-import { IconList } from '@tabler/icons-vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 
 defineOptions({ name: 'SwitchIconTooltip' })

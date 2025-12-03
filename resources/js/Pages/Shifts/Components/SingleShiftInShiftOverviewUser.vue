@@ -2,7 +2,7 @@
     <div>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
             <div class="col-span-2 flex items-center gap-x-2">
-                <component :is="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
+                <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
                 <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: shift.craft.color + '22', borderColor: blackColorIfColorIsWhite(shift.craft.color) + '55', color: blackColorIfColorIsWhite(shift.craft.color) }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
@@ -42,7 +42,7 @@
                                             id="start" type="time" class="max-w-28 text-xs"
                                             v-model="shift.endPivot"
                                         />
-                                        <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
+                                        <BaseUIButton label="Save" use-translation icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                                     </div>
                                 </div>
                             </PopoverPanel>
@@ -72,10 +72,10 @@
     </div>
     <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
         <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">
-            <Component :is="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
         <button type="button" @click="showConfirmDeleteModal = true">
-            <Component :is="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
     </div>
 
@@ -103,9 +103,8 @@ import {computed, defineAsyncComponent, ref} from "vue";
 import {Popover, PopoverButton, PopoverPanel} from "@headlessui/vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconClockEdit, IconDeviceFloppy, IconLock, IconSquareRoundedXFilled} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     user: {

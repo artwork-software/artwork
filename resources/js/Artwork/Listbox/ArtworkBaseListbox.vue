@@ -34,7 +34,7 @@
                         ></span>
                         <span class="truncate">{{ displayText }}</span>
                     </div>
-                    <IconChevronUp
+                    <PropertyIcon name="IconChevronUp"
                         class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4 transition-transform"
                         :class="open ? 'rotate-180' : ''"
                         aria-hidden="true"
@@ -132,7 +132,7 @@
                                             v-if="selected"
                                             :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                         >
-                                          <IconCheck class="size-5" aria-hidden="true" />
+                                          <PropertyIcon name="IconCheck" class="size-5" aria-hidden="true" />
                                         </span>
                                     </slot>
                                 </li>
@@ -168,10 +168,10 @@ import {
     ListboxOption,
     ListboxOptions,
 } from '@headlessui/vue'
-import { IconChevronUp, IconCheck } from '@tabler/icons-vue'
 import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {Float} from "@headlessui-float/vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 type Option = Record<string, any>
 type ModelValue = Option | Option[] | null
 

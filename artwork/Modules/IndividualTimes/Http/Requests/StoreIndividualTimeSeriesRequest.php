@@ -25,6 +25,7 @@ class StoreIndividualTimeSeriesRequest extends FormRequest
             'full_day'   => ['sometimes', 'boolean'],
 
             'working_time_minutes' => ['nullable', 'integer', 'min:0'],
+            'break_minutes' => ['nullable', 'integer', 'min:0'],
 
             'frequency' => ['required', 'string', 'in:weekly'], // später erweiterbar
             'interval'  => ['required', 'integer', 'min:1'],

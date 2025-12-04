@@ -730,8 +730,15 @@ class User extends Model implements
 
     public function getCurrentWorkTime(): ?UserWorkTime
     {
+        $now = now();
         return $this->workTimes()
-            ->where('is_active', true)
+            ->where(function ($q) use ($now): void {
+                $q->whereNull('valid_from')->orWhere('valid_from', '<=', $now);
+            })
+            ->where(function ($q) use ($now): void {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', $now);
+            })
+            ->orderByDesc('valid_from')
             ->first();
     }
 

@@ -37,7 +37,14 @@ class UserWorkTime extends Model
     ];
 
     protected $appends = [
-        'full_work_time_in_hours'
+        'full_work_time_in_hours',
+        'monday_hours',
+        'tuesday_hours',
+        'wednesday_hours',
+        'thursday_hours',
+        'friday_hours',
+        'saturday_hours',
+        'sunday_hours'
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -53,6 +60,49 @@ class UserWorkTime extends Model
             'id',
             'user_work_time_patterns'
         );
+    }
+
+    private function timeToHours($time): float
+    {
+        if (!$time) {
+            return 0;
+        }
+        return round(($time->hour * 60 + $time->minute) / 60, 2);
+    }
+
+    public function getMondayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->monday);
+    }
+
+    public function getTuesdayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->tuesday);
+    }
+
+    public function getWednesdayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->wednesday);
+    }
+
+    public function getThursdayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->thursday);
+    }
+
+    public function getFridayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->friday);
+    }
+
+    public function getSaturdayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->saturday);
+    }
+
+    public function getSundayHoursAttribute(): float
+    {
+        return $this->timeToHours($this->sunday);
     }
 
     public function getFullWorkTimeInHoursAttribute(): float

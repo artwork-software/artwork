@@ -540,10 +540,9 @@
                                                 :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </div>
-                                        <template v-for="day in days"
-                                             :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay"
-                                             class="relative">
+                                        <div v-for="day in days" :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay"  class="relative">
                                             <div v-if="!day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }"
+
                                                  :class="[
                                                     highlightMode
                                                         ? idToHighlight
@@ -633,14 +632,14 @@
                                             </div>
 
                                             <!-- DayServices (Icons) -->
-                                            <template
+                                            <div
                                                 v-if="user.dayServices"
                                                 v-for="(userDayServices, indexDay) in user.dayServices"
                                                 :key="indexDay"
                                                 class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
                                             >
                                                 <template v-if="indexDay === day.withoutFormat">
-                                                    <template
+                                                    <div
                                                         v-for="(userDayService, position) in userDayServices"
                                                         :key="userDayService.id || position"
                                                         class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5"
@@ -653,10 +652,10 @@
                                                             :icon-style="{ color: userDayService.hex_color }"
                                                             :classes-button="'mt-0'"
                                                         />
-                                                    </template>
+                                                    </div>
                                                 </template>
-                                            </template>
-                                        </template>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

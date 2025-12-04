@@ -3,6 +3,9 @@
         <div :class="[page.props.auth.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12', { 'border-dashed': item.is_freelancer || type === 1}]" draggable="true" @dragstart="onDragStart"
             class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg border" :style="{backgroundColor: backgroundColorWithOpacityOld(color), borderColor : color+'80'}">
 
+            <div class="text-white" v-if="!page.props.auth.user.compact_mode">
+                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6"/>
+            </div>
 
             <div class="text-left cursor-pointer flex items-center gap-2 w-full">
                 <div>

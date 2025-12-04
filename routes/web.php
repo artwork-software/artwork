@@ -2020,6 +2020,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Nutzungsdaten für UsageModal eines Artikels an einem Tag
         Route::get('/articles/usage', [InventoryArticleController::class, 'usageData'])
             ->name('inventory.articles.usage');
+
+        // Update user's inventory grid layout preference
+        Route::post('/update-grid-layout', [InventoryCategoryController::class, 'updateInventoryGridLayout'])
+            ->name('inventory.update-grid-layout');
     });
 
 

@@ -1,4 +1,14 @@
 <template>
+    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-zinc-500/30 opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
+        <div class="flex items-center justify-center h-full w-full">
+            <div class="relative pointer-events-auto">
+                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-2 ring-white text-blue-500 text-xs flex items-center justify-center">
+                    {{ findBasketForArticle(item.id) ? findBasketForArticle(item.id).quantity : 0 }}
+                </span>
+                <BaseUIButton :label="$t('Add to Basket')" use-translation icon="IconBasketPlus" @click="$emit('add-to-basket', item.id)" />
+            </div>
+        </div>
+    </td>
     <td class="py-3 pr-3 pl-3 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
         <img :src="getMainImageInImage.image" @error="(e) => e.target.src = usePage().props.big_logo"  alt="" class="w-12 h-12 object-fill rounded-lg">
     </td>
@@ -31,6 +41,7 @@ import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {IconEye, IconIdBadge, IconPhoto} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const $t = useTranslation()
 
 const props = defineProps({
@@ -41,8 +52,20 @@ const props = defineProps({
     allPropertiesFromArticles: {
         type: Array,
         required: true
+    },
+    enableAddArticleToBasket: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    findBasketForArticle: {
+        type: Function,
+        required: false,
+        default: () => null
     }
 })
+
+const emit = defineEmits(['add-to-basket'])
 
 const showEditArticleModal = ref(false);
 const showArticleDetail = ref(false);

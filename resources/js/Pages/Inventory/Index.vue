@@ -103,8 +103,14 @@
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                <tr v-for="item in props.articles.data" :key="item?.id" class="divide-x divide-gray-200">
-                                    <InventorySingleArticleInTable :item="item" :all-properties-from-articles="allPropertiesFromArticles" />
+                                <tr v-for="item in props.articles.data" :key="item?.id" class="divide-x divide-gray-200 relative">
+                                    <InventorySingleArticleInTable
+                                        :item="item"
+                                        :all-properties-from-articles="allPropertiesFromArticles"
+                                        :enable-add-article-to-basket="enableAddArticleToBasket"
+                                        :find-basket-for-article="findBasketForArticle"
+                                        @add-to-basket="addArticleToBasket"
+                                    />
                                 </tr>
                                 </tbody>
                             </table>
@@ -236,6 +242,11 @@ const props = defineProps({
         type: Object,
         required: false,
         default: () => ({})
+    },
+    inventoryGridLayout: {
+        type: Boolean,
+        required: false,
+        default: true
     }
 })
 
@@ -251,7 +262,7 @@ provide('tags', props.tags)
 
 
 
-const gridLayout = ref(true)
+const gridLayout = ref(props.inventoryGridLayout)
 const enableAddArticleToBasket = ref(false)
 const showProductBasketModal = ref(false)
 const showIssueOfMaterialModal = ref(false)
@@ -265,6 +276,14 @@ const AddEditArticleModal = defineAsyncComponent({
 
 const updateGridLayout = (value) => {
     gridLayout.value = value
+
+    // Persist the preference to the backend
+    router.post(route('inventory.update-grid-layout'), {
+        inventory_grid_layout: value
+    }, {
+        preserveScroll: true,
+        preserveState: true
+    })
 }
 
 

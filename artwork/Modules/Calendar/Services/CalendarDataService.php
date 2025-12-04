@@ -21,6 +21,7 @@ use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
@@ -35,7 +36,8 @@ readonly class CalendarDataService
         private FilterService $filterService,
         private UserService $userService,
         private ProjectService $projectService,
-    ) {}
+    ) {
+    }
 
     public function createCalendarData(
         $startDate,
@@ -159,78 +161,86 @@ readonly class CalendarDataService
      * - `withCount('events')` für effiziente has_events Prüfung ohne N+1
      * - `with('admins')` um N+1 für Admins zu vermeiden
      */
-    public function getFilteredRooms(UserFilter $filter, $userCalendarSettings, $startDate, $endDate, bool $considerShiftsForOccupancy = false)
-    {
-        $userCalendarFilter = $filter;
+    public function getFilteredRooms(
+        UserFilter $filter,
+        ?UserCalendarSettings $userCalendarSettings,
+        CarbonInterface $startDate,
+        CarbonInterface $endDate,
+        bool $considerShiftsForOccupancy = false
+    ): SupportCollection {
+        $eventOccupancySubquery = function ($eventQuery) use ($filter, $startDate, $endDate): void {
+            $eventQuery->selectRaw(1)
+                ->from('events')
+                ->whereColumn('events.room_id', 'rooms.id')
+                ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                    $q->whereIn('events.event_type_id', $filter->event_type_ids);
+                })
+                ->where(function ($q) use ($startDate, $endDate): void {
+                    $q->where(function ($q) use ($startDate, $endDate): void {
+                        $q->whereBetween('start_time', [$startDate, $endDate])
+                            ->orWhereBetween('end_time', [$startDate, $endDate]);
+                    })->orWhere(function ($q) use ($startDate, $endDate): void {
+                        $q->where('start_time', '<=', $startDate)
+                            ->where('end_time', '>=', $endDate);
+                    });
+                });
+        };
+
+        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $startDate, $endDate): void {
+            $shiftQuery->selectRaw(1)
+                ->from('shifts')
+                ->whereNull('shifts.event_id')
+                ->whereColumn('shifts.room_id', 'rooms.id')
+                ->unless(empty($filter->craft_ids), function ($q) use ($filter): void {
+                    $q->whereIn('shifts.craft_id', $filter->craft_ids);
+                })
+                ->where(function ($q) use ($startDate, $endDate): void {
+                    $q->whereBetween('shifts.start_date', [$startDate, $endDate])
+                        ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
+                        ->orWhere(function ($q) use ($startDate, $endDate): void {
+                            $q->where('shifts.start_date', '<=', $startDate)
+                                ->where('shifts.end_date', '>=', $endDate);
+                        });
+                });
+        };
+
         $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
             ->with(['admins'])
             ->withCount('events')
             ->where('relevant_for_disposition', true)
-            ->unlessRoomIds($userCalendarFilter?->room_ids)
-            ->unlessRoomAttributeIds($userCalendarFilter?->room_attribute_ids)
-            ->unlessAreaIds($userCalendarFilter?->area_ids)
-            ->unlessRoomCategoryIds($userCalendarFilter?->room_category_ids)
-            ->when(
-                $userCalendarSettings?->hide_unoccupied_rooms,
-                function ($query) use ($filter, $startDate, $endDate, $considerShiftsForOccupancy): void {
-                    // In the regular calendar, a room is considered occupied if it has events in range.
-                    // In the shift plan, we also consider standalone shifts (without an event) as occupancy.
-                    if (!$considerShiftsForOccupancy) {
-                        $query->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate): void {
-                            $eventQuery->selectRaw(1)
-                                ->from('events')
-                                ->whereColumn('events.room_id', 'rooms.id')
-                                ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
-                                    $q->whereIn('events.event_type_id', $filter->event_type_ids);
-                                })
-                                ->where(function ($q) use ($startDate, $endDate): void {
-                                    $q->where(function ($q) use ($startDate, $endDate): void {
-                                        $q->whereBetween('start_time', [$startDate, $endDate])
-                                            ->orWhereBetween('end_time', [$startDate, $endDate]);
-                                    })->orWhere(function ($q) use ($startDate, $endDate): void {
-                                        $q->where('start_time', '<=', $startDate)
-                                            ->where('end_time', '>=', $endDate);
-                                    });
-                                });
-                        });
-                    } else {
-                        $query->where(function ($q) use ($filter, $startDate, $endDate): void {
-                            // Occupied by events
-                            $q->whereExists(function ($eventQuery) use ($filter, $startDate, $endDate): void {
-                                $eventQuery->selectRaw(1)
-                                    ->from('events')
-                                    ->whereColumn('events.room_id', 'rooms.id')
-                                    ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
-                                        $q->whereIn('events.event_type_id', $filter->event_type_ids);
-                                    })
-                                    ->where(function ($q) use ($startDate, $endDate): void {
-                                        $q->where(function ($q) use ($startDate, $endDate): void {
-                                            $q->whereBetween('start_time', [$startDate, $endDate])
-                                                ->orWhereBetween('end_time', [$startDate, $endDate]);
-                                        })->orWhere(function ($q) use ($startDate, $endDate): void {
-                                            $q->where('start_time', '<=', $startDate)
-                                                ->where('end_time', '>=', $endDate);
-                                        });
-                                    });
-                            })
-                            // OR occupied by standalone shifts
-                            ->orWhereExists(function ($shiftQuery) use ($filter, $startDate, $endDate): void {
-                                $shiftQuery->selectRaw(1)
-                                    ->from('shifts')
-                                    ->whereNull('shifts.event_id')
-                                    ->whereColumn('shifts.room_id', 'rooms.id')
-                                    ->unless(empty($filter->craft_ids), function ($q) use ($filter): void {
-                                        $q->whereIn('shifts.craft_id', $filter->craft_ids);
-                                    })
-                                    ->where(function ($q) use ($startDate, $endDate): void {
-                                        $q->whereBetween('shifts.start_date', [$startDate, $endDate])
-                                            ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
-                                            ->orWhere(function ($q) use ($startDate, $endDate): void {
-                                                $q->where('shifts.start_date', '<', $startDate)
-                                                    ->where('shifts.end_date', '>', $endDate);
-                                            });
+            ->unlessRoomIds($filter?->room_ids)
+            ->unlessRoomAttributeIds($filter?->room_attribute_ids)
+            ->unlessAreaIds($filter?->area_ids)
+            ->unlessRoomCategoryIds($filter?->room_category_ids)
+            // temporäre Räume nur, wenn Zeitraum sich überschneidet
+            ->where(function ($q) use ($startDate, $endDate): void {
+                $q->where('temporary', false)
+                    ->orWhereNull('temporary')
+                    ->orWhere(function ($q) use ($startDate, $endDate): void {
+                        $q->where('temporary', true)
+                            ->where(function ($q) use ($startDate, $endDate): void {
+                                $q->whereBetween('start_date', [$startDate, $endDate])
+                                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                                    ->orWhere(function ($q) use ($startDate, $endDate): void {
+                                        $q->where('start_date', '<=', $startDate)
+                                            ->where('end_date', '>=', $endDate);
                                     });
                             });
+                    });
+            })
+            ->when(
+                $userCalendarSettings?->hide_unoccupied_rooms,
+                function ($query) use (
+                    $eventOccupancySubquery,
+                    $shiftOccupancySubquery,
+                    $considerShiftsForOccupancy
+                ): void {
+                    if (!$considerShiftsForOccupancy) {
+                        $query->whereExists($eventOccupancySubquery);
+                    } else {
+                        $query->where(function ($q) use ($eventOccupancySubquery, $shiftOccupancySubquery): void {
+                            $q->whereExists($eventOccupancySubquery)
+                                ->orWhereExists($shiftOccupancySubquery);
                         });
                     }
                 }
@@ -238,19 +248,9 @@ readonly class CalendarDataService
             ->orderBy('position')
             ->get();
 
-        // Filter out temporary rooms that don't overlap with the displayed time period
-        $filteredRooms = $rooms->filter(function ($room) use ($startDate, $endDate) {
-            // If the room is not temporary, include it
-            if (!$room->temporary) {
-                return true;
-            }
-
-            // If the room is temporary, check if its time period overlaps with the displayed time period
-            return $this->datesOverlap($room->start_date, $room->end_date, $startDate, $endDate);
-        });
-
-        return $filteredRooms;
+        return $rooms;
     }
+
 
     public function getCalendarDateRange(
         UserCalendarSettings $userCalendarSettings,
@@ -302,14 +302,14 @@ readonly class CalendarDataService
     private function getHolidaysForRange(Carbon $start, Carbon $end): SupportCollection
     {
         return Holiday::select(['id','name','date','end_date','color','yearly'])
-            ->where(function (Builder $q) use ($start, $end) {
-                $q->whereBetween('date',     [$start->toDateString(), $end->toDateString()])
-                    ->orWhereBetween('end_date',[$start->toDateString(), $end->toDateString()])
-                    ->orWhere(function (Builder $nested) use ($start, $end) {
+            ->where(function (Builder $q) use ($start, $end): void {
+                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
+                    ->orWhere(function (Builder $nested) use ($start, $end): void {
                         $nested->where('date', '<=', $start->toDateString())
                             ->where('end_date', '>=', $end->toDateString());
                     })
-                    ->orWhere(function (Builder $nested) use ($start, $end) {
+                    ->orWhere(function (Builder $nested) use ($start, $end): void {
                         // jährliche Gedenktage
                         $nested->where('yearly', true)
                             ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);

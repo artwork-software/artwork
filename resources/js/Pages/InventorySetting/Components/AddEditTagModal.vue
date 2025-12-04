@@ -1,7 +1,7 @@
 <template>
     <ArtworkBaseModal
-        :title="tag ? $t('Edit tag') : $t('Add tag')"
-        :description="tag
+        :title="tag?.id ? $t('Edit tag') : $t('Add tag')"
+        :description="tag?.id
             ? $t('Edit the tag and its settings.')
             : $t('Create a new tag and assign it to a group.')"
         @close="$emit('close')"
@@ -325,7 +325,7 @@
                 <BaseUIButton
                     type="submit"
                     is-add-button
-                    :label="tag ? $t('Save changes') : $t('Create tag')"
+                    :label="tag?.id ? $t('Save changes') : $t('Create tag')"
                     :disabled="form.processing"
                 />
             </div>
@@ -489,9 +489,9 @@ function onColorChange(color) {
 
 function submit() {
 
-    form.inventory_tag_group_id = form.inventory_tag_group_id.id;
+    form.inventory_tag_group_id = form.inventory_tag_group_id?.id ?? null;
 
-    if (props.tag) {
+    if (props.tag?.id) {
         form.patch(route('settings.inventory-tags.update', props.tag.id), {
             preserveScroll: false,
             preserveState: true,

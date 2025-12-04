@@ -25,7 +25,7 @@
                 <div v-if="this.file !== null" class="mb-6">
                     <div class="group flex"><span v-if="this.file.name">{{ this.file.name }}</span><span
                         v-else>{{ contract.name }}</span>
-                        <IconCircleX
+                        <PropertyIcon name="IconCircleX"
                             stroke-width="1.5" @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
@@ -47,7 +47,7 @@
                                         {{ selectedLegalForm.name }}
                                     </div>
                                     <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -58,7 +58,7 @@
                                     </div>
                                     <span
                                         class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -72,7 +72,7 @@
                                                 </span>
                                             </div>
                                             <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -88,7 +88,7 @@
                                         {{ selectedContractType.name }}
                                     </div>
                                     <span class="pointer-events-none">
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -98,7 +98,7 @@
                                         {{ $t('Contract type')}}
                                     </div>
                                     <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -112,7 +112,7 @@
                                                 </span>
                                             </div>
                                             <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -134,7 +134,7 @@
                                         {{ selectedCurrency.name }}
                                     </div>
                                     <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -148,7 +148,7 @@
                                                 </span>
                                             </div>
                                             <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -217,7 +217,7 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromContractUserArray(index)">
                                         <span class="sr-only">{{$t('Remove user from contract')}}</span>
-                                        <IconX stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
                                     </button>
                                 </div>
                             </div>
@@ -229,9 +229,9 @@
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             {{ $t('Add further details or task')}}
-                            <IconChevronUp stroke-width="1.5" v-if="showExtraSettings"
-                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
-                            <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
+                            <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="showExtraSettings"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4" />
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4" />
                         </div>
                         <div v-if="showExtraSettings">
                             <div class="items-center mb-2 mt-4">
@@ -252,7 +252,7 @@
                                 <button v-if="!creatingNewTask" type="button"
                                         @click="[creatingNewTask = !creatingNewTask]"
                                         class="flex py-3 px-3 mt-1 items-center border border-2 mt-6 border-artwork-buttons-create bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-artwork-buttons-create hover:shadow-artwork-buttons-create focus:outline-none">
-                                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 mr-2" aria-hidden="true"/>
                                     <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
                                 </button>
 
@@ -302,6 +302,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 export default {
     name: "ContractEditModal",
     mixins: [Permissions, IconLib],
@@ -314,6 +315,7 @@ export default {
         contractTypes: Array,
     },
     components: {
+        PropertyIcon,
         BaseTextarea,
         BaseInput,
         UserSearch,

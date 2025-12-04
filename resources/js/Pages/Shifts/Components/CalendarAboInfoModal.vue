@@ -2,11 +2,9 @@
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import { ChevronUpIcon } from '@heroicons/vue/solid'
-import {IconChevronDown, IconCircleCheck, IconInfoCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props / Emits
 const props = defineProps({
@@ -152,7 +150,7 @@ const instructions = computed(() => ([
                               <span class="font-medium text-gray-900 truncate">
                                 {{ $t(instruction.system) }}
                               </span>
-                            <component :is="IconChevronDown" class="h-5 w-5 text-gray-500 transition-transform duration-200 ui-open:rotate-180"/>
+                            <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-gray-500 transition-transform duration-200 ui-open:rotate-180"/>
                         </DisclosureButton>
 
                         <DisclosurePanel class="px-4 pb-4 pt-2 text-sm">
@@ -192,13 +190,13 @@ const instructions = computed(() => ([
                         class="absolute right-1 top-1 bottom-1 my-auto inline-flex items-center gap-2 rounded-md bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create"
                         @click="copyAboUrlToClipboard"
                     >
-                        <component :is="IconCircleCheck" class="h-4 w-4" v-if="copyText" />
+                        <PropertyIcon name="IconCircleCheck" class="h-4 w-4" v-if="copyText" />
                         {{ copyText || $t('Copy') }}
                     </button>
                 </div>
 
                 <div class="mt-2 text-xs text-artwork-buttons-create flex items-center gap-1">
-                    <component :is="IconInfoCircle" class="h-4 w-4" />
+                    <PropertyIcon name="IconInfoCircle" class="h-4 w-4" />
                     {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
                 </div>
             </section>

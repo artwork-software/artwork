@@ -48,16 +48,13 @@
 </template>
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import {IconBackground} from "@tabler/icons-vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 export default {
     name: "BaseModal",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         ToolTipDefault,
         FormButton,
@@ -65,7 +62,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, IconBackground
+        DialogPanel
     },
     data() {
         return {

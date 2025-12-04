@@ -5,7 +5,7 @@
         <ToolTipComponent
             direction="bottom"
             :tooltip-text="$t('Display Settings')"
-            :icon="IconSettings"
+            icon="IconSettings"
             icon-size="h-5 w-5"
             @click="showCalendarSettingsModal = true"
             classesButton="ui-button"
@@ -33,7 +33,6 @@
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
-import {IconSettings} from "@tabler/icons-vue";
 
 const props = defineProps({
     isPlanning: {

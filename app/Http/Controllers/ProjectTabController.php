@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ProjectTabController extends Controller
 {
@@ -94,7 +95,7 @@ class ProjectTabController extends Controller
         $components = Cache::remember(self::CACHE_KEY_COMPONENTS, self::CACHE_TTL, function () {
             return Component::notSpecial()
                 ->without(['users', 'departments'])
-                ->select(['id', 'name', 'type', 'data'])
+                ->select(['id', 'name', 'type', 'data', 'sidebar_enabled', 'special'])
                 ->orderBy('type')
                 ->orderBy('name')
                 ->get()
@@ -104,7 +105,7 @@ class ProjectTabController extends Controller
         $componentsSpecial = Cache::remember(self::CACHE_KEY_COMPONENTS_SPECIAL, self::CACHE_TTL, function () {
             return Component::isSpecial()
                 ->without(['users', 'departments'])
-                ->select(['id', 'name', 'type', 'data'])
+                ->select(['id', 'name', 'type', 'data', 'sidebar_enabled', 'special'])
                 ->orderBy('name')
                 ->get();
         });
@@ -116,7 +117,7 @@ class ProjectTabController extends Controller
         ]);
     }
 
-    public function store(Request $request): void
+    public function store(Request $request)
     {
         // get all tabs to calculate the order
         $lastOrder = ProjectTab::orderBy('order', 'desc')->first();
@@ -203,17 +204,57 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
     }
 
-    public function addComponentSidebar(ProjectTabSidebarTab $projectTabSidebarTab, Request $request): void
+    public function addComponentSidebar(ProjectTabSidebarTab $projectTabSidebarTab, Request $request)
     {
-        $order = $request->input('order');
-        SidebarTabComponent::where('project_tab_sidebar_id', $projectTabSidebarTab->id)
-            ->where('order', '>=', $order)->increment('order');
-        $projectTabSidebarTab->componentsInSidebar()->create([
-            'component_id' => $request->input('component_id'),
-            'order' => $request->input('order'),
+        $validated = $request->validate([
+            'component_id' => 'required|exists:components,id',
+            'order' => 'required|integer|min:1',
         ]);
 
-        $this->clearTabSettingsCache();
+        try {
+            // Prüfe ob die Komponente bereits in diesem Sidebar-Tab existiert
+            $exists = SidebarTabComponent::where('project_tab_sidebar_id', $projectTabSidebarTab->id)
+                ->where('component_id', $validated['component_id'])
+                ->exists();
+
+            if ($exists) {
+                return redirect()->back()->withErrors(['error' => 'Diese Komponente ist bereits im Sidebar-Tab vorhanden']);
+            }
+
+            // Prüfe ob die Komponente Sidebar-fähig ist
+            $component = Component::find($validated['component_id']);
+            if (!$component->sidebar_enabled) {
+                return redirect()->back()->withErrors(['error' => 'Diese Komponente kann nicht in die Sidebar gelegt werden']);
+            }
+
+            if ($component->special) {
+                return redirect()->back()->withErrors(['error' => 'Spezielle Komponenten können nicht in die Sidebar gelegt werden']);
+            }
+
+            // Prüfe ob es sich um eine Ordnerkomponente handelt
+            if ($component->type === 'DisclosureComponent') {
+                return redirect()->back()->withErrors(['error' => 'Ordnerkomponenten können nicht in die Sidebar gelegt werden']);
+            }
+
+            // Verschiebe alle Komponenten mit höherer Order um 1 nach oben
+            $order = $validated['order'];
+            SidebarTabComponent::where('project_tab_sidebar_id', $projectTabSidebarTab->id)
+                ->where('order', '>=', $order)
+                ->increment('order');
+
+            // Erstelle die neue Komponente
+            $projectTabSidebarTab->componentsInSidebar()->create([
+                'component_id' => $validated['component_id'],
+                'order' => $order,
+            ]);
+
+            $this->clearTabSettingsCache();
+
+            return redirect()->back()->with('success', 'Komponente erfolgreich zur Sidebar hinzugefügt');
+        } catch (\Exception $e) {
+            Log::error('Fehler beim Hinzufügen der Komponente zur Sidebar: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Fehler beim Hinzufügen der Komponente zur Sidebar']);
+        }
     }
 
     public function addComponentWithScopes(ProjectTab $projectTab, Request $request): void

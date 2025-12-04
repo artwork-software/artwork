@@ -2,7 +2,7 @@
     <div class="rounded-xl p-4 mb-5 border cursor-default" :class="bgClass">
         <div class="flex gap-x-3 items-center">
             <div class="shrink-0">
-                <component :is="iconClass" class="size-5" :class="iconTextClass" aria-hidden="true" />
+                <PropertyIcon :name="iconClass" class="size-5" :class="iconTextClass" aria-hidden="true" />
             </div>
             <div class="">
                 <p class="text-xs" :class="textClass">
@@ -21,12 +21,8 @@
 <script setup>
 
 import {computed} from "vue";
-import {
-    IconAlertSquareFilled,
-    IconCircleCheckFilled,
-    IconExclamationCircleFilled,
-    IconInfoSquareRoundedFilled, IconMoodSadFilled
-} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
 
 const props = defineProps({
     type: {
@@ -73,15 +69,15 @@ const bgClass = computed(() => {
 const iconClass = computed(() => {
     switch (props.type) {
         case types.success:
-            return IconCircleCheckFilled
+            return 'IconCircleCheckFilled'
         case types.error:
-            return IconExclamationCircleFilled
+            return 'IconExclamationCircleFilled'
         case types.warning:
-            return IconAlertSquareFilled
+            return 'IconAlertSquareFilled'
         case types.info:
-            return IconInfoSquareRoundedFilled
+            return 'IconInfoSquareRoundedFilled'
         default:
-            return IconMoodSadFilled
+            return 'IconMoodSadFilled'
     }
 })
 

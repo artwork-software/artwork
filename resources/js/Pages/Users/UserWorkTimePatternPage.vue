@@ -141,43 +141,43 @@
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Monday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.monday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.monday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Tuesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.tuesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.tuesday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Wednesday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.wednesday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.wednesday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Thursday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.thursday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.thursday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Friday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.friday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.friday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Saturday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.saturday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.saturday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">
                     <div class="flex items-center justify-center flex-col font-lexend">
                         <h2 class="text-md">{{ $t('Sunday')}}</h2>
-                        <p class="text-sm text-gray-500">{{ currentWorkTime?.sunday }} Std</p>
+                        <p class="text-sm text-gray-500">{{ currentWorkTime?.sunday_hours }} Std</p>
                     </div>
                 </div>
                 <div class="card glassy p-10">

@@ -6,7 +6,7 @@
             </template>
             <template v-else>
                 <img v-if="user" :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 " :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]">
-                <IconUserExclamation v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
+                <PropertyIcon name="IconUserExclamation" v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
             </template>
         </PopoverButton>
         <Teleport to="body">
@@ -24,15 +24,15 @@
                                 </div>
 
                                 <div class="text-sm font-bold flex items-center gap-x-2" v-if="user.position" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
-                                    <component :is="IconMapPin" class="h-4 w-4" v-if="user.position"/>
+                                    <PropertyIcon name="IconMapPin" class="h-4 w-4" v-if="user.position"/>
                                     {{ user.position }}
                                 </div>
                                 <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
-                                    <component :is="IconMail" class="h-4 w-4" v-if="user.email"/>
+                                    <PropertyIcon name="IconMail" class="h-4 w-4" v-if="user.email"/>
                                     {{ user.email }}
                                 </div>
                                 <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
-                                    <component :is="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
+                                    <PropertyIcon name="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
                                     {{ user.phone_number }}
                                 </div>
                                 <div class="col-span-4 mt-2 break-all text-xs italic" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.description">
@@ -46,7 +46,7 @@
                         </div>
                     </div>
                     <div v-else class="flex flex-row items-center ring-1 ring-black ring-opacity-5 text-white shadow-lg gap-x-3 py-3 px-5">
-                        <IconUserExclamation class="h-14 w-14 rounded-full border-2 border-white"/>
+                        <PropertyIcon name="IconUserExclamation" class="h-14 w-14 rounded-full border-2 border-white"/>
                         <div class="font-black font-lexend text-white text-lg">
                             {{ $t('Deleted user') }}
                         </div>
@@ -61,12 +61,13 @@
 import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {IconDeviceMobile, IconMail, IconMapPin} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "UserPopoverTooltip",
     mixins: [IconLib, Permissions],
     components: {
+        PropertyIcon,
         Popover,
         PopoverButton,
         PopoverPanel
@@ -111,9 +112,6 @@ export default {
         }
     },
     methods: {
-        IconDeviceMobile,
-        IconMail,
-        IconMapPin,
         calculatePopoverPosition(event) {
             const {top, left, height, width} = event.target.getBoundingClientRect();
 

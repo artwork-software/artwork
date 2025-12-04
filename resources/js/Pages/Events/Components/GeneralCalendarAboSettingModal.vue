@@ -1,6 +1,5 @@
 <script>
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {
     Listbox,
@@ -15,12 +14,13 @@ import {
 import {useForm} from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "GeneralCalendarAboSettingModal",
-    mixins: [IconLib],
     props: ['eventTypes', 'rooms', 'areas'],
     components: {
+        PropertyIcon,
         BaseUIButton,
         ArtworkBaseModal,
         FormButton,
@@ -142,7 +142,7 @@ export default {
                             <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ event_types?.map((eventType) => eventType?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
                             </ListboxButton>
 
@@ -153,7 +153,7 @@ export default {
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ eventTyp.name }}</span>
 
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
+                                        <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
                                     </ListboxOption>
@@ -188,7 +188,7 @@ export default {
                             <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ selected_areas?.map((selected_area) => selected_area?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
                             </ListboxButton>
 
@@ -199,7 +199,7 @@ export default {
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ area.name }}</span>
 
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
+                                        <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
                                     </ListboxOption>
@@ -233,7 +233,7 @@ export default {
                             <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ selected_rooms?.map((selected_room) => selected_room?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
                             </ListboxButton>
 
@@ -244,7 +244,7 @@ export default {
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ room.name }}</span>
 
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                        <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
+                                        <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
                                     </ListboxOption>
@@ -291,7 +291,7 @@ export default {
             <div class="flex items-center justify-between">
                 <div>
                     <div v-if="aboForm.id" class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
-                        <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                        <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5"/>
                         <span class="ml-1">{{ $t('Show instructions') }}</span>
                     </div>
                 </div>
@@ -300,7 +300,7 @@ export default {
 
             <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >
                 <div class="flex items-center gap-1 mb-2">
-                    <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                    <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5"/>
                     <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
                 </div>
                 <div class="text-xs text-artwork-buttons-create w-fit">

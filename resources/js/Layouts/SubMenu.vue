@@ -59,7 +59,6 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <!-- Static sidebar for desktop -->
     <div
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
@@ -101,6 +100,7 @@
                                 <Link
                                     v-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
+                                    :prefetch="item.prefetch"
                                     :aria-current="item.current ? 'page' : undefined"
                                     :class="[
                                       'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
@@ -399,6 +399,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: true,
+        prefetch: false
     },
     {
         name: 'Projects',
@@ -408,6 +409,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('projects'),
+        prefetch: ['projects']
     },
     {
         name: 'Calendar',
@@ -417,6 +419,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('room_assignment'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Calendar',
@@ -448,21 +451,22 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+        has_permission: moduleIsVisible('shift_plan'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Duty rosters',
                 href: route('shifts.plan'),
                 icon: 'IconCalendarUser',
                 current: route().current('shifts.plan'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
             },
             {
                 name: 'My Operational plan',
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: moduleIsVisible('shift_plan'),
             },
             /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {
@@ -478,7 +482,7 @@ const navigation = ref([
                 href: route('work-time-request.index'),
                 icon: 'IconTimelineEventPlus',
                 current: route().current('work-time-request.index'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: moduleIsVisible('shift_plan'),
             },
 
             // --- NEU: Prüfungsanfragen ---
@@ -517,6 +521,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('inventory'),
+        prefetch: false,
         subMenus: [
             {
                 name: 'Inventory',
@@ -549,6 +554,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('tasks'),
+        prefetch: false,
     },
     {
         name: 'Sources of funding',
@@ -557,7 +563,8 @@ const navigation = ref([
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit add money_sources | can edit and delete money sources') || moduleIsVisible('sources_of_funding'),
+        has_permission: moduleIsVisible('sources_of_funding') && (can('view edit add money_sources | can edit and delete money sources') || is('artwork admin')),
+        prefetch: false,
     },
     {
         name: 'Users',
@@ -567,6 +574,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('users'),
+        prefetch: false,
     },
     {
         name: 'Contracts',
@@ -575,7 +583,8 @@ const navigation = ref([
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit upload contracts | can see and download contract modules') || moduleIsVisible('contracts'),
+        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules') || is('artwork admin')),
+        prefetch: false,
     },
     {
         name: 'System',
@@ -584,6 +593,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
+        prefetch: false,
         has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit') || is('artwork admin'),
         subMenus: [
             {
@@ -673,6 +683,7 @@ const navigation = ref([
         isMenu: false,
         showToolTipForItem: false,
         has_permission: is('artwork admin'),
+        prefetch: false,
     },
 ])
 

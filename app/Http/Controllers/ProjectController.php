@@ -2314,7 +2314,7 @@ class ProjectController extends Controller
         $headerObject->projectState        = $project->state;
 
         $tabInformation = [];
-        ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation){
+        ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation): void {
             $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
         });
 

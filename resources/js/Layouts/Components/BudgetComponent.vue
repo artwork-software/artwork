@@ -9,7 +9,7 @@
                     <MenuItem v-slot="{ active }">
                         <a @click="openRenameTableModal()"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <TrashIcon
+                            <PropertyIcon name="TrashIcon"
                                 class="mr-3 h-5 w-5 text-primaryText"
                                 aria-hidden="true"/>
                             {{ $t('Rename') }}
@@ -18,7 +18,7 @@
                     <MenuItem v-if="table.is_template" v-slot="{ active }">
                         <a @click="deleteBudgetTemplate()"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
+                            <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
                             {{ $t('Delete') }}
                         </a>
                     </MenuItem>
@@ -138,7 +138,7 @@
                                                             </div>
                                                             <span
                                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                                <CheckIcon v-if="selected"
+                                                                <PropertyIcon name="CheckIcon" v-if="selected"
                                                                            class="h-5 w-5 flex text-success"
                                                                            aria-hidden="true"/>
                                                             </span>
@@ -195,7 +195,7 @@
                                           v-if="column.is_locked">
                                     <a @click="unlockColumn(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLockOpen stroke-width="1.5" stroke="currentColor"
+                                        <PropertyIcon name="IconLockOpen" stroke-width="1.5" stroke="currentColor"
                                                       class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Unlock') }}
                                     </a>
@@ -203,14 +203,14 @@
                                 <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="deleteColumn(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
                                     <a v-show="index > 2" @click="duplicateColumn(column.id)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconCopy class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconCopy" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Duplicate') }}
                                     </a>
                                 </MenuItem>
@@ -233,7 +233,7 @@
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
                                     <a @click="updateColumnCommented(column.id, false)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLockOpen stroke-width="1.5"
+                                        <PropertyIcon name="IconLockOpen" stroke-width="1.5"
                                                       class="mr-3 h-5 w-5 text-primaryText"
                                                       aria-hidden="true"/>
                                         {{ $t('Include column') }}
@@ -242,7 +242,7 @@
                                 <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
                                     <a @click="updateColumnCommented(column.id, true)"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconLock stroke-width="1.5"
+                                        <PropertyIcon name="IconLock" stroke-width="1.5"
                                                   class="mr-3 h-5 w-5 text-primaryText"
                                                   aria-hidden="true"/>
                                         {{ $t('Exclude column') }}
@@ -268,16 +268,16 @@
                             <div class="headline4  flex">
                                 {{ $t('Expenses') }}
                                 <button class="w-6" @click="costsOpened = !costsOpened">
-                                    <IconChevronUp stroke-width="1.5" v-if="costsOpened"
+                                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
                                                    class="h-6 w-6 text-primary my-auto"/>
-                                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                                 </button>
                             </div>
                             <BaseMenu dots-color="text-artwork-context-dark" v-if="this.hasBudgetAccess()">
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconFileImport" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Import template') }}
                                     </a>
                                 </MenuItem>
@@ -285,7 +285,7 @@
                                     <a v-show="tableIsEmpty && !table.is_template"
                                        @click="openUseTemplateFromProjectModal()"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconFileImport" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Import from project') }}
                                     </a>
                                 </MenuItem>
@@ -293,14 +293,14 @@
                                     <a v-show="!tableIsEmpty && !table.is_template"
                                        @click="openAddBudgetTemplateModal()"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFilePlus class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconFilePlus" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Save as template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconRestore
+                                        <PropertyIcon name="IconRestore"
                                             class="mr-3 h-5 w-5 text-primaryText"
                                             aria-hidden="true"/>
                                         {{ $t('Reset') }}
@@ -309,7 +309,7 @@
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="table.is_template" @click="deleteBudgetTemplate()"
                                        :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText"/>
+                                        <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
@@ -320,8 +320,8 @@
                              class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                             <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                                 {{ $t('Main position') }}
-                                <IconCirclePlus
-                                    class="h-6 w-6 ml-12 text-secondaryHover bg-artwork-buttons-create rounded-full"></IconCirclePlus>
+                                <PropertyIcon name="IconCirclePlus"
+                                    class="h-6 w-6 ml-12 text-secondaryHover bg-artwork-buttons-create rounded-full" />
                             </div>
                         </div>
                         <table class="w-[97%] mb-6">
@@ -377,7 +377,7 @@
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
-                                            <IconCirclePlus
+                                            <PropertyIcon name="IconCirclePlus"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                                         </div>
                                     </div>
@@ -415,9 +415,9 @@
                         <div class="headline4 my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="costsOpened"
+                                <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
                                                    class="h-6 w-6 text-primary my-auto"/>
-                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                     </div>
@@ -429,9 +429,9 @@
                         <div class="headline4 my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6" @click="earningsOpened = !earningsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened"
+                                <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
                                                class="h-6 w-6 text-primary my-auto"/>
-                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                         <table class="w-[97%] mb-6">
@@ -528,10 +528,10 @@
                             {{ $t('Revenue') }}
                             <button class="w-6"
                                     @click="earningsOpened = !earningsOpened">
-                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened"
-                                               class="h-6 w-6 text-primary my-auto"></IconChevronUp>
-                                <IconChevronDown stroke-width="1.5" v-else
-                                                 class="h-6 w-6 text-primary my-auto"></IconChevronDown>
+                                <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else
+                                                 class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                     </div>
@@ -585,7 +585,7 @@
                 <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
                         @click="closeSuccessModal">
-                    <IconCheck stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
                 </button>
             </div>
         </div>
@@ -643,7 +643,7 @@
                                 </span>
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
-                                    <IconX stroke-width="1.5"
+                                    <PropertyIcon name="IconX" stroke-width="1.5"
                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                 </button>
                             </div>
@@ -801,11 +801,13 @@ import {IconCalendarCog, IconEyeX, IconFlagUp} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
         SwitchIconTooltip,

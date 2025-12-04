@@ -7,8 +7,16 @@
                 <div
                     v-for="request in requests"
                     :key="request.id"
-                    class="card white p-6"
+                    class="card white p-6 relative"
                 >
+                    <button
+                        v-if="request.status === 'pending'"
+                        @click="deleteRequest(request.id)"
+                        class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        :title="$t('Delete request')"
+                    >
+                        <IconTrash class="h-5 w-5 text-red-600" />
+                    </button>
                     <SingleWorkTimeChangeRequest :request="request" :need-approval="false" />
                 </div>
             </div>
@@ -25,6 +33,8 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTabComponent from "@/Pages/WorkTime/Components/WorkTimeTabComponent.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import SingleWorkTimeChangeRequest from "@/Pages/WorkTime/Components/SingleWorkTimeChangeRequest.vue";
+import { IconTrash } from "@tabler/icons-vue";
+import { router } from "@inertiajs/vue3";
 
 const props = defineProps({
     requests: {
@@ -32,6 +42,20 @@ const props = defineProps({
         required: true
     }
 })
+
+const deleteRequest = (requestId) => {
+    if (confirm('Möchten Sie diese Anfrage wirklich löschen?')) {
+        router.delete(route('worktime.change-request.destroy', { workTimeChangeRequest: requestId }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Request successfully deleted
+            },
+            onError: (error) => {
+                console.error('Error deleting request:', error);
+            }
+        });
+    }
+}
 </script>
 
 <style scoped>

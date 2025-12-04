@@ -31,10 +31,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

@@ -9,7 +9,7 @@
                     <div class="flex bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                         <div class="flex w-full">
                             <div class="flex">
-                                <IconDragDrop class="my-auto xsDark h-5 w-5 hidden group-hover:block"/>
+                                <PropertyIcon name="IconDragDrop" class="my-auto xsDark h-5 w-5 hidden group-hover:block"/>
                                 <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto xsDark">
                                     {{ element.name }}
                                 </Link>
@@ -30,11 +30,14 @@ import {IconCopy, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue
 import {Link} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "RoomReorderManagement",
     mixins: [IconLib],
-    components: {RoomSettingsHeader, UserPopoverTooltip, IconEdit, Link, IconDotsVertical, IconCopy, IconTrash, draggable},
+    components: {
+        PropertyIcon,
+        RoomSettingsHeader, UserPopoverTooltip, IconEdit, Link, IconDotsVertical, IconCopy, IconTrash, draggable},
     props: [
         'rooms'
     ],

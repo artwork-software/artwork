@@ -35,7 +35,7 @@
                             @click="deleteUserFromForm(index)"
                             :aria-label="$t('Remove user')"
                         >
-                            <XIcon class="size-4" />
+                            <PropertyIcon name="XIcon" class="size-4" />
                         </button>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
             <!-- Hinweis + Name bei Gruppenchat -->
             <div v-if="chatUsers.length > 1" class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
                 <div class="flex gap-3">
-                    <component :is="IconInfoSquareRoundedFilled" class="size-5 text-yellow-500 shrink-0" />
+                    <PropertyIcon name="IconInfoSquareRoundedFilled" class="size-5 text-yellow-500 shrink-0" />
                     <p class="text-xs sm:text-sm text-yellow-900">
                         {{ $t('You have selected multiple users. This will create a group chat. You will automatically be included as a member. Please provide a name for the group.') }}
                     </p>
@@ -88,6 +88,7 @@ import { IconInfoSquareRoundedFilled } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({})
 const emit = defineEmits(['close'])

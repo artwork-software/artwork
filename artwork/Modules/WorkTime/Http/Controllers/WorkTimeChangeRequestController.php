@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeChangeRequestRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeChangeRequestRequest;
@@ -44,13 +46,28 @@ class WorkTimeChangeRequestController extends Controller
 
     public function received(): \Inertia\Response
     {
-        $userId = auth()->id();
+        $user = auth()->user();
+
+        // Check if user is admin or has shift planner permission
+        if (!$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->hasPermissionTo(PermissionEnum::SHIFT_PLANNER->value)) {
+            abort(403, 'Unauthorized');
+        }
+
+        $userId = $user->id;
 
         $workTimeChangeRequests = WorkTimeChangeRequest::with(['user', 'shift', 'craft.craftShiftPlaner'])
-            ->whereHas('craft.craftShiftPlaner', function ($query) use ($userId): void {
-                $query->where('user_id', $userId);
-            })
             ->where('status', 'pending')
+            ->where(function ($query) use ($userId) {
+                // Include requests where user is assigned as craft shift planner
+                $query->whereHas('craft.craftShiftPlaner', function ($subQuery) use ($userId): void {
+                    $subQuery->where('user_id', $userId);
+                })
+                // OR include requests from crafts that are assignable by all
+                ->orWhereHas('craft', function ($subQuery): void {
+                    $subQuery->where('assignable_by_all', true);
+                });
+            })
             ->get();
 
         return Inertia::render('WorkTime/ReceivedRequests', [
@@ -76,12 +93,21 @@ class WorkTimeChangeRequestController extends Controller
 
         // send notification to craft planner
         $craftId = $request->input('craft_id');
-        $craftShiftPlaner = Craft::findOrFail($craftId)
-            ->craftShiftPlaner()
-            ->get();
+        $craft = Craft::findOrFail($craftId);
+
+        // Determine who should receive notifications
+        $recipientPlanners = collect();
+
+        if ($craft->assignable_by_all) {
+            // If craft is assignable by all, notify all users with shift planner permission
+            $recipientPlanners = User::permission(PermissionEnum::SHIFT_PLANNER->value)->get();
+        } else {
+            // Otherwise, only notify the assigned craft shift planners
+            $recipientPlanners = $craft->craftShiftPlaner()->get();
+        }
 
         /** @var User $planner */
-        foreach ($craftShiftPlaner as $planner) {
+        foreach ($recipientPlanners as $planner) {
             $notificationTitle = __(
                 'notification.shift.worktime-request.new-request',
                 [],
@@ -127,22 +153,35 @@ class WorkTimeChangeRequestController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(WorkTimeChangeRequest $workTimeChangeRequest): void
+    public function destroy(WorkTimeChangeRequest $workTimeChangeRequest): \Illuminate\Http\RedirectResponse
     {
-        //
+        // Check if the user owns this request
+        if ($workTimeChangeRequest->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Check if the request is still pending
+        if ($workTimeChangeRequest->status !== 'pending') {
+            abort(403, 'Only pending requests can be deleted');
+        }
+
+        // Delete the request
+        $workTimeChangeRequest->delete();
+
+        return redirect()->back();
     }
 
     public function approve(
         WorkTimeChangeRequest $workTimeChangeRequest,
         WorkTimeBookingRepository $repository
-    ): void {
+    ): \Illuminate\Http\RedirectResponse {
         $shift = $workTimeChangeRequest->shift;
         $user = $workTimeChangeRequest->user;
 
         $oldPivot = $shift->users()->where('user_id', $user->id)->first()?->pivot;
 
         if (!$oldPivot) {
-            abort(404, 'Pivot-Daten nicht gefunden.');
+            abort(404, 'Ursprüngliche Schicht nicht gefunden.');
         }
 
         $oldStart = \Carbon\Carbon::parse($oldPivot->start_time);
@@ -162,13 +201,7 @@ class WorkTimeChangeRequestController extends Controller
                 'end_time' => $newEnd->format('H:i:s'),
             ]);
         } else {
-            $weekdayIndex = $shiftDate->dayOfWeek;
-            $previousBooking = $repository->getPreviousBooking($user, $shiftDate, $weekdayIndex);
-
-            if (!$previousBooking) {
-                abort(404, 'Es existiert keine ursprüngliche Buchung für diesen Tag.');
-            }
-
+            // For past shifts, create an adjustment booking to reflect the time change
             $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
                 'name' => 'adjustment_work_time_change_request_' . $shift->id,
                 'comment' => 'Zeitkorrektur: ' . $oldDuration . 'min → ' . $newDuration . 'min',
@@ -197,14 +230,18 @@ class WorkTimeChangeRequestController extends Controller
             'status' => 'approved',
             'approved_by' => auth()->id(),
         ]);
+
+        return redirect()->back();
     }
 
-    public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): void
+    public function decline(WorkTimeChangeRequest $workTimeChangeRequest, Request $request): \Illuminate\Http\RedirectResponse
     {
         $workTimeChangeRequest->update([
             'status' => 'rejected',
             'declined_by' => auth()->id(),
             'decline_comment' => $request->input('decline_message', 'Keine Begründung angegeben.'),
         ]);
+
+        return redirect()->back();
     }
 }

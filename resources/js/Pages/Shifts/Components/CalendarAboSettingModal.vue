@@ -1,15 +1,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import CalendarAboInfoModal from '@/Pages/Shifts/Components/CalendarAboInfoModal.vue'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
-import {IconInfoCircle} from "@tabler/icons-vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props & Emits
 const props = defineProps({
@@ -193,7 +191,7 @@ const selectedEventTypesLabel = computed(() =>
                     class="flex items-center text-xs text-artwork-buttons-hover underline"
                     @click="showCalendarAboInfoModal = true"
                 >
-                    <component :is="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
+                    <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
                     <span class="ml-1">{{ $t('Show instructions') }}</span>
                 </button>
             </div>
@@ -212,7 +210,7 @@ const selectedEventTypesLabel = computed(() =>
             class="mt-3 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3"
         >
             <div class="flex items-center gap-1 mb-2">
-                <component :is="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
+                <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
                 <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
             </div>
             <div class="text-xs text-artwork-buttons-create w-fit">

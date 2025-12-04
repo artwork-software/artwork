@@ -45,7 +45,7 @@
                                 {{ file.name }}
                             </div>
                             <div>
-                                <component :is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                                <PropertyIcon name="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
                             </div>
                         </div>
                     </div>
@@ -74,6 +74,7 @@ import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {IconCircleX} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ContractModuleUploadModal",
@@ -83,6 +84,7 @@ export default {
         closeModal: Function
     },
     components: {
+        PropertyIcon,
         BaseTextarea,
         MultiAlertComponent,
         TextareaComponent,

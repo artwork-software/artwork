@@ -4,8 +4,8 @@
         <div
             class="flex items-center justify-between gap-2 px-3 py-2"
             :style="{
-        backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : '#e8e8e8',
-        color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : '#000000'
+        backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : (shift?.craft?.color ? `${shift.craft.color}40` : '#e8e8e8'),
+        color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : getTextColorBasedOnBackground(shift?.craft?.color ? `${shift.craft.color}40` : '#e8e8e8')
       }"
         >
             <a
@@ -17,11 +17,11 @@
             </a>
 
             <span v-else class="truncate text-sm font-semibold">
-        {{ $t('Universal Shift') }}
+        {{ getCraftAndFunctionLabel() }}
       </span>
 
             <div class="ml-auto flex items-center gap-2">
-                <IconLock v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
+                <PropertyIcon name="IconLock" v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
                 <button
                     v-if="project"
                     type="button"
@@ -38,7 +38,7 @@
                     @click="showRequestWorkTimeChangeModal = true"
                     :aria-label="$t('Request work time change')"
                 >
-                    <IconClockEdit class="h-5 w-5" stroke-width="1.5" />
+                    <PropertyIcon name="IconClockEdit" class="h-5 w-5" stroke-width="1.5" />
                 </button>
             </div>
         </div>
@@ -146,6 +146,7 @@ import ShiftNoteComponent from '@/Layouts/Components/ShiftNoteComponent.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import RequestWorkTimeChangeModal from '@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue'
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const percentage = usePage().props.high_contrast_percent
 const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper()
@@ -165,6 +166,53 @@ const showRequestWorkTimeChangeModal = ref(false)
 const hasColleaguesOnShift = (shift) => {
     // Eigene Schicht ist immer in users enthalten – Kollegen = weitere Personen
     return (shift.users?.length > 1) || (shift.freelancer?.length > 0) || (shift.service_provider?.length > 0)
+}
+
+const getCraftAndFunctionLabel = () => {
+    // Try to get craft and function from the current user's pivot data
+    let craftName = null
+    let functionName = null
+
+    // Prioritize shift.craft.name for the full craft name
+    if (props.shift?.craft?.name) {
+        craftName = props.shift.craft.name
+    }
+
+    // Find the current user/freelancer/service_provider in the shift to get their function
+    if (props.type === 'user' && props.shift?.users) {
+        const currentUser = props.shift.users.find(u => u.id === props.userToEditId)
+        if (currentUser?.pivot) {
+            if (currentUser.pivot.short_description) {
+                functionName = currentUser.pivot.short_description
+            }
+        }
+    } else if (props.type === 'freelancer' && props.shift?.freelancer) {
+        const currentFreelancer = props.shift.freelancer.find(f => f.id === props.userToEditId)
+        if (currentFreelancer?.pivot) {
+            if (currentFreelancer.pivot.short_description) {
+                functionName = currentFreelancer.pivot.short_description
+            }
+        }
+    } else if (props.type === 'service_provider' && props.shift?.service_provider) {
+        const currentSP = props.shift.service_provider.find(sp => sp.id === props.userToEditId)
+        if (currentSP?.pivot) {
+            if (currentSP.pivot.short_description) {
+                functionName = currentSP.pivot.short_description
+            }
+        }
+    }
+
+    // Build the label
+    if (craftName && functionName) {
+        return `${craftName} - ${functionName}`
+    } else if (craftName) {
+        return craftName
+    } else if (functionName) {
+        return functionName
+    } else {
+        // Fallback to Universal Shift if no craft or function is found
+        return usePage().props?.translations?.universal_shift || 'Universal Shift'
+    }
 }
 
 const toggleProjectTimePeriodAndRedirect = () => {

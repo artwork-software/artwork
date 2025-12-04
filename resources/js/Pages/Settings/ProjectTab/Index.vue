@@ -13,6 +13,7 @@ import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import {IconPlus} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props
 const props = defineProps({
@@ -141,7 +142,7 @@ function updateComponentOrder(components) {
     <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
         <template #actions>
             <button class="ui-button-add" @click="showAddEditModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <PropertyIcon name="IconPlus" stroke-width="1" class="size-5" />
                 {{ t('Create tab') }}
             </button>
         </template>

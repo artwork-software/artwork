@@ -93,7 +93,7 @@
                         <div v-if="!this.showAccountSearch"
                              @click="this.showAccountSearch = !this.showAccountSearch"
                              class="cursor-pointer inset-y-0">
-                            <IconSearch class="h-5 w-5"
+                            <PropertyIcon name="IconSearch" class="h-5 w-5"
                                         aria-hidden="true"
                             />
                         </div>
@@ -103,7 +103,7 @@
                                 :label="$t('Search account')"
                                 id="accountSearchQuery"
                             />
-                            <IconX class="ml-2 cursor-pointer h-5 w-5"
+                            <PropertyIcon name="IconX" class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showAccountSearch = false"
                             />
                         </div>
@@ -158,18 +158,18 @@
                         <!-- only display edit/trash icons if no account is edited currently -->
                         <div v-if="this.accountIdToEdit === null"
                              class="flex flex-row items-center">
-                            <IconEdit class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-error cursor-pointer"
                                       @click="this.initAccountEdit(account)"/>
-                            <IconTrash class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-error cursor-pointer"
                                        @click="this.showRemoveConfirmModal(account, 'account')"
                             />
                         </div>
                         <!-- only display save/x icons if current account is edited -->
                         <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center">
-                            <IconDeviceFloppy @click="this.saveAccountEdit()"
+                            <PropertyIcon name="IconDeviceFloppy" @click="this.saveAccountEdit()"
                                               class="w-5 h-5 hover:text-error cursor-pointer"
                             />
-                            <IconX @click="this.resetAccountEdit();"
+                            <PropertyIcon name="IconX" @click="this.resetAccountEdit();"
                                    class="w-5 h-5 hover:text-error cursor-pointer"
                             />
                         </div>
@@ -187,7 +187,7 @@
                         <div v-if="!this.showCostUnitSearch"
                              @click="this.showCostUnitSearch = !this.showCostUnitSearch"
                              class="cursor-pointer inset-y-0">
-                            <IconSearch class="h-5 w-5"
+                            <PropertyIcon name="IconSearch" class="h-5 w-5"
                                         aria-hidden="true"
                             />
                         </div>
@@ -197,7 +197,7 @@
                                 :label="$t('Search cost center')"
                                 id="costUnitSearchQuery"
                             />
-                            <IconX class="ml-2 cursor-pointer h-5 w-5"
+                            <PropertyIcon name="IconX" class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showCostUnitSearch = false"
                             />
                         </div>
@@ -235,18 +235,18 @@
                         <!-- only display edit/trash icons if no cost_unit is edited currently -->
                         <div v-if="this.costUnitIdToEdit === null"
                              class="flex flex-row items-center">
-                            <IconEdit class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-error cursor-pointer"
                                       @click="this.initCostUnitEdit(cost_unit)"/>
-                            <IconTrash class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-error cursor-pointer"
                                        @click="this.showRemoveConfirmModal(cost_unit, 'cost_unit')"
                             />
                         </div>
                         <!-- only display save/x icons if current cost_unit is edited -->
                         <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center ml-2">
-                            <IconDeviceFloppy @click="this.saveCostUnitEdit()"
+                            <PropertyIcon name="IconDeviceFloppy" @click="this.saveCostUnitEdit()"
                                               class="w-5 h-5 hover:text-error cursor-pointer"
                             />
-                            <IconX @click="this.resetCostUnitEdit();"
+                            <PropertyIcon name="IconX" @click="this.resetCostUnitEdit();"
                                    class="w-5 h-5 hover:text-error cursor-pointer"
                             />
                         </div>
@@ -291,10 +291,12 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     mixins: [IconLib],
     components: {
+        PropertyIcon,
         BaseInput,
         TextInputComponent,
         SuccessModal,

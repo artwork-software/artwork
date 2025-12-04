@@ -124,6 +124,7 @@ class ShiftPlanRequestController extends Controller
             $activity = activity()
                 ->performedOn($shift)
                 ->causedBy($user)
+                ->useLog('shift')
                 ->event('shift_added_to_request')
                 ->withProperties([
                     'old' => [
@@ -267,6 +268,7 @@ class ShiftPlanRequestController extends Controller
             activity()
                 ->performedOn($shift)
                 ->causedBy($user)
+                ->useLog('shift')
                 ->event('shift_committed')
                 ->log('Shift committed as part of approved shift plan request');
         }
@@ -621,6 +623,7 @@ class ShiftPlanRequestController extends Controller
             activity()
                 ->performedOn($shift)
                 ->causedBy($user)
+                ->useLog('shift')
                 ->event('shift_rejected')
                 ->withProperties([
                     'old' => $old,
@@ -1120,6 +1123,7 @@ class ShiftPlanRequestController extends Controller
                     ->performedOn($shift)
                     ->causedBy($user)
                     ->event('committed_shift_change_reverted')
+                    ->useLog('shift')
                     ->withProperties([
                         'shift_plan_request_id' => $shiftPlanRequest->id,
                         'shift_change_id'       => $shiftChange->id,

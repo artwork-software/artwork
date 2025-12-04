@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import draggable from "vuedraggable";
 
@@ -17,14 +17,7 @@ const { t } = useI18n();
 const showAddEditSidebarTabModal = ref(false);
 const dragging = ref(false);
 
-// Lokale Kopie, um Prop-Mutationen zu vermeiden
-const sidebarTabsLocal = ref([...(props.tab?.sidebar_tabs ?? [])]);
-watch(
-    () => props.tab?.sidebar_tabs,
-    (val) => { sidebarTabsLocal.value = [...(val ?? [])]; }
-);
-
-const sidebarCount = computed(() => sidebarTabsLocal.value.length);
+const sidebarCount = computed(() => props.tab?.sidebar_tabs?.length ?? 0);
 
 function updateComponentOrder(components) {
     components.forEach((component, index) => (component.order = index + 1));
@@ -33,8 +26,20 @@ function updateComponentOrder(components) {
     router.post(
         route("sidebar.tab.reorder"),
         { components: minimal },
-        { preserveScroll: true }
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                console.log('Reihenfolge erfolgreich aktualisiert');
+            }
+        }
     );
+}
+
+function handleSaved() {
+    showAddEditSidebarTabModal.value = false;
+    // Force reload to get fresh data
+    router.reload({ only: ['tabs'] });
 }
 </script>
 
@@ -73,21 +78,21 @@ function updateComponentOrder(components) {
                 ghost-class="opacity-50"
                 key="draggableKey"
                 item-key="id"
-                :list="sidebarTabsLocal"
+                :list="tab.sidebar_tabs"
                 @start="dragging = true"
                 @end="dragging = false"
-                @change="updateComponentOrder(sidebarTabsLocal)"
+                @change="updateComponentOrder(tab.sidebar_tabs)"
             >
                 <template #item="{ element }">
                     <div :key="element.id" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
-                        <SingleSidebarElement :tab="props.tab" :sidebar-tab="element" />
+                        <SingleSidebarElement :tab="props.tab" :sidebar-tab="element" @saved="handleSaved" />
                     </div>
                 </template>
             </draggable>
 
             <!-- Empty State -->
             <div
-                v-if="sidebarTabsLocal.length === 0"
+                v-if="!tab.sidebar_tabs || tab.sidebar_tabs.length === 0"
                 class="text-[12px] text-zinc-500 px-3 py-6 text-center border-2 border-dashed border-zinc-200 rounded-lg"
             >
                 {{ t('No sidebar tabs yet. Click the plus to add one.') }}
@@ -101,6 +106,7 @@ function updateComponentOrder(components) {
         :tab-to-edit="null"
         :tab="props.tab"
         @close="showAddEditSidebarTabModal = false"
+        @saved="handleSaved"
     />
 </template>
 

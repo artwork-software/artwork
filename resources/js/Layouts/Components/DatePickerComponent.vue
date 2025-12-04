@@ -19,7 +19,7 @@
                     <ToolTipComponent
                         direction="right"
                         :tooltip-text="$t('Select time')"
-                        :icon="IconCalendar"
+                        icon="IconCalendar"
                         icon-size="h-5 w-5"
                         classesButton="ui-button"
                     />
@@ -59,7 +59,7 @@
                        placeholder="Start"
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
-                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
+                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
             </div>
             <div class="relative rounded-md">
@@ -85,7 +85,7 @@
                        placeholder="Ende"
                        class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
-                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
+                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
             </div>
         </div>
@@ -96,11 +96,11 @@
     <transition name="fade" appear>
         <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="hasError">
             <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
                 <p class="text-sm/6 text-white"> {{ errorMessage }} </p>
                 <button type="button" class="-m-1.5 flex-none p-1.5">
                     <span class="sr-only">Dismiss</span>
-                    <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
+                    <PropertyIcon name="IconX" class="size-5 text-white" aria-hidden="true" @click="hasError = false" />
                 </button>
             </div>
         </div>
@@ -108,15 +108,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import {ref, computed, watch, onMounted, defineAsyncComponent} from "vue";
 import { usePage, router } from "@inertiajs/vue3";
-import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconAlertSquareRounded, IconCalendar, IconX} from '@tabler/icons-vue';
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const $t = useTranslation()
 // Props
 const props = defineProps({
@@ -134,6 +131,12 @@ const props = defineProps({
         default: false
     }
 });
+
+const VueDatePicker = defineAsyncComponent({
+    loader: () => import('@vuepic/vue-datepicker'),
+    delay: 200,
+    timeout: 3000
+})
 
 // Refs & State
 const dateValue = ref(props.dateValueArray ? [...props.dateValueArray] : []);

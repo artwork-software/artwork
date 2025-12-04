@@ -28,6 +28,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'opened_checklists' => [],
             'opened_areas' => [],
+            'inventory_grid_layout' => true,
         ];
     }
 

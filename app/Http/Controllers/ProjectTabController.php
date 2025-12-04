@@ -231,6 +231,11 @@ class ProjectTabController extends Controller
                 return redirect()->back()->withErrors(['error' => 'Spezielle Komponenten können nicht in die Sidebar gelegt werden']);
             }
 
+            // Prüfe ob es sich um eine Ordnerkomponente handelt
+            if ($component->type === 'DisclosureComponent') {
+                return redirect()->back()->withErrors(['error' => 'Ordnerkomponenten können nicht in die Sidebar gelegt werden']);
+            }
+
             // Verschiebe alle Komponenten mit höherer Order um 1 nach oben
             $order = $validated['order'];
             SidebarTabComponent::where('project_tab_sidebar_id', $projectTabSidebarTab->id)

@@ -31,12 +31,10 @@ export default {
         },
         onDrop(event) {
             event.preventDefault();
-            console.log('🎯 Drop Event ausgelöst!');
 
             // add check if JSON is valid
             const jsonData = event.dataTransfer?.getData('application/json');
             if (!jsonData) {
-                console.warn('⚠️ Keine JSON-Daten gefunden');
                 this.dropOver = false;
                 return;
             }
@@ -44,7 +42,6 @@ export default {
             let data;
             try {
                 data = JSON.parse(jsonData);
-                console.log('📦 Empfangene Daten:', data);
             } catch (e) {
                 console.error('❌ JSON Parse Error:', e);
                 this.dropOver = false;
@@ -53,7 +50,6 @@ export default {
 
             // Prüfen ob es eine Komponente ist
             if(data.drop_type !== 'component') {
-                console.warn('⚠️ Kein Component-Drop-Type:', data.drop_type);
                 this.dropOver = false;
                 return;
             }
@@ -61,7 +57,6 @@ export default {
             // Für normale Tabs: Spezielle Komponenten brauchen Tab-Auswahl
             if(!this.isSidebar){
                 if(data.type === 'ProjectDocumentsComponent' || data.type === 'CommentTab' || data.type === 'ChecklistComponent') {
-                    console.log('📋 Spezielle Komponente für Tab - Modal öffnen');
                     this.componentData = data;
                     this.showSelectTabsModal = true;
                     this.dropOver = false;
@@ -71,23 +66,16 @@ export default {
 
             // Für Sidebar: Prüfen ob Komponente Sidebar-fähig ist
             if(this.isSidebar) {
-                console.log('🔧 Sidebar-Drop - Validierung läuft...');
-                console.log('   - Komplette Daten:', data);
-                console.log('   - special:', data.special, '(Type:', typeof data.special, ')');
-                console.log('   - sidebar_enabled:', data.sidebar_enabled, '(Type:', typeof data.sidebar_enabled, ')');
-
-                // Debugging: Zeige alle Vergleiche
-                console.log('   - data.special === true:', data.special === true);
-                console.log('   - data.sidebar_enabled === false:', data.sidebar_enabled === false);
-                console.log('   - data.sidebar_enabled === 0:', data.sidebar_enabled === 0);
-                console.log('   - data.sidebar_enabled === "0":', data.sidebar_enabled === "0");
-                console.log('   - data.sidebar_enabled === true:', data.sidebar_enabled === true);
-                console.log('   - data.sidebar_enabled === 1:', data.sidebar_enabled === 1);
-
                 // Spezielle Komponenten können nicht in die Sidebar
                 if(data.special === true) {
-                    console.warn('⛔ BLOCKIERT: Spezielle Komponente (special === true)');
                     alert('Spezielle Komponenten können nicht in die Sidebar gelegt werden');
+                    this.dropOver = false;
+                    return;
+                }
+
+                // Ordnerkomponenten (DisclosureComponent) können nicht in die Sidebar
+                if(data.type === 'DisclosureComponent') {
+                    alert('Ordnerkomponenten können nicht in die Sidebar gelegt werden');
                     this.dropOver = false;
                     return;
                 }
@@ -95,33 +83,23 @@ export default {
                 // Nur Komponenten mit sidebar_enabled = true können hinzugefügt werden
                 // Blockiere nur wenn explizit false oder 0
                 if(data.sidebar_enabled === false || data.sidebar_enabled === 0 || data.sidebar_enabled === "0") {
-                    console.warn('⛔ BLOCKIERT: sidebar_enabled ist false/0');
                     alert('Diese Komponente kann nicht in die Sidebar gelegt werden');
                     this.dropOver = false;
                     return;
                 }
-
-                console.log('✅ Sidebar-Validierung erfolgreich! Komponente wird hinzugefügt.');
             }
 
             // Komponente zur Sidebar oder Tab hinzufügen
             if(this.isSidebar) {
-                console.log('🚀 Sende POST-Request für Sidebar...');
-                console.log('   - Route:', route('tab.add.component.sidebar', {projectTabSidebarTab: this.tab.id}));
-                console.log('   - component_id:', data.id);
-                console.log('   - order:', this.order);
-
                 this.$inertia.post(route('tab.add.component.sidebar', {projectTabSidebarTab: this.tab.id}), {
                     component_id: data.id,
                     order: this.order
                 }, {
                     preserveScroll: true,
                     onStart: () => {
-                        console.log('⏳ Request gestartet...');
+                        // Request gestartet
                     },
                     onSuccess: (page) => {
-                        console.log('✅ Komponente erfolgreich zur Sidebar hinzugefügt');
-                        console.log('📄 Response:', page);
                         this.dropOver = false;
                         // Reload page data to get fresh sidebar tabs
                         this.$inertia.reload({ only: ['tabs'] });
@@ -131,11 +109,10 @@ export default {
                         this.dropOver = false;
                     },
                     onFinish: () => {
-                        console.log('🏁 Request abgeschlossen');
+                        // Request abgeschlossen
                     }
                 });
             } else {
-                console.log('🚀 Sende POST-Request für normalen Tab...');
                 this.$inertia.post(route('tab.add.component', {projectTab: this.tab.id}), {
                     component_id: data.id,
                     order: this.order
@@ -143,7 +120,6 @@ export default {
                     preserveScroll: true,
                     onSuccess: () => {
                         this.dropOver = false;
-                        console.log('✅ Komponente erfolgreich zum Tab hinzugefügt');
                     },
                     onError: (errors) => {
                         console.error('❌ Fehler beim Hinzufügen zum Tab:', errors);

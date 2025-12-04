@@ -31,7 +31,7 @@
                 >
                     <ListboxOptions
                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm"
-                        :class="inSidebar ? 'bg-primary text-white border border-gray-300' : 'bg-white'"
+                        :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600' : 'bg-white'"
                     >
                         <ListboxOption
                             as="template"

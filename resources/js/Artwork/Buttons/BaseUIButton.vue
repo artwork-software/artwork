@@ -28,7 +28,6 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {IconCancel, IconCirclePlus, IconTrash} from '@tabler/icons-vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 
 defineOptions({ name: 'BaseUIButton' });
@@ -76,11 +75,11 @@ const strokeWidthResolved = computed(() => props.strokeWidth ?? 1);
 const iconResolved = computed(() => {
     // Priorität: custom icon → add icon → delete icon → default icon
     if (props.icon) return props.icon;
-    if (props.isAddButton) return IconCirclePlus;
-    if (props.isDeleteButton) return IconTrash;
-    if (props.isDeleteButton) return IconTrash;
-    if (props.isCancelButton) return IconCancel;
-    return IconCirclePlus;
+    if (props.isAddButton) return 'IconCirclePlus';
+    if (props.isDeleteButton) return 'IconTrash';
+    if (props.isDeleteButton) return 'IconTrash';
+    if (props.isCancelButton) return 'IconCancel';
+    return 'IconCirclePlus';
 });
 
 const labelResolved = computed(() => {

@@ -1,8 +1,10 @@
 <template>
     <div class="w-full flex flex-col">
         <ShiftHeader>
+
+
             <div aria-live="assertive"
-                class="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
+                 class="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
                 <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
                     <transition
                         enter-active-class="transform ease-out duration-300 transition"
@@ -12,12 +14,13 @@
                         leave-from-class=""
                         leave-to-class="opacity-0">
                         <div v-if="notice.show"
-                            class="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:-outline-offset-1 dark:outline-white/10"
-                            role="status">
+                             class="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:-outline-offset-1 dark:outline-white/10"
+                             role="status">
                             <div class="p-4">
                                 <div class="flex items-start">
                                     <div class="shrink-0">
-                                        <PropertyIcon :name="noticeIcon" class="size-6" :class="noticeIconClass" aria-hidden="true"/>
+                                        <PropertyIcon :name="noticeIcon" class="size-6" :class="noticeIconClass"
+                                                      aria-hidden="true"/>
                                     </div>
                                     <div class="ml-3 w-0 flex-1 pt-0.5">
                                         <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -28,9 +31,10 @@
                                         </p>
                                     </div>
                                     <div class="ml-4 flex shrink-0">
-                                        <button type="button" @click="hideNotice" class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500">
+                                        <button type="button" @click="hideNotice"
+                                                class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500">
                                             <span class="sr-only">Close</span>
-                                            <IconX class="size-5" aria-hidden="true" />
+                                            <PropertyIcon name="IconX" class="size-5" aria-hidden="true"/>
                                         </button>
                                     </div>
                                 </div>
@@ -40,15 +44,19 @@
                 </div>
             </div>
             <transition name="fade" appear>
-                <div class="pointer-events-none fixed inset-x-0 top-5 z-100 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
-                    <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                        <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                <div
+                    class="pointer-events-none fixed inset-x-0 top-5 z-100 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8"
+                    v-show="showCalendarWarning.length > 0">
+                    <div
+                        class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                        <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true"/>
                         <p class="text-sm/6 text-white">
                             {{ showCalendarWarning }}
                         </p>
                         <button type="button" class="-m-1.5 flex-none p-1.5">
                             <span class="sr-only">Dismiss</span>
-                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''"/>
+                            <PropertyIcon name="IconX" class="size-5 text-white" aria-hidden="true"
+                                       @click="showCalendarWarning = ''"/>
                         </button>
                     </div>
                 </div>
@@ -74,10 +82,14 @@
                     <template #multiEditCalendar>
                         <div v-if="multiEditModeCalendar">
                             <div class="flex items-center justify-center gap-x-4">
-                                <button type="button" @click="initializeCalendarMultiEditSave" :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto" :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                <button type="button" @click="initializeCalendarMultiEditSave"
+                                        :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                     {{ $t('Create') }}
                                 </button>
-                                <button type="button" @click="openCellMultiEditCalendarDelete = true" :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto" :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                <button type="button" @click="openCellMultiEditCalendarDelete = true"
+                                        :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                     {{ $t('Delete') }}
                                 </button>
                             </div>
@@ -85,32 +97,43 @@
                     </template>
 
                     <template #moreButtons>
-                        <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Daily view')" size="md" @change="changeDailyViewMode" :icon="IconCalendarWeek"/>
-                        <SwitchIconTooltip v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditModeCalendar" :icon="IconPencil"/>
+                        <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Daily view')" size="md"
+                                           @change="changeDailyViewMode" icon="IconCalendarWeek"/>
+                        <SwitchIconTooltip v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
+                                           @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlanEl" id="shiftPlanEl" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
+                <div ref="shiftPlanEl" id="shiftPlanEl" class="bg-white flex-grow"
+                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader sticky top-0 z-30">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
-                                    <th v-for="day in days" :ref="el => registerMonthSentinel(el as HTMLElement, day)" :key="`head-${day.fullDay}-${day.weekNumber}`" :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay" style="max-width: 204px" class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
+                                    <th v-for="day in days" :ref="el => registerMonthSentinel(el as HTMLElement, day)"
+                                        :key="`head-${day.fullDay}-${day.weekNumber}`"
+                                        :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay"
+                                        style="max-width: 204px"
+                                        class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
                                         <div v-if="day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }">
                                             <span class="text-[9px] font-bold">KW{{ day.weekNumber }}</span>
                                         </div>
-                                        <div v-else :style="{ width: '200px' }" class="ml-2 flex h-full items-center justify-between calendarRoomHeaderBold">
+                                        <div v-else :style="{ width: '200px' }"
+                                             class="ml-2 flex h-full items-center justify-between calendarRoomHeaderBold">
                                             <div>{{ day.dayString }} {{ day.fullDay }}</div>
                                             <div class="mr-5" v-if="day.holidays.length > 0">
                                                 <HolidayToolTip>
                                                     <div class="space-y-1 divide-y divide-dashed divide-gray-500">
-                                                        <div v-for="holiday in day.holidays" :key="holiday.date || holiday.name" class="pt-1">
+                                                        <div v-for="holiday in day.holidays"
+                                                             :key="holiday.date || holiday.name" class="pt-1">
                                                             <div :style="{ color: holiday.color }">
                                                                 <div>{{ holiday.name }}</div>
                                                                 <div v-if="holiday.subdivisions.length > 0">
-                                                                    {{holiday.subdivisions.map((person) => person).join(', ') }}
+                                                                    {{
+                                                                        holiday.subdivisions.map((person) => person).join(', ')
+                                                                    }}
                                                                 </div>
                                                                 <div v-else>
                                                                     {{ $t('Germany-wide') }}
@@ -127,42 +150,64 @@
                         </template>
                         <template #body>
                             <TableBody class="eventByDaysContainer">
-                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId" class="w-full table-row divide-x divide-gray-300" :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
-                                    <th :id="'roomNameContainer_' + index" class="xsDark table-cell align-middle" :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                        <div class="flex items-center font-semibold"  style="width: 191.5px; max-width: 191.5px">
+                                <tr v-for="(room, index) in newShiftPlanData" :key="room.roomId"
+                                    class="w-full table-row divide-x divide-gray-300"
+                                    :class="$page.props.auth.user.calendar_settings.expand_days ? 'h-full' : 'h-28'">
+                                    <th :id="'roomNameContainer_' + index" class="xsDark table-cell align-middle"
+                                        :class="[index % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        <div class="flex items-center font-semibold"
+                                             style="width: 191.5px; max-width: 191.5px">
                                             <span class="pl-3">{{ room.roomName }}</span>
                                         </div>
                                     </th>
-                                    <td v-for="day in days" :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`" :style="{ width: '202px', maxWidth: '202px' }" :data-day="day.fullDay" class="day-container relative table-cell align-top px-[1px] border-gray-400"
+                                    <td v-for="day in days"
+                                        :key="`room-${room.roomId}-${day.fullDay}-${day.weekNumber}`"
+                                        :style="{ width: '202px', maxWidth: '202px' }" :data-day="day.fullDay"
+                                        class="day-container relative table-cell align-top px-[1px] border-gray-400"
                                         :class="[day.isWeekend ? 'bg-backgroundGray' : 'bg-white', day.isSunday ? '' : '', multiEditModeCalendar ? '' : '', usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-28']">
-                                        <div v-if="!day.isExtraRow && multiEditModeCalendar" class="absolute h-full w-full"
-                                            :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
+                                        <div v-if="!day.isExtraRow && multiEditModeCalendar"
+                                             class="absolute h-full w-full"
+                                             :class="[multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create' : '',
                                             checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '']"
-                                            @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"></div>
-                                        <div v-if="day.isExtraRow" class="mb-3 h-full min-w-full bg-background-gray2 border-gray-800"></div>
-                                        <div v-else class="cell group" :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
-                                            <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events">
-                                                <div v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)" :key="group.id">
-                                                    <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', {project: group.id,projectTab: firstProjectShiftTabId})" class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white">
-                                                        <component :is="group.icon" class="size-4" aria-hidden="true" />
+                                             @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"></div>
+                                        <div v-if="day.isExtraRow"
+                                             class="mb-3 h-full min-w-full bg-background-gray2 border-gray-800"></div>
+                                        <div v-else class="cell group"
+                                             :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
+                                            <template
+                                                v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events">
+                                                <div
+                                                    v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)"
+                                                    :key="group.id">
+                                                    <Link :disabled="checkIfUserIsAdminOrInGroup(group)"
+                                                          :href="route('projects.tab', {project: group.id,projectTab: firstProjectShiftTabId})"
+                                                          class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white">
+                                                        <PropertyIcon :name="group.icon" class="size-4" aria-hidden="true"/>
                                                         <span>{{ group.name }}</span>
                                                     </Link>
                                                 </div>
                                             </template>
                                             <template v-if="room.content[day.fullDay]?.events">
-                                                <div v-for="event in room.content[day.fullDay].events" :key="event.id || event.uuid || event.name" class="mb-1">
-                                                    <SingleEventInShiftPlan v-if="!checkIfEventHasShiftsToDisplay(event)" :event="event" :day="day" :firstProjectShiftTabId="firstProjectShiftTabId"/>
+                                                <div v-for="event in room.content[day.fullDay].events"
+                                                     :key="event.id || event.uuid || event.name" class="mb-1">
+                                                    <SingleEventInShiftPlan
+                                                        v-if="!checkIfEventHasShiftsToDisplay(event)" :event="event"
+                                                        :day="day" :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                                 </div>
                                             </template>
                                             <div class="space-y-0.5">
                                                 <template v-if="room.content[day.fullDay]?.shifts?.length">
                                                     <!-- 1. Ebene: Projekt-Gruppen -->
-                                                    <div v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)" :key="group.projectId ?? `no-project-${day.fullDay}`">
+                                                    <div
+                                                        v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)"
+                                                        :key="group.projectId ?? `no-project-${day.fullDay}`">
                                                         <!-- Projekt-Gruppen-Container -->
-                                                        <div class="rounded-lg border duration-200 ease-in-out" :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'">
+                                                        <div class="rounded-lg border duration-200 ease-in-out"
+                                                             :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'">
                                                             <!-- Kopfzeile: Projekt / „ohne Projekt“ -->
                                                             <div>
-                                                                <div v-if="group.project" class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
+                                                                <div v-if="group.project"
+                                                                     class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
                                                                     <span>{{ group.project.name }}</span>
                                                                     <span class="text-[10px] text-sky-600">
                                                                         ({{ group.shifts.length }})
@@ -171,11 +216,12 @@
                                                             </div>
 
                                                             <!-- 2. Ebene: einzelne Schichten der Gruppe -->
-                                                            <div class="space-y-0.5 px-1" :class="group.project ? 'divide-y divide-sky-100' : 'divide-y divide-gray-100'">
+                                                            <div class="space-y-0.5 px-1"
+                                                                 :class="group.project ? 'divide-y divide-sky-100' : 'divide-y divide-gray-100'">
                                                                 <div v-for="shift in group.shifts"
-                                                                    :key="shift.id || shift.dwId || shift.uuid"
-                                                                    class="rounded-lg duration-200 ease-in-out"
-                                                                    :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'">
+                                                                     :key="shift.id || shift.dwId || shift.uuid"
+                                                                     class="rounded-lg duration-200 ease-in-out"
+                                                                     :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'">
                                                                     <SingleShiftInRoom
                                                                         :multiEditMode="multiEditMode"
                                                                         :user-for-multi-edit="userForMultiEdit"
@@ -207,7 +253,7 @@
                                                 v-if="!multiEditModeCalendar"
                                                 @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
                                             >
-                                                <component :is="IconPlus" class="size-4" />
+                                                <PropertyIcon name="IconPlus" class="size-4"/>
                                             </button>
                                         </div>
                                     </td>
@@ -217,45 +263,87 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="fixed bottom-0 z-40 w-full">
+            <div  id="userOverview" class="fixed bottom-0 z-40 w-full overflow-x-auto pointer-events-none">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
-                    <div v-if="can('can plan shifts') || can('can view shift plan') || is('artwork admin')" @click="showCloseUserOverview" class="pointer-events-auto flex h-5 w-8 cursor-pointer items-center justify-center bg-artwork-navigation-background" :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'">
-                        <div :class="showUserOverview ? '' : 'fixed bottom-0 mb-0.5 rotate-180'">
-                            <component :is="IconChevronsDown" class="h-4 w-4 text-gray-300" />
-                        </div>
-                    </div>
-                    <div v-if="showUserOverview" @mousedown="startResize" @dblclick="() => { showUserOverview = !showUserOverview; updateLayout() }" class="pointer-events-auto flex h-5 w-8 cursor-ns-resize items-center justify-center rounded-tr-lg bg-artwork-navigation-background" :class="showUserOverview ? '' : 'fixed bottom-0'" :title="$t('Hold and drag to change the size')">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <SelectorIcon class="h-3 w-6 text-gray-400" />
+                    <div class="pointer-events-auto relative mb-2">
+                        <!-- Schweben + Shadow + Blur -->
+                        <div class="flex items-center justify-between gap-0.5 rounded-full bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/60 px-2.5 py-1.5 transition-all duration-300 ring-1 ring-white/5">
+                            <!-- TOGGLE: links -->
+                            <button
+                                v-if="can('can plan shifts') || can('can view shift plan') || is('artwork admin')"
+                                @click="showCloseUserOverview" class="flex items-center justify-center h-7 w-7 rounded-full hover:bg-white/5 active:scale-95 ransition-all duration-200"
+                                :aria-pressed="showUserOverview"
+                                :title="showUserOverview ? $t('Hide user overview') : $t('Show user overview')">
+                                <PropertyIcon
+                                    name="IconChevronsDown"
+                                    class="h-4 w-4 text-zinc-100 transition-transform duration-400"
+                                    :class="!showUserOverview ? 'rotate-180' : ''"
+                                />
+                            </button>
+
+                            <!-- Divider -->
+                            <div v-if="showUserOverview" class="mx-0.5 h-5 w-px bg-white/10"></div>
+
+                            <!-- RESIZE: rechts -->
+                            <button
+                                v-if="showUserOverview"
+                                @mousedown="startResize"
+                                @dblclick="() => { showUserOverview = !showUserOverview; updateLayout() }"
+                                class="flex items-center justify-center h-7 w-10 cursor-ns-resize rounded-full hover:bg-white/5 active:scale-95 transition-all duration-200"
+                                :title="$t('Hold and drag to change the size')">
+                                <!-- iOS-Grabber-Style -->
+                                <div class="flex flex-col items-center gap-0.5">
+                                    <span class="block h-0.5 w-5 rounded-full bg-zinc-300/80"></span>
+                                    <span class="block h-0.5 w-5 rounded-full bg-zinc-500/60"></span>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="bg-artwork-navigation-background">
-                    <div v-show="showUserOverview" ref="userOverviewEl" class="relative z-20 w-[97%] overflow-x-scroll overflow-y-scroll bg-artwork-navigation-background" :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
-                        <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background px-3 py-3" :style="{ top: calculateTopPositionOfUserOverView }">
+
+                <div class="bg-artwork-navigation-background pointer-events-auto">
+                    <div
+                        v-show="showUserOverview"
+                        ref="userOverviewEl"
+                        class="relative z-20 w-[97%] overflow-y-scroll bg-artwork-navigation-background "
+                        :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }"
+                    >
+                        <div
+                            class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3"
+                            :style="{ top: calculateTopPositionOfUserOverView }"
+                        >
                             <div class="flex items-center justify-end gap-x-3">
-                                <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" :icon="IconPencil"/>
+                                <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Create individual time series')"
-                                    :icon="IconClockShield"
+                                    icon="IconClockShield"
                                     icon-size="h-5 w-5"
                                     @click="showIndividualTimeSeriesModal = true"
-                                    classesButton="ui-button"
+                                    classesButton="ui-button-small"
                                 />
                                 <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
-                                    <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')" size="md" @change="toggleDayServiceMode" :icon="selectedDayService?.icon"/>
-                                    <DayServiceFilter :current-selected-day-service="selectedDayService" :day-services="dayServices" @update:current-selected-day-service="updateSelectedDayService"/>
+                                    <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')"
+                                                       size="md" @change="toggleDayServiceMode"
+                                                       :icon="selectedDayService?.icon"/>
+                                    <DayServiceFilter :current-selected-day-service="selectedDayService"
+                                                      :day-services="dayServices"
+                                                      @update:current-selected-day-service="updateSelectedDayService"/>
                                 </div>
                             </div>
                             <div class="pointer-events-none -mt-1" v-if="multiEditMode">
-                                <div v-if="Object.keys(multiEditCellByDayAndUser).length !== 0" class="flex items-center justify-center gap-3">
-                                    <button type="button" @click="showCellMultiEditModal = true" :disabled="Object.keys(multiEditCellByDayAndUser).length === 0" class="pointer-events-auto" :class="[
+                                <div v-if="Object.keys(multiEditCellByDayAndUser).length !== 0"
+                                     class="flex items-center justify-center gap-3">
+                                    <button type="button" @click="showCellMultiEditModal = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto" :class="[
                                            Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
                                             'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                         {{ $t('Edit Entries') }}
                                     </button>
-                                    <button type="button" @click="openCellMultiEditDelete = true" :disabled="Object.keys(multiEditCellByDayAndUser).length === 0" class="pointer-events-auto" :class="[
+                                    <button type="button" @click="openCellMultiEditDelete = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto" :class="[
                                             Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
                                             'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                         {{ $t('Delete Entries') }}
@@ -263,13 +351,19 @@
                                 </div>
                             </div>
                             <div class="z-20 flex items-center justify-end gap-x-3 pr-24">
-                                <SwitchIconTooltip v-model="highlightMode" :tooltip-text="$t('Highlight')" size="md" @change="toggleHighlightMode" :icon="IconBulb"/>
-                                <SwitchIconTooltip v-model="$page.props.auth.user.compact_mode" :tooltip-text="$t('Compact view')" size="md" @change="toggleCompactMode" :icon="!$page.props.auth.user.compact_mode ? 'IconTextDecrease' : 'IconTextIncrease'"/>
+                                <SwitchIconTooltip v-model="highlightMode" :tooltip-text="$t('Highlight')" size="md"
+                                                   @change="toggleHighlightMode" icon="IconBulb"/>
+                                <SwitchIconTooltip v-model="$page.props.auth.user.compact_mode"
+                                                   :tooltip-text="$t('Compact view')" size="md"
+                                                   @change="toggleCompactMode"
+                                                   :icon="!$page.props.auth.user.compact_mode ? 'IconTextDecrease' : 'IconTextIncrease'"/>
                                 <BaseFilter :whiteIcon="false" :onlyIcon="true">
                                     <div class="mx-auto mt-2 w-full max-h-44 max-w-md rounded-2xl border-none pb-3">
                                         <div class="mb-2 flex items-start">
                                             <div class="flex h-6 items-center">
-                                                <input id="showFreelancers" v-model="showFreelancers" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist"/>
+                                                <input id="showFreelancers" v-model="showFreelancers"
+                                                       aria-describedby="comments-description" name="comments"
+                                                       type="checkbox" class="input-checklist"/>
                                             </div>
                                             <div class="ml-2 text-sm leading-6">
                                                 <label for="showFreelancers" class="font-medium text-white">
@@ -277,24 +371,34 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids" is_tiny/>
+                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids"
+                                                     is_tiny/>
                                         <div class="py-4">
                                             <div>
-                                                <div class="flex h-9 cursor-pointer items-center" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
+                                                <div class="flex h-9 cursor-pointer items-center"
+                                                     @click="showShiftQualificationFilter = !showShiftQualificationFilter">
                                                     <div class="flex items-center text-xs text-white">
                                                         {{ $t('Shift qualifications') }}
-                                                        <IconChevronDown v-if="!showShiftQualificationFilter" class="ml-2 h-4 w-4"/>
-                                                        <IconChevronUp v-else class="ml-2 h-4 w-4"/>
+                                                        <PropertyIcon name="IconChevronDown" v-if="!showShiftQualificationFilter"
+                                                                         class="ml-2 h-4 w-4"/>
+                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4"/>
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">
-                                                    <div v-for="shiftQualification in shiftQualifications" :key="shiftQualification.id">
+                                                    <div v-for="shiftQualification in shiftQualifications"
+                                                         :key="shiftQualification.id">
                                                         <div class="relative mb-2 flex items-start">
                                                             <div class="flex h-6 items-center">
-                                                                <input :checked="userShiftPlanShiftQualificationFilters.includes(shiftQualification.id)" @change="saveShiftQualificationFilter" :value="shiftQualification.id" type="checkbox" class="input-checklist-dark"/>
+                                                                <input
+                                                                    :checked="userShiftPlanShiftQualificationFilters.includes(shiftQualification.id)"
+                                                                    @change="saveShiftQualificationFilter"
+                                                                    :value="shiftQualification.id" type="checkbox"
+                                                                    class="input-checklist-dark"/>
                                                             </div>
                                                             <div class="ml-2 text-sm leading-6">
-                                                                <label :for="'shiftQualification-' + shiftQualification.id" class="font-medium text-white">
+                                                                <label
+                                                                    :for="'shiftQualification-' + shiftQualification.id"
+                                                                    class="font-medium text-white">
                                                                     {{ shiftQualification.name }}
                                                                 </label>
                                                             </div>
@@ -305,144 +409,262 @@
                                         </div>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right classesButton="ui-button hover:!bg-artwork-navigation-color/10 text-artwork-buttons-context">
+                                <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right
+                                          classesButton="ui-button-small hover:!bg-white text-artwork-buttons-context">
                                     <div class="flex items-center justify-end py-1">
-                                        <span class="xxsLight w-full cursor-pointer pr-4 pt-0.5 text-right" @click="resetSort()">
+                                        <span class="xxsLight w-full cursor-pointer pr-4 pt-0.5 text-right"
+                                              @click="resetSort()">
                                             {{ $t('Reset') }}
                                         </span>
                                     </div>
-                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums" :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
-                                        <div @click="applySort(computedShiftPlanWorkerSortEnum)" :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                            <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
-                                                <span :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                    <MenuItem
+                                        v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
+                                        :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
+                                        <div @click="applySort(computedShiftPlanWorkerSortEnum)"
+                                             :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                            <template
+                                                v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
+                                                <span
+                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
-                                                <IconArrowUp class="h-5 w-5" />
-                                                <IconCheck v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconCheck"
+                                                    v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
+                                                    class="h-5 w-5"/>
                                             </template>
-                                            <template v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
-                                                <span :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                            <template
+                                                v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
+                                                <span
+                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
-                                                <IconArrowDown class="h-5 w-5" />
-                                                <IconCheck v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconCheck"
+                                                    v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
+                                                    class="h-5 w-5"/>
                                             </template>
 
-                                            <template v-else-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
-                                                {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
-                                                <IconArrowUp class="h-5 w-5" />
-                                                <IconCheck v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="h-5 w-5"/>
+                                            <template
+                                                v-else-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
+                                                {{
+                                                    getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')])
+                                                }}
+                                                <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconCheck"
+                                                    v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
+                                                    class="h-5 w-5"/>
                                             </template>
-                                            <template v-else-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">{{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')])}}
-                                                <IconArrowDown class="h-5 w-5" />
-                                                <IconCheck v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="h-5 w-5"/>
+                                            <template
+                                                v-else-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
+                                                {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
+                                                <PropertyIcon name="IconCheck"
+                                                    v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
+                                                    class="h-5 w-5"/>
                                             </template>
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div class="pt-20 z-10">
-                            <table class="z-10 w-full overflow-y-scroll text-white">
-                                <div class="z-10">
-                                    <tbody class="w-full pt-3" v-for="craft in craftsToDisplay" :key="craft.id">
-                                    <tr class="stickyYAxisNoMarginLeft xsLight !font-lexend mb-1 flex w-48 cursor-pointer justify-between pb-1" @click="changeCraftVisibility(craft.id)">
-                                        {{ craft.name }}
-                                        <ChevronDownIcon class="mt-0.5 h-4 w-4" :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"/>
-                                    </tr>
-                                    <template v-for="(user, index) in craft.users" :key="user.element.id + '_' + user.type">
-                                        <tr v-if="!closedCrafts.includes(craft.id)" class="flex w-full">
-                                            <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
-                                                :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
-                                                <DragElement
-                                                    v-if="!highlightMode && !multiEditMode"
-                                                    :item="user.element"
-                                                    :work-time-balance="user.workTimeBalance"
-                                                    :type="user.type"
-                                                    :color="craft.color"
-                                                    :craft="craft"
-                                                    :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+
+                        <div class="pt-10 z-10 min-w-max">
+                            <!-- Wrapper für die gesamte Achse -->
+                            <div class="w-full">
+                                <div v-for="craft in craftsToDisplay" :key="craft.id" class="pt-3">
+                                    <!-- Craft-Kopf (war vorher <tr> mit <td colspan>) -->
+                                    <div class="stickyYAxisNoMarginLeft xsLight !font-lexend mb-1 flex w-96 cursor-pointer justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                        <div class="flex items-center justify-between gap-x-3 w-full">
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ craft.name }}</span>
+                                                <!-- user count badge -->
+                                                <span v-if="craft.users.length > 0" class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-gray-100">
+                                                    {{ craft.users.length }}
+                                                    <span class="inline-block h-2 w-2 rounded-full bg-gray-100"></span>
+                                                </span>
+                                            </div>
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-normal text-gray-100">
+                                                <PropertyIcon name="IconChevronDown"
+                                                    class="mt-[1px] h-3.5 w-3.5 transition-transform duration-200"
+                                                    :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180'"
                                                 />
-                                                <MultiEditUserCell
-                                                    v-else-if="multiEditMode && !highlightMode"
-                                                    :item="user.element"
-                                                    :work-time-balance="user.workTimeBalance"
-                                                    :type="user.type"
-                                                    :userForMultiEdit="userForMultiEdit"
-                                                    :multiEditMode="multiEditMode"
-                                                    @addUserToMultiEdit="addUserToMultiEdit"
-                                                    :color="craft.color"
-                                                    :craft-id="craft.id"
-                                                    :craft="craft"
-                                                    :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
-                                                    :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Users für dieses Craft -->
+                                    <div
+                                        v-for="(user, index) in craft.users"
+                                        :key="user.element.id + '_' + user.type"
+                                        v-if="!closedCrafts.includes(craft.id)"
+                                        class="flex w-full"
+                                    >
+                                        <!-- Linke, sticky Spalte (User-Zelle) -->
+                                        <div
+                                            class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
+                                            :class="[multiEditMode ? '' : '', index % 2 === 0 ? '' : '']"
+                                            :style="{ width: '191.5px', maxWidth: '191.5px', minWidth: '191.5px' }"
+                                        >
+                                            <DragElement
+                                                v-if="!highlightMode && !multiEditMode"
+                                                :item="user.element"
+                                                :work-time-balance="user.workTimeBalance"
+                                                :type="user.type"
+                                                :color="craft.color"
+                                                :craft="craft"
+                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                            />
+                                            <MultiEditUserCell
+                                                v-else-if="multiEditMode && !highlightMode"
+                                                :item="user.element"
+                                                :work-time-balance="user.workTimeBalance"
+                                                :type="user.type"
+                                                :userForMultiEdit="userForMultiEdit"
+                                                :multiEditMode="multiEditMode"
+                                                @addUserToMultiEdit="addUserToMultiEdit"
+                                                :color="craft.color"
+                                                :craft-id="craft.id"
+                                                :craft="craft"
+                                                :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                            />
+                                            <HighlightUserCell
+                                                v-else
+                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight : false"
+                                                :item="user.element"
+                                                :work-time-balance="user.workTimeBalance"
+                                                :type="user.type"
+                                                @highlightShiftsOfUser="highlightShiftsOfUser"
+                                                :color="craft.color"
+                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                            />
+                                        </div>
+                                        <div v-for="day in days" :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay"  class="relative">
+                                            <div v-if="!day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }"
+
+                                                 :class="[
+                                                    highlightMode
+                                                        ? idToHighlight
+                                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
+                                                                ? ''
+                                                                : 'opacity-30'
+                                                            : 'opacity-30'
+                                                        : '',
+                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
+                                                    multiEditMode
+                                                        ? userForMultiEdit
+                                                            ? userForMultiEdit.id === user.element.id &&
+                                                              user.type === userForMultiEdit.type &&
+                                                              craft.id === userForMultiEdit.craftId
+                                                                ? ''
+                                                                : 'opacity-30'
+                                                            : 'opacity-30'
+                                                        : '',
+                                                    multiEditMode &&
+                                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
+                                                        user.type &&
+                                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
+                                                        day.withoutFormat,
+                                                    )
+                                                        ? '!opacity-100 !overflow-hidden'
+                                                        : '',
+                                                ]"
+                                                                             @click="handleCellClick(user, day)"
+                                                                        >
+                                                                            <ShiftPlanCell
+                                                                                :user="user"
+                                                                                :day="day"
+                                                                                :classes="[
+                                                        multiEditMode &&
+                                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
+                                                            user.type &&
+                                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
+                                                            day.withoutFormat,
+                                                        )
+                                                            ? '!opacity-20'
+                                                            : '',
+                                                    ]"
                                                 />
-                                                <HighlightUserCell
-                                                    v-else
-                                                    :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight : false"
-                                                    :item="user.element"
-                                                    :work-time-balance="user.workTimeBalance"
-                                                    :type="user.type"
-                                                    @highlightShiftsOfUser="highlightShiftsOfUser"
-                                                    :color="craft.color"
-                                                    :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
-                                                />
-                                            </th>
-                                            <td v-for="day in days"
-                                                :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay">
-                                                <div v-if="!day.isExtraRow"
-                                                    :style="{width: '202px', maxWidth: '202px'}"
-                                                    :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight ? '': 'opacity-30' : 'opacity-30' : '',
-                                                            $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
-                                                            multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type &&
-                                                            craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                            multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type &&
-                                                            multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat) ? '!opacity-100 !overflow-hidden' : '']"
-                                                    @click="handleCellClick(user, day)">
-                                                    <ShiftPlanCell
-                                                        :user="user"
-                                                        :day="day"
-                                                        :classes="[multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type &&
-                                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.withoutFormat)? '!opacity-20': '']"
-                                                    />
-                                                </div>
-                                                <div v-else
-                                                    class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
-                                                    :style="{ width: '202px', maxWidth: '202px'}"
-                                                    :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                            $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
-                                                            multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id &&
-                                                            user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
-                                                    <div :class="$page.props.auth.user.compact_mode? 'flex items-center gap-x-1' : ''">
-                                                        <div class="text-[9px]">
-                                                            Arbeitszeit KW {{ day.weekNumber }}
-                                                        </div>
-                                                        <div
-                                                            class="font-lexend text-xs"
-                                                            :class="user?.weeklyWorkingHours[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'">
-                                                            {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
-                                                        </div>
+                                            </div>
+
+                                            <!-- Extra-Row / Wochenarbeitszeit -->
+                                            <div
+                                                v-else
+                                                class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
+                                                :style="{ width: '202px', maxWidth: '202px' }"
+                                                :class="[
+                                                    highlightMode
+                                                        ? idToHighlight
+                                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
+                                                                ? ''
+                                                                : 'opacity-30'
+                                                            : 'opacity-30'
+                                                        : '',
+                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
+                                                    multiEditMode
+                                                        ? userForMultiEdit
+                                                            ? userForMultiEdit.id === user.element.id &&
+                                                              user.type === userForMultiEdit.type &&
+                                                              craft.id === userForMultiEdit.craftId
+                                                                ? ''
+                                                                : 'opacity-30'
+                                                            : 'opacity-30'
+                                                        : '',
+                                                ]"
+                                            >
+                                                <div
+                                                    :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
+                                                    <div class="text-[9px]">
+                                                        Arbeitszeit KW {{ day.weekNumber }}
+                                                    </div>
+                                                    <div
+                                                        class="font-lexend text-xs"
+                                                        :class="
+                                                            user?.weeklyWorkingHours[day.weekNumber]?.isMinus
+                                                                ? 'text-red-100'
+                                                                : 'text-green-100'
+                                                        "
+                                                    >
+                                                        {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
                                                     </div>
                                                 </div>
-                                                <div v-if="user.dayServices" v-for="(userDayServices, indexDay) in user.dayServices" :key="indexDay" class="absolute right-2 top-1/2 flex -translate-y-1/2 transform">
-                                                    <template v-if="indexDay === day.withoutFormat">
-                                                        <div v-for="(userDayService, position) in userDayServices" :key="userDayService.id || position" class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5" :class="position > 0 ? '-ml-3' : ''">
-                                                            <ToolTipComponent :tooltip-text="userDayService.name" :icon="userDayService.icon" icon-size="h-4 w-4" :icon-style="{color: userDayService.hex_color}" :classes-button="'mt-0'"
-                                                            />
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                    </tbody>
+                                            </div>
+
+                                            <!-- DayServices (Icons) -->
+                                            <div
+                                                v-if="user.dayServices"
+                                                v-for="(userDayServices, indexDay) in user.dayServices"
+                                                :key="indexDay"
+                                                class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
+                                            >
+                                                <template v-if="indexDay === day.withoutFormat">
+                                                    <div
+                                                        v-for="(userDayService, position) in userDayServices"
+                                                        :key="userDayService.id || position"
+                                                        class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5"
+                                                        :class="position > 0 ? '-ml-3' : ''"
+                                                    >
+                                                        <ToolTipComponent
+                                                            :tooltip-text="userDayService.name"
+                                                            :icon="userDayService.icon"
+                                                            icon-size="h-4 w-4"
+                                                            :icon-style="{ color: userDayService.hex_color }"
+                                                            :classes-button="'mt-0'"
+                                                        />
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </table>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
-            <show-user-shifts-modal
+            <ShowUserShiftsModal
                 v-if="showUserShifts"
                 @closed="showUserShifts = false"
                 :user="userToShow"
@@ -451,7 +673,7 @@
             />
             <ShiftHistoryModal
                 v-if="showHistoryModal"
-                :history="history"
+                :logs="history"
                 @closed="showHistoryModal = false"
             />
         </ShiftHeader>
@@ -489,13 +711,13 @@
         :crafts="crafts"
         :event="null"
         :shift="shiftToEdit"
-        :currentUserCrafts="usePage().props.currentUserCrafts"
+        :current-user-crafts="currentUserCrafts"
         :buffer="null"
-        :shift-qualifications="usePage().props.shiftQualifications"
+        :shift-qualifications="shiftQualifications"
         :shift-groups="usePage().props.shiftGroups"
         :global-qualifications="usePage().props.globalQualifications"
         @closed="closeAddShiftModal"
-        :shift-time-presets="usePage().props.shiftTimePresets"
+        :shift-time-presets="shiftTimePresets"
         :rooms="rooms"
         :room="roomForShiftAdd"
         :day="dayForShiftAdd"
@@ -515,70 +737,139 @@
 <script setup lang="ts">
 
 import Permissions from '@/Mixins/Permissions.vue'
-import { ChevronDownIcon } from '@heroicons/vue/outline'
 import axios from 'axios'
-import { Link, router, usePage } from '@inertiajs/vue3'
+import {Link, router, usePage} from '@inertiajs/vue3'
 import ShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue'
 import ShiftHeader from '@/Pages/Shifts/ShiftHeader.vue'
-import ShiftHistoryModal from '@/Pages/Shifts/Components/ShiftHistoryModal.vue'
-import ShowUserShiftsModal from '@/Pages/Shifts/Components/ShowUserShiftsModal.vue'
-import DragElement from '@/Pages/Projects/Components/DragElement.vue'
-import HighlightUserCell from '@/Pages/Shifts/Components/HighlightUserCell.vue'
-import { MenuItem } from '@headlessui/vue'
-import MultiEditUserCell from '@/Pages/Shifts/Components/MultiEditUserCell.vue'
-import SideNotification from '@/Layouts/Components/General/SideNotification.vue'
+import {MenuItem} from '@headlessui/vue'
 import Table from '@/Components/Table/Table.vue'
 import TableHead from '@/Components/Table/TableHead.vue'
 import TableBody from '@/Components/Table/TableBody.vue'
-import { SelectorIcon } from '@heroicons/vue/solid'
-import ShiftsQualificationsAssignmentModal from '@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
-import {
-    IconAlertSquareRounded,
-    IconArrowDown,
-    IconArrowUp,
-    IconBulb,
-    IconCalendarWeek,
-    IconChevronDown,
-    IconChevronsDown,
-    IconPencil,
-    IconPlus,
-    IconX,
-    IconChevronUp,
-    IconCheck, IconCalendarMonth, IconClockShield,
-} from '@tabler/icons-vue'
-import CraftFilter from '@/Components/Filter/CraftFilter.vue'
-import SingleEventInShiftPlan from '@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'
-import IconLib from '@/Mixins/IconLib.vue'
-import DayServiceFilter from '@/Components/Filter/DayServiceFilter.vue'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch,getCurrentInstance } from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch, getCurrentInstance, defineAsyncComponent} from 'vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
-import { useSortEnumTranslation } from '@/Composeables/SortEnumTranslation.js'
+import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import ShiftPlanCell from '@/Pages/Shifts/Components/ShiftPlanCell.vue'
-import CellMultiEditModal from '@/Pages/Shifts/Components/CellMultiEditModal.vue'
-import DeleteEntriesModal from '@/Pages/Shifts/Components/DeleteEntriesModal.vue'
-import HolidayToolTip from '@/Components/ToolTips/HolidayToolTip.vue'
-import SingleShiftInRoom from '@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue'
-import AddShiftModal from '@/Pages/Projects/Components/AddShiftModal.vue'
-import DeleteCalendarRoomShiftEntriesModal from '@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue'
-import { useShiftCalendarListener } from '@/Composeables/Listener/useShiftCalendarListener.js'
+import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
-import { can, is } from 'laravel-permission-to-vuejs'
-import { useUserOverviewLayout } from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
-import { useSyncedHorizontalScroll } from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
-import { useI18n } from 'vue-i18n'
-import IndividualTimeSeriesModal from "@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue";
-const { t } = useI18n()
-
+import {can, is} from 'laravel-permission-to-vuejs'
+import {useUserOverviewLayout} from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
+import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
 
 defineOptions({
     name: 'ShiftPlan',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
 })
 
+const DragElement = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/DragElement.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const ShiftPlanCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftPlanCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const SingleShiftInRoom = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const HolidayToolTip = defineAsyncComponent({
+    loader: () => import('@/Components/ToolTips/HolidayToolTip.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const HighlightUserCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/HighlightUserCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const MultiEditUserCell = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/MultiEditUserCell.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const CraftFilter = defineAsyncComponent({
+    loader: () => import('@/Components/Filter/CraftFilter.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const SingleEventInShiftPlan = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const DayServiceFilter = defineAsyncComponent({
+    loader: () => import('@/Components/Filter/DayServiceFilter.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const ShowUserShiftsModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShowUserShiftsModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const ShiftHistoryModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const SideNotification = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/General/SideNotification.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const ShiftsQualificationsAssignmentModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const CellMultiEditModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/CellMultiEditModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const DeleteEntriesModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/DeleteEntriesModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const DeleteCalendarRoomShiftEntriesModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const AddShiftModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
+
+const IndividualTimeSeriesModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 
 type ShiftPlanProps = {
     events?: any[]
@@ -604,7 +895,9 @@ type ShiftPlanProps = {
     userShiftPlanShiftQualificationFilters?: number[]
     projectNameUsedForProjectTimePeriod?: any
     calendarWarningText?: string
-    eventTypes?: any[]
+    eventTypes?: any[],
+    shiftTimePresets?: any[],
+    currentUserCrafts?: any[],
 }
 
 const props = withDefaults(defineProps<ShiftPlanProps>(), {
@@ -632,6 +925,8 @@ const props = withDefaults(defineProps<ShiftPlanProps>(), {
     projectNameUsedForProjectTimePeriod: null,
     calendarWarningText: '',
     eventTypes: () => [],
+    shiftTimePresets: () => [],
+    currentUserCrafts: () => [],
 })
 
 type Day = {
@@ -680,6 +975,7 @@ const showCellMultiEditModal = ref(false)
 const openCellMultiEditDelete = ref(false)
 const showIndividualTimeSeriesModal = ref(false)
 const preventNextNavigation = ref(false)
+const isLoadingMonth = ref(false)
 const originalVisit = ref<any | null>(null)
 const showShiftQualificationFilter = ref(false)
 const multiEditModeCalendar = ref(false)
@@ -701,7 +997,13 @@ const resolveModalClose = ref<null | (() => void)>(null)
 const _singlePickResolve = ref<any | null>(null)
 const _singlePickShiftId = ref<number | null>(null)
 const multiEditSessionId = ref(0)
-const notice = reactive<{ show: boolean; kind: 'success' | 'error' | 'info'; title: string; message: string; _timeoutId: any | null }>({
+const notice = reactive<{
+    show: boolean;
+    kind: 'success' | 'error' | 'info';
+    title: string;
+    message: string;
+    _timeoutId: any | null
+}>({
     show: false,
     kind: 'success',
     title: '',
@@ -716,9 +1018,9 @@ const $toast = (instance?.proxy as any)?.$toast
 const showUserOverview = ref(true)
 const pageProps = usePage().props
 
-const { userOverviewHeight, windowHeight, startResize, updateLayout } = useUserOverviewLayout(showUserOverview, {
+const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
-    topGap: 16,
+    topGap: 0,
     minTop: 100,
     minMain: 200,
     pageProps,
@@ -729,12 +1031,12 @@ const userOverviewEl = ref<HTMLElement | null>(null)
 const daysRef = ref<any[]>(days.value)
 const currentDayRef = ref<any>(null)
 
-const { attach, detach } = useSyncedHorizontalScroll(
+const {attach, detach} = useSyncedHorizontalScroll(
     shiftPlanEl,
     userOverviewEl,
     daysRef,
     currentDayRef,
-    { roomNameOffsetPx: 200 },
+    {roomNameOffsetPx: 200},
 )
 
 
@@ -843,13 +1145,13 @@ function registerMonthSentinel(el: HTMLElement | null, day: any) {
 
 function getCurrentRange() {
     if (!days.value.length) {
-        return { start: null as dayjs.Dayjs | null, end: null as dayjs.Dayjs | null }
+        return {start: null as dayjs.Dayjs | null, end: null as dayjs.Dayjs | null}
     }
 
     const first = dayjs(days.value[0].withoutFormat ?? days.value[0].fullDay)
     const last = dayjs(days.value[days.value.length - 1].withoutFormat ?? days.value[days.value.length - 1].fullDay)
 
-    return { start: first, end: last }
+    return {start: first, end: last}
 }
 
 
@@ -861,24 +1163,25 @@ function setCurrentDayRef(day: any) {
 type LoadDirection = 'next' | 'prev'
 
 async function loadMonth(direction: LoadDirection) {
-    const { start, end } = getCurrentRange()
-    if (!start || !end) return
+    if (isLoadingMonth.value) return
+    isLoadingMonth.value = true
 
-    let rangeStart: dayjs.Dayjs
-    let rangeEnd: dayjs.Dayjs
-
-    if (direction === 'next') {
-        const firstOfNextMonth = end.add(1, 'day').startOf('month')
-        rangeStart = firstOfNextMonth
-        rangeEnd = firstOfNextMonth.endOf('month')
-    } else {
-        const lastOfPrevMonth = start.subtract(1, 'day').endOf('month')
-        rangeEnd = lastOfPrevMonth
-        rangeStart = lastOfPrevMonth.startOf('month')
-    }
-
-    // Guard: only load months that intersect the user-selected range (props.dateValue)
     try {
+        const {start, end} = getCurrentRange()
+        if (!start || !end) return
+
+        let rangeStart: dayjs.Dayjs
+        let rangeEnd: dayjs.Dayjs
+
+        if (direction === 'next') {
+            const firstOfNextMonth = end.add(1, 'day').startOf('month')
+            rangeStart = firstOfNextMonth
+            rangeEnd = firstOfNextMonth.endOf('month')
+        } else {
+            const lastOfPrevMonth = start.subtract(1, 'day').endOf('month')
+            rangeEnd = lastOfPrevMonth
+            rangeStart = lastOfPrevMonth.startOf('month')
+        }
         const selectedStart = props.dateValue && props.dateValue[0] ? dayjs(props.dateValue[0]) : null
         const selectedEnd = props.dateValue && props.dateValue[1] ? dayjs(props.dateValue[1]) : null
 
@@ -900,9 +1203,11 @@ async function loadMonth(direction: LoadDirection) {
         // dayjs parsing error - fall back to original behavior (do not block loading)
         // eslint-disable-next-line no-console
         console.debug('loadMonth: could not parse props.dateValue, proceeding without range guard', e)
+    } finally {
+        isLoadingMonth.value = false
     }
 
-    const { data } = await axios.get(route('shift.plan.all'), {
+    const {data} = await axios.get(route('shift.plan.all'), {
         params: {
             start_date: rangeStart.format('YYYY-MM-DD'),
             end_date: rangeEnd.format('YYYY-MM-DD'),
@@ -926,7 +1231,7 @@ async function loadMonth(direction: LoadDirection) {
 
     for (const r of rooms.value) {
         const id = r.roomId ?? r.id
-        roomsById.set(id, { ...r })
+        roomsById.set(id, {...r})
     }
 
     for (const nr of newRooms) {
@@ -1002,7 +1307,7 @@ const computedShiftPlanWorkerSortEnums = computed(() => {
     return sortConfig
 })
 
-const { getSortEnumTranslation } = useSortEnumTranslation()
+const {getSortEnumTranslation} = useSortEnumTranslation()
 
 async function initializeShiftPlan() {
     const hasInitialDays = Array.isArray(props.days) && props.days.length > 0
@@ -1014,11 +1319,11 @@ async function initializeShiftPlan() {
         )
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route('shift.plan.all'), {
+        const {data} = await axios.get(route('shift.plan.all'), {
             params: {
                 start_date: props.dateValue[0],
-                end_date:   props.dateValue[1],
-                projectId:  props.projectId,
+                end_date: props.dateValue[1],
+                projectId: props.projectId,
             },
         })
 
@@ -1056,7 +1361,7 @@ onMounted(async () => {
             days.value = (v ?? []) as any[]
             daysRef.value = days.value
         },
-        { deep: true },
+        {deep: true},
     )
 
     attach()
@@ -1076,16 +1381,20 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     detach()
+    monthObserver.value?.disconnect()
+    monthObserver.value = null
+
     if (originalVisit.value) {
         router.visit = originalVisit.value
     }
 })
 
+
 function changeDailyViewMode() {
     router.patch(
         route('user.update.daily_view', usePage().props.auth.user.id),
-        { daily_view: dailyViewMode.value },
-        { preserveScroll: false, preserveState: false },
+        {daily_view: dailyViewMode.value},
+        {preserveScroll: false, preserveState: false},
     )
 }
 
@@ -1158,7 +1467,7 @@ function addDayAndRoomToMultiEditCalendar(day: string, roomId: number) {
     if (exists) {
         multiEditCalendarDays.value = multiEditCalendarDays.value.filter((x) => !(x.day === day && x.roomId === roomId))
     } else {
-        multiEditCalendarDays.value.push({ day, roomId })
+        multiEditCalendarDays.value.push({day, roomId})
     }
 }
 
@@ -1173,7 +1482,7 @@ function setupInertiaNavigationGuard() {
 
     router.visit = async (url: string, options: any = {}) => {
         // Standardmäßig Scroll-Position beibehalten, außer explizit überschrieben
-        options = { preserveScroll: true, ...options }
+        options = {preserveScroll: true, ...options}
         if (multiEditMode.value && userForMultiEdit.value && !preventNextNavigation.value) {
             preventNextNavigation.value = true
             try {
@@ -1192,9 +1501,11 @@ function setupInertiaNavigationGuard() {
 function isWorkerUser(worker: any) {
     return worker.type === 0
 }
+
 function isWorkerFreelancer(worker: any) {
     return worker.type === 1
 }
+
 function isWorkerServiceProvider(worker: any) {
     return worker.type === 2
 }
@@ -1271,34 +1582,46 @@ function filterAndSortWorkersOfCraft(craft: any) {
     const assignedNonManagingWorkersFiltered = filterNonManagingWorkersByShiftQualificationFilter(assignedNonManagingWorkers)
 
     const sortBy = usePage().props.auth.user.shift_plan_user_sort_by_id
+
     if (sortBy === null) {
         return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
     }
+
     if (sortBy === 'ALPHABETICALLY_NAME_ASCENDING') {
-        return sortAscendingByUseFirstNameForSort(assignedManagingWorkers).concat(
-            sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered),
-        )
+        return sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
+            .concat(sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered))
     }
+
     if (sortBy === 'ALPHABETICALLY_NAME_DESCENDING') {
-        return sortDescendingByUseFirstNameForSort(assignedManagingWorkers).concat(
-            sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered),
-        )
+        return sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
+            .concat(sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered))
     }
-    const intern = assignedNonManagingWorkers.filter((w) => isWorkerUser(w))
-    const extern = assignedNonManagingWorkers.filter((w) => isWorkerFreelancer(w) || isWorkerServiceProvider(w))
+
+    // INTERN = type=0 UND NICHT is_freelancer
+    const intern = assignedNonManagingWorkersFiltered.filter((w) =>
+        w.type === 0 && w.element?.is_freelancer !== true
+    )
+
+    // EXTERN = Freelancer-User, Freelancer-Models, ServiceProvider
+    const extern = assignedNonManagingWorkersFiltered.filter((w) =>
+        w.element?.is_freelancer === true || w.type === 1 || w.type === 2
+    )
 
     if (sortBy === 'INTERN_EXTERN_ASCENDING') {
         return sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
             .concat(sortAscendingByUseFirstNameForSort(intern))
             .concat(sortAscendingByUseFirstNameForSort(extern))
     }
+
     if (sortBy === 'INTERN_EXTERN_DESCENDING') {
         return sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
             .concat(sortDescendingByUseFirstNameForSort(extern))
             .concat(sortDescendingByUseFirstNameForSort(intern))
     }
+
     return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
 }
+
 
 function getDropWorkers() {
     const users: any[] = []
@@ -1411,11 +1734,14 @@ function handleCellClick(user: any, day: any) {
         }
 
         if (hasDayService) {
-            axios.patch(route('remove.day.service.from.user', { dayServiceable: user.element.id }), {
+            axios.patch(route('remove.day.service.from.user', {dayServiceable: user.element.id}), {
                 dayService: selectedDayService.value.id, date: day.withoutFormat, modelType: type,
             }).then(setWorkerDayServicesCallback)
         } else {
-            axios.post(route('day-service.attach', { dayServiceable: user.element.id, dayService: selectedDayService.value.id }), {
+            axios.post(route('day-service.attach', {
+                dayServiceable: user.element.id,
+                dayService: selectedDayService.value.id
+            }), {
                 date: day.withoutFormat, modelType: type,
             }).then(setWorkerDayServicesCallback)
         }
@@ -1430,7 +1756,7 @@ function updateSelectedDayService(dayService: any) {
 }
 
 function calculateTopPositionOfUserOverView() {
-    return showUserOverview.value ? userOverviewHeight.value + 'px' : '0'
+    return showUserOverview.value ? userOverviewHeight.value + 'px' : '0px'
 }
 
 function checkIfEventHasShiftsToDisplay(event: any) {
@@ -1485,8 +1811,8 @@ function calculateDateDifference() {
 function updateTimes() {
     router.patch(
         route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
-        { start_date: props.dateValue[0], end_date: props.dateValue[1] },
-        { preserveScroll: true, preserveState: false },
+        {start_date: props.dateValue[0], end_date: props.dateValue[1]},
+        {preserveScroll: true, preserveState: false},
     )
 }
 
@@ -1556,6 +1882,7 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
 function selectGoToNextMode() {
     selectGoToMode('next')
 }
+
 function selectGoToPreviousMode() {
     selectGoToMode('previous')
 }
@@ -1614,9 +1941,9 @@ function toggleDayServiceMode() {
 
 function toggleCompactMode() {
     router.post(
-        route('user.compact.mode.toggle', { user: usePage().props.auth.user.id }),
-        { compact_mode: usePage().props.auth.user.compact_mode },
-        { preserveScroll: true, preserveState: true },
+        route('user.compact.mode.toggle', {user: usePage().props.auth.user.id}),
+        {compact_mode: usePage().props.auth.user.compact_mode},
+        {preserveScroll: true, preserveState: true},
     )
 }
 
@@ -1648,13 +1975,15 @@ function _cancelOpenPickersAndModals() {
     if (resolveModalClose.value) {
         try {
             resolveModalClose.value()
-        } catch {}
+        } catch {
+        }
         resolveModalClose.value = null
     }
     if (_singlePickResolve.value) {
         try {
             _singlePickResolve.value(null)
-        } catch {}
+        } catch {
+        }
         _singlePickResolve.value = null
         _singlePickShiftId.value = null
     }
@@ -1687,12 +2016,15 @@ async function closeShiftsQualificationsAssignmentModal(closedForAssignment: boo
 
         if (singleResolver) {
             const picked = (assignedShifts ?? []).find((s: any) => s.shiftId === singleShiftId)
-            singleResolver(picked ? { id: picked.shiftQualificationId } : null)
+            singleResolver(picked ? {id: picked.shiftQualificationId} : null)
             return
         }
 
         ;(assignedShifts ?? []).forEach((s: any) => {
-            shiftsToHandleOnMultiEdit.assignToShift.push({ shiftId: s.shiftId, shiftQualificationId: s.shiftQualificationId })
+            shiftsToHandleOnMultiEdit.assignToShift.push({
+                shiftId: s.shiftId,
+                shiftQualificationId: s.shiftQualificationId
+            })
         })
 
         await saveMultiEdit()
@@ -1740,18 +2072,18 @@ function changeCraftVisibility(id: number) {
 function applySort(shiftPlanWorkerSortEnumName: string) {
     usePage().props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
     router.patch(
-        route('user.update.shiftPlanUserSortBy', { user: usePage().props.auth.user.id }),
-        { sortBy: shiftPlanWorkerSortEnumName },
-        { preserveState: true, preserveScroll: true },
+        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        {sortBy: shiftPlanWorkerSortEnumName},
+        {preserveState: true, preserveScroll: true},
     )
 }
 
 function resetSort() {
     usePage().props.auth.user.shift_plan_user_sort_by_id = null
     router.patch(
-        route('user.update.shiftPlanUserSortBy', { user: usePage().props.auth.user.id }),
-        { sortBy: null },
-        { preserveState: false, preserveScroll: true },
+        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        {sortBy: null},
+        {preserveState: false, preserveScroll: true},
     )
 }
 
@@ -1862,7 +2194,7 @@ function openQualificationPicker(desiredShift: any, options: any[]) {
     return new Promise((resolve) => {
         _singlePickResolve.value = resolve
         _singlePickShiftId.value = desiredShift.id
-        showShiftsQualificationsAssignmentModalShifts.value = [{ shift: desiredShift, availableSlots: options }]
+        showShiftsQualificationsAssignmentModalShifts.value = [{shift: desiredShift, availableSlots: options}]
         showShiftsQualificationsAssignmentModal.value = true
         waitForModalClose.value = true
     })
@@ -1875,7 +2207,7 @@ async function persistAssign(shiftId: number, shiftQualificationId: number | nul
         craft_abbreviation: userForMultiEdit.value.craft_abbreviation,
         shiftsToHandle: {
             assignToShift: [
-                ...(shiftQualificationId != null ? [{ shiftId, shiftQualificationId }] : [{ shiftId }]),
+                ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId}] : [{shiftId}]),
             ],
             removeFromShift: [],
         },
@@ -1888,7 +2220,7 @@ async function persistRemove(shiftId: number) {
         userType: userForMultiEdit.value.type,
         userTypeId: userForMultiEdit.value.id,
         craft_abbreviation: userForMultiEdit.value.craft_abbreviation,
-        shiftsToHandle: { assignToShift: [], removeFromShift: [shiftId] },
+        shiftsToHandle: {assignToShift: [], removeFromShift: [shiftId]},
     })
 }
 
@@ -1910,7 +2242,7 @@ function isSaving(shiftId: number) {
     return savingShiftIds.value.has(shiftId)
 }
 
-function showNotice(kind: 'success' | 'error' | 'info', title: string, message: string, { timeout = 3500 } = {}) {
+function showNotice(kind: 'success' | 'error' | 'info', title: string, message: string, {timeout = 3500} = {}) {
     if (notice._timeoutId) clearTimeout(notice._timeoutId)
     notice.kind = kind
     notice.title = $t(title)
@@ -1940,9 +2272,9 @@ function saveShiftQualificationFilter(event: any) {
     }
 
     router.patch(
-        route('user.update.show_shift-qualifications', { user: usePage().props.auth.user.id }),
-        { show_qualifications: list },
-        { preserveScroll: true, preserveState: true },
+        route('user.update.show_shift-qualifications', {user: usePage().props.auth.user.id}),
+        {show_qualifications: list},
+        {preserveScroll: true, preserveState: true},
     )
 }
 

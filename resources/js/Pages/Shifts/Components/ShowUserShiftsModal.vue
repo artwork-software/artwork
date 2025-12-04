@@ -112,7 +112,7 @@
                                 class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                                 @click="addIndividualTime"
                             >
-                                <IconCirclePlus class="h-3.5 w-3.5" stroke-width="2" />
+                                <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
                                 <span>{{ t('Add individual time') }}</span>
                             </button>
                         </div>
@@ -258,7 +258,7 @@
                                     class="inline-flex items-center gap-1 text-xs xsLight hover:text-artwork-buttons-hover transition-colors"
                                     @click="addIndividualTime"
                                 >
-                                    <IconCirclePlus
+                                    <PropertyIcon name="IconCirclePlus"
                                         class="h-5 w-5"
                                         stroke-width="2"
                                     />
@@ -313,7 +313,7 @@
                                         {{ checked?.name }}
                                     </span>
                                 </div>
-                                <ChevronDownIcon
+                                <PropertyIcon name="ChevronDownIcon"
                                     class="h-5 w-5 text-primary"
                                     aria-hidden="true"
                                 />
@@ -342,7 +342,7 @@
                                             {{ type.name }}
                                         </span>
                                     </div>
-                                    <CheckIcon
+                                    <PropertyIcon name="CheckIcon"
                                         v-if="selected"
                                         class="h-5 w-5 text-success"
                                         aria-hidden="true"
@@ -479,8 +479,6 @@ import {
     ListboxOption,
     ListboxOptions,
 } from '@headlessui/vue';
-import { CheckIcon } from '@heroicons/vue/solid';
-import { ChevronDownIcon } from '@heroicons/vue/outline';
 import axios from 'axios';
 import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
@@ -494,7 +492,7 @@ import SingleShiftInShiftOverviewUser from '@/Pages/Shifts/Components/SingleShif
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import IndividualTimeSeriesModal from '@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue';
-import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 defineOptions({
     name: 'ShowUserShiftsModal',

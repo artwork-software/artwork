@@ -22,7 +22,7 @@
                 <div class="mb-2">
                     <div class="group flex" v-if="file">
                         {{ file.name }}
-                        <IconCircleX
+                        <PropertyIcon name="IconCircleX"
                             stroke-width="1.5" @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
@@ -62,11 +62,11 @@
                         <Listbox as="div" class="flex relative" v-model="selectedLegalForm" id="eventType">
                             <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
                                 <div>{{ selectedLegalForm.name }}</div>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
                             <ListboxButton v-else class="menu-button">
                                 <span>{{ $t('Legal form')}}</span>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
@@ -78,7 +78,7 @@
                                                 </span>
                                             </div>
                                             <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -94,7 +94,7 @@
                                         <span>{{ selectedContractType.name }}</span>
                                     </span>
                                     <span class="pointer-events-none">
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </div>
                             </ListboxButton>
@@ -103,7 +103,7 @@
                                     {{ $t('Contract type')}}
                                 </div>
                                 <span class="pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -116,7 +116,7 @@
                                                 </span>
                                             </div>
                                             <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -135,7 +135,7 @@
                             <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="eventType">
                                 <ListboxButton class="menu-button">
                                     <span>{{ selectedCurrency.name }}</span>
-                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
@@ -153,7 +153,7 @@
                                                 </div>
                                                 <span
                                                     :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                             </li>
@@ -224,7 +224,7 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromContractUserArray(index)">
                                         <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                        <IconX stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
                                     </button>
                                 </div>
                             </div>
@@ -236,8 +236,8 @@
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             {{ $t('Add further details or task')}}
-                            <IconChevronUp stroke-width="1.5" v-if="showExtraSettings" class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"></IconChevronUp>
-                            <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0h-4 w-4"></IconChevronDown>
+                            <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="showExtraSettings" class=" ml-1 mr-3 flex-shrink-0 h-4 w-4" />
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0h-4 w-4" />
                         </div>
                         <div v-if="showExtraSettings">
                             <div class="items-center mb-2">
@@ -304,6 +304,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -319,6 +320,7 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        PropertyIcon,
         BaseUIButton,
         ArtworkBaseModal,
         BaseTextarea,

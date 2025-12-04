@@ -47,7 +47,7 @@
                     class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-2 py-1 text-xs font-semibold text-white
                         enabled:hover:bg-zinc-800 enabled:transition disabled:opacity-50"
                 >
-                    <component v-if="group.icon" :is="group.icon" class="size-4" aria-hidden="true" />
+                    <PropertyIcon v-if="group.icon" :name="group.icon" class="size-4" aria-hidden="true" />
                     <span class="truncate max-w-[14rem]">{{ group.name }}</span>
                 </Link>
             </div>
@@ -118,6 +118,7 @@ import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserEventShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
 import {is} from "laravel-permission-to-vuejs";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props

@@ -4,13 +4,13 @@
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
                     <!-- Date Shortcuts - 3 vertical icons -->
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true"></date-picker-component>
+                    <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
+                                           :is_shift_plan="true"></DatePickerComponent>
                     <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Today')"
-                            :icon="IconCalendar"
+                            icon="IconCalendar"
                             icon-size="h-5 w-5"
                             @click="jumpToToday"
                             classesButton="ui-button"
@@ -18,7 +18,7 @@
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
-                            :icon="IconCalendarWeek"
+                            icon="IconCalendarWeek"
                             icon-size="h-5 w-5"
                             @click="jumpToCurrentWeek"
                             classesButton="ui-button"
@@ -26,25 +26,25 @@
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current month')"
-                            :icon="IconCalendarMonth"
+                            icon="IconCalendarMonth"
                             icon-size="h-5 w-5"
                             @click="jumpToCurrentMonth"
                             classesButton="ui-button"
                         />
                     </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
+                        <PropertyIcon name="IconChevronLeftPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                              @click="previousTimeRange"/>
-                        <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
+                        <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                          @click="scrollToPreviousDay"/>
                         <Menu as="div" class="relative inline-block text-left">
                             <div class="flex items-center">
                                 <MenuButton class="">
-                                    <component :is="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <PropertyIcon name="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                        v-if="userGotoMode === 'month'"/>
-                                    <component :is="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <PropertyIcon name="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                       v-if="userGotoMode === 'week'"/>
-                                    <component :is="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
+                                    <PropertyIcon name="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
                                                   v-if="userGotoMode === 'day'"/>
                                 </MenuButton>
                             </div>
@@ -64,7 +64,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
-                                                    :icon="IconCalendar"
+                                                    icon="IconCalendar"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -74,7 +74,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
-                                                    :icon="IconCalendarWeek"
+                                                    icon="IconCalendarWeek"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -84,7 +84,7 @@
                                                 <ToolTipComponent
                                                     direction="right"
                                                     :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
-                                                    :icon="IconCalendarMonth"
+                                                    icon="IconCalendarMonth"
                                                     icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
@@ -92,19 +92,19 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
+                        <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                           @click="scrollToNextDay"/>
 
-                        <IconChevronRightPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
+                        <PropertyIcon name="IconChevronRightPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
                                               @click="nextTimeRange"/>
                     </div>
                     <div class="items-center hidden">
                         <div class="flex items-center">
                             <button class="ml-2 text-black" @click="previousTimeRange">
-                                <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
+                                <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
                             </button>
                             <button class="ml-2  text-black" @click="nextTimeRange">
-                                <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
+                                <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
                             </button>
                         </div>
                     </div>
@@ -150,7 +150,7 @@
                         :tooltip-text="$t('Project search')"
                         size="md"
                         @change="handleUseTimePeriodChange"
-                        :icon="IconGeometry"
+                        icon="IconGeometry"
                     />
                 </div>
 
@@ -182,15 +182,15 @@
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="$t('Lock all shifts')" :icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
+                                      :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                       @click="commitAllShifts()"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" :icon="IconHistory"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" :icon="IconArrowsDiagonal"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
                                       icon-size="h-5 w-5" classes-button="ui-button" v-if="!isFullscreen" @click="enterFullscreenMode"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" :icon="IconCalendarStar"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
@@ -243,17 +243,6 @@ import {
     Switch,
 } from "@headlessui/vue";
 
-import {
-    IconChevronLeftPipe,
-    IconChevronLeft,
-    IconCalendarMonth,
-    IconCalendarWeek,
-    IconCalendar,
-    IconChevronRight,
-    IconChevronRightPipe, IconGeometry, IconArrowsDiagonal, IconHistory, IconCalendarCheck, IconCalendarStar,
-} from "@tabler/icons-vue";
-
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, useForm, Link, usePage} from "@inertiajs/vue3";
@@ -268,7 +257,14 @@ import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const {hasAdminRole, can} = usePermission(usePage().props);
+
+const DatePickerComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
+    delay: 200,
+    timeout: 3000,
+})
 
 const props = defineProps({
     dateValue: Array,

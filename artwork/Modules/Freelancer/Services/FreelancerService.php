@@ -70,10 +70,6 @@ readonly class FreelancerService
             if ($desiredFreelancerResource instanceof FreelancerShiftPlanResource) {
                 $desiredFreelancerResource->setStartDate($startDate)->setEndDate($endDate);
             }
-
-            /*$plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
-                $this->workingHourService->calculateShiftTime($freelancer, $startDate, $endDate)
-            );*/
             $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
                 $freelancer,
                 $startDate,
@@ -82,7 +78,6 @@ readonly class FreelancerService
 
             $freelancerData = [
                 'freelancer' => $desiredFreelancerResource->resolve(),
-                //'plannedWorkingHours' => $plannedWorkingHours, //$freelancer->plannedWorkingHours($startDate, $endDate),
                 'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $freelancer->dayServices?->groupBy('pivot.date'),
                 'individual_times' => $freelancer->individualTimes()->with(['series'])

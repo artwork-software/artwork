@@ -1854,6 +1854,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //tab.sidebar.store
             Route::post('/{projectTab}/store', [ProjectTabSidebarTabController::class, 'store'])
                 ->name('tab.sidebar.store');
+            //sidebar.tab.destroy
+            Route::delete('/{projectTabSidebarTab}/destroy', [ProjectTabSidebarTabController::class, 'destroy'])
+                ->name('sidebar.tab.destroy');
             //sidebar.tab.update.component.order
             Route::post('/{projectTabSidebarTab}/update/component/order', [
                 ProjectTabSidebarTabController::class,
@@ -2017,6 +2020,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Nutzungsdaten für UsageModal eines Artikels an einem Tag
         Route::get('/articles/usage', [InventoryArticleController::class, 'usageData'])
             ->name('inventory.articles.usage');
+
+        // Update user's inventory grid layout preference
+        Route::post('/update-grid-layout', [InventoryCategoryController::class, 'updateInventoryGridLayout'])
+            ->name('inventory.update-grid-layout');
     });
 
 
@@ -2581,6 +2588,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/change-request/{workTimeChangeRequest}/decline',
             [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'decline']
         )->name('worktime.change-request.decline');
+
+        // worktime.change-request.destroy
+        Route::delete(
+            '/change-request/{workTimeChangeRequest}',
+            [\Artwork\Modules\WorkTime\Http\Controllers\WorkTimeChangeRequestController::class, 'destroy']
+        )->name('worktime.change-request.destroy');
     });
 
 

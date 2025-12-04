@@ -1,5 +1,5 @@
 <template>
-    <div id="myCalendar" ref="calendarRef" class="bg-white">
+    <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-auto h-screen' : ''">
         <!-- Topbar -->
         <div class="w-full left-8 top-0 px-5 fixed z-40">
             <FunctionBarCalendar
@@ -908,6 +908,12 @@ onMounted(async () => {
         cancelAllExcept(targets);
         await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
     }
+
+    // Listen for fullscreen changes to reset isFullscreen when exiting
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
 });
 
 onBeforeUnmount(() => {
@@ -915,6 +921,12 @@ onBeforeUnmount(() => {
     monthObserver = null;
     monthSentinelSeen.value.clear();
     cancelAllExcept([]);
+
+    // Remove fullscreen event listeners
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('msfullscreenchange', handleFullscreenChange);
 });
 
 // ---------- Multi-Edit etc. ----------
@@ -991,6 +1003,11 @@ const openFullscreen = () => {
     else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
     else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
     isFullscreen.value = true;
+};
+const handleFullscreenChange = () => {
+    // Check if still in fullscreen mode
+    const isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    isFullscreen.value = isCurrentlyFullscreen;
 };
 const closeMultiEditModal = (closedOnPurpose) => { showMultiEditModal.value = false; if (closedOnPurpose) toggleMultiEdit(false); };
 const closeMultiDuplicateModal = (closedOnPurpose) => { showMultiDuplicateModal.value = false; if (closedOnPurpose) toggleMultiEdit(false); };

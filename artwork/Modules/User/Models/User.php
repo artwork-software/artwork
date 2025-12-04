@@ -227,6 +227,7 @@ class User extends Model implements
         'drawer_height',
         'inventory_sort_column_id',
         'inventory_sort_direction',
+        'inventory_grid_layout',
         'checklist_has_projects',
         'checklist_no_projects',
         'checklist_private_checklists',
@@ -264,6 +265,7 @@ class User extends Model implements
         'notification_enums_last_sent_dates' => 'array',
         'show_notification_indicator' => 'boolean',
         'is_freelancer' => 'boolean',
+        'inventory_grid_layout' => 'boolean',
         'checklist_has_projects' => 'boolean',
         'checklist_no_projects' => 'boolean',
         'checklist_private_checklists' => 'boolean',
@@ -728,8 +730,15 @@ class User extends Model implements
 
     public function getCurrentWorkTime(): ?UserWorkTime
     {
+        $now = now();
         return $this->workTimes()
-            ->where('is_active', true)
+            ->where(function ($q) use ($now): void {
+                $q->whereNull('valid_from')->orWhere('valid_from', '<=', $now);
+            })
+            ->where(function ($q) use ($now): void {
+                $q->whereNull('valid_until')->orWhere('valid_until', '>=', $now);
+            })
+            ->orderByDesc('valid_from')
             ->first();
     }
 

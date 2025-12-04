@@ -40,12 +40,11 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         BaseModal,
         FormButton,

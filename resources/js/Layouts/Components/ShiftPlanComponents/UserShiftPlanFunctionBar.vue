@@ -9,17 +9,17 @@
                 <div class="flex items-center">
                     <div class="flex items-center">
                         <button class="ml-2 text-black" @click="previousTimeRange">
-                            <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-primary"/>
+                            <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-5 w-5 text-primary"/>
                         </button>
                         <button class="ml-2 text-black" @click="nextTimeRange">
-                            <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-primary"/>
+                            <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-5 w-5 text-primary"/>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="flex items-center" v-if="checkIfThisIsMe">
                 <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                    <PropertyIcon name="IconCalendarStar" class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
                     {{ $t('Subscribe to shift calendar') }}
                 </div>
             </div>
@@ -47,12 +47,14 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
         CalendarAboInfoModal,
         CalendarAboSettingModal,
         BaseFilterTag,

@@ -35,17 +35,15 @@
 
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 export default {
     name: "ConfirmDeleteModal",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         ArtworkBaseModal,
         BaseAlertComponent,
@@ -55,7 +53,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel
+        DialogPanel
     },
     data(){
         return {

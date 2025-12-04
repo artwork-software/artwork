@@ -1,7 +1,7 @@
 <template>
     <div class="my-2 px-1" @click="openTextField" v-if="!showTextField && $can('can plan shifts') || hasAdminRole()">
         <div v-if="shift.description?.length === 0 || shift.description === null && !showTextField">
-            <IconNote class="w-4 h-4 cursor-pointer text-artwork-buttons-context" />
+            <PropertyIcon name="IconNote" class="w-4 h-4 cursor-pointer text-artwork-buttons-context" />
         </div>
         <p v-else-if="!showTextField" class="text-xs cursor-pointer">
             {{ cutDescription }}
@@ -22,10 +22,11 @@ import IconLib from "@/Mixins/IconLib.vue";
 import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ShiftNoteComponent",
-    components: {BaseTextarea},
+    components: {PropertyIcon, BaseTextarea},
     props: {
         shift: {
             type: Object,

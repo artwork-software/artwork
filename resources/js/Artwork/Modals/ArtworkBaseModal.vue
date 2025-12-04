@@ -27,17 +27,17 @@
                                             <div class="flex items-center gap-x-3">
                                                 <div class="" @click="showBackdrop = !showBackdrop">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')" classes-button="ui-button"/>
+                                                        <ToolTipComponent icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')" classes-button="ui-button"/>
                                                     </div>
                                                 </div>
                                                 <div ref="dragHandleRef">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconDragDrop" :tooltip-text="$t('Hold here to move')"  classes-button="ui-button hover:!bg-yellow-50"/>
+                                                        <ToolTipComponent icon="IconDragDrop" :tooltip-text="$t('Hold here to move')"  classes-button="ui-button hover:!bg-yellow-50"/>
                                                     </div>
                                                 </div>
                                                 <div class="" @click="$emit('close')">
                                                     <div>
-                                                        <ToolTipComponent :icon="IconX" :tooltip-text="$t('Close Window')" classes="!text-red-500" classes-button="ui-button hover:!bg-red-50 !text-red-500"/>
+                                                        <ToolTipComponent icon="IconX" :tooltip-text="$t('Close Window')" classes="!text-red-500" classes-button="ui-button hover:!bg-red-50 !text-red-500"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -61,7 +61,6 @@
 import {nextTick, ref} from "vue";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconDragDrop, IconTexture, IconX} from "@tabler/icons-vue";
 
 
 const props = defineProps({

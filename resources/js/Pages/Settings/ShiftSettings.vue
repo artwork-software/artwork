@@ -17,7 +17,7 @@
                             :tooltip-text="$t('Duty roster release workflow')"
                             size="md"
                             @change="changeShiftCommitWorkflow"
-                            :icon="IconCheck"
+                            icon="IconCheck"
                         />
                     </div>
 
@@ -33,7 +33,7 @@
 
 
                         <div>
-                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex items-center gap-4 mt-3">
+                            <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex flex-wrap items-center gap-4 mt-3">
                                 <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
                                     <div class="flex items-center">
                                         <div>
@@ -44,7 +44,7 @@
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
-                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                                <PropertyIcon name="XIcon" class="h-4 w-4 text-gray-400 hover:text-error" />
                                             </button>
                                         </div>
                                     </div>
@@ -124,7 +124,7 @@
                                                                             class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ring-inset
                                                      ring-zinc-200 bg-zinc-50 text-zinc-700"
                                                                         >
-                                              <IconUsersGroup class="size-3.5" />
+                                              <PropertyIcon name="IconUsersGroup" class="size-3.5" />
                                               <span v-if="element.assignable_by_all">
                                                 {{ $t('Assignable by all schedulers') }}
                                               </span>
@@ -157,7 +157,7 @@
                                             </p>
 
                                             <p class="leading-5 flex items-center gap-1.5">
-                                                <IconBell class="size-3.5 shrink-0" />
+                                                <PropertyIcon name="IconBell" class="size-3.5 shrink-0" />
                                                 <span v-if="element.notify_days > 0">
                                                     {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [element.notify_days]) }}
                                                 </span>
@@ -378,9 +378,9 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-x-3">
-                                <IconEdit stroke-width="1.5" class="h-5 w-5 cursor-pointer" aria-hidden="true" @click="openAddEditShiftPresetModal(shiftTimePreset)"/>
+                                <PropertyIcon name="IconEdit" stroke-width="1.5" class="h-5 w-5 cursor-pointer" aria-hidden="true" @click="openAddEditShiftPresetModal(shiftTimePreset)"/>
 
-                                <IconTrash stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteShiftTimePresetModal(shiftTimePreset)"/>
+                                <PropertyIcon name="IconTrash" stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteShiftTimePresetModal(shiftTimePreset)"/>
                             </div>
                         </li>
                     </ul>
@@ -634,7 +634,10 @@ export default defineComponent({
         IconPlus,
         IconGripVertical,
         addUserToWorkflow(user) {
-            if (this.userForWorkflowForm.processing || this.userForWorkflowForm.users.includes(user.id)) {
+            // Check if user already exists in shiftCommitWorkflowUsers prop
+            const userAlreadyExists = this.shiftCommitWorkflowUsers.some(workflowUser => workflowUser.user.id === user.id);
+
+            if (this.userForWorkflowForm.processing || userAlreadyExists) {
                 console.warn('User is already in the workflow or form is processing.');
                 return;
             }

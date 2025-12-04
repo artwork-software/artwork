@@ -451,7 +451,7 @@ const navigation = ref([
         current: true,
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+        has_permission: moduleIsVisible('shift_plan'),
         prefetch: false,
         subMenus: [
             {
@@ -459,14 +459,14 @@ const navigation = ref([
                 href: route('shifts.plan'),
                 icon: 'IconCalendarUser',
                 current: route().current('shifts.plan'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
             },
             {
                 name: 'My Operational plan',
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: moduleIsVisible('shift_plan'),
             },
             /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {
@@ -482,7 +482,7 @@ const navigation = ref([
                 href: route('work-time-request.index'),
                 icon: 'IconTimelineEventPlus',
                 current: route().current('work-time-request.index'),
-                has_permission: can('can view shift plan') || moduleIsVisible('shift_plan') || is('artwork admin'),
+                has_permission: moduleIsVisible('shift_plan'),
             },
 
             // --- NEU: Prüfungsanfragen ---
@@ -563,7 +563,7 @@ const navigation = ref([
         current: route().current('money_sources.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit add money_sources | can edit and delete money sources') || moduleIsVisible('sources_of_funding'),
+        has_permission: moduleIsVisible('sources_of_funding') && (can('view edit add money_sources | can edit and delete money sources') || is('artwork admin')),
         prefetch: false,
     },
     {
@@ -583,7 +583,7 @@ const navigation = ref([
         current: route().current('contracts.index'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: can('view edit upload contracts | can see and download contract modules') || moduleIsVisible('contracts'),
+        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules') || is('artwork admin')),
         prefetch: false,
     },
     {

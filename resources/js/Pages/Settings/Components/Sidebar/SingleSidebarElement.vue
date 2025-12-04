@@ -7,11 +7,9 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import DropNewComponent from "@/Pages/Settings/Components/DropNewComponent.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import { MenuItem } from "@headlessui/vue";
 
 import {
     IconChevronDown,
-    IconChevronUp,
     IconEdit,
     IconTrash,
     IconDragDrop,
@@ -22,6 +20,8 @@ const props = defineProps({
     tab: { type: Object, required: true },
     sidebarTab: { type: Object, required: true },
 });
+
+const emit = defineEmits(['saved']);
 
 const tabClosed = ref(false);
 const dragging = ref(false);
@@ -45,21 +45,58 @@ function onDragStart(event) {
 }
 
 function removeComponentFromSidebar(id) {
-    router.delete(route("sidebar.component.remove", { sidebarTabComponent: id }), {
-        preserveState: true,
-        preserveScroll: true,
-    });
+    if (confirm('Möchten Sie diese Komponente aus dem Sidebar-Tab entfernen?')) {
+        router.delete(route("sidebar.component.remove", { sidebarTabComponent: id }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                console.log('Komponente erfolgreich aus Sidebar entfernt');
+                router.reload({ only: ['tabs'] });
+            },
+            onError: (errors) => {
+                console.error('Fehler beim Entfernen der Komponente:', errors);
+            }
+        });
+    }
 }
 
 function updateComponentOrder(components) {
-    components.forEach((c, i) => (c.order = i + 1));
+    console.log('🔄 updateComponentOrder aufgerufen');
+    console.log('   - Anzahl Komponenten:', components.length);
+    console.log('   - Sidebar-Tab ID:', props.sidebarTab.id);
+
+    components.forEach((c, i) => {
+        c.order = i + 1;
+        console.log(`   - Komponente ${c.id}: Order = ${c.order}`);
+    });
+
     const minimal = components.map((c) => ({ id: c.id, order: c.order }));
+    console.log('📤 Sende Daten:', minimal);
+
+    const routeUrl = route("sidebar.tab.update.component.order", {
+        projectTabSidebarTab: props.sidebarTab.id,
+    });
+    console.log('🌐 Route URL:', routeUrl);
+
     router.post(
-        route("sidebar.tab.update.component.order", {
-            projectTabSidebarTab: props.sidebarTab.id,
-        }),
+        routeUrl,
         { components: minimal },
-        { preserveScroll: true }
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onStart: () => {
+                console.log('⏳ Request gestartet...');
+            },
+            onSuccess: (page) => {
+                console.log('✅ Reihenfolge erfolgreich aktualisiert');
+                console.log('📄 Response:', page);
+            },
+            onError: (errors) => {
+                console.error('❌ Fehler beim Aktualisieren der Reihenfolge:', errors);
+            },
+            onFinish: () => {
+                console.log('🏁 Request abgeschlossen');
+            }
+        }
     );
 }
 
@@ -72,9 +109,37 @@ function editTab() {
 }
 
 function removeTab() {
-    router.delete(
-        route("sidebar.tab.destroy", { projectTabSidebarTab: props.sidebarTab.id })
-    );
+    if (confirm('Möchten Sie diesen Sidebar-Tab wirklich löschen?')) {
+        router.delete(
+            route("sidebar.tab.destroy", { projectTabSidebarTab: props.sidebarTab.id }),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload({ only: ['tabs'] });
+                }
+            }
+        );
+    }
+}
+
+function handleSaved() {
+    showAddEditModal.value = false;
+    emit('saved');
+}
+
+function removeDisclosureComponent(id) {
+    if (confirm('Möchten Sie diese Komponente aus dem Ordner entfernen?')) {
+        router.delete(route("sidebar.disclosure.component.remove", { disclosureComponent: id }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                console.log('✅ Komponente erfolgreich aus Ordner entfernt');
+                router.reload({ only: ['tabs'] });
+            },
+            onError: (errors) => {
+                console.error('❌ Fehler beim Entfernen der Komponente aus Ordner:', errors);
+            }
+        });
+    }
 }
 </script>
 
@@ -155,35 +220,56 @@ function removeTab() {
                         @mouseout="showMenu = null"
                     >
                         <div
-                            class="flex items-center justify-between gap-3 rounded-xl border border-zinc-200/80 bg-white/60 px-4 py-4 transition"
+                            class="rounded-xl border border-zinc-200/80 bg-white/60 transition"
                             :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
                         >
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0">
-                                    <ComponentIcons :type="element.component.type" />
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="text-sm font-semibold text-zinc-900 truncate">
-                                        {{ element.component.name }}
+                            <!-- Hauptkomponente -->
+                            <div class="flex items-center justify-between gap-3 px-4 py-4">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <!-- Disclosure-Icon (wenn DisclosureComponent) -->
+                                    <button
+                                        v-if="element.component.type === 'DisclosureComponent'"
+                                        @click="disclosureOpen[element.id] = !disclosureOpen[element.id]"
+                                        class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0 hover:bg-zinc-50 transition"
+                                        :aria-expanded="disclosureOpen[element.id]"
+                                    >
+                                        <IconChevronDown
+                                            class="h-4 w-4 text-zinc-600 transition-transform duration-200"
+                                            :class="{'-rotate-180': disclosureOpen[element.id]}"
+                                        />
+                                    </button>
+                                    <!-- Normales Icon -->
+                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0">
+                                        <ComponentIcons :type="element.component.type" />
                                     </div>
-                                    <div class="text-[11px] text-zinc-500">
-                                        {{ $t(element.component.type) }}
-                                        <template v-if="element.component?.data?.height !== undefined">
-                                            · {{ element.component.data.height }} px
-                                        </template>
-                                        <template v-if="element.component?.data?.showLine === true">
-                                            · {{ $t('Show a separator line') }}
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="flex items-center gap-2 shrink-0">
-                                <IconDragDrop class="h-5 w-5 text-zinc-400 invisible group-hover:visible" aria-hidden="true" />
-                                <div class="invisible group-hover:visible">
-                                    <BaseMenu has-no-offset white-menu-background>
-                                        <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />
-                                    </BaseMenu>
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-semibold text-zinc-900 truncate">
+                                            {{ element.component.name }}
+                                        </div>
+                                        <div class="text-[11px] text-zinc-500">
+                                            {{ $t(element.component.type) }}
+                                            <template v-if="element.component?.data?.height !== undefined">
+                                                · {{ element.component.data.height }} px
+                                            </template>
+                                            <template v-if="element.component?.data?.showLine === true">
+                                                · {{ $t('Show a separator line') }}
+                                            </template>
+                                            <!-- Zeige Anzahl der Komponenten in Disclosure -->
+                                            <template v-if="element.component.type === 'DisclosureComponent' && element.component.disclosure_components?.length">
+                                                · {{ element.component.disclosure_components.length }} {{ $t('components in folder') }}
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <IconDragDrop class="h-5 w-5 text-zinc-400 invisible group-hover:visible" aria-hidden="true" />
+                                    <div class="invisible group-hover:visible">
+                                        <BaseMenu has-no-offset white-menu-background>
+                                            <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />
+                                        </BaseMenu>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -206,9 +292,10 @@ function removeTab() {
     <!-- Modal: Add/Edit Sidebar-Tab -->
     <AddEditSidebarTab
         v-if="showAddEditModal"
-        :tab="null"
+        :tab="tab"
         :tab-to-edit="sidebarTab"
         @close="showAddEditModal = false"
+        @saved="handleSaved"
     />
 </template>
 

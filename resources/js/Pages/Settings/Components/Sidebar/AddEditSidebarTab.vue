@@ -1,81 +1,91 @@
-<script>
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import {XIcon} from "@heroicons/vue/solid";
+<script setup>
 import {useForm} from "@inertiajs/vue3";
+import {ref, computed} from "vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
-export default {
-    name: "AddEditSidebarTab",
-    mixins: [IconLib],
-    components: {
-        BaseInput,
-        BaseUIButton,
-        ArtworkBaseModal,
-        FormButton,
-        Dialog,
-        DialogTitle,
-        TransitionChild,
-        TransitionRoot,
-        XIcon, DialogPanel
+const props = defineProps({
+    tabToEdit: {
+        type: Object,
+        default: null
     },
-    emits: ['close'],
-    props: ['tabToEdit', 'tab'],
-    data(){
-        return {
-            open: true,
-            tabForm: useForm({
-                name: this.tabToEdit ? this.tabToEdit.name : '',
-            })
-        }
-    },
-    methods: {
-        closeModal(bool){
-            this.$emit('close', bool)
-        },
-        saveTab() {
-            if (this.tabToEdit) {
-                this.tabForm.patch(route('tab.sidebar.update', {projectTabSidebarTab: this.tabToEdit.id}), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal(false);
-                    },
-                })
-            } else {
-                this.tabForm.post(route('tab.sidebar.store', {projectTab: this.tab.id}),
-                    {
-                        preserveState: true,
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            this.closeModal(false);
-                        },
-                    });
-            }
-        }
+    tab: {
+        type: Object,
+        required: true
     }
-}
+});
+
+const emit = defineEmits(['close', 'saved']);
+
+const tabForm = useForm({
+    name: props.tabToEdit ? props.tabToEdit.name : '',
+});
+
+const isEditing = computed(() => !!props.tabToEdit);
+
+const closeModal = () => {
+    emit('close');
+};
+
+const saveTab = () => {
+    if (!tabForm.name || tabForm.name.trim() === '') {
+        tabForm.setError('name', 'Der Name darf nicht leer sein');
+        return;
+    }
+
+    if (isEditing.value) {
+        tabForm.patch(
+            route('tab.sidebar.update', {projectTabSidebarTab: props.tabToEdit.id}),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    emit('saved');
+                    closeModal();
+                },
+                onError: (errors) => {
+                    console.error('Fehler beim Update:', errors);
+                }
+            }
+        );
+    } else {
+        tabForm.post(
+            route('tab.sidebar.store', {projectTab: props.tab.id}),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    emit('saved');
+                    closeModal();
+                },
+                onError: (errors) => {
+                    console.error('Fehler beim Erstellen:', errors);
+                }
+            }
+        );
+    }
+};
 </script>
 
 <template>
 
     <ArtworkBaseModal :title="tabToEdit ? $t('Rename sidebar tab') : $t('Create sidebar tab')" description="" @close="closeModal">
         <div>
-            <BaseInput v-model="tabForm.name" name="email" id="email" label="Name" />
-
+            <BaseInput v-model="tabForm.name" name="name" id="sidebar-tab-name" label="Name" />
+            <div v-if="tabForm.errors.name" class="mt-1 text-sm text-red-600">
+                {{ tabForm.errors.name }}
+            </div>
         </div>
         <div class="flex justify-between mt-5 items-center">
             <BaseUIButton
-                @click="saveTab(true)"
+                @click="saveTab"
                 is-add-button
+                :disabled="tabForm.processing"
                 :label="tabToEdit ? $t('Edit') : $t('Create')" />
 
             <BaseUIButton
-                @click="closeModal"
+                @click="closeModal(false)"
                 is-cancel-button
+                :disabled="tabForm.processing"
                 :label="$t('No, not really')" />
         </div>
     </ArtworkBaseModal>

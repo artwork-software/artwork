@@ -1692,6 +1692,7 @@
     "Project Documents": "Dokumente",
     "Project Title": "Projekttitel",
     "Special components": "Spezielle Komponenten",
+    "Spezielle Komponenten können nicht in einen Sidebar-Tab gelegt werden": "Spezielle Komponenten können nicht in einen Sidebar-Tab gelegt werden",
     "Import individual booking days again. Existing data is overwritten with new data.": "Importiere einzelne Buchungstage erneut. Vorhandene Daten werden mit neuen Daten überschrieben.",
     "Please configure the Sage interface first.": "Bitte konfiguriere zunächst die Sage-Schnittstelle.",
     "Import a specific booking date": "Bestimmten Buchungstag importieren",

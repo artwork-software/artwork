@@ -2,7 +2,7 @@
     <div class="rounded-xl p-4 mb-5 border cursor-default" :class="bgClass">
         <div class="flex gap-x-3 items-center">
             <div class="shrink-0">
-                <PropertyIcon name="iconClass" class="size-5" :class="iconTextClass" aria-hidden="true" />
+                <PropertyIcon :name="iconClass" class="size-5" :class="iconTextClass" aria-hidden="true" />
             </div>
             <div class="">
                 <p class="text-xs" :class="textClass">

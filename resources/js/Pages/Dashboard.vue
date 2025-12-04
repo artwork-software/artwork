@@ -35,19 +35,19 @@
                         <!-- Quicklinks -->
                         <nav class="grid grid-cols-2 sm:flex gap-2">
                             <a :href="route('events')" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition">
-                                <component :is="IconCalendarMonth" class="size-4" />
+                                <PropertyIcon name="IconCalendarMonth" class="size-4" />
                                 {{ $t('Calendar') }}
                             </a>
                             <a v-if="canViewShifts" :href="route('shifts.plan')" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition">
-                                <component :is="IconCalendarUser" class="size-4" />
+                                <PropertyIcon name="IconCalendarUser" class="size-4" />
                                 {{ $t('Shift plan') }}
                             </a>
                             <a :href="route('tasks.own')" class="inline-flex items-center gap-2 rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-2 text-xs text-fuchsia-700 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition">
-                                <component :is="IconListCheck" class="size-4" />
+                                <PropertyIcon name="IconListCheck" class="size-4" />
                                 {{ $t('Tasks') }}
                             </a>
                             <a :href="route('notifications.index')" class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition">
-                                <component :is="IconBell" class="size-4" />
+                                <PropertyIcon name="IconBell" class="size-4" />
                                 {{ $t('Notifications') }}
                             </a>
                         </nav>
@@ -64,7 +64,7 @@
                             <p class="mt-1 text-3xl font-semibold">{{ eventsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-300/15 flex items-center justify-center">
-                            <component :is="IconCalendarMonth" class="size-5 text-indigo-600" />
+                            <PropertyIcon name="IconCalendarMonth" class="size-5 text-indigo-600" />
                         </div>
                     </div>
                     <p class="mt-2 text-xs text-gray-500">{{ $t('All scheduled appointments today.') }}</p>
@@ -77,7 +77,7 @@
                             <p class="mt-1 text-3xl font-semibold">{{ shiftsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-300/15 flex items-center justify-center">
-                            <component :is="IconCalendarUser" class="size-5 text-emerald-600" />
+                            <PropertyIcon name="IconCalendarUser" class="size-5 text-emerald-600" />
                         </div>
                     </div>
                     <p class="mt-2 text-xs text-gray-500">{{ $t('Your shifts at a glance.') }}</p>
@@ -90,7 +90,7 @@
                             <p class="mt-1 text-3xl font-semibold">{{ notificationsCountToday }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-300/15 flex items-center justify-center">
-                            <component :is="IconBell" class="size-5 text-amber-600" />
+                            <PropertyIcon name="IconBell" class="size-5 text-amber-600" />
                         </div>
                     </div>
                     <p class="mt-2 text-xs text-gray-500">{{ $t('Current notices & news.') }}</p>
@@ -103,7 +103,7 @@
                             <p class="mt-1 text-3xl font-semibold">{{ openTasksCount }}</p>
                         </div>
                         <div class="size-10 rounded-xl bg-gradient-to-br from-fuchsia-500/15 to-pink-300/15 flex items-center justify-center">
-                            <component :is="IconListCheck" class="size-5 text-fuchsia-600" />
+                            <PropertyIcon name="IconListCheck" class="size-5 text-fuchsia-600" />
                         </div>
                     </div>
                     <p class="mt-2 text-xs text-gray-500">{{ $t('The next due to-dos.') }}</p>
@@ -122,7 +122,7 @@
                                 <p class="text-xs text-gray-500">{{ $t('Quick overview of all appointments of the day') }}</p>
                             </div>
                             <a :href="route('events')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
-                                <component :is="IconCalendarMonth" class="size-4" /> {{ $t('to calendar') }}
+                                <PropertyIcon name="IconCalendarMonth" class="size-4" /> {{ $t('to calendar') }}
                             </a>
                         </div>
 
@@ -155,7 +155,7 @@
                                         <div class="break-keep">
                                             <button @click="openCalendarWithEventId(event)" class="inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800 break-keep">
                                                 {{ $t('Open in calendar') }}
-                                                <ChevronRightIcon class="h-3 w-3" />
+                                                <PropertyIcon name="ChevronRightIcon" class="h-3 w-3" />
                                             </button>
                                         </div>
                                     </div>
@@ -176,7 +176,7 @@
                                 <p class="text-xs text-gray-500">{{ $t('Your shifts today') }}</p>
                             </div>
                             <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
-                                <component :is="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
+                                <PropertyIcon name="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
                             </a>
                         </div>
 
@@ -256,7 +256,7 @@
 
                         <div class="px-5 pb-5">
                             <a :href="route('notifications.index')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
-                                <component :is="IconBell" class="size-4" /> {{ $t('Go to the notifications') }}
+                                <PropertyIcon name="IconBell" class="size-4" /> {{ $t('Go to the notifications') }}
                             </a>
                         </div>
                     </div>
@@ -269,7 +269,7 @@
                                 <p class="text-xs text-gray-500">{{ $t('Your open to-dos') }}</p>
                             </div>
                             <a :href="route('tasks.own')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
-                                <component :is="IconListCheck" class="size-4" /> {{ $t('To the task overview') }}
+                                <PropertyIcon name="IconListCheck" class="size-4" /> {{ $t('To the task overview') }}
                             </a>
                         </div>
 
@@ -307,7 +307,7 @@
                                     class="mt-2 inline-flex items-center gap-1 text-[11px] text-indigo-700 hover:text-indigo-800"
                                 >
                                     {{ task.projectName }}
-                                    <ChevronRightIcon class="h-3 w-3" />
+                                    <PropertyIcon name="ChevronRightIcon" class="h-3 w-3" />
                                     {{ task.checklistName }}
                                 </Link>
                             </div>
@@ -337,6 +337,7 @@ import { is, can } from 'laravel-permission-to-vuejs'
 import { ChevronRightIcon } from '@heroicons/vue/solid'
 import { IconBell, IconCalendarMonth, IconCalendarUser, IconListCheck } from '@tabler/icons-vue'
 import calendarComponent from "@/Layouts/Components/CalendarComponent.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 defineOptions({ mixins: [Permissions] })
 

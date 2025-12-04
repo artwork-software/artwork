@@ -2,7 +2,7 @@
     <ChecklistTemplatesHeader :title="$t('Checklist templates')" :description="$t('Create and manage templates for checklists that can be reused across projects.')">
         <template #actions>
             <Link :href="route('checklist_templates.create')" class="ui-button-add">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <PropertyIcon name="IconPlus" stroke-width="1" class="size-5" />
                 {{ $t('New template') }}
             </Link>
         </template>
@@ -60,12 +60,14 @@ import ChecklistTemplatesHeader from "@/Pages/ChecklistTemplates/Components/Chec
 import SingleChecklistTemplateListView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateListView.vue";
 import SingleChecklistTemplateGridView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateGridView.vue";
 import {IconPlus} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        PropertyIcon,
         SingleChecklistTemplateGridView,
         SingleChecklistTemplateListView,
         ChecklistTemplatesHeader,

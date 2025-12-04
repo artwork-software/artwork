@@ -21,7 +21,7 @@
       </span>
 
             <div class="ml-auto flex items-center gap-2">
-                <IconLock v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
+                <PropertyIcon name="IconLock" v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
                 <button
                     v-if="project"
                     type="button"
@@ -38,7 +38,7 @@
                     @click="showRequestWorkTimeChangeModal = true"
                     :aria-label="$t('Request work time change')"
                 >
-                    <IconClockEdit class="h-5 w-5" stroke-width="1.5" />
+                    <PropertyIcon name="IconClockEdit" class="h-5 w-5" stroke-width="1.5" />
                 </button>
             </div>
         </div>
@@ -146,6 +146,7 @@ import ShiftNoteComponent from '@/Layouts/Components/ShiftNoteComponent.vue'
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import RequestWorkTimeChangeModal from '@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue'
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const percentage = usePage().props.high_contrast_percent
 const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper()

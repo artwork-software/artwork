@@ -15,8 +15,8 @@
 
     <div class="fixed top-44 right-0 cursor-pointer z-100 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="updateShow">
         <div class="bg-artwork-navigation-background px-2 py-1.5 flex items-center rounded-l-lg">
-            <IconChevronsLeft class="w-5 h-5 xsLight" v-if="!show"/>
-            <IconChevronsRight class="w-5 h-5 xsLight" v-else/>
+            <PropertyIcon name="IconChevronsLeft" class="w-5 h-5 xsLight" v-if="!show"/>
+            <PropertyIcon name="IconChevronsRight" class="w-5 h-5 xsLight" v-else/>
         </div>
     </div>
 
@@ -27,10 +27,12 @@
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 export default {
     name: "BaseSidenav",
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
         Dialog,
         DialogPanel,
         DialogTitle,

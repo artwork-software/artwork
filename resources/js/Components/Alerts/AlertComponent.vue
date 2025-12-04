@@ -74,7 +74,7 @@ const textColor = computed(() => {
 
 <template>
     <div class="flex items-start gap-x-1" :class="[textColor, textSize, classes]">
-        <PropertyIcon name="icon" :class="iconSize" v-if="showIcon" />
+        <PropertyIcon :name="icon" :class="iconSize" v-if="showIcon" />
         <span v-if="text">
             {{ text }}
         </span>

@@ -608,31 +608,58 @@ function markBreakAsManuallyEdited(individualTime) {
     manualBreakEdits.value.set(timeKey, true);
 }
 
-// Watch for changes in start/end times to reset manual edit flag
-watch(
-    () => props.user.individual_times,
-    (newTimes, oldTimes) => {
-        if (!newTimes || !oldTimes) return;
-
-        newTimes.forEach((newTime, index) => {
-            const oldTime = oldTimes[index];
-            if (oldTime &&
-                (newTime.start_time !== oldTime.start_time || newTime.end_time !== oldTime.end_time)) {
-                // Times changed, reset manual edit flag
-                const timeKey = newTime.id || `${newTime.start_date}-${newTime.start_time}-${newTime.end_time}`;
-                manualBreakEdits.value.delete(timeKey);
-            }
-        });
-    },
-    { deep: true }
-);
-
 // IndividualTimes gefiltert nach Tag
 const individualTimesByDate = computed(() => {
     return (props.user.individual_times || []).filter((individual_time) =>
         individual_time.days_of_individual_time?.includes(props.day.withoutFormat),
     );
 });
+
+// Watch each individual time for start/end time changes to auto-calculate break
+watch(
+    () => props.user.individual_times?.map(it => ({
+        id: it.id,
+        start_time: it.start_time,
+        end_time: it.end_time,
+        start_date: it.start_date
+    })),
+    (newTimes, oldTimes) => {
+        if (!newTimes || !props.user.individual_times) return;
+
+        newTimes.forEach((newTime, index) => {
+            const oldTime = oldTimes?.[index];
+            const individualTime = props.user.individual_times[index];
+
+            if (!individualTime) return;
+
+            const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
+
+            // Check if start_time or end_time actually changed
+            const timesChanged = oldTime && (
+                newTime.start_time !== oldTime.start_time ||
+                newTime.end_time !== oldTime.end_time
+            );
+
+            // Only recalculate break_minutes when times actually changed
+            if (timesChanged) {
+                // Reset manual edit flag when times change
+                manualBreakEdits.value.delete(timeKey);
+
+                // Auto-calculate break_minutes if times are set
+                if (individualTime.start_time && individualTime.end_time) {
+                    const startRef = computed(() => individualTime.start_time);
+                    const endRef = computed(() => individualTime.end_time);
+                    const { breakMinutes } = useLegalBreak(startRef, endRef);
+
+                    if (breakMinutes.value !== individualTime.break_minutes) {
+                        individualTime.break_minutes = breakMinutes.value;
+                    }
+                }
+            }
+        });
+    },
+    { deep: true }
+);
 
 // Subject für Serien-Modal (Person)
 const currentSeriesSubject = computed(() => {
@@ -672,36 +699,6 @@ function dotClassForType(type) {
     if (type.type === 'NOT_AVAILABLE') return 'bg-rose-500';
     return 'bg-zinc-300';
 }
-
-// Watcher für automatische Pausenberechnung
-watch(
-    () => props.user.individual_times,
-    (newTimes) => {
-        if (!newTimes) return;
-
-        newTimes.forEach((individualTime) => {
-            if (individualTime.start_time && individualTime.end_time) {
-                // Create unique key for this individual time
-                const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
-
-                // Skip if user has manually edited this item's break time
-                if (manualBreakEdits.value.has(timeKey)) {
-                    return;
-                }
-
-                const startRef = computed(() => individualTime.start_time);
-                const endRef = computed(() => individualTime.end_time);
-                const { breakMinutes } = useLegalBreak(startRef, endRef);
-
-                // Nur setzen, wenn sich der berechnete Wert unterscheidet
-                if (breakMinutes.value !== individualTime.break_minutes) {
-                    individualTime.break_minutes = breakMinutes.value;
-                }
-            }
-        });
-    },
-    { deep: true }
-);
 
 // Initialer Vacation-Type
 onMounted(() => {

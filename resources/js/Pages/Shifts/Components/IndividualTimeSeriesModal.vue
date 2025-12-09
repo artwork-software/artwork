@@ -115,6 +115,23 @@
                                 />
                             </div>
                         </div>
+
+                        <!-- Break Minutes -->
+                        <div v-if="!form.full_day" class="space-y-1.5 pt-2 border-t border-zinc-100">
+                            <BaseInput
+                                id="series_break_minutes"
+                                v-model.number="form.break_minutes"
+                                type="number"
+                                :label="'Break time (minutes)'"
+                                :is-small="true"
+                                :min="0"
+                                :step="1"
+                                @input="userHasManuallyEditedBreak = true"
+                            />
+                            <p class="text-[11px] text-zinc-500 leading-snug">
+                                {{ infoText }}
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Recurrence -->
@@ -381,6 +398,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
+import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 type SubjectType = 'user' | 'freelancer' | 'service_provider';
@@ -411,6 +429,7 @@ const form = useForm({
     start_time: '',
     end_time: '',
     full_day: false,
+    break_minutes: 0,
     frequency: 'weekly',
     interval: 1 as number | string,
     weekdays: [1, 2, 3, 4, 5] as number[], // default Mon–Fri
@@ -423,6 +442,24 @@ const isSearching = ref(false);
 const searchTimeout = ref<number | null>(null);
 const isSubmitting = ref(false);
 const showDeleteModal = ref(false);
+const userHasManuallyEditedBreak = ref(false);
+
+// Setup automatic break calculation
+const startTimeRef = computed(() => form.start_time);
+const endTimeRef = computed(() => form.end_time);
+const { breakMinutes, infoText } = useLegalBreak(startTimeRef, endTimeRef);
+
+// Watch for automatic break calculation
+watch(breakMinutes, (newBreakMinutes) => {
+    if (!form.full_day && form.start_time && form.end_time && !userHasManuallyEditedBreak.value) {
+        form.break_minutes = newBreakMinutes;
+    }
+});
+
+// Reset manual edit flag when start or end time changes
+watch([startTimeRef, endTimeRef], () => {
+    userHasManuallyEditedBreak.value = false;
+});
 
 const weekdayOptions = [
     { value: 1, label: 'Mo' },
@@ -571,6 +608,7 @@ async function loadSeries(uuid: string) {
         form.start_time = data.start_time ?? '';
         form.end_time = data.end_time ?? '';
         form.full_day = Boolean(data.full_day);
+        form.break_minutes = data.break_minutes ?? 0;
         form.frequency = data.frequency ?? 'weekly';
         form.interval = data.interval ?? 1;
         form.weekdays = Array.isArray(data.weekdays) ? data.weekdays : [1, 2, 3, 4, 5];

@@ -527,9 +527,12 @@ function validateShiftDates() {
 
     const shiftStartDateTime = new Date(`${shiftForm.start_date}T${shiftForm.start}`)
     const shiftEndDateTime = new Date(`${shiftForm.end_date}T${shiftForm.end}`)
+    const shiftStartDateTimeMilliseconds = shiftStartDateTime.getTime();
+    const shiftEndDateTimeMilliseconds = shiftEndDateTime.getTime();
+
     let hasErrors = false
 
-    if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
+    if (((shiftEndDateTimeMilliseconds - shiftStartDateTimeMilliseconds) / 60000) > 600) {
         validationMessages.warnings.shift_start.push($t('The shift is over 10 hours long!'))
     }
 
@@ -567,9 +570,11 @@ function validateShiftBreak() {
 
     const shiftStartDateTime = new Date(`${shiftForm.start_date}T${shiftForm.start}`)
     const shiftEndDateTime = new Date(`${shiftForm.end_date}T${shiftForm.end}`)
+    const shiftStartDateTimeMilliseconds = shiftStartDateTime.getTime();
+    const shiftEndDateTimeMilliseconds = shiftEndDateTime.getTime();
     let hasErrors = false
 
-    if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 360 && shiftForm.break_minutes < 30) {
+    if (((shiftEndDateTimeMilliseconds - shiftStartDateTimeMilliseconds) / 60000) > 360 && shiftForm.break_minutes < 30) {
         validationMessages.warnings.break_length.push($t('The break is shorter than required by law!'))
     }
 

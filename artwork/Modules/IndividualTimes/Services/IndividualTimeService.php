@@ -25,7 +25,8 @@ class IndividualTimeService
         ?string $title,
         ?string $startTime,
         ?string $endTime,
-        string $date
+        string $date,
+        ?int $breakMinutes = 0
     ): bool {
         $isFullDay = false;
         if (!method_exists($modelInstance, 'individualTimes')) {
@@ -46,7 +47,8 @@ class IndividualTimeService
                 $endTime,
                 Carbon::parse($date)
             );
-            $workingTimeInMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+            $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+            $workingTimeInMinutes = max(0, $totalMinutes - ($breakMinutes ?? 0));
         } else {
             $startTimeConverted = Carbon::parse($date);
             $endTimeConverted = Carbon::parse($date);
@@ -63,6 +65,7 @@ class IndividualTimeService
             'end_date' => $endTimeConverted->format('Y-m-d'),
             'full_day' => $isFullDay,
             'working_time_minutes' => $workingTimeInMinutes,
+            'break_minutes' => $breakMinutes ?? 0,
         ];
         if (!empty($individualTime->series_uuid)) {
             $updateData['series_uuid'] = null;
@@ -75,7 +78,8 @@ class IndividualTimeService
         ?string $title,
         ?string $startTime,
         ?string $endTime,
-        string $date
+        string $date,
+        ?int $breakMinutes = 0
     ): IndividualTime {
         $isFullDay = false;
         if (!method_exists($modelInstance, 'individualTimes')) {
@@ -91,7 +95,8 @@ class IndividualTimeService
                 $endTime,
                 Carbon::parse($date)
             );
-            $workingTimeInMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+            $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+            $workingTimeInMinutes = max(0, $totalMinutes - ($breakMinutes ?? 0));
         } else {
             $startTimeConverted = Carbon::parse($date);
             $endTimeConverted = Carbon::parse($date);
@@ -107,6 +112,7 @@ class IndividualTimeService
             'end_date' => $endTimeConverted->format('Y-m-d'),
             'full_day' => $isFullDay,
             'working_time_minutes' => $workingTimeInMinutes,
+            'break_minutes' => $breakMinutes ?? 0,
         ];
 
         return $this->individualTimeRepository->createNewIndividualTime($modelInstance, $individualTimeObject);

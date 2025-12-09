@@ -183,6 +183,25 @@
                                                 icon="IconTrash"
                                             />
                                         </div>
+
+                                        <!-- Break Minutes -->
+                                        <div class="col-span-full mt-3 pt-3 border-t border-zinc-100">
+                                            <BaseInput
+                                                type="number"
+                                                :id="'break_minutes_' + index"
+                                                v-model.number="individual_time.break_minutes"
+                                                :label="t('Break time (minutes)')"
+                                                :show-label="false"
+                                                :min="0"
+                                                :step="1"
+                                                no-margin-top
+                                                class="max-w-xs"
+                                                @input="markBreakAsManuallyEdited(individual_time)"
+                                            />
+                                            <p class="text-[11px] text-zinc-500 mt-1.5 leading-snug">
+                                                {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
+                                            </p>
+                                        </div>
                                     </template>
 
                                     <!-- FALL 3: Zeit gehört zu einer Serie -->
@@ -239,6 +258,28 @@
                                         </div>
                                         <div class="text-[11px] text-gray-500 col-span-full mt-1">
                                             {{ t('This time belongs to a series. If you change it, it will be detached from the series.') }}
+                                        </div>
+
+                                        <!-- Break Minutes -->
+                                        <div class="col-span-full mt-3 pt-3 border-t border-zinc-100">
+                                            <label class="block text-[11px] font-medium text-zinc-500 mb-1.5">
+                                                {{ t('Break time (minutes)') }}
+                                            </label>
+                                            <BaseInput
+                                                type="number"
+                                                :id="'break_minutes_series_' + index"
+                                                v-model.number="individual_time.break_minutes"
+                                                :label="t('Break time (minutes)')"
+                                                :show-label="false"
+                                                :min="0"
+                                                :step="1"
+                                                no-margin-top
+                                                class="max-w-xs"
+                                                @input="markBreakAsManuallyEdited(individual_time)"
+                                            />
+                                            <p class="text-[11px] text-zinc-500 mt-1.5 leading-snug">
+                                                {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
+                                            </p>
                                         </div>
                                     </template>
                                 </div>
@@ -472,7 +513,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
     Listbox,
     ListboxButton,
@@ -492,6 +533,8 @@ import SingleShiftInShiftOverviewUser from '@/Pages/Shifts/Components/SingleShif
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import IndividualTimeSeriesModal from '@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue';
+import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
+import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 defineOptions({
@@ -556,12 +599,67 @@ const shiftPlanComment = ref(
     },
 );
 
+// Track manual edits for break_minutes per individual time
+const manualBreakEdits = ref(new Map());
+
+// Function to mark break time as manually edited
+function markBreakAsManuallyEdited(individualTime) {
+    const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
+    manualBreakEdits.value.set(timeKey, true);
+}
+
 // IndividualTimes gefiltert nach Tag
 const individualTimesByDate = computed(() => {
     return (props.user.individual_times || []).filter((individual_time) =>
         individual_time.days_of_individual_time?.includes(props.day.withoutFormat),
     );
 });
+
+// Watch each individual time for start/end time changes to auto-calculate break
+watch(
+    () => props.user.individual_times?.map(it => ({
+        id: it.id,
+        start_time: it.start_time,
+        end_time: it.end_time,
+        start_date: it.start_date
+    })),
+    (newTimes, oldTimes) => {
+        if (!newTimes || !props.user.individual_times) return;
+
+        newTimes.forEach((newTime, index) => {
+            const oldTime = oldTimes?.[index];
+            const individualTime = props.user.individual_times[index];
+
+            if (!individualTime) return;
+
+            const timeKey = individualTime.id || `${individualTime.start_date}-${individualTime.start_time}-${individualTime.end_time}`;
+
+            // Check if start_time or end_time actually changed
+            const timesChanged = oldTime && (
+                newTime.start_time !== oldTime.start_time ||
+                newTime.end_time !== oldTime.end_time
+            );
+
+            // Only recalculate break_minutes when times actually changed
+            if (timesChanged) {
+                // Reset manual edit flag when times change
+                manualBreakEdits.value.delete(timeKey);
+
+                // Auto-calculate break_minutes if times are set
+                if (individualTime.start_time && individualTime.end_time) {
+                    const startRef = computed(() => individualTime.start_time);
+                    const endRef = computed(() => individualTime.end_time);
+                    const { breakMinutes } = useLegalBreak(startRef, endRef);
+
+                    if (breakMinutes.value !== individualTime.break_minutes) {
+                        individualTime.break_minutes = breakMinutes.value;
+                    }
+                }
+            }
+        });
+    },
+    { deep: true }
+);
 
 // Subject für Serien-Modal (Person)
 const currentSeriesSubject = computed(() => {
@@ -671,6 +769,7 @@ function addIndividualTime() {
         start_time: '',
         end_time: '',
         start_date: props.day.withoutFormat,
+        break_minutes: 0,
         days_of_individual_time: [props.day.withoutFormat],
     });
 }

@@ -82,6 +82,7 @@ import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamMod
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import {IconEdit} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [
@@ -95,7 +96,8 @@ export default defineComponent({
         ProjectEditTeamModal,
         TeamTooltip,
         UserTooltip,
-        TeamIconCollection
+        TeamIconCollection,
+        IconEdit
     },
     props: {
         project: {

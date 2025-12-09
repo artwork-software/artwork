@@ -3677,5 +3677,7 @@
     "Loading calendar data...": "Lade Kalenderdaten...",
     "Loading...": "Lädt...",
     "Calendar data is not available.": "Kalenderdaten sind nicht verfügbar.",
-    "Select any Craft to show changes in shifts": "Wähle ein Gewerk aus, um Änderungen in Schichten anzuzeigen"
+    "Select any Craft to show changes in shifts": "Wähle ein Gewerk aus, um Änderungen in Schichten anzuzeigen",
+    "Break time (minutes)": "Pausezeit (Minuten)",
+    "This time will be deducted from the working hours when calculating the daily working time.": "Diese Zeit wird bei der Berechnung der täglichen Arbeitszeit von den Arbeitsstunden abgezogen."
 }

@@ -78,10 +78,12 @@ class IndividualTimeSeriesService
                 $fullDay = (bool) ($data['full_day'] ?? false);
                 $startTime = $fullDay ? null : ($data['start_time'] ?? null);
                 $endTime = $fullDay ? null : ($data['end_time'] ?? null);
+                $breakMinutes = $data['break_minutes'] ?? 0;
                 if ($startTime && $endTime) {
                     $startTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $endTimeConverted = \Illuminate\Support\Carbon::parse($date->toDateString() . ' ' . $endTime);
-                    $workingTimeInMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+                    $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+                    $workingTimeInMinutes = max(0, $totalMinutes - $breakMinutes);
                 } else {
                     $workingTimeInMinutes = 1440;
                 }
@@ -93,6 +95,7 @@ class IndividualTimeSeriesService
                     'end_time'              => $endTime,
                     'full_day'              => $fullDay,
                     'working_time_minutes'  => $workingTimeInMinutes,
+                    'break_minutes'         => $breakMinutes,
                     'series_uuid'           => $series->uuid,
                 ]);
             }

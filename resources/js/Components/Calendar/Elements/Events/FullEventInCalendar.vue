@@ -46,12 +46,36 @@
             {{ $t('Verification requested') }}
         </div>
 
+        <!-- Projektgruppen-Balken (nur wenn display_project_groups aktiv UND Projekt einer Gruppe zugeordnet ist) -->
+        <div
+            v-if="usePage().props.auth.user.calendar_settings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+            class="w-full rounded-t-lg px-2 py-1 border-b border-black/15"
+            :style="{
+                backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent'
+            }"
+        >
+            <div class="flex items-center gap-1.5 min-w-0">
+                <a
+                    :href="getEditHref(event.project.group[0].id)"
+                    class="block w-full truncate font-semibold text-xs text-black hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                >
+                    {{ event.project.group[0].name }}
+                </a>
+            </div>
+        </div>
+
         <!-- Projektname: eigener Balken oberhalb des Events -->
-        <div v-if="event.project?.name && event.project?.id" class="w-full px-2 py-1 border-b border-black/15">
+        <div
+            v-if="event.project?.name && event.project?.id"
+            class="w-full px-2 py-1 border-b border-black/15"
+            :style="{
+                backgroundColor: event.project?.isGroup && event.project?.color ? event.project.color + '40' : 'transparent'
+            }"
+        >
             <div
                 class="flex items-center gap-1.5 min-w-0"
                 :style="{
-                  color: getTextColorBasedOnBackground(
+                  color: event.project?.isGroup ? 'black' : getTextColorBasedOnBackground(
                     backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
                   )
                 }"

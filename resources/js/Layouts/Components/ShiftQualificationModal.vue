@@ -3,7 +3,7 @@
                       :description="descriptionText">
             <div class="mx-4">
                 <div class="flex items-center gap-4">
-                    <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
+                    <PropertyIcon name="IconSelector" @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
                     <!--<Menu as="div" class="relative col-span-1">
                         <div>
                             <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button mt-5">
@@ -85,6 +85,7 @@ import IconSelector from "@/Components/Icon/IconSelector.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -101,6 +102,7 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
+        PropertyIcon,
         BaseUIButton,
         ArtworkBaseModal,
         BaseInput,

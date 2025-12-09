@@ -230,8 +230,6 @@ class WorkingHourService
 
         // Eager load all necessary relationships for all workers at once
         $workers = $this->userRepository->getWorkers()->load([
-            'shifts',
-            'shifts.shiftGroup',
             'individualTimes' => function ($query) use ($startDate, $endDate): void {
                 $query->with(['series'])->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },
@@ -259,13 +257,8 @@ class WorkingHourService
             });
         }
 
-        // Precompute expected minutes for all users
-        $expectedMinutesCache = []; //$this->precomputeExpectedMinutes($workers, $startDate, $endDate);
-
-        // Precompute planned minutes for all users
-        $plannedMinutesCache = []; //$this->precomputePlannedMinutes($workers, $startDate, $endDate);
-
-        // Precompute weekly working hours for all users
+        $expectedMinutesCache = [];
+        $plannedMinutesCache = [];
         $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
 
         /** @var User $user */

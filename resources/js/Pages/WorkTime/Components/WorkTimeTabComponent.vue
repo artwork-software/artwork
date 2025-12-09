@@ -6,9 +6,12 @@
 
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import {ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
+import {usePermission} from "@/Composeables/Permission.js";
 
 const props = defineProps({})
 
+const { hasAdminRole, can } = usePermission(usePage().props);
 
 const tabs = ref([
     {
@@ -23,7 +26,7 @@ const tabs = ref([
         icon: 'IconGitPullRequest',
         href: route('work-time-request.received'),
         current: route().current('work-time-request.received'),
-        show: true
+        show: hasAdminRole() || can('can plan shifts')
     },
 ]);
 </script>

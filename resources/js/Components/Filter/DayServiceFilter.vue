@@ -1,13 +1,10 @@
 <script>
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {IconChevronDown} from "@tabler/icons-vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "DayServiceFilter",
     emits: ['update:currentSelectedDayService'],
-    mixins: [IconLib],
     props: {
         dayServices: {
             type: Array,
@@ -30,7 +27,7 @@ export default {
         }
     },
 
-    components: {PropertyIcon, Menu, MenuItems, IconChevronDown, MenuButton, MenuItem}
+    components: {PropertyIcon, Menu, MenuItems, MenuButton, MenuItem}
 }
 </script>
 
@@ -38,7 +35,7 @@ export default {
 <Menu as="div" class="relative inline-block text-left">
     <div>
         <MenuButton>
-            <IconChevronDown class="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
+            <PropertyIcon name="IconChevronDown" class="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
         </MenuButton>
     </div>
     <transition enter-active-class="transition-enter-active"

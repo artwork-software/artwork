@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, unref, type Component } from 'vue'
-import { IconTag } from '@tabler/icons-vue' // Fallback, sofort verfügbar
+import {IconTag} from "@tabler/icons-vue";
 
 // name kann String | Component | Ref davon sein
 const props = defineProps<{ name?: unknown }>()

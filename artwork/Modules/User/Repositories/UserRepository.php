@@ -70,9 +70,6 @@ class UserRepository extends BaseRepository
         return User::query()->canWorkShifts()->with(
             'dayServices',
             'shifts',
-            'shifts.event',
-            'shifts.event.room',
-            'departments',
             'shifts.shiftsQualifications',
             'shiftQualifications',
         )->get();

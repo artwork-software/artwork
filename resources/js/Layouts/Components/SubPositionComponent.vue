@@ -6,16 +6,16 @@
                     {{ subPosition.name }}
                 </div>
                 <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
-                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                 </button>
             </div>
             <div v-else class="flex w-full">
                 <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name"
                        @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
-                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
-                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                 </button>
             </div>
             <div class="flex items-center justify-end">
@@ -27,7 +27,7 @@
                                       v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
                                 <span @click="fixSubPosition(subPosition.id)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconLock stroke-width="1.5"
+                                    <PropertyIcon name="IconLock" stroke-width="1.5"
                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{ $t('Commitment') }}
@@ -38,7 +38,7 @@
                                       v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
                                 <span @click="unfixSubPosition(subPosition.id)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconLockOpen stroke-width="1.5"
+                                    <PropertyIcon name="IconLockOpen" stroke-width="1.5"
                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                   aria-hidden="true"/>
                                     {{ $t('Canceling a fixed term') }}
@@ -47,7 +47,7 @@
                             <MenuItem v-slot="{ active }">
                                 <span @click="openDeleteSubPositionModal(subPosition)"
                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconTrash stroke-width="1.5"
+                                    <PropertyIcon name="IconTrash" stroke-width="1.5"
                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                aria-hidden="true"/>
                                     {{ $t('Delete') }}
@@ -56,7 +56,7 @@
                             <MenuItem v-slot="{ active }">
                                 <a @click="duplicateSubpostion(subPosition.id)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconCopy stroke-width="1.5"
+                                    <PropertyIcon name="IconCopy" stroke-width="1.5"
                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                               aria-hidden="true"/>
                                     {{ $t('Duplicate') }}
@@ -106,7 +106,7 @@
                                                @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                                @focusout="this.handleBudgetManagementSearchBlur(cell)"
                                         />
-                                        <XIcon class="w-10 h-10 cursor-pointer"
+                                        <PropertyIcon name="XIcon" class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
                                         />
                                         <div v-if="cell.accountSearchResults" class="absolute w-64 z-20 top-10">
@@ -169,18 +169,18 @@
                                         <div class="cursor-pointer"
                                              @click="handleCellClick(cell, 'comment', index, row)"
                                              v-if="cell.comments_count > 0">
-                                            <IconMessageDots
+                                            <PropertyIcon name="IconMessageDots"
                                                 class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
-                                        <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)"
+                                        <PropertyIcon name="IconCalculator" @click="handleCellClick(cell, 'calculation', index, row)"
                                                         v-if="cell.calculations_count > 0"
                                                         class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconLink @click="handleCellClick(cell, 'moneysource', index, row)"
+                                        <PropertyIcon name="IconLink" @click="handleCellClick(cell, 'moneysource', index, row)"
                                                   v-if="cell.linked_money_source_id !== null"
                                                   class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconAbacus
+                                        <PropertyIcon name="IconAbacus"
                                             v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"/>
-                                        <IconAdjustmentsAlt v-if="cell.sage_assigned_data.length >= 1"
+                                        <PropertyIcon name="IconAdjustmentsAlt" v-if="cell.sage_assigned_data.length >= 1"
                                                             @click="handleCellClick(cell, 'sageAssignedData', index, row)"
                                                             class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md"
                                                             :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
@@ -199,9 +199,8 @@
                                         </div>
                                     </div>
                                     <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
-                                        <component @click="openRelevantBudgetDataSumModalForCell(cell)"
+                                        <PropertyIcon name="IconList" @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
-                                                   :is="IconList"
                                                    class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
@@ -235,7 +234,7 @@
                                 </div>
 
                             </div>
-                            <IconCirclePlus stroke-width="1.5" v-if="index > 2 "
+                            <PropertyIcon name="IconCirclePlus" stroke-width="1.5" v-if="index > 2 "
                                             @click="openCellDetailModal(cell)"
                                             class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                         </td>
@@ -248,7 +247,7 @@
                                         <span
                                             @click=""
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <IconLock stroke-width="1.5"
+                                            <PropertyIcon name="IconLock" stroke-width="1.5"
                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                       aria-hidden="true"/>
                                             {{ $t('Exclude') }}
@@ -259,7 +258,7 @@
                                   @click="updateRowCommented(row.id, false)">
                                         <span
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <IconLockOpen stroke-width="1.5"
+                                            <PropertyIcon name="IconLockOpen" stroke-width="1.5"
                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                           aria-hidden="true"/>
                                             {{ $t('Include positions') }}
@@ -269,7 +268,7 @@
                                         <span
                                             @click="duplicateRow(row.id)"
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <IconCopy stroke-width="1.5"
+                                            <PropertyIcon name="IconCopy" stroke-width="1.5"
                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                       aria-hidden="true"/>
                                             {{ $t('Duplicate') }}
@@ -279,7 +278,7 @@
                                         <span
                                             @click="openDeleteRowModal(row)"
                                             :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <IconTrash stroke-width="1.5"
+                                            <PropertyIcon name="IconTrash" stroke-width="1.5"
                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                                        aria-hidden="true"/>
                                             {{ $t('Delete') }}
@@ -294,7 +293,7 @@
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
                     <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                         {{ $t('Row') }}
-                        <IconCirclePlus stroke-width="1.5"
+                        <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
                                         class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                     </div>
                 </div>
@@ -304,7 +303,7 @@
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                     {{ $t('Row') }}
-                    <IconCirclePlus stroke-width="1.5"
+                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
                                     class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                 </div>
             </div>
@@ -342,7 +341,7 @@
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
                                  v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                                <IconCirclePlus stroke-width="1.5"
+                                <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                             </div>
                         </div>
@@ -356,7 +355,7 @@
              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
             <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                 {{ $t('Sub position') }}
-                <IconCirclePlus stroke-width="1.5"
+                <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
                                 class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full"/>
             </div>
         </div>
@@ -392,11 +391,13 @@ import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormat
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue";
 import {IconList} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        PropertyIcon,
         RelevantBudgetDataSumModal,
         BaseMenu,
         SageDragCellElement,

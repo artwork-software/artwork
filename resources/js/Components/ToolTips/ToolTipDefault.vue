@@ -1,10 +1,10 @@
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
-import {IconBackground, IconClock24} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ToolTipDefault",
-    components: {IconBackground, IconClock24},
+    components: {PropertyIcon},
     mixins: [IconLib],
     data() {
         return {
@@ -61,11 +61,11 @@ export default {
         <!-- Button oder Icon, das den Tooltip triggert -->
         <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none cursor-pointer" :class="classes">
             <!-- Ihr SVG-Icon -->
-            <IconExclamationCircle class="h-5 w-5 text-artwork-buttons-context" v-if="!showBackgroundIcon && !showDraggable && !showXIcon && !show24HIcon" :class="iconClasses" />
-            <IconBackground stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showBackgroundIcon" :class="iconClasses"/>
-            <IconDragDrop stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showDraggable" :class="iconClasses"  />
-            <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showXIcon" :class="iconClasses"  />
-            <IconClock24 stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="show24HIcon" :class="iconClasses" />
+            <PropertyIcon name="IconExclamationCircle" class="h-5 w-5 text-artwork-buttons-context" v-if="!showBackgroundIcon && !showDraggable && !showXIcon && !show24HIcon" :class="iconClasses" />
+            <PropertyIcon name="IconBackground" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showBackgroundIcon" :class="iconClasses"/>
+            <PropertyIcon name="IconDragDrop" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showDraggable" :class="iconClasses"  />
+            <PropertyIcon name="IconX" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showXIcon" :class="iconClasses"  />
+            <PropertyIcon name="IconClock24" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="show24HIcon" :class="iconClasses" />
         </button>
         <!-- Tooltip-Text, der beim Hover erscheint -->
         <div v-if="show && top" class="absolute z-50 -top-3 text-center w-64 p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">

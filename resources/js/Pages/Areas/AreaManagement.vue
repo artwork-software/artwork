@@ -54,7 +54,7 @@
                                             :aria-disabled="!roomCategoryInput"
                                             :title="$t('Add category')"
                                         >
-                                            <IconCheck stroke-width="1.5" class="h-4 w-4"></IconCheck>
+                                            <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
                                         </button>
                                     </div>
                                 </div>
@@ -79,7 +79,7 @@
             :title="$t('Remove')"
             aria-label="Remove category"
         >
-          <IconX stroke-width="1.5" class="h-4 w-4"/>
+          <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4"/>
         </button>
       </span>
                                 </TransitionGroup>
@@ -123,7 +123,7 @@
                                             :aria-disabled="!roomAttributeInput"
                                             :title="$t('Add property')"
                                         >
-                                            <IconCheck stroke-width="1.5" class="h-4 w-4"></IconCheck>
+                                            <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -147,7 +147,7 @@
             :title="$t('Remove')"
             aria-label="Remove attribute"
         >
-          <IconX stroke-width="1.5" class="h-4 w-4"/>
+          <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4"/>
         </button>
       </span>
                                 </TransitionGroup>
@@ -179,12 +179,12 @@
                                     :aria-expanded="this.opened_areas.includes(area.id)"
                                     :aria-controls="`area-panel-${area.id}`"
                                 >
-                                    <IconChevronUp
+                                    <PropertyIcon name="IconChevronUp"
                                         v-if="this.opened_areas.includes(area.id)"
                                         class="h-5 w-5"
                                         stroke-width="1.5"
                                     />
-                                    <IconChevronDown
+                                    <PropertyIcon name="IconChevronDown"
                                         v-else
                                         class="h-5 w-5"
                                         stroke-width="1.5"
@@ -310,7 +310,7 @@
                                                                 <div
                                                                     class="mt-1 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-zinc-500">
                                                                     <span class="inline-flex items-center gap-1">
-                                                                        <IconCalendar class="h-3.5 w-3.5"
+                                                                        <PropertyIcon name="IconCalendar" class="h-3.5 w-3.5"
                                                                                       stroke-width="1.5"/>
                                                                         {{
                                                                             $t('created on { created_at } by', {'created_at': element.created_at})
@@ -334,7 +334,7 @@
                                                                     @click="openEditRoomModal(element)"
                                                                     aria-label="Edit"
                                                                 >
-                                                                    <IconEdit class="h-4.5 w-4.5" stroke-width="1.75"/>
+                                                                    <PropertyIcon name="IconEdit" class="h-4.5 w-4.5" stroke-width="1.75"/>
                                                                 </button>
                                                                 <button
                                                                     type="button"
@@ -342,7 +342,7 @@
                                                                     @click="duplicateRoom(element)"
                                                                     aria-label="Duplicate"
                                                                 >
-                                                                    <IconCopy class="h-4.5 w-4.5" stroke-width="1.75"/>
+                                                                    <PropertyIcon name="IconCopy" class="h-4.5 w-4.5" stroke-width="1.75"/>
                                                                 </button>
 
                                                                 <!-- Mehr (Kontextmenü) -->
@@ -375,12 +375,12 @@
                                             @click="switchVisibility(area.id)"
                                         >
                                             {{ $t('Temporary rooms') }}
-                                            <IconChevronUp
+                                            <PropertyIcon name="IconChevronUp"
                                                 v-if="showTemporaryRooms.includes(area.id)"
                                                 class="h-4 w-4"
                                                 stroke-width="1.5"
                                             />
-                                            <IconChevronDown
+                                            <PropertyIcon name="IconChevronDown"
                                                 v-else
                                                 class="h-4 w-4"
                                                 stroke-width="1.5"
@@ -436,7 +436,7 @@
                        text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ring-1 ring-inset ring-white/40"
                                                                                 :title="$t('Date range')"
                                                                             >
-                                                                            <IconCalendar class="h-3.5 w-3.5"
+                                                                            <PropertyIcon name="IconCalendar" class="h-3.5 w-3.5"
                                                                                           stroke-width="1.5"/>
                                                                             <span class="tabular-nums">{{
                                                                                     element.start_date
@@ -477,7 +477,7 @@
                                                                             @click="openEditRoomModal(element)"
                                                                             aria-label="Edit"
                                                                         >
-                                                                            <IconEdit class="h-4.5 w-4.5"
+                                                                            <PropertyIcon name="IconEdit" class="h-4.5 w-4.5"
                                                                                       stroke-width="1.75"/>
                                                                         </button>
                                                                         <button
@@ -486,7 +486,7 @@
                                                                             @click="duplicateRoom(element)"
                                                                             aria-label="Duplicate"
                                                                         >
-                                                                            <IconCopy class="h-4.5 w-4.5"
+                                                                            <PropertyIcon name="IconCopy" class="h-4.5 w-4.5"
                                                                                       stroke-width="1.75"/>
                                                                         </button>
 
@@ -731,7 +731,7 @@
                                     border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                             {{ $t('adjoining room from') }} {{ room.name }}
                             <button @click="newRoomForm.adjoining_roomsToDisplay.splice(index,1)" type="button">
-                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                <PropertyIcon name="XIcon" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
 
@@ -1130,10 +1130,12 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
         ArtworkBaseModalButton,

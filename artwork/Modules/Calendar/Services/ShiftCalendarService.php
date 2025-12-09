@@ -18,21 +18,31 @@ use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
+use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 
 class ShiftCalendarService
 {
-    public function filterRoomsEventsAnShifts(
+    public function filterRoomsEventsAndShifts(
         Collection $rooms,
         UserFilter $filter,
-        $startDate,
-        $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
-        ?bool $addTimeline = false,
-        ?\Artwork\Modules\Project\Models\Project $project = null
+        CarbonInterface $startDate,
+        CarbonInterface $endDate,
+        bool $addTimeline = false,
+        ?Project $project = null
     ): Collection {
-        $roomIds = $rooms->pluck('id');
+        $roomIds = $rooms->pluck('id')->all();
+
+        // Gemeinsame Overlap-Logik für Zeiträume
+        $applyIntervalOverlap = function ($query, string $startColumn, string $endColumn) use ($startDate, $endDate): void {
+            $query->whereBetween($startColumn, [$startDate, $endDate])
+                ->orWhereBetween($endColumn, [$startDate, $endDate])
+                ->orWhere(function ($q) use ($startColumn, $endColumn, $startDate, $endDate): void {
+                    $q->where($startColumn, '<', $startDate)
+                        ->where($endColumn, '>', $endDate);
+                });
+        };
 
         $eventWith = [
             'project:id,name,state,artists,is_group,icon,color',
@@ -46,7 +56,7 @@ class ShiftCalendarService
             'eventProperties',
             'verifications' => function ($query): void {
                 $query->where('status', 'pending');
-            }
+            },
         ];
 
         if ($addTimeline) {
@@ -55,44 +65,60 @@ class ShiftCalendarService
             };
         }
 
-
+        // Events laden
         $events = Event::select([
-            'id', 'start_time', 'end_time', 'eventName', 'description', 'project_id',
-            'event_type_id', 'event_status_id', 'allDay', 'room_id', 'user_id', 'occupancy_option', 'declined_room_id'
+            'id',
+            'start_time',
+            'end_time',
+            'eventName',
+            'description',
+            'project_id',
+            'event_type_id',
+            'event_status_id',
+            'allDay',
+            'room_id',
+            'user_id',
+            'occupancy_option',
+            'declined_room_id',
         ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
-            ->when($project !== null, fn($q) => $q->where('project_id', $project->id))
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('start_time', [$startDate, $endDate])
-                    ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate): void {
-                        $q->where('start_time', '<', $startDate)
-                            ->where('end_time', '>', $endDate);
-                    });
+            ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
+            ->where(function ($query) use ($applyIntervalOverlap): void {
+                $applyIntervalOverlap($query, 'start_time', 'end_time');
             })
-            ->when(!empty($filter->event_type_ids), fn($query) => $query->whereIn('event_type_id', $filter->event_type_ids))
+            ->when(!empty($filter->event_type_ids), fn ($query) => $query->whereIn('event_type_id', $filter->event_type_ids))
             ->get();
 
-
-        $shifts = Shift::where('event_id', null)
+        // Standalone Shifts laden
+        $shifts = Shift::whereNull('event_id')
             ->whereIn('room_id', $roomIds)
-            ->when($project !== null, fn($q) => $q->where('project_id', $project->id))
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('shifts.start_date', [$startDate, $endDate])
-                    ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
-                    ->orWhere(function ($q) use ($startDate, $endDate): void {
-                        $q->where('shifts.start_date', '<', $startDate)
-                            ->where('shifts.end_date', '>', $endDate);
-                    });
-            })->get();
+            ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
+            // optional: Filter auf craft_ids analog zu getFilteredRooms
+            ->when(!empty($filter->craft_ids), fn ($q) => $q->whereIn('craft_id', $filter->craft_ids))
+            ->where(function ($query) use ($applyIntervalOverlap): void {
+                $applyIntervalOverlap($query, 'shifts.start_date', 'shifts.end_date');
+            })
+            ->get();
 
-
+        // Hilfsdaten für DTOs
         $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $userIds = $events->pluck('user_id')->unique();
+        $userIds      = $events->pluck('user_id')->unique();
 
         $users = User::whereIn('id', $userIds)
-            ->select(['id', 'first_name', 'last_name', 'pronouns', 'position', 'email_private', 'email', 'phone_number', 'phone_private', 'description', 'profile_photo_path'])
+            ->select([
+                'id',
+                'first_name',
+                'last_name',
+                'pronouns',
+                'position',
+                'email_private',
+                'email',
+                'phone_number',
+                'phone_private',
+                'description',
+                'profile_photo_path',
+            ])
             ->get()
             ->keyBy('id');
 
@@ -101,18 +127,21 @@ class ShiftCalendarService
             ->get()
             ->keyBy('id');
 
+        // DTOs bauen & pro Raum gruppieren
+        $eventDTOs = $events
+            ->map(fn ($event) => EventShiftPlanDTO::fromModel(
+                $event,
+                $eventTypes,
+                $users,
+                $addTimeline
+            ))
+            ->groupBy('roomId');
 
-        $eventDTOs = $events->map(fn($event) => EventShiftPlanDTO::fromModel(
-            $event,
-            $eventTypes,
-            $users,
-            $addTimeline
-        ))->groupBy('roomId');
+        $shiftDTOs = $shifts
+            ->map(fn ($shift) => ShiftDTO::fromModel($shift))
+            ->groupBy('roomId');
 
-        $shiftDTOs = $shifts->map(fn($shift) => ShiftDTO::fromModel(
-            $shift
-        ))->groupBy('roomId');
-
+        // Events & Shifts an Räume hängen
         foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();
             $room->shifts = $shiftDTOs[$room->id] ?? collect();

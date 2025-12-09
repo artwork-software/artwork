@@ -111,7 +111,8 @@ class InventoryCategoryController extends Controller
             ])->orderBy('position')->get(),
             'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
                 ->orderBy('position')
-                ->get()
+                ->get(),
+            'inventoryGridLayout' => auth()->user()->inventory_grid_layout ?? true
         ]);
     }
 
@@ -181,5 +182,18 @@ class InventoryCategoryController extends Controller
         return response()->json([
             'categories' => $categories,
         ]);
+    }
+
+    public function updateInventoryGridLayout(\Illuminate\Http\Request $request): void
+    {
+        $validated = $request->validate([
+            'inventory_grid_layout' => 'required|boolean'
+        ]);
+
+        auth()->user()->update([
+            'inventory_grid_layout' => $validated['inventory_grid_layout']
+        ]);
+
+
     }
 }

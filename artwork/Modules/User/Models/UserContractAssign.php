@@ -33,7 +33,17 @@ class UserContractAssign extends Model
         'special_day_rule_active',
         'compensation_period',
         'free_sundays_per_season',
-        'days_off_first_26_weeks'
+        'days_off_first_26_weeks',
+        'work_time_pattern_id',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+        'valid_from',
+        'valid_until'
     ];
 
     protected $casts = [

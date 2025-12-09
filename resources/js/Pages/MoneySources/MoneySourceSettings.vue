@@ -25,7 +25,7 @@
                         <button
                             :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                             @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
-                            <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
+                            <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
                         border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                         {{ category.name }}
                         <button type="button" @click="this.showCategoryDeleteModal(category)">
-                            <IconX  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            <PropertyIcon name="IconX"  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                         </button>
                     </span>
                 </div>
@@ -69,10 +69,12 @@ import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FundingSourcesSettingsHeader from "@/Pages/MoneySources/Components/FundingSourcesSettingsHeader.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
         FundingSourcesSettingsHeader,
         BaseInput,
         TextInputComponent,

@@ -11,9 +11,6 @@ import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
 import SelectComponent from '@/Components/Inputs/SelectComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
-
-// Icons (Tabler)
-import { IconSearch, IconX } from '@tabler/icons-vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -838,12 +835,12 @@ const lockOrUnlockShift = (commit = false) => {
                                     v-model="searchShiftPreset"
                                     :label="$t('Browse shift templates')"
                                 />
-                                <IconX class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeShiftSearchbar" />
+                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeShiftSearchbar" />
                             </div>
                         </div>
                         <div v-else>
                             <button type="button" class="ui-button !text-xs" @click="showShiftSearchbar = true">
-                                <IconSearch class="h-4 w-4" />
+                                <PropertyIcon name="IconSearch" class="h-4 w-4" />
                                 <span>{{ $t('Search') }}</span>
                             </button>
                         </div>
@@ -957,12 +954,12 @@ const lockOrUnlockShift = (commit = false) => {
                                     v-model="searchTimePreset"
                                     :label="$t('Search time specifications')"
                                 />
-                                <IconX class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeTimeSearchbar" />
+                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeTimeSearchbar" />
                             </div>
                         </div>
                         <div v-else>
                             <button type="button" class="ui-button !text-xs" @click="showTimeSearchbar = true">
-                                <IconSearch class="h-4 w-4" />
+                                <PropertyIcon name="IconSearch" class="h-4 w-4" />
                                 <span>{{ $t('Search') }}</span>
                             </button>
                         </div>
@@ -1102,7 +1099,7 @@ const lockOrUnlockShift = (commit = false) => {
                                  class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
                                 <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
                                 <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
-                                    <IconX class="size-4" />
+                                    <PropertyIcon name="IconX" class="size-4" />
                                 </button>
                             </div>
                         </div>

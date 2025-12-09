@@ -4,17 +4,17 @@
             <div class="text-secondary text-md font-semibold">
                 {{ $t('Contract modules')}}
             </div>
-            <IconUpload stroke-width="1.5" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
+            <PropertyIcon name="IconUpload" stroke-width="1.5" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
              v-for="contractModule in contractModules.data"
         >
-            <IconDownload stroke-width="1.5" class="w-4 h-4 mr-2" @click="download(contractModule)" v-if="$canAny(['view edit upload contracts','can see and download contract modules']) || hasAdminRole()"/>
+            <PropertyIcon name="IconDownload" stroke-width="1.5" class="w-4 h-4 mr-2" @click="download(contractModule)" v-if="$canAny(['view edit upload contracts','can see and download contract modules']) || hasAdminRole()"/>
             <div v-if="$canAny(['view edit upload contracts']) || hasAdminRole()" @click="download(contractModule)">{{ contractModule.name }}</div>
             <div v-else>
                 {{ contractModule.name }}
             </div>
-            <IconCircleX stroke-width="1.5" class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
+            <PropertyIcon name="IconCircleX" stroke-width="1.5" class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
         </div>
         <ContractModuleDeleteModal
             :show="showDeleteModal"
@@ -42,6 +42,7 @@ import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUpload
 import {usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ContractModuleSidenav",
@@ -50,6 +51,7 @@ export default {
         contractModules: Object
     },
     components: {
+        PropertyIcon,
         ContractModuleDeleteModal,
         DownloadIcon,
         UploadIcon,

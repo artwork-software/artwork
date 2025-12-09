@@ -12,7 +12,7 @@
                                         <BaseFilter>
                                             <div class="inline-flex border-none justify-end w-full">
                                                 <button class="flex" @click="resetContractFilter">
-                                                    <XIcon class="w-3 mr-1 mt-0.5"/>
+                                                    <PropertyIcon name="XIcon" class="w-3 mr-1 mt-0.5"/>
                                                     <label class="text-xs">{{ $t('Reset') }}</label>
                                                 </button>
                                             </div>
@@ -147,11 +147,13 @@ import {XIcon} from "@heroicons/vue/outline";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        PropertyIcon,
         AddButtonBig,
         FormButton,
         BaseFilterCheckboxList, XIcon, BaseFilterDisclosure,

@@ -2,7 +2,7 @@
     <ProjectSettingsHeader :title="$t('Project Role Settings')">
         <template #actions>
             <button class="ui-button-add" @click="showAddProjectRoleModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <PropertyIcon name="IconPlus" stroke-width="1" class="size-5" />
                 {{ $t('Add Project Role') }}
             </button>
         </template>
@@ -15,8 +15,8 @@
                             </div>
                         </div>
                         <div class="flex gap-x-3">
-                            <IconEdit class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openRoleEditForm(role)"/>
-                            <IconTrash class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="deleteRole(role)"/>
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openRoleEditForm(role)"/>
+                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="deleteRole(role)"/>
                         </div>
                     </div>
                 </div>
@@ -48,10 +48,12 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconPlus} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "ProjectRoles",
     components: {
+        PropertyIcon,
         ProjectSettingsHeader,
         GlassyIconButton,
         BaseInput,

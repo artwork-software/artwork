@@ -13,7 +13,7 @@
             <!-- Top Info -->
             <div class="flex flex-col gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-4 py-3 text-xs text-zinc-600">
                 <div class="flex items-center gap-2 font-medium text-zinc-800">
-                    <IconRepeat class="h-4 w-4" />
+                    <PropertyIcon name="IconRepeat" class="h-4 w-4" />
                     <span>{{ $t('Series configuration') }}</span>
                 </div>
                 <p class="leading-snug">
@@ -27,7 +27,7 @@
                     <!-- Series title -->
                     <div class="space-y-1.5">
                         <label class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                            <IconCalendar class="h-4 w-4" />
+                            <PropertyIcon name="IconCalendar" class="h-4 w-4" />
                             <span>{{ $t('Series title (optional)') }}</span>
                         </label>
                         <BaseInput
@@ -44,7 +44,7 @@
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                                <IconCalendar class="h-4 w-4" />
+                                <PropertyIcon name="IconCalendar" class="h-4 w-4" />
                                 <span>{{ $t('Start date') }}</span>
                             </label>
                             <BaseInput
@@ -57,7 +57,7 @@
                         </div>
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                                <IconCalendar class="h-4 w-4" />
+                                <PropertyIcon name="IconCalendar" class="h-4 w-4" />
                                 <span>{{ $t('End date') }}</span>
                             </label>
                             <BaseInput
@@ -74,7 +74,7 @@
                     <div class="space-y-2 rounded-xl border border-zinc-100 bg-white/80 p-4 shadow-sm">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                                <IconClock class="h-4 w-4" />
+                                <PropertyIcon name="IconClock" class="h-4 w-4" />
                                 <span>{{ $t('Time') }}</span>
                             </div>
                             <label class="inline-flex cursor-pointer items-center gap-2 text-xs text-zinc-600">
@@ -137,7 +137,7 @@
                     <!-- Recurrence -->
                     <div class="space-y-3 rounded-xl border border-zinc-100 bg-white/80 p-4 shadow-sm">
                         <div class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                            <IconRepeat class="h-4 w-4" />
+                            <PropertyIcon name="IconRepeat" class="h-4 w-4" />
                             <span>{{ $t('Recurrence') }}</span>
                         </div>
 
@@ -213,7 +213,7 @@
                     <div class="space-y-2 rounded-xl border border-zinc-100 bg-white/80 p-4 shadow-sm">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                                <IconUserSearch class="h-4 w-4" />
+                                <PropertyIcon name="IconUserSearch" class="h-4 w-4" />
                                 <span>{{ $t('Search people') }}</span>
                             </div>
                             <span class="text-[11px] text-zinc-500">
@@ -276,14 +276,14 @@
                                             v-if="isSelected(result)"
                                             class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
                                         >
-                                            <IconCheck class="h-3 w-3" />
+                                            <PropertyIcon name="IconCheck" class="h-3 w-3" />
                                             {{ $t('Added') }}
                                         </span>
                                         <span
                                             v-else
                                             class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 group-hover:bg-indigo-100"
                                         >
-                                            <IconPlus class="h-3 w-3" />
+                                            <PropertyIcon name="IconPlus" class="h-3 w-3" />
                                             {{ $t('Add') }}
                                         </span>
                                     </div>
@@ -296,7 +296,7 @@
                     <div class="space-y-2 rounded-xl border border-zinc-100 bg-white/80 p-4 shadow-sm">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 text-xs font-medium text-zinc-700">
-                                <IconUsers class="h-4 w-4" />
+                                <PropertyIcon name="IconUsers" class="h-4 w-4" />
                                 <span>{{ $t('Selected people') }}</span>
                             </div>
                             <span class="text-[11px] text-zinc-500">
@@ -335,7 +335,7 @@
                                         class="ml-0.5 rounded-full p-0.5 text-zinc-400 hover:bg-zinc-200/80 hover:text-zinc-700"
                                         @click="removeSubject(subject)"
                                     >
-                                        <IconX class="h-3 w-3" />
+                                        <PropertyIcon name="IconX" class="h-3 w-3" />
                                     </button>
                                 </div>
                             </div>
@@ -347,7 +347,7 @@
             <!-- Footer -->
             <div class="grid grid-cols-2 border-t border-zinc-100 pt-4 gap-3">
                 <div class="flex items-center gap-2 text-[11px] text-zinc-500">
-                    <IconInfoCircle class="h-3.5 w-3.5 min-h-3.5 min-w-3.5" />
+                    <PropertyIcon name="IconInfoCircle" class="h-3.5 w-3.5 min-h-3.5 min-w-3.5" />
                     <span>
                         {{ $t('All times will be stored as individual times per selected person and date. They can later be found via the series (UUID).') }}
                     </span>
@@ -391,17 +391,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import {
-    IconCalendar,
-    IconCheck,
-    IconClock,
-    IconInfoCircle,
-    IconPlus,
-    IconRepeat,
-    IconUserSearch,
-    IconUsers,
-    IconX,
-} from '@tabler/icons-vue';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
 
@@ -410,6 +399,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseDeleteModal from '@/Artwork/Modals/ArtworkBaseDeleteModal.vue';
 import { useLegalBreak } from '@/Composeables/useLegalBreak';
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 type SubjectType = 'user' | 'freelancer' | 'service_provider';
 

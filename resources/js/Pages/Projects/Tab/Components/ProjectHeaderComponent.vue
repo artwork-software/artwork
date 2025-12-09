@@ -3,13 +3,13 @@
         <transition name="fade" appear>
             <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCopyUrl">
                 <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                    <component :is="IconClipboard" class="size-5 text-blue-400" aria-hidden="true" />
+                    <PropertyIcon name="IconClipboard" class="size-5 text-blue-400" aria-hidden="true" />
                     <p class="text-sm/6 text-white">
                         {{ $t('Project URL has been copied') }}
                     </p>
                     <button type="button" class="-m-1.5 flex-none p-1.5">
                         <span class="sr-only">Dismiss</span>
-                        <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCopyUrl = false" />
+                        <PropertyIcon name="IconX" class="size-5 text-white" aria-hidden="true" @click="showCopyUrl = false" />
                     </button>
                 </div>
             </div>
@@ -35,7 +35,7 @@
                                             class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 ui-button-small bg-white"
                                             aria-label="Change key visual"
                                         >
-                                            <component :is="IconEdit" class="h-3.5 w-3.5" aria-hidden="true" />
+                                            <PropertyIcon name="IconEdit" class="h-3.5 w-3.5" aria-hidden="true" />
                                             {{ $t('Change') }}
                                         </button>
                                     </div>
@@ -87,7 +87,7 @@
                                         />
                                         <span class="ml-2 tabular-nums">{{ headerObject.project_history[0]?.created_at }}</span>
                                         <button class="ml-4 inline-flex items-center gap-1 text-artwork-buttons-create hover:text-artwork-buttons-hover transition" @click="openProjectHistoryModal()">
-                                            <component :is="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
+                                            <PropertyIcon name="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
                                             {{ $t('View history') }}
                                         </button>
                                     </div>
@@ -112,14 +112,14 @@
                             <div class="flex items-start md:items-center justify-end gap-2 sm:gap-3">
                                 <ToolTipComponent
                                     :tooltip-text="$t('Select print layout')"
-                                    :icon="IconPrinter"
+                                    icon="IconPrinter"
                                     :direction="'bottom'"
                                     @click="showPrintLayoutSelectorModal = true"
                                     stroke="2"
                                 />
                                 <ToolTipComponent
                                     :tooltip-text="$t('Copy link')"
-                                    :icon="IconLink"
+                                    icon="IconLink"
                                     :direction="'bottom'"
                                     @click="copyProjectUrlToClipboard"
                                     stroke="2"
@@ -137,7 +137,7 @@
                                             white-menu-background
                                             @click="showAddProjectToGroup = true"
                                             v-if="is('artwork admin') || headerObject.projectWriteIds.includes(usePage().props.auth.user.id) || headerObject.projectManagerIds.includes(usePage().props.auth.user.id) || can('write projects')"
-                                            :icon="IconCirclePlus"
+                                            icon="IconCirclePlus"
                                             title="Add projects to group"
                                         />
                                         <BaseMenuItem
@@ -153,7 +153,7 @@
                                         white-menu-background
                                         v-if="headerObject.projectDeleteIds.includes(usePage().props.auth.user.id) || is('artwork admin')"
                                         @click="openDeleteProjectModal(project)"
-                                        :icon="IconTrash"
+                                        icon="IconTrash"
                                         title="Put in the trash"
                                     />
                                 </BaseMenu>
@@ -181,7 +181,7 @@
                                 {{ groupProject.name }}
                             </a>
                             <button type="button" @click="deleteProjectFromGroup(groupProject.id)" class="rounded-full p-1 hover:bg-zinc-100" aria-label="Remove from group">
-                                <XIcon class="h-4 w-4 text-zinc-400 hover:text-error" />
+                                <PropertyIcon name="XIcon" class="h-4 w-4 text-zinc-400 hover:text-error" />
                             </button>
                         </div>
                     </div>
@@ -281,6 +281,7 @@ import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import tabs from "@/Pages/Areas/Components/Tabs.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     headerObject: {

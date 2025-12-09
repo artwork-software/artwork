@@ -15,13 +15,13 @@
         "tailwindcss": "^4.1.16",
         "unplugin-icons": "^22.4.2",
         "unplugin-vue-components": "^29.0.0",
-        "vite": "7.1.12"
+        "vite": "7.2.6"
     },
     "dependencies": {
         "@headlessui-float/vue": "^0.15.1",
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^1.0.6",
-        "@inertiajs/vue3": "^2.2.11",
+        "@inertiajs/vue3": "^2.2.19",
         "@primeuix/themes": "^1.2.5",
         "@sentry/vue": "^7.40.0",
         "@tabler/icons": "^3.35.0",

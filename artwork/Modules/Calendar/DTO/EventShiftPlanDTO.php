@@ -50,10 +50,19 @@ class EventShiftPlanDTO extends Data
         ?bool $addTimeline = false,
     ): EventShiftPlanDTO
     {
+        // For all-day events, set time to 00:00 - 23:59 to display them as full-day events
+        if ($event->allDay) {
+            $startTime = Carbon::parse($event->start_time)->format('Y-m-d') . ' 00:00';
+            $endTime = Carbon::parse($event->end_time)->format('Y-m-d') . ' 23:59';
+        } else {
+            $startTime = Carbon::parse($event->start_time)->format('Y-m-d H:i');
+            $endTime = Carbon::parse($event->end_time)->format('Y-m-d H:i');
+        }
+
         return new self(
             id: $event->id,
-            start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
-            end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
+            start: $startTime,
+            end: $endTime,
             eventName: $event->eventName,
             description: $event->description,
             project: $event->project ? ProjectDTO::fromModel($event->project) : null,

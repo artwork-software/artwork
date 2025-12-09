@@ -1,20 +1,5 @@
 <template>
   <div class="space-y-3 select-none">
-    <!-- Ganztägige Termine: oben, volle Breite, damit beide Spalten darunter auf gleicher Höhe starten -->
-    <div v-if="allDayEvents.length" class="space-y-1 mb-2">
-      <div v-for="e in allDayEvents" :key="'allday-'+e.id" class="relative">
-        <SingleEventInDailyShiftView
-          :event="e"
-          :eventTypes="eventTypes"
-          :rooms="rooms"
-          :first_project_calendar_tab_id="first_project_calendar_tab_id"
-          :event-statuses="eventStatuses"
-          :has-collision="false"
-          @toggle="onEventToggle(e.id, $event)"
-        />
-      </div>
-    </div>
-
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <!-- EVENTS (left) -->
       <div class="col-span-1">
@@ -144,8 +129,6 @@ const eventItems = computed<Item[]>(() => {
     const dayYmd = currentDayYmd.value
 
     for (const e of (props.events as any[] || [])) {
-        if (e.allDay) continue
-
         // Event hat IMMER raw start/end im Format "YYYY-MM-DD HH:MM"
         const [rawStartDate, rawStartTime] = String(e.start || '').split(' ')
         const [rawEndDate, rawEndTime]     = String(e.end   || '').split(' ')
@@ -178,7 +161,10 @@ const eventItems = computed<Item[]>(() => {
             } else if (dayYmd === endDate) {
                 // Endtag: 00:00 → Endzeit
                 adjustedStart = 0
-                adjustedEnd   = Math.max(15, endRaw)
+                // Treat 23:59 (minute 1439) as end of day (1440) for proper collision detection
+                let endTime = endRaw
+                if (endTime === 1439) endTime = 1440
+                adjustedEnd   = Math.max(15, endTime)
                 dayRole = 'end'
             } else {
                 // Mitteltag(e): 00:00 → 24:00
@@ -192,6 +178,8 @@ const eventItems = computed<Item[]>(() => {
 
             let end = endRaw
             if (end <= start) end = 1440
+            // Treat 23:59 (minute 1439) as end of day (1440) for all-day events to ensure proper collision detection
+            if (end === 1439) end = 1440
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
@@ -265,7 +253,10 @@ const shiftItems = computed<Item[]>(() => {
             } else if (dayYmd === endDate) {
                 // Endtag: 00:00 -> Endzeit
                 adjustedStart = 0
-                adjustedEnd   = Math.max(15, endRaw)
+                // Treat 23:59 (minute 1439) as end of day (1440) for proper collision detection
+                let endTime = endRaw
+                if (endTime === 1439) endTime = 1440
+                adjustedEnd   = Math.max(15, endTime)
                 dayRole = 'end'
             } else {
                 // Mitteltag
@@ -279,6 +270,8 @@ const shiftItems = computed<Item[]>(() => {
 
             let end = endRaw
             if (end <= start) end = 1440
+            // Treat 23:59 (minute 1439) as end of day (1440) for proper collision detection
+            if (end === 1439) end = 1440
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
@@ -303,12 +296,6 @@ const shiftItems = computed<Item[]>(() => {
 
     return items.sort((a, b) => a.startMin - b.startMin)
 })
-
-
-
-
-
-const allDayEvents = computed(() => (props.events as any[] || []).filter((e: any) => e.allDay))
 
 // Build unified blocks from both lists to keep vertical alignment between columns
 function buildBlocks(evItems: Item[], shItems: Item[]) {
@@ -371,7 +358,25 @@ function finalizeBlock(block: any) {
 function assignLanes(items: Item[]) {
   // Greedy interval partitioning for overlapping items
   const laneEnds: number[] = []
-  items.sort((a, b) => a.startMin - b.startMin)
+  // Sort items: all-day events first (leftmost), then by earliest start time, then by longest duration
+  items.sort((a, b) => {
+    // All-day events always come first (leftmost lanes)
+    const aIsAllDay = a.payload?.allDay === true
+    const bIsAllDay = b.payload?.allDay === true
+    if (aIsAllDay && !bIsAllDay) return -1
+    if (!aIsAllDay && bIsAllDay) return 1
+
+    // Sort by earliest start time
+    if (a.startMin !== b.startMin) {
+      return a.startMin - b.startMin
+    }
+
+    // For same start time, sort by longest duration first
+    const aDuration = a.endMin - a.startMin
+    const bDuration = b.endMin - b.startMin
+    return bDuration - aDuration
+  })
+
   for (const it of items) {
     let placed = false
     for (let i = 0; i < laneEnds.length; i++) {

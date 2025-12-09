@@ -1208,6 +1208,8 @@ class ShiftController extends Controller
             };
 
             $entityModel = $modelClass::findOrFail($entity['id']);
+
+            // Process individual times and comments for each day
             foreach ($entity['days'] as $day) {
                 foreach ($individualTimes as $time) {
                     $this->individualTimeService->createForModel(
@@ -1226,15 +1228,16 @@ class ShiftController extends Controller
                         $day
                     );
                 }
+            }
 
-                if (!$entityModel instanceof ServiceProvider) {
-                    $this->vacationService->updateVacationOfEntity(
-                        $vacationType,
-                        $modelClass,
-                        $entityModel,
-                        $day
-                    );
-                }
+            // Bulk update vacations for all days at once to avoid N+1 queries
+            if (!$entityModel instanceof ServiceProvider) {
+                $this->vacationService->updateVacationsOfEntityBulk(
+                    $vacationType,
+                    $modelClass,
+                    $entityModel,
+                    $entity['days']
+                );
             }
         }
     }

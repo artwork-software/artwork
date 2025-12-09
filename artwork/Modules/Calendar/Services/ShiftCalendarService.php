@@ -48,6 +48,7 @@ class ShiftCalendarService
             'project:id,name,state,artists,is_group,icon,color',
             'project.status:id,name,color',
             'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+            'project.groups',
             'eventStatus:id,color',
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',

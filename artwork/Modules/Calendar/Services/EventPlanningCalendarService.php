@@ -57,6 +57,7 @@ class EventPlanningCalendarService
                 'project:id,name,state,artists',
                 'project.status:id,name,color',
                 'project.managerUsers:id,first_name,last_name,position,email',
+                'project.groups',
                 'eventStatus:id,color',
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
@@ -103,7 +104,7 @@ class EventPlanningCalendarService
 
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path'])
+            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path', 'groups'])
             ->get()->keyBy('id');
 
         $eventTypes = EventType::whereIn('id', $eventTypeIds)

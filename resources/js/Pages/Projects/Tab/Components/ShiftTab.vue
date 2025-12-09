@@ -49,34 +49,10 @@ const dateRange = computed(() => {
     return [start, end]
 })
 
-// Standardmäßig "Leere Räume ausblenden" aktivieren, bevor Daten geladen werden
+// Verwende die gespeicherte Einstellung des Benutzers
 const ready = ref(false)
 onMounted(() => {
-    const current = usePage().props.auth.user.calendar_settings?.hide_unoccupied_rooms
-    if (current === true) {
-        ready.value = true
-        return
-    }
-
-    router.patch(
-        route('user.calendar_settings.update', { user: usePage().props.auth.user.id }),
-        { hide_unoccupied_rooms: true },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                // Lokale Props sofort spiegeln, damit Anzeigeeinstellungen-Indikator korrekt ist
-                if (usePage().props.auth.user.calendar_settings) {
-                    usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms = true
-                }
-                ready.value = true
-            },
-            onError: () => {
-                // Auch bei Fehler die View rendern, um nicht zu blockieren
-                ready.value = true
-            }
-        }
-    )
+    ready.value = true
 })
 </script>
 

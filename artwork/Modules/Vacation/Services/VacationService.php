@@ -256,4 +256,60 @@ readonly class VacationService
             }
         }
     }
+
+    /**
+     * Bulk update vacations for an entity across multiple days.
+     * Pre-loads all vacations to avoid N+1 queries.
+     *
+     * @param array $vacationType
+     * @param string $modelClass
+     * @param Vacationer $entityModel
+     * @param array $days
+     * @return void
+     */
+    public function updateVacationsOfEntityBulk(
+        array $vacationType,
+        string $modelClass,
+        Vacationer $entityModel,
+        array $days
+    ): void {
+        if (!$vacationType['type'] || !in_array($modelClass, [User::class, Freelancer::class], true)) {
+            return;
+        }
+
+        // Pre-load all vacations for all days at once to avoid N+1 queries
+        $existingVacations = $entityModel->vacations()
+            ->whereIn('date', $days)
+            ->get()
+            ->groupBy('date');
+
+        foreach ($days as $day) {
+            $vacationsForDay = $existingVacations->get($day, collect());
+
+            if ($vacationsForDay->isNotEmpty()) {
+                $this->deleteVacationInterval($entityModel, $day);
+            }
+
+            if ($vacationType['type'] !== \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
+                $createVacationRequest = new CreateVacationRequest([
+                    'date' => $day,
+                    'type' => 'vacation',
+                    'full_day' => true,
+                    'is_series' => false,
+                    'comment' => $vacationType['type'],
+                ]);
+
+                $this->create(
+                    $entityModel,
+                    $createVacationRequest,
+                    $this->vacationConflictService,
+                    $this->vacationSeriesService,
+                    $this->changeService,
+                    $this->schedulingService,
+                    $this->notificationService,
+                    $vacationType['type']
+                );
+            }
+        }
+    }
 }

@@ -84,7 +84,7 @@ watch(
                     v-model="text"
                     :label="projectData.data.placeholder"
                     without-translation
-                    :class="inSidebar ? 'bg-primary text-white' : ''"
+                    :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
                 />
             </div>
         </div>

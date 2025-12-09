@@ -16,7 +16,7 @@
             <div class="relative mt-2">
                 <ListboxButton
                     class="menu-button"
-                    :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : ''"
+                    :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
                 >
                     <div class="block truncate">{{ selected }}</div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">

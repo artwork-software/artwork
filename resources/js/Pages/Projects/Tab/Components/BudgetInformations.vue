@@ -2,7 +2,7 @@
     <div class="w-full">
         <div class="w-full flex items-center">
             <div class="text-secondary text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
-            <IconEdit :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full bg-darkInputBg']" @click="openCopyrightModal"/>
+            <PencilAltIcon :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full bg-darkInputBg']" @click="openCopyrightModal"/>
             <ProjectCopyrightModal
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
@@ -20,9 +20,9 @@
         <hr class="my-10 border-darkGray">
         <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.effectiveBudgetInformation?.project_manager_ids?.includes(this.$page.props.auth.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
-            <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
+            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
-            <IconUpload v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
+            <UploadIcon v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
                         class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal"
@@ -37,9 +37,9 @@
                         v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
-                        <IconDownload class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
+                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
                         <div @click="openFileEditModal(projectFile)">{{ projectFile.name }}</div>
-                        <IconCircleX class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(projectFile)"/>
+                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(projectFile)"/>
                     </div>
                 </div>
 
@@ -65,9 +65,9 @@
             <hr class="my-10 border-darkGray">
             <div class="w-full flex items-center mb-4">
                 <div class="text-secondary text-md">{{ $t('Contracts')}}</div>
-                <IconChevronDown class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
+                <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
                                  @click="showContracts = !showContracts"/>
-                <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                             @click="openContractUploadModal"/>
                 <ContractUploadModal
                     :show="showContractUploadModal"
@@ -84,7 +84,7 @@
                         <div
                             v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
-                            <IconDownload class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
+                            <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
                             <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
                             <ContractDeleteModal v-if="showContractDeleteModal"
                                                  :show="showContractDeleteModal === contract?.id"
@@ -97,7 +97,7 @@
                                                :contract-types="this.effectiveBudgetInformation?.contract_types ?? project.contract_types"
                                                :company-types="this.effectiveBudgetInformation?.company_types ?? project.company_types"
                                                :currencies="this.effectiveBudgetInformation?.currencies ?? project.currencies"/>
-                            <IconCircleX class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
+                            <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                 <hr class="my-10 border-darkGray">
                 <div class="w-full flex items-center mb-4">
                     <div class="text-secondary text-md">{{$t('Linked sources of funding')}}</div>
-                    <IconChevronDown class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
+                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
                 <div v-if="showMoneySources">

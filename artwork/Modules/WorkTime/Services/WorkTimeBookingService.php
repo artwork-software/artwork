@@ -150,6 +150,38 @@ class WorkTimeBookingService
             }
         }
 
+        // Add individual times to the calculation
+        foreach ($user->individualTimes as $individualTime) {
+            // Check if the individual time is for the current day
+            if (in_array($day->toDateString(), $individualTime->days_of_individual_time ?? [])) {
+                // working_time_minutes already has break_minutes deducted
+                $total += (int)($individualTime->working_time_minutes ?? 0);
+
+                // Calculate night hours for individual times if they have specific times
+                if ($individualTime->start_time && $individualTime->end_time && !$individualTime->full_day) {
+                    $start = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
+                    $end = Carbon::parse($individualTime->end_date . ' ' . $individualTime->end_time);
+
+                    $workStart = max($start, $dayStart);
+                    $workEnd = min($end, $dayEnd);
+
+                    if ($workStart->lt($workEnd)) {
+                        $nightOverlap1Start = max($workStart, $night1Start);
+                        $nightOverlap1End = min($workEnd, $night1End);
+                        if ($nightOverlap1Start->lt($nightOverlap1End)) {
+                            $night += $nightOverlap1Start->diffInMinutes($nightOverlap1End);
+                        }
+
+                        $nightOverlap2Start = max($workStart, $night2Start);
+                        $nightOverlap2End = min($workEnd, $night2End);
+                        if ($nightOverlap2Start->lt($nightOverlap2End)) {
+                            $night += $nightOverlap2Start->diffInMinutes($nightOverlap2End);
+                        }
+                    }
+                }
+            }
+        }
+
         return [
             'total' => (int) round($total),
             'night' => (int) round($night)

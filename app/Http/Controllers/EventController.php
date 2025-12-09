@@ -644,6 +644,9 @@ class EventController extends Controller
                 'qualifications'
             ]),
             'rooms' => $roomDTOs,
+            'eventTypes' => EventType::all(),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
+            'event_properties' => EventProperty::all(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),

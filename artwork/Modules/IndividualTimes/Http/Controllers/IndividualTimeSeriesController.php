@@ -101,6 +101,7 @@ class IndividualTimeSeriesController extends Controller
                 'start_time'           => optional($sample)->start_time,
                 'end_time'             => optional($sample)->end_time,
                 'working_time_minutes' => optional($sample)->working_time_minutes,
+                'break_minutes'        => optional($sample)->break_minutes ?? 0,
             ],
         ]);
     }
@@ -214,6 +215,7 @@ class IndividualTimeSeriesController extends Controller
                 },
             ],
             'working_time_minutes'  => ['nullable', 'integer', 'min:0'],
+            'break_minutes'         => ['nullable', 'integer', 'min:0'],
             'frequency'             => ['required', Rule::in(['weekly'])],
             'interval'              => ['required', 'integer', 'min:1'],
             'weekdays'              => ['required', 'array', 'min:1'],
@@ -268,11 +270,13 @@ class IndividualTimeSeriesController extends Controller
                 // Arbeitszeit wie bei Einzelzeit berechnen
                 $startTime = $fullDay ? null : Arr::get($data, 'start_time');
                 $endTime = $fullDay ? null : Arr::get($data, 'end_time');
+                $breakMinutes = Arr::get($data, 'break_minutes', 0);
                 if ($startTime && $endTime) {
                     $startDateForConvert = Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $startTimeConverted = Carbon::parse($date->toDateString() . ' ' . $startTime);
                     $endTimeConverted = Carbon::parse($date->toDateString() . ' ' . $endTime);
-                    $workingTimeInMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+                    $totalMinutes = $startTimeConverted->diffInMinutes($endTimeConverted);
+                    $workingTimeInMinutes = max(0, $totalMinutes - $breakMinutes);
                 } else {
                     $workingTimeInMinutes = 1440;
                 }
@@ -287,6 +291,7 @@ class IndividualTimeSeriesController extends Controller
                     'end_time'                => $endTime,
                     'full_day'                => $fullDay,
                     'working_time_minutes'    => $workingTimeInMinutes,
+                    'break_minutes'           => $breakMinutes,
                     'days_of_individual_time' => [$date->toDateString()],
                 ]);
             }

@@ -21,6 +21,7 @@ class IndividualTime extends Model
         'end_date',
         'full_day',
         'working_time_minutes',
+        'break_minutes',
         'series_uuid',
         'timeable_type',
         'timeable_id'
@@ -37,6 +38,7 @@ class IndividualTime extends Model
     protected $casts = [
         'full_day' => 'boolean',
         'working_time_minutes' => 'integer',
+        'break_minutes' => 'integer',
         'start_time' => TimeWithoutSeconds::class,
         'end_time' => TimeWithoutSeconds::class,
     ];

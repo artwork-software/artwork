@@ -363,6 +363,15 @@
                 </BaseUIButton>
             </div>
         </div>
+        <ConfirmDeleteModal
+            v-if="showConfirmCalculationModal"
+            :title="$t('Save calculation')"
+            :description="$t('Would you like to save your calculation? The previous figure in the budget table will be overwritten with the new figure irrevocably.')"
+            :button="$t('Save')"
+            :is_budget="true"
+            @closed="closeConfirmCalculationModal"
+            @delete="performSaveCalculations"
+        />
     </ArtworkBaseModal>
 </template>
 
@@ -384,6 +393,7 @@ import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headless
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue';
 import { router } from '@inertiajs/vue3';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     name: 'CellDetailModal',
@@ -404,7 +414,8 @@ export default {
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        NewUserToolTip
+        NewUserToolTip,
+        ConfirmDeleteModal
     },
     props: {
         cell: {
@@ -437,7 +448,8 @@ export default {
             ],
             tempIdCounter: 0,
             isLoading: true,
-            loadError: null
+            loadError: null,
+            showConfirmCalculationModal: false
         };
     },
     computed: {
@@ -718,19 +730,21 @@ export default {
                     // Calculation Tab: Speichere Berechnungen
                     if (this.cell?.column?.type === 'empty') {
                         await this.saveCalculations();
+                        // Modal closing is handled by performSaveCalculations() after confirmation
                     }
                 } else if (this.activeTab === 'comment') {
                     // Comment Tab: Speichere neuen Kommentar, falls vorhanden
                     if (this.newComment && this.newComment.trim() !== '') {
                         await this.saveCommentOnly();
                     }
+                    // Close modal nach erfolgreichem Speichern
+                    this.$emit('closed', true);
                 } else if (this.activeTab === 'linking') {
                     // Linking Tab: Speichere Verlinkungen
                     await this.saveLinking();
+                    // Close modal nach erfolgreichem Speichern
+                    this.$emit('closed', true);
                 }
-
-                // Close modal nach erfolgreichem Speichern
-                this.$emit('closed', true);
             } catch (error) {
                 console.error('Error in saveAndClose:', error);
                 // Modal bleibt offen bei Fehler
@@ -741,17 +755,20 @@ export default {
             // Check if cell already has a value
             const cellValue = Number(this.cell?.value ?? this.cell?.sage_value ?? this.cell?.current_value);
 
-            if (cellValue !== 0 && cellValue !== this.totalCalculated) {
-                const confirmed = confirm(
-                    this.$t('Save calculation') + '\n\n' +
-                    this.$t('Would you like to save your calculation? The previous figure in the budget table will be overwritten with the new figure irrevocably.')
-                );
+            console.log('saveCalculations - cellValue:', cellValue, 'totalCalculated:', this.totalCalculated);
 
-                if (!confirmed) {
-                    return;
-                }
+            if (cellValue !== 0 && cellValue !== this.totalCalculated) {
+                console.log('Showing confirmation modal');
+                this.showConfirmCalculationModal = true;
+                return;
             }
 
+            console.log('No confirmation needed, saving directly');
+            await this.performSaveCalculations();
+        },
+
+        async performSaveCalculations() {
+            console.log('performSaveCalculations called');
             try {
                 // Füge cell_id zu allen Kalkulationen hinzu (für neue Kalkulationen)
                 const calculationsWithCellId = this.calculations.map(calc => ({
@@ -787,6 +804,11 @@ export default {
                     calculations: calculationsWithCellId,
                     cellValue: response.data.cell_value
                 });
+
+                console.log('Closing confirmation modal and parent modal');
+                // Close the confirmation modal and parent modal after successful save
+                this.closeConfirmCalculationModal();
+                this.$emit('closed', true);
             } catch (error) {
                 console.error('Error saving calculations:', error);
                 alert(this.$t('Error saving calculations. Please try again.'));
@@ -831,6 +853,10 @@ export default {
 
         handleClose() {
             this.$emit('closed', false);
+        },
+
+        closeConfirmCalculationModal() {
+            this.showConfirmCalculationModal = false;
         },
 
         formatCurrency(value) {

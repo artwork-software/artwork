@@ -1721,7 +1721,13 @@ readonly class EventService
         int $userId,
     ): Event {
 
-        $day = $this->parseDayInput($event['day']);
+        // Handle null or missing day input by using current date as fallback
+        $dayInput = $event['day'] ?? null;
+        if ($dayInput === null || $dayInput === '') {
+            $day = Carbon::now()->startOfDay();
+        } else {
+            $day = $this->parseDayInput($dayInput);
+        }
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $event['start_time'] ?? null,

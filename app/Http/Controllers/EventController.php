@@ -550,7 +550,7 @@ class EventController extends Controller
             $userCalendarFilter,
             $startDate,
             $endDate,
-            $user->getAttribute('daily_view'),
+            $project || (bool)$user->getAttribute('daily_view'),
             $project
         );
 

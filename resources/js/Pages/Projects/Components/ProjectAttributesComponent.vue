@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-5">
             <BasePageTitle title="Project properties" :white-text="inSidebar" />
 
-            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+            <PropertyIcon name="IconEdit" class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="openProjectAttributeEditModal"
                       v-if="this.canEditComponent && projectMembersWriteAccess()"
             />
@@ -44,6 +44,8 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import { IconEdit } from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     mixins: [
@@ -51,6 +53,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        PropertyIcon,
         BasePageTitle,
         ProjectAttributeEditModal,
         SidebarTagComponent
@@ -75,6 +78,9 @@ export default defineComponent({
         };
     },
     computed: {
+        IconEdit() {
+            return IconEdit
+        },
         projectCategoriesWithColor(){
             return this.projectCategories.map(category => {
                 return {

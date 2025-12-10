@@ -26,17 +26,17 @@
                             class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
                             <button @click="downloadKeyVisual" type="button"
                                     class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <IconDownload class="h-5 w-5" aria-hidden="true"/>
+                                <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <button @click="selectNewKeyVisual" type="button"
                                     class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <IconEdit
+                                <PropertyIcon name="IconEdit"
                                     class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                     aria-hidden="true"/>
                             </button>
                             <button @click="deleteKeyVisual" type="button"
                                     class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                <IconX class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                        aria-hidden="true"/>
                             </button>
                         </div>
@@ -119,7 +119,7 @@
                                     </div>
                                 </div>
                                 <div class="hidden group-hover:block">
-                                    <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
+                                    <PropertyIcon name="IconCircleX" class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
                                 </div>
                             </div>
                         </div>
@@ -129,7 +129,7 @@
                     <TextInputComponent
                         v-model="cost_center"
                         :label="$t('Name of the cost unit')"
-                    />
+                     id="cost_center"/>
                 </div>
                 <div class="mt-4">
                     <div class="flex items-center mb-2" v-if="!project.is_group">
@@ -184,9 +184,6 @@
                     </div>
                 </div>
             </div>
-        <pre>
-            {{ project }}
-        </pre>
             <div class="justify-center flex w-full my-6">
                 <FormButton :text="$t('Save')" :disabled="name.length < 1"
                             @click="updateProjectData"/>
@@ -219,6 +216,7 @@ import Input from "@/Jetstream/Input.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [
@@ -236,6 +234,7 @@ export default {
         createSettings: Object
     },
     components: {
+        PropertyIcon,
         UserSearch,
         TextInputComponent,
         BaseModal,

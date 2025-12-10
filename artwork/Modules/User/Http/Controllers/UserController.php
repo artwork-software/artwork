@@ -470,9 +470,10 @@ class UserController extends Controller
                 ->first();
 
             $patternTime = $userWorkTime?->{$weekday};
-            $dailyTargetMinutes = $patternTime
-                ? Carbon::parse($patternTime)->diffInMinutes(Carbon::parse($patternTime)->copy()->startOfDay())
-                : 0;
+            $dailyTargetMinutes = 0;
+            if ($patternTime instanceof Carbon) {
+                $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
+            }
 
             $workedMinutes = 0;
             $nightlyMinutes = 0;
@@ -519,6 +520,16 @@ class UserController extends Controller
 
                     if ($individualTimes->has($dateKey)) {
                         $workedMinutes += $individualTimes[$dateKey];
+                    }
+
+                    // Calculate balance change: on work-free days (dailyTargetMinutes = 0),
+                    // no negative balance should be calculated
+                    if ($dailyTargetMinutes === 0) {
+                        // Work-free day: only count actual worked time as positive balance
+                        $balanceChange = $workedMinutes;
+                    } else {
+                        // Regular day: calculate difference between worked and target
+                        $balanceChange = $workedMinutes - $dailyTargetMinutes;
                     }
                 }
             }

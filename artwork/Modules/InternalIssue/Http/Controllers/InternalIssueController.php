@@ -63,7 +63,7 @@ class InternalIssueController extends Controller
                 'specialItems',
                 'room',
                 'project',
-                'responsibleUsers',
+                'responsibleUsers.departments',
             ])
             ->when(!empty($articleIds), function ($q) use ($articleIds) {
                 $q->whereHas('articles', function ($sub) use ($articleIds) {

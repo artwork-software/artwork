@@ -692,7 +692,7 @@ const addEmptyEventForGroup = (group) => {
         name: props.isInModal ? '' : 'Blocker',
         room: baseEvent?.room || props.rooms?.[0] || null,
         day: toISO(newDate),
-        end_day: baseEvent?.end_day || toISO(newDate),
+        end_day: toISO(newDate),
         start_time: baseEvent?.start_time || '',
         end_time: baseEvent?.end_time || '',
         copy: false,

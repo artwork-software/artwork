@@ -26,7 +26,7 @@
                             {{ $t('Checklist users') }}
                             <div @click="openChangeUsersModal"
                                  class="text-secondary flex items-center text-sm subpixel-antialiased cursor-pointer">
-                                <IconEdit stroke-width="2"
+                                <PropertyIcon name="IconEdit" stroke-width="2"
                                     class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                     aria-hidden="true"/>
                             </div>
@@ -208,12 +208,14 @@ import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Template Edit",
     props: ['checklist_template'],
     components: {
+        PropertyIcon,
         TextareaComponent,
         ModalHeader,
         ConfirmDeleteModal,

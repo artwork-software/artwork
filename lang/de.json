@@ -3679,5 +3679,7 @@
     "Calendar data is not available.": "Kalenderdaten sind nicht verfügbar.",
     "Select any Craft to show changes in shifts": "Wähle ein Gewerk aus, um Änderungen in Schichten anzuzeigen",
     "Break time (minutes)": "Pausezeit (Minuten)",
-    "This time will be deducted from the working hours when calculating the daily working time.": "Diese Zeit wird bei der Berechnung der täglichen Arbeitszeit von den Arbeitsstunden abgezogen."
+    "This time will be deducted from the working hours when calculating the daily working time.": "Diese Zeit wird bei der Berechnung der täglichen Arbeitszeit von den Arbeitsstunden abgezogen.",
+    "You can create a craft functionality here.": "Du kannst hier eine Gewerks-Funktion erstellen.",
+    "Here you can edit the craft functionality \"{0}\".": "Hier kannst du die Gewerks-Funktion „{0}“ bearbeiten."
 }

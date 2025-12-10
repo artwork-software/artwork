@@ -8,7 +8,7 @@
                         <MenuItem v-slot="{ active }">
                             <a @click="openEditRoomModal(room)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                <IconEdit stroke-width="1.5"
+                                <PropertyIcon name="IconEdit" stroke-width="1.5"
                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                           aria-hidden="true"/>
                                 {{$t('edit')}}
@@ -17,7 +17,7 @@
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="duplicateRoom(room)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconCopy stroke-width="1.5"
+                                <PropertyIcon name="IconCopy" stroke-width="1.5"
                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                           aria-hidden="true"/>
                                 {{ $t('Duplicate')}}
@@ -26,7 +26,7 @@
                         <MenuItem v-slot="{ active }">
                             <a @click="openSoftDeleteRoomModal(room)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconTrash  stroke-width="1.5"
+                                <PropertyIcon name="IconTrash"  stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"/>
                                 {{$t('In the recycle bin')}}
@@ -175,7 +175,7 @@
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToApprove.event_type.name }}
-                                        <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
+                                        <PropertyIcon name="AdjustmentsIcon" v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -428,6 +428,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -446,6 +447,7 @@ export default {
         'adjoiningRooms',
     ],
     components: {
+        PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
         BaseTextarea,

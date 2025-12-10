@@ -7,27 +7,27 @@
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <IconLink stroke-width="1.5" class="h-4 w-4"/>
+                    <PropertyIcon name="IconLink" stroke-width="1.5" class="h-4 w-4"/>
                 </a>
                 <button type="button" @click="openEditEventModal(event)"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <IconEdit class="h-4 w-4" stroke-width="1.5"/>
+                    <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal"
                         v-show="event.eventTypeId === 1" type="button"
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
+                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <IconX stroke-width="1.5"
+                    <PropertyIcon name="IconX" stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                         @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <IconTrash stroke-width="1.5"
+                    <PropertyIcon name="IconTrash" stroke-width="1.5"
                                stroke="currentColor" class="w-4 h-4"/>
                 </button>
             </div>
@@ -76,7 +76,7 @@
                 <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
-                    <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
+                    <PropertyIcon name="IconUsersGroup" stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
                 </div>
             </div>
             <div class="flex">
@@ -149,7 +149,7 @@
                  :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
                  v-if="$page.props.auth.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
-                <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
+                <PropertyIcon name="IconRepeat" class="mx-1 h-3 w-3" stroke-width="1.5"/>
                 {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
@@ -217,12 +217,12 @@
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                            <IconEdit class="h-4 w-4" stroke-width="1.5"/>
+                            <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                                 @click="openConfirmModal(subEvent.id, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                            <IconTrash stroke-width="1.5"
+                            <PropertyIcon name="IconTrash" stroke-width="1.5"
                                        stroke="currentColor" class="w-4 h-4"/>
                         </button>
                     </div>
@@ -247,7 +247,7 @@
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
                              class="flex">
-                            <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
+                            <PropertyIcon name="IconUsersGroup" stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
                         </div>
                     </div>
                     <!-- Time -->
@@ -350,11 +350,13 @@ import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "SingleCalendarEvent",
     components: {
+        PropertyIcon,
         VueMathjax,
         DeclineEventModal,
         EventComponent,

@@ -2930,8 +2930,14 @@ class EventController extends Controller
         ProjectTabService $projectTabService
     ): bool {
         foreach ($request->collect('events') as $eventId) {
+            $event = $eventService->findEventById($eventId);
+
+            if ($event === null) {
+                continue;
+            }
+
             $eventService->delete(
-                $eventService->findEventById($eventId),
+                $event,
                 $shiftsQualificationsService,
                 $shiftUserService,
                 $shiftFreelancerService,
@@ -2959,6 +2965,11 @@ class EventController extends Controller
         $eventIds = $request->collect('events');
         foreach ($eventIds as $eventId) {
             $event = $this->eventService->findEventById($eventId);
+
+            if ($event === null) {
+                continue;
+            }
+
             $desiredRoomIds[] = $event->getAttribute('room_id');
 
             foreach (
@@ -3136,6 +3147,10 @@ class EventController extends Controller
 
         foreach ($eventIds as $eventId) {
             $originalEvent = $this->eventService->findEventById($eventId);
+
+            if ($originalEvent === null) {
+                continue;
+            }
 
             $duplicatedEvent = $originalEvent->replicate();
             $duplicatedEvent->save();

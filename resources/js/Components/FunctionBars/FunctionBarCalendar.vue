@@ -121,7 +121,7 @@
                         />
                     </div>
                 </div>
-                <div class="flex items-center gap-x-2">
+                <div class="hidden 2xl:flex items-center gap-x-2">
 
                     <ToolTipComponent
                         direction="bottom"
@@ -222,6 +222,71 @@
                         @click="$emit('wantsToAddNewEvent');"
                         classesButton="ui-button-add"
                     />
+                </div>
+
+                <!-- Mobile Menu for small screens -->
+                <div class="2xl:hidden flex items-center gap-x-2">
+                    <FunctionBarFilter
+                        :user_filters="user_filters"
+                        :personal-filters="personalFilters"
+                        :filter-options="filterOptions"
+                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
+                    />
+
+                    <FunctionBarSetting :is-planning="isPlanning" />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Add Event')"
+                        :icon="IconCirclePlus"
+                        icon-size="h-5 w-5 text-blue-500"
+                        @click="$emit('wantsToAddNewEvent');"
+                        classesButton="ui-button-add"
+                    />
+
+                    <BaseMenu class="pt-2" tooltip-direction="bottom" show-custom-icon :icon="IconList" translation-key="More options" has-no-offset>
+                        <BaseMenuItem
+                            v-if="!atAGlance"
+                            :icon="IconZoomIn"
+                            white-menu-background
+                            :title="$t('Zoom in')"
+                            :disabled="zoom_factor >= 1.4"
+                            @click="incrementZoomFactor"
+                        />
+                        <BaseMenuItem
+                            white-menu-background
+                            without-translation
+                            :title="zoom_factor * 100 + '%'"
+                        />
+                        <BaseMenuItem
+                            v-if="!atAGlance"
+                            :icon="IconZoomOut"
+                            white-menu-background
+                            :title="$t('Zoom out')"
+                            :disabled="zoom_factor <= 0.2"
+                            @click="decrementZoomFactor"
+                        />
+                        <BaseMenuItem
+                            v-if="!atAGlance && !isFullscreen"
+                            :icon="IconArrowsDiagonal"
+                            white-menu-background
+                            :title="$t('Full screen')"
+                            @click="$emit('openFullscreenMode')"
+                        />
+                        <BaseMenuItem
+                            v-if="!project"
+                            :icon="IconCalendarStar"
+                            white-menu-background
+                            :title="$t('Subscribe to calendar')"
+                            @click="showCalendarAboSettingModal = true"
+                        />
+                        <BaseMenuItem
+                            :icon="IconFileExport"
+                            white-menu-background
+                            :title="$t('Export calendar')"
+                            @click="showExportModal = true"
+                        />
+                    </BaseMenu>
                 </div>
             </div>
         </div>

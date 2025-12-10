@@ -126,14 +126,13 @@
             <div class="print:col-span-2" :style="getColumnSize(5)">
                 <div class="relative">
                     <BaseInput
-                        v-model="event.day"
+                        v-model="draftStartDate"
                         type="date"
                         :id="'day-' + index"
                         :label="$t('Start date') + ' ' + dayString"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('day-' + index)"
-                        @focusout="updateEventInDatabase"
-                        @change="dayString = getDayOfWeek(new Date(event.day)).replace('.', '')"
+                        @focusout="onStartDateFocusOut"
                     />
                 </div>
             </div>
@@ -340,6 +339,9 @@ const openNoteModal = ref(false);
 const event_properties = inject('event_properties');
 const showDeleteEventConfirmModal = ref(false);
 
+// Local draft state for start date to prevent immediate re-sorting while typing
+const draftStartDate = ref(props.event.day);
+
 const getColumnSize = (column) => ({
     minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
     width: usePage().props.auth.user.bulk_column_size[column] + 'px',
@@ -438,6 +440,13 @@ const updateEventInDatabase = async () => {
 const removeTime = () => {
     props.event.start_time = null;
     props.event.end_time = null;
+    updateEventInDatabase();
+};
+
+const onStartDateFocusOut = () => {
+    // Commit draft to actual event object only on focusout
+    props.event.day = draftStartDate.value;
+    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
     updateEventInDatabase();
 };
 

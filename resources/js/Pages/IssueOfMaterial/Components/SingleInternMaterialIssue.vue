@@ -60,7 +60,7 @@
       <span v-if="!issueOfMaterial?.special_items_done && issueOfMaterial?.special_items?.length"
             class="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] text-rose-700">
         <component :is="IconAlertTriangle" class="size-3.5" />
-        {{ $t('Open') }}
+        {{ $t('Status Open') }}
       </span>
             <span v-else class="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700">
         <component :is="IconCheck" class="size-3.5" />

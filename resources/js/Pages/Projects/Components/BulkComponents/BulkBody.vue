@@ -16,7 +16,6 @@
                 classes="!items-center"
             />
         </div>
-
         <!-- Top bar -->
         <div class="flex items-center justify-between gap-x-4 print:hidden" v-if="!isInModal">
             <div

@@ -2313,6 +2313,10 @@ class ProjectController extends Controller
 
         $headerObject->projectState        = $project->state;
 
+        // Load full state object with is_planning for BulkBody component
+        $project->load('status');
+        $headerObject->project->state = $project->status;
+
         $tabInformation = [];
         ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation): void {
             $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];

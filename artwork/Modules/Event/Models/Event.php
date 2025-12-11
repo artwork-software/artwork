@@ -452,7 +452,7 @@ class Event extends Model
      */
     public function getDatesForSeriesEventAttribute(): array
     {
-        if (!$this->is_series) {
+        if (!$this->is_series || !$this->series) {
             return [];
         }
 

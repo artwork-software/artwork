@@ -22,7 +22,7 @@ class ProjectManagementBuilderController extends Controller
             'componentsInGrid' => $this->projectManagementBuilderService->getProjectManagementBuilder(),
             'availableComponents' => Component::query()
                 ->without(['users', 'departments'])
-                ->select(['id', 'name', 'type', 'special'])
+                ->select(['id', 'name', 'type', 'special', 'sidebar_enabled'])
                 ->get(),
         ]);
     }

@@ -19,6 +19,7 @@ use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
@@ -610,21 +611,6 @@ class EventController extends Controller
             ]);
         }
 
-        $rooms = $this->calendarDataService->getFilteredRooms(
-            $userCalendarFilter,
-            $userCalendarSettings,
-            $startDate,
-            $endDate,
-            true // Shift plan view: consider standalone shifts for occupancy
-        );
-
-        // Transform Room models to RoomDTOs for frontend compatibility
-        $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
-            id: $room->id,
-            name: $room->name,
-            has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
-        ));
 
         $dateValue = [
             $startDate ? $startDate->format('Y-m-d') : null,
@@ -637,16 +623,16 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => $this->craftService->getAll([
+            'crafts' => Craft::with([
                 'managingUsers',
                 'managingFreelancers',
                 'managingServiceProviders',
                 'qualifications'
-            ]),
-            'rooms' => $roomDTOs,
-            'eventTypes' => EventType::all(),
-            'eventStatuses' => EventStatus::orderBy('order')->get(),
-            'event_properties' => EventProperty::all(),
+            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
+
+            //'eventTypes' => EventType::all(),
+            //'eventStatuses' => EventStatus::orderBy('order')->get(),
+            // 'event_properties' => EventProperty::all(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
             'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),

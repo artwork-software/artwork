@@ -153,6 +153,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import axios from 'axios';
 
 export default {
     name: 'MultiDuplicateModal',
@@ -222,20 +223,20 @@ export default {
             this.editEvents.calculationType = this.selectedCalculationType.id;
             this.editEvents.newRoomId = this.selectedRoom?.id ?? null;
 
-            router.patch(route('multi-duplicate.save'), {
+            axios.patch(route('multi-duplicate.save'), {
                 events: this.editEvents.events,
                 newRoomId: this.editEvents.newRoomId,
                 calculationType: this.editEvents.calculationType,
                 value: this.editEvents.value,
                 type: this.editEvents.type,
                 date: this.editEvents.date
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.closeModal()
-                }
             })
-
+            .then(() => {
+                this.closeModal(true);
+            })
+            .catch((error) => {
+                console.error('Multi-duplicate save failed:', error);
+            });
         }
     },
 }

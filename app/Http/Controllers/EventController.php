@@ -2638,10 +2638,7 @@ class EventController extends Controller
     ): void {
         //$eventBeforeDelete = $event->replicate();
         $this->authorize('delete', $event);
-        broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-            $event,
-            'deleted'
-        ));
+        broadcast(new RemoveEvent($event, $event->room_id));
         $this->eventService->delete(
             $event,
             $shiftsQualificationsService,
@@ -2718,6 +2715,60 @@ class EventController extends Controller
             $notificationService,
             $projectTabService
         );
+    }
+
+    /**
+     * Delete all events in a series
+     * @throws AuthorizationException
+     */
+    public function destroySeriesEvents(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
+        // Check if event is part of a series
+        if (!$event->is_series || !$event->series_id) {
+            return;
+        }
+
+        // Get all events in the series
+        $seriesEvents = Event::where('series_id', $event->series_id)->get();
+
+        // Delete each event in the series
+        foreach ($seriesEvents as $seriesEvent) {
+            // Authorize delete for each event
+            $this->authorize('delete', $seriesEvent);
+
+            // Delete the event
+            $this->eventService->delete(
+                $seriesEvent,
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService,
+                $changeService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService,
+                $projectTabService
+            );
+
+            // Check and delete from inventory if needed
+            if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($seriesEvent)) {
+                $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+            }
+        }
     }
 
     /**
@@ -3123,10 +3174,7 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
-            broadcast(new EventCreated(
-                $event->fresh(),
-                $event->fresh()->room_id
-            ));
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
 
 
@@ -3324,10 +3372,7 @@ class EventController extends Controller
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
             $event->save();
-            broadcast(new EventCreated(
-                $event->fresh(),
-                $event->fresh()->room_id
-            ));
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
     }
 
@@ -3391,17 +3436,16 @@ class EventController extends Controller
     {
         $event->update($request->only(['description']));
 
-        broadcast(new EventCreated(
-            $event->fresh(),
-            $event->fresh()->room_id
-        ));
+        broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
 
 
     public function bulkMultiEditEvent(Request $request): void
     {
+        $eventIds = $request->collect('eventIds');
+
         $this->eventService->bulkMultiEditEvent(
-            $request->collect('eventIds'),
+            $eventIds,
             $request->only([
                 'selectedRoom',
                 'selectedEventType',
@@ -3412,11 +3456,27 @@ class EventController extends Controller
                 'selectedEndTime'
             ])
         );
+
+        // Broadcast updates for each affected event
+        $events = Event::whereIn('id', $eventIds)->get();
+        foreach ($events as $event) {
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+        }
     }
 
     public function bulkDeleteEvent(Request $request): void
     {
-        $this->eventService->bulkDeleteEvent($request->collect('eventIds'));
+        $eventIds = $request->collect('eventIds');
+
+        // Fetch events before deletion to broadcast them
+        $events = Event::whereIn('id', $eventIds)->get();
+
+        $this->eventService->bulkDeleteEvent($eventIds);
+
+        // Broadcast deletions for each affected event
+        foreach ($events as $event) {
+            broadcast(new RemoveEvent($event, $event->room_id));
+        }
     }
 
     public function standardEventValues()
@@ -3467,5 +3527,15 @@ class EventController extends Controller
 
         // Merge both collections and remove duplicates by craft id
         return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
+    }
+
+    public function getTimelines(Event $event): JsonResponse
+    {
+        $event->load('timelines');
+
+        return response()->json([
+            'event' => $event,
+            'timelines' => $event->timelines
+        ]);
     }
 }

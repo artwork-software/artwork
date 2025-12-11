@@ -110,7 +110,6 @@
                 </a>
             </div>
         </div>
-
         <!-- CONTENT: Detailliert ab mittlerem Zoom -->
         <div v-if="zoom_factor > 0.6" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
             <!-- Linke 2/3 Spalte -->
@@ -356,6 +355,7 @@
                             title="Add Sub-Event"
                         />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Alle Termine der Serie löschen" />
                         <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
@@ -366,6 +366,20 @@
                     <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1">
                         <PropertyIcon :name="property.icon" class="size-3.5 opacity-90" />
                     </div>
+                </div>
+
+                <!-- Timeline Icon -->
+                <div
+                    v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                    class="mt-2 cursor-pointer"
+                    @click="openTimelineModal"
+                >
+                    <component
+                        :is="IconTimeline"
+                        class="size-5"
+                        :class="event.hasTimelines ? 'text-black' : 'text-gray-400'"
+                        stroke-width="1.5"
+                    />
                 </div>
             </div>
 
@@ -548,6 +562,7 @@
                                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                                         <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && event?.eventType?.id === 1" @click="$emit('openAddSubEventModal', event, 'create', null)" :icon="IconCirclePlus" title="Add Sub-Event" />
                                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Alle Termine der Serie löschen" />
                                         <BaseMenuItem white-menu-background v-if="can('can edit planning calendar') && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
                                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                                     </BaseMenu>
@@ -571,7 +586,6 @@
                                     <span> ({{ shift.worker_count }}/{{ shift.max_worker_count }})</span>
                                 </a>
                             </div>
-
                             <!-- Beschreibung -->
                             <div
                                 v-if="usePage().props.auth.user.calendar_settings.description"
@@ -579,6 +593,20 @@
                                 :style="{ color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)) }"
                             >
                                 <EventNoteComponent :event="event" />
+                            </div>
+
+                            <!-- Timeline Icon (compact view) -->
+                            <div
+                                v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                                class="mt-2 cursor-pointer"
+                                @click="openTimelineModal"
+                            >
+                                <component
+                                    :is="IconTimeline"
+                                    class="size-4"
+                                    :class="event.hasTimelines ? 'text-black' : 'text-gray-400'"
+                                    stroke-width="1.5"
+                                />
                             </div>
                         </div>
                     </PopoverPanel>
@@ -702,12 +730,30 @@
             @close="showConvertToPlanningModal = false"
             @convert="convertToPlanning"
         />
+
+        <!-- Delete Series Events Modal -->
+        <ConfirmDeleteModal
+            v-if="showDeleteSeriesModal"
+            :title="$t('Alle Termine der Serie löschen')"
+            :description="$t('Möchten Sie wirklich alle Termine dieser Serie löschen?')"
+            @closed="closeDeleteSeriesModal"
+            @delete="confirmDeleteSeriesEvents"
+        />
+
+        <!-- Timeline Modal -->
+        <AddEditTimelineModal
+            v-if="showTimelineModal"
+            :event="event"
+            :timelineToEdit="timelineData"
+            @close="closeTimelineModal"
+        />
     </div>
 </template>
 
 <script setup>
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, watch, nextTick } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 import {
     IconCalendarPlus,
     IconChecks,
@@ -720,6 +766,7 @@ import {
     IconLockOpen,
     IconRepeat,
     IconSquareCheckFilled,
+    IconTimeline,
     IconTrash,
     IconUsersGroup,
     IconX,
@@ -737,12 +784,16 @@ import { Float } from "@headlessui-float/vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
 const showConvertToPlanningModal = ref(false);
+const showDeleteSeriesModal = ref(false);
+const showTimelineModal = ref(false);
+const timelineData = ref([]);
 
 const emits = defineEmits([
     "editEvent",
@@ -755,6 +806,12 @@ const emits = defineEmits([
 
 const RejectEventVerificationRequestModal = defineAsyncComponent({
     loader: () => import("@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
+const AddEditTimelineModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue"),
     delay: 200,
     timeout: 3000,
 });
@@ -904,6 +961,39 @@ const convertToPlanning = () => {
             showConvertToPlanningModal.value = false;
         },
     });
+};
+
+const deleteSeriesEvents = () => {
+    showDeleteSeriesModal.value = true;
+};
+
+const confirmDeleteSeriesEvents = () => {
+    router.delete(route("events.series.delete", props.event.id), {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            showDeleteSeriesModal.value = false;
+        }
+    });
+};
+
+const closeDeleteSeriesModal = () => {
+    showDeleteSeriesModal.value = false;
+};
+
+const openTimelineModal = async () => {
+    try {
+        const response = await axios.get(route('events.timelines', { event: props.event.id }));
+        timelineData.value = response.data.timelines || [];
+        showTimelineModal.value = true;
+    } catch (error) {
+        console.error('Error loading timelines:', error);
+    }
+};
+
+const closeTimelineModal = () => {
+    showTimelineModal.value = false;
+    timelineData.value = [];
 };
 </script>
 

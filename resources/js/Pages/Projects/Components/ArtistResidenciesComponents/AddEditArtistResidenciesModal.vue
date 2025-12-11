@@ -477,7 +477,7 @@ const calculateTotalCost = computed(() => {
 
 const calculateTotalDailyAllowance = computed(() => {
 
-    return (Math.floor(artistResidency.daily_allowance) * (calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)))
+    return (artistResidency.daily_allowance * (calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)))
 })
 
 

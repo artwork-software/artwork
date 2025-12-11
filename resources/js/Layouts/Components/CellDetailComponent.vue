@@ -2,7 +2,7 @@
     <ArtworkBaseModal @close="closeModal" v-if="true" title="Details" description="">
             <div class="mx-4">
                 <div>
-                    <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell?.column?.is_locked"/>
+                    <PropertyIcon name="IconLock" stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell?.column?.is_locked"/>
                     <div class="mb-4">
                         <div class="hidden sm:block">
                             <div class="border-gray-200">
@@ -70,7 +70,7 @@
                                                     {{ $t('Add below') }}
                                                 </div>
                                                 <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                    <IconCirclePlus stroke-width="1.5" class="w-6 h-6 object-cover"/>
+                                                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -87,7 +87,7 @@
                                                 </div>
                                                 <div
                                                     class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
-                                                    <IconCircleX stroke-width="1.5" class="w-6 h-6 object-cover"/>
+                                                    <PropertyIcon name="IconCircleX" stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -106,7 +106,7 @@
                                                 {{ $t('Add below') }}
                                             </div>
                                             <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                <IconCirclePlus stroke-width="1.5" class="w-6 h-6 object-cover"/>
+                                                <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                             </div>
                                         </div>
                                     </div>
@@ -158,7 +158,7 @@
                                         type="button"
                                         @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">{{ $t('Remove comment from project') }}</span>
-                                        <IconCircleX stroke-width="1.5" class="ml-2 h-7 w-7 hover:text-error"/>
+                                        <PropertyIcon name="IconCircleX" stroke-width="1.5" class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
                                 </div>
                                 <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
@@ -192,7 +192,7 @@
                                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
                                                     {{ linkedType.name }}
                                                 </div>
-                                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                             </ListboxButton>
                                             <ListboxOptions
                                                 class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
@@ -204,7 +204,7 @@
                                                     <div :class="[selected ? 'text-white' : '']">
                                                         {{ type.name }}
                                                     </div>
-                                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                                    <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
                                                                aria-hidden="true"/>
                                                 </ListboxOption>
                                             </ListboxOptions>
@@ -308,11 +308,13 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions, IconLib],
     components: {
+        PropertyIcon,
         ArtworkBaseModal,
         TextareaComponent,
         NumberInputComponent,

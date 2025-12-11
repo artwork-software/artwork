@@ -69,10 +69,10 @@ import {computed, onMounted, ref} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useForm} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import axios from "axios";
 
 const props = defineProps({
     timelineToEdit: {
@@ -91,10 +91,6 @@ const showExamples = ref(false);
 const exampleText = ref([]);
 
 const rawText = ref('');
-
-const createOrUpdateForm = useForm({
-    dataset: props.timelineToEdit ? props.timelineToEdit.times : [],
-})
 
 const isValidTime = (time) => {
     const [hours, minutes] = time.split(":").map(Number);
@@ -251,30 +247,19 @@ const addExample = (example) => {
     rawText.value += example;
 };
 
-const updateOrCreate = () => {
-    createOrUpdateForm.dataset = dataset.value;
-    if(props.timelineToEdit){
-        createOrUpdateForm.post(
-            route('edit.timeline.event', {event: props.event.id}),
-            {
-                preserveScroll: true,
-                preserveState: false,
-                onSuccess: () => {
-                    emit('close');
-                }
-            }
-        )
-    } else {
-        createOrUpdateForm.post(
-            route('create.timeline.event', {event: props.event.id}),
-            {
-                preserveScroll: true,
-                preserveState: false,
-                onSuccess: () => {
-                    emit('close');
-                }
-            }
-        )
+const updateOrCreate = async () => {
+    try {
+        const payload = { dataset: dataset.value };
+
+        if(props.timelineToEdit){
+            await axios.post(route('edit.timeline.event', {event: props.event.id}), payload);
+        } else {
+            await axios.post(route('create.timeline.event', {event: props.event.id}), payload);
+        }
+
+        emit('close');
+    } catch (error) {
+        console.error('Error saving timeline:', error);
     }
 }
 

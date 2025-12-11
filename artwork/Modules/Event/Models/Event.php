@@ -527,4 +527,9 @@ class Event extends Model
     {
         return $this->verifications()->where('status', 'pending')->exists();
     }
+
+    public function hasTimelines(): bool
+    {
+        return $this->timelines()->exists();
+    }
 }

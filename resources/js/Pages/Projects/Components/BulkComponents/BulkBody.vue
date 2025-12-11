@@ -297,7 +297,7 @@
         :event-types="eventTypes"
         :rooms="rooms"
         :event-ids="eventIdsForMultiEdit"
-        @close="showMultiEditModal = false"
+        @close="closeMultiEditModal"
     />
 
     <ConfirmDeleteModal
@@ -833,7 +833,7 @@ const updateUserSortId = (id) => {
         { bulk_sort_id: id },
         {
             preserveScroll: true,
-            preserveState: false,
+            preserveState: true,
             onFinish: () => { isLoading.value = false; }
         }
     );
@@ -843,20 +843,32 @@ const deleteSelectedEvents = () => {
     isLoading.value = true;
     const selectedIds = getEventIdsWhereSelectedForMultiEdit();
 
-    router.delete(route('event.bulk.multi-edit.delete'), {
-        data: { eventIds: selectedIds },
-        preserveScroll: true,
-        preserveState: false,
-        onFinish: () => { isLoading.value = false; }
-    });
-
-    // FIX: wirklich lokal entfernen
-    events.value = events.value.filter(e => !e.isSelectedForMultiEdit);
+    axios.delete(route('event.bulk.multi-edit.delete'), {
+        data: { eventIds: selectedIds }
+    })
+        .then(() => {
+            // Close the confirmation modal
+            showConfirmDeleteModal.value = false;
+            // Clear selection on remaining events - broadcasts will handle removal
+            events.value.forEach(e => e.isSelectedForMultiEdit = false);
+        })
+        .catch(error => {
+            console.error('Delete failed', error);
+        })
+        .finally(() => {
+            isLoading.value = false;
+        });
 };
 
 const openMultiEditModal = () => {
     eventIdsForMultiEdit.value = getEventIdsWhereSelectedForMultiEdit();
     showMultiEditModal.value = true;
+};
+
+const closeMultiEditModal = () => {
+    showMultiEditModal.value = false;
+    // Clear selection on all events after multi-edit
+    events.value.forEach(e => e.isSelectedForMultiEdit = false);
 };
 
 const getExportModalConfiguration = () => {

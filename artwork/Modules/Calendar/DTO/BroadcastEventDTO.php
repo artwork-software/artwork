@@ -46,6 +46,7 @@ class BroadcastEventDTO extends Data
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
         public ?Collection $timelines = new Collection(),
+        public ?bool $hasTimelines = false,
     ) {
     }
 
@@ -83,6 +84,7 @@ class BroadcastEventDTO extends Data
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
             timelines: $event->timelines ?? new Collection(),
+            hasTimelines: $event->hasTimelines(),
         );
     }
 }

@@ -3670,5 +3670,9 @@
     "Calendar data is not available.": "Calendar data is not available.",
     "Select any Craft to show changes in shifts": "Select any Craft to show changes in shifts",
     "Break time (minutes)": "Break time (minutes)",
-    "This time will be deducted from the working hours when calculating the daily working time.": "This time will be deducted from the working hours when calculating the daily working time."
+    "This time will be deducted from the working hours when calculating the daily working time.": "This time will be deducted from the working hours when calculating the daily working time.",
+    "You can create a craft functionality here.": "You can create a craft functionality here.",
+    "Here you can edit the craft functionality \"{0}\".": "Here you can edit the craft functionality \"{0}\".",
+    "Status Open": "Status Open",
+    "More options":" More options"
 }

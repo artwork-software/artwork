@@ -452,7 +452,7 @@ class Event extends Model
      */
     public function getDatesForSeriesEventAttribute(): array
     {
-        if (!$this->is_series) {
+        if (!$this->is_series || !$this->series) {
             return [];
         }
 
@@ -526,5 +526,10 @@ class Event extends Model
     public function getHasVerificationAttribute(): bool
     {
         return $this->verifications()->where('status', 'pending')->exists();
+    }
+
+    public function hasTimelines(): bool
+    {
+        return $this->timelines()->exists();
     }
 }

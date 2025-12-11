@@ -48,6 +48,7 @@ class EventDTO extends Data
         public ?string $option_string,
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
+        public ?bool $hasTimelines = false,
     ) {
     }
 
@@ -92,6 +93,7 @@ class EventDTO extends Data
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
+            hasTimelines: $event->hasTimelines()
         );
     }
 }

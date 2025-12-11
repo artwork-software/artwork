@@ -343,17 +343,27 @@ class EventRepository extends BaseRepository
         DB::transaction(function () use ($eventIds, $updates, $selectedDay, $selectedStartTime, $selectedEndTime) {
             foreach ($eventIds as $eventId) {
                 $event = Event::findOrFail($eventId);
+
+                // Store original times BEFORE updating the event
+                $originalStartTime = $event->start_time;
+                $originalEndTime = $event->end_time;
+                $originalAllDay = $event->allDay;
+
                 $event->update($updates);
 
                 if ($selectedDay || $selectedStartTime || $selectedEndTime) {
-                    $startTime = $event->start_time;
-                    $endTime = $event->end_time;
-                    $allDay = $event->allDay;
+                    $startTime = $originalStartTime;
+                    $endTime = $originalEndTime;
+                    $allDay = $originalAllDay;
 
                     if ($selectedDay && !$selectedStartTime && !$selectedEndTime) {
-                        // Day-only change: keep existing times but move to new day
-                        $startTime = Carbon::parse($selectedDay)->setTimeFrom($startTime);
-                        $endTime = Carbon::parse($selectedDay)->setTimeFrom($endTime);
+                        // Day-only change: shift both start and end by the same offset to preserve duration
+                        $originalStartDate = Carbon::parse($startTime);
+                        $newStartDate = Carbon::parse($selectedDay)->setTimeFrom($startTime);
+                        $daysDifference = $originalStartDate->diffInDays($newStartDate, false);
+
+                        $startTime = $newStartDate;
+                        $endTime = Carbon::parse($endTime)->addDays($daysDifference);
                     } elseif ($selectedStartTime || $selectedEndTime) {
                         // Time-only change: update times and convert to non-all-day event
                         $day = optional($startTime)->toDateString() ?? Carbon::now()->toDateString();

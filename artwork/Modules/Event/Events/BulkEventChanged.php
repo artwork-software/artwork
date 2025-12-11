@@ -56,6 +56,7 @@ class BulkEventChanged implements ShouldBroadcastNow
                 'roomName' => $this->event->room?->name ?? null,
                 'roomPosition' => $this->event->room?->position ?? null,
                 'day' => Carbon::parse($this->event->start_time)->format('Y-m-d'),
+                'end_day' => Carbon::parse($this->event->end_time)->format('Y-m-d'),
                 'start_time' => $this->event->allDay ?  '' : Carbon::parse($this->event->start_time)->format('H:i'),
                 'end_time' => $this->event->allDay ? '' : Carbon::parse($this->event->end_time)->format('H:i'),
                 'allDay' => $this->event->allDay,

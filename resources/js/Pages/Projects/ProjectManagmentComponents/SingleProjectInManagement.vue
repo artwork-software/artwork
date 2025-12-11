@@ -27,6 +27,7 @@
                         :class="component.type === 'ActionsComponent' ? 'justify-end' : 'justify-start'"
                         @click="openProject(component, project)"
                     >
+
                         <!-- Visible content -->
                         <component
                             v-if="checkIfComponentIsVisible(component)"
@@ -138,6 +139,7 @@ import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
 import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
 import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
+import BuilderLink from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import { IconCopy, IconFolderOpen, IconPin, IconPinned, IconPinnedOff, IconTrash } from "@tabler/icons-vue";
@@ -177,6 +179,7 @@ const componentMapping = {
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
+    BuilderLink,
 };
 
 const page = ref(route().params.page ?? 1);

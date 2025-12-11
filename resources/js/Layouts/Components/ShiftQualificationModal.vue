@@ -3,7 +3,7 @@
                       :description="descriptionText">
             <div class="mx-4">
                 <div class="flex items-center gap-4">
-                    <PropertyIcon name="IconSelector" @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
+                    <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
                     <!--<Menu as="div" class="relative col-span-1">
                         <div>
                             <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button mt-5">
@@ -131,7 +131,7 @@ export default defineComponent({
     ],
     data () {
         return {
-            descriptionText: this.mode === 'create' ? this.$t('You can create a qualification here.') : this.$t('Here you can edit the qualification "{0}".', [this.shiftQualification.name]),
+            descriptionText: this.mode === 'create' ? this.$t('You can create a craft functionality here.') : this.$t('Here you can edit the craft functionality "{0}".', [this.shiftQualification.name]),
             shiftQualificationForm: useForm({
                 icon: this.mode === 'edit' ? this.shiftQualification.icon : null,
                 name: this.mode === 'edit' ? this.shiftQualification.name : null,

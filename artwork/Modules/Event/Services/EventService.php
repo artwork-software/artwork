@@ -1867,6 +1867,7 @@ readonly class EventService
             'room_id' => $data['selectedRoom']['id'] ?? null,
             'event_type_id' => $data['selectedEventType']['id'] ?? null,
             'event_status_id' => $data['selectedEventStatus']['id'] ?? null,
+            'name' => $data['eventName'] ?? null,
             'eventName' => $data['eventName'] ?? null,
             'is_planning' => $data['is_planning'] ?? null,
         ]);

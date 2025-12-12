@@ -108,6 +108,7 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -2313,6 +2314,10 @@ class ProjectController extends Controller
 
         $headerObject->projectState        = $project->state;
 
+        // Load full state object with is_planning for BulkBody component
+        $project->load('status');
+        $headerObject->project->state = $project->status;
+
         $tabInformation = [];
         ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation): void {
             $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
@@ -2780,6 +2785,9 @@ class ProjectController extends Controller
             $projectBudgetAccessBefore,
             $projectBudgetAccessAfter
         );
+
+        // Broadcast team update event
+        broadcast(new ProjectTeamUpdated($project->id));
 
         return Redirect::back();
     }

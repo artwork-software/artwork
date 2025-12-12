@@ -24,7 +24,7 @@
             <div class="flex items-center justify-center pr-2 pl-1" v-if="multiEdit">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
-                        <div class="group grid size-4 grid-cols-1">
+                        <div class="group grid size-4 grid-cols-1" :class="event.isSelectedForMultiEdit ? '' : ''" >
                             <input id="comments"  v-model="event.isSelectedForMultiEdit"
                                    aria-describedby="candidates-description"
                                    name="candidates"

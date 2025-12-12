@@ -1,7 +1,7 @@
 <template>
     <div class="my-2" @click="openTextField" v-if="!showTextField">
         <div v-if="event.description?.length === 0 || event.description === null">
-            <IconNote class="w-4 h-4 text-artwork-buttons-context"/>
+            <PropertyIcon name="IconNote" class="w-4 h-4 text-artwork-buttons-context"/>
         </div>
         <p v-else class="text-xs">
             {{ cutDescription }}
@@ -21,11 +21,13 @@
 
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
-import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import axios from "axios";
 
 export default {
     name: "EventNoteComponent",
+    components: {PropertyIcon},
     props: {
         event: {
             type: Object,
@@ -41,23 +43,26 @@ export default {
     data() {
         return {
             showTextField: false,
-            eventDescription: useForm({
-                description: this.event.description ? this.event.description : ''
-            })
+            eventDescription: {
+                description: this.event.description ? this.event.description : '',
+                originalDescription: this.event.description ? this.event.description : ''
+            }
         }
     },
     methods: {
-        updateDescription() {
-            if (this.eventDescription.isDirty) {
-                this.eventDescription.patch(route('event.update.description', this.event.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.showTextField = false
-                    }
-                })
+        async updateDescription() {
+            if (this.eventDescription.description !== this.eventDescription.originalDescription) {
+                try {
+                    await axios.patch(route('event.update.description', this.event.id), {
+                        description: this.eventDescription.description
+                    });
+                    this.eventDescription.originalDescription = this.eventDescription.description;
+                    this.showTextField = false;
+                } catch (error) {
+                    console.error('Failed to update description:', error);
+                }
             } else {
-                this.showTextField = false
+                this.showTextField = false;
             }
         },
         openTextField() {

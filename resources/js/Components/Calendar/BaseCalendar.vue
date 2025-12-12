@@ -27,7 +27,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Grid -->
         <div class="pt-20">
             <!-- Monatsansicht -->
@@ -909,6 +908,7 @@ onMounted(async () => {
         await Promise.allSettled(targets.map(k => loadMonth(k, epoch)));
     }
 
+
     // Listen for fullscreen changes to reset isFullscreen when exiting
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -974,7 +974,24 @@ function toggleMultiEdit(value) {
         editEvents.value = [];
     }
 }
-const cancelMultiEditDuplicateSelection = () => toggleMultiEdit(false);
+const cancelMultiEditDuplicateSelection = () => {
+    // Clear event selections but keep multi-edit mode active
+    editEvents.value = [];
+    const next = newCalendarData.value.map(room => {
+        let roomChanged = false;
+        const content = { ...room.content };
+        for (const [d, slot] of Object.entries(content)) {
+            let changed = false;
+            const evts = (slot.events ?? []).map(e => {
+                if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                return e;
+            });
+            if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+        }
+        return roomChanged ? { ...room, content } : room;
+    });
+    newCalendarData.value = next;
+};
 
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
 const openDeleteEventModal = (event, type) => {
@@ -1009,8 +1026,48 @@ const handleFullscreenChange = () => {
     const isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
     isFullscreen.value = isCurrentlyFullscreen;
 };
-const closeMultiEditModal = (closedOnPurpose) => { showMultiEditModal.value = false; if (closedOnPurpose) toggleMultiEdit(false); };
-const closeMultiDuplicateModal = (closedOnPurpose) => { showMultiDuplicateModal.value = false; if (closedOnPurpose) toggleMultiEdit(false); };
+const closeMultiEditModal = (closedOnPurpose) => {
+    showMultiEditModal.value = false;
+    if (closedOnPurpose) {
+        // Clear event selections but keep multi-edit mode active
+        editEvents.value = [];
+        const next = newCalendarData.value.map(room => {
+            let roomChanged = false;
+            const content = { ...room.content };
+            for (const [d, slot] of Object.entries(content)) {
+                let changed = false;
+                const evts = (slot.events ?? []).map(e => {
+                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                    return e;
+                });
+                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+            }
+            return roomChanged ? { ...room, content } : room;
+        });
+        newCalendarData.value = next;
+    }
+};
+const closeMultiDuplicateModal = (closedOnPurpose) => {
+    showMultiDuplicateModal.value = false;
+    if (closedOnPurpose) {
+        // Clear event selections but keep multi-edit mode active
+        editEvents.value = [];
+        const next = newCalendarData.value.map(room => {
+            let roomChanged = false;
+            const content = { ...room.content };
+            for (const [d, slot] of Object.entries(content)) {
+                let changed = false;
+                const evts = (slot.events ?? []).map(e => {
+                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                    return e;
+                });
+                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+            }
+            return roomChanged ? { ...room, content } : room;
+        });
+        newCalendarData.value = next;
+    }
+};
 const closeAddSubEventModal = () => { showAddSubEventModal.value = false; eventToEdit.value = null; subEventToEdit.value = null; };
 
 const eventComponentClosed = (closedOnPurpose) => {
@@ -1034,12 +1091,47 @@ const deleteEvent = () => {
     else axios.delete(route("subEvent.delete", eventToDelete.value));
     deleteComponentVisible.value = false;
 };
-const closeDeleteSelectedEventsModal = (closedOnPurpose) => { openDeleteSelectedEventsModal.value = false; if (closedOnPurpose) toggleMultiEdit(false); };
+const closeDeleteSelectedEventsModal = (closedOnPurpose) => {
+    openDeleteSelectedEventsModal.value = false;
+    if (closedOnPurpose) {
+        // Clear event selections but keep multi-edit mode active
+        editEvents.value = [];
+        const next = newCalendarData.value.map(room => {
+            let roomChanged = false;
+            const content = { ...room.content };
+            for (const [d, slot] of Object.entries(content)) {
+                let changed = false;
+                const evts = (slot.events ?? []).map(e => {
+                    if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                    return e;
+                });
+                if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+            }
+            return roomChanged ? { ...room, content } : room;
+        });
+        newCalendarData.value = next;
+    }
+};
 const deleteSelectedEvents = () => {
     axios.post(route("multi-edit.delete"), { events: editEvents.value })
         .finally(() => {
             openDeleteSelectedEventsModal.value = false;
-            toggleMultiEdit(false);
+            // Clear event selections but keep multi-edit mode active
+            editEvents.value = [];
+            const next = newCalendarData.value.map(room => {
+                let roomChanged = false;
+                const content = { ...room.content };
+                for (const [d, slot] of Object.entries(content)) {
+                    let changed = false;
+                    const evts = (slot.events ?? []).map(e => {
+                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                        return e;
+                    });
+                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+                }
+                return roomChanged ? { ...room, content } : room;
+            });
+            newCalendarData.value = next;
         });
 };
 const jumpToDayOfMonth = (day) => {
@@ -1048,17 +1140,50 @@ const jumpToDayOfMonth = (day) => {
 };
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {
-        preserveScroll: true, preserveState: true, onSuccess: () => toggleMultiEdit(false)
+        preserveScroll: true, preserveState: true, onSuccess: () => {
+            // Clear event selections but keep multi-edit mode active
+            editEvents.value = [];
+            const next = newCalendarData.value.map(room => {
+                let roomChanged = false;
+                const content = { ...room.content };
+                for (const [d, slot] of Object.entries(content)) {
+                    let changed = false;
+                    const evts = (slot.events ?? []).map(e => {
+                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                        return e;
+                    });
+                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+                }
+                return roomChanged ? { ...room, content } : room;
+            });
+            newCalendarData.value = next;
+        }
     });
 };
 const requestVerification = () => {
     router.post(route("events-verifications.request-verification"), { events: editEvents.value }, {
-        preserveScroll: true, preserveState: true, onSuccess: () => toggleMultiEdit(false)
+        preserveScroll: true, preserveState: true, onSuccess: () => {
+            // Clear event selections but keep multi-edit mode active
+            editEvents.value = [];
+            const next = newCalendarData.value.map(room => {
+                let roomChanged = false;
+                const content = { ...room.content };
+                for (const [d, slot] of Object.entries(content)) {
+                    let changed = false;
+                    const evts = (slot.events ?? []).map(e => {
+                        if (e.considerOnMultiEdit) { changed = true; return { ...e, considerOnMultiEdit: false }; }
+                        return e;
+                    });
+                    if (changed) { content[d] = { ...slot, events: evts }; roomChanged = true; }
+                }
+                return roomChanged ? { ...room, content } : room;
+            });
+            newCalendarData.value = next;
+        }
     });
 };
 
 const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
-    console.log(mainEvent, desiredEvent, mode);
     if (mode === 'create') {
         //only set eventToEdit as base for new sub event
         eventToEdit.value = mainEvent;
@@ -1067,8 +1192,6 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
         eventToEdit.value = mainEvent;
         subEventToEdit.value = desiredEvent;
     }
-
-    console.log(mainEvent, desiredEvent, mode, eventToEdit.value, subEventToEdit.value);
 
     showAddSubEventModal.value = true;
 }

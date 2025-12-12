@@ -130,7 +130,7 @@ const formatProperty = (property) => {
     }
 
     if (property.type === 'time') {
-        return new Date(property.pivot.value).toLocaleTimeString();
+        return property.pivot.value;
     }
 
     if (property.type === 'datetime') {

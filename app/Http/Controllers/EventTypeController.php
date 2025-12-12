@@ -53,12 +53,19 @@ class EventTypeController extends Controller
         }
 
         try {
-            // Get all events associated with this event type
-            $eventType->events()->update(['event_type_id' => 1]);
-            $eventType->verifiers()->detach();
-            $eventType->subEvents()->update(['event_type_id' => 1]);
-            // Delete the event type after all events have been reassigned
-            $eventType->delete();
+            DB::transaction(function () use ($eventType) {
+                // Get all events associated with this event type and reassign to event type id 1
+                // Use DB query to include soft-deleted events
+                DB::table('events')->where('event_type_id', $eventType->id)->update(['event_type_id' => 1]);
+                // Detach verifiers
+                $eventType->verifiers()->detach();
+                // Delete related records from event_type_filter table
+                DB::table('event_type_filter')->where('event_type_id', $eventType->id)->delete();
+                // Delete related records from event_type_shift_filter table
+                DB::table('event_type_shift_filter')->where('event_type_id', $eventType->id)->delete();
+                // Delete the event type after all events have been reassigned
+                $eventType->delete();
+            });
             return Redirect::route('event_types.management');
         } catch (\Exception $e) {
             return $e;

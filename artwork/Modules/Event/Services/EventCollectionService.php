@@ -146,7 +146,8 @@ class EventCollectionService
                 'shifts.serviceProvider',
                 'shifts.shiftsQualifications',
                 'subEvents.event',
-                'subEvents.event.room'
+                'subEvents.event.room',
+                'timelines'
             ])
             ->when($calendarPeriod, function ($builder) use ($calendarPeriod) {
                 // Overlap innerhalb Period

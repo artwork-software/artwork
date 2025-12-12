@@ -175,7 +175,8 @@ class CalendarService
                     'shifts.serviceProvider',
                     'shifts.shiftsQualifications',
                     'subEvents.event',
-                    'subEvents.event.room'
+                    'subEvents.event.room',
+                    'timelines'
                 ]
             )->orderBy('start_time');
         foreach ($eventsQuery->get()->all() as $event) {

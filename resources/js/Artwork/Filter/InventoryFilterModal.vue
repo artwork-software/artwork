@@ -74,6 +74,25 @@
               </div>
             </div>
 
+            <!-- Tag chips -->
+            <div
+              v-for="tag in activeFilters.tags"
+              :key="`tag-${tag.id}`"
+              class="group block cursor-pointer shrink-0 w-fit px-2 py-1.5 rounded-full border"
+              :style="tagChipStyle(tag)"
+            >
+              <div class="flex items-center">
+                <div class="mx-2">
+                  <p class="text-xs group-hover:opacity-80">{{ tag.name }}</p>
+                </div>
+                <div class="flex items-center">
+                  <button type="button" @click="removeActiveFilter(tag, 'tag')">
+                    <XIcon class="size-4 hover:opacity-80" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Hinweis, falls keine aktiven Filter -->
             <div v-if="totalActiveCount === 0" class="text-xs text-gray-500">
               {{ $t('No active filters') }}
@@ -302,9 +321,9 @@
                                   coerce="number"
                               />
 
-                              <!-- Allgemein: vordefinierte Werte -->
+                              <!-- Selection: vordefinierte Werte -->
                               <select
-                                  v-else-if="prop.select_values && prop.select_values.length"
+                                  v-else-if="prop.type === 'selection' && prop.select_values && prop.select_values.length"
                                   v-model="prop.value"
                                   class="border border-gray-300 bg-white shadow-md rounded px-2 py-3 text-xs w-full"
                               >
@@ -314,20 +333,31 @@
                                   </option>
                               </select>
 
-                              <!-- Fallback: Text -->
+                              <!-- Checkbox -->
+                              <div v-else-if="prop.type === 'checkbox'" class="flex items-center">
+                                  <input
+                                      type="checkbox"
+                                      :id="`prop-checkbox-${prop.id}`"
+                                      :checked="prop.value === true || prop.value === 'true' || prop.value === 1"
+                                      @change="prop.value = $event.target.checked"
+                                      class="input-checklist"
+                                  />
+                              </div>
+
+                              <!-- Standard Input: text, number, date, etc. -->
                               <BaseInput
-                                  v-else
+                                  v-else-if="prop.type !== 'file'"
                                   :id="`prop-input-${prop.id}`"
                                   :label="prop.name"
                                   v-model="prop.value"
-                                  type="text"
+                                  :type="mapTypeToInputType(prop.type)"
                               />
 
                               <!-- Clear -->
                               <button
                                   type="button"
                                   class="text-xs underline underline-offset-2 text-gray-400 hover:text-gray-600"
-                                  v-if="prop.value"
+                                  v-if="prop.value !== '' && prop.value !== null && prop.value !== undefined && prop.value !== false"
                                   @click="prop.value = ''"
                               >
                                   {{ $t('Clear') }}
@@ -337,6 +367,68 @@
                   </div>
               </div>
           </div>
+
+        <!-- TAGS -->
+        <div class="py-1" v-if="tags && tags.length">
+          <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+            {{ $t('Tags') }}
+          </div>
+
+          <div class="space-y-2 mt-2">
+            <div class="card white px-4">
+              <div
+                class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
+                @click="sections.tags.open = !sections.tags.open"
+              >
+                <div class="text-sm text-gray-900">
+                  {{ $t('All tags') }}
+                </div>
+                <div class="flex items-center gap-5">
+                  <span
+                    class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                    :class="selectedTagIds.length > 0 ? 'visible' : 'invisible'"
+                  >
+                    {{ selectedTagIds.length }} {{ $t('selected') }}
+                  </span>
+                  <component
+                    :is="IconChevronDown"
+                    class="w-4 h-4 text-gray-400"
+                    :class="sections.tags.open ? 'rotate-180' : ''"
+                  />
+                </div>
+              </div>
+
+              <div v-if="sections.tags.open" class="space-y-3 my-3">
+                <!-- Loop through tag groups -->
+                <div v-for="group in groupedTags" :key="group.key" class="space-y-2">
+                  <div class="text-xs font-semibold text-gray-600 px-1">
+                    {{ group.name }}
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="tag in group.tags"
+                      :key="tag.id"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
+                      :class="selectedTagIds.includes(tag.id)
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'"
+                      @click="toggleTag(tag.id)"
+                    >
+                      <span
+                        class="inline-block h-2 w-2 rounded-full border border-white/60"
+                        :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                      />
+                      <span class="truncate max-w-[120px]">
+                        {{ tag.name }}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -360,7 +452,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
@@ -380,9 +472,11 @@ const page = usePage()
  */
 const categories = computed(() => page.props?.categories ?? [])
 const filterableProperties = computed(() => page.props?.filterable_properties ?? [])
-const userFilter = computed(() => page.props?.user_filter ?? { category_ids: [], sub_category_ids: [], property_filters: {} })
+const userFilter = computed(() => page.props?.user_filter ?? { category_ids: [], sub_category_ids: [], property_filters: {}, tag_ids: [] })
 const rooms = computed(() => page.props?.rooms ?? [])                   // [{id,name}]
 const manufacturers = computed(() => page.props?.manufacturers ?? [])   // [{id,name}]
+const tags = computed(() => page.props?.tags ?? [])                     // [{id,name,color}]
+const tagGroups = computed(() => page.props?.tagGroups ?? [])           // [{id,name}]
 /**
  * UI-Modelle (mit checked/value + open Zuständen),
  * damit wir wie im Calendar-Filter arbeiten können.
@@ -398,8 +492,11 @@ const ui = reactive({
 const sections = reactive({
   categories: { open: true },
   subCategories: { open: true },
-  properties: { open: true }
+  properties: { open: true },
+  tags: { open: true }
 })
+
+const selectedTagIds = ref([])
 
 /* ---------- Helpers ---------- */
 
@@ -414,9 +511,58 @@ const selectedSubCategoryIds = computed(() => {
 const filledPropertyCount = computed(() => ui.properties.filter(p => !!p.value).length)
 
 const totalActiveCount = computed(() =>
-  selectedCategoryIds.value.length + selectedSubCategoryIds.value.length + filledPropertyCount.value
+  selectedCategoryIds.value.length + selectedSubCategoryIds.value.length + filledPropertyCount.value + selectedTagIds.value.length
 )
 
+/**
+ * Groups tags by their tag groups.
+ * Tags without a group are placed under "Inventartags ohne Gruppe"
+ */
+const groupedTags = computed(() => {
+  const groups = []
+  const tagList = tags.value || []
+  const groupList = tagGroups.value || []
+
+  // Create a map of group ID to group name
+  const groupMap = new Map()
+  groupList.forEach(group => {
+    groupMap.set(group.id, group.name)
+  })
+
+  // Group tags by their inventory_tag_group_id
+  const tagsByGroup = new Map()
+  tagList.forEach(tag => {
+    const groupId = tag.inventory_tag_group_id || null
+    if (!tagsByGroup.has(groupId)) {
+      tagsByGroup.set(groupId, [])
+    }
+    tagsByGroup.get(groupId).push(tag)
+  })
+
+  // Add grouped tags first (tags with a group)
+  groupList.forEach(group => {
+    const groupTags = tagsByGroup.get(group.id) || []
+    if (groupTags.length > 0) {
+      groups.push({
+        key: `group-${group.id}`,
+        name: group.name,
+        tags: groupTags
+      })
+    }
+  })
+
+  // Add ungrouped tags last
+  const ungroupedTags = tagsByGroup.get(null) || []
+  if (ungroupedTags.length > 0) {
+    groups.push({
+      key: 'ungrouped',
+      name: 'Inventartags ohne Gruppe',
+      tags: ungroupedTags
+    })
+  }
+
+  return groups
+})
 
 // Hilfsfunktionen, um ID -> Name für Chips umzusetzen
 function resolvePropertyDisplay(prop, val) {
@@ -445,7 +591,9 @@ const activeFilters = computed(() => {
         .filter(p => p.value !== '' && p.value !== null && p.value !== undefined)
         .map(p => ({ id: p.id, name: p.name, value: resolvePropertyDisplay(p, p.value) }))
 
-    return { categories: cats, subCategories: subs, properties: props }
+    const activeTags = tags.value.filter(t => selectedTagIds.value.includes(t.id))
+
+    return { categories: cats, subCategories: subs, properties: props, tags: activeTags }
 })
 
 function removeActiveFilter(filter, type) {
@@ -460,6 +608,8 @@ function removeActiveFilter(filter, type) {
     } else if (type === 'property') {
         const p = ui.properties.find(pp => pp.id === filter.id)
         if (p) p.value = ''
+    } else if (type === 'tag') {
+        selectedTagIds.value = selectedTagIds.value.filter(id => id !== filter.id)
     }
 }
 
@@ -470,10 +620,50 @@ function removeActiveFilter(filter, type) {
  */
 function onToggleCategory(_) {}
 
+/**
+ * Tag-Helpers
+ */
+function toggleTag(tagId) {
+    const idx = selectedTagIds.value.indexOf(tagId)
+    if (idx === -1) {
+        selectedTagIds.value.push(tagId)
+    } else {
+        selectedTagIds.value.splice(idx, 1)
+    }
+}
+
+function tagChipStyle(tag) {
+    const base = tag?.color || '#2563eb'
+    return {
+        backgroundColor: base + '10',
+        borderColor: base + '40',
+        color: base,
+    }
+}
+
+/**
+ * Maps database type values to HTML5 input types
+ */
+function mapTypeToInputType(dbType) {
+    const typeMap = {
+        'string': 'text',
+        'boolean': 'checkbox',
+        'number': 'number',
+        'date': 'date',
+        'time': 'time',
+        'datetime': 'datetime-local',
+        'email': 'email',
+        'url': 'url',
+        'tel': 'tel',
+    }
+    return typeMap[dbType] || 'text'
+}
+
 function resetFilter() {
     ui.categories.forEach(c => (c.checked = false))
     Object.values(ui.subCategoriesByCategory).forEach(group => group.items.forEach(s => (s.checked = false)))
     ui.properties.forEach(p => (p.value = ''))
+    selectedTagIds.value = []
     applyFilter()
 }
 
@@ -488,7 +678,8 @@ function applyFilter() {
     const data = {
         category_ids: selectedCategoryIds.value,
         sub_category_ids: selectedSubCategoryIds.value,
-        property_filters
+        property_filters,
+        tag_ids: selectedTagIds.value
     }
 
     router.post(route('inventory.filter.store'), data, {
@@ -541,9 +732,16 @@ function restoreFromUserFilter() {
                 : (incoming ?? '')
     })
 
+    // Restore selected tags
+    const tagIdsFromFilter = uf.tag_ids || []
+    selectedTagIds.value = Array.isArray(tagIdsFromFilter)
+        ? tagIdsFromFilter.map(Number).filter(n => !Number.isNaN(n))
+        : []
+
     sections.categories.open = true
     sections.subCategories.open = true
     sections.properties.open = true
+    sections.tags.open = selectedTagIds.value.length > 0
 }
 
 onMounted(() => {

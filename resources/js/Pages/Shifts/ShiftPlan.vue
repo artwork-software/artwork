@@ -372,12 +372,9 @@
                 </div>
 
                 <div class="bg-artwork-navigation-background pointer-events-auto">
-                    <div
-                        v-show="showUserOverview"
-
+                    <div v-show="showUserOverview"
                         class="relative z-20 w-[97%] overflow-y-scroll bg-artwork-navigation-background "
-                        :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }"
-                    >
+                        :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
@@ -452,8 +449,7 @@
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">
-                                                    <template v-for="shiftQualification in shiftQualifications"
-                                                              :key="shiftQualification.id">
+                                                    <template v-for="shiftQualification in shiftQualifications":key="shiftQualification.id">
                                                         <div class="relative mb-2 flex items-start">
                                                             <div class="flex h-6 items-center">
                                                                 <input
@@ -669,6 +665,7 @@
                                 </div>
                             </template>
                         </Virtual2DGrid>
+
                     </div>
                 </div>
             </div>
@@ -1455,6 +1452,7 @@ const page = usePage()
 
 const shiftPlanUserSortById = computed<string | null>(() => page.props.auth.user.shift_plan_user_sort_by_id)
 
+
 type GridRow =
     | { key: string; kind: 'craft'; craft: any }
     | { key: string; kind: 'worker'; craft: any; worker: any }
@@ -1819,7 +1817,6 @@ function previousTimeRange() {
     props.dateValue[0] = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
     props.dateValue[1] = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
     updateTimes()
-    loadMonth('prev')
 }
 
 function nextTimeRange() {
@@ -1827,7 +1824,6 @@ function nextTimeRange() {
     props.dateValue[0] = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
     props.dateValue[1] = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
     updateTimes()
-    loadMonth('next')
 }
 
 function calculateDateDifference() {
@@ -2164,7 +2160,6 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 if (err?.message !== 'no_qualification') {
                     $toast?.error?.($t('Saving failed'))
                     showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
-
                 }
             })
             .finally(() => {
@@ -2183,7 +2178,6 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 userForMultiEdit.value.shift_ids = Array.from(oldIds)
                 $toast?.error?.($t('Saving failed'))
                 showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
-
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)

@@ -232,14 +232,10 @@ class InventoryArticleController extends Controller
         $endDate = $request->get('end_date');
         /** @var User $user */
         $user = $this->authManager->user();
-        $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticles(
-            $user,
-            $startDate,
-            $endDate
-        );
+        $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticlesNew($user);
 
         return response()->json([
-            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties'])
+            'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties', 'tags'])
                 ->paginate(15)
         ]);
     }

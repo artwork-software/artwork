@@ -19,6 +19,8 @@ class InventoryUserFilterRequest extends FormRequest
             'sub_category_ids' => 'array',
             'sub_category_ids.*' => 'integer',
             'property_filters' => 'array',
+            'tag_ids' => 'array',
+            'tag_ids.*' => 'integer',
         ];
     }
 }

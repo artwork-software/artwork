@@ -676,6 +676,7 @@
     "this freelancer": "this freelancer",
     "this service provider": "this service provider",
     "There is no position that can be filled by {0} with the available craft function.": "There is no position that can be filled by {0} with the available craft function.",
+    "{0} has no open function in the shift and therefore cannot be assigned.": "{0} has no open function in the shift and therefore cannot be assigned.",
     "Organize shift": "Organize shift",
     "Determine how long your shift lasts and how many people should work in your shift.": "Determine how long your shift lasts and how many people should work in your shift.",
     "Shift start": "Shift start",

@@ -25,7 +25,6 @@
                 </div>
             </div>
         </header>
-
         <!-- Konflikt-Leiste: Zeigt Überbuchungen im Zeitraum an -->
         <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-red-200 bg-red-50/70 p-4 ring-1 ring-inset ring-red-200">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -554,6 +553,16 @@ const props = defineProps({
         required: false,
         default: false,
     },
+    firstEvent: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+    lastEvent: {
+        type: Object,
+        required: false,
+        default: null,
+    },
 });
 
 const internMaterialIssue = useForm({
@@ -561,10 +570,10 @@ const internMaterialIssue = useForm({
     name: props.issueOfMaterial?.name || "",
     project_id: props.issueOfMaterial?.project_id || null,
     project: props.issueOfMaterial?.project || null,
-    start_date: props.issueOfMaterial?.start_date || "",
-    start_time: normalizeTime(props.issueOfMaterial?.start_time) || "00:00",
-    end_date: props.issueOfMaterial?.end_date || "",
-    end_time: normalizeTime(props.issueOfMaterial?.end_time) || "23:59",
+    start_date: props.issueOfMaterial?.start_date || props.firstEvent?.formatted_dates?.start_without_time || "",
+    start_time: normalizeTime(props.issueOfMaterial?.start_time) || props.firstEvent?.formatted_dates?.startTime || "00:00",
+    end_date: props.issueOfMaterial?.end_date || props.lastEvent?.formatted_dates?.end_without_time || "",
+    end_time: normalizeTime(props.issueOfMaterial?.end_time) || props.lastEvent?.formatted_dates?.endTime || "23:59",
     room_id: props.issueOfMaterial?.room_id || null,
     notes: props.issueOfMaterial?.notes || "",
     responsible_user_ids: props.issueOfMaterial?.responsible_user_ids || [],
@@ -1042,6 +1051,7 @@ const submit = () => {
     // Ensure times are in HH:mm before submitting
     internMaterialIssue.start_time = normalizeTime(internMaterialIssue.start_time) || "";
     internMaterialIssue.end_time = normalizeTime(internMaterialIssue.end_time) || "";
+
     if (selectedProject.value) {
         internMaterialIssue.project_id = selectedProject.value.id;
     } else {

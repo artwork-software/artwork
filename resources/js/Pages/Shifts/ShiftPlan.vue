@@ -2051,7 +2051,6 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 userForMultiEdit.value.shift_ids = Array.from(oldIds)
                 $toast?.error?.($t('Saving failed'))
                 showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
-                console.error(err)
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)

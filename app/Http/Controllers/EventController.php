@@ -205,8 +205,11 @@ class EventController extends Controller
                                 'shifts',
                                 'shifts.craft',
                                 'shifts.users',
+                                'shifts.users.globalQualifications',
                                 'shifts.freelancer',
+                                'shifts.freelancer.globalQualifications',
                                 'shifts.serviceProvider',
+                                'shifts.serviceProvider.globalQualifications',
                                 'shifts.shiftsQualifications',
                                 'subEvents.event',
                                 'subEvents.event.room'
@@ -624,6 +627,9 @@ class EventController extends Controller
         return Inertia::render($renderViewName, [
             'history' => [],
             'crafts' => Craft::with([
+                'users',
+                'freelancers',
+                'serviceProviders',
                 'managingUsers',
                 'managingFreelancers',
                 'managingServiceProviders',

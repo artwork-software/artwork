@@ -236,79 +236,115 @@
                                 </div>
                             </li>
 
-                            <!-- Profil -->
+                            <!-- Profil / Account Popover -->
                             <li>
-                                <Popover class="ml-0">
-                                    <Float auto-placement portal :offset="{ mainAxis: 150, crossAxis: 250 }">
-                                        <PopoverButton>
-                                            <div
-                                                :class="[
-                                                    'flex items-center gap-3 text-sm/6 font-semibold text-white',
-                                                    isFullSideBar ? 'px-2 h-12 justify-start' : 'px-3 h-12 justify-center'
-                                                  ]"
-                                            >
+                                <Popover class="relative">
+                                    <Float
+                                        portal
+                                        auto-placement
+                                        :offset="{ mainAxis: 12, crossAxis: isFullSideBar ? 0 : 12 }"
+                                        :shift="12"
+                                        :flip="12"
+                                    >
+                                        <!-- Trigger -->
+                                        <PopoverButton
+                                            class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-white/5 focus:outline-none focus:ring-0 focus:ring-white/15"
+                                            :class="isFullSideBar ? 'justify-start' : 'justify-center px-3'"
+                                        >
+                                            <div class="relative">
                                                 <img
-                                                    class="size-8 min-w-8 min-h-8 rounded-full object-cover bg-gray-50"
+                                                    class="h-9 w-9 rounded-full object-cover ring-1 ring-white/10 bg-gray-100"
                                                     :src="usePage().props.auth.user.profile_photo_url"
                                                     alt=""
                                                 />
-                                                <span v-if="isFullSideBar">
-                        <span class="sr-only">Your profile</span>
-                        <span aria-hidden="true">{{ usePage().props.auth.user.full_name }}</span>
-                      </span>
+                                            </div>
+
+                                            <div v-if="isFullSideBar" class="min-w-0 flex-1">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <span class="truncate text-sm font-semibold text-white">
+                                                      {{ usePage().props.auth.user.full_name }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </PopoverButton>
 
+                                        <!-- Panel -->
                                         <transition
-                                            enter-active-class="transition ease-out duration-200"
-                                            enter-from-class="opacity-0 translate-y-1"
-                                            enter-to-class="opacity-100 translate-y-0"
-                                            leave-active-class="transition ease-in duration-150"
-                                            leave-from-class="opacity-100 translate-y-0"
-                                            leave-to-class="opacity-0 translate-y-1"
+                                            enter-active-class="transition ease-out duration-150"
+                                            enter-from-class="opacity-0 translate-y-1 scale-[0.98]"
+                                            enter-to-class="opacity-100 translate-y-0 scale-100"
+                                            leave-active-class="transition ease-in duration-120"
+                                            leave-from-class="opacity-100 translate-y-0 scale-100"
+                                            leave-to-class="opacity-0 translate-y-1 scale-[0.98]"
                                         >
-                                            <PopoverPanel class="absolute left-1/2 z-10 flex w-screen max-w-max card glassy -translate-x-1/2 p-3">
-                                                <div class="w-screen max-w-md flex-auto overflow-hidden card white p-3">
-                                                    <div class="flex w-full items-center justify-between space-x-6 p-2">
-                                                        <div class="flex-1 truncate">
-                                                            <div class="flex items-center space-x-3">
-                                                                <div class="font-bold headline h2">{{ usePage().props.auth.user.full_name }}</div>
-                                                                <span class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                {{ usePage().props.auth.user.position }}
-                              </span>
-                                                            </div>
-                                                            <p class="mt-1 truncate text-sm text-gray-500">{{ usePage().props.auth.user.business }}</p>
-                                                        </div>
+                                            <PopoverPanel
+                                                class="z-50 w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-[#0B1220]/95 shadow-2xl backdrop-blur-xl"
+                                            >
+                                                <!-- Header -->
+                                                <div class="p-4">
+                                                    <div class="flex items-center gap-3">
                                                         <img
-                                                            class="size-14 shrink-0 rounded-full object-cover bg-gray-300"
+                                                            class="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10 bg-gray-100"
                                                             :src="usePage().props.auth.user.profile_photo_url"
                                                             alt=""
                                                         />
-                                                    </div>
-                                                    <div class="border-t border-dashed border-gray-200">
-                                                        <div class="flex items-center justify-between py-2">
-                                                            <div
-                                                                @click="logout"
-                                                                class="relative -mr-px inline-flex w-1/2 items-center justify-center gap-3 rounded-bl-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-red-500 cursor-pointer"
-                                                            >
-                                                                <PropertyIcon name="IconLogout" class="size-5 text-gray-400 transition group-hover:text-red-500" />
-                                                                {{ $t('Logout') }}
+
+                                                        <div class="min-w-0 flex-1">
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="truncate text-sm font-semibold text-white">
+                                                                    {{ usePage().props.auth.user.full_name }}
+                                                                </div>
+
+                                                                <span
+                                                                    v-if="usePage().props.auth.user.position"
+                                                                    class="inline-flex shrink-0 items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px]
+                           font-medium text-emerald-200 ring-1 ring-emerald-500/20"
+                                                                >
+                    {{ usePage().props.auth.user.position }}
+                  </span>
                                                             </div>
-                                                            <Link
-                                                                :href="route('user.edit.info', { user: usePage().props.auth.user.id })"
-                                                                class="relative inline-flex w-1/2 items-center justify-center gap-3 rounded-br-lg border border-transparent text-sm font-semibold text-gray-900 transition hover:text-artwork-buttons-create"
-                                                            >
-                                                                <PropertyIcon name="IconUserCircle" class="size-5 text-gray-400 transition group-hover:text-artwork-buttons-create" />
-                                                                {{ $t('Your account') }}
-                                                            </Link>
+
+                                                            <div class="mt-0.5 truncate text-xs text-white/60">
+                                                                {{ usePage().props.auth.user.business }}
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                </div>
+
+                                                <!-- Actions -->
+                                                <div class="border-t border-white/10 p-2">
+                                                    <Link
+                                                        :href="route('user.edit.info', { user: usePage().props.auth.user.id })"
+                                                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90
+                     transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/15"
+                                                    >
+                                                        <PropertyIcon
+                                                            name="IconUserCircle"
+                                                            class="h-5 w-5 text-white/50 transition group-hover:text-white/80"
+                                                        />
+                                                        <span class="flex-1">{{ $t('Your account') }}</span>
+                                                        <PropertyIcon name="IconChevronRight" class="h-4 w-4 text-white/40 group-hover:text-white/70" />
+                                                    </Link>
+
+                                                    <button
+                                                        type="button"
+                                                        @click="logout"
+                                                        class="group mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90
+                     transition hover:bg-red-500/10 hover:text-red-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 cursor-pointer"
+                                                    >
+                                                        <PropertyIcon
+                                                            name="IconLogout"
+                                                            class="h-5 w-5 text-white/50 transition group-hover:text-red-200"
+                                                        />
+                                                        <span class="">{{ $t('Logout') }}</span>
+                                                    </button>
                                                 </div>
                                             </PopoverPanel>
                                         </transition>
                                     </Float>
                                 </Popover>
                             </li>
+
                         </ul>
                     </li>
                 </ul>

@@ -13,7 +13,7 @@
         <div v-else-if="loadingTeam" class="text-xs text-secondary mt-2">
             {{ $t('Loading data...') }}
         </div>
-        <div class="flex w-full mt-2 flex-wrap mb-3">
+        <div class="flex w-full mt-2 flex-wrap mb-3" v-if="(teamProject.project_managers || []).length > 0">
             <span
                 class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project management') }}
@@ -38,7 +38,7 @@
                  </div>
             </div>
         </div>
-        <div class="flex w-full mt-2 flex-wrap mb-4">
+        <div class="flex w-full mt-2 flex-wrap mb-4" v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
             <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project team') }}
             </span>
@@ -154,10 +154,14 @@ export default defineComponent({
     },
     mounted() {
         this.ensureTeamData();
+        this.setupTeamUpdateListener();
+    },
+    beforeUnmount() {
+        this.cleanupTeamUpdateListener();
     },
     methods: {
-        async ensureTeamData() {
-            if (this.projectHasTeamData(this.teamProject)) {
+        async ensureTeamData(force = false) {
+            if (!force && this.projectHasTeamData(this.teamProject)) {
                 return;
             }
 
@@ -212,6 +216,25 @@ export default defineComponent({
         },
         checkRoleHasUser(role) {
             return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id));
+        },
+        setupTeamUpdateListener() {
+            const id = this.currentProjectId();
+            if (!id) {
+                return;
+            }
+
+            window.Echo.private(`project.${id}`)
+                .listen('.team.updated', () => {
+                    this.ensureTeamData(true);
+                });
+        },
+        cleanupTeamUpdateListener() {
+            const id = this.currentProjectId();
+            if (!id) {
+                return;
+            }
+
+            window.Echo.leave(`project.${id}`);
         }
     }
 });

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property array $category_ids
  * @property array $sub_category_ids
  * @property array $property_filters
+ * @property array $tag_ids
  */
 class InventoryUserFilter extends Model
 {
@@ -23,12 +24,14 @@ class InventoryUserFilter extends Model
         'category_ids',
         'sub_category_ids',
         'property_filters',
+        'tag_ids',
     ];
 
     protected $casts = [
         'category_ids' => 'array',
         'sub_category_ids' => 'array',
         'property_filters' => 'array',
+        'tag_ids' => 'array',
     ];
 
     public function user()

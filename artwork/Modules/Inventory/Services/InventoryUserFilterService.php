@@ -121,6 +121,13 @@ class InventoryUserFilterService
             }
         }
 
+        // Tags
+        if (!empty($filter->tag_ids)) {
+            $qb->whereHas('tags', function ($q) use ($filter) {
+                $q->whereIn('inventory_tags.id', $filter->tag_ids);
+            });
+        }
+
         return $qb;
     }
 }

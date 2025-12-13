@@ -4,6 +4,12 @@
         description="Select a category to view and add articles."
         @close="$emit('close')"
     >
+        <div class="mb-4 flex items-center justify-between">
+            <div class="text-sm font-medium text-gray-700">
+                {{ $t('Filter articles') }}
+            </div>
+            <InventoryFunctionBarFilter @close="handleFilterClose" />
+        </div>
 
         <Listbox as="div" v-model="selectedCategory">
             <ListboxLabel class="xsDark">
@@ -69,6 +75,7 @@ import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} fro
 import {onMounted, ref} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {IconCheck, IconChevronUp} from "@tabler/icons-vue";
+import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 
 const props = defineProps({})
 
@@ -88,6 +95,11 @@ const fetchCategories = async () => {
     } catch (error) {
         console.error('Error fetching categories:', error)
     }
+}
+
+const handleFilterClose = () => {
+    // Refetch categories when filter modal closes to apply new filters
+    fetchCategories()
 }
 </script>
 

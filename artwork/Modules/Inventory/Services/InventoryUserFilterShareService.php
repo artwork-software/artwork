@@ -5,6 +5,8 @@ namespace Artwork\Modules\Inventory\Services;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Artwork\Modules\Inventory\Models\InventoryTag;
+use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Repositories\InventoryUserFilterRepository;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Project\Models\Project;
@@ -57,6 +59,7 @@ class InventoryUserFilterShareService
             'category_ids' => $userFilter?->category_ids ?? [],
             'sub_category_ids' => $userFilter?->sub_category_ids ?? [],
             'property_filters' => $userFilter?->property_filters ?? [],
+            'tag_ids' => $userFilter?->tag_ids ?? [],
         ];
 
         Inertia::share([
@@ -70,7 +73,11 @@ class InventoryUserFilterShareService
             // NEU:
             'projects' => Project::select('id','name')->orderBy('name')->get(),
             'users' => User::select('id','first_name', 'last_name')->orderBy('first_name')->get(),
-            // optional: 'manufacturers' => Manufacturer::all(),
+            'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
+
+            // Tags für Filter
+            'tags' => InventoryTag::select('id', 'name', 'color', 'inventory_tag_group_id')->orderBy('position')->get(),
+            'tagGroups' => InventoryTagGroup::select('id', 'name')->orderBy('position')->get(),
         ]);
     }
 

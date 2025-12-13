@@ -61,7 +61,7 @@
                     </div>
                 </div>
             </transition>
-            <div class="bg-white flex-grow">
+            <div class="bg-white grow">
                 <ShiftPlanFunctionBar
                     @previousTimeRange="previousTimeRange"
                     @next-time-range="nextTimeRange"
@@ -105,18 +105,18 @@
                 </ShiftPlanFunctionBar>
             </div>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlanEl" id="shiftPlanEl" class="bg-white flex-grow"
-                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
+                <div ref="shiftPlanEl" id="shiftPlanEl" class="bg-white grow"
+                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-(--dynamic-height) overflow-y-scroll' : '',' max-h-(--dynamic-height) overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader sticky top-0 z-30">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
-                                    <th v-for="day in days" :ref="el => registerMonthSentinel(el as HTMLElement, day)"
+                                    <th v-for="day in days"
                                         :key="`head-${day.fullDay}-${day.weekNumber}`"
                                         :id="day.isExtraRow ? 'extra_row_' + day.weekNumber : day.fullDay"
                                         style="max-width: 204px"
-                                        class="z-20 h-8 py-2 px-[1px] border-r-2 border-artwork-navigation-background truncate text-white">
+                                        class="z-20 h-8 py-2 px-px border-r-2 border-artwork-navigation-background truncate text-white">
                                         <div v-if="day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }">
                                             <span class="text-[9px] font-bold">KW{{ day.weekNumber }}</span>
                                         </div>
@@ -176,7 +176,7 @@
                                              :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12' : 'max-h-28 h-28 overflow-y-auto'">
                                             <template
                                                 v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content[day.fullDay]?.events">
-                                                <div
+                                                <template
                                                     v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)"
                                                     :key="group.id">
                                                     <Link :disabled="checkIfUserIsAdminOrInGroup(group)"
@@ -185,7 +185,7 @@
                                                         <PropertyIcon :name="group.icon" class="size-4" aria-hidden="true"/>
                                                         <span>{{ group.name }}</span>
                                                     </Link>
-                                                </div>
+                                                </template>
                                             </template>
                                             <template v-if="room.content[day.fullDay]?.events">
                                                 <div v-for="event in room.content[day.fullDay].events"
@@ -198,21 +198,19 @@
                                             <div class="space-y-0.5">
                                                 <template v-if="room.content[day.fullDay]?.shifts?.length">
                                                     <!-- 1. Ebene: Projekt-Gruppen -->
-                                                    <div
+                                                    <template
                                                         v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)"
                                                         :key="group.projectId ?? `no-project-${day.fullDay}`">
                                                         <!-- Projekt-Gruppen-Container -->
                                                         <div class="rounded-lg border duration-200 ease-in-out"
                                                              :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'">
                                                             <!-- Kopfzeile: Projekt / „ohne Projekt“ -->
-                                                            <div>
-                                                                <div v-if="group.project"
-                                                                     class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
-                                                                    <span>{{ group.project.name }}</span>
-                                                                    <span class="text-[10px] text-sky-600">
+                                                            <div v-if="group.project"
+                                                                 class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800">
+                                                                <span>{{ group.project.name }}</span>
+                                                                <span class="text-[10px] text-sky-600">
                                                                         ({{ group.shifts.length }})
                                                                     </span>
-                                                                </div>
                                                             </div>
 
                                                             <!-- 2. Ebene: einzelne Schichten der Gruppe -->
@@ -239,7 +237,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </template>
                                                 </template>
                                             </div>
 
@@ -308,10 +306,7 @@
                         class="relative z-20 w-[97%] overflow-y-scroll bg-artwork-navigation-background "
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }"
                     >
-                        <div
-                            class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3"
-                            :style="{ top: calculateTopPositionOfUserOverView }"
-                        >
+                        <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
@@ -385,7 +380,7 @@
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">
-                                                    <div v-for="shiftQualification in shiftQualifications"
+                                                    <template v-for="shiftQualification in shiftQualifications"
                                                          :key="shiftQualification.id">
                                                         <div class="relative mb-2 flex items-start">
                                                             <div class="flex h-6 items-center">
@@ -403,7 +398,7 @@
                                                                 </label>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </div>
@@ -470,197 +465,214 @@
                         </div>
 
                         <div class="pt-10 z-10 min-w-max">
-                            <!-- Wrapper für die gesamte Achse -->
                             <div class="w-full">
                                 <div v-for="craft in craftsToDisplay" :key="craft.id" class="pt-3">
-                                    <!-- Craft-Kopf (war vorher <tr> mit <td colspan>) -->
-                                    <div class="stickyYAxisNoMarginLeft xsLight !font-lexend mb-1 flex w-96 cursor-pointer justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                    <!-- Craft-Kopf -->
+                                    <div
+                                        class="stickyYAxisNoMarginLeft xsLight font-lexend! mb-1 flex w-96 cursor-pointer justify-between pb-1"
+                                        @click="changeCraftVisibility(craft.id)"
+                                    >
                                         <div class="flex items-center justify-between gap-x-3 w-full">
                                             <div class="flex items-center gap-2">
                                                 <span>{{ craft.name }}</span>
-                                                <!-- user count badge -->
-                                                <span v-if="craft.users.length > 0" class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-gray-100">
-                                                    {{ craft.users.length }}
-                                                    <span class="inline-block h-2 w-2 rounded-full bg-gray-100"></span>
-                                                </span>
+                                                <span
+                                                    v-if="craft.users.length > 0"
+                                                    class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-gray-100"
+                                                >
+                            {{ craft.users.length }}
+                            <span class="inline-block h-2 w-2 rounded-full bg-gray-100"></span>
+                        </span>
                                             </div>
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-normal text-gray-100">
-                                                <PropertyIcon name="IconChevronDown"
-                                                    class="mt-[1px] h-3.5 w-3.5 transition-transform duration-200"
-                                                    :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180'"
-                                                />
-                                            </span>
+                                            <span
+                                                class="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-normal text-gray-100"
+                                            >
+                        <PropertyIcon
+                            name="IconChevronDown"
+                            class="mt-[1px] h-3.5 w-3.5 transition-transform duration-200"
+                            :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180'"
+                        />
+                    </span>
                                         </div>
                                     </div>
 
-                                    <!-- Users für dieses Craft -->
-                                    <div
-                                        v-for="(user, index) in craft.users"
-                                        :key="user.element.id + '_' + user.type"
+                                    <!-- Virtuelle User-Liste für dieses Craft -->
+                                    <RecycleScroller
                                         v-if="!closedCrafts.includes(craft.id)"
-                                        class="flex w-full"
+                                        :items="craft.users"
+                                        key-field="key"
+                                        :item-size="rowHeight"
+                                        class="flex w-full flex-col"
                                     >
-                                        <!-- Linke, sticky Spalte (User-Zelle) -->
-                                        <div
-                                            class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
-                                            :class="[multiEditMode ? '' : '', index % 2 === 0 ? '' : '']"
-                                            :style="{ width: '191.5px', maxWidth: '191.5px', minWidth: '191.5px' }"
-                                        >
-                                            <DragElement
-                                                v-if="!highlightMode && !multiEditMode"
-                                                :item="user.element"
-                                                :work-time-balance="user.workTimeBalance"
-                                                :type="user.type"
-                                                :color="craft.color"
-                                                :craft="craft"
-                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
-                                            />
-                                            <MultiEditUserCell
-                                                v-else-if="multiEditMode && !highlightMode"
-                                                :item="user.element"
-                                                :work-time-balance="user.workTimeBalance"
-                                                :type="user.type"
-                                                :userForMultiEdit="userForMultiEdit"
-                                                :multiEditMode="multiEditMode"
-                                                @addUserToMultiEdit="addUserToMultiEdit"
-                                                :color="craft.color"
-                                                :craft-id="craft.id"
-                                                :craft="craft"
-                                                :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
-                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
-                                            />
-                                            <HighlightUserCell
-                                                v-else
-                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight : false"
-                                                :item="user.element"
-                                                :work-time-balance="user.workTimeBalance"
-                                                :type="user.type"
-                                                @highlightShiftsOfUser="highlightShiftsOfUser"
-                                                :color="craft.color"
-                                                :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
-                                            />
-                                        </div>
-                                        <div v-for="day in days" :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay"  class="relative">
-                                            <div v-if="!day.isExtraRow" :style="{ width: '202px', maxWidth: '202px' }"
-
-                                                 :class="[
-                                                    highlightMode
-                                                        ? idToHighlight
-                                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
-                                                                ? ''
-                                                                : 'opacity-30'
-                                                            : 'opacity-30'
-                                                        : '',
-                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
-                                                    multiEditMode
-                                                        ? userForMultiEdit
-                                                            ? userForMultiEdit.id === user.element.id &&
-                                                              user.type === userForMultiEdit.type &&
-                                                              craft.id === userForMultiEdit.craftId
-                                                                ? ''
-                                                                : 'opacity-30'
-                                                            : 'opacity-30'
-                                                        : '',
-                                                    multiEditMode &&
-                                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
-                                                        user.type &&
-                                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
-                                                        day.withoutFormat,
-                                                    )
-                                                        ? '!opacity-100 !overflow-hidden'
-                                                        : '',
-                                                ]"
-                                                                             @click="handleCellClick(user, day)"
-                                                                        >
-                                                                            <ShiftPlanCell
-                                                                                :user="user"
-                                                                                :day="day"
-                                                                                :classes="[
-                                                        multiEditMode &&
-                                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
-                                                            user.type &&
-                                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
-                                                            day.withoutFormat,
-                                                        )
-                                                            ? '!opacity-20'
-                                                            : '',
-                                                    ]"
-                                                />
-                                            </div>
-
-                                            <!-- Extra-Row / Wochenarbeitszeit -->
-                                            <div
-                                                v-else
-                                                class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
-                                                :style="{ width: '202px', maxWidth: '202px' }"
-                                                :class="[
-                                                    highlightMode
-                                                        ? idToHighlight
-                                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
-                                                                ? ''
-                                                                : 'opacity-30'
-                                                            : 'opacity-30'
-                                                        : '',
-                                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
-                                                    multiEditMode
-                                                        ? userForMultiEdit
-                                                            ? userForMultiEdit.id === user.element.id &&
-                                                              user.type === userForMultiEdit.type &&
-                                                              craft.id === userForMultiEdit.craftId
-                                                                ? ''
-                                                                : 'opacity-30'
-                                                            : 'opacity-30'
-                                                        : '',
-                                                ]"
-                                            >
+                                        <template #default="{ item: user, index }">
+                                            <div class="flex w-full">
+                                                <!-- Linke, sticky User-Spalte -->
                                                 <div
-                                                    :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
-                                                    <div class="text-[9px]">
-                                                        Arbeitszeit KW {{ day.weekNumber }}
-                                                    </div>
+                                                    class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right pb-[1px]"
+                                                    :style="{ width: '191.5px', maxWidth: '191.5px', minWidth: '191.5px' }"
+                                                >
+                                                    <DragElement
+                                                        v-if="!highlightMode && !multiEditMode"
+                                                        :item="user.element"
+                                                        :work-time-balance="user.workTimeBalance"
+                                                        :type="user.type"
+                                                        :color="craft.color"
+                                                        :craft="craft"
+                                                        :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                                    />
+                                                    <MultiEditUserCell
+                                                        v-else-if="multiEditMode && !highlightMode"
+                                                        :item="user.element"
+                                                        :work-time-balance="user.workTimeBalance"
+                                                        :type="user.type"
+                                                        :userForMultiEdit="userForMultiEdit"
+                                                        :multiEditMode="multiEditMode"
+                                                        @addUserToMultiEdit="addUserToMultiEdit"
+                                                        :color="craft.color"
+                                                        :craft-id="craft.id"
+                                                        :craft="craft"
+                                                        :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+                                                        :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                                    />
+                                                    <HighlightUserCell
+                                                        v-else
+                                                        :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === typeToHighlight : false"
+                                                        :item="user.element"
+                                                        :work-time-balance="user.workTimeBalance"
+                                                        :type="user.type"
+                                                        @highlightShiftsOfUser="highlightShiftsOfUser"
+                                                        :color="craft.color"
+                                                        :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
+                                                    />
+                                                </div>
+
+                                                <!-- Tage für diesen Benutzer -->
+                                                <div
+                                                    v-for="day in days"
+                                                    :key="'user-' + user.element.id + '-' + user.type + '-' + day.fullDay"
+                                                    class="relative"
+                                                >
                                                     <div
-                                                        class="font-lexend text-xs"
-                                                        :class="
-                                                            user?.weeklyWorkingHours[day.weekNumber]?.isMinus
-                                                                ? 'text-red-100'
-                                                                : 'text-green-100'
-                                                        "
+                                                        v-if="!day.isExtraRow"
+                                                        :style="{ width: '202px', maxWidth: '202px' }"
+                                                        :class="[
+                                    highlightMode
+                                        ? idToHighlight
+                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
+                                                ? ''
+                                                : 'opacity-30'
+                                            : 'opacity-30'
+                                        : '',
+                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : 'h-12 max-h-12',
+                                    multiEditMode
+                                        ? userForMultiEdit
+                                            ? userForMultiEdit.id === user.element.id &&
+                                              user.type === userForMultiEdit.type &&
+                                              craft.id === userForMultiEdit.craftId
+                                                ? ''
+                                                : 'opacity-30'
+                                            : 'opacity-30'
+                                        : '',
+                                    multiEditMode &&
+                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
+                                        user.type &&
+                                    multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
+                                        day.withoutFormat,
+                                    )
+                                        ? 'opacity-100! overflow-hidden!'
+                                        : '',
+                                ]"
+                                                        @click="handleCellClick(user, day)"
                                                     >
-                                                        {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
+                                                        <ShiftPlanCell
+                                                            :user="user"
+                                                            :day="day"
+                                                            :classes="[
+                                        multiEditMode &&
+                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type ===
+                                            user.type &&
+                                        multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(
+                                            day.withoutFormat,
+                                        )
+                                            ? '!opacity-20'
+                                            : '',
+                                    ]"
+                                                        />
+                                                    </div>
+
+                                                    <!-- Extra-Row / Wochenarbeitszeit -->
+                                                    <div
+                                                        v-else
+                                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
+                                                        :style="{ width: '202px', maxWidth: '202px' }"
+                                                        :class="[
+                                    highlightMode
+                                        ? idToHighlight
+                                            ? idToHighlight === user.element.id && user.type === typeToHighlight
+                                                ? ''
+                                                : 'opacity-30'
+                                            : 'opacity-30'
+                                        : '',
+                                    $page.props.auth.user.compact_mode ? 'h-8 max-h-8' : '',
+                                    multiEditMode
+                                        ? userForMultiEdit
+                                            ? userForMultiEdit.id === user.element.id &&
+                                              user.type === userForMultiEdit.type &&
+                                              craft.id === userForMultiEdit.craftId
+                                                ? ''
+                                                : 'opacity-30'
+                                            : 'opacity-30'
+                                        : '',
+                                ]"
+                                                    >
+                                                        <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
+                                                            <div class="text-[9px]">
+                                                                Arbeitszeit KW {{ day.weekNumber }}
+                                                            </div>
+                                                            <div
+                                                                class="font-lexend text-xs"
+                                                                :class="
+                                            user?.weeklyWorkingHours[day.weekNumber]?.isMinus
+                                                ? 'text-red-100'
+                                                : 'text-green-100'
+                                        "
+                                                            >
+                                                                {{ user?.weeklyWorkingHours[day.weekNumber]?.difference }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- DayServices (Icons) -->
+                                                    <div
+                                                        v-if="user.dayServices"
+                                                        v-for="(userDayServices, indexDay) in user.dayServices"
+                                                        :key="indexDay"
+                                                        class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
+                                                    >
+                                                        <template v-if="indexDay === day.withoutFormat">
+                                                            <div
+                                                                v-for="(userDayService, position) in userDayServices"
+                                                                :key="userDayService.id || position"
+                                                                class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5"
+                                                                :class="position > 0 ? '-ml-3' : ''"
+                                                            >
+                                                                <ToolTipComponent
+                                                                    :tooltip-text="userDayService.name"
+                                                                    :icon="userDayService.icon"
+                                                                    icon-size="h-4 w-4"
+                                                                    :icon-style="{ color: userDayService.hex_color }"
+                                                                    :classes-button="'mt-0'"
+                                                                />
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <!-- DayServices (Icons) -->
-                                            <div
-                                                v-if="user.dayServices"
-                                                v-for="(userDayServices, indexDay) in user.dayServices"
-                                                :key="indexDay"
-                                                class="absolute right-2 top-1/2 flex -translate-y-1/2 transform"
-                                            >
-                                                <template v-if="indexDay === day.withoutFormat">
-                                                    <div
-                                                        v-for="(userDayService, position) in userDayServices"
-                                                        :key="userDayService.id || position"
-                                                        class="flex h-6 w-6 items-center justify-center rounded-full bg-white p-0.5"
-                                                        :class="position > 0 ? '-ml-3' : ''"
-                                                    >
-                                                        <ToolTipComponent
-                                                            :tooltip-text="userDayService.name"
-                                                            :icon="userDayService.icon"
-                                                            icon-size="h-4 w-4"
-                                                            :icon-style="{ color: userDayService.hex_color }"
-                                                            :classes-button="'mt-0'"
-                                                        />
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        </template>
+                                    </RecycleScroller>
                                 </div>
                             </div>
-
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -735,7 +747,8 @@
 </template>
 
 <script setup lang="ts">
-
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import Permissions from '@/Mixins/Permissions.vue'
 import axios from 'axios'
 import {Link, router, usePage} from '@inertiajs/vue3'
@@ -746,7 +759,17 @@ import Table from '@/Components/Table/Table.vue'
 import TableHead from '@/Components/Table/TableHead.vue'
 import TableBody from '@/Components/Table/TableBody.vue'
 import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
-import {computed, onBeforeUnmount, onMounted, reactive, ref, watch, getCurrentInstance, defineAsyncComponent} from 'vue'
+import {
+    computed,
+    defineAsyncComponent,
+    getCurrentInstance,
+    onBeforeUnmount,
+    onMounted,
+    reactive,
+    ref,
+    shallowRef,
+    watch
+} from 'vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
@@ -757,64 +780,20 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
 import {useUserOverviewLayout} from '@/Pages/Shifts/Composables/useUserOverviewLayout.ts'
 import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHorizontalScroll.ts'
+import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
+import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
+import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
+import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
+import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
+import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
+import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 
 defineOptions({
     name: 'ShiftPlan',
     mixins: [Permissions],
-})
-
-const DragElement = defineAsyncComponent({
-    loader: () => import('@/Pages/Projects/Components/DragElement.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const ShiftPlanCell = defineAsyncComponent({
-    loader: () => import('@/Pages/Shifts/Components/ShiftPlanCell.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const SingleShiftInRoom = defineAsyncComponent({
-    loader: () => import('@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const HolidayToolTip = defineAsyncComponent({
-    loader: () => import('@/Components/ToolTips/HolidayToolTip.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const HighlightUserCell = defineAsyncComponent({
-    loader: () => import('@/Pages/Shifts/Components/HighlightUserCell.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const MultiEditUserCell = defineAsyncComponent({
-    loader: () => import('@/Pages/Shifts/Components/MultiEditUserCell.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const CraftFilter = defineAsyncComponent({
-    loader: () => import('@/Components/Filter/CraftFilter.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const SingleEventInShiftPlan = defineAsyncComponent({
-    loader: () => import('@/Pages/Shifts/Components/SingleEventInShiftPlan.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const DayServiceFilter = defineAsyncComponent({
-    loader: () => import('@/Components/Filter/DayServiceFilter.vue'),
-    delay: 200,
-    timeout: 3000,
 })
 
 const ShowUserShiftsModal = defineAsyncComponent({
@@ -825,12 +804,6 @@ const ShowUserShiftsModal = defineAsyncComponent({
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
-const SideNotification = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/General/SideNotification.vue'),
     delay: 200,
     timeout: 3000,
 })
@@ -940,8 +913,8 @@ type Day = {
     [key: string]: any
 }
 
-const days = ref<any[]>(props.days ?? [])
-const rooms = ref([])
+const days = shallowRef<any[]>(props.days ?? [])
+const rooms = shallowRef([])
 const isFullscreen = ref(false)
 const showHistoryModal = ref(false)
 const showUserShifts = ref(false)
@@ -975,7 +948,6 @@ const showCellMultiEditModal = ref(false)
 const openCellMultiEditDelete = ref(false)
 const showIndividualTimeSeriesModal = ref(false)
 const preventNextNavigation = ref(false)
-const isLoadingMonth = ref(false)
 const originalVisit = ref<any | null>(null)
 const showShiftQualificationFilter = ref(false)
 const multiEditModeCalendar = ref(false)
@@ -1026,10 +998,14 @@ const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOve
     pageProps,
 })
 
-const shiftPlanEl = ref<HTMLElement | null>(null)
-const userOverviewEl = ref<HTMLElement | null>(null)
-const daysRef = ref<any[]>(days.value)
-const currentDayRef = ref<any>(null)
+const rowHeight = computed(() => {
+    return usePage().props.auth.user.compact_mode ? 32 : 48 // px
+})
+
+const shiftPlanEl = shallowRef<HTMLElement | null>(null)
+const userOverviewEl = shallowRef<HTMLElement | null>(null)
+const daysRef = shallowRef<any[]>(days.value)
+const currentDayRef = shallowRef<any>(null)
 
 const {attach, detach} = useSyncedHorizontalScroll(
     shiftPlanEl,
@@ -1082,175 +1058,10 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
 }
 
 const monthObserver = ref<IntersectionObserver | null>(null)
-const watchedMonths = new Map<Element, string>()
-
-function initMonthObserver() {
-    if (monthObserver.value) return
-
-    monthObserver.value = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-            const monthKey = watchedMonths.get(entry.target)
-            if (!monthKey) continue
-
-            if (entry.isIntersecting) {
-                const bounding = entry.boundingClientRect
-                const rootRect = entry.rootBounds
-
-                if (!rootRect) continue
-
-                const isRightEdge = bounding.right > rootRect.right - 50
-                const isLeftEdge = bounding.left < rootRect.left + 50
-
-                if (isRightEdge) {
-                    loadMonth('next')
-                } else if (isLeftEdge) {
-                    loadMonth('prev')
-                }
-            }
-        }
-    }, {
-        root: shiftPlanEl.value ?? null,
-        rootMargin: '0px',
-        threshold: 0.1,
-    })
-}
-
-function registerMonthSentinel(el: HTMLElement | null, day: any) {
-    if (!el || !day) return
-    initMonthObserver()
-
-    const monthKey = day.monthNumber ?? day.monthKey ?? day.fullDay?.slice(0, 7)
-
-    // If user selected a fixed date range, skip observing months that are completely outside that range
-    try {
-        const selectedStart = props.dateValue && props.dateValue[0] ? dayjs(props.dateValue[0]).startOf('day') : null
-        const selectedEnd = props.dateValue && props.dateValue[1] ? dayjs(props.dateValue[1]).endOf('day') : null
-
-        if (selectedStart && selectedEnd && monthKey) {
-            const monthStart = dayjs(monthKey + '-01')
-            const monthEnd = monthStart.endOf('month')
-            if (monthEnd.isBefore(selectedStart, 'day') || monthStart.isAfter(selectedEnd, 'day')) {
-                // Do not observe months outside selected range
-                return
-            }
-        }
-    } catch (e) {
-        // parsing failed - fall back to observing
-    }
-
-    watchedMonths.set(el, monthKey)
-
-    monthObserver.value?.observe(el)
-}
-
-function getCurrentRange() {
-    if (!days.value.length) {
-        return {start: null as dayjs.Dayjs | null, end: null as dayjs.Dayjs | null}
-    }
-
-    const first = dayjs(days.value[0].withoutFormat ?? days.value[0].fullDay)
-    const last = dayjs(days.value[days.value.length - 1].withoutFormat ?? days.value[days.value.length - 1].fullDay)
-
-    return {start: first, end: last}
-}
 
 
 function setCurrentDayRef(day: any) {
     currentDayRef.value = day
-}
-
-
-type LoadDirection = 'next' | 'prev'
-
-async function loadMonth(direction: LoadDirection) {
-    if (isLoadingMonth.value) return
-    isLoadingMonth.value = true
-
-    try {
-        const {start, end} = getCurrentRange()
-        if (!start || !end) return
-
-        let rangeStart: dayjs.Dayjs
-        let rangeEnd: dayjs.Dayjs
-
-        if (direction === 'next') {
-            const firstOfNextMonth = end.add(1, 'day').startOf('month')
-            rangeStart = firstOfNextMonth
-            rangeEnd = firstOfNextMonth.endOf('month')
-        } else {
-            const lastOfPrevMonth = start.subtract(1, 'day').endOf('month')
-            rangeEnd = lastOfPrevMonth
-            rangeStart = lastOfPrevMonth.startOf('month')
-        }
-        const selectedStart = props.dateValue && props.dateValue[0] ? dayjs(props.dateValue[0]) : null
-        const selectedEnd = props.dateValue && props.dateValue[1] ? dayjs(props.dateValue[1]) : null
-
-        if (selectedStart && selectedEnd) {
-            // If the candidate range is completely outside the selected range -> skip loading
-            if (rangeEnd.isBefore(selectedStart, 'day') || rangeStart.isAfter(selectedEnd, 'day')) {
-                return
-            }
-
-            // Clamp the requested range to the selected range so we never request outside of it
-            if (rangeStart.isBefore(selectedStart, 'day')) {
-                rangeStart = selectedStart.startOf('day')
-            }
-            if (rangeEnd.isAfter(selectedEnd, 'day')) {
-                rangeEnd = selectedEnd.endOf('day')
-            }
-        }
-    } catch (e) {
-        // dayjs parsing error - fall back to original behavior (do not block loading)
-        // eslint-disable-next-line no-console
-        console.debug('loadMonth: could not parse props.dateValue, proceeding without range guard', e)
-    } finally {
-        isLoadingMonth.value = false
-    }
-
-    const {data} = await axios.get(route('shift.plan.all'), {
-        params: {
-            start_date: rangeStart.format('YYYY-MM-DD'),
-            end_date: rangeEnd.format('YYYY-MM-DD'),
-            projectId: props.projectId
-        },
-    })
-
-    const newDays = data.days ?? []
-    const newRooms = data.shiftPlan ?? []
-    if (direction === 'next') {
-        const existing = new Set(days.value.map(d => d.fullDay ?? d.withoutFormat))
-        const toAdd = newDays.filter((d: any) => !existing.has(d.fullDay ?? d.withoutFormat))
-        days.value = [...days.value, ...toAdd]
-    } else {
-        const existing = new Set(days.value.map(d => d.fullDay ?? d.withoutFormat))
-        const toAdd = newDays.filter((d: any) => !existing.has(d.fullDay ?? d.withoutFormat))
-        days.value = [...toAdd, ...days.value]
-    }
-
-    const roomsById = new Map<number | string, any>()
-
-    for (const r of rooms.value) {
-        const id = r.roomId ?? r.id
-        roomsById.set(id, {...r})
-    }
-
-    for (const nr of newRooms) {
-        const id = nr.roomId ?? nr.id
-        const existingRoom = roomsById.get(id)
-
-        if (!existingRoom) {
-            roomsById.set(id, nr)
-            continue
-        }
-        if (Array.isArray(existingRoom.days) && Array.isArray(nr.days)) {
-            existingRoom.days = [...existingRoom.days, ...nr.days]
-        }
-
-        roomsById.set(id, existingRoom)
-    }
-
-    rooms.value = Array.from(roomsById.values())
-    daysRef.value = days.value
 }
 
 const noticeIcon = computed(() => {
@@ -1270,56 +1081,31 @@ const noticeIconClass = computed(() => ({
     'text-blue-400': notice.kind === 'info',
 }))
 
-const craftsToDisplay = computed(() => {
-    const crafts = (props.crafts ?? []).map((craft: any) => ({
-        id: craft.id,
-        name: craft.name,
-        abbreviation: craft.abbreviation,
-        users: filterAndSortWorkersOfCraft(craft),
-        color: craft?.color,
-        universally_applicable: craft.universally_applicable,
-    }))
-    if (!props.user_filters?.craft_ids || props.user_filters.craft_ids.length === 0) return crafts
-    return crafts.filter((c: any) => props.user_filters.craft_ids.includes(c.id))
-})
-
-const computedShiftPlanWorkerSortEnums = computed(() => {
-    const nameSortEnums = ['ALPHABETICALLY_NAME_ASCENDING', 'ALPHABETICALLY_NAME_DESCENDING']
-    const sortConfig: string[] = []
-    const sortBy = usePage().props.auth.user.shift_plan_user_sort_by_id
-
-    if (nameSortEnums.includes(sortBy)) {
-        sortConfig.push('INTERN_EXTERN_ASCENDING')
-        if (sortBy === 'ALPHABETICALLY_NAME_ASCENDING') {
-            sortConfig.push('ALPHABETICALLY_NAME_DESCENDING')
-        } else {
-            sortConfig.push('ALPHABETICALLY_NAME_ASCENDING')
-        }
-        return sortConfig
-    }
-
-    if (sortBy === 'INTERN_EXTERN_ASCENDING') {
-        sortConfig.push('INTERN_EXTERN_DESCENDING')
-    } else {
-        sortConfig.push('INTERN_EXTERN_ASCENDING')
-    }
-    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING')
-    return sortConfig
-})
-
 const {getSortEnumTranslation} = useSortEnumTranslation()
+
+
+function normalizeShiftPlan(sp: any[] | Record<string, any> | null | undefined): any[] {
+    if (!sp) return []
+    return Array.isArray(sp) ? sp : Object.values(sp)
+}
+
+function pickInitialCurrentDay(daysList: any[]) {
+    return daysList.find((d: any) => !d.isExtraRow) ?? null
+}
 
 async function initializeShiftPlan() {
     const hasInitialDays = Array.isArray(props.days) && props.days.length > 0
+
     const hasInitialShiftPlan =
-        props.shiftPlan && (
+        !!props.shiftPlan &&
+        (
             Array.isArray(props.shiftPlan)
                 ? props.shiftPlan.length > 0
                 : Object.keys(props.shiftPlan).length > 0
         )
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const {data} = await axios.get(route('shift.plan.all'), {
+        const { data } = await axios.get(route('shift.plan.all'), {
             params: {
                 start_date: props.dateValue[0],
                 end_date: props.dateValue[1],
@@ -1327,55 +1113,70 @@ async function initializeShiftPlan() {
             },
         })
 
-        days.value = data.days ?? []
-        daysRef.value = days.value
-        rooms.value = data.shiftPlan ?? []
-        newShiftPlanData.value = data.shiftPlan ?? []
+        const loadedDays = data.days ?? []
+        const loadedShiftPlan = data.shiftPlan ?? []
 
+        days.value = loadedDays
+        daysRef.value = loadedDays
+        rooms.value = normalizeShiftPlan(loadedShiftPlan)
+        newShiftPlanData.value = loadedShiftPlan
     } else {
-        days.value = [...(props.days ?? [])]
-        daysRef.value = days.value
+        const initialDays = props.days ?? []
+        const initialShiftPlan = props.shiftPlan ?? []
 
-        const sp = props.shiftPlan ?? []
-        rooms.value = Array.isArray(sp) ? [...sp] : Object.values(sp)
-        newShiftPlanData.value = rooms.value
+        days.value = initialDays
+        daysRef.value = initialDays
+
+        rooms.value = normalizeShiftPlan(initialShiftPlan)
+        newShiftPlanData.value = initialShiftPlan
     }
-    currentDayOnView.value =
-        days.value.find((d: any) => !d.isExtraRow) ?? null
 
-    setCurrentDayRef(currentDayOnView.value)
+    const initialCurrentDay = pickInitialCurrentDay(days.value)
+    currentDayOnView.value = initialCurrentDay
+    currentDayRef.value = initialCurrentDay
 }
+
+// 🔁 immer die gleiche Referenz aus newShiftPlanData ableiten
+// statt einmaligem Snapshot in onMounted
+const shiftPlanArrayRef = computed<any[]>(() => {
+    return normalizeShiftPlan(newShiftPlanData.value)
+})
 
 onMounted(async () => {
     await initializeShiftPlan()
-    currentDayRef.value = currentDayOnView.value
+
+    // currentDayRef folgt immer currentDayOnView
     watch(
         () => currentDayOnView.value,
         (v) => {
             currentDayRef.value = v
         },
     )
+
+    // Tage aus Props aktualisieren (nur Referenz, kein deep-Watch – schneller)
     watch(
         () => props.days,
         (v) => {
-            days.value = (v ?? []) as any[]
-            daysRef.value = days.value
+            const newDays = (v ?? []) as any[]
+            days.value = newDays
+            daysRef.value = newDays
+
+            // falls sich Tage komplett ändern, ggf. currentDay neu setzen
+            currentDayOnView.value = pickInitialCurrentDay(newDays)
         },
-        {deep: true},
     )
 
     attach()
-    const shiftPlanArray = Array.isArray(newShiftPlanData.value)
-        ? newShiftPlanData.value
-        : Object.values(newShiftPlanData.value ?? {})
 
-    const shiftPlanDataRef = ref(shiftPlanArray)
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanDataRef)
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef)
     ShiftCalendarListener.init()
+
     setupInertiaNavigationGuard()
+
+    // wenn nur ein kurzer Hinweis: direkt leeren, Timeout möglichst klein halten
     setTimeout(() => {
         showCalendarWarning.value = ''
-    }, 5000)
+    }, 3000)
 })
 
 
@@ -1510,164 +1311,266 @@ function isWorkerServiceProvider(worker: any) {
     return worker.type === 2
 }
 
-function isManagingWorker(craft: any, worker: any) {
-    if (isWorkerUser(worker)) {
-        return craft.managing_users.findIndex((m: any) => m.id === worker.element.id) > -1
-    }
-    if (isWorkerFreelancer(worker)) {
-        return craft.managing_freelancers.findIndex((m: any) => m.id === worker.element.id) > -1
-    }
+/**
+ * Sort-Helfer: einheitlich nach Name sortieren
+ */
+function getWorkerSortName(worker: any, useFirstNameForSort: boolean): string {
     if (isWorkerServiceProvider(worker)) {
-        return craft.managing_service_providers.findIndex((m: any) => m.id === worker.element.id) > -1
+        return worker.element.provider_name ?? ''
     }
-    return false
+
+    if (!useFirstNameForSort) {
+        return worker.element.first_name ?? ''
+    }
+
+    return worker.element.last_name ?? ''
 }
 
-function getAssignedWorkerOfCraft(craftId: number, dropWorkers: any[]) {
-    return dropWorkers.filter((dw) => dw.assigned_craft_ids.includes(craftId))
-}
+function sortWorkersByName(workers: any[], useFirstNameForSort: boolean, direction: 1 | -1) {
+    return [...workers].sort((a, b) => {
+        const aName = getWorkerSortName(a, useFirstNameForSort)
+        const bName = getWorkerSortName(b, useFirstNameForSort)
 
-function sortAscendingByUseFirstNameForSort(workers: any[]) {
-    if (!props.useFirstNameForSort) {
-        return workers.sort((a, b) => {
-            const aName = isWorkerServiceProvider(a) ? a.element.provider_name : a.element.first_name
-            const bName = isWorkerServiceProvider(b) ? b.element.provider_name : b.element.first_name
-            if (aName < bName) return -1
-            if (aName > bName) return 1
-            return 0
-        })
-    }
-    return workers.sort((a, b) => {
-        const aName = isWorkerServiceProvider(a) ? a.element.provider_name : a.element.last_name
-        const bName = isWorkerServiceProvider(b) ? b.element.provider_name : b.element.last_name
-        if (aName < bName) return -1
-        if (aName > bName) return 1
+        if (aName < bName) return -1 * direction
+        if (aName > bName) return 1 * direction
         return 0
     })
 }
 
-function sortDescendingByUseFirstNameForSort(workers: any[]) {
-    if (!props.useFirstNameForSort) {
-        return workers.sort((a, b) => {
-            const aName = isWorkerServiceProvider(a) ? a.element.provider_name : a.element.first_name
-            const bName = isWorkerServiceProvider(b) ? b.element.provider_name : b.element.first_name
-            if (aName > bName) return -1
-            if (aName < bName) return 1
-            return 0
-        })
-    }
-    return workers.sort((a, b) => {
-        const aName = isWorkerServiceProvider(a) ? a.element.provider_name : a.element.last_name
-        const bName = isWorkerServiceProvider(b) ? b.element.provider_name : b.element.last_name
-        if (aName > bName) return -1
-        if (aName < bName) return 1
-        return 0
+function filterNonManagingWorkersByShiftQualificationFilter(workers: any[], filters: number[] | null | undefined) {
+    const activeFilters = filters ?? []
+    if (activeFilters.length === 0) return workers
+
+    return workers.filter((w) => {
+        const quals = w.element.shift_qualifications ?? []
+        if (quals.length === 0) return false
+        return quals.some((sq: any) => activeFilters.includes(sq.id))
     })
 }
 
-function filterNonManagingWorkersByShiftQualificationFilter(workers: any[]) {
-    const filters = props.userShiftPlanShiftQualificationFilters ?? []
-    if (filters.length === 0) return workers
-    const withQuali = workers.filter((w) => (w.element.shift_qualifications ?? []).length > 0)
-    return withQuali.filter((w) =>
-        w.element.shift_qualifications.some((sq: any) => filters.includes(sq.id)),
-    )
-}
+// -----------------------------------------------------
+//  PRECOMPUTED: Drop-Worker & Craft-Zuordnungen
+// -----------------------------------------------------
 
-function filterAndSortWorkersOfCraft(craft: any) {
-    const dropWorkers = getDropWorkers()
-    const assignedWorkersOfCraft = getAssignedWorkerOfCraft(craft.id, dropWorkers)
-    const assignedManagingWorkers = assignedWorkersOfCraft.filter((x) => isManagingWorker(craft, x))
-    const assignedNonManagingWorkers = assignedWorkersOfCraft.filter((x) => !isManagingWorker(craft, x))
-    const assignedNonManagingWorkersFiltered = filterNonManagingWorkersByShiftQualificationFilter(assignedNonManagingWorkers)
+const page = usePage()
 
-    const sortBy = usePage().props.auth.user.shift_plan_user_sort_by_id
+const shiftPlanUserSortById = computed<string | null>(() => page.props.auth.user.shift_plan_user_sort_by_id)
 
-    if (sortBy === null) {
-        return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
-    }
-
-    if (sortBy === 'ALPHABETICALLY_NAME_ASCENDING') {
-        return sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
-            .concat(sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered))
-    }
-
-    if (sortBy === 'ALPHABETICALLY_NAME_DESCENDING') {
-        return sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
-            .concat(sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered))
-    }
-
-    // INTERN = type=0 UND NICHT is_freelancer
-    const intern = assignedNonManagingWorkersFiltered.filter((w) =>
-        w.type === 0 && w.element?.is_freelancer !== true
-    )
-
-    // EXTERN = Freelancer-User, Freelancer-Models, ServiceProvider
-    const extern = assignedNonManagingWorkersFiltered.filter((w) =>
-        w.element?.is_freelancer === true || w.type === 1 || w.type === 2
-    )
-
-    if (sortBy === 'INTERN_EXTERN_ASCENDING') {
-        return sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
-            .concat(sortAscendingByUseFirstNameForSort(intern))
-            .concat(sortAscendingByUseFirstNameForSort(extern))
-    }
-
-    if (sortBy === 'INTERN_EXTERN_DESCENDING') {
-        return sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
-            .concat(sortDescendingByUseFirstNameForSort(extern))
-            .concat(sortDescendingByUseFirstNameForSort(intern))
-    }
-
-    return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
-}
-
-
-function getDropWorkers() {
+/**
+ * Alle DropWorker nur EINMAL aus Props bauen
+ */
+const dropWorkers = computed<any[]>(() => {
     const users: any[] = []
+
     ;(props.usersForShifts ?? []).forEach((user: any) => {
         if (!showFreelancers.value && user.user.is_freelancer) return
+
         users.push({
             element: user.user,
             type: 0,
             workTimeBalance: user.workTimeBalance,
             vacations: user.vacations,
-            assigned_craft_ids: user.user.assigned_craft_ids,
+            assigned_craft_ids: user.user.assigned_craft_ids ?? [],
             availabilities: user.availabilities,
             weeklyWorkingHours: user.weeklyWorkingHours,
             dayServices: user.dayServices,
             individual_times: user.individual_times,
             shift_comments: user.shift_comments,
+            key: `u_${user.user.id}_0`,
         })
     })
+
     if (showFreelancers.value) {
         ;(props.freelancersForShifts ?? []).forEach((freelancer: any) => {
             users.push({
                 element: freelancer.freelancer,
                 type: 1,
                 vacations: freelancer.vacations,
-                assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
+                assigned_craft_ids: freelancer.freelancer.assigned_craft_ids ?? [],
                 availabilities: freelancer.availabilities,
                 dayServices: freelancer.dayServices,
                 individual_times: freelancer.individual_times,
                 shift_comments: freelancer.shift_comments,
                 weeklyWorkingHours: freelancer.weeklyWorkingHours,
+                key: `u_${freelancer.freelancer.id}_1`,
             })
         })
     }
+
     ;(props.serviceProvidersForShifts ?? []).forEach((sp: any) => {
         users.push({
             element: sp.service_provider,
             type: 2,
-            assigned_craft_ids: sp.service_provider.assigned_craft_ids,
+            assigned_craft_ids: sp.service_provider.assigned_craft_ids ?? [],
             dayServices: sp.dayServices,
             individual_times: sp.individual_times,
             shift_comments: sp.shift_comments,
             weeklyWorkingHours: sp.weeklyWorkingHours,
+            key: `u_${sp.service_provider.id}_2`,
         })
     })
+
     return users
+})
+
+/**
+ * Map: craftId -> Worker[]
+ * statt für jeden Craft erneut über ALLE Worker zu loopen
+ */
+const craftWorkersMap = computed<Map<number, any[]>>(() => {
+    const map = new Map<number, any[]>()
+
+    for (const worker of dropWorkers.value) {
+        const craftIds: number[] = worker.assigned_craft_ids ?? []
+        for (const craftId of craftIds) {
+            if (!map.has(craftId)) {
+                map.set(craftId, [])
+            }
+            map.get(craftId)!.push(worker)
+        }
+    }
+
+    return map
+})
+
+/**
+ * Managing-Sets für einen Craft vorbereiten (O(n) → später O(1)-Lookups)
+ */
+function buildManagingSets(craft: any) {
+    return {
+        userIds: new Set<number>((craft.managing_users ?? []).map((m: any) => m.id)),
+        freelancerIds: new Set<number>((craft.managing_freelancers ?? []).map((m: any) => m.id)),
+        serviceProviderIds: new Set<number>((craft.managing_service_providers ?? []).map((m: any) => m.id)),
+    }
 }
+
+function isManagingWorkerForCraft(worker: any, managingSets: ReturnType<typeof buildManagingSets>) {
+    const id = worker.element?.id
+    if (id == null) return false
+
+    if (isWorkerUser(worker)) return managingSets.userIds.has(id)
+    if (isWorkerFreelancer(worker)) return managingSets.freelancerIds.has(id)
+    if (isWorkerServiceProvider(worker)) return managingSets.serviceProviderIds.has(id)
+
+    return false
+}
+
+/**
+ * Filter + Sortierung für einen Craft (arbeitet jetzt auf precomputed Maps)
+ */
+function filterAndSortWorkersOfCraft(craft: any) {
+    const allWorkersOfCraft = craftWorkersMap.value.get(craft.id) ?? []
+
+    const managingSets = buildManagingSets(craft)
+
+    const assignedManagingWorkers: any[] = []
+    const assignedNonManagingWorkers: any[] = []
+
+    // Nur EIN Durchlauf zum Split in managing / non-managing
+    for (const w of allWorkersOfCraft) {
+        if (isManagingWorkerForCraft(w, managingSets)) {
+            assignedManagingWorkers.push(w)
+        } else {
+            assignedNonManagingWorkers.push(w)
+        }
+    }
+
+    const assignedNonManagingWorkersFiltered = filterNonManagingWorkersByShiftQualificationFilter(
+        assignedNonManagingWorkers,
+        props.userShiftPlanShiftQualificationFilters
+    )
+
+    const sortBy = shiftPlanUserSortById.value
+    const useFirstName = !!props.useFirstNameForSort
+
+    if (sortBy === null) {
+        // Keine Sortierung → nur Managing zuerst
+        return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
+    }
+
+    // Helper für intern/extern-Split nur 1x
+    const intern = assignedNonManagingWorkersFiltered.filter(
+        (w) => w.type === 0 && w.element?.is_freelancer !== true
+    )
+
+    const extern = assignedNonManagingWorkersFiltered.filter(
+        (w) => w.element?.is_freelancer === true || w.type === 1 || w.type === 2
+    )
+
+    switch (sortBy) {
+        case 'ALPHABETICALLY_NAME_ASCENDING':
+            return sortWorkersByName(assignedManagingWorkers, useFirstName, 1)
+                .concat(sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, 1))
+
+        case 'ALPHABETICALLY_NAME_DESCENDING':
+            return sortWorkersByName(assignedManagingWorkers, useFirstName, -1)
+                .concat(sortWorkersByName(assignedNonManagingWorkersFiltered, useFirstName, -1))
+
+        case 'INTERN_EXTERN_ASCENDING':
+            return sortWorkersByName(assignedManagingWorkers, useFirstName, 1)
+                .concat(sortWorkersByName(intern, useFirstName, 1))
+                .concat(sortWorkersByName(extern, useFirstName, 1))
+
+        case 'INTERN_EXTERN_DESCENDING':
+            return sortWorkersByName(assignedManagingWorkers, useFirstName, -1)
+                .concat(sortWorkersByName(extern, useFirstName, -1))
+                .concat(sortWorkersByName(intern, useFirstName, -1))
+
+        default:
+            return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered)
+    }
+}
+
+// -----------------------------------------------------
+//  craftsToDisplay & Sort-Konfig
+// -----------------------------------------------------
+
+const craftsToDisplay = computed(() => {
+    const allCrafts = (props.crafts ?? []).map((craft: any) => ({
+        id: craft.id,
+        name: craft.name,
+        abbreviation: craft.abbreviation,
+        users: filterAndSortWorkersOfCraft(craft),
+        color: craft?.color,
+        universally_applicable: craft.universally_applicable,
+    }))
+
+    if (!props.user_filters?.craft_ids || props.user_filters.craft_ids.length === 0) {
+        return allCrafts
+    }
+
+    const filterIds = props.user_filters.craft_ids
+    return allCrafts.filter((c: any) => filterIds.includes(c.id))
+})
+
+const computedShiftPlanWorkerSortEnums = computed(() => {
+    const nameSortEnums = ['ALPHABETICALLY_NAME_ASCENDING', 'ALPHABETICALLY_NAME_DESCENDING']
+    const sortConfig: string[] = []
+    const sortBy = shiftPlanUserSortById.value
+
+    if (sortBy && nameSortEnums.includes(sortBy)) {
+        // Name → als nächstes Intern/Extern + inverse Namenssortierung
+        sortConfig.push('INTERN_EXTERN_ASCENDING')
+        sortConfig.push(
+            sortBy === 'ALPHABETICALLY_NAME_ASCENDING'
+                ? 'ALPHABETICALLY_NAME_DESCENDING'
+                : 'ALPHABETICALLY_NAME_ASCENDING'
+        )
+        return sortConfig
+    }
+
+    // Aktuell Intern/Extern → als nächstes andere Richtung + Name ASC
+    if (sortBy === 'INTERN_EXTERN_ASCENDING') {
+        sortConfig.push('INTERN_EXTERN_DESCENDING')
+    } else {
+        sortConfig.push('INTERN_EXTERN_ASCENDING')
+    }
+
+    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING')
+
+    return sortConfig
+})
+
 
 function handleMultiEdit(user: any, day: any) {
     const key = `${user.element.id}_${user.type}`
@@ -2148,7 +2051,6 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 userForMultiEdit.value.shift_ids = Array.from(oldIds)
                 $toast?.error?.($t('Saving failed'))
                 showNotice('error', 'Save failed', 'Something went wrong while saving. Please try again.')
-                console.error(err)
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)

@@ -66,13 +66,6 @@ export default {
 
             // Für Sidebar: Prüfen ob Komponente Sidebar-fähig ist
             if(this.isSidebar) {
-                // Spezielle Komponenten können nicht in die Sidebar
-                if(data.special === true) {
-                    alert('Spezielle Komponenten können nicht in die Sidebar gelegt werden');
-                    this.dropOver = false;
-                    return;
-                }
-
                 // Ordnerkomponenten (DisclosureComponent) können nicht in die Sidebar
                 if(data.type === 'DisclosureComponent') {
                     alert('Ordnerkomponenten können nicht in die Sidebar gelegt werden');

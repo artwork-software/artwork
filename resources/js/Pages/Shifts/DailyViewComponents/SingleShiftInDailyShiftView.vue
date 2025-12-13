@@ -488,17 +488,22 @@ const getAssignablePeople = (shiftQualificationId) => {
     const peopleWithCraft = [];
 
     Object.values(props.crafts).forEach(craft => {
+        // Only process crafts that match the shift's craft or are universally applicable
+        const isCraftRelevant = craftIds.includes(craft.id);
+        if (!isCraftRelevant) {
+            return;
+        }
+
         const personTypes = [
             { type: 'user', list: craft.users || [] },
             { type: 'freelancer', list: craft.freelancers || [] },
-            { type: 'service_provider', list: craft.service_providers || [] }
+            { type: 'service_provider', list: craft.serviceProviders || [] }
         ];
 
         personTypes.forEach(({ type, list }) => {
             list.forEach(person => {
                 const key = `${type}-${person.id}`;
                 const alreadyAdded = peopleWithCraft.some(p => p.key === key);
-                const hasCraft = person.pivot && craftIds.includes(person.pivot.craft_id);
                 const hasQualification = person.shift_qualifications?.some(q => q.id === shiftQualificationId);
 
                 // Prüfen, ob Person bereits in der Schicht ist
@@ -506,7 +511,7 @@ const getAssignablePeople = (shiftQualificationId) => {
 
                 // Zeige alle Personen mit der Qualifikation an, unabhängig davon, ob sie bereits in der Schicht sind
                 // Dies ist wichtig, um Kollisionen auch bei bereits zugewiesenen Personen zu erkennen
-                if (!alreadyAdded && hasCraft && hasQualification) {
+                if (!alreadyAdded && hasQualification) {
                     peopleWithCraft.push({
                         ...person,
                         type,
@@ -531,14 +536,18 @@ const getAssignablePeople = (shiftQualificationId) => {
 // Angepasste Methode für das Menü, die bereits zugewiesene Personen anzeigt
 // Diese Funktion sollte KEINE Requests auslösen, da sie bei jedem Rendering aufgerufen wird
 const getAssignablePeopleWithCollision = (shiftQualificationId) => {
-    // Nur die gecachten Daten zurückgeben, ohne einen neuen Request auszulösen
-    // Der Request wird stattdessen beim Öffnen des Dropdowns über den @click Handler ausgelöst
+    // Wenn Daten im Cache vorhanden sind, diese zurückgeben
     if (assignablePeopleCache.value[shiftQualificationId]?.length > 0) {
         return assignablePeopleCache.value[shiftQualificationId];
     }
 
-    // Wenn keine Daten im Cache sind, leeres Array zurückgeben
-    return [];
+    // Wenn keine Daten im Cache sind, getAssignablePeople aufrufen und Cache befüllen
+    // Dies zeigt die Benutzer sofort an, auch bevor die Kollisionsprüfung abgeschlossen ist
+    const people = getAssignablePeople(shiftQualificationId);
+    if (people.length > 0) {
+        assignablePeopleCache.value[shiftQualificationId] = people;
+    }
+    return people;
 };
 
 // Function to generate a more informative tooltip for collision warnings

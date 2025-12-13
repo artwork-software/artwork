@@ -681,6 +681,7 @@
     "this freelancer": "diesem/dieser externe Mitarbeiter*in",
     "this service provider": "diesem/dieser Dienstleister*in",
     "There is no position that can be filled by {0} with the available craft function.": "Es gibt keine Position die von {0} mit den verfügbaren Gewerks-Funktion besetzt werden kann.",
+    "{0} has no open function in the shift and therefore cannot be assigned.": "{0} hat keine offene Funktion in der Schicht und kann somit nicht zugewiesen werden.",
     "Organize shift": "Schicht einteilen",
     "Determine how long your shift lasts and how many people should work in your shift.": "Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.",
     "Shift start": "Schicht Start",

@@ -41,7 +41,9 @@
 </div>
 
 <div class="mb-4">
-    <p><span class="font-bold">Ausgabe durch:</span> {{ $issue->issuedBy->full_name }}</p>
+    @if($issue->issuedBy)
+        <p><span class="font-bold">Ausgabe durch:</span> {{ $issue->issuedBy->full_name }}</p>
+    @endif
     @if($issue->receivedBy)
         <p><span class="font-bold">Zurückgenommen durch:</span> {{ $issue->receivedBy->full_name }}</p>
     @endif

@@ -44,7 +44,6 @@ class UpdateArtwork extends Command
         $this->updateServiceProviderContacts();
         $this->addInventoryArticleStatus();
         $this->addInventoryArticlePlanFilter();
-        $this->migrateCraftInventoryItems();
         $this->setupPassport();
         $this->removeOldCalendarComponent();
         $this->migrateFilterToNewFilterStructure();
@@ -53,6 +52,7 @@ class UpdateArtwork extends Command
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
         $this->remapShiftEventProjectRelations();
+        $this->updateSpecialComponentsSidebarEnabled();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -431,5 +431,38 @@ class UpdateArtwork extends Command
             // detach qualifications from shift event
             $shift->shiftsQualifications()->delete();
         }
+    }
+
+    private function updateSpecialComponentsSidebarEnabled(): void
+    {
+        $this->section('Update Special Components Sidebar Enabled');
+
+        // Liste der Komponenten, die in der Sidebar erlaubt sein sollen
+        $sidebarEnabledTypes = [
+            ProjectTabComponentEnum::PROJECT_STATUS,
+            ProjectTabComponentEnum::PROJECT_GROUP,
+            ProjectTabComponentEnum::PROJECT_TEAM,
+            ProjectTabComponentEnum::PROJECT_ATTRIBUTES,
+            ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING,
+            ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS,
+            ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION,
+            ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE,
+            ProjectTabComponentEnum::PROJECT_TITLE,
+            ProjectTabComponentEnum::BUDGET_INFORMATIONS,
+            ProjectTabComponentEnum::GROUP_PROJECT_DISPLAY,
+            ProjectTabComponentEnum::ARTIST_NAME_DISPLAY,
+        ];
+
+        foreach ($sidebarEnabledTypes as $type) {
+            $updated = Component::where('type', $type->value)
+                ->where('special', true)
+                ->update(['sidebar_enabled' => true]);
+
+            if ($updated > 0) {
+                $this->info("✓ {$type->value} - sidebar_enabled set to true");
+            }
+        }
+
+        $this->info('Special components sidebar settings updated');
     }
 }

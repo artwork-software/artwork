@@ -36,7 +36,7 @@
                 <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
@@ -105,6 +105,16 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false,
+    },
+    firstEvent: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+    lastEvent: {
+        type: Object,
+        required: false,
+        default: null,
     },
 })
 

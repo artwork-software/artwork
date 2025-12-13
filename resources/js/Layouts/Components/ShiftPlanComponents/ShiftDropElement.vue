@@ -477,12 +477,38 @@ function saveUser() {
         return
     }
 
-    if (qualificationsForCraft.length === 1) {
-        assignUser(user, qualificationsForCraft[0].id)
+    // Check if there are available slots for any of the user's qualifications
+    const qualificationsWithAvailableSlots = qualificationsForCraft.filter((q: any) => {
+        const qualificationData = computedShiftsQualificationsWithWorkerCount.value.find(
+            (sq: any) => sq.shift_qualification_id === q.id
+        )
+        // If no data found or maxWorkerCount is 0, no slots available
+        if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
+        // Check if there are free slots (workerCount < maxWorkerCount)
+        return qualificationData.workerCount < qualificationData.maxWorkerCount
+    })
+
+    // If no qualifications have available slots, show error message
+    if (qualificationsWithAvailableSlots.length === 0) {
+        const label = user.type === 0
+            ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
+            : user.type === 1
+                ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
+                : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('{0} has no open function in the shift and therefore cannot be assigned.', [label]) ??
+            `${label} has no open function in the shift and therefore cannot be assigned.`
+        )
         return
     }
 
-    openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsForCraft)
+    if (qualificationsWithAvailableSlots.length === 1) {
+        assignUser(user, qualificationsWithAvailableSlots[0].id)
+        return
+    }
+
+    openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsWithAvailableSlots)
 }
 
 function assignUser(user: any, shiftQualificationId: number) {

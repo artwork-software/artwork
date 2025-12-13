@@ -44,6 +44,7 @@ import {reloadRolesAndPermissions} from "laravel-permission-to-vuejs";
 import {useI18n} from "vue-i18n";
 import PopupChat from "@/Components/Chat/PopupChat.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SubMenu from "@/Layouts/SubMenu.vue";
 const { locale } = useI18n();
 
 const props = defineProps({
@@ -52,8 +53,6 @@ const props = defineProps({
         default: 'Dashboard'
     },
 })
-
-const SubMenu = defineAsyncComponent(() => import('@/Layouts/SubMenu.vue'));
 
 watchEffect(() => {
     window.Laravel = window.Laravel || {}

@@ -478,6 +478,8 @@
         :project="project"
         :issue-of-material="materialIssueToEdit"
         :is-in-project-component="true"
+        :first-event="headerObject?.firstEventInProject"
+        :last-event="headerObject?.lastEventInProject"
     />
 </template>
 
@@ -526,6 +528,7 @@ const props = defineProps<{
     project: Project
     materials?: InternalIssue[]
     defaultOpen?: boolean
+    headerObject?: any
 }>()
 
 const tags = ref(usePage().props.tags ?? [])
@@ -696,7 +699,31 @@ const openEditIssue = (issue:InternalIssue) => {
 }
 
 const openCreateMaterialIssue = () => {
-    materialIssueToEdit.value = null
+    // Extract dates from first and last event formatted_dates (already in YYYY-MM-DD format)
+    const firstEvent = props.headerObject?.firstEventInProject
+    const lastEvent = props.headerObject?.lastEventInProject
+
+    const startDate = firstEvent?.formatted_dates?.start_without_time || ''
+    const startTime = firstEvent?.formatted_dates?.startTime || '00:00'
+    const endDate = lastEvent?.formatted_dates?.end_without_time || ''
+    const endTime = lastEvent?.formatted_dates?.endTime || '23:59'
+
+    materialIssueToEdit.value = {
+        id: null,
+        name: '',
+        project_id: props.project?.id || null,
+        start_date: startDate,
+        start_time: startTime,
+        end_date: endDate,
+        end_time: endTime,
+        room_id: null,
+        notes: '',
+        responsible_user_ids: [],
+        special_items_done: false,
+        files: [],
+        articles: [],
+        special_items: []
+    }
     showIssueOfMaterialModal.value = true
 }
 

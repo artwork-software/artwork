@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <IconChevronDown class="h-5 w-5 text-primary"
+                        <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-primary"
                                          aria-hidden="true"/>
                     </span>
                 </ListboxButton>
@@ -43,7 +43,7 @@
                                 </span>
                                 <span v-if="selected"
                                       :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                    <IconCheck class="h-5 w-5" aria-hidden="true"/>
+                                    <PropertyIcon name="IconCheck" class="h-5 w-5" aria-hidden="true"/>
                                 </span>
                             </li>
                         </ListboxOption>
@@ -60,9 +60,11 @@ import {defineComponent} from "vue";
 import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     components: {
+        PropertyIcon,
         Listbox,
         ListboxOption,
         ListboxOptions,

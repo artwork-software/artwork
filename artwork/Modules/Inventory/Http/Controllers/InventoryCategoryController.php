@@ -15,9 +15,11 @@ use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
+use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\Room\Models\Room;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class InventoryCategoryController extends Controller
@@ -28,6 +30,7 @@ class InventoryCategoryController extends Controller
         protected InventoryPropertyRepository $propertyRepository,
         protected InventoryArticleService $inventoryArticleService,
         protected ProductBasketService $productBasketService,
+        protected InventoryUserFilterService $filterService,
     ) {
     }
 
@@ -167,11 +170,24 @@ class InventoryCategoryController extends Controller
 
     public function getAllCategories()
     {
-        // Optimiere durch spezifisches Select und Eager Loading
+        $user = Auth::user();
+
+        // Get filtered article IDs based on user's saved filters (including tags)
+        $filteredArticleIds = $this->filterService
+            ->getFilteredArticlesNew($user)
+            ->pluck('id')
+            ->toArray();
+
+        // Load categories with filtered articles
         $categories = InventoryCategory::with([
             'subcategories:id,inventory_category_id,name',
             'subcategories.properties:id,name,type,select_values',
-            'articles:id,name,inventory_category_id,inventory_sub_category_id',
+            'articles' => function ($query) use ($filteredArticleIds) {
+                if (!empty($filteredArticleIds)) {
+                    $query->whereIn('id', $filteredArticleIds);
+                }
+                $query->select('id', 'name', 'inventory_category_id', 'inventory_sub_category_id');
+            },
             'articles.category:id,name',
             'articles.subCategory:id,name'
         ])

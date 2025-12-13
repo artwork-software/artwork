@@ -11,6 +11,7 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -206,7 +207,7 @@ class CraftItemMigrationService
 
     private function isCraftItemAlreadyMigrated(string $name, int $categoryId, ?int $subcategoryId = null): bool
     {
-        $query = InventoryArticle::where('name', $name)
+        $query = InventoryArticle::withTrashed()->where('name', $name)
             ->where('inventory_category_id', $categoryId);
 
         if ($subcategoryId !== null) {

@@ -31,54 +31,87 @@ export function useSyncedHorizontalScroll(
         options.getDayElementId ??
         ((d: DayLike) => (d.fullDay ? d.fullDay : d.weekNumber != null ? `extra_row_${d.weekNumber}` : null))
 
-    // Loop-Guard, damit A->B nicht wieder B->A triggert usw.
+    /** Loop-Guard, damit A->B nicht wieder B->A triggert usw. */
     const syncingFrom = ref<'shift' | 'overview' | null>(null)
-    let rafId: number | null = null
+
+    /** rAF für "release guard" */
+    let releaseRafId: number | null = null
+
+    /** rAF für "current day"-Berechnung (throttled) */
+    let dayScanRafId: number | null = null
+
+    /** Cache für Day-Elemente (vermeidet document.getElementById auf jedem Scroll-Event) */
+    const dayElCache = new Map<string, HTMLElement>()
+
+    function getDayEl(id: string): HTMLElement | null {
+        const cached = dayElCache.get(id)
+        // Wenn Element aus dem DOM geflogen ist (Re-Render), neu holen
+        if (cached && cached.isConnected) return cached
+
+        const el = document.getElementById(id)
+        if (el && el instanceof HTMLElement) {
+            dayElCache.set(id, el)
+            return el
+        }
+
+        dayElCache.delete(id)
+        return null
+    }
 
     function _syncScroll(source: 'shift' | 'overview', targetEl: HTMLElement, left: number) {
         // Guard: nicht zurückspielen, wenn wir gerade vom Ziel kommen
         if (syncingFrom.value && syncingFrom.value !== source) return
+
+        // unnötige Writes vermeiden (reduziert Layout/Scroll-Events)
+        if (targetEl.scrollLeft === left) return
+
         syncingFrom.value = source
         targetEl.scrollLeft = left
+
         // nach dem nächsten Frame wieder freigeben
-        if (rafId) cancelAnimationFrame(rafId)
-        rafId = requestAnimationFrame(() => {
+        if (releaseRafId) cancelAnimationFrame(releaseRafId)
+        releaseRafId = requestAnimationFrame(() => {
             syncingFrom.value = null
-            rafId = null
+            releaseRafId = null
         })
     }
 
     function syncScrollUserOverview(e: Event) {
-        const src = e.target as HTMLElement
+        const src = e.target
+        if (!(src instanceof HTMLElement)) return
+
         const target = shiftPlanEl.value
         if (!target) return
+
         _syncScroll('overview', target, src.scrollLeft)
+        // Hinweis: currentDayOnView wird weiterhin über shiftPlan-scroll event aktualisiert
+        // (wie in deiner Original-Logik), weil shiftPlan durch _syncScroll scrollt.
     }
 
-    function syncScrollShiftPlan(e: Event) {
-        const src = e.target as HTMLElement
-        const target = userOverviewEl.value
-        if (target) {
-            _syncScroll('shift', target, src.scrollLeft)
-        }
+    function scanCurrentDay() {
+        dayScanRafId = null
 
         const container = shiftPlanEl.value
-        if (!container || !days.value?.length) return
+        const list = days.value
+        if (!container || !list?.length) return
 
         const roomNameFixedPosition = container.getBoundingClientRect().left + roomNameOffsetPx
 
         let closestDayIndex: number | null = null
         let closestDayDistance = Infinity
 
-        for (let i = 0; i < days.value.length; i++) {
-            const day = days.value[i]
+        for (let i = 0; i < list.length; i++) {
+            const day = list[i]
             const id = getDayElementId(day)
             if (!id) continue
 
-            const dayElement = document.getElementById(id)
+            const dayElement = getDayEl(id)
             if (!dayElement) continue
 
             const rect = dayElement.getBoundingClientRect()
+            // wenn Element nicht sichtbar/0-breit ist, skip (verhindert komische Sprünge)
+            if (rect.width <= 0) continue
+
             const elementCenter = rect.left + rect.width / 2
             const distance = Math.abs(roomNameFixedPosition - elementCenter)
 
@@ -88,18 +121,38 @@ export function useSyncedHorizontalScroll(
             }
         }
 
-        if (closestDayIndex !== null) {
-            const selectedDay = days.value[closestDayIndex]
-            if (selectedDay?.isExtraRow) {
-                for (let j = closestDayIndex + 1; j < days.value.length; j++) {
-                    if ((days.value[j] as any).isMonday) {
-                        currentDayOnView.value = days.value[j]
-                        return
-                    }
+        if (closestDayIndex === null) return
+
+        const selectedDay = list[closestDayIndex]
+        if (!selectedDay) return
+
+        if (selectedDay.isExtraRow) {
+            for (let j = closestDayIndex + 1; j < list.length; j++) {
+                if (list[j]?.isMonday) {
+                    currentDayOnView.value = list[j]
+                    return
                 }
-            } else {
-                currentDayOnView.value = selectedDay
             }
+            // fallback: wenn keine Monday gefunden, setze wenigstens selectedDay
+            currentDayOnView.value = selectedDay
+            return
+        }
+
+        currentDayOnView.value = selectedDay
+    }
+
+    function syncScrollShiftPlan(e: Event) {
+        const src = e.target
+        if (!(src instanceof HTMLElement)) return
+
+        const target = userOverviewEl.value
+        if (target) {
+            _syncScroll('shift', target, src.scrollLeft)
+        }
+
+        // Current-Day-Berechnung throttlen: maximal 1x pro Frame
+        if (!dayScanRafId) {
+            dayScanRafId = requestAnimationFrame(scanCurrentDay)
         }
     }
 
@@ -107,11 +160,13 @@ export function useSyncedHorizontalScroll(
         // defensiv: zuerst abkoppeln
         detach()
 
+        const passiveOpts: AddEventListenerOptions = { passive: true }
+
         if (shiftPlanEl.value) {
-            shiftPlanEl.value.addEventListener('scroll', syncScrollShiftPlan, { passive: true })
+            shiftPlanEl.value.addEventListener('scroll', syncScrollShiftPlan, passiveOpts)
         }
         if (userOverviewEl.value) {
-            userOverviewEl.value.addEventListener('scroll', syncScrollUserOverview, { passive: true })
+            userOverviewEl.value.addEventListener('scroll', syncScrollUserOverview, passiveOpts)
         }
     }
 
@@ -122,11 +177,18 @@ export function useSyncedHorizontalScroll(
         if (userOverviewEl.value) {
             userOverviewEl.value.removeEventListener('scroll', syncScrollUserOverview)
         }
-        if (rafId) {
-            cancelAnimationFrame(rafId)
-            rafId = null
+
+        if (releaseRafId) {
+            cancelAnimationFrame(releaseRafId)
+            releaseRafId = null
         }
+        if (dayScanRafId) {
+            cancelAnimationFrame(dayScanRafId)
+            dayScanRafId = null
+        }
+
         syncingFrom.value = null
+        dayElCache.clear()
     }
 
     return {

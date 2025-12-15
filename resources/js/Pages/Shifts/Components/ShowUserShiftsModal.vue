@@ -566,6 +566,7 @@ const vacationTypes = ref([
     { name: 'Verfügbar', type: 'AVAILABLE' },
     { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
     { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
+    { name: 'Frei', type: 'FREE_WORK' },
 ]);
 
 const checked = ref(null);

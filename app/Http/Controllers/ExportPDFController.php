@@ -140,21 +140,102 @@ class ExportPDFController extends Controller
         // Für den Header
         $project = $projectId ? $this->projectService->findById($projectId) : null;
 
+        // Determine export mode: 'relative' (new) or 'block' (old)
+        $exportMode = $request->get('exportMode', 'relative');
+
         $rowHeights = [];
 
-        $baseSegmentHeight = 36; // px (gerne anpassen, wenn dir die Zellen zu "flach" wirken)
+        if ($exportMode === 'block') {
+            // Old export mode: dynamic row heights based on event count per slot
+            try {
+                $perEventHeight = 18; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
+                $baseMinHeight  = 36; // px, Mindesthöhe wenn keine Events vorhanden sind
 
-        foreach ($rooms as $room) {
-            $rowHeights[$room->id] = [
-                'morning' => $baseSegmentHeight,
-                'noon'    => $baseSegmentHeight,
-                'evening' => $baseSegmentHeight,
-            ];
+                // Liste der Tag-Strings (Format wie im View: d.m.Y)
+                $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
+
+                // Kalender-Räume-Struktur aus DTO
+                $calendarRooms = $calendar->rooms ?? [];
+
+                // Hilfs-Lookup: roomId -> calendar room block
+                $calendarRoomLookup = [];
+                foreach ($calendarRooms as $roomBlock) {
+                    $rid = $roomBlock['roomId'] ?? null;
+                    if ($rid !== null) {
+                        $calendarRoomLookup[$rid] = $roomBlock;
+                    }
+                }
+
+                foreach ($rooms as $room) {
+                    $rid = $room->id;
+                    $maxPerSlot = [
+                        'morning' => 0,
+                        'noon'    => 0,
+                        'evening' => 0,
+                    ];
+
+                    $roomBlock = $calendarRoomLookup[$rid] ?? null;
+                    if (!$roomBlock) {
+                        // Falls keine Inhalte vorhanden sind, auf Basis-Mindesthöhe setzen
+                        $rowHeights[$rid] = [
+                            'morning' => $baseMinHeight,
+                            'noon'    => $baseMinHeight,
+                            'evening' => $baseMinHeight,
+                        ];
+                        continue;
+                    }
+
+                    foreach ($allDayStrings as $dayDisplay) {
+                        $events = $roomBlock['content'][$dayDisplay]['events'] ?? [];
+                        if (empty($events)) {
+                            // Keine Events für diesen Tag
+                            continue;
+                        }
+
+                        // Zähle Events, die je Slot in diesen Tag fallen
+                        foreach (['morning', 'noon', 'evening'] as $slot) {
+                            $count = 0;
+                            foreach ($events as $event) {
+                                if (self::eventOverlapsSlot($event, $dayDisplay, $slot)) {
+                                    $count++;
+                                }
+                            }
+                            if ($count > $maxPerSlot[$slot]) {
+                                $maxPerSlot[$slot] = $count;
+                            }
+                        }
+                    }
+
+                    // Berechne Pixelhöhen pro Slot
+                    $rowHeights[$rid] = [
+                        'morning' => max($baseMinHeight, $maxPerSlot['morning'] * $perEventHeight),
+                        'noon'    => max($baseMinHeight, $maxPerSlot['noon']    * $perEventHeight),
+                        'evening' => max($baseMinHeight, $maxPerSlot['evening'] * $perEventHeight),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // Fallback, falls Struktur sich ändert – View erhält dann nur Basiswerte
+                $rowHeights = [];
+            }
+        } else {
+            // New export mode: fixed segment height
+            $baseSegmentHeight = 36; // px (gerne anpassen, wenn dir die Zellen zu "flach" wirken)
+
+            foreach ($rooms as $room) {
+                $rowHeights[$room->id] = [
+                    'morning' => $baseSegmentHeight,
+                    'noon'    => $baseSegmentHeight,
+                    'evening' => $baseSegmentHeight,
+                ];
+            }
         }
+
+        // Select blade template based on export mode
+        $bladeTemplate = $exportMode === 'block' ? 'pdf.calendarExportNotRelative' : 'pdf.calendar';
 
         // PDF rendern
         $pdf = $this->domPdf->loadView(
-            'pdf.calendar',
+            $bladeTemplate,
             [
                 'title'          => $request->get('title') ?? 'Raumbelegung',
                 'project'        => $project,

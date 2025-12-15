@@ -1,106 +1,187 @@
 <template>
-    <div class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell h-full cursor-pointer overflow-y-scroll hover:opacity-100" :class="hasMultiShiftGroups ? 'ring-2 ring-inset ring-rose-400' : ''">
-        <div :class="[classes]">
+    <div
+        class="shiftCell h-full cursor-pointer overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100"
+        :class="[
+      hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
+    ]"
+    >
+        <div :class="classes">
+            <!-- Urlaub -->
+            <span
+                v-if="isOnVacation"
+                class="flex h-full items-center justify-center text-[#f08b32]"
+            >
+        {{ vacationLabel }}
+      </span>
 
-            <template v-if="!checkIfUserHasVacationOnDay(user, day.withoutFormat)">
-                <template v-for="shift in user.element?.shifts" :key="shift.id">
-        <span v-if="shift.start_of_shift === day.fullDay">
-          {{ shift.startPivot }} - {{ shift.endPivot }} {{ shift?.roomName }}
-          <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser && shift.craftAbbreviationUser">
-            [{{ shift.craftAbbreviationUser }}]
-          </span>,
-        </span>
-                </template>
-
-
-                <template v-for="individual_time in user.individual_times" :key="individual_time.id">
-                    <span v-if="individual_time.days_of_individual_time?.includes(day.withoutFormat)">
-                          <span v-if="individual_time.start_time && individual_time.end_time">{{ individual_time.start_time }} - {{ individual_time.end_time }}</span>
-                          <span v-else>{{ $t('All day') }}</span>
-                        {{ individual_time.title }},
-                    </span>
-                </template>
-
-                <span v-if="user.shift_comments[day.withoutFormat]">
-                    {{ user.shift_comments[day.withoutFormat][0].comment }}
-                </span>
-
-                <template v-if="user.availabilities && user.availabilities[day.fullDay]">
-                    <span v-for="availability in user.availabilities[day.fullDay]" :key="availability.id" class="text-green-500">
-                      <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
-                    </span>
-                </template>
-            </template>
-
+            <!-- Normal -->
             <template v-else>
-              <span class="h-full flex justify-center items-center text-[#f08b32]">
-                {{ user.vacations.find(v => v.date === day.withoutFormat).type === 'OFF_WORK' ? $t('Day off work') : $t('not available') }}
-              </span>
+                <template v-for="part in cellParts" :key="part.key">
+          <span :class="part.class">
+            {{ part.text }}
+          </span>
+                </template>
             </template>
         </div>
     </div>
-    <!-- Rahmen dynamisch hinzufügen -->
-
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import {usePage} from "@inertiajs/vue3";
+import { usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
     user: { type: Object, required: true },
-    day:  { type: Object, required: true },
+    day: { type: Object, required: true },
     classes: { type: Array, default: () => [] },
 })
 
-const checkIfUserHasVacationOnDay = (user, day) =>
-    user.vacations?.some(vacation => vacation.date === day)
+const page = usePage()
 
-/** Holt die ShiftGroup-ID robust aus allen gängigen Varianten */
+/**
+ * Vacation types: als Konstante statt ref (keine Reaktivität nötig)
+ * (Wenn du das aus i18n/config ziehen willst: perfekt – dann hier ersetzen.)
+ */
+const vacationTypes = [
+    { name: 'Verfügbar', type: 'AVAILABLE' },
+    { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
+    { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
+    { name: 'Frei', type: 'FREE_WORK' },
+]
+
+const vacationTypeMap = computed(() => {
+    const map = Object.create(null)
+    for (const v of vacationTypes) map[v.type] = v.name
+    return map
+})
+
+/** Urlaub am Tag nur 1x ermitteln */
+const vacationToday = computed(() => {
+    const list = props.user?.vacations ?? []
+    return list.find(v => v?.date === props.day.withoutFormat) ?? null
+})
+
+const isOnVacation = computed(() => !!vacationToday.value)
+
+const vacationLabel = computed(() => {
+    const v = vacationToday.value
+    if (!v) return 'On Vacation'
+    return vacationTypeMap.value?.[v.type] || 'On Vacation'
+})
+
+/** Robust: ShiftGroup-ID aus allen gängigen Varianten */
 function getShiftGroupId(shift) {
-    // ✅ deine aktuellen Daten
     if (shift?.shiftGroup?.id != null) return shift.shiftGroup.id
-
-    // weitere mögliche Varianten (Fallbacks)
-    if (shift?.shift_group_id != null)   return shift.shift_group_id
-    if (shift?.shiftGroupId != null)     return shift.shiftGroupId
-    if (shift?.group_id != null)         return shift.group_id
-    if (shift?.group?.id != null)        return shift.group.id
-    if (shift?.shift_group?.id != null)  return shift.shift_group.id
-
+    if (shift?.shift_group_id != null) return shift.shift_group_id
+    if (shift?.shiftGroupId != null) return shift.shiftGroupId
+    if (shift?.group_id != null) return shift.group_id
+    if (shift?.group?.id != null) return shift.group.id
+    if (shift?.shift_group?.id != null) return shift.shift_group.id
     return null
 }
 
-/** Alle Schichten des Users am aktuellen Tag (robust auf beide Felder) */
+/** Alle Schichten am Tag (einmal filtern, dann überall verwenden) */
 const shiftsToday = computed(() => {
     const list = props.user?.element?.shifts ?? []
-    const dayA = props.day.fullDay           // z.B. "13.10.2025"
-    const dayB = props.day.withoutFormat     // z.B. "13.10.2025" (oder anderes Format)
+    const dayA = props.day.fullDay
+    const dayB = props.day.withoutFormat
 
     return list.filter(s => {
-        const byStartOfShift =
-            s.start_of_shift === dayA || s.start_of_shift === dayB
+        const start = s?.start_of_shift
+        const byStart = start === dayA || start === dayB
 
-        const byDaysArray =
-            Array.isArray(s.days_of_shift) &&
-            (s.days_of_shift.includes(dayA) || s.days_of_shift.includes(dayB))
+        const days = s?.days_of_shift
+        const byDays =
+            Array.isArray(days) && (days.includes(dayA) || days.includes(dayB))
 
-        return byStartOfShift || byDaysArray
+        return byStart || byDays
     })
 })
 
-/** Rahmenregel: Mind. zwei unterschiedliche (nicht-leere) Gruppen am Tag */
-const hasMultiShiftGroups = computed(() => {
+/** Individual times am Tag (einmal filtern) */
+const individualTimesToday = computed(() => {
+    const list = props.user?.individual_times ?? []
+    const d = props.day.withoutFormat
+    return list.filter(it =>
+        Array.isArray(it?.days_of_individual_time) &&
+        it.days_of_individual_time.includes(d)
+    )
+})
 
-    if(!usePage().props.warn_multiple_assignments){
-        return false
+/** Kommentar am Tag (nur 1x sauber lesen) */
+const shiftCommentToday = computed(() => {
+    return props.user?.shift_comments?.[props.day.withoutFormat]?.[0]?.comment ?? ''
+})
+
+/** Availabilities am Tag (nur 1x) */
+const availabilitiesToday = computed(() => {
+    return props.user?.availabilities?.[props.day.fullDay] ?? []
+})
+
+/** Render-Parts: ein Array, das das Template nur noch “abspult” */
+const cellParts = computed(() => {
+    const parts = []
+
+    // Shifts
+    for (const s of shiftsToday.value) {
+        const craftSuffix =
+            s?.craftAbbreviation !== s?.craftAbbreviationUser && s?.craftAbbreviationUser
+                ? ` [${s.craftAbbreviationUser}]`
+                : ''
+
+        parts.push({
+            key: `shift:${s.id}`,
+            text: `${s.startPivot} - ${s.endPivot} ${s?.roomName ?? ''}${craftSuffix}, `,
+            class: '',
+        })
     }
 
-    const ids = new Set(
-        shiftsToday.value
-            .map(s => getShiftGroupId(s))
-            .filter(id => id !== null && id !== undefined)
-    )
-    return ids.size >= 2
+    // Individual Times
+    for (const it of individualTimesToday.value) {
+        const time =
+            it?.start_time && it?.end_time
+                ? `${it.start_time} - ${it.end_time}`
+                : 'All day'
+
+        parts.push({
+            key: `it:${it.id}`,
+            text: `${time} ${it?.title ?? ''}, `,
+            class: '',
+        })
+    }
+
+    // Comment
+    if (shiftCommentToday.value) {
+        parts.push({
+            key: 'comment',
+            text: shiftCommentToday.value,
+            class: '',
+        })
+    }
+
+    // Availabilities (nur Comments anzeigen, wie vorher)
+    for (const a of availabilitiesToday.value) {
+        if (!a?.comment) continue
+        parts.push({
+            key: `av:${a.id}`,
+            text: `„${a.comment}” `,
+            class: 'text-green-500',
+        })
+    }
+
+    return parts
+})
+
+/** Rahmenregel: mind. 2 unterschiedliche Gruppen am Tag */
+const hasMultiShiftGroups = computed(() => {
+    if (!page.props?.warn_multiple_assignments) return false
+
+    const ids = new Set()
+    for (const s of shiftsToday.value) {
+        const id = getShiftGroupId(s)
+        if (id != null) ids.add(id)
+        if (ids.size >= 2) return true // early-exit = schneller
+    }
+    return false
 })
 </script>

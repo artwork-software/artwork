@@ -13,10 +13,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .page {
-            page-break-after: always;
-            padding: 16px;
-        }
+        .page { page-break-after: always; padding: 16px; }
         .page:last-child { page-break-after: auto; }
 
         /* HEADER ------------------------------------------------------*/
@@ -27,75 +24,38 @@
             font-size: 8px;
             line-height: 1.3;
             border: none;
-            border-collapse: collapse; /* keine sichtbaren Rahmen */
+            border-collapse: collapse;
         }
 
-        .header-table td {
-            vertical-align: top; /* gleiche Höhe oben */
-            padding: 0;
-            border: none;
-        }
+        .header-table td { vertical-align: top; padding: 0; border: none; }
+        .header-left { width: 60%; font-size: 8px; color: #111; }
+        .header-right { width: 40%; text-align: right; font-size: 7px; color: #71717a; line-height: 1.4; }
 
-        .header-left {
-            width: 60%;
-            font-size: 8px;
-            color: #111;
-        }
-
-        .header-right {
-            width: 40%;
-            text-align: right;
-            font-size: 7px;
-            color: #71717a;
-            line-height: 1.4;
-        }
-
-        .title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #0a0a0a;
-            line-height: 1.3;
-        }
-        .subtitle {
-            font-size: 8px;
-            color: #52525b;
-            margin-top: 2px;
-            line-height: 1.4;
-        }
-        .chunk-info {
-            font-size: 7px;
-            color: #71717a;
-            line-height: 1.4;
-            margin-top: 2px;
-        }
+        .title { font-size: 12px; font-weight: 600; color: #0a0a0a; line-height: 1.3; }
+        .subtitle { font-size: 8px; color: #52525b; margin-top: 2px; line-height: 1.4; }
+        .chunk-info { font-size: 7px; color: #71717a; line-height: 1.4; margin-top: 2px; }
 
         /* TABLE ------------------------------------------------------*/
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;   /* <--- WICHTIG */
+            table-layout: fixed;
             border: 1px solid #404040;
             font-size: 6px;
             font-weight: 500;
         }
 
-        /* Damit Inhalte nicht über die Zelle hinausquellen */
-        th, td {
-            word-wrap: break-word;
-        }
-
+        th, td { word-wrap: break-word; }
 
         thead th {
             border-bottom: 1px solid #404040;
             border-right: 1px solid #404040;
             background: #f9fafb;
             vertical-align: top;
-            word-wrap: break-word;
             font-size: 6px;
             font-weight: 500;
         }
 
-        /* Kopfspalten */
         .th-room-head {
             font-weight: 500;
             font-size: 6px;
@@ -115,116 +75,153 @@
             font-weight: 500;
             font-size: 6px;
         }
-        .th-daygroup-meta {
-            font-weight: 500;
-            font-size: 6px;
-            line-height: 1.2;
-            color: #4b5563;
-        }
+        .th-daygroup-meta { font-weight: 500; font-size: 6px; line-height: 1.2; color: #4b5563; }
 
-        /* Wochenendfärbung */
         .weekend-bg-top { background-color: #f4f4f5; }
-        .weekend-bg-slot { background-color: #f4f4f5; }
-
-        /* Zeitspalte leicht grau hinterlegen (ähnlich Wochenende) */
+        .weekend-bg-cell { background-color: #f4f4f5; }
         .time-col-bg { background-color: #f4f4f5; }
 
-        /* BODY ------------------------------------------------------*/
         tbody td {
             border-bottom: 1px solid #404040;
             border-right: 1px solid #404040;
             vertical-align: top;
-            padding: 3px;
-            word-wrap: break-word;
+            padding: 0; /* wichtig: Linien fluchten exakt */
         }
 
-        /* Raumspalte links */
+        /* Raumspalte */
         .td-room {
             padding: 2px;
-            vertical-align: top;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1.2;
+            word-break: break-word;
         }
 
-        .room-name-wrapper {
-            line-height: 1.2;
-            font-weight: 500;
-            color: #000;
-            font-size: 6px;
-            word-break: break-word;
-            max-height: 24px;
+        /* Zeitspalte */
+        .td-time {
+            padding: 0;
+            vertical-align: top;
+            text-align: center;
+            color: #4b5563;
+            font-weight: 700;
+            font-size: 7px;
+        }
+
+        .time-wrap { position: relative; width: 100%; overflow: hidden; }
+        .time-block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            font-size: 7px;
+            font-weight: 700;
+            color: #4b5563;
+        }
+
+        /* Day cell */
+        .day-wrap { position: relative; width: 100%; overflow: hidden; background: #fff; }
+
+        /* Segment Lines */
+        .seg-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid rgba(64,64,64,0.35);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Lane Layout */
+        .lanes {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .lane {
+            float: left;
+            height: 100%;
+            position: relative;
+            padding: 2px;
+            overflow: hidden;
+            border-left: 1px solid rgba(64,64,64,0.15);
+        }
+        .lane:first-child { border-left: none; }
+
+        .lanes:after { content: ""; display: block; clear: both; }
+
+        /* Event ------------------------------------------------------*/
+        .event {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.40);
+            border-left-width: 3px;
+            background-clip: padding-box;
             overflow: hidden;
         }
 
-        /* Slot/Zeitraum Spalte (jetzt schlanker) */
-        .td-slot-label {
-            font-size: 6px;
-            line-height: 1.2;
-            color: #4b5563;
-            font-weight: 500;
-            vertical-align: middle;
-            text-align: center;
-            padding: 1px;
-            white-space: nowrap;
-            /* gleiche Mindesthöhe wie Eventzellen */
-            min-height: 32px;
-        }
+        .event-inner { padding: 2px 3px; overflow: hidden; }
 
-        .slot-cell {
-            vertical-align: top;
+        .event-title {
+            font-weight: 800;
             font-size: 6px;
-            line-height: 1.25;
-            padding: 3px;
-            word-wrap: break-word;
-            /* Mindesthöhe für leere Zeilen: Platz für einen 4-zeiligen Termin */
-            min-height: 80px;
+            line-height: 1.15;
+            word-break: break-word;
+            overflow: hidden;
         }
-
-        /* Innen-Wrapper in Slot-Zellen, damit DomPDF min-height zuverlässig anwendet */
-        .slot-inner {
-            min-height: 64px;
+        .event-sub {
+            margin-top: 1px;
+            font-weight: 600;
+            font-size: 5.7px;
+            line-height: 1.1;
+            opacity: 0.9;
+            word-break: break-word;
+            overflow: hidden;
         }
-
-        /* Event Bubble ----------------------------------------------*/
-        .event {
-            border-radius: 3px;
-            border-width: 0.5px;
-            border-style: solid;
-            margin-bottom: 2px;
-            padding: 3px 4px;
-            font-size: 6px;
-            line-height: 1.3;
-            font-weight: 500;
-            display: block;
-        }
-        .event-headerline {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 2px;
-            font-weight: 500;
-            font-size: 6px;
-            line-height: 1.3;
-        }
-        .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; }
-        .event-abbr { font-weight: 600; }
         .event-time {
-            flex: 0 0 auto;
-            font-weight: 500;
-            font-size: 6px;
-            line-height: 1.2;
-            word-wrap: break-word;
+            margin-top: 1px;
+            font-weight: 800;
+            font-size: 5.6px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
         }
+
+        .event-compact .event-inner { padding: 1px 2px; }
+        .event-compact .event-title { font-size: 5.4px; line-height: 1.1; }
+        .event-compact .event-sub   { display: none; }
+        .event-compact .event-time  { font-size: 5.2px; line-height: 1.05; }
+
+        .event-supercompact .event-inner { padding: 1px 2px; }
+        .event-supercompact .event-title { font-size: 5.1px; line-height: 1.05; }
+        .event-supercompact .event-sub   { display: none; }
+        .event-supercompact .event-time  { font-size: 5.0px; line-height: 1.0; }
+
+        .abbr { font-weight: 900; margin-right: 2px; }
     </style>
 </head>
 <body>
 
 @php
-    /**
-     * Holt alle Events eines Raums an einem Tag.
-     */
+    // === Zeitfenster (WICHTIG): Morgens = 06–12, Mittags = 12–18, Abends = 18–24
+    $SCHEDULE_START_MIN = 6 * 60;    // 06:00
+    $SCHEDULE_END_MIN   = 24 * 60;   // 24:00
+
+    $MORNING_START_MIN  = 6 * 60;
+    $MORNING_END_MIN    = 12 * 60;
+    $NOON_START_MIN     = 12 * 60;
+    $NOON_END_MIN       = 18 * 60;
+    $EVENING_START_MIN  = 18 * 60;
+    $EVENING_END_MIN    = 24 * 60;
+
     function __getEventsForRoomAndDay($calendar, $roomId, $dayDisplay) {
-        if (empty($calendar) || empty($calendar->rooms)) {
-            return [];
-        }
+        if (empty($calendar) || empty($calendar->rooms)) return [];
         foreach ($calendar->rooms as $roomBlock) {
             if (($roomBlock['roomId'] ?? null) === $roomId) {
                 return $roomBlock['content'][$dayDisplay]['events'] ?? [];
@@ -233,99 +230,362 @@
         return [];
     }
 
+    function __parseDayStart(string $dayDisplay): \Illuminate\Support\Carbon {
+        return \Illuminate\Support\Carbon::createFromFormat('d.m.Y', $dayDisplay, config('app.timezone'))->startOfDay();
+    }
+    function __parseDayEnd(string $dayDisplay): \Illuminate\Support\Carbon {
+        return \Illuminate\Support\Carbon::createFromFormat('d.m.Y', $dayDisplay, config('app.timezone'))->endOfDay();
+    }
+
+    function __minutesSinceMidnight(\Illuminate\Support\Carbon $t): int {
+        return ((int)$t->format('H')) * 60 + ((int)$t->format('i'));
+    }
+
+    function __floorToHour(int $minutes): int { return (int)(floor($minutes / 60) * 60); }
+    function __ceilToHour(int $minutes): int { return (int)(ceil($minutes / 60) * 60); }
+
+    function __slotForMinute(int $min): string {
+        // end-boundary inkl. Handling über "min-1" außerhalb
+        if ($min < 12*60) return 'morning';
+        if ($min < 18*60) return 'noon';
+        return 'evening';
+    }
+
+    function __slotBoundsMin(string $slot): array {
+        if ($slot === 'morning') return [6*60, 12*60];
+        if ($slot === 'noon')    return [12*60, 18*60];
+        return [18*60, 24*60];
+    }
+
     /**
-     * Rendert Events als Bubbles für einen Slot (morning|noon|evening).
-     * Wenn ein Event über Zeitfenster geht, taucht es in mehreren Slots auf,
-     * weil eventOverlapsSlot() für mehrere Slots true sein kann.
+     * Mappt Minuten (06:00..24:00) -> Y-Pixel innerhalb der Tageshöhe
+     * Morgens (06–12) nutzt hMorning, Mittags (12–18) hNoon, Abends (18–24) hEvening
      */
-    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) {
-        foreach ($events as $event) {
-            if (!\App\Http\Controllers\ExportPDFController::eventOverlapsSlot($event, $dayDisplay, $slot)) {
-                continue;
-            }
+    function __minuteToYSchedule(
+        int $min,
+        int $hMorning, int $hNoon, int $hEvening
+    ): int {
+        $min = max(6*60, min(24*60, $min)); // clamp auf 06..24
 
-            $abbr      = $event->eventType?->abbreviation ?? '';
-            $hexColor  = $event->eventType?->hex_code ?? '#000000';
-            $name      = $event->eventName ?? '';
-            $projectNm = $event->project->name ?? null;
-            $allDay    = $event->allDay ?? false;
-
-            // Zeiten vorbereiten
-            $startCarbon = \Illuminate\Support\Carbon::parse($event->start)->timezone(config('app.timezone'));
-            $endCarbon   = \Illuminate\Support\Carbon::parse($event->end)->timezone(config('app.timezone'));
-
-            // Geht über mehrere Kalendertage?
-            $isMultiDay = $startCarbon->toDateString() !== $endCarbon->toDateString();
-
-            if ($allDay) {
-                $timeString = 'Ganztägig';
-            } else {
-                $timeString = $startCarbon->format('H:i') . '–' . $endCarbon->format('H:i');
-            }
-
-            // Farben aus Hex auf rgba runterbrechen
-            $r = hexdec(substr($hexColor, 1, 2));
-            $g = hexdec(substr($hexColor, 3, 2));
-            $b = hexdec(substr($hexColor, 5, 2));
-            $bgRGBA     = "rgba($r,$g,$b,0.15)";
-            $borderRGBA = "rgba($r,$g,$b,0.3)";
-            $textRGBA   = "rgba($r,$g,$b,1)";
-
-            echo '<div class="event" style="background-color:'.$bgRGBA.';border-color:'.$borderRGBA.';color:'.$textRGBA.';">';
-            echo    '<div class="event-headerline">';
-
-            // Linker Block (Name, Projekt)
-            echo        '<span class="event-left">';
-            if ($abbr) {
-                echo '<span class="event-abbr">'.$abbr.'</span>: ';
-            }
-            echo        e($name);
-            if ($projectNm) {
-                echo '<br>'.e($projectNm);
-            }
-            echo        '</span>';
-
-            // Rechter Block (Zeit). Hier kommt das "!" bei mehrtägig
-            echo        '<div class="event-time">';
-
-            if ($isMultiDay) {
-                echo '<span style="color:#dc2626;padding-right:2px;font-weight:600;">!</span>';
-
-                $startHuman = $startCarbon->format('d.m. H:i');
-                $endHuman   = $endCarbon->format('d.m. H:i');
-
-                echo e($startHuman).' – '.e($endHuman);
-            } else {
-                echo e($timeString);
-            }
-
-            echo        '</div>'; // .event-time
-            echo    '</div>'; // .event-headerline
-            echo '</div>'; // .event
+        // 06–12 (360..720) -> 0..hMorning
+        if ($min <= 12*60) {
+            $ratio = ($min - 6*60) / (6*60);
+            return (int)round($ratio * $hMorning);
         }
+
+        // 12–18 (720..1080) -> hMorning..hMorning+hNoon
+        if ($min <= 18*60) {
+            $ratio = ($min - 12*60) / (6*60);
+            return (int)round($hMorning + ($ratio * $hNoon));
+        }
+
+        // 18–24 (1080..1440) -> hMorning+hNoon..sum
+        $ratio = ($min - 18*60) / (6*60);
+        return (int)round($hMorning + $hNoon + ($ratio * $hEvening));
+    }
+
+    /**
+     * Baut Segment für einen Tag:
+     * - stundenweise (floor/ceil)
+     * - innerhalb eines Slots (nur morning/noon/evening) wird Mindesthöhe so umgesetzt,
+     *   dass es NICHT in den nächsten Slot läuft -> lieber nach oben schieben.
+     */
+    function __buildSegmentForDay(
+        $event,
+        string $dayDisplay,
+        int $hMorning, int $hNoon, int $hEvening
+    ) {
+        $tz = config('app.timezone');
+
+        $dayStart = __parseDayStart($dayDisplay);
+        $dayEnd   = __parseDayEnd($dayDisplay);
+
+        $allDay = (bool)($event->allDay ?? false);
+
+        $start = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
+        $end   = \Illuminate\Support\Carbon::parse($event->end)->timezone($tz);
+
+        // Tagesclip
+        if ($allDay) {
+            $effStart = $dayStart->copy();
+            $effEnd   = $dayEnd->copy();
+        } else {
+            $effStart = $start->greaterThan($dayStart) ? $start->copy() : $dayStart->copy();
+            $effEnd   = $end->lessThan($dayEnd) ? $end->copy() : $dayEnd->copy();
+        }
+
+        if ($effEnd->lte($effStart)) return null;
+
+        $isMultiDay = $start->toDateString() !== $end->toDateString();
+        $isStartDay = $start->toDateString() === $dayStart->toDateString();
+        $isEndDay   = $end->toDateString() === $dayStart->toDateString();
+
+        // Zeitstring
+        if ($allDay) {
+            $timeString = 'Ganztägig';
+        } else {
+            if ($isMultiDay) {
+                if (!$isStartDay && !$isEndDay) {
+                    $timeString = 'Ganztägig';
+                } elseif ($isStartDay && !$isEndDay) {
+                    $timeString = $start->format('H:i') . '–24:00';
+                } elseif (!$isStartDay && $isEndDay) {
+                    $timeString = '00:00–' . $end->format('H:i');
+                } else {
+                    $timeString = $start->format('H:i') . '–' . $end->format('H:i');
+                }
+            } else {
+                $timeString = $start->format('H:i') . '–' . $end->format('H:i');
+            }
+        }
+
+        // Minuten
+        $startMinRaw = $allDay ? 6*60 : __minutesSinceMidnight($effStart);
+        $endMinRaw   = $allDay ? 24*60 : __minutesSinceMidnight($effEnd);
+
+        // Clamp auf sichtbaren Schedule 06..24
+        // (alles davor wird oben "auf 06" gezogen -> sichtbar, aber nicht nacht-genau)
+        $startMin = max(6*60, min(24*60, $startMinRaw));
+        $endMin   = max(6*60, min(24*60, $endMinRaw));
+
+        // stundenweise Quantisierung
+        $qStart = __floorToHour($startMin);
+        $qEnd   = __ceilToHour($endMin);
+
+        // sicherstellen: mind. 1h
+        if ($qEnd <= $qStart) $qEnd = min(24*60, $qStart + 60);
+
+        // pixel mapping (Schedule 06..24)
+        $hDay = $hMorning + $hNoon + $hEvening;
+
+        $topPxBase    = __minuteToYSchedule($qStart, $hMorning, $hNoon, $hEvening);
+        $bottomPxBase = __minuteToYSchedule($qEnd,   $hMorning, $hNoon, $hEvening);
+
+        if ($bottomPxBase <= $topPxBase) $bottomPxBase = min($hDay, $topPxBase + 1);
+
+        // Slot-Erkennung (Ende genau auf Grenze zählt zum vorherigen Slot)
+        $slotStart = __slotForMinute($qStart);
+        $slotEnd   = __slotForMinute(max(6*60, $qEnd - 1));
+
+        $isSingleSlot = ($slotStart === $slotEnd);
+
+        // Slot-Pixelbounds
+        [$slotMinStart, $slotMinEnd] = __slotBoundsMin($slotStart);
+        $slotStartPx = __minuteToYSchedule($slotMinStart, $hMorning, $hNoon, $hEvening);
+        $slotEndPx   = __minuteToYSchedule($slotMinEnd,   $hMorning, $hNoon, $hEvening);
+
+        $topPx = $topPxBase;
+        $bottomPx = $bottomPxBase;
+
+        // Mindesthöhe: genug für Titel + Zeit
+        $minHeightPx = 18;
+
+        $heightPx = $bottomPx - $topPx;
+
+        if ($heightPx < $minHeightPx) {
+            if ($isSingleSlot) {
+                // 1) bevorzugt: bottom beibehalten (endet "richtig"), top nach oben ziehen
+                $bottomPx = min($bottomPxBase, $slotEndPx);
+                $topPx = $bottomPx - $minHeightPx;
+
+                // 2) wenn top über Slot-Anfang rausläuft -> in Slot clampen, dann nach unten füllen
+                if ($topPx < $slotStartPx) {
+                    $topPx = $slotStartPx;
+                    $bottomPx = $topPx + $minHeightPx;
+                }
+
+                // 3) wenn dadurch bottom über Slot-Ende geht -> nach oben schieben
+                if ($bottomPx > $slotEndPx) {
+                    $bottomPx = $slotEndPx;
+                    $topPx = $bottomPx - $minHeightPx;
+
+                    // wenn Mindesthöhe größer als Slot selbst -> Slot komplett füllen
+                    if ($topPx < $slotStartPx) {
+                        $topPx = $slotStartPx;
+                    }
+                }
+
+                // final clamp
+                $topPx = max($slotStartPx, min($slotEndPx, $topPx));
+                $bottomPx = max($slotStartPx, min($slotEndPx, $bottomPx));
+                if ($bottomPx <= $topPx) $bottomPx = min($slotEndPx, $topPx + 1);
+            } else {
+                // Multi-Slot: Mindesthöhe okay, darf über Linien gehen (aber nicht über Tag hinaus)
+                $bottomPx = min($hDay, $bottomPxBase);
+                $topPx = $bottomPx - $minHeightPx;
+                if ($topPx < 0) $topPx = 0;
+            }
+        } else {
+            // auch ohne Mindesthöhe: Single-Slot strikt im Slot halten (kein "Minuten-Drift" über Linie)
+            if ($isSingleSlot) {
+                // wenn irgendwas (durch Rundung) über Slot-Ende laufen würde -> nach oben schieben
+                if ($bottomPx > $slotEndPx) {
+                    $shift = $bottomPx - $slotEndPx;
+                    $bottomPx -= $shift;
+                    $topPx -= $shift;
+                }
+                // wenn dadurch top < slotStart -> clamp
+                if ($topPx < $slotStartPx) {
+                    $topPx = $slotStartPx;
+                }
+                // und bottom clamp
+                $bottomPx = min($slotEndPx, max($slotStartPx + 1, $bottomPx));
+            }
+
+            // Tag clamp
+            $topPx = max(0, min($hDay - 1, $topPx));
+            $bottomPx = max($topPx + 1, min($hDay, $bottomPx));
+        }
+
+        $heightPx = max(1, $bottomPx - $topPx);
+
+        // Slot-Span (für Kompaktheitslogik)
+        $slotSpan = 1;
+        if ($qStart < 12*60 && $qEnd > 12*60) $slotSpan++;
+        if ($qStart < 18*60 && $qEnd > 18*60) $slotSpan++;
+
+        $abbr      = $event->eventType?->abbreviation ?? '';
+        $hexColor  = $event->eventType?->hex_code ?? '#111111';
+        $name      = $event->eventName ?? '';
+        $projectNm = $event->project->name ?? null;
+
+        $r = hexdec(substr($hexColor, 1, 2));
+        $g = hexdec(substr($hexColor, 3, 2));
+        $b = hexdec(substr($hexColor, 5, 2));
+
+        $bgRGBA     = "rgba($r,$g,$b,0.14)";
+        $borderRGBA = "rgba($r,$g,$b,0.95)";
+        $leftRGBA   = "rgba($r,$g,$b,1)";
+
+        return [
+            'topPx'     => $topPx,
+            'bottomPx'  => $topPx + $heightPx,
+            'heightPx'  => $heightPx,
+            'slotSpan'  => $slotSpan,
+            'abbr'      => $abbr,
+            'name'      => $name,
+            'project'   => $projectNm,
+            'time'      => $timeString,
+            'isMulti'   => $isMultiDay,
+            'bg'        => $bgRGBA,
+            'border'    => $borderRGBA,
+            'left'      => $leftRGBA,
+            'rgb'       => [$r,$g,$b],
+        ];
+    }
+
+    // Lane assignment (Pixel-Intervalle => keine Überlappung)
+    function __assignLanes(array $segments): array {
+        usort($segments, function($a, $b) {
+            if ($a['topPx'] !== $b['topPx']) return $a['topPx'] <=> $b['topPx'];
+            if ($a['bottomPx'] !== $b['bottomPx']) return $b['bottomPx'] <=> $a['bottomPx'];
+            return 0;
+        });
+
+        $laneEnds = [];
+        $byLane   = [];
+
+        foreach ($segments as $seg) {
+            $assigned = null;
+
+            foreach ($laneEnds as $laneIndex => $endPx) {
+                if ($endPx <= $seg['topPx']) {
+                    $assigned = $laneIndex;
+                    break;
+                }
+            }
+
+            if ($assigned === null) {
+                $assigned = count($laneEnds);
+                $laneEnds[$assigned] = 0;
+            }
+
+            $laneEnds[$assigned] = $seg['bottomPx'];
+            $byLane[$assigned][] = $seg;
+        }
+
+        ksort($byLane);
+        $laneCount = max(1, count($byLane));
+
+        // “gerne 3 parallele Termine” -> ab 3 wird’s compact, ab 4 supercompact
+        return [$byLane, $laneCount];
+    }
+
+    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening) {
+        $segments = [];
+        foreach ($eventsForDay as $event) {
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening);
+            if ($seg) $segments[] = $seg;
+        }
+
+        [$byLane, $laneCount] = __assignLanes($segments);
+
+        $hDay = $hMorning + $hNoon + $hEvening;
+
+        // Slot-Grenzlinien (12 und 18)
+        echo '<div class="seg-line" style="top: '.$hMorning.'px;"></div>';
+        echo '<div class="seg-line" style="top: '.($hMorning + $hNoon).'px;"></div>';
+
+        echo '<div class="lanes" style="height: '.$hDay.'px;">';
+
+        $laneWidth = 100 / $laneCount;
+
+        foreach ($byLane as $laneIndex => $laneSegments) {
+            echo '<div class="lane" style="width: '.$laneWidth.'%; height: '.$hDay.'px;">';
+
+            foreach ($laneSegments as $seg) {
+                $cls = 'event';
+                if ($laneCount >= 4) $cls .= ' event-supercompact';
+                elseif ($laneCount === 3) $cls .= ' event-compact';
+
+                $showSubLine = ($laneCount <= 2 && $seg['slotSpan'] >= 2 && !empty($seg['project']));
+
+                echo '<div class="'.$cls.'" style="'
+                    .'top: '.$seg['topPx'].'px;'
+                    .'height: '.$seg['heightPx'].'px;'
+                    .'background-color: '.$seg['bg'].';'
+                    .'border-color: '.$seg['border'].';'
+                    .'border-left-color: '.$seg['left'].';'
+                .'">';
+
+                echo '<div class="event-inner">';
+
+                echo '<div class="event-title">';
+                if (!empty($seg['abbr'])) {
+                    $rgb = $seg['rgb'];
+                    echo '<span class="abbr" style="color: rgba('.$rgb[0].','.$rgb[1].','.$rgb[2].',1);">'.e($seg['abbr']).'</span>';
+                    echo '<span style="font-weight:900;">:</span> ';
+                }
+                echo e($seg['name']);
+                echo '</div>';
+
+                if ($showSubLine) {
+                    echo '<div class="event-sub">'.e($seg['project']).'</div>';
+                }
+
+                echo '<div class="event-time">';
+                if (!empty($seg['isMulti'])) {
+                    echo '<span style="color:#dc2626;padding-right:2px;font-weight:900;">!</span>';
+                }
+                echo e($seg['time']);
+                echo '</div>';
+
+                echo '</div></div>'; // inner + event
+            }
+
+            echo '</div>'; // lane
+        }
+
+        echo '</div>'; // lanes
     };
 
-
-    // Für Zeitraum im Kopf
     $allDaysFlat = collect($dayChunks ?? [])->flatten(1);
     $firstDay    = $allDaysFlat->first()['fullDay'] ?? null;
     $lastDay     = $allDaysFlat->last()['fullDay'] ?? null;
-
 @endphp
 
 @foreach($roomChunks as $roomChunkIndex => $roomChunkPage)
     @foreach($dayChunks as $dayChunkIndex => $daysPage)
-        @php
-            $currentPageNumber = ($roomChunkIndex * count($dayChunks)) + $dayChunkIndex + 1;
-            $totalPages        = count($roomChunks) * count($dayChunks);
-
-            $firstRoomName = optional($roomChunkPage->first())->name ?? '';
-            $lastRoomName  = optional($roomChunkPage->last())->name ?? '';
-
-            $firstDayOnPage = $daysPage[0]['fullDay'] ?? '';
-            $lastDayOnPage  = $daysPage[count($daysPage)-1]['fullDay'] ?? '';
-        @endphp
-
         <section class="page">
             {{-- HEADER --}}
             <table class="header-table" cellspacing="0" cellpadding="0">
@@ -347,40 +607,23 @@
 
             {{-- TABELLE --}}
             <table>
-                    <thead>
-                    <tr>
-                                    {{-- Linke Kopfspalte: Raum --}}
+                <thead>
+                <tr>
                     <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:9px; font-weight:700;">
                         Raum
                     </th>
-                    {{-- Slot/Zeitraum Kopf (jetzt sehr klein) --}}
+
                     <th class="th-room-head time-col-bg" style="padding: 1px; font-size: 9px; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
                         Zeit
                     </th>
 
-                    {{-- Dann pro Tag EINE Spalte --}}
-                    @php
-                        // Berechne die Breite für jede Tagesspalte, damit alle gleich breit sind
-                        $dayCount = count($daysPage);
-                    @endphp
                     @foreach($daysPage as $dayInfo)
-                        @php
-                            $isWeekend = !empty($dayInfo['isWeekend']);
-                        @endphp
+                        @php $isWeekend = !empty($dayInfo['isWeekend']); @endphp
                         <th class="th-daygroup {{ $isWeekend ? 'weekend-bg-top' : '' }}"
-                            style="
-                                {{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}
-                                font-size:9px;
-                                line-height:1.3;
-                                font-weight:700;
-                                padding:4px 2px;
-                                text-align:center;
-                            "
+                            style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} font-size:9px; line-height:1.3; font-weight:700; padding:4px 2px; text-align:center;"
                         >
                             <div>{{ $dayInfo['dayString'] }} {{ $dayInfo['fullDay'] }}</div>
-                            <div class="th-daygroup-meta">
-                                KW {{ $dayInfo['weekNumber'] }}
-                            </div>
+                            <div class="th-daygroup-meta">KW {{ $dayInfo['weekNumber'] }}</div>
                         </th>
                     @endforeach
                 </tr>
@@ -390,69 +633,32 @@
                 @foreach($roomChunkPage as $room)
                     @php
                         $roomName = $room->name;
+
+                        $hMorning = (int)($rowHeights[$room->id]['morning'] ?? 36);
+                        $hNoon    = (int)($rowHeights[$room->id]['noon'] ?? 36);
+                        $hEvening = (int)($rowHeights[$room->id]['evening'] ?? 36);
+                        $hDay     = $hMorning + $hNoon + $hEvening;
                     @endphp
 
-                    {{-- Zeile 1: Morgens --}}
-                    @php $hMorning = $rowHeights[$room->id]['morning'] ?? 20; @endphp
                     <tr>
-                        {{-- Leerer Platzhalter für Morgens-Zeile --}}
-                        <td class="td-room"
-                            style="
-                                text-align:center;
-                                vertical-align:top;
-                                border-right:1px solid #404040;
-                                border-bottom:none;
-                            "
-                        >
-                            &nbsp;
-                        </td>
-
-                        {{-- Slot-Label Morgens --}}
-                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hMorning }}px;">
-                            Morgens
-                        </td>
-
-                        {{-- Für jeden Tag die Events Morgens --}}
-                        @foreach($daysPage as $dayInfo)
-                            @php
-                                $fullDay   = $dayInfo['fullDay'] ?? '';
-                                $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
-                            @endphp
-
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hMorning }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'morning'); @endphp
-                                </div>
-                            </td>
-                        @endforeach
-                    </tr>
-
-                    {{-- Zeile 2: Nachmittag --}}
-                    @php $hNoon = $rowHeights[$room->id]['noon'] ?? 20; @endphp
-                    <tr>
-                        {{-- Raumzelle für Nachmittag-Zeile mit Raumnamen (größer und dicker) --}}
-                        <td class="td-room"
-                            style="
-                                font-size:9px;
-                                font-weight:700;
-                                line-height:1.2;
-                                word-break:break-word;
-                                text-align:center;
-                                vertical-align:middle;
-                                border-right:1px solid #404040;
-                                border-bottom:none;
-                            "
-                        >
+                        {{-- Raum --}}
+                        <td class="td-room" style="height: {{ $hDay }}px;">
                             {{ $roomName }}
                         </td>
 
-                        <td class="td-slot-label time-col-bg" style="background-color:#f4f4f5; min-height: {{ $hNoon }}px;">
-                            Mittags
+                        {{-- Zeitspalte (Linien exakt wie Day-Cells) --}}
+                        <td class="td-time time-col-bg" style="height: {{ $hDay }}px; background-color:#f4f4f5;">
+                            <div class="time-wrap" style="height: {{ $hDay }}px;">
+                                <div class="seg-line" style="top: {{ $hMorning }}px;"></div>
+                                <div class="seg-line" style="top: {{ $hMorning + $hNoon }}px;"></div>
+
+                                <div class="time-block" style="height: {{ $hMorning }}px;">Morgens</div>
+                                <div class="time-block" style="height: {{ $hNoon }}px;">Mittags</div>
+                                <div class="time-block" style="height: {{ $hEvening }}px;">Abends</div>
+                            </div>
                         </td>
 
+                        {{-- Tage --}}
                         @foreach($daysPage as $dayInfo)
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
@@ -460,47 +666,11 @@
                                 $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
+                            <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
+                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
                             >
-                                <div class="slot-inner" style="min-height: {{ $hNoon }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'noon'); @endphp
-                                </div>
-                            </td>
-                        @endforeach
-                    </tr>
-
-                    {{-- Zeile 3: Abends --}}
-                    @php $hEvening = $rowHeights[$room->id]['evening'] ?? 20; @endphp
-                    <tr>
-                        {{-- Leerer Platzhalter für Abends-Zeile --}}
-                        <td class="td-room"
-                            style="
-                                text-align:center;
-                                vertical-align:top;
-                                border-right:1px solid #404040;
-                                border-bottom:1px solid #404040;
-                            "
-                        >
-                            &nbsp;
-                        </td>
-
-                        <td class="td-slot-label time-col-bg" style="border-bottom:1px solid #404040; background-color:#f4f4f5; min-height: {{ $hEvening }}px;">
-                            Abends
-                        </td>
-
-                        @foreach($daysPage as $dayInfo)
-                            @php
-                                $fullDay   = $dayInfo['fullDay'] ?? '';
-                                $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
-                            @endphp
-
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hEvening }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'evening'); @endphp
+                                <div class="day-wrap" style="height: {{ $hDay }}px;">
+                                    @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening); @endphp
                                 </div>
                             </td>
                         @endforeach

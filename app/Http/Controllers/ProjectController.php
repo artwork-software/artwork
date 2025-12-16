@@ -2390,7 +2390,7 @@ class ProjectController extends Controller
             // ShiftTab-Daten laden (analog EventController::viewShiftPlan)
             $this->loadShiftTabData($headerObject, $project);
 
-            $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+            $userCalendarFilter = $user->userFilters()->projectShiftFilter()->first();
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
             $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();

@@ -525,6 +525,9 @@ class EventController extends Controller
         $user = $this->authManager->user();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+        if ($request->get('isInProjectView')) {
+            $userCalendarFilter = $user->userFilters()->projectShiftFilter()->first();
+        }
 
         // Wenn ein exakter Zeitraum angefragt wird, diesen respektieren (Projekt-Tab lädt Projektzeitraum)
         if ($request->filled('start_date') && $request->filled('end_date')) {

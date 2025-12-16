@@ -22,7 +22,7 @@ class UpdateUserFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter_type' => 'required|string|in:calendar_filter,shift_filter,planning_filter',
+            'filter_type' => 'required|string|in:calendar_filter,shift_filter,planning_filter,project_shift_filter',
             'event_type_ids' => 'nullable|array',
             'event_type_ids.*' => 'integer|exists:event_types,id',
             'room_ids' => 'nullable|array',

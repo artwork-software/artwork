@@ -6,6 +6,7 @@
             :project="projectLite"
             :date-value="dateRange"
             :sticky-offset-top-px="48"
+            :is-in-project-view="true"
         />
         <div v-else class="text-secondary text-sm">{{ $t('Loading...') }}</div>
     </div>

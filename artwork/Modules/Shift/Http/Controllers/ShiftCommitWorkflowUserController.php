@@ -31,23 +31,57 @@ class ShiftCommitWorkflowUserController extends Controller
      */
     public function store(StoreShiftCommitWorkflowUserRequest $request)
     {
-        $userIds = $request->input('users', []);
+        $raw = $request->input('users', []);
+
+        //dd($request->all());
+
+
+        // 1) Normalisieren: Map (id => bool) oder Liste (ids) oder "1,2,3"
+        if (is_string($raw)) {
+            $raw = array_filter(array_map('trim', explode(',', $raw)));
+        }
+
+        // Wenn es eine Map ist (z.B. [5 => true, 9 => false]), nur die "true" keys nehmen
+        if (is_array($raw) && array_keys($raw) !== range(0, count($raw) - 1)) {
+            $raw = array_keys(array_filter($raw, fn ($v) => filter_var($v, FILTER_VALIDATE_BOOL)));
+        }
+
+        // 2) IDs bereinigen (int, >0, unique)
+        $userIds = collect($raw)
+            ->flatten()
+            ->filter(fn ($v) => $v !== null && $v !== '')
+            ->map(fn ($v) => (int) $v)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
 
         if (empty($userIds)) {
             return redirect()->back()->withErrors(['users' => 'Mindestens ein Benutzer muss ausgewählt werden.']);
         }
 
-        // Nur gültige Benutzer-IDs verwenden
-        $validUserIds = User::whereIn('id', $userIds)->pluck('id')->toArray();
+        // 3) Nur existierende User übernehmen
+        $validUserIds = User::whereIn('id', $userIds)->pluck('id')->all();
 
-        $existingUserIds = ShiftCommitWorkflowUser::whereIn('user_id', $validUserIds)->pluck('user_id')->toArray();
-        $newUserIds = array_diff($validUserIds, $existingUserIds);
+        if (empty($validUserIds)) {
+            return redirect()->back()->withErrors(['users' => 'Die ausgewählten Benutzer sind ungültig.']);
+        }
 
-        $newEntries = array_map(fn($id) => ['user_id' => $id], $newUserIds);
-        ShiftCommitWorkflowUser::insert($newEntries);
+        // 4) Doppelte Einträge verhindern (DB-seitig wäre unique Index ideal)
+        $existingUserIds = ShiftCommitWorkflowUser::whereIn('user_id', $validUserIds)
+            ->pluck('user_id')
+            ->all();
+
+        $newUserIds = array_values(array_diff($validUserIds, $existingUserIds));
+
+        if (!empty($newUserIds)) {
+            $newEntries = array_map(fn ($id) => ['user_id' => $id], $newUserIds);
+            ShiftCommitWorkflowUser::insert($newEntries);
+        }
 
         return redirect()->back()->with('success', 'Benutzer wurden erfolgreich zum Shift-Commit-Workflow hinzugefügt.');
     }
+
 
 
 

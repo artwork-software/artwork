@@ -3,6 +3,10 @@
         <ShiftHeader>
 
 
+            <pre class="hidden">
+                {{ shiftPlanArrayRef }}
+            </pre>
+
             <div aria-live="assertive"
                  class="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
                 <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
@@ -665,7 +669,6 @@
                                 </div>
                             </template>
                         </Virtual2DGrid>
-
                     </div>
                 </div>
             </div>
@@ -1069,8 +1072,52 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     const groupsMap = new Map<string, ShiftGroup>()
     const PROJECTLESS_KEY = 'no_project'
 
+    function toIsoDateFromDayLabel(label: string): string {
+        // "02.11.2025" -> "2025-11-02"
+        const [dd, mm, yyyy] = label.split('.')
+        return `${yyyy}-${mm}-${dd}`
+    }
+
+    const getShiftStartMs = (shift: any): number => {
+        // Datum: aus startDate (YYYY-MM-DD ...) oder fallback aus dayLabel
+        const baseDateStr =
+            typeof shift.startDate === 'string'
+                ? shift.startDate.slice(0, 10) // "2025-11-02"
+                : toIsoDateFromDayLabel(dayLabel)
+
+        const timeStr = (shift.start ?? '00:00').toString().slice(0, 5) // "14:00"
+        const iso = `${baseDateStr}T${timeStr}:00`
+        const ms = new Date(iso).getTime()
+        return Number.isFinite(ms) ? ms : Number.MAX_SAFE_INTEGER
+    }
+
+    const getShiftEndMs = (shift: any): number => {
+        const baseDateStr =
+            typeof shift.endDate === 'string'
+                ? shift.endDate.slice(0, 10)
+                : (typeof shift.startDate === 'string'
+                    ? shift.startDate.slice(0, 10)
+                    : toIsoDateFromDayLabel(dayLabel))
+
+        const timeStr = (shift.end ?? '00:00').toString().slice(0, 5)
+        const iso = `${baseDateStr}T${timeStr}:00`
+        const ms = new Date(iso).getTime()
+        return Number.isFinite(ms) ? ms : Number.MAX_SAFE_INTEGER
+    }
+
+    const getGroupEarliestStartMs = (g: ShiftGroup): number => {
+        if (!g.shifts?.length) return Number.MAX_SAFE_INTEGER
+        // min() über alle shifts in der Gruppe
+        let min = Number.MAX_SAFE_INTEGER
+        for (const s of g.shifts) {
+            const t = getShiftStartMs(s)
+            if (t < min) min = t
+        }
+        return min
+    }
+
+    // 1) Gruppieren
     for (const shift of shifts) {
-        // nur Schichten für den aktuellen Tag
         if (!shift.daysOfShift?.includes(dayLabel)) continue
 
         const hasProject = !!shift.project
@@ -1089,16 +1136,40 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
 
     const groups = Array.from(groupsMap.values())
 
-    // Sortierung: erst Projekte (optional nach Name), dann "ohne Projekt"
+    // 2) Schichten innerhalb der Gruppe zeitlich sortieren
+    for (const g of groups) {
+        g.shifts.sort((a: any, b: any) => {
+            const aStart = getShiftStartMs(a)
+            const bStart = getShiftStartMs(b)
+            if (aStart !== bStart) return aStart - bStart
+
+            const aEnd = getShiftEndMs(a)
+            const bEnd = getShiftEndMs(b)
+            if (aEnd !== bEnd) return aEnd - bEnd
+
+            return (a.id ?? 0) - (b.id ?? 0)
+        })
+    }
+
+    // 3) Gruppen nach frühester Startzeit sortieren (nicht A-Z)
     return groups.sort((a, b) => {
+        // "ohne Projekt" ans Ende
         if (a.project && !b.project) return -1
         if (!a.project && b.project) return 1
-        if (a.project && b.project) {
-            return (a.project.name || '').localeCompare(b.project.name || '')
-        }
-        return 0
+
+        const aMin = getGroupEarliestStartMs(a)
+        const bMin = getGroupEarliestStartMs(b)
+        if (aMin !== bMin) return aMin - bMin
+
+        // Tie-Breaker (stabil): projectId / dann Name
+        const aId = a.projectId ?? Number.MAX_SAFE_INTEGER
+        const bId = b.projectId ?? Number.MAX_SAFE_INTEGER
+        if (aId !== bId) return aId - bId
+
+        return (a.project?.name || '').localeCompare(b.project?.name || '')
     })
 }
+
 
 const monthObserver = ref<IntersectionObserver | null>(null)
 

@@ -283,7 +283,7 @@
                                         :for="paperOrientation.id"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                         peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
-                                        border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
+                                        border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
                                         :class="orientationDisabled ? 'opacity-60 cursor-not-allowed' : ''"
                                     >
                                         {{ paperOrientation.title }}
@@ -310,6 +310,56 @@
                             v-model="pdf.daysPerPage"
                             :label="$t('Days per page')"
                         />
+                    </div>
+
+                    <!-- Export Mode Toggle -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-zinc-700">
+                                {{ $t('Export mode') }}
+                            </label>
+                            <div class="group relative">
+                                <PropertyIcon
+                                    name="IconInfoCircle"
+                                    class="size-4 text-zinc-400 hover:text-zinc-600 cursor-help"
+                                />
+                                <div class="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-80 bg-zinc-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
+                                    <p>
+                                        {{ $t("When 'Events relative to each other' is active, concurrent events are displayed side by side in the export, which reduces the readability of the information but shows overlaps better. In 'Events in time blocks' mode, events are displayed one after another per time block, which increases readability but does not allow simultaneity to be seen at a glance.") }}
+                                    </p>
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                                        <div class="border-4 border-transparent border-t-zinc-900"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <fieldset class="flex gap-2">
+                            <div
+                                v-for="mode in [
+                                    { id: 'relative', label: $t('Events relative to each other') },
+                                    { id: 'block', label: $t('Events in time blocks') }
+                                ]"
+                                :key="mode.id"
+                                class="relative flex-1"
+                            >
+                                <input
+                                    :id="`exportMode-${mode.id}`"
+                                    name="export-mode"
+                                    type="radio"
+                                    :value="mode.id"
+                                    v-model="pdf.exportMode"
+                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
+                                />
+                                <label
+                                    :for="`exportMode-${mode.id}`"
+                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
+                                    peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
+                                    border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
+                                >
+                                    {{ mode.label }}
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
             </section>
@@ -376,6 +426,7 @@ const pdf = useForm({
     project: null as number | null,
     dpi: 72,
     daysPerPage: 7,
+    exportMode: 'relative' as 'relative' | 'block',
     filter: {} as Record<string, number[] | null>
 })
 

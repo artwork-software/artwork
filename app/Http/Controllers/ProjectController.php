@@ -56,6 +56,7 @@ use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\CostCenter\Services\CostCenterService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
@@ -2510,14 +2511,17 @@ class ProjectController extends Controller
         array $history
     ): array {
         return [
-            // Quick Win Step 2: Crafts nur mit minimalen Daten laden (60-70% Reduktion)
-            // Vollständige Details können bei Bedarf per API nachgeladen werden
-            'crafts' => $craftService->getAll()->map(fn($craft) => [
-                'id' => $craft->id,
-                'name' => $craft->name,
-                'abbreviation' => $craft->abbreviation,
-                'color' => $craft->color,
-            ]),
+            // Crafts mit allen notwendigen Relationen für ShiftPlanDailyView
+            // Benötigt: users, freelancers, serviceProviders mit shift_qualifications
+            'crafts' => Craft::with([
+                'users',
+                'freelancers',
+                'serviceProviders',
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+                'qualifications'
+            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
             'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),

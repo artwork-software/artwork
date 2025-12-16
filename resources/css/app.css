@@ -86,6 +86,11 @@
     --z-100: 100;
     --blur-27: 27px;
     --blur-2xl: 40px;
+
+    --bg:#f8fafc;
+    --surface:#ffffff;
+    --text:#0f172a;
+    --accent:#4f46e5;
 }
 
 :root {

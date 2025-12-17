@@ -247,9 +247,15 @@ class ProjectController extends Controller
     {
 
         $user = $this->userService->getAuthUser();
-        $userProjectManagementSetting = $this->userProjectManagementSettingService
-            ->getFromUser($user)
-            ->getAttribute('settings');
+        $userProjectManagementSettingModel = $this->userProjectManagementSettingService
+            ->getFromUser($user);
+
+        if (!$userProjectManagementSettingModel) {
+            $userProjectManagementSettingModel = $this->userProjectManagementSettingService
+                ->updateOrCreateIfNecessary($user, $this->userProjectManagementSettingService->getDefaults());
+        }
+
+        $userProjectManagementSetting = $userProjectManagementSettingModel->getAttribute('settings');
 
         if ($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);

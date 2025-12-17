@@ -49,11 +49,10 @@
             </div>
 
             <!-- Grid wrapper -->
-            <div class="flex flex-col w-full overflow-hidden relative" style="height: calc(100vh - 100px);">
-                <div class="flex-1 overflow-x-auto overflow-y-hidden text-sm relative">
-                    <div class="min-w-max h-full overflow-y-auto">
-                        <!-- Timeline header row -->
-                        <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-zinc-700">
+            <div class="overflow-auto text-sm relative" style="height: calc(100vh - 100px);">
+                <div class="min-w-max">
+                    <!-- Timeline header row -->
+                    <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-zinc-700">
                             <div class="sticky left-0 z-20 bg-white/90 px-4 py-2 font-medium w-[220px] min-w-[220px] flex items-center border-r border-zinc-200">
                                 {{ $t('Article') }}
                             </div>
@@ -195,7 +194,6 @@
                             </template>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
 
@@ -373,6 +371,10 @@ const InventoryFunctionBarFilter = defineAsyncComponent({
 </script>
 
 <style scoped>
-/* optional subtle shadow on sticky first column when scrolling horizontally */
-:deep(.sticky[left]) { box-shadow: 1px 0 0 0 rgba(24,24,27,0.06); }
+/* Sticky positioning for first column (Article) */
+.sticky.left-0 {
+    position: sticky;
+    position: -webkit-sticky;
+    box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
 </style>

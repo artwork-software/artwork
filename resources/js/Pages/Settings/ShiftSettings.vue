@@ -44,7 +44,7 @@
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
-                                                <PropertyIcon name="XIcon" class="h-4 w-4 text-gray-400 hover:text-error" />
+                                                <PropertyIcon name="IconX" class="h-4 w-4 text-gray-400 hover:text-error" />
                                             </button>
                                         </div>
                                     </div>
@@ -634,29 +634,37 @@ export default defineComponent({
         IconPlus,
         IconGripVertical,
         addUserToWorkflow(user) {
-            // Check if user already exists in shiftCommitWorkflowUsers prop
-            const userAlreadyExists = this.shiftCommitWorkflowUsers.some(workflowUser => workflowUser.user.id === user.id);
+            const userAlreadyExistsOnServer =
+                this.shiftCommitWorkflowUsers.some(wu => wu.user?.id === user.id);
 
-            if (this.userForWorkflowForm.processing || userAlreadyExists) {
-                console.warn('User is already in the workflow or form is processing.');
+            const userAlreadyQueuedLocally =
+                this.userForWorkflowForm.users.includes(user.id);
+
+            if (this.userForWorkflowForm.processing || userAlreadyExistsOnServer || userAlreadyQueuedLocally) {
+                console.warn('User already exists / queued or form is processing.');
                 return;
             }
 
-            this.userForWorkflowForm.users.push(user.id);
+            // WICHTIG: Payload immer nur "dieser eine User"
+            this.userForWorkflowForm.users = [user.id];
 
             this.userForWorkflowForm.patch(route('shift.settings.update.shift-commit-workflow-users'), {
                 preserveScroll: true,
                 preserveState: false,
-                onFinish: () => {
-                    // Optional: Benutzerfeedback oder Aufräumarbeiten
+                onSuccess: () => {
+                    // Array leeren, damit der nächste Klick keinen "Altbestand" mitsendet
+                    this.userForWorkflowForm.users = [];
                 },
                 onError: () => {
-                    // Optional: Fehlerbehandlung z. B. Benutzer entfernen, wenn Fehler auftritt
-                    const index = this.userForWorkflowForm.users.indexOf(user.id);
-                    if (index !== -1) this.userForWorkflowForm.users.splice(index, 1);
-                }
+                    this.userForWorkflowForm.users = [];
+                },
+                onFinish: () => {
+                    // zur Sicherheit auch hier leeren (falls onSuccess/onError nicht greift)
+                    this.userForWorkflowForm.users = [];
+                },
             });
         },
+
         removeUserFormShiftWorkFlow(objectId){
             this.$inertia.delete(route('shift.settings.remove.shift-commit-workflow-user', objectId), {
                 preserveScroll: true,

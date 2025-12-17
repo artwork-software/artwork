@@ -143,7 +143,6 @@
                     </div>
                 </div>
             </section>
-
             <!-- Artikel: Suche & Auswahl -->
             <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Linke Spalte: Suche/Filter/Liste -->
@@ -614,7 +613,7 @@ watch(() => internMaterialIssue.end_time, (val) => {
     if (nt !== val) internMaterialIssue.end_time = nt || "";
 });
 
-const selectedProject = ref(null);
+const selectedProject = ref(props.project || props.issueOfMaterial?.project || null);
 const selectedRoom = ref(props.issueOfMaterial?.room || null);
 const selectedResponsibleUsers = ref(
     props.issueOfMaterial?.responsible_users || []

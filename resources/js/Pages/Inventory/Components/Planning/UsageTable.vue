@@ -40,6 +40,7 @@
         :issue-of-material="extern ? null : issueForModal"
         :is-extern-or-intern="extern"
         :extern-material-issue="extern ? issueForModal : null"
+        :project="issueForModal?.project || null"
     />
 </template>
 

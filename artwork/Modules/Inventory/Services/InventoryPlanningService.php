@@ -206,7 +206,7 @@ class InventoryPlanningService
 
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }, 'specialItems', 'files', 'responsibleUsers'])
+        }, 'project', 'specialItems', 'files', 'responsibleUsers'])
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
             ->get();
@@ -276,7 +276,7 @@ class InventoryPlanningService
 
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
-        }])
+        }, 'project'])
             ->whereDate('start_date', '<=', $endDate)
             ->whereDate('end_date', '>=', $startDate)
             ->get();

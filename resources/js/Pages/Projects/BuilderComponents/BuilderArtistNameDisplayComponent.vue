@@ -1,5 +1,5 @@
 <template>
-    <div class="text-xs">
+    <div class="font-lexend font-black tracking-wide text-sm text-primary">
         <span v-if="artistText">{{ artistText }}</span>
     </div>
 </template>

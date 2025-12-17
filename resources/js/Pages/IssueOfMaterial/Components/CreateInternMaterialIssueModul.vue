@@ -476,7 +476,7 @@ import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/Article
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
-import {computed, nextTick, onMounted, ref, watch} from "vue";
+import {computed, inject, nextTick, onMounted, provide, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -563,6 +563,10 @@ const props = defineProps({
         default: null,
     },
 });
+
+// Inject materialSets from parent and provide to children
+const materialSets = inject('materialSets', []);
+provide('materialSets', materialSets);
 
 const internMaterialIssue = useForm({
     id: props.issueOfMaterial?.id || null,

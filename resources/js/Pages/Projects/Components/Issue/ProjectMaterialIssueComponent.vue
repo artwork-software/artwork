@@ -475,6 +475,7 @@
     <IssueOfMaterialModal
         v-if="showIssueOfMaterialModal"
         @close="showIssueOfMaterialModal = false"
+        @saved="handleMaterialIssueSaved"
         :project="project"
         :issue-of-material="materialIssueToEdit"
         :is-in-project-component="true"
@@ -484,7 +485,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount, watch, onMounted } from 'vue'
+import { ref, computed, onBeforeUnmount, watch, onMounted, provide } from 'vue'
 import axios from 'axios'
 import {
     IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
@@ -546,6 +547,10 @@ const materialIssueToEdit = ref(null)
 const isLoadingMaterials = ref(false)
 const loadMaterialsError = ref('')
 const localMaterials = ref<InternalIssue[]>(props.materials ?? [])
+const materialSets = ref([])
+
+// Provide materialSets to child components
+provide('materialSets', materialSets)
 
 /** Article Lightbox State */
 const articleLightboxImages = ref([])
@@ -589,6 +594,7 @@ async function fetchMaterials() {
             route('projects.tabs.material-issues', { project: projectId })
         )
         localMaterials.value = data?.materials ?? []
+        materialSets.value = data?.materialSets ?? []
     } catch (error) {
         console.error(error)
         loadMaterialsError.value = 'Unable to load material issues.'
@@ -726,6 +732,10 @@ const openCreateMaterialIssue = () => {
         special_items: []
     }
     showIssueOfMaterialModal.value = true
+}
+
+const handleMaterialIssueSaved = () => {
+    fetchMaterials()
 }
 
 /** Article Lightbox Functions */

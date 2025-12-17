@@ -173,7 +173,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const emit = defineEmits(['close', 'add-material-set'])
 
 // Datenquelle wie gehabt via provide/inject
-const materialSets = inject('materialSets', []) // Fallback: []
+const materialSets = inject('materialSets', ref([])) // Fallback: ref([])
 
 // UI-State
 const query = ref('')
@@ -219,7 +219,7 @@ function relevanceScore(set, q) {
 // Gefilterte & sortierte Liste
 const filteredSets = computed(() => {
     const q = norm(query.value).trim()
-    const base = Array.isArray(materialSets) ? materialSets : []
+    const base = Array.isArray(materialSets.value) ? materialSets.value : []
 
     let out = base.filter((s) => {
         if (onlyWithItems.value && (s.items?.length ?? 0) === 0) return false

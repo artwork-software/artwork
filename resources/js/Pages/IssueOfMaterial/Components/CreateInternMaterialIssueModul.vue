@@ -613,7 +613,7 @@ watch(() => internMaterialIssue.end_time, (val) => {
     if (nt !== val) internMaterialIssue.end_time = nt || "";
 });
 
-const selectedProject = ref(props.project || props.issueOfMaterial?.project || null);
+const selectedProject = ref((props.project?.id ? props.project : null) || props.issueOfMaterial?.project || null);
 const selectedRoom = ref(props.issueOfMaterial?.room || null);
 const selectedResponsibleUsers = ref(
     props.issueOfMaterial?.responsible_users || []

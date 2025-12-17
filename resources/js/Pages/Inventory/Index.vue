@@ -84,36 +84,64 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-else>
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead>
-                                <tr class="divide-x divide-gray-200">
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                                        {{ $t('Image') }}</th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                        {{ $t('Name') }}
-                                    </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                        {{ $t('Quantity') }}
-                                    </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900" v-for="property in allPropertiesFromArticles">
-                                        {{ property?.name }}
-                                    </th>
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">{{ $t('Actions') }}</th>
-                                </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                <tr v-for="item in props.articles.data" :key="item?.id" class="divide-x divide-gray-200 relative">
-                                    <InventorySingleArticleInTable
-                                        :item="item"
-                                        :all-properties-from-articles="allPropertiesFromArticles"
-                                        :enable-add-article-to-basket="enableAddArticleToBasket"
-                                        :find-basket-for-article="findBasketForArticle"
-                                        @add-to-basket="addArticleToBasket"
-                                    />
-                                </tr>
-                                </tbody>
-                            </table>
+                        <div v-else class="space-y-8">
+                            <!-- Loop through each category -->
+                            <div v-for="(category, index) in groupedArticles" :key="category.id" class="space-y-6">
+                                <!-- Category Header -->
+                                <div class="border-b-2 border-gray-300 pb-2">
+                                    <h2 class="text-xl font-bold text-gray-900">{{ category.name }}</h2>
+                                </div>
+
+                                <!-- Loop through each subcategory within the category -->
+                                <div v-for="subcategory in category.subcategories" :key="subcategory.id" class="space-y-3">
+                                    <!-- Subcategory Header -->
+                                    <div class="bg-gray-50 px-4 py-2 rounded-t-lg border-l-4 border-artwork-buttons-create">
+                                        <h3 class="text-lg font-semibold text-gray-800">{{ subcategory.name }}</h3>
+                                    </div>
+
+                                    <!-- Table for this subcategory -->
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-300 border border-gray-200 rounded-b-lg">
+                                            <thead class="bg-gray-50">
+                                                <tr class="divide-x divide-gray-200">
+                                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left flex justify-center text-sm font-semibold text-gray-900 sm:pl-0">
+                                                        {{ $t('Image') }}
+                                                    </th>
+                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                                        {{ $t('Name') }}
+                                                    </th>
+                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                                        {{ $t('Quantity') }}
+                                                    </th>
+                                                    <!-- Only show properties that exist in this subcategory -->
+                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900"
+                                                        v-for="property in subcategory.properties"
+                                                        :key="property.id">
+                                                        {{ property?.name }}
+                                                    </th>
+                                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                                        {{ $t('Actions') }}
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 bg-white">
+                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-gray-200 relative hover:bg-gray-50">
+                                                    <InventorySingleArticleInTable
+                                                        :item="item"
+                                                        :subcategory-properties="subcategory.properties"
+                                                        :enable-add-article-to-basket="enableAddArticleToBasket"
+                                                        :find-basket-for-article="findBasketForArticle"
+                                                        @add-to-basket="addArticleToBasket"
+                                                    />
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Divider between categories (not after the last one) -->
+                                <div v-if="index < Object.keys(groupedArticles).length - 1" class="border-t-2 border-gray-400 my-8"></div>
+                            </div>
                         </div>
                         <div class="mt-10">
                             <BasePaginator property-name="articles" :entities="articles" />
@@ -181,6 +209,10 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import ProductBasketModal from "@/Pages/Inventory/ProductBasket/Components/ProductBasketModal.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+
+const $t = useTranslation()
+
 const props = defineProps({
     categories: {
         type: Object,
@@ -302,6 +334,47 @@ const allPropertiesFromArticles = computed(() => {
     return properties;
 })
 
+// Group articles by category and subcategory for the new list view
+const groupedArticles = computed(() => {
+    const grouped = {}
+
+    props.articles.data.forEach((article) => {
+        const categoryId = article.category?.id || 'no-category'
+        const categoryName = article.category?.name || $t('Without Subcategory')
+        const subCategoryId = article.sub_category?.id || 'no-subcategory'
+        const subCategoryName = article.sub_category?.name || $t('Without Subcategory')
+
+        if (!grouped[categoryId]) {
+            grouped[categoryId] = {
+                id: categoryId,
+                name: categoryName,
+                subcategories: {}
+            }
+        }
+
+        if (!grouped[categoryId].subcategories[subCategoryId]) {
+            grouped[categoryId].subcategories[subCategoryId] = {
+                id: subCategoryId,
+                name: subCategoryName,
+                articles: [],
+                properties: []
+            }
+        }
+
+        grouped[categoryId].subcategories[subCategoryId].articles.push(article)
+
+        // Collect unique properties for this subcategory
+        article.properties.forEach((property) => {
+            const subCat = grouped[categoryId].subcategories[subCategoryId]
+            if (!subCat.properties.find((p) => p.id === property.id)) {
+                subCat.properties.push(property)
+            }
+        })
+    })
+
+    return grouped
+})
+
 const searchArticles = debounce(() => {
     // search for articles
     router.reload({
@@ -350,8 +423,6 @@ const closeModalProductBasket = (payload) => {
             showIssueOfMaterialModal.value = true;
         }
     }
-
-    console.log(payload)
 }
 </script>
 

@@ -156,149 +156,33 @@
                 </div>
 
                 <!-- List view -->
-                <div v-else-if="view==='list'" class="space-y-4">
-                    <section
-                        v-for="cl in checklistsComputed"
-                        :key="cl.id"
-                        class="rounded-2xl border border-gray-100 bg-white shadow-sm"
-                    >
-                        <div class="px-5 py-4 flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <h2 class="text-base font-semibold leading-tight truncate">{{ cl.name }}</h2>
-                                    <span v-if="cl.private" class="inline-flex items-center rounded-md border border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-600">
-                                    {{ $t('Private') }}
-                                  </span>
-                                  <Link v-if="cl.hasProject && cl.project?.name" class="inline-flex items-center gap-1 rounded-md border border-gray-300 px-1.5 py-0.5 text-[11px] text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-500 ease-in-out duration-200" :href="route('projects.tab', { project: cl.project.id, projectTab: first_project_tasks_tab_id })">
-                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
-                                    {{ cl.project.name }}
-                                  </Link>
-                                </div>
-                                <p class="text-xs text-gray-500 mt-0.5">
-                                    {{ cl.tasks.length }} {{ $t('Tasks') }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- tasks -->
-                        <div class="px-5 pb-5 space-y-3">
-                            <div
-                                v-for="task in cl.tasks"
-                                :key="task.id"
-                                class="rounded-xl border border-gray-100 bg-white shadow-sm p-4"
-                            >
-                                <div class="flex items-start justify-between gap-3">
-                                    <label class="flex items-start gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            v-model="task.done"
-                                            @change="toggleDone(task)"
-                                            class="mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-gray-400' : ''">
-                                                {{ task.name }}
-                                            </p>
-                                            <p v-if="task.description" class="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                                                {{ task.description }}
-                                            </p>
-                                        </div>
-                                    </label>
-
-                                    <div class="text-right shrink-0">
-                                        <p v-if="!task.done && task.deadline" class="text-[11px]" :class="isFuture(task) ? 'text-gray-500' : 'text-red-600'">
-                                            {{ $t('bis') }} {{ task.deadline }}
-                                        </p>
-                                        <div v-else-if="task.done && task.done_at" class="text-[11px] text-emerald-600">
-                                            {{ $t('erledigt am') }} {{ task.done_at }}
-                                        </div>
-                                        <div class="mt-2 flex items-center justify-end gap-2">
-                                            <button
-                                                @click="openTaskModal(task, cl)"
-                                                class="rounded-lg border border-gray-200 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-50"
-                                            >
-                                                {{ $t('Edit') }}
-                                            </button>
-                                            <Link
-                                                :href="route('tasks.destroy', { task: task.id })"
-                                                method="delete"
-                                                as="button"
-                                                class="rounded-lg border border-red-200 px-2 py-1 text-[11px] text-red-700 hover:bg-red-50"
-                                                preserve-scroll
-                                                preserve-state
-                                            >
-                                                {{ $t('Delete') }}
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Empty state for list without visible tasks -->
-                            <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
-                                <p class="text-sm text-gray-600">{{ $t('No tasks to show in this list') }}</p>
-
-                            </div>
-
-                            <BaseUIButton label="Aufgabe hinzufügen" use-translation is-add-button is-small class="mt-4" @click="openTaskModal(null, cl)" />
-                        </div>
-                    </section>
+                <div v-else-if="view==='list'">
+                    <ChecklistListView
+                        :checklists="checklistsComputed"
+                        :can-edit-component="false"
+                        :project-can-write-ids="[]"
+                        :project-manager-ids="[]"
+                        :is-admin="false"
+                        :checklist_templates="checklist_templates"
+                        :project="null"
+                        :tab_id="null"
+                        :is-in-own-task-management="true"
+                    />
                 </div>
 
                 <!-- Kanban view -->
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <section
-                        v-for="cl in checklistsComputed"
-                        :key="cl.id"
-                        class="rounded-2xl border border-gray-100 bg-white shadow-sm flex flex-col"
-                    >
-                        <div class="px-5 py-4">
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="min-w-0">
-                                    <h3 class="text-sm font-semibold leading-tight truncate">{{ cl.name }}</h3>
-                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ cl.tasks.length }} {{ $t('Tasks') }}</p>
-                                </div>
-                                <span v-if="cl.hasProject && cl.project?.name" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
-                  <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
-                  <Link :href="route('projects.tab', { project: cl.project.id, projectTab: cl?.project?.checklist_tab_id ?? 1 })">
-                    {{ cl.project.name }}
-                  </Link>
-                </span>
-                            </div>
-                        </div>
-
-                        <div class="px-5 pb-5 space-y-3">
-                            <div
-                                v-for="task in cl.tasks"
-                                :key="task.id"
-                                class="rounded-xl border border-gray-100 bg-white shadow-sm p-4"
-                            >
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="task.done" @change="toggleDone(task)" class="mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                                            <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-gray-400' : ''">{{ task.name }}</p>
-                                        </div>
-                                        <p v-if="task.description" class="text-xs text-gray-500 line-clamp-2 mt-1">{{ task.description }}</p>
-                                    </div>
-                                    <div class="text-right shrink-0">
-                                        <p v-if="!task.done && task.deadline" class="text-[11px]" :class="isFuture(task) ? 'text-gray-500' : 'text-red-600'">
-                                            {{ task.deadline }}
-                                        </p>
-                                        <p v-else-if="task.done && task.done_at" class="text-[11px] text-emerald-600">
-                                            {{ $t('done at') }} {{ task.done_at }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div v-if="cl.tasks.length===0" class="rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center">
-                                <p class="text-sm text-gray-600">{{ $t('No tasks to show in this list') }}</p>
-                            </div>
-
-                            <BaseUIButton label="Aufgabe hinzufügen" use-translation is-add-button is-small class="mt-4" @click="openTaskModal(null, cl)" />
-                        </div>
-                    </section>
+                <div v-else>
+                    <ChecklistKanbanView
+                        :checklists="checklistsComputed"
+                        :can-edit-component="false"
+                        :project-can-write-ids="[]"
+                        :project-manager-ids="[]"
+                        :is-admin="false"
+                        :checklist_templates="checklist_templates"
+                        :project="null"
+                        :tab_id="null"
+                        :is-in-own-task-management="true"
+                    />
                 </div>
 
                 <!-- Money Source Tasks -->
@@ -325,44 +209,31 @@
         <AddEditChecklistModal
             :checklist_templates="checklist_templates"
             :project="null"
-            :checklist-to-edit="checklistToEdit"
+            :checklist-to-edit="null"
             :tab_id="null"
             v-if="showChecklistEditModal"
             @closed="showChecklistEditModal = false"
-        />
-
-
-        <AddEditTaskModal
-            :project="checklistToEdit?.project"
-            :tab_id="null"
-            :checklist="checklistToEdit"
-            :task-to-edit="taskToEdit"
-            v-if="openAddTaskModal"
-            @closed="openAddTaskModal = false"
-            :is-private="checklistToEdit.private"
         />
     </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
-import { Link, router, useForm, usePage } from '@inertiajs/vue3'
+import { computed, ref, watch } from 'vue'
+import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
 import SingleMoneySourceTask from '@/Pages/Tasks/Components/SingleMoneySourceTask.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
-import { IconListCheck, IconCheck, IconX, IconChecklist } from '@tabler/icons-vue'
-import { ChevronRightIcon } from '@heroicons/vue/solid'
+import { IconCheck, IconX, IconChecklist } from '@tabler/icons-vue'
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
+import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
+import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 
 const $t = useTranslation()
 
 const props = defineProps<{
-    tasks: any[],
-    private_checklists: any[],
     money_source_task: any[],
     first_project_tasks_tab_id: number,
     checklists: Array<any>,
@@ -377,25 +248,7 @@ const view = ref<'list' | 'kanban'>((user.value?.checklist_style === 'list' ? 'l
 const currentSort = ref<number>(page.props.urlParameters?.filter > 0 ? parseInt(page.props.urlParameters?.filter) : 0)
 const sortOpen = ref(false)
 const showChecklistEditModal = ref(false)
-const openAddTaskModal = ref(false)
-const checklistToEdit = ref(null)
-const taskToEdit = ref(null)
 const filterSaved = ref(false)
-
-const doneForm = useForm({ done: false })
-
-const today = computed(() => {
-    const dt = new Date()
-    return dt.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-})
-
-const openTaskModal = (task: any, checklist: any) => {
-    checklistToEdit.value = checklist
-    taskToEdit.value = task
-    nextTick(() => {
-        openAddTaskModal.value = true
-    })
-}
 
 const sortLabel = computed(() => {
     switch (currentSort.value) {
@@ -527,26 +380,6 @@ function saveFiltersNow() {
             }
         }
     )
-}
-
-function toggleDone(task: any) {
-    doneForm.done = task.done
-    doneForm.patch(route('tasks.done', { task: task.id }), {
-        preserveScroll: true,
-        preserveState: true
-    })
-}
-
-function isFuture(task: any) {
-    // fallback: Server liefert isDeadlineInFuture oft mit – wenn nicht, grobe Prüfung
-    if (typeof task.isDeadlineInFuture === 'boolean') return task.isDeadlineInFuture
-    try {
-        const now = new Date()
-        const d = new Date(task.deadline_dt_local || task.deadlineDate || task.deadline)
-        return d.getTime() >= now.getTime()
-    } catch {
-        return true
-    }
 }
 
 /** --- Sync view back to user prefs (optional) --- */

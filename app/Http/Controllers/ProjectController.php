@@ -247,9 +247,15 @@ class ProjectController extends Controller
     {
 
         $user = $this->userService->getAuthUser();
-        $userProjectManagementSetting = $this->userProjectManagementSettingService
-            ->getFromUser($user)
-            ->getAttribute('settings');
+        $userProjectManagementSettingModel = $this->userProjectManagementSettingService
+            ->getFromUser($user);
+
+        if (!$userProjectManagementSettingModel) {
+            $userProjectManagementSettingModel = $this->userProjectManagementSettingService
+                ->updateOrCreateIfNecessary($user, $this->userProjectManagementSettingService->getDefaults());
+        }
+
+        $userProjectManagementSetting = $userProjectManagementSettingModel->getAttribute('settings');
 
         if ($request->integer('entitiesPerPage') && $user->entities_per_page !== $request->integer('entitiesPerPage')) {
             $user->update(['entities_per_page' => $request->integer('entitiesPerPage')]);
@@ -2391,7 +2397,21 @@ class ProjectController extends Controller
             // ShiftTab-Daten laden (analog EventController::viewShiftPlan)
             $this->loadShiftTabData($headerObject, $project);
 
-            $userCalendarFilter = $user->userFilters()->projectShiftFilter()->first();
+            // Ensure project shift filter exists for the user
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => UserFilterTypes::PROJECT_SHIFT_FILTER->value],
+                [
+                    'start_date' => null,
+                    'end_date' => null,
+                    'event_type_ids' => null,
+                    'room_ids' => null,
+                    'area_ids' => null,
+                    'room_attribute_ids' => null,
+                    'room_category_ids' => null,
+                    'event_property_ids' => null,
+                    'craft_ids' => null,
+                ]
+            );
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
             $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();

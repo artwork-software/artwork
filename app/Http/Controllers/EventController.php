@@ -524,9 +524,25 @@ class EventController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
-        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+
         if ($request->get('isInProjectView')) {
-            $userCalendarFilter = $user->userFilters()->projectShiftFilter()->first();
+            // Ensure project shift filter exists for the user
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => UserFilterTypes::PROJECT_SHIFT_FILTER->value],
+                [
+                    'start_date' => null,
+                    'end_date' => null,
+                    'event_type_ids' => null,
+                    'room_ids' => null,
+                    'area_ids' => null,
+                    'room_attribute_ids' => null,
+                    'room_category_ids' => null,
+                    'event_property_ids' => null,
+                    'craft_ids' => null,
+                ]
+            );
+        } else {
+            $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
         }
 
         // Wenn ein exakter Zeitraum angefragt wird, diesen respektieren (Projekt-Tab lädt Projektzeitraum)

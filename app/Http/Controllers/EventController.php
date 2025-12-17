@@ -532,13 +532,13 @@ class EventController extends Controller
                 [
                     'start_date' => null,
                     'end_date' => null,
-                    'event_type_ids' => [],
-                    'room_ids' => [],
-                    'area_ids' => [],
-                    'room_attribute_ids' => [],
-                    'room_category_ids' => [],
-                    'event_property_ids' => [],
-                    'craft_ids' => [],
+                    'event_type_ids' => null,
+                    'room_ids' => null,
+                    'area_ids' => null,
+                    'room_attribute_ids' => null,
+                    'room_category_ids' => null,
+                    'event_property_ids' => null,
+                    'craft_ids' => null,
                 ]
             );
         } else {

@@ -2,31 +2,37 @@
     <div class="relative w-full">
         <component :is="props.project ? 'div' : ShiftHeader">
             <transition name="fade" appear>
-                <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
+                <div
+                    class="pointer-events-none fixed z-[100] inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8"
+                    v-show="showCalendarWarning.length > 0"
+                >
                     <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
                         <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
                         <p class="text-sm/6 text-white">
                             {{ showCalendarWarning }}
                         </p>
-                        <button type="button" class="-m-1.5 flex-none p-1.5">
+                        <button
+                            type="button"
+                            class="-m-1.5 flex-none p-1.5"
+                            @click="showCalendarWarning = ''"
+                        >
                             <span class="sr-only">{{ $t('Dismiss') }}</span>
-                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" @click="showCalendarWarning = ''" />
+                            <component :is="IconX" class="size-5 text-white" aria-hidden="true" />
                         </button>
                     </div>
                 </div>
             </transition>
-            <!-- topbar with date range selector or project period -->
+
+            <!-- topbar -->
             <div :class="topBarContainerClass" :style="topBarStyle" ref="topBarEl">
                 <div class="flex items-center pr-5 gap-x-5 justify-between">
                     <div class="flex items-center gap-x-4">
-                        <!-- In Projekt-Kontext: nur Projektzeitraum anzeigen -->
                         <div v-if="props.project" class="ml-1 text-sm font-lexend font-semibold text-gray-700">
                             {{ $t('Projektzeitraum') }} {{ formatDate(projectStart) }} - {{ formatDate(projectEnd) }}
                         </div>
 
-                        <!-- Globaler Kontext: DatePicker + Shortcuts -->
                         <template v-else>
-                            <date-picker-component :date-value-array="dateValue" :is_shift_plan="true"/>
+                            <date-picker-component :date-value-array="props.dateValue" :is_shift_plan="true"/>
 
                             <div class="flex gap-x-1 mx-2">
                                 <ToolTipComponent
@@ -57,8 +63,7 @@
                         </template>
                     </div>
 
-                    <div class="flex items-center gap-x-5 ">
-                        <!-- Im Projekt: kein Umschalter zwischen Tages- und Normalansicht -->
+                    <div class="flex items-center gap-x-5">
                         <SwitchIconTooltip
                             v-if="!props.project"
                             v-model="dailyViewMode"
@@ -67,18 +72,13 @@
                             @change="changeDailyViewMode"
                             :icon="IconCalendarWeek"
                         />
-                        <!--<ShiftPlanFilter
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                            :user_filters="user_filters"
-                            :crafts="crafts"
-                        />-->
+
                         <FunctionBarFilter
-                            :user_filters="user_filters"
-                            :personal-filters="personalFilters"
-                            :filter-options="filterOptions"
-                            :crafts="crafts"
-                            filter-type="shift_filter"
+                            :user_filters="user_filtersResolved"
+                            :personal-filters="personalFiltersResolved"
+                            :filter-options="filterOptionsResolved"
+                            :crafts="craftsResolved"
+                            :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_filter'"
                         />
 
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan />
@@ -86,37 +86,44 @@
                 </div>
             </div>
 
-            <div v-for="day in days" :key="day.withoutFormat" class="flex flex-col w-full h-full relative ml-1">
-                <!-- tages balken -->
+            <div
+                v-for="day in daysLocal"
+                :key="day.withoutFormat"
+                class="flex flex-col w-full h-full relative ml-1"
+                :class="props.isInProjectView ? 'mt-5' : ''"
+            >
                 <div v-if="!day.isExtraRow">
-                    <div class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30" :style="dayHeaderStyle">
+                    <div
+                        class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
+                        :style="dayHeaderStyle"
+                    >
                         <div class="px-16 font-lexend text-sm font-bold py-4">
                             {{ day.dayString }}, {{ day.fullDay }}
                         </div>
                     </div>
-                    <div class="grid grid-cols-[3rem_1fr] ml-1" v-for="room in roomsForDay(day.fullDay)">
+
+                    <div
+                        class="grid grid-cols-[3rem_1fr] ml-1"
+                        v-for="room in (roomsForDayMap.get(day.fullDay) || [])"
+                        :key="room.roomId ?? room.id ?? room.roomName"
+                    >
                         <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
-                            <!-- Raumnamen von unten nach oben -->
-                            <div :key="room.roomName" class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
+                            <div class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
                                 {{ room.roomName }}
                             </div>
                         </div>
+
                         <div class="flex items-stretch px-4 py-2">
-                            <!--
-                              Add relative positioning and extra bottom padding to the timeline card so that
-                              expanded details (e.g., SingleEntityOfShifts) have room and do not overlap the
-                              next room's row. This ensures the row below is pushed down when an item expands.
-                            -->
                             <div class="card glassy p-4 w-full relative pb-28 md:pb-32">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
-                                    :events="getEventsForDay(room, day.fullDay)"
-                                    :shifts="filterShiftsByCraft(room.content[day.fullDay]?.shifts || [])"
-                                    :event-types="eventTypes"
-                                    :rooms="rooms"
-                                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                    :event-statuses="eventStatuses"
-                                    :crafts="crafts"
+                                    :events="getEventsForRoomDay(room, day.fullDay)"
+                                    :shifts="getFilteredShiftsForRoomDay(room, day.fullDay)"
+                                    :event-types="eventTypesResolved"
+                                    :rooms="roomsResolved"
+                                    :first_project_calendar_tab_id="first_project_calendar_tab_idResolved"
+                                    :event-statuses="eventStatusesResolved"
+                                    :crafts="craftsResolved"
                                     :shift-qualifications="shiftQualificationsArray"
                                     :px-per-min="1.0"
                                     :gap-threshold-min="90"
@@ -129,19 +136,18 @@
                 </div>
             </div>
 
-
             <AddShiftModal
                 v-if="showAddShiftModal"
-                :crafts="crafts"
+                :crafts="craftsResolved"
                 :event="null"
                 :shift="shiftToEdit"
-                :currentUserCrafts="usePage().props.currentUserCrafts"
+                :currentUserCrafts="pageProps.currentUserCrafts"
                 :buffer="null"
-                :shift-qualifications="usePage().props.shiftQualifications"
-                :shift-groups="usePage().props.shiftGroups"
-                :global-qualifications="usePage().props.globalQualifications"
+                :shift-qualifications="pageProps.shiftQualifications"
+                :shift-groups="pageProps.shiftGroups"
+                :global-qualifications="pageProps.globalQualifications"
                 @closed="closeAddShiftModal"
-                :shift-time-presets="usePage().props.shiftTimePresets"
+                :shift-time-presets="pageProps.shiftTimePresets"
                 :rooms="roomsArray"
                 :room="roomForShiftAdd"
                 :day="dayForShiftAdd"
@@ -152,32 +158,30 @@
 
             <EventComponent
                 v-if="showEventComponent"
-                :showHints="usePage().props.show_hints"
-                :eventTypes="eventTypes"
+                :showHints="pageProps.show_hints"
+                :eventTypes="eventTypesResolved"
                 :rooms="roomsArray"
-                :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                :calendarProjectPeriod="pageProps.auth.user.calendar_settings.use_project_time_period"
                 :project="props.project"
                 :event="eventToEdit"
                 :wantedRoomId="wantedRoom"
                 :isAdmin="hasAdminRole()"
                 :roomCollisions="roomCollisions"
-                :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                :first_project_calendar_tab_id="first_project_calendar_tab_idResolved"
                 :requires-axios-requests="true"
                 @closed="eventComponentClosed"
-                :event-statuses="eventStatuses"
+                :event-statuses="eventStatusesResolved"
                 :is-planning="isPlanning"
                 :wanted-date="wantedDate"
-
             />
-
         </component>
-
     </div>
 </template>
+
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import { ref, provide, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
+import { ref, provide, onMounted, onUnmounted, watch, computed, nextTick, shallowRef } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -196,459 +200,434 @@ import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
-import { is } from 'laravel-permission-to-vuejs'
+import { is } from "laravel-permission-to-vuejs";
 
-// Hilfsfunktion: Extrahiert Datum aus verschiedenen Formaten und normalisiert zu "YYYY-MM-DD"
+type AnyRoom = any
+type AnyEvent = any
+
+const page = usePage()
+const pageProps = computed(() => page.props).value
+
+// ✅ defineProps: KEIN usePage() hier drin!
+const props = defineProps({
+    project: { type: Object as any, required: false, default: null },
+    days: { type: Array, required: false, default: () => [] },
+    dateValue: { type: Array, required: false, default: () => [] },
+    shiftPlan: { type: [Object, Array], required: false, default: () => ({}) },
+
+    shiftQualifications: { type: [Object, Array], required: false, default: () => ({}) },
+    crafts: { type: [Object, Array], required: false, default: () => ({}) },
+    rooms: { type: [Object, Array], required: false, default: () => ([]) },
+    eventStatuses: { type: [Object, Array], required: false, default: () => ([]) },
+    eventTypes: { type: [Object, Array], required: false, default: () => ([]) },
+
+    event_properties: { type: Object, required: false, default: () => ({}) },
+    first_project_calendar_tab_id: { type: Number, required: false, default: 0 },
+    filterOptions: { type: Object, required: false, default: () => ({}) },
+    personalFilters: { type: Object, required: false, default: () => ({}) },
+    user_filters: { type: Object, required: false, default: () => ({}) },
+
+    calendarWarningText: { type: String, required: false, default: "" },
+    stickyOffsetTopPx: { type: Number, required: false, default: 0 },
+    isInProjectView: { type: Boolean, required: false, default: false },
+})
+
+const hasAdminRole = () => is("artwork admin")
+
+/**
+ * ✅ Resolver: Props -> fallback auf Inertia page.props
+ */
+const shiftQualificationsResolved = computed(() => {
+    const v: any = props.shiftQualifications
+    if (Array.isArray(v)) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.shiftQualifications ?? {}
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
+})
+
+const craftsResolved = computed(() => {
+    const v: any = props.crafts
+    if (Array.isArray(v)) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.crafts ?? {}
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
+})
+
+const roomsResolved = computed(() => {
+    const v: any = props.rooms
+    if (Array.isArray(v)) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.rooms ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const eventStatusesResolved = computed(() => {
+    const v: any = props.eventStatuses
+    if (Array.isArray(v) && v.length) return v
+    const fromPage: any = page.props.eventStatuses ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const eventTypesResolved = computed(() => {
+    const v: any = props.eventTypes
+    if (Array.isArray(v) && v.length) return v
+    const fromPage: any = page.props.eventTypes ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const first_project_calendar_tab_idResolved = computed(() => {
+    return props.first_project_calendar_tab_id || page.props.first_project_calendar_tab_id || 0
+})
+
+const filterOptionsResolved = computed(() => props.filterOptions && Object.keys(props.filterOptions).length ? props.filterOptions : (page.props.filterOptions ?? {}))
+const personalFiltersResolved = computed(() => props.personalFilters && Object.keys(props.personalFilters).length ? props.personalFilters : (page.props.personalFilters ?? {}))
+const user_filtersResolved = computed(() => props.user_filters && Object.keys(props.user_filters).length ? props.user_filters : (page.props.user_filters ?? {}))
+
+provide("event_properties", computed(() => {
+    return (props.event_properties && Object.keys(props.event_properties).length)
+        ? props.event_properties
+        : (page.props.event_properties ?? {})
+}).value)
+
+/**
+ * Lokaler State
+ */
+const showCalendarWarning = ref(props.calendarWarningText)
+const daysLocal = shallowRef<any[]>(props.days ?? [])
+
+// shiftPlanCopy
+const shiftPlanCopy = shallowRef<any[]>(
+    Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
+)
+
+const shiftToEdit = ref(null)
+const roomForShiftAdd = ref<number | null>(null)
+const dayForShiftAdd = ref<string | null>(null)
+const showAddShiftModal = ref(false)
+
+const eventToEdit = ref<any | boolean>(false)
+const wantedRoom = ref<number | null>(null)
+const wantedDate = ref<string | null>(null)
+const showEventComponent = ref(false)
+
+const isPlanning = ref(false)
+const roomCollisions = ref<any[]>([])
+const dailyViewMode = ref<boolean>(page.props.auth.user.daily_view ?? false)
+
+/**
+ * helper: extractDate
+ */
 function extractDate(raw: any): string | null {
     if (!raw) return null
     const s = String(raw).trim()
-    const datePart = s.split(' ')[0] // "YYYY-MM-DD HH:MM" -> "YYYY-MM-DD" oder "DD.MM.YYYY HH:MM" -> "DD.MM.YYYY"
+    const datePart = s.split(" ")[0]
 
-    // ISO-Format: YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart
 
-    // Deutsches Format: DD.MM.YYYY -> umwandeln zu YYYY-MM-DD
     if (/^\d{2}\.\d{2}\.\d{4}$/.test(datePart)) {
-        const [day, month, year] = datePart.split('.')
+        const [day, month, year] = datePart.split(".")
         return `${year}-${month}-${day}`
     }
 
     return null
 }
 
-// Hilfsfunktion: Gibt alle Events für einen Tag zurück, inkl. mehrtägiger Events
-function getEventsForDay(room: any, targetDay: string): any[] {
-    // Normalisiere targetDay zu ISO-Format (YYYY-MM-DD)
-    const normalizedTargetDay = extractDate(targetDay)
+function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEvent[]>> {
+    const index = new Map<any, Map<string, AnyEvent[]>>()
 
-    if (!normalizedTargetDay) {
-        return []
+    const push = (roomId: any, dayIso: string, ev: AnyEvent) => {
+        if (!index.has(roomId)) index.set(roomId, new Map())
+        const byDay = index.get(roomId)!
+        if (!byDay.has(dayIso)) byDay.set(dayIso, [])
+        const arr = byDay.get(dayIso)!
+        if (ev?.id != null && arr.some(x => x?.id === ev.id)) return
+        arr.push(ev)
     }
 
-    const result: any[] = []
-    const seenIds = new Set<number>()
+    for (const room of rooms || []) {
+        const roomId = room.roomId ?? room.id
+        const content = room?.content || {}
 
-    // Events, die direkt diesem Tag zugeordnet sind
-    const directEvents = room.content?.[targetDay]?.events || []
-    for (const e of directEvents) {
-        if (!seenIds.has(e.id)) {
-            result.push(e)
-            seenIds.add(e.id)
-        }
-    }
+        for (const dayKey of Object.keys(content)) {
+            const dayIso = extractDate(dayKey)
+            const dayEvents: AnyEvent[] = content?.[dayKey]?.events || []
 
-    // Alle Events aus allen Tagen in room.content durchgehen
-    if (room.content) {
-        for (const dayKey of Object.keys(room.content)) {
-            const dayEvents = room.content[dayKey]?.events || []
+            if (dayIso) {
+                for (const ev of dayEvents) push(roomId, dayIso, ev)
+            }
 
-            for (const e of dayEvents) {
-                // Überspringen, wenn bereits hinzugefügt
-                if (seenIds.has(e.id)) continue
+            for (const ev of dayEvents) {
+                const startIso = extractDate(ev.start || ev.startDate || ev.start_date)
+                const endIso   = extractDate(ev.end   || ev.endDate   || ev.end_date)
+                if (!startIso || !endIso || startIso === endIso) continue
 
-                // Prüfen, ob das Event mehrtägig ist und targetDay überschneidet
-                const startDate = extractDate(e.start || e.startDate || e.start_date)
-                const endDate = extractDate(e.end || e.endDate || e.end_date)
+                let d = dayjs(startIso)
+                const end = dayjs(endIso)
+                if (!d.isValid() || !end.isValid()) continue
 
-                if (startDate && endDate && startDate !== endDate) {
-                    // Mehrtägiges Event: prüfen, ob normalizedTargetDay im Bereich liegt
-                    if (normalizedTargetDay >= startDate && normalizedTargetDay <= endDate) {
-                        result.push(e)
-                        seenIds.add(e.id)
-                    }
+                while (d.isBefore(end) || d.isSame(end, "day")) {
+                    push(roomId, d.format("YYYY-MM-DD"), ev)
+                    d = d.add(1, "day")
                 }
             }
         }
     }
 
-    return result
+    return index
 }
 
-const props = defineProps({
-    project: {
-        type: Object as any,
-        required: false,
-        default: null
-    },
-    days: {
-        type: Array,
-        required: false,
-        default: () => []
-    },
-    dateValue: {
-        type: Array,
-        required: false,
-        default: () => []
-    },
-    shiftPlan: {
-        type: [Object, Array],
-        required: false,
-        default: () => ({})
-    },
-    shiftQualifications: {
-        type: [Object, Array],
-        required: false,
-        default: () => (usePage().props.shiftQualifications ?? {})
-    },
-    crafts: {
-        type: [Object, Array],
-        required: false,
-        default: () => (usePage().props.crafts ?? {})
-    },
-    rooms: {
-        type: [Object, Array],
-        required: false,
-        default: () => (usePage().props.rooms ?? [])
-    },
-    eventStatuses: {
-        type: [Object, Array],
-        required: false,
-        default: () => (usePage().props.eventStatuses ?? [])
-    },
-    eventTypes: {
-        type: [Object, Array],
-        required: false,
-        default: () => (usePage().props.eventTypes ?? [])
-    },
-    event_properties: {
-        type: Object,
-        required: false,
-        default: () => (usePage().props.event_properties ?? {})
-    },
-    first_project_calendar_tab_id: {
-        type: Number,
-        required: false,
-        default: () => (usePage().props.first_project_calendar_tab_id ?? 0)
-    },
-    filterOptions: {
-        type: Object,
-        required: false,
-        default: () => (usePage().props.filterOptions ?? {})
-    },
-    personalFilters: {
-        type: Object,
-        required: false,
-        default: () => (usePage().props.personalFilters ?? {})
-    },
-    user_filters: {
-        type: Object,
-        required: false,
-        default: () => (usePage().props.user_filters ?? {})
-    },
-    calendarWarningText: {
-        type: String,
-        required: false,
-        default: ''
-    },
-    // Optionaler zusätzlicher Offset in Pixeln für Sticky-Elemente oben (z.B. Höhe der Tab-Leiste)
-    stickyOffsetTopPx: {
-        type: Number,
-        required: false,
-        default: 0
-    }
-})
-const hasAdminRole = () => is('artwork admin')
 /**
- * Lokale State-Refs – damit wir per API nachladen können
- */
-const showCalendarWarning = ref(props.calendarWarningText)
-
-// Tage lokal spiegeln, damit wir sie überschreiben können
-const days = ref<Array<any>>(props.days ?? [])
-
-// shiftPlanCopy: intern verwendete Version des Schichtplans
-const shiftPlanCopy = ref<any[]>(
-    Array.isArray(props.shiftPlan)
-        ? props.shiftPlan
-        : Object.values(props.shiftPlan ?? {})
-)
-
-const shiftToEdit = ref(null);
-const roomForShiftAdd = ref<number | null>(null);
-const dayForShiftAdd = ref<string | null>(null);
-const showAddShiftModal = ref(false);
-const eventToEdit = ref<any | boolean>(false);
-const wantedRoom = ref<number | null>(null);
-const wantedDate = ref<string | null>(null);
-const showEventComponent = ref(false);
-const isPlanning = ref(false);
-const roomCollisions = ref<any[]>([]);
-const dailyViewMode = ref<boolean>(usePage().props.auth.user.daily_view ?? false);
-
-provide('event_properties', props.event_properties)
-
-// Normalisiere rooms zu einem Array (wie im BaseCalendar), damit EventComponent stets ein Array erhält
-const roomsArray = computed(() => {
-    const fromProp = Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms ?? {})
-    if (fromProp && fromProp.length > 0) return fromProp
-    // Fallback: aus dem geladenen ShiftPlan ableiten
-    const derived = (shiftPlanCopy.value || []).map((r: any) => ({ id: r.roomId ?? r.id, name: r.roomName ?? r.name }))
-    const map = new Map<any, any>()
-    derived.forEach(r => { if (r && r.id !== undefined) map.set(r.id, r) })
-    return Array.from(map.values())
-})
-
-// Normalisierte Qualifikationsliste als Array
-const shiftQualificationsArray = computed(() =>
-    Array.isArray(props.shiftQualifications)
-        ? props.shiftQualifications
-        : Object.values(props.shiftQualifications || {})
-)
-
-/**
- * Initiales Laden des Tages-Schichtplans über API, wenn Props leer sind
+ * Initial load
  */
 const initializeDailyShiftPlan = async () => {
     const hasInitialDays = Array.isArray(props.days) && props.days.length > 0
     const hasInitialShiftPlan =
         props.shiftPlan &&
-        (Array.isArray(props.shiftPlan)
-            ? props.shiftPlan.length > 0
-            : Object.keys(props.shiftPlan).length > 0)
+        (Array.isArray(props.shiftPlan) ? props.shiftPlan.length > 0 : Object.keys(props.shiftPlan).length > 0)
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route('shift.plan.all'), {
+        const { data } = await axios.get(route("shift.plan.all"), {
             params: {
-                start_date: props.dateValue[0],
-                end_date: props.dateValue[1],
-                // Projektfilter priorisieren, wenn Komponente im Projektkontext verwendet wird
-                projectId: (props.project as any)?.id ?? usePage().props.currentProject?.id ?? null
-            }
+                start_date: props.dateValue?.[0],
+                end_date: props.dateValue?.[1],
+                projectId: (props.project as any)?.id ?? page.props.currentProject?.id ?? null,
+                isInProjectView: props.isInProjectView,
+            },
         })
 
-        days.value = data.days ?? []
-        shiftPlanCopy.value = Array.isArray(data.shiftPlan)
-            ? data.shiftPlan
-            : Object.values(data.shiftPlan ?? {})
-    } else {
-        // Props in lokale Refs spiegeln
-        days.value = [...(props.days ?? [])]
-        shiftPlanCopy.value = Array.isArray(props.shiftPlan)
-            ? [...props.shiftPlan]
-            : Object.values(props.shiftPlan ?? {})
+        daysLocal.value = data.days ?? []
+        shiftPlanCopy.value = Array.isArray(data.shiftPlan) ? data.shiftPlan : Object.values(data.shiftPlan ?? {})
+        return
     }
+
+    daysLocal.value = props.days ?? []
+    shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
+}
+
+watch(() => props.days, (v) => { daysLocal.value = v ?? [] })
+watch(() => props.shiftPlan, (v) => {
+    shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
+})
+
+/**
+ * Craft filter set
+ */
+const craftIdSet = computed<Set<any>>(() => {
+    const ids = (user_filtersResolved.value as any)?.craft_ids
+    return new Set(Array.isArray(ids) ? ids : [])
+})
+
+function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
+    const dayContent = room?.content?.[dayLabel]
+    const shiftsRaw: any[] = Array.isArray(dayContent?.shifts) ? dayContent.shifts : []
+    const set = craftIdSet.value
+    if (set.size === 0) return shiftsRaw
+    return shiftsRaw.filter(s => set.has(s?.craft?.id))
 }
 
 /**
- * Reaktiv bleiben, wenn Inertia neue Days/ShiftPlan via Props liefert
+ * Hide empty rooms
  */
-watch(
-    () => props.days,
-    (v) => {
-        days.value = v ?? []
-    },
-    { deep: true }
-)
+const hideUnoccupiedRooms = computed<boolean>(() => {
+    return page.props.auth?.user?.calendar_settings?.hide_unoccupied_rooms === true
+})
+
+/**
+ * Events index
+ */
+const roomDayEventsIndex = shallowRef<Map<any, Map<string, AnyEvent[]>>>(new Map())
 
 watch(
-    () => props.shiftPlan,
-    (v) => {
-        shiftPlanCopy.value = Array.isArray(v)
-            ? [...v]
-            : Object.values(v ?? {})
-    },
-    { deep: true }
+    shiftPlanCopy,
+    () => { roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || []) },
+    { immediate: true }
+)
+
+function getEventsForRoomDay(room: any, targetDay: string): AnyEvent[] {
+    const roomId = room?.roomId ?? room?.id
+    const dayIso = extractDate(targetDay)
+    if (!dayIso) return []
+    return roomDayEventsIndex.value.get(roomId)?.get(dayIso) ?? []
+}
+
+/**
+ * roomsForDayMap
+ */
+const roomsForDayMap = computed<Map<string, AnyRoom[]>>(() => {
+    const map = new Map<string, AnyRoom[]>()
+    const rooms = shiftPlanCopy.value || []
+
+    if (!hideUnoccupiedRooms.value) {
+        for (const d of (daysLocal.value || [])) map.set(d.fullDay, rooms)
+        return map
+    }
+
+    for (const d of (daysLocal.value || [])) {
+        const dayLabel = d.fullDay
+        const filtered = rooms.filter((room: any) => {
+            const events = getEventsForRoomDay(room, dayLabel)
+            const shifts = getFilteredShiftsForRoomDay(room, dayLabel)
+            return (events?.length ?? 0) > 0 || (shifts?.length ?? 0) > 0
+        })
+        map.set(dayLabel, filtered)
+    }
+
+    return map
+})
+
+/**
+ * roomsArray for EventComponent
+ */
+const roomsArray = computed(() => {
+    const from = roomsResolved.value
+    if (from && from.length) {
+        return from.map((r: any) => ({ id: r.id ?? r.roomId, name: r.name ?? r.roomName }))
+    }
+    const derived = (shiftPlanCopy.value || []).map((r: any) => ({ id: r.roomId ?? r.id, name: r.roomName ?? r.name }))
+    const m = new Map<any, any>()
+    derived.forEach(r => { if (r?.id != null) m.set(r.id, r) })
+    return Array.from(m.values())
+})
+
+const shiftQualificationsArray = computed(() =>
+    Array.isArray(shiftQualificationsResolved.value)
+        ? shiftQualificationsResolved.value
+        : Object.values(shiftQualificationsResolved.value || {})
 )
 
 /**
- * Modale / Aktionen
+ * Modals
  */
 const openAddShiftForRoomAndDay = (day: string, roomId: number) => {
-    shiftToEdit.value = null;
-    roomForShiftAdd.value = roomId;
-    dayForShiftAdd.value = day;
-    showAddShiftModal.value = true;
+    shiftToEdit.value = null
+    roomForShiftAdd.value = roomId
+    dayForShiftAdd.value = day
+    showAddShiftModal.value = true
 }
 
 const closeAddShiftModal = () => {
-    showAddShiftModal.value = false;
-    shiftToEdit.value = null;
-    roomForShiftAdd.value = null;
-    dayForShiftAdd.value = null;
+    showAddShiftModal.value = false
+    shiftToEdit.value = null
+    roomForShiftAdd.value = null
+    dayForShiftAdd.value = null
 }
 
 const openNewEventModalWithBaseData = (day: string, roomId: number) => {
     eventToEdit.value = false
-    wantedRoom.value = roomId;
-    wantedDate.value = day;
-    showEventComponent.value = true;
-};
+    wantedRoom.value = roomId
+    wantedDate.value = day
+    showEventComponent.value = true
+}
 
 const eventComponentClosed = () => {
-    showEventComponent.value = false;
-    eventToEdit.value = false;
-    wantedRoom.value = null;
-    wantedDate.value = null;
-};
-
-/**
- * Daily View Mode
- */
-const changeDailyViewMode = () => {
-    router.patch(
-        route('user.update.daily_view', usePage().props.auth.user.id),
-        { daily_view: dailyViewMode.value },
-        {
-            preserveScroll: false,
-            preserveState: false
-        }
-    )
-};
-
-const filterShiftsByCraft = (shifts: any[]) => {
-    if (!shifts) return [];
-
-    if (props.user_filters.craft_ids && props.user_filters.craft_ids.length > 0) {
-        return shifts.filter(shift => {
-            return props.user_filters.craft_ids.includes(shift.craft?.id);
-        });
-    }
-
-    return shifts;
-};
-
-const changeDailyViewModeValue = (newValue: boolean) => {
-    dailyViewMode.value = newValue;
-    router.patch(
-        route('user.update.daily_view', usePage().props.auth.user.id),
-        { daily_view: dailyViewMode.value },
-        {
-            preserveScroll: false,
-            preserveState: false
-        }
-    );
-};
-
-/**
- * Einstellung: Leere Räume ausblenden (pro Tag)
- * Wenn aktiviert, werden für jeden Tag nur jene Räume gerendert,
- * die entweder Events oder (nach Craft-Filter gefilterte) Shifts enthalten.
- */
-const hideUnoccupiedRooms = computed<boolean>(() => {
-    try {
-        return usePage().props.auth?.user?.calendar_settings?.hide_unoccupied_rooms === true
-    } catch (e) {
-        return false
-    }
-})
-
-const roomsForDay = (dayLabel: string): any[] => {
-    const rooms = shiftPlanCopy.value || []
-    if (!hideUnoccupiedRooms.value) return rooms
-
-    return rooms.filter((room: any) => {
-        // Verwende getEventsForDay(), um auch mehrtägige Events zu berücksichtigen
-        const events = getEventsForDay(room, dayLabel)
-
-        const dayContent = room?.content?.[dayLabel]
-        const shiftsRaw: any[] = Array.isArray(dayContent?.shifts) ? dayContent.shifts : []
-        const shifts = filterShiftsByCraft(shiftsRaw)
-
-        return (events?.length ?? 0) > 0 || (shifts?.length ?? 0) > 0
-    })
+    showEventComponent.value = false
+    eventToEdit.value = false
+    wantedRoom.value = null
+    wantedDate.value = null
 }
 
 /**
- * Shortcuts (Heute / aktuelle Woche / Monat)
+ * Daily view mode
+ */
+const changeDailyViewMode = () => {
+    router.patch(
+        route("user.update.daily_view", page.props.auth.user.id),
+        { daily_view: dailyViewMode.value },
+        { preserveScroll: false, preserveState: false }
+    )
+}
+
+const changeDailyViewModeValue = (newValue: boolean) => {
+    dailyViewMode.value = newValue
+    router.patch(
+        route("user.update.daily_view", page.props.auth.user.id),
+        { daily_view: dailyViewMode.value },
+        { preserveScroll: false, preserveState: false }
+    )
+}
+
+/**
+ * Shortcuts
  */
 const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10)
 
     if (!dailyViewMode.value) {
-        changeDailyViewModeValue(true);
+        changeDailyViewModeValue(true)
         setTimeout(() => {
             router.patch(
-                route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+                route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
                 { start_date: today, end_date: today },
                 { preserveScroll: true, preserveState: false }
-            );
-        }, 100);
-    } else {
-        router.patch(
-            route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
-            { start_date: today, end_date: today },
-            { preserveScroll: true, preserveState: false }
-        );
+            )
+        }, 100)
+        return
     }
-};
-
-const jumpToCurrentWeek = () => {
-    const today = new Date();
-    const currentWeekStart = new Date(today);
-    const currentWeekEnd = new Date(today);
-
-    const dayOfWeek = today.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    currentWeekStart.setDate(today.getDate() - daysToMonday);
-
-    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-    currentWeekEnd.setDate(today.getDate() + daysToSunday);
 
     router.patch(
-        route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
+        { start_date: today, end_date: today },
+        { preserveScroll: true, preserveState: false }
+    )
+}
+
+const jumpToCurrentWeek = () => {
+    const today = new Date()
+    const currentWeekStart = new Date(today)
+    const currentWeekEnd = new Date(today)
+
+    const dayOfWeek = today.getDay()
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    currentWeekStart.setDate(today.getDate() - daysToMonday)
+
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
+    currentWeekEnd.setDate(today.getDate() + daysToSunday)
+
+    router.patch(
+        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
         {
             start_date: currentWeekStart.toISOString().slice(0, 10),
             end_date: currentWeekEnd.toISOString().slice(0, 10),
         },
-        {
-            preserveScroll: true,
-            preserveState: false
-        }
-    );
-};
+        { preserveScroll: true, preserveState: false }
+    )
+}
 
 const jumpToCurrentMonth = () => {
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const today = new Date()
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
     if (dailyViewMode.value) {
-        changeDailyViewModeValue(false);
+        changeDailyViewModeValue(false)
         setTimeout(() => {
             router.patch(
-                route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+                route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
                 {
                     start_date: monthStart.toISOString().slice(0, 10),
                     end_date: monthEnd.toISOString().slice(0, 10),
                 },
-                {
-                    preserveScroll: true,
-                    preserveState: false
-                }
-            );
-        }, 100);
-    } else {
-        router.patch(
-            route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
-            {
-                start_date: monthStart.toISOString().slice(0, 10),
-                end_date: monthEnd.toISOString().slice(0, 10),
-            },
-            {
-                preserveScroll: true,
-                preserveState: false
-            }
-        );
+                { preserveScroll: true, preserveState: false }
+            )
+        }, 100)
+        return
     }
-};
 
-onMounted(async () => {
-    setTimeout(() => {
-        showCalendarWarning.value = ''
-    }, 5000)
+    router.patch(
+        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
+        {
+            start_date: monthStart.toISOString().slice(0, 10),
+            end_date: monthEnd.toISOString().slice(0, 10),
+        },
+        { preserveScroll: true, preserveState: false }
+    )
+}
 
-    // Schichtplan & Tage initial laden (falls leer)
-    await initializeDailyShiftPlan()
-
-    // Listener initialisieren – bekommt die ref auf shiftPlanCopy
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy);
-    ShiftCalendarListener.init();
-})
-
-// ---- Projektzeitraum-Helfer ----
+/**
+ * Projektzeitraum
+ */
 const projectStart = computed(() => {
-    // Priorität: übergebener DateRange -> HeaderObject.firstEventInProject.start_time -> Fallbacks im Projekt
-    const headerObj: any = (usePage().props as any)?.headerObject || {}
+    const headerObj: any = (page.props as any)?.headerObject || {}
     const fromRange = Array.isArray(props.dateValue) ? props.dateValue[0] : null
     const fromHeader = headerObj?.firstEventInProject?.start_time
     const p: any = props.project || {}
@@ -656,7 +635,7 @@ const projectStart = computed(() => {
 })
 
 const projectEnd = computed(() => {
-    const headerObj: any = (usePage().props as any)?.headerObject || {}
+    const headerObj: any = (page.props as any)?.headerObject || {}
     const fromRange = Array.isArray(props.dateValue) ? props.dateValue[1] : null
     const fromHeader = headerObj?.lastEventInProject?.end_time
     const p: any = props.project || {}
@@ -664,58 +643,61 @@ const projectEnd = computed(() => {
 })
 
 function formatDate(dateLike: any) {
-    if (!dateLike) return '-'
-    try {
-        const d = typeof dateLike === 'string' ? dayjs(dateLike) : dayjs(dateLike)
-        return d.isValid() ? d.format('DD.MM.YYYY') : '-'
-    } catch (e) {
-        return '-'
-    }
+    if (!dateLike) return "-"
+    const d = dayjs(dateLike)
+    return d.isValid() ? d.format("DD.MM.YYYY") : "-"
 }
 
-// Optik der Top-Bar: im Projektkontext nahezu randlos, sonst Standard-Karte
+/**
+ * Sticky / Toolbar height
+ */
 const topBarContainerClass = computed(() => {
-    if (props.project) {
-        // Im Projekt-/ShiftTab-Kontext soll die Toolbar einen weißen Hintergrund haben
-        // Kein vertikaler Zwischenraum zur darunterliegenden Tages-/Raumleiste: unten kein Padding
-        return 'w-full sticky top-0 z-40 px-3 pt-2 pb-0 bg-white'
-    }
-    return 'card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none'
+    if (props.project) return "w-full sticky top-0 z-40 px-3 pt-2 pb-0 bg-white"
+    return "card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
 })
 
-// Dynamischer Top-Offset der Top-Bar (berücksichtigt z.B. die Tabs-Leiste)
-const topBarStyle = computed(() => ({
-    top: `${props.stickyOffsetTopPx}px`
-}))
+const topBarStyle = computed(() => ({ top: `${props.stickyOffsetTopPx}px` }))
 
-// Toolbar-Höhe dynamisch messen, um exakten Abstand für den Tageskopf zu setzen
 const topBarEl = ref<HTMLElement | null>(null)
 const topBarHeightPx = ref<number>(72)
 
+let ro: ResizeObserver | null = null
+
 function measureTopBarHeight() {
     const h = topBarEl.value?.offsetHeight
-    if (typeof h === 'number' && h > 0) {
-        topBarHeightPx.value = h
-    }
+    if (typeof h === "number" && h > 0 && h !== topBarHeightPx.value) topBarHeightPx.value = h
 }
 
 onMounted(async () => {
+    setTimeout(() => { showCalendarWarning.value = "" }, 5000)
+
+    await initializeDailyShiftPlan()
+
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any)
+    ShiftCalendarListener.init()
+
     await nextTick()
     measureTopBarHeight()
-    window.addEventListener('resize', measureTopBarHeight)
+
+    if (topBarEl.value && "ResizeObserver" in window) {
+        ro = new ResizeObserver(() => measureTopBarHeight())
+        ro.observe(topBarEl.value)
+    } else {
+        window.addEventListener("resize", measureTopBarHeight)
+    }
 })
 
 onUnmounted(() => {
-    window.removeEventListener('resize', measureTopBarHeight)
+    if (ro && topBarEl.value) ro.unobserve(topBarEl.value)
+    ro = null
+    window.removeEventListener("resize", measureTopBarHeight)
 })
 
-// Dynamischer Top-Offset für den Tageskopf: gemessene Top-Bar-Höhe + zusätzlicher Offset
 const dayHeaderStyle = computed(() => ({
-    top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`
+    top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`,
 }))
 </script>
 
-
 <style scoped>
-
+/* optional */
 </style>

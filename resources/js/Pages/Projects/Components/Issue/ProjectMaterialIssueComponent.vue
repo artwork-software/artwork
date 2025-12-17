@@ -515,6 +515,7 @@ type Article = {
 type SpecialItem = { id:number; name:string; quantity:number; description?:string|null }
 type InternalIssue = {
     id:number; name:string|null; project_id:number|string|null;
+    project?: Project | null;
     start_date:string; start_time:string; end_date:string; end_time:string;
     start_date_time:string; end_date_time:string;
     special_items_done:boolean; articles:Article[]; special_items:SpecialItem[]; files:FileItem[];

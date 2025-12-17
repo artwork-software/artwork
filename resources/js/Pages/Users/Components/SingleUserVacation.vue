@@ -41,7 +41,7 @@
                 </div>
             </div>
             <p v-if="vacation.comment" class="mt-1 text-zinc-600">
-                &bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;
+                &bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' || vacation.comment === 'FREE_WORK' ? $t(vacation.comment) : vacation.comment }}&rdquo;
             </p>
         </div>
     </div>
@@ -96,7 +96,7 @@
                 </div>
 
                 <p v-if="vacation.comment" class="mt-1 text-zinc-600">
-                    &bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;
+                    &bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' || vacation.comment === 'FREE_WORK' ? $t(vacation.comment) : vacation.comment }}&rdquo;
                 </p>
             </div>
         </div>
@@ -159,6 +159,14 @@ const modalTexts = ref({
     button: 'Löschen',
 })
 const isSeries = ref(false)
+
+const vacationTypes = ref([
+    { name: 'Verfügbar', type: 'AVAILABLE' },
+    { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
+    { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
+    { name: 'Frei', type: 'FREE_WORK' },
+]);
+
 
 // globale Helfer wie vorher (Permissions-Mixin-Ersatz)
 const { proxy } = getCurrentInstance()

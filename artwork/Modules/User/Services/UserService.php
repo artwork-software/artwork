@@ -343,18 +343,33 @@ class UserService
      */
     public function getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(User $user): array
     {
-        return [
-            (
-                $userWorkerShiftPlanFilter = $this->getUserWorkerShiftPlanFilter(
-                    $user,
-                    [
-                        'start_date' => ($now = $this->carbonService->getNow()),
-                        'end_date' => $this->carbonService->cloneAndAddWeek($now)
-                    ]
-                )
-            )->getAttribute('start_date'),
-            $userWorkerShiftPlanFilter->getAttribute('end_date')
-        ];
+        $userWorkerShiftPlanFilter = $this->getUserWorkerShiftPlanFilter(
+            $user,
+            [
+                'start_date' => ($now = $this->carbonService->getNow()),
+                'end_date' => $this->carbonService->cloneAndAddWeek($now)
+            ]
+        );
+
+        $startDate = $userWorkerShiftPlanFilter->getAttribute('start_date');
+        $endDate = $userWorkerShiftPlanFilter->getAttribute('end_date');
+
+        // Ensure dates are Carbon instances
+        if (!$startDate instanceof Carbon) {
+            $startDate = $now ?? $this->carbonService->getNow();
+        }
+        if (!$endDate instanceof Carbon) {
+            $endDate = $this->carbonService->cloneAndAddWeek($startDate);
+        }
+
+        // Ensure start date is not after end date
+        if ($startDate->isAfter($endDate)) {
+            $temp = $startDate;
+            $startDate = $endDate;
+            $endDate = $temp;
+        }
+
+        return [$startDate, $endDate];
     }
 
     public function getAdminUser(): User

@@ -89,6 +89,7 @@ class ShiftCalendarService
                 $applyIntervalOverlap($query, 'start_time', 'end_time');
             })
             ->when(!empty($filter->event_type_ids), fn ($query) => $query->whereIn('event_type_id', $filter->event_type_ids))
+            ->orderBy('start_time')
             ->get();
 
         // Standalone Shifts laden
@@ -100,6 +101,8 @@ class ShiftCalendarService
             ->where(function ($query) use ($applyIntervalOverlap): void {
                 $applyIntervalOverlap($query, 'shifts.start_date', 'shifts.end_date');
             })
+            // order by start_date asc
+            ->orderBy('start_date', 'ASC')
             ->get();
 
         // Hilfsdaten für DTOs

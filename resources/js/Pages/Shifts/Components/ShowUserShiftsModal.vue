@@ -354,7 +354,7 @@
                                         {{ checked?.name }}
                                     </span>
                                 </div>
-                                <PropertyIcon name="ChevronDownIcon"
+                                <PropertyIcon name="IconChevronDown"
                                     class="h-5 w-5 text-primary"
                                     aria-hidden="true"
                                 />
@@ -383,7 +383,7 @@
                                             {{ type.name }}
                                         </span>
                                     </div>
-                                    <PropertyIcon name="CheckIcon"
+                                    <PropertyIcon name="IconCheck"
                                         v-if="selected"
                                         class="h-5 w-5 text-success"
                                         aria-hidden="true"

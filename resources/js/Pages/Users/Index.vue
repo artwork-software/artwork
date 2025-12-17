@@ -70,10 +70,15 @@
                 </template>
 
                 <!-- Title + Department -->
-                <template #cell-departments="{ row }">
+                <template #cell-teams="{ row }">
                     <div class="flex items-center gap-3">
                         <div class="flex -space-x-3">
-                            <div v-for="department in row.departments?.slice(0,2)" :key="department.id" class="relative">
+                            <div
+                                v-for="department in row.departments?.slice(0,2)"
+                                :key="department.id"
+                                class="relative"
+                                v-tooltip.top="{ value: department.name, appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
+                            >
                                 <TeamIconCollection
                                     class="size-10 min-w-10 min-h-10 rounded-full ring-2 ring-white"
                                     :iconName="department.svg_name"
@@ -355,7 +360,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const cols = ref<TableColumn[]>([
     { key: 'name',  label: 'Name',  sortable: false },
     { key: 'position', label: 'Position', sortable: false },
-    { key: 'departments', label: 'Departments', sortable: false },
+    { key: 'teams', label: 'Teams', sortable: false },
 ])
 
 const page = ref(1)

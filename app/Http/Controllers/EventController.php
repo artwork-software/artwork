@@ -62,6 +62,7 @@ use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftPresetGroup;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftGroupService;
@@ -687,6 +688,27 @@ class EventController extends Controller
             ),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
+            'shiftGroupPresets' => ShiftPresetGroup::query()
+                ->select(['id', 'name'])
+                ->withCount('presets')
+                ->with([
+                    'presets' => function ($q) {
+                        $q->select([
+                            'single_shift_presets.id',
+                            'single_shift_presets.name',
+                            'single_shift_presets.start_time',
+                            'single_shift_presets.end_time',
+                            'single_shift_presets.break_duration',
+                            'single_shift_presets.craft_id',
+                            'single_shift_presets.description',
+                        ])->with([
+                            'craft:id,name,abbreviation,color',
+                            'shiftsQualifications:id,name,icon,available', // pivot(quantity) kommt automatisch mit
+                        ]);
+                    }
+                ])
+                ->orderBy('name')
+                ->get(),
             'calendarWarningText' => $calendarWarningText,
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),

@@ -50,7 +50,15 @@ class SingleShiftPresetService
 
     public function getAllPresets(): \Illuminate\Database\Eloquent\Collection
     {
-        return SingleShiftPreset::with(['shiftsQualifications'])->get();
+        return SingleShiftPreset::query()
+        ->select([
+            'id', 'name', 'start_time', 'end_time', 'break_duration', 'craft_id', 'description'
+        ])
+        ->with([
+            'craft:id,name,abbreviation,color',
+            'shiftsQualifications:id,name,icon,available',
+        ])
+        ->get();
     }
 
     public function shareSingleShiftPresets(): void

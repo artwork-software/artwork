@@ -354,7 +354,7 @@ class UserService
         $startDate = $userWorkerShiftPlanFilter->getAttribute('start_date');
         $endDate = $userWorkerShiftPlanFilter->getAttribute('end_date');
 
-        // Ensure dates are Carbon instances
+        // Ensure dates are valid Carbon instances
         if (!$startDate instanceof Carbon) {
             $startDate = $now ?? $this->carbonService->getNow();
         }
@@ -367,6 +367,11 @@ class UserService
             $temp = $startDate;
             $startDate = $endDate;
             $endDate = $temp;
+        }
+
+        // Ensure dates are not equal (CarbonPeriod requires start < end)
+        if ($startDate->equalTo($endDate)) {
+            $endDate = $startDate->copy()->addDay();
         }
 
         return [$startDate, $endDate];

@@ -138,6 +138,9 @@ class TaskService
             $newTask = $task->replicate();
             $newTask->checklist_id = $newChecklist->id;
             $this->taskRepository->save($newTask);
+
+            // Copy task_users relationship
+            $newTask->task_users()->sync($task->task_users->pluck('id')->toArray());
         }
     }
 

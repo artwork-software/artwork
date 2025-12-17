@@ -182,7 +182,7 @@ const updateTaskStatus = () => {
         {},
         {
             preserveScroll: true,
-            preserveState: false,
+            preserveState: true,
             onError: () => {
                 // rollback UI on error
                 localTaskDone.value = !!props.task.done

@@ -123,6 +123,11 @@ class Project extends Model
             );
         });
 
+        static::deleting(function ($project): void {
+            // Delete all artist residencies before deleting the project
+            $project->artistResidencies()->delete();
+        });
+
         static::deleted(function ($project): void {
             UserCalendarSettings::query()->where('time_period_project_id', $project->id)->update(
                 ['time_period_project_id' => 0, 'use_project_time_period' => 0]

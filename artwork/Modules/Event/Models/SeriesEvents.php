@@ -41,4 +41,20 @@ class SeriesEvents extends Model
         // Prune series that have no associated events
         return static::doesntHave('events');
     }
+
+    /**
+     * Prepare the model for pruning by handling related events.
+     */
+    public function prune(): bool
+    {
+        // Before deleting the series, permanently delete all related events
+        // Events use SoftDeletes, so we need to use forceDelete() to actually remove them
+        $events = $this->events()->get();
+        foreach ($events as $event) {
+            $event->forceDelete();
+        }
+
+        // Now delete the series
+        return $this->delete() ?? false;
+    }
 }

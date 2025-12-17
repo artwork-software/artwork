@@ -168,7 +168,7 @@ const updateTaskStatus = () => {
         {},
         {
             preserveScroll: true,
-            preserveState: false,
+            preserveState: true,
             onError: () => { localTaskDone.value = !!props.task.done },
             onSuccess: () => { localTaskDone.value = !!props.task.done },
         }

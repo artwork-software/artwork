@@ -162,7 +162,7 @@ readonly class CalendarDataService
      * - `with('admins')` um N+1 für Admins zu vermeiden
      */
     public function getFilteredRooms(
-        UserFilter $filter,
+        ?UserFilter $filter,
         ?UserCalendarSettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
@@ -172,7 +172,7 @@ readonly class CalendarDataService
             $eventQuery->selectRaw(1)
                 ->from('events')
                 ->whereColumn('events.room_id', 'rooms.id')
-                ->unless(empty($filter->event_type_ids), function ($q) use ($filter): void {
+                ->unless(empty($filter?->event_type_ids), function ($q) use ($filter): void {
                     $q->whereIn('events.event_type_id', $filter->event_type_ids);
                 })
                 ->where(function ($q) use ($startDate, $endDate): void {
@@ -191,7 +191,7 @@ readonly class CalendarDataService
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
                 ->whereColumn('shifts.room_id', 'rooms.id')
-                ->unless(empty($filter->craft_ids), function ($q) use ($filter): void {
+                ->unless(empty($filter?->craft_ids), function ($q) use ($filter): void {
                     $q->whereIn('shifts.craft_id', $filter->craft_ids);
                 })
                 ->where(function ($q) use ($startDate, $endDate): void {

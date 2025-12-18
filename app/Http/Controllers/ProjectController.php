@@ -607,12 +607,14 @@ class ProjectController extends Controller
 
         $costSubPositionRow = $costSubPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $costSubPosition->subPositionRows()->max('position') + 1
+            'position' => $costSubPosition->subPositionRows()->max('position') + 1,
+            'order' => $costSubPosition->subPositionRows()->max('order') + 1,
         ]);
 
         $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $earningSubPosition->subPositionRows()->max('position') + 1
+            'position' => $earningSubPosition->subPositionRows()->max('position') + 1,
+            'order' => $earningSubPosition->subPositionRows()->max('order') + 1,
 
         ]);
 
@@ -1815,10 +1817,16 @@ class ProjectController extends Controller
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
 
+        SubPositionRow::query()
+            ->where('sub_position_id', $request->sub_position_id)
+            ->where('order', '>', $request->positionBefore)
+            ->increment('order');
+
         /** @var SubPositionRow $subPositionRow */
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $request->positionBefore + 1
+            'position' => $request->positionBefore + 1,
+            'order' => $request->positionBefore + 1,
         ]);
 
         $firstThreeColumns = $columns->shift(3);
@@ -1842,6 +1850,47 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+    }
+
+    public function reorderSubPositionRows(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'updates' => ['required', 'array', 'min:1'],
+            'updates.*.sub_position_id' => ['required', 'integer', 'exists:sub_positions,id'],
+            'updates.*.row_ids' => ['required', 'array'],
+            'updates.*.row_ids.*' => ['required', 'integer', 'exists:sub_position_rows,id'],
+        ]);
+
+        $updates = $validated['updates'];
+        $allRowIds = collect($updates)->pluck('row_ids')->flatten()->all();
+
+        if (count($allRowIds) !== count(array_unique($allRowIds))) {
+            throw ValidationException::withMessages([
+                'updates' => ['Row-IDs dürfen nicht mehrfach vorkommen.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($updates): void {
+            foreach ($updates as $update) {
+                $subPositionId = (int)$update['sub_position_id'];
+                $rowIds = $update['row_ids'];
+
+                foreach ($rowIds as $index => $rowId) {
+                    SubPositionRow::query()
+                        ->whereKey($rowId)
+                        ->update([
+                            'sub_position_id' => $subPositionId,
+                            'order' => $index + 1,
+                            // keep legacy ordering column in sync
+                            'position' => $index + 1,
+                        ]);
+                }
+            }
+        });
+
+        // Inertia expects a redirect (or a valid Inertia response). Without this,
+        // the client will not treat the request as successful.
+        return Redirect::back();
     }
 
     public function dropSageData(
@@ -1905,6 +1954,7 @@ class ProjectController extends Controller
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => 1,
+            'order' => 1,
         ]);
 
         $firstThreeColumns = $columns->shift(3);

@@ -76,7 +76,7 @@
                 <tr class="relative">
                     <th v-for="(column,index) in computedSortedColumns"
                         v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                        :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
+                        :class="index === 0 ? 'w-36' : index === 1 ? 'w-36' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id"
                              :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
@@ -155,7 +155,7 @@
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'"
+                                        :class="index === 0 ? 'w-36' : index === 1 ? 'w-36' : index === 2 ? 'w-72' : 'w-48'"
                                         class="xsDark h-5  pr-1 mr-1 flex " type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
@@ -342,8 +342,8 @@
                                 />
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right te">
-                                <td class="w-28"></td>
-                                <td class="w-28"></td>
+                                <td class="w-36"></td>
+                                <td class="w-36"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)"
@@ -384,8 +384,8 @@
                                 </td>
                             </tr>
                             <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                                <td class="w-28"></td>
-                                <td class="w-28"></td>
+                                <td class="w-36"></td>
+                                <td class="w-36"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
@@ -452,8 +452,8 @@
                                 />
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
-                                <td class="w-28"></td>
-                                <td class="w-28"></td>
+                                <td class="w-36"></td>
+                                <td class="w-36"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
@@ -495,8 +495,8 @@
 
                             </tr>
                             <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                                <td class="w-28"></td>
-                                <td class="w-28"></td>
+                                <td class="w-36"></td>
+                                <td class="w-36"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"

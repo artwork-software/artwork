@@ -71,35 +71,54 @@
             <tbody class="bg-secondary-hover w-full">
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id"/>
-            <div v-if="subPosition.sub_position_rows?.length > 0"
-                 v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
-                    @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                    class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
-                    <div class="flex items-center">
-                        <td v-for="(cell,index) in row.cells"
-                            v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+            <draggable
+                v-if="subPosition.sub_position_rows?.length > 0"
+                v-model="subPosition.sub_position_rows"
+                item-key="id"
+                tag="div"
+                :group="{ name: 'sub-position-rows', pull: true, put: true }"
+                handle=".sub-position-row-drag-handle"
+                :disabled="!canReorderSubPositionRows"
+                @change="persistSubPositionRowOrder($event)"
+            >
+                <template #item="{ element: row, index: rowIndex }">
+                    <div>
+                        <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
+                            :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
+                            @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
+                            class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
+                            <div class="flex items-center">
+                                <td v-for="(cell,index) in row.cells"
+                                    v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
+                                    :class="[index <= 1 ? 'w-36' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                                    <div
+                                        v-if="index === 0 && canReorderSubPositionRows"
+                                        class="sub-position-row-drag-handle absolute left-1 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
+                                        @mousedown.stop
+                                    >
+                                        <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
+                                    </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center cell-button">
-                                        <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
+                                        <div
+                                             :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate'"
+                                             :title="cell.display_value ?? cell.value"
                                              @mousedown="storeFocus(cell.id)"
                                              @click="this.handleCellClick(cell, '', index, row)">
-                                            {{ cell.value }}
+                                            {{ cell.display_value ?? cell.value }}
                                         </div>
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
-                                               :placeholder="cell.value"
+                                               :placeholder="cell.display_value ?? cell.value"
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
@@ -116,7 +135,7 @@
                                             >
                                                 <div
                                                     class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
-                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, account.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
                                                             {{ account.account_number }}
@@ -140,7 +159,7 @@
                                             >
                                                 <div
                                                     class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
-                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, cost_unit.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
                                                             {{ cost_unit.cost_unit_number }}
@@ -161,7 +180,7 @@
                             </div>
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
-                                    index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
+                                    index <= 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div class=" flex items-center"
@@ -285,21 +304,24 @@
                                         </span>
                         </MenuItem>
                     </BaseMenu>
-                </tr>
-                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
-                                     :sub-position-id="subPosition.id"/>
-                <div @click="addRowToSubPosition(subPosition, row)"
-                     v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
-                    <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
-                        {{ $t('Row') }}
-                        <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                        class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                        </tr>
+                        <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
+                                             :sub-position-id="subPosition.id"/>
+                        <div @click="addRowToSubPosition(subPosition, row)"
+                             v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
+                             class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
+                            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
+                                {{ $t('Row') }}
+                                <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
+                                                class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div v-else @click="addRowToSubPosition(subPosition)"
-                 v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
+                </template>
+            </draggable>
+
+            <div v-if="!(subPosition.sub_position_rows?.length > 0) && (this.hasBudgetAccess || this.$can('edit budget templates'))"
+                 @click="addRowToSubPosition(subPosition)"
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                     {{ $t('Row') }}
@@ -392,12 +414,14 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/RelevantBudgetDataSumModal.vue";
 import {IconList} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import draggable from 'vuedraggable';
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
         PropertyIcon,
+        draggable,
         RelevantBudgetDataSumModal,
         BaseMenu,
         SageDragCellElement,
@@ -419,7 +443,7 @@ export default {
         ConfirmationComponent,
         Link
     },
-    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
+    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
@@ -504,6 +528,11 @@ export default {
             }, 0) ?? 0;
         },
 
+        canReorderSubPositionRows() {
+            return (this.hasBudgetAccess || this.$can('edit budget templates'))
+                && (!this.table?.is_template || this.$can('edit budget templates'));
+        },
+
         // usePage().props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData
 
     },
@@ -522,6 +551,82 @@ export default {
     methods: {
         IconList,
         usePage,
+        persistSubPositionRowOrder(evt = null) {
+            if (!this.canReorderSubPositionRows) {
+                return;
+            }
+
+            // Important for cross-subposition drag&drop:
+            // both source and target lists emit events. The source emits `removed`.
+            // If we persist on the source event as well, it can overwrite the target
+            // update and the row jumps back after reload.
+            // Therefore: ignore pure `removed` events and only persist on `added`
+            // (target list) or `moved` (same list).
+            if (evt?.removed && !evt?.added && !evt?.moved) {
+                return;
+            }
+
+            // debounce, because `@change` can fire multiple times during a drag
+            window.clearTimeout(this._reorderSaveTimeout);
+            this._reorderSaveTimeout = window.setTimeout(() => {
+                // wait for Vue to apply list mutations before reading them
+                nextTick(() => {
+                // For cross-sub-position drag&drop we need to persist BOTH lists:
+                // - source subPosition (removed)
+                // - target subPosition (added)
+                // Otherwise the `sub_position_id` of the moved row is not persisted.
+
+                const affectedSubPositionIds = new Set([this.subPosition?.id]);
+
+                const movedRowId = evt?.added?.element?.id
+                    ?? evt?.removed?.element?.id
+                    ?? evt?.moved?.element?.id
+                    ?? null;
+
+                const oldSubPositionId = evt?.added?.element?.sub_position_id
+                    ?? evt?.removed?.element?.sub_position_id
+                    ?? null;
+
+                if (oldSubPositionId) {
+                    affectedSubPositionIds.add(oldSubPositionId);
+                }
+
+                // Try to find source/target subPositions across ALL main positions.
+                // This is required for drag&drop across different main positions.
+                const allSubPositions = (this.allMainPositions ?? [this.mainPosition])
+                    .flatMap(mp => mp?.sub_positions ?? []);
+                if (movedRowId && Array.isArray(allSubPositions)) {
+                    const currentContainer = allSubPositions.find(sp =>
+                        (sp?.sub_position_rows ?? []).some(r => r.id === movedRowId)
+                    );
+                    if (currentContainer?.id) {
+                        affectedSubPositionIds.add(currentContainer.id);
+                    }
+                }
+
+                const updates = Array.from(affectedSubPositionIds)
+                    .filter(Boolean)
+                    .map((subPositionId) => {
+                        const sp = allSubPositions.find(s => s?.id === subPositionId) || this.subPosition;
+                        return {
+                            sub_position_id: subPositionId,
+                            row_ids: (sp?.sub_position_rows ?? []).map(r => r.id),
+                        };
+                    });
+
+                this.$inertia.patch(
+                    route('project.budget.sub-position-row.reorder'),
+                    {
+                        updates,
+                    },
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                    }
+                );
+                });
+            }, 150);
+        },
         openRelevantBudgetDataSumModalForCell(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
@@ -533,9 +638,14 @@ export default {
         },
         calculateRelevantBudgetDataSumFormProjectsInGroup(cell) {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
-            if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
+            // Fallback: wenn keine DTO-Daten vorhanden/filtrierbar sind, den bereits vom Backend
+            // angereicherten Zellwert nutzen.
+            const fallback = parseFloat(String(cell?.value ?? '0').replace(',', '.'));
+
+            if (!data || !Array.isArray(data[this.mainPosition?.type])) return isNaN(fallback) ? 0 : fallback;
+
             const relevantData = data[this.mainPosition.type].filter(item => item?.groupRowId === cell?.sub_position_row_id);
-            if (!relevantData.length) return this.toCurrencyString(0);
+            if (!relevantData.length) return isNaN(fallback) ? 0 : fallback;
             const sum = relevantData.reduce((acc, item) => {
                 const value = parseFloat(item.value?.replace(',', '.') || '0');
                 return acc + (isNaN(value) ? 0 : value);
@@ -750,7 +860,7 @@ export default {
                 return;
             }*/
 
-            if (cell.value === null || cell.value === '') {
+            if ((cell.value === null || cell.value === '') && cell.column.type !== 'empty') {
                 cell.value = 0;
             }
 
@@ -934,7 +1044,7 @@ export default {
                 ).then(response => cell.costUnitSearchResults = response.data);
             }
         },
-        handleBudgetManagementSearchSelect(index, cell, value, mainPositionIsVerified, subPositionIsVerified) {
+        handleBudgetManagementSearchSelect(index, cell, value, displayValue, mainPositionIsVerified, subPositionIsVerified) {
             if (index === 0) {
                 cell.accountSearchResults = null;
             } else {
@@ -942,6 +1052,7 @@ export default {
             }
 
             cell.value = value;
+            cell.display_value = displayValue;
 
             this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
         },

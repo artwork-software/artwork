@@ -1111,6 +1111,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])
                 ->name('project.budget.sub-position-row.add');
 
+            Route::patch('/sub-position-row/reorder', [ProjectController::class, 'reorderSubPositionRows'])
+                ->name('project.budget.sub-position-row.reorder');
+
             // drop sage data
             Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
                 ->name('project.budget.drop.sage');

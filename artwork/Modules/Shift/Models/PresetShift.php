@@ -6,7 +6,6 @@ use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Models\PresetShiftShiftsQualifications;
-use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -79,6 +79,12 @@ export default defineComponent({
                 permission: true
             },
             {
+                name: $t('Shift preset groups'),
+                href: route('shift-preset-groups.index'),
+                current: route().current('shift-preset-groups.index'),
+                permission: true
+            },
+            {
                 name: $t('Shift warnings - rules'),
                 href: route('shift-rules.index'),
                 current: route().current('shift-rules.index'),

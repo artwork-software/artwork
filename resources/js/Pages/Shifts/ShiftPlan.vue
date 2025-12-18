@@ -312,18 +312,34 @@
                                         </template>
                                     </div>
 
+                                    <div class=" group-hover:inline-flex hidden absolute bottom-2 right-1 z-20 gap-x-1">
+
+                                        <ToolTipComponent
+                                            direction="left"
+                                            :tooltip-text="$t('Add Shift based on templates')"
+                                            icon="IconCopyPlus"
+                                            icon-size="size-4"
+                                            @click="openAddShiftByPresetOrGroup(day, room)"
+                                            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
+                    items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
+                    ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+                                        />
+
+                                        <ToolTipComponent
+                                            direction="left"
+                                            :tooltip-text="$t('Add Shift')"
+                                            icon="IconPlus"
+                                            icon-size="size-4"
+                                            v-if="!multiEditModeCalendar"
+                                            @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
+                                            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
+                    items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
+                    ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+                                        />
+                                    </div>
+
                                     <!-- Add button -->
-                                    <button
-                                        type="button"
-                                        class="pointer-events-auto group-hover:inline-flex hidden absolute bottom-1 border border-zinc-200 right-1 z-20
-                 items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
-                 ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
-                                        :aria-label="$t('Add shift')"
-                                        v-if="!multiEditModeCalendar"
-                                        @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
-                                    >
-                                        <PropertyIcon name="IconPlus" class="size-4"/>
-                                    </button>
+
                                 </div>
                             </div>
                         </template>
@@ -734,6 +750,15 @@
         @close="showIndividualTimeSeriesModal = false"
         @updated="handleSeriesUpdated"
     />
+
+    <AddShiftsByPresetsAndGroupsModal
+        :single-shift-presets="page.props.singleShiftPresets"
+        :preset-groups="shiftGroupPresets"
+        :day="dayForPreset"
+        :room="roomForPreset"
+        v-if="showAddShiftByPresetOrGroupModal"
+        @close="showAddShiftByPresetOrGroupModal = false"
+        />
 </template>
 
 <script setup lang="ts">
@@ -779,6 +804,7 @@ import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import Virtual2DGrid from "@/Pages/Shifts/Components/Virtual2DGrid.vue";
 import Virtual2DGridWithHeader from "@/Pages/Shifts/Components/Virtual2DGridWithHeader.vue";
+import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 
 defineOptions({
     name: 'ShiftPlan',
@@ -860,6 +886,7 @@ type ShiftPlanProps = {
     eventTypes?: any[],
     shiftTimePresets?: any[],
     currentUserCrafts?: any[],
+    shiftGroupPresets?: any
 }
 
 const props = withDefaults(defineProps<ShiftPlanProps>(), {
@@ -889,6 +916,7 @@ const props = withDefaults(defineProps<ShiftPlanProps>(), {
     eventTypes: () => [],
     shiftTimePresets: () => [],
     currentUserCrafts: () => [],
+    shiftGroupPresets: () => ({})
 })
 
 type Day = {
@@ -920,6 +948,9 @@ const userToMultiEditCurrentShifts = ref<number[]>([])
 const userToMultiEditCheckedShiftsAndEvents = ref<any[]>([])
 const dropFeedback = ref<string | null>(null)
 const closedCrafts = ref<number[]>([])
+const dayForPreset = ref()
+const roomForPreset = ref()
+const showAddShiftByPresetOrGroupModal = ref(false)
 const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShift: any[] }>({
     assignToShift: [],
     removeFromShift: [],
@@ -1012,6 +1043,14 @@ watchEffect(() => {
         shiftGridRef.value?.viewportEl?.value ??
         null
 })
+
+const openAddShiftByPresetOrGroup = (day, roomId) => {
+    roomForPreset.value = roomId
+    dayForPreset.value = day
+
+
+    showAddShiftByPresetOrGroupModal.value = true
+}
 
 const shiftPlanArrayRef = computed<any[]>(() => normalizeShiftPlan(newShiftPlanData.value))
 

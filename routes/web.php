@@ -1498,7 +1498,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [FreelancerController::class, 'removeCraft']
     )->name('freelancer.remove.craft');
 
-    // Vacation
+    //Vacation
 
     Route::post('/freelancer/vacation/{freelancer}/add', [VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
@@ -2718,6 +2718,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // individual-time-series.destroy
     Route::delete('/individual-time-series/{series:uuid}', [IndividualTimeSeriesController::class, 'destroy'])
         ->name('individual-time-series.destroy');
+
+    Route::get('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'index'])
+        ->name('shift-preset-groups.index');
+    Route::post('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'store'])
+        ->name('shift-preset-groups.store');
+    Route::patch('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'update'])
+        ->name('shift-preset-groups.update');
+    Route::delete('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'destroy'])
+        ->name('shift-preset-groups.destroy');
+
+    // shifts.createFromPresets
+    Route::post('/shifts/createFromPresets', [\Artwork\Modules\Shift\Http\Controllers\ShiftController::class, 'createFromPresets'])
+        ->name('shifts.createFromPresets');
 });
 
 Route::get(

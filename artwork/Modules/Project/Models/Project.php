@@ -18,8 +18,10 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -108,6 +110,10 @@ class Project extends Model
         'own_copyright' => 'boolean',
         'is_group' => 'boolean',
         'marked_as_done' => 'boolean',
+    ];
+
+    protected $appends = [
+        'first_and_last_event_date',
     ];
 
     protected $with = [
@@ -254,6 +260,11 @@ class Project extends Model
         return $this->belongsToMany(Room::class, 'events');
     }
 
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(Shift::class, 'project_id', 'id');
+    }
+
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id')->with(['users']);
@@ -297,6 +308,21 @@ class Project extends Model
             'id' => $this->id,
             'name' => $this->name,
         ];
+    }
+
+    public function getFirstAndLastEventDateAttribute(): ?array
+    {
+        $firstEvent = $this->events()->orderBy('start_time', 'ASC')->first();
+        $lastEvent = $this->events()->orderBy('end_time', 'DESC')->first();
+
+        if ($firstEvent && $lastEvent) {
+            return [
+                'first_event_date' => Carbon::parse($firstEvent->start_time)->translatedFormat('d.m.Y H:i'),
+                'last_event_date' => Carbon::parse($lastEvent->end_time)->translatedFormat('d.m.Y H:i'),
+            ];
+        }
+
+        return null;
     }
 
     public function scopeWhereNotDeleted(Builder $builder): Builder

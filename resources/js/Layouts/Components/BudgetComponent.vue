@@ -25,7 +25,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full sticky top-0 z-30 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
+        <div class="w-full sticky top-31.5 z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
 
             <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
                 label="New column"

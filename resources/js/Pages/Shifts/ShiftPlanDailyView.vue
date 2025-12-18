@@ -81,6 +81,16 @@
                             :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_filter'"
                         />
 
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Export Daily View Shift Paln as PDF')"
+                            :icon="IconFileExport"
+                            icon-size="h-5 w-5"
+                            @click="openExportRouteInNewTab"
+                            v-if="isInProjectView"
+                            classesButton="ui-button"
+                        />
+
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
@@ -191,7 +201,7 @@ import {
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
-    IconX,
+    IconX, IconFileExport,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -692,6 +702,16 @@ onUnmounted(() => {
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)
 })
+
+const openExportRouteInNewTab = () => {
+    const projectId = props.project?.id ?? null
+    if (!projectId) return
+
+    const url = route("projects.exports.shift-plan", {
+        project: projectId,
+    })
+    window.open(url, "_blank")
+}
 
 const dayHeaderStyle = computed(() => ({
     top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`,

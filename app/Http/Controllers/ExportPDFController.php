@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
-use Artwork\Modules\Event\DTOs\CalendarEventDto;
+use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Room\Http\Resources\RoomPdfResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
@@ -23,11 +24,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 class ExportPDFController extends Controller
 {
@@ -42,6 +41,8 @@ class ExportPDFController extends Controller
         protected PDF $domPdf,
         protected AuthManager $authManager,
         protected EventCalendarService $eventCalendarService,
+        protected ShiftCalendarService $shiftCalendarService,
+        protected DailyShiftPlanPdfBuilder $dailyShiftPlanPdfBuilder,
     ) {
     }
 
@@ -348,5 +349,26 @@ class ExportPDFController extends Controller
             str_replace(' ', '_', $title),
             $dpi
         );
+    }
+
+    public function exportDailyViewShiftPlanInProject(Project $project): \Symfony\Component\HttpFoundation\Response
+    {
+        $project->load([
+            // Events voll + Typfarbe
+            'events.event_type',
+            'events.timelines',
+            'shifts.craft',
+            'shifts.users',
+            'shifts.freelancer',       // <- Relation heißt in deinem Model "freelancer()"
+            'shifts.serviceProvider',  // <- Relation heißt "serviceProvider()"
+        ]);
+
+        $pdfData = $this->dailyShiftPlanPdfBuilder->buildForProject($project);
+
+        $pdf = $this->domPdf
+            ->loadView('pdf.shiftplan_daily_project', $pdfData)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream("Shiftplan_{$project->name}.pdf");
     }
 }

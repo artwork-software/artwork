@@ -2718,6 +2718,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // individual-time-series.destroy
     Route::delete('/individual-time-series/{series:uuid}', [IndividualTimeSeriesController::class, 'destroy'])
         ->name('individual-time-series.destroy');
+
+
+
+    // project routes
+    Route::group(['prefix' => 'projects'], static function (): void {
+
+
+        Route::group(['prefix' => 'exports'], function (): void {
+            // pdf Shift plan exprot
+            Route::get('/pdf/{project}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+                ->name('projects.exports.shift-plan');
+        });
+    });
 });
 
 Route::get(

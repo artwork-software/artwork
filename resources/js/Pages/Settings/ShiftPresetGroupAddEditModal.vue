@@ -277,19 +277,20 @@ function removePreset(id) {
 }
 
 function submit() {
-
     const storeUrl = route("shift-preset-groups.store");
-    const updateUrl = route("shift-preset-groups.update", props.presetGroup.id);
 
     const onSuccess = () => {
         emit("close");
     };
 
     if (isEdit.value) {
+        if (!props.presetGroup?.id) return;
+        const updateUrl = route("shift-preset-groups.update", props.presetGroup.id);
         groupForm.patch(updateUrl, {preserveScroll: true, onSuccess});
-    } else {
-        groupForm.post(storeUrl, {preserveScroll: true, onSuccess});
+        return;
     }
+
+    groupForm.post(storeUrl, {preserveScroll: true, onSuccess});
 }
 
 function toMinutes(hhmm) {

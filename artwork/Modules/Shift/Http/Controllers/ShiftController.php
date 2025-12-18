@@ -20,7 +20,7 @@ class ShiftController extends Controller
     ) {
     }
 
-    public function createFromPresets(Request $request): RedirectResponse|null
+    public function createFromPresets(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'room_id'        => ['required', 'integer'],
@@ -51,7 +51,7 @@ class ShiftController extends Controller
 
         $createdShifts = collect();
 
-        DB::transaction(function () use ($createdShifts, $presets, $dayDate, $data): void {
+        DB::transaction(function () use (&$createdShifts, $presets, $dayDate, $data): void {
 
             foreach ($presets as $preset) {
                 $startTime = $this->normalizeTimeString($preset->start_time);
@@ -120,7 +120,13 @@ class ShiftController extends Controller
             }
         });
 
+        if ($createdShifts->isEmpty()) {
+            return redirect()->back()->with('error', 'Es konnten keine Schichten aus den ausgewählten Vorlagen erstellt werden.');
+        }
+
         broadcast(new MultiShiftCreateInShiftPlan($createdShifts));
+
+        return redirect()->back()->with('success', $createdShifts->count() . ' Schicht(en) wurden hinzugefügt.');
     }
 
     private function normalizeTimeString(?string $time): ?string

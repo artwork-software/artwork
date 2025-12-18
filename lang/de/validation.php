@@ -249,7 +249,7 @@ return [
         'deleted_at' => 'deleted at',
         'description' => 'description',
         'district' => 'district',
-        'duration' => 'duration',
+        'duration' => 'Dauer',
         'email' => 'email',
         'excerpt' => 'excerpt',
         'filter' => 'filter',

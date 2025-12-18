@@ -1,20 +1,18 @@
 <template>
-    <ShiftSettingsHeader :title="$t('Shift preset groups')">
+    <ShiftSettingsHeader
+        :title="$t('Shift preset groups')"
+        :description="$t('Groups that collect multiple time presets')"
+    >
+        <template #actions>
+            <BaseUIButton
+                @click="openCreateModal"
+                :label="$t('New group')"
+                is-add-button
+            />
+        </template>
+
         <div class="rounded-2xl border border-zinc-200/70 bg-white/85 backdrop-blur px-5 py-5 shadow-sm">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <BasePageTitle
-                    :title="$t('Shift preset groups')"
-                    :description="$t('Groups that collect multiple time presets')"
-                />
-
-                <BaseUIButton
-                    @click="openCreateModal"
-                    :label="$t('New group')"
-                    is-add-button
-                />
-            </div>
-
-            <div class="mt-5">
+            <div>
                 <TransitionGroup v-if="groups?.length" name="list" tag="ul" class="space-y-2">
                     <li
                         v-for="g in groups"
@@ -123,7 +121,6 @@ import {router} from "@inertiajs/vue3";
 
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";

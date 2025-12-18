@@ -39,7 +39,7 @@
         </div>
 
         <!-- Footer: Avatars + Dates -->
-        <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
             <!-- Assignees -->
             <div class="flex items-center">
                 <ul class="flex -space-x-3">
@@ -60,9 +60,9 @@
                 <div class="flex items-center justify-end gap-2 text-xs">
                     <!-- Open / deadline -->
                     <template v-if="!localTaskDone">
-                        <IconCalendar class="h-4 w-4" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
+                        <IconCalendar class="h-6 w-6" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
                         <span
-                            class="rounded-md px-1.5 py-0.5 text-[10px]"
+                            class="rounded-md px-1.5 py-0.5 text-sm"
                             :class="isOverdue ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700'"
                         >
                           {{ task.formatted_dates?.deadline }}
@@ -71,16 +71,17 @@
 
                     <!-- Done / done_at -->
                     <template v-else>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center">
+                            <div class="flex">
                             <UserPopoverTooltip
                                 v-if="task.done_by_user"
                                 :user="task.done_by_user"
                                 :id="`${task.id}-doneby`"
-                                height="4"
-                                width="4"
+                                height="6"
+                                width="6"
                             />
-                            <IconCalendar class="h-4 w-4 text-zinc-400" />
-                            <span class="text-[10px] text-zinc-600">{{ task.formatted_dates?.done_at }}</span>
+                            <span class="text-sm text-zinc-600">{{ task.formatted_dates?.done_at }}</span>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -109,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import AddEditTaskModal from '@/Components/Checklist/Modals/AddEditTaskModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
@@ -151,6 +152,13 @@ const props = defineProps<{
 // Local state derived from props to keep checkbox snappy
 const localTaskDone = ref<boolean>(!!props.task.done)
 
+watch(
+    () => props.task.done,
+    (isDone) => {
+        localTaskDone.value = !!isDone
+    }
+)
+
 // Ids for a11y
 const titleId = `task-title-${props.task.id}`
 const checkboxId = `task-checkbox-${props.task.id}`
@@ -185,10 +193,6 @@ const updateTaskStatus = () => {
             preserveState: true,
             onError: () => {
                 // rollback UI on error
-                localTaskDone.value = !!props.task.done
-            },
-            onSuccess: () => {
-                // sync to prop after server updated page state
                 localTaskDone.value = !!props.task.done
             },
         }

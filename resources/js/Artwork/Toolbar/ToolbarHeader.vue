@@ -24,14 +24,19 @@
 
                 <!-- Quick-Search (Icon -> Input) -->
                 <div v-if="searchEnabled" class="relative flex items-center gap-2">
-                    <button
+                    <!-- Wichtig: kein <button> um ToolTipComponent herum, da ToolTipComponent selbst ein <button> rendert (sonst verschachtelte Buttons) -->
+                    <div
                         v-if="!showSearchbar"
-                        @click="openSearchbar"
-                        type="button"
+                        class="inline-flex"
+                        role="button"
+                        tabindex="0"
                         aria-label="Search"
+                        @click="openSearchbar"
+                        @keydown.enter.prevent="openSearchbar"
+                        @keydown.space.prevent="openSearchbar"
                     >
                         <ToolTipComponent :icon="IconSearch" icon-size="size-5" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
-                    </button>
+                    </div>
 
                     <div v-else class="w-72 sm:w-96 flex items-center justify-end gap-2">
                         <BaseInput
@@ -39,6 +44,7 @@
                             ref="searchBarInput"
                             :id="searchInputId"
                             :label="searchLabel"
+                            :placeholder="searchPlaceholder"
                             :model-value="modelValue"
                             @update:model-value="$emit('update:modelValue', $event)"
                         />
@@ -63,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 
 // Externe UI/Icons aus deinem Projekt
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
@@ -80,6 +86,7 @@ const props = defineProps<{
     searchEnabled?: boolean  // Quick-Search anzeigen?
     modelValue?: string      // v-model für die Suche
     searchLabel?: string
+    searchPlaceholder?: string
     searchTooltip?: string
     searchInputId?: string
 }>()
@@ -91,26 +98,41 @@ const emit = defineEmits<{
 }>()
 
 const showSearchbar = ref(false)
-const searchBarInput = ref<HTMLInputElement | null>(null)
+const searchBarInput = ref<{ focus?: () => void; select?: () => void } | null>(null)
 
 const icon = props.icon ?? null
 const iconBgClass = props.iconBgClass ?? 'bg-blue-600/10 text-blue-700'
 const searchInputId = props.searchInputId ?? 'toolbar-search'
 const searchLabel = props.searchLabel ?? 'Search'
+const searchPlaceholder = props.searchPlaceholder ?? ''
 const searchTooltip = props.searchTooltip ?? 'Search'
 const searchEnabled = props.searchEnabled ?? true
 
 function openSearchbar() {
     showSearchbar.value = true
-    nextTick(() => {
-        // Fokus ins Input, falls vorhanden
-        (searchBarInput.value as any)?.focus?.()
-    })
     emit('search-opened')
 }
 
+function focusSearchInput() {
+    // nextTick reicht oft, aber durch Tooltips/Overlays/DOM-Reflow kann der Fokus sonst „verloren“ gehen.
+    nextTick(() => {
+        requestAnimationFrame(() => {
+            searchBarInput.value?.focus?.()
+            // Optional: direkt selektieren, falls schon Text drin ist
+            searchBarInput.value?.select?.()
+        })
+    })
+}
+
+watch(showSearchbar, (isOpen) => {
+    if (isOpen) focusSearchInput()
+})
+
 function closeSearchbar() {
     showSearchbar.value = false
+    // Beim Schließen über das äußere X ebenfalls den Suchstring leeren,
+    // damit die Eltern-Komponente wieder die vollständige Liste lädt.
+    emit('update:modelValue', '')
     emit('search-closed')
 }
 

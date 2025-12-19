@@ -70,7 +70,7 @@
 
                     // -> Hervorhebung bei >2 Terminen (nur wenn nicht expand_days):
                     (!settings.expand_days && eventsCount(day, room) > 1)
-                      ? 'ring-2 ring-blue-300'                  // klarer, ohne Schatten
+                      ? 'ring-2 ring-blue-300 rounded-lg'                  // klarer, ohne Schatten
                       : ''
                   ]"
                                         >

@@ -26,11 +26,25 @@
                                     <li>
                                         <ul role="list" class="-mx-2 space-y-1">
                                             <li v-for="item in navigation" :key="item.name">
-                                                <div v-if="item.has_permission">
-                                                    <a v-if="!item.isMenu" :href="item.href" :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
+                                                <div v-if="item.has_permission && (!item.isMenu || getVisibleSubMenus(item).length !== 0)">
+                                                    <a
+                                                        v-if="!item.isMenu"
+                                                        :href="item.href"
+                                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
+                                                    >
                                                         <PropertyIcon :name="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
                                                         {{ $t(item.name) }}
                                                     </a>
+
+                                                    <a
+                                                        v-else-if="getSingleVisibleSubMenu(item)"
+                                                        :href="getSingleVisibleSubMenu(item).href"
+                                                        :class="[(getSingleVisibleSubMenu(item).current) ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
+                                                    >
+                                                        <PropertyIcon :name="item.icon" :class="[(getSingleVisibleSubMenu(item).current) ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
+                                                        {{ $t(item.name) }}
+                                                    </a>
+
                                                     <div v-else>
                                                         <div class="text-gray-700 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold">
                                                             <PropertyIcon :name="item.icon" class="text-gray-400 size-6 shrink-0" aria-hidden="true" />
@@ -130,8 +144,41 @@
                                 </Link>
 
                                 <!-- Menü-Eintrag -->
-                                <div v-else-if="item.has_permission" class="w-full">
+                                <div v-else-if="item.has_permission && getVisibleSubMenus(item).length !== 0" class="w-full">
+                                    <Link
+                                        v-if="getSingleVisibleSubMenu(item)"
+                                        :href="getSingleVisibleSubMenu(item).href"
+                                        :prefetch="item.prefetch"
+                                        :aria-current="getSingleVisibleSubMenu(item).current ? 'page' : undefined"
+                                        :class="[
+                                          'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                          isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                          getSingleVisibleSubMenu(item).current
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                        ]"
+                                    >
+                                        <ToolTipComponent
+                                            v-if="!isFullSideBar"
+                                            :icon="item.icon"
+                                            :tooltip-text="$t(item.name)"
+                                            direction="right"
+                                            classes-button="flex items-center justify-center"
+                                            white-icon
+                                            icon-size="size-6"
+                                        />
+                                        <PropertyIcon
+                                            v-else
+                                            :name="item.icon"
+                                            :stroke-width="1.5"
+                                            class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                            aria-hidden="true"
+                                        />
+                                        <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                    </Link>
+
                                     <div
+                                        v-else
                                         :class="[
                                         'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
                                         isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
@@ -423,6 +470,23 @@ const computedBudgetRoute = computed(() => {
 
 const moduleIsVisible = (module) => {
     return is('artwork admin') || usePage().props.module_settings[module];
+}
+
+const getVisibleSubMenus = (item) => {
+    if (!item?.subMenus?.length) {
+        return []
+    }
+
+    return item.subMenus.filter((subMenu) => subMenu.has_permission)
+}
+
+const getSingleVisibleSubMenu = (item) => {
+    if (!item?.isMenu) {
+        return null
+    }
+
+    const visible = getVisibleSubMenus(item)
+    return visible.length === 1 ? visible[0] : null
 }
 
 

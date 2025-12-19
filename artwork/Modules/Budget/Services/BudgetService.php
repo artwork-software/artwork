@@ -4,6 +4,8 @@ namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\DTOs\MatchRelevantProjectGroupDTO;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
+use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -128,12 +130,14 @@ class BudgetService
 
             $costSubPositionRow = $costSubPosition->subPositionRows()->create([
                 'commented' => false,
-                'position' => $costSubPosition->subPositionRows()->max('position') + 1
+                'position' => $costSubPosition->subPositionRows()->max('position') + 1,
+                'order' => $costSubPosition->subPositionRows()->max('order') + 1,
             ]);
 
             $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
                 'commented' => false,
-                'position' => $earningSubPosition->subPositionRows()->max('position') + 1
+                'position' => $earningSubPosition->subPositionRows()->max('position') + 1,
+                'order' => $earningSubPosition->subPositionRows()->max('order') + 1,
 
             ]);
 
@@ -406,7 +410,7 @@ class BudgetService
         $loadedProjectInformation['BudgetTab'] = [
             'moneySources' => MoneySource::all(),
             'budget' => [
-                'table' => $project->table()
+                'table' => ($table = $project->table()
                     ->with([
                         'columns' => function (HasMany $query): void {
                             $query->orderBy('position');
@@ -419,7 +423,7 @@ class BudgetService
                         },
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
-                            return $query->orderBy('position');
+                            return $query->orderBy('order')->orderBy('id');
                         },
                         'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
                             $query
@@ -454,7 +458,7 @@ class BudgetService
                         },
                         'mainPositions.subPositions.subPositionRows.cells.column',
                     ])
-                    ->first(),
+                    ->first()),
                 'selectedCell' => $selectedCell?->load([
                     'calculations' => function ($calculations): void {
                         $calculations->orderBy('position', 'asc');
@@ -485,7 +489,175 @@ class BudgetService
             'projectGroupRelevantBudgetData' => $groupedProjectData
         ];
 
+        $this->enrichAccountManagementDisplayValues($table);
+        $this->enrichProjectGroupSubprojectsColumnValues($table, $groupedProjectData);
+
         return $loadedProjectInformation;
+    }
+
+    /**
+     * Für KTO/KST (erste zwei Spalten) sollen weiterhin die Nummern in `value` gespeichert bleiben,
+     * aber im Frontend der Klartext-Name angezeigt werden.
+     *
+     * Daher reichern wir die geladenen Zellen nur für die Ausgabe mit einem nicht-persistierten
+     * Attribut `display_value` an.
+     */
+    private function enrichAccountManagementDisplayValues(?Table $table): void
+    {
+        if (!$table) {
+            return;
+        }
+
+        $columns = $table->columns?->sortBy('position')->values() ?? collect();
+        if ($columns->count() < 2) {
+            return;
+        }
+
+        $ktoColumnId = $columns->get(0)?->id;
+        $kstColumnId = $columns->get(1)?->id;
+
+        if (!$ktoColumnId || !$kstColumnId) {
+            return;
+        }
+
+        $ktoValues = [];
+        $kstValues = [];
+
+        foreach ($table->mainPositions ?? [] as $mainPosition) {
+            foreach ($mainPosition->subPositions ?? [] as $subPosition) {
+                foreach ($subPosition->subPositionRows ?? [] as $row) {
+                    foreach ($row->cells ?? [] as $cell) {
+                        $rawValue = trim((string) ($cell->value ?? ''));
+                        if ($rawValue === '') {
+                            continue;
+                        }
+
+                        if ((int) $cell->column_id === (int) $ktoColumnId) {
+                            $ktoValues[] = $rawValue;
+                        } elseif ((int) $cell->column_id === (int) $kstColumnId) {
+                            $kstValues[] = $rawValue;
+                        }
+                    }
+                }
+            }
+        }
+
+        $ktoValues = array_values(array_unique($ktoValues));
+        $kstValues = array_values(array_unique($kstValues));
+
+        $accountTitlesByNumber = empty($ktoValues)
+            ? collect()
+            : BudgetManagementAccount::query()
+                ->whereIn('account_number', $ktoValues)
+                ->get(['account_number', 'title'])
+                ->pluck('title', 'account_number');
+
+        $costUnitTitlesByNumber = empty($kstValues)
+            ? collect()
+            : BudgetManagementCostUnit::query()
+                ->whereIn('cost_unit_number', $kstValues)
+                ->get(['cost_unit_number', 'title'])
+                ->pluck('title', 'cost_unit_number');
+
+        foreach ($table->mainPositions ?? [] as $mainPosition) {
+            foreach ($mainPosition->subPositions ?? [] as $subPosition) {
+                foreach ($subPosition->subPositionRows ?? [] as $row) {
+                    foreach ($row->cells ?? [] as $cell) {
+                        $rawValue = trim((string) ($cell->value ?? ''));
+                        if ($rawValue === '') {
+                            continue;
+                        }
+
+                        if ((int) $cell->column_id === (int) $ktoColumnId) {
+                            $cell->setAttribute('display_value', $accountTitlesByNumber->get($rawValue));
+                        } elseif ((int) $cell->column_id === (int) $kstColumnId) {
+                            $cell->setAttribute('display_value', $costUnitTitlesByNumber->get($rawValue));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Projektgruppen-Funktionalität: In der Spalte "Unterprojekte" (Typ `subprojects_column_for_group`)
+     * soll pro Gruppen-Zeile die Summe aller relevanten Werte aus den Unterprojekten angezeigt werden,
+     * die dieselbe KTO/KST-Kombination besitzen.
+     *
+     * Das Frontend berechnet diese Summe grundsätzlich aus `projectGroupRelevantBudgetData`.
+     * Da es in der Praxis jedoch vorkam, dass dort nicht korrekt gefiltert werden kann (Anzeige 0),
+     * reichern wir zusätzlich den Zellwert der Unterprojekte-Spalte in der Response an.
+     *
+     * Wichtig: Wir persistieren diese Summen NICHT in der DB, sondern setzen nur den Wert am geladenen
+     * Model für die Ausgabe.
+     *
+     * @param array<string, array<int, MatchRelevantProjectGroupDTO>> $groupedProjectData
+     */
+    private function enrichProjectGroupSubprojectsColumnValues(?Table $table, array $groupedProjectData): void
+    {
+        if (!$table) {
+            return;
+        }
+
+        // Unterprojekte-Spalte ermitteln
+        $subprojectsColumnId = $table->columns
+            ?->firstWhere('type', 'subprojects_column_for_group')
+            ?->id;
+
+        if (!$subprojectsColumnId) {
+            return;
+        }
+
+        // Summe pro Gruppen-Zeile (groupRowId) aggregieren
+        $sumByGroupRowId = [];
+
+        foreach ($groupedProjectData as $typeEntries) {
+            foreach ($typeEntries as $dto) {
+                if (!$dto instanceof MatchRelevantProjectGroupDTO) {
+                    continue;
+                }
+
+                $groupRowId = (int) $dto->groupRowId;
+                $raw = str_replace(',', '.', (string) ($dto->value ?? '0'));
+                $raw = $raw === '' ? '0' : $raw;
+
+                $sumByGroupRowId[$groupRowId] = bcadd($sumByGroupRowId[$groupRowId] ?? '0', $raw, 2);
+            }
+        }
+
+        if (empty($sumByGroupRowId)) {
+            return;
+        }
+
+        // Werte in die geladenen Zellen schreiben (Response-only)
+        foreach ($table->mainPositions ?? [] as $mainPosition) {
+            foreach ($mainPosition->subPositions ?? [] as $subPosition) {
+                foreach ($subPosition->subPositionRows ?? [] as $row) {
+                    $rowId = (int) $row->id;
+                    if (!isset($sumByGroupRowId[$rowId])) {
+                        continue;
+                    }
+
+                    $sum = $sumByGroupRowId[$rowId]; // string mit '.' als Dezimaltrenner
+                    $sumForFrontend = str_replace('.', ',', $sum);
+
+                    $cell = $row->cells?->firstWhere('column_id', $subprojectsColumnId);
+                    if ($cell) {
+                        $cell->value = $sumForFrontend;
+                    } else {
+                        // Falls die Zelle nicht existiert (z.B. frisch hinzugefügte Spalte), fügen wir sie nur
+                        // für die Response hinzu.
+                        $virtualCell = new ColumnCell([
+                            'column_id' => $subprojectsColumnId,
+                            'sub_position_row_id' => $row->id,
+                            'value' => $sumForFrontend,
+                            'commented' => false,
+                        ]);
+                        $row->cells?->push($virtualCell);
+                    }
+                }
+            }
+        }
     }
 
 

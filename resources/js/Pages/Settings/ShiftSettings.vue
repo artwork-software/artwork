@@ -603,6 +603,13 @@ export default defineComponent({
                     current: route().current('shift-rules.index'),
                     show: true,
                     icon: 'IconGavel'
+                },
+                {
+                    name: this.$t('Shift preset groups'),
+                    href: route('shift-preset-groups.index'),
+                    current: route().current('shift-preset-groups.index'),
+                    show: true,
+                    icon: 'IconLayers' // vorhandenes Icon-Set verwenden
                 }
             ]
         }

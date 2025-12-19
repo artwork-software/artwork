@@ -4,8 +4,48 @@
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <!-- Date Shortcuts - 3 vertical icons -->
-
+                    <div class="flex items-center ">
+                        <ToolTipComponent
+                            v-if="!dailyView"
+                            direction="bottom"
+                            :tooltip-text="$t('Time range back')"
+                            :icon="IconChevronLeft"
+                            icon-size="h-5 w-5 text-primary"
+                            @click="previousTimeRange"
+                            classesButton="ui-button"
+                        />
+                        <ToolTipComponent
+                            v-else
+                            direction="bottom"
+                            :tooltip-text="$t('Time range back')"
+                            :icon="IconChevronLeft"
+                            icon-size="h-5 w-5 text-primary"
+                            @click="previousDay"
+                            classesButton="ui-button"
+                        />
+                    </div>
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
+                    <div class="flex items-center">
+                        <ToolTipComponent
+                            v-if="!dailyView"
+                            direction="bottom"
+                            :tooltip-text="$t('Time range forward')"
+                            :icon="IconChevronRight"
+                            icon-size="h-5 w-5 text-primary"
+                            @click="nextTimeRange"
+                            classesButton="ui-button"
+                        />
+                        <ToolTipComponent
+                            v-else
+                            direction="bottom"
+                            :tooltip-text="$t('Time range forward')"
+                            :icon="IconChevronRight"
+                            icon-size="h-5 w-5 text-primary"
+                            @click="nextDay"
+                            classesButton="ui-button"
+                        />
+
+                    </div>
                     <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
                             direction="right"
@@ -32,21 +72,7 @@
                             classesButton="ui-button"
                         />
                     </div>
-                    <div class="flex items-center">
-                        <button v-if="!dailyView" class="ml-2 text-black previousTimeRange cursor-pointer" @click="previousTimeRange">
-                            <IconChevronLeft class="h-5 w-5 text-primary"/>
-                        </button>
-                        <button v-else class="ml-2 text-black previousTimeRange cursor-pointer" @click="previousDay">
-                            <IconChevronLeft class="h-5 w-5 text-primary"/>
-                        </button>
-                        <button v-if="!dailyView" class="ml-2 text-black nextTimeRange cursor-pointer" @click="nextTimeRange">
-                            <IconChevronRight class="h-5 w-5 text-primary"/>
-                        </button>
-                        <button v-else class="ml-2 text-black nextTimeRange cursor-pointer" @click="nextDay">
-                            <IconChevronRight class="h-5 w-5 text-primary"/>
-                        </button>
 
-                    </div>
                     <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>

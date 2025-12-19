@@ -103,7 +103,13 @@ class ProjectService
                 ->when(
                     strlen($search) > 0,
                     function (Builder $builder) use ($search): void {
-                        $builder->where('name', 'like', '%' . $search . '%');
+                        $builder->where(function (Builder $query) use ($search): void {
+                            $like = '%' . $search . '%';
+
+                            $query
+                                ->where('name', 'like', $like)
+                                ->orWhere('artists', 'like', $like);
+                        });
                     }
                 )
                 ->when(

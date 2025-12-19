@@ -81,7 +81,8 @@ test('view shiftplan with freelancer', function (Freelancer $freelancer) {
 test('views dashboard', function () {
     $response = $this->get(route('dashboard'));
     $response->assertInertia(fn(AssertableInertia $page) => $page
-        ->component('Dashboard'));
+        ->component('Dashboard')
+        ->has('individualTimesOfDay'));
 });
 
 test('views dashboard with tasks', function (Task $task) {

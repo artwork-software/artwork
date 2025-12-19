@@ -901,6 +901,22 @@ function formatDate(date, time, toUTC = true) {
     // Wenn lokales ISO ohne Z erwartet wird -> return isoLocal
     return toUTC ? d.toISOString() : isoLocal
 }
+
+function normalizeDateInput(raw) {
+    if (!raw) return null
+    // BaseInput (type=date) liefert normalerweise "YYYY-MM-DD".
+    // Falls doch mal ein Date-Objekt oder ISO-String reinkommt: robust normalisieren.
+    if (raw instanceof Date) {
+        const d = dayjs(raw)
+        return d.isValid() ? d.format('YYYY-MM-DD') : null
+    }
+    const s = String(raw).trim()
+    // Wenn bereits korrekt: direkt zurück
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+
+    const d = dayjs(s)
+    return d.isValid() ? d.format('YYYY-MM-DD') : null
+}
 async function checkCollisions() {
     if ((startTime.value && startDate.value && endTime.value && endDate.value) || (allDayEvent.value && startDate.value && endDate.value)) {
         const startFull = formatDate(startDate.value, startTime.value ?? '00:00')
@@ -948,13 +964,22 @@ function applyQuickDuration(minutes) {
 }
 
 function updateTimes() {
+    // Start-/Enddatum immer in das gleiche Format bringen wie bei manueller Eingabe
+    if (startDate.value) startDate.value = normalizeDateInput(startDate.value)
+    if (endDate.value) endDate.value = normalizeDateInput(endDate.value)
+
+    // Enddatum soll beim Anlegen automatisch dem Startdatum folgen,
+    // solange das Ende nicht manuell geändert wurde.
+    if (startDate.value && (!endDate.value || endAutoFilled.value)) {
+        endDate.value = startDate.value
+        endAutoFilled.value = true
+    }
+
     if (startDate.value && startTime.value) {
         // Endzeit nur setzen, wenn leer ODER zuletzt auto-gefüllt
         if (!endTime.value || endAutoFilled.value) {
             setEndFromDuration()
         }
-        // Falls Enddatum noch leer ist (z. B. initial), auf Startdatum setzen
-        if (!endDate.value) endDate.value = startDate.value
     }
 
     validateStartBeforeEndTime()

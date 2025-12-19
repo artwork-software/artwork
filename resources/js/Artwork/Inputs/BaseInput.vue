@@ -28,7 +28,7 @@
             @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
             @blur="maybeAutofillTime"
             @change="maybeAutofillTime"
-            @keydown.enter.prevent="maybeAutofillTime"
+            @keydown.enter="handleEnter"
         />
 
         <!-- Clear Button -->
@@ -94,6 +94,20 @@ const props = defineProps({
 
 /** Refs */
 const inputEl = ref(null)
+
+/**
+ * Ermöglicht Parent-Komponenten (z.B. ToolbarHeader) den Fokus auf das echte <input> zu setzen.
+ * Vue-Refs auf Komponenten zeigen sonst nur auf die Component-Instanz.
+ */
+function focus() {
+    inputEl.value?.focus?.()
+}
+
+function select() {
+    inputEl.value?.select?.()
+}
+
+defineExpose({ focus, select })
 
 /** Dichte */
 const density = computed(() => {
@@ -258,6 +272,14 @@ function maybeAutofillTime(e) {
         if (inputEl?.value) inputEl.value.value = next
         model.value = next
     }
+}
+
+function handleEnter(e) {
+    // Nur bei Time-Inputs Enter abfangen, um zuerst zu normalisieren.
+    // Bei normalen Inputs soll Enter das native Form-Submit auslösen können.
+    if (!isTime.value) return
+    e?.preventDefault?.()
+    maybeAutofillTime(e)
 }
 
 /** Clear-Handler: Wert leeren und blur explizit auslösen (Firefox-Fix) */

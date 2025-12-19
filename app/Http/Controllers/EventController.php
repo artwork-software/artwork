@@ -62,6 +62,7 @@ use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftPresetGroup;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftGroupService;
@@ -703,6 +704,27 @@ class EventController extends Controller
             ),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
+            'shiftGroupPresets' => ShiftPresetGroup::query()
+                ->select(['id', 'name'])
+                ->withCount('presets')
+                ->with([
+                    'presets' => function ($q) {
+                        $q->select([
+                            'single_shift_presets.id',
+                            'single_shift_presets.name',
+                            'single_shift_presets.start_time',
+                            'single_shift_presets.end_time',
+                            'single_shift_presets.break_duration',
+                            'single_shift_presets.craft_id',
+                            'single_shift_presets.description',
+                        ])->with([
+                            'craft:id,name,abbreviation,color',
+                            'shiftsQualifications:id,name,icon,available', // pivot(quantity) kommt automatisch mit
+                        ]);
+                    }
+                ])
+                ->orderBy('name')
+                ->get(),
             'calendarWarningText' => $calendarWarningText,
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
@@ -774,12 +796,23 @@ class EventController extends Controller
         $user = Auth::user();
 
         $now = $carbonService->getNow();
+        $today = $now->format('Y-m-d');
         $shiftsOfDay = $user
             ->shifts()
             ->whereDate(
                 'shifts.start_date',
-                $now->format('Y-m-d')
+                $today
             )->with(['event','event.project','event.room', 'event.event_type'])->get();
+
+        $individualTimesOfDay = $user
+            ->individualTimes()
+            ->whereDate('start_date', '<=', $today)
+            ->where(function (Builder $query) use ($today): void {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $today);
+            })
+            ->with(['series'])
+            ->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
@@ -847,6 +880,7 @@ class EventController extends Controller
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
             'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $now)->get(),
             'shiftsOfDay' => $shiftsOfDay,
+            'individualTimesOfDay' => $individualTimesOfDay,
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),

@@ -35,7 +35,7 @@
         "lodash.debounce": "^4.0.8",
         "mathjax": "4.0.0",
         "primevue": "^4.4.1",
-        "puppeteer": "^24.26.1",
+        "puppeteer": "^24.33.1",
         "vite-plugin-compression": "^0.5.1",
         "vue": "^3.5.22",
         "vue-cal": "^4.8.1",

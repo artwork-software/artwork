@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $sub_position_id
  * @property int $position
+ * @property int $order
  * @property bool $commented
  * @property SubPosition $subPosition
  * @property Collection<ColumnCell> $cells
@@ -28,7 +29,8 @@ class SubPositionRow extends Model
     protected $fillable = [
         'sub_position_id',
         'commented',
-        'position'
+        'position',
+        'order',
     ];
 
     protected $casts = [

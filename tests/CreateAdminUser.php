@@ -5,7 +5,7 @@ namespace Tests;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
-use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserCalendarSettings;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Spatie\Permission\Models\Role;
 

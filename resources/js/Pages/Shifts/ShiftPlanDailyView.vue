@@ -81,6 +81,16 @@
                             :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_filter'"
                         />
 
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Export Shift Plan as PDF')"
+                            :icon="IconFileExport"
+                            icon-size="h-5 w-5"
+                            @click="openExportDailyProjectShiftPlanModal = true"
+                            v-if="isInProjectView"
+                            classesButton="ui-button"
+                        />
+
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
@@ -114,7 +124,7 @@
                         </div>
 
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="card glassy p-4 w-full relative pb-28 md:pb-32">
+                            <div class="p-4 w-full relative pb-28 md:pb-32">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
                                     :events="getEventsForRoomDay(room, day.fullDay)"
@@ -174,6 +184,12 @@
                 :is-planning="isPlanning"
                 :wanted-date="wantedDate"
             />
+
+            <ExportDailyProjectShiftPlanModal
+                v-if="openExportDailyProjectShiftPlanModal"
+                @close="openExportDailyProjectShiftPlanModal = false"
+                :project="props.project"
+            />
         </component>
     </div>
 </template>
@@ -191,7 +207,7 @@ import {
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
-    IconX,
+    IconX, IconFileExport,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -201,6 +217,7 @@ import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import { is } from "laravel-permission-to-vuejs";
+import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
 
 type AnyRoom = any
 type AnyEvent = any
@@ -304,6 +321,7 @@ const shiftToEdit = ref(null)
 const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
+const openExportDailyProjectShiftPlanModal = ref(false)
 
 const eventToEdit = ref<any | boolean>(false)
 const wantedRoom = ref<number | null>(null)
@@ -652,7 +670,7 @@ function formatDate(dateLike: any) {
  * Sticky / Toolbar height
  */
 const topBarContainerClass = computed(() => {
-    if (props.project) return "w-full sticky top-0 z-40 px-3 pt-2 pb-0 bg-white"
+    if (props.project) return "w-full sticky top-0 z-40 px-3 pt-2 pb-2 bg-white"
     return "card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
 })
 
@@ -692,6 +710,8 @@ onUnmounted(() => {
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)
 })
+
+
 
 const dayHeaderStyle = computed(() => ({
     top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`,

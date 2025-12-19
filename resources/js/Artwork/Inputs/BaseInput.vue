@@ -28,7 +28,7 @@
             @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
             @blur="maybeAutofillTime"
             @change="maybeAutofillTime"
-            @keydown.enter.prevent="maybeAutofillTime"
+            @keydown.enter="handleEnter"
         />
 
         <!-- Clear Button -->
@@ -258,6 +258,14 @@ function maybeAutofillTime(e) {
         if (inputEl?.value) inputEl.value.value = next
         model.value = next
     }
+}
+
+function handleEnter(e) {
+    // Nur bei Time-Inputs Enter abfangen, um zuerst zu normalisieren.
+    // Bei normalen Inputs soll Enter das native Form-Submit auslösen können.
+    if (!isTime.value) return
+    e?.preventDefault?.()
+    maybeAutofillTime(e)
 }
 
 /** Clear-Handler: Wert leeren und blur explizit auslösen (Firefox-Fix) */

@@ -43,6 +43,7 @@
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[0]"
                        @focusout="updateTimes"
+                       @keydown.enter.prevent="handleManualDateEnter"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -52,6 +53,7 @@
                 <input v-else
                        v-model="dateValue[0]"
                        @focusout="updateTimes"
+                       @keydown.enter.prevent="handleManualDateEnter"
                        ref="startDate"
                        id="startDate"
                        type="date"
@@ -69,6 +71,7 @@
                 <input v-if="is_user_shift_plan === true"
                        v-model="dateValue[1]"
                        @focusout="updateTimes"
+                       @keydown.enter.prevent="handleManualDateEnter"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -78,6 +81,7 @@
                 <input v-else
                        v-model="dateValue[1]"
                        @focusout="updateTimes"
+                       @keydown.enter.prevent="handleManualDateEnter"
                        ref="endDate"
                        id="endDate"
                        type="date"
@@ -337,6 +341,11 @@ function format(date) {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function handleManualDateEnter(e) {
+    // Soll sich verhalten wie ein Focus-Out: durch blur wird das bestehende @focusout="updateTimes" ausgelöst.
+    e?.target?.blur?.();
 }
 
 function updateTimes() {

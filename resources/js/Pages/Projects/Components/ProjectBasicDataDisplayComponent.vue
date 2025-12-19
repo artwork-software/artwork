@@ -48,8 +48,8 @@
                 <!-- state badge -->
                 <div v-else-if="row.type === 'state'" class="pt-0.5">
                     <span
-                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex"
-                        :class="row.value?.color ?? ''"
+                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex text-white"
+                        :style="{ backgroundColor: row.value?.color ?? undefined }"
                     >
                         {{ row.value?.name ?? '' }}
                     </span>
@@ -57,15 +57,18 @@
             </div>
         </div>
 
-        <ProjectDataEditModal
+        <ProjectCreateModal
             v-if="editingProject"
             :show="editingProject"
-            :project="project"
-            :group-projects="headerObject.groupProjects"
-            :current-group="headerObject.currentGroup"
+            :categories="categoriesForCreateModal"
+            :genres="genresForCreateModal"
+            :sectors="sectorsForCreateModal"
+            :project-groups="projectGroupsForCreateModal"
             :states="headerObject.states"
             :create-settings="createSettings"
-            @closed="closeEditProjectModal"
+            :project="project"
+            :selected-group="selectedGroupForCreateModal"
+            @close-create-project-modal="closeEditProjectModal"
         />
     </div>
 </template>
@@ -73,13 +76,13 @@
 <script>
 import {defineComponent} from 'vue';
 import {can, is} from 'laravel-permission-to-vuejs';
-import ProjectDataEditModal from '@/Layouts/Components/ProjectDataEditModal.vue';
+import ProjectCreateModal from '@/Layouts/Components/ProjectCreateModal.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import SidebarTagComponent from '@/Layouts/Components/SidebarTagComponent.vue';
 
 export default defineComponent({
     name: 'ProjectBasicDataDisplayComponent',
-    components: {SidebarTagComponent, PropertyIcon, ProjectDataEditModal},
+    components: {SidebarTagComponent, PropertyIcon, ProjectCreateModal},
     props: {
         project: {
             type: Object,
@@ -110,6 +113,22 @@ export default defineComponent({
             default: () => ([])
         },
         projectSectors: {
+            type: Array,
+            required: false,
+            default: () => ([])
+        },
+        // full option lists (for edit modal)
+        categories: {
+            type: Array,
+            required: false,
+            default: () => ([])
+        },
+        genres: {
+            type: Array,
+            required: false,
+            default: () => ([])
+        },
+        sectors: {
             type: Array,
             required: false,
             default: () => ([])
@@ -210,6 +229,24 @@ export default defineComponent({
             }
 
             return rows;
+        },
+
+        categoriesForCreateModal() {
+            return (this.categories?.length ? this.categories : this.projectCategories) ?? [];
+        },
+        genresForCreateModal() {
+            return (this.genres?.length ? this.genres : this.projectGenres) ?? [];
+        },
+        sectorsForCreateModal() {
+            return (this.sectors?.length ? this.sectors : this.projectSectors) ?? [];
+        },
+
+        projectGroupsForCreateModal() {
+            // Header-Objekte sind historisch nicht überall gleich benannt.
+            return this.headerObject?.projectGroups ?? this.headerObject?.groupProjects ?? [];
+        },
+        selectedGroupForCreateModal() {
+            return this.headerObject?.currentGroup ?? null;
         }
     },
     methods: {

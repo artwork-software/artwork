@@ -2367,9 +2367,12 @@ class ProjectController extends Controller
 
         $headerObject->projectsOfGroup     = $project->projectsOfGroup()->get();
 
-        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn ProjectAttributesComponent vorhanden (10-15% Reduktion)
+        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn nötig.
+        // Achtung: Auch ohne ProjectAttributesComponent können die Daten im Header (z.B. Projekt-Basisdaten-Modal)
+        // benötigt werden. Daher zusätzlich über die CreateSettings absichern.
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
-        if ($hasAttributesComponent) {
+        $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
+        if ($needsProjectAttributesData) {
             $headerObject->categories = $this->categoryService->getAll();
             $headerObject->genres = $this->genreService->getAll();
             $headerObject->sectors = $this->sectorService->getAll();

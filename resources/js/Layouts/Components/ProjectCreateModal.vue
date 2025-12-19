@@ -170,16 +170,16 @@
                                 </Menu>
                                 <div :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
                                     <TagComponent v-for="categoryId in createProjectForm.assignedCategoryIds" hide-x="true"
-                                                  :displayed-text="categories.find(category => category.id === categoryId).name"
-                                                  :property="categories.find(category => category.id === categoryId)"
+                                                  :displayed-text="categories?.find(category => category.id === categoryId)?.name ?? ''"
+                                                  :property="categories?.find(category => category.id === categoryId)"
                                     />
                                     <TagComponent v-for="genreId in createProjectForm.assignedGenreIds" hide-x="true"
-                                                  :displayed-text="genres.find(genre => genre.id === genreId).name"
-                                                  :property="genres.find(genre => genre.id === genreId)"
+                                                  :displayed-text="genres?.find(genre => genre.id === genreId)?.name ?? ''"
+                                                  :property="genres?.find(genre => genre.id === genreId)"
                                     />
                                     <TagComponent hide-x="true" v-for="sectorId in createProjectForm.assignedSectorIds"
-                                                      :displayed-text="sectors.find(sector => sector.id === sectorId).name"
-                                                      :property="sectors.find(sector => sector.id === sectorId)"
+                                                      :displayed-text="sectors?.find(sector => sector.id === sectorId)?.name ?? ''"
+                                                      :property="sectors?.find(sector => sector.id === sectorId)"
                                     />
                                 </div>
                             </div>
@@ -509,18 +509,18 @@
                         <div class="flex">
                             <div v-for="categoryId in createProjectForm.assignedCategoryIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="categories.find(category => category.id === categoryId).name"
-                                              :property="categories.find(category => category.id === categoryId)"></TagComponent>
+                                              :displayed-text="categories?.find(category => category.id === categoryId)?.name ?? ''"
+                                              :property="categories?.find(category => category.id === categoryId)"></TagComponent>
                             </div>
                             <div v-for="genreId in createProjectForm.assignedGenreIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="genres.find(genre => genre.id === genreId).name"
-                                              :property="genres.find(genre => genre.id === genreId)"></TagComponent>
+                                              :displayed-text="genres?.find(genre => genre.id === genreId)?.name ?? ''"
+                                              :property="genres?.find(genre => genre.id === genreId)"></TagComponent>
                             </div>
                             <div v-for="sectorId in createProjectForm.assignedSectorIds">
                                 <TagComponent hide-x="true"
-                                              :displayed-text="sectors.find(sector => sector.id === sectorId).name"
-                                              :property="sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                              :displayed-text="sectors?.find(sector => sector.id === sectorId)?.name ?? ''"
+                                              :property="sectors?.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
                         <div class="mb-2">

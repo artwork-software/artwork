@@ -359,17 +359,15 @@
                                 <span class="muted">Zeitraum:</span>
                                 <strong>{{ $firstDate ?? '—' }}</strong>–<strong>{{ $lastDate ?? '—' }}</strong>
                             @endif
-
-                            @if(($created_by['name'] ?? '') !== '' && !$privacyMode)
-                                <span class="sep">•</span>
-                                <span class="muted">Von:</span> <strong>{{ $created_by['name'] }}</strong>
-                            @endif
                         </div>
                     </div>
 
                     <div class="hdrR">
                         <div class="exportMini">
                             <div class="exportMiniTop">Export</div>
+                            @if(($created_by['name'] ?? '') !== '' && !$privacyMode)
+                                <span class="muted">Von:</span> <strong>{{ $created_by['name'] }}</strong>
+                            @endif
                             <div class="exportMiniTime">{{ $meta['exportedAt']->format('d.m.Y H:i') }}</div>
                         </div>
                     </div>

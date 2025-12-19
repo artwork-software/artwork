@@ -25,8 +25,34 @@
                 >
                     {{ row.label }}
                 </div>
-                <div :class="inSidebar ? 'text-white text-sm' : 'text-primaryText text-sm'">
+
+                <!-- default value rendering -->
+                <div
+                    v-if="row.type === 'text'"
+                    :class="inSidebar ? 'text-white text-sm' : 'text-primaryText text-sm'"
+                >
                     {{ row.value }}
+                </div>
+
+                <!-- properties badges -->
+                <div v-else-if="row.type === 'properties'" class="flex flex-wrap gap-1.5 pt-0.5">
+                    <SidebarTagComponent
+                        v-for="property in row.value"
+                        :key="property.key"
+                        :item="property"
+                        :property="property"
+                        :hide-x="true"
+                    />
+                </div>
+
+                <!-- state badge -->
+                <div v-else-if="row.type === 'state'" class="pt-0.5">
+                    <span
+                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex"
+                        :class="row.value?.color ?? ''"
+                    >
+                        {{ row.value?.name ?? '' }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -49,10 +75,11 @@ import {defineComponent} from 'vue';
 import {can, is} from 'laravel-permission-to-vuejs';
 import ProjectDataEditModal from '@/Layouts/Components/ProjectDataEditModal.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
+import SidebarTagComponent from '@/Layouts/Components/SidebarTagComponent.vue';
 
 export default defineComponent({
     name: 'ProjectBasicDataDisplayComponent',
-    components: {PropertyIcon, ProjectDataEditModal},
+    components: {SidebarTagComponent, PropertyIcon, ProjectDataEditModal},
     props: {
         project: {
             type: Object,
@@ -104,14 +131,26 @@ export default defineComponent({
                 this.headerObject.projectWriteIds?.includes(userId)
             );
         },
-        propertiesString() {
-            const names = [
-                ...(this.projectCategories ?? []).map((c) => c?.name).filter(Boolean),
-                ...(this.projectGenres ?? []).map((g) => g?.name).filter(Boolean),
-                ...(this.projectSectors ?? []).map((s) => s?.name).filter(Boolean),
-            ];
+        propertiesBadges() {
+            const toBadge = (item, type) => {
+                const name = item?.name;
+                if (!name) {
+                    return null;
+                }
 
-            return names.join(', ');
+                return {
+                    ...item,
+                    key: `${type}-${item?.id ?? name}`,
+                    name,
+                    color: item?.color ? item.color : '#ffffff'
+                };
+            };
+
+            return [
+                ...(this.projectCategories ?? []).map((c) => toBadge(c, 'category')),
+                ...(this.projectGenres ?? []).map((g) => toBadge(g, 'genre')),
+                ...(this.projectSectors ?? []).map((s) => toBadge(s, 'sector')),
+            ].filter(Boolean);
         },
         rows() {
             const rows = [];
@@ -120,6 +159,7 @@ export default defineComponent({
                 rows.push({
                     key: 'name',
                     label: this.$t('Project name'),
+                    type: 'text',
                     value: this.project.name
                 });
             }
@@ -128,15 +168,17 @@ export default defineComponent({
                 rows.push({
                     key: 'artists',
                     label: this.$t('Artists'),
+                    type: 'text',
                     value: this.project.artists
                 });
             }
 
-            if (this.propertiesString) {
+            if (this.propertiesBadges.length) {
                 rows.push({
                     key: 'properties',
                     label: this.$t('Project properties'),
-                    value: this.propertiesString
+                    type: 'properties',
+                    value: this.propertiesBadges
                 });
             }
 
@@ -144,7 +186,8 @@ export default defineComponent({
                 rows.push({
                     key: 'state',
                     label: this.$t('Project status'),
-                    value: this.project.state.name
+                    type: 'state',
+                    value: this.project.state
                 });
             }
 
@@ -152,6 +195,7 @@ export default defineComponent({
                 rows.push({
                     key: 'cost_center',
                     label: this.$t('Name of the cost unit'),
+                    type: 'text',
                     value: this.project.cost_center.name
                 });
             }
@@ -160,7 +204,8 @@ export default defineComponent({
                 rows.push({
                     key: 'budget_deadline',
                     label: this.$t('Budget deadline'),
-                    value: this.project.budget_deadline
+                    type: 'text',
+                    value: this.formatDate(this.project.budget_deadline)
                 });
             }
 
@@ -168,6 +213,30 @@ export default defineComponent({
         }
     },
     methods: {
+        formatDate(dateValue) {
+            if (!dateValue) {
+                return '';
+            }
+
+            // Most project dates come as `YYYY-MM-DD` from backend.
+            if (typeof dateValue === 'string') {
+                const m = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m) {
+                    return `${m[3]}.${m[2]}.${m[1]}`;
+                }
+            }
+
+            const parsed = new Date(dateValue);
+            if (Number.isNaN(parsed.getTime())) {
+                return String(dateValue);
+            }
+
+            return new Intl.DateTimeFormat('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(parsed);
+        },
         openEditProjectModal() {
             this.editingProject = true;
         },

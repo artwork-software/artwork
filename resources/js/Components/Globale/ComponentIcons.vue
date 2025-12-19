@@ -51,6 +51,8 @@ export default {
     <PropertyIcon name="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
     <PropertyIcon name="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
     <PropertyIcon name="IconLink" class="w-6 h-6" v-if="type === 'Link'" />
+    <PropertyIcon name="IconInfoSquare" class="w-6 h-6" v-if="type === 'ProjectBasicDataDisplayComponent'" />
+    <PropertyIcon name="IconPackage" class="w-6 h-6" v-if="type === 'ProjectMaterialIssueComponent'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

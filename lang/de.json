@@ -2149,6 +2149,8 @@
     "Short Description": "Kurzbeschreibung",
     "Create tab": "Tab erstellen",
     "ArtistResidenciesComponent": "Künstleraufenthalte-Komponente",
+    "Project basic data display component": "Projekt-Stammdaten",
+    "Project Material Issue Component": "Projekt-Materialausgabe",
     "Manage the artist residencies for this project.": "Verwalte die Künstleraufenthalte für dieses Projekt.",
     "Add artist residency": "Künstleraufenthalt hinzufügen",
     "appartement": "Appartement",

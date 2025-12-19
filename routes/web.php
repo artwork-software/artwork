@@ -2722,6 +2722,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/individual-time-series/{series:uuid}', [IndividualTimeSeriesController::class, 'destroy'])
         ->name('individual-time-series.destroy');
 
+
+    // project routes
+    Route::group(['prefix' => 'projects'], static function (): void {
+
+
+        Route::group(['prefix' => 'exports'], function (): void {
+            // pdf Shift plan exprot
+            Route::get('/pdf/{project}/{privacyMode}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+                ->name('projects.exports.shift-plan');
+        });
+    });
+
     Route::get('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'index'])
         ->name('shift-preset-groups.index');
     Route::post('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'store'])

@@ -2421,6 +2421,7 @@ class ProjectController extends Controller
 
         // Safely fetch latest history entry; can be null if no history exists
         $latestHistory = $project->historyChanges()->first();
+
         $latestChange  = [];
         if ($latestHistory !== null) {
             $latestChange = [[

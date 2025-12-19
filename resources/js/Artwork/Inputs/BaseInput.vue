@@ -95,6 +95,20 @@ const props = defineProps({
 /** Refs */
 const inputEl = ref(null)
 
+/**
+ * Ermöglicht Parent-Komponenten (z.B. ToolbarHeader) den Fokus auf das echte <input> zu setzen.
+ * Vue-Refs auf Komponenten zeigen sonst nur auf die Component-Instanz.
+ */
+function focus() {
+    inputEl.value?.focus?.()
+}
+
+function select() {
+    inputEl.value?.select?.()
+}
+
+defineExpose({ focus, select })
+
 /** Dichte */
 const density = computed(() => {
     if (props.isSmall) {

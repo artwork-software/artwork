@@ -195,7 +195,7 @@ class UserService
 
         $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $user->id,
-            'users',
+            'user',
             $startOfWeek,
             $endOfWeek
         );

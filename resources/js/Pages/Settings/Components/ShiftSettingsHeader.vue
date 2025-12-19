@@ -61,6 +61,12 @@ export default defineComponent({
                 permission: true
             },
             {
+                name: $t('shift groups'),
+                href: route('shift-groups.index'),
+                current: route().current('shift-groups.index'),
+                permission: true
+            },
+            {
                 name: $t('User Contracts'),
                 href: route('user-contract-settings.index'),
                 current: route().current('user-contract-settings.index'),
@@ -72,10 +78,11 @@ export default defineComponent({
                 current: route().current('single-shift-presets.index'),
                 permission: true
             },
+
             {
-                name: $t('shift groups'),
-                href: route('shift-groups.index'),
-                current: route().current('shift-groups.index'),
+                name: $t('Shift preset groups'),
+                href: route('shift-preset-groups.index'),
+                current: route().current('shift-preset-groups.index'),
                 permission: true
             },
             {

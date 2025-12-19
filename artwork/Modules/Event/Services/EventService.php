@@ -39,6 +39,7 @@ use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\PresetShift;
@@ -538,9 +539,50 @@ readonly class EventService
             $daysWithData[$formattedDate] = [
                 'date' => $formattedDate,
                 'shifts' => [],
+                'individualTimes' => [],
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
+        }
+
+        // Individualzeiten nur für User im Zeitraum einsammeln.
+        // Hinweis: IndividualTime ist morph (`timeable_type`/`timeable_id`) – es gibt keine `user_id` Spalte.
+        if ($modelType === 'user') {
+            $individualTimes = IndividualTime::query()
+                ->where('timeable_type', User::class)
+                ->where('timeable_id', $modelId)
+                ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+                ->where(function (Builder $query) use ($startDate): void {
+                    $query->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', $startDate->format('Y-m-d'));
+                })
+                ->with(['series'])
+                ->get();
+
+            foreach ($individualTimes as $it) {
+                $itStart = Carbon::parse($it->start_date)->startOfDay();
+                $itEnd = Carbon::parse($it->end_date ?? $it->start_date)->endOfDay();
+
+                $clampedStart = $itStart->copy()->max($startDate->copy()->startOfDay());
+                $clampedEnd = $itEnd->copy()->min($endDate->copy()->endOfDay());
+
+                $itPeriod = CarbonPeriod::create($clampedStart, $clampedEnd);
+                foreach ($itPeriod as $d) {
+                    $dayKey = $d->format('Y-m-d');
+                    if (!isset($daysWithData[$dayKey])) {
+                        continue;
+                    }
+
+                    $daysWithData[$dayKey]['individualTimes'][] = [
+                        'id' => $it->id,
+                        'start_time' => $it->start_time,
+                        'end_time' => $it->end_time,
+                        'full_day' => (bool)$it->full_day,
+                        'title' => $it->title,
+                        'series' => $it->series,
+                    ];
+                }
+            }
         }
 
         $mapping = [

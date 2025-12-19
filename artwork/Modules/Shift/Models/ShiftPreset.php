@@ -29,7 +29,8 @@ class ShiftPreset extends Model
 
     protected $fillable = [
         'name',
-        'event_type_id'
+        'event_type_id',
+        'shift_preset_group_id'
     ];
 
     public function timeline(): HasMany

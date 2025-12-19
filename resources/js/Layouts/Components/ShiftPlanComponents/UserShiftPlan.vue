@@ -15,7 +15,7 @@
         </div>
 
         <!-- Keine Schichten im Zeitraum -->
-        <div v-if="shiftsInRange.length === 0" class="rounded-xl border border-zinc-200 bg-white p-8 text-center">
+        <div v-if="workItemsInRange.length === 0" class="rounded-xl border border-zinc-200 bg-white p-8 text-center">
             <p class="text-sm text-zinc-600">
                 {{ $t('No shifts in the selected period.') }}
             </p>
@@ -65,31 +65,56 @@
                             {{ bucket.title }}
                         </div>
                         <div class="text-xs text-zinc-500">
-                            {{ $t('Shifts') }}: {{ bucket.shifts.length }}
+                            {{ $t('Shifts') }}: {{ bucket.items.length }}
                         </div>
                     </div>
 
                     <!-- Schichtenliste -->
                     <div class="p-3 space-y-3">
-                        <div v-for="s in bucket.shifts" :key="s._key" class="space-y-1">
-                            <!-- kleine Kopfzeile je Schicht mit Datum + +1-Tag Hinweis -->
+                        <div v-for="i in bucket.items" :key="i._key" class="space-y-1">
+                            <!-- kleine Kopfzeile je Eintrag mit Datum + +1-Tag Hinweis -->
                             <div class="text-xs text-zinc-600">
-                                {{ formatDateDMY(s._startAt) }}
-                                · {{ s.start }}–{{ s.end }}
-                                <span v-if="s._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5">
+                                {{ formatDateDMY(i._startAt) }}
+                                · {{ i.start }}–{{ i.end }}
+                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5">
                                     → +1&nbsp;Tag
                                 </span>
                             </div>
 
                             <SingleUserEventShift
+                                v-if="i._type === 'shift'"
                                 :user-to-edit-id="userToEditId"
                                 :first-project-shift-tab-id="firstProjectShiftTabId"
-                                :event-type="eventTypes.find(et => et.id === (s?.event?.event_type_id ?? s.event?.event_type_id)) ?? null"
-                                :shift="s"
-                                :event="s?.event ?? null"
+                                :event-type="eventTypes.find(et => et.id === (i?.event?.event_type_id ?? i.event?.event_type_id)) ?? null"
+                                :shift="i"
+                                :event="i?.event ?? null"
                                 :type="type"
-                                :project="s?.project ?? s.event?.project ?? null"
+                                :project="i?.project ?? i.event?.project ?? null"
                             />
+
+                            <div
+                                v-else
+                                class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                            >
+                                <div class="flex items-center justify-between gap-2 px-3 py-2 bg-zinc-100 text-zinc-900">
+                                    <span class="truncate text-sm font-semibold">
+                                        {{ $t('Individual time') }}: {{ i.title ?? '' }}
+                                    </span>
+                                </div>
+
+                                <div class="px-3 py-3">
+                                    <div class="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2">
+                                        <span class="text-sm font-medium text-zinc-900">
+                                            <template v-if="i.full_day">
+                                                {{ $t('All day') }}
+                                            </template>
+                                            <template v-else>
+                                                {{ i.start_time }} – {{ i.end_time }}
+                                            </template>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -184,7 +209,7 @@ function fmtMinutes(total) {
 }
 
 /** ---------- Shifts über Zeitraum einsammeln ---------- **/
-const shiftsInRange = computed(() => {
+const workItemsInRange = computed(() => {
     const r = range.value
     if (!r.startAt || !r.endAt) return []
 
@@ -207,11 +232,37 @@ const shiftsInRange = computed(() => {
             if (intersects(startAt, endAt, r.startAt, r.endAt)) {
                 out.push({
                     ...s,
+                    _type: 'shift',
                     _day: day.date,
                     _startAt: startAt,
                     _endAt: endAt,
                     _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
                     _key: `${s.id}-${day.date}-${s.start}-${s.end}`
+                })
+            }
+        }
+
+        const individualTimes = Array.isArray(day.individualTimes) ? day.individualTimes : []
+        for (const it of individualTimes) {
+            const startTime = it?.full_day ? '00:00' : (it?.start_time ?? '00:00')
+            const endTime = it?.full_day ? '23:59' : (it?.end_time ?? '23:59')
+            const startAt = toDateTime(day.date, String(startTime).slice(0, 5))
+            let endAt = toDateTime(day.date, String(endTime).slice(0, 5))
+
+            // Übernacht (sollte bei Individualzeiten eigentlich nicht vorkommen) – wir behandeln es trotzdem konsistent.
+            if (endAt < startAt) endAt = addDays(endAt, 1)
+
+            if (intersects(startAt, endAt, r.startAt, r.endAt)) {
+                out.push({
+                    ...it,
+                    start: String(startTime).slice(0, 5),
+                    end: String(endTime).slice(0, 5),
+                    _type: 'individual_time',
+                    _day: day.date,
+                    _startAt: startAt,
+                    _endAt: endAt,
+                    _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
+                    _key: `it-${it.id}-${day.date}-${startTime}-${endTime}`
                 })
             }
         }
@@ -243,7 +294,9 @@ const totalBreakTimeInRange = computed(() => {
 /** ---------- Gruppen-Pills (unique im Zeitraum) ---------- **/
 const uniqueGroupsForRange = computed(() => {
     const map = new Map()
-    shiftsInRange.value.forEach(s => {
+    workItemsInRange.value
+        .filter(s => s?._type === 'shift')
+        .forEach(s => {
         const project = s?.project ?? s?.event?.project
         if (!project) return
 
@@ -254,7 +307,7 @@ const uniqueGroupsForRange = computed(() => {
                 if (!map.has(g.id)) map.set(g.id, g)
             })
         }
-    })
+        })
     return Array.from(map.values())
 })
 
@@ -262,8 +315,8 @@ const uniqueGroupsForRange = computed(() => {
 const roomBuckets = computed(() => {
     const buckets = new Map()
 
-    shiftsInRange.value.forEach(s => {
-        const room = s?.room ?? s?.event?.room ?? null
+    workItemsInRange.value.forEach(i => {
+        const room = i?._type === 'shift' ? (i?.room ?? i?.event?.room ?? null) : null
         const key = room?.id ? String(room.id) : 'no-room'
 
         if (!buckets.has(key)) {
@@ -271,15 +324,15 @@ const roomBuckets = computed(() => {
                 key,
                 room,
                 title: room?.name ?? page.props?.translations?.no_room ?? 'Ohne Raum',
-                shifts: []
+                items: []
             })
         }
-        buckets.get(key).shifts.push(s)
+        buckets.get(key).items.push(i)
     })
 
     // sort innerhalb der Buckets nach Startzeit
     buckets.forEach(b => {
-        b.shifts.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())
+        b.items.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())
     })
 
     // "Ohne Raum" nach unten

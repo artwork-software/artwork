@@ -9,7 +9,8 @@
                 :description="projects.data.length + ' ' + $t('projects in total')"
                 v-model="project_search"
                 :search-enabled="true"
-                :search-label="$t('Search for projects')"
+                :search-label="$t('Search for projects or their artists')"
+                search-placeholder="Suche nach Projekten oder deren Künstler*innen"
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>

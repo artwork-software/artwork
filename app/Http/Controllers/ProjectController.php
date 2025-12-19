@@ -607,12 +607,14 @@ class ProjectController extends Controller
 
         $costSubPositionRow = $costSubPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $costSubPosition->subPositionRows()->max('position') + 1
+            'position' => $costSubPosition->subPositionRows()->max('position') + 1,
+            'order' => $costSubPosition->subPositionRows()->max('order') + 1,
         ]);
 
         $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $earningSubPosition->subPositionRows()->max('position') + 1
+            'position' => $earningSubPosition->subPositionRows()->max('position') + 1,
+            'order' => $earningSubPosition->subPositionRows()->max('order') + 1,
 
         ]);
 
@@ -1815,10 +1817,16 @@ class ProjectController extends Controller
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
 
+        SubPositionRow::query()
+            ->where('sub_position_id', $request->sub_position_id)
+            ->where('order', '>', $request->positionBefore)
+            ->increment('order');
+
         /** @var SubPositionRow $subPositionRow */
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $request->positionBefore + 1
+            'position' => $request->positionBefore + 1,
+            'order' => $request->positionBefore + 1,
         ]);
 
         $firstThreeColumns = $columns->shift(3);
@@ -1842,6 +1850,47 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+    }
+
+    public function reorderSubPositionRows(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'updates' => ['required', 'array', 'min:1'],
+            'updates.*.sub_position_id' => ['required', 'integer', 'exists:sub_positions,id'],
+            'updates.*.row_ids' => ['required', 'array'],
+            'updates.*.row_ids.*' => ['required', 'integer', 'exists:sub_position_rows,id'],
+        ]);
+
+        $updates = $validated['updates'];
+        $allRowIds = collect($updates)->pluck('row_ids')->flatten()->all();
+
+        if (count($allRowIds) !== count(array_unique($allRowIds))) {
+            throw ValidationException::withMessages([
+                'updates' => ['Row-IDs dürfen nicht mehrfach vorkommen.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($updates): void {
+            foreach ($updates as $update) {
+                $subPositionId = (int)$update['sub_position_id'];
+                $rowIds = $update['row_ids'];
+
+                foreach ($rowIds as $index => $rowId) {
+                    SubPositionRow::query()
+                        ->whereKey($rowId)
+                        ->update([
+                            'sub_position_id' => $subPositionId,
+                            'order' => $index + 1,
+                            // keep legacy ordering column in sync
+                            'position' => $index + 1,
+                        ]);
+                }
+            }
+        });
+
+        // Inertia expects a redirect (or a valid Inertia response). Without this,
+        // the client will not treat the request as successful.
+        return Redirect::back();
     }
 
     public function dropSageData(
@@ -1905,6 +1954,7 @@ class ProjectController extends Controller
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => 1,
+            'order' => 1,
         ]);
 
         $firstThreeColumns = $columns->shift(3);
@@ -2259,6 +2309,25 @@ class ProjectController extends Controller
             ->unique()
             ->toArray();
 
+        // Load project relations only if the currently rendered tab needs them
+        $hasProjectBasicDataDisplayComponent = in_array(
+            ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY->value,
+            $componentTypes,
+            true
+        );
+        if ($hasProjectBasicDataDisplayComponent) {
+            $project->loadMissing([
+                'costCenter',
+                'status',
+                'categories',
+                'genres',
+                'sectors',
+            ]);
+
+            // keep frontend contract (`project.cost_center`)
+            $headerObject->project->cost_center = $project->costCenter;
+        }
+
         $hasShiftTab = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
         $hasCalendarTab = in_array(ProjectTabComponentEnum::CALENDAR->value, $componentTypes, true);
         $hasBudgetTab = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
@@ -2298,9 +2367,12 @@ class ProjectController extends Controller
 
         $headerObject->projectsOfGroup     = $project->projectsOfGroup()->get();
 
-        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn ProjectAttributesComponent vorhanden (10-15% Reduktion)
+        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn nötig.
+        // Achtung: Auch ohne ProjectAttributesComponent können die Daten im Header (z.B. Projekt-Basisdaten-Modal)
+        // benötigt werden. Daher zusätzlich über die CreateSettings absichern.
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
-        if ($hasAttributesComponent) {
+        $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
+        if ($needsProjectAttributesData) {
             $headerObject->categories = $this->categoryService->getAll();
             $headerObject->genres = $this->genreService->getAll();
             $headerObject->sectors = $this->sectorService->getAll();
@@ -2349,6 +2421,7 @@ class ProjectController extends Controller
 
         // Safely fetch latest history entry; can be null if no history exists
         $latestHistory = $project->historyChanges()->first();
+
         $latestChange  = [];
         if ($latestHistory !== null) {
             $latestChange = [[

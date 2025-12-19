@@ -4,6 +4,8 @@ namespace Artwork\Modules\User\Models;
 
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\User\Models\User;
+use Database\Factories\Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilterFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -33,4 +35,9 @@ class UserShiftCalendarFilter extends CalendarFilter
         'event_types' => 'array',
         'rooms' => 'array'
     ];
+
+    protected static function newFactory(): Factory
+    {
+        return UserShiftCalendarFilterFactory::new();
+    }
 }

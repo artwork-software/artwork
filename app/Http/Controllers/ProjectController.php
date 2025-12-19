@@ -2309,6 +2309,25 @@ class ProjectController extends Controller
             ->unique()
             ->toArray();
 
+        // Load project relations only if the currently rendered tab needs them
+        $hasProjectBasicDataDisplayComponent = in_array(
+            ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY->value,
+            $componentTypes,
+            true
+        );
+        if ($hasProjectBasicDataDisplayComponent) {
+            $project->loadMissing([
+                'costCenter',
+                'status',
+                'categories',
+                'genres',
+                'sectors',
+            ]);
+
+            // keep frontend contract (`project.cost_center`)
+            $headerObject->project->cost_center = $project->costCenter;
+        }
+
         $hasShiftTab = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
         $hasCalendarTab = in_array(ProjectTabComponentEnum::CALENDAR->value, $componentTypes, true);
         $hasBudgetTab = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);

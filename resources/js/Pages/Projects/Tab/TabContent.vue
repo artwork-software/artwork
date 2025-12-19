@@ -129,6 +129,7 @@ import GroupProjectDisplayComponent from "@/Pages/Projects/Components/GroupProje
 import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGroupDisplayComponent.vue";
 import DisclosureComponent from "@/Pages/Projects/Tab/Components/DisclosureComponent.vue";
 import ArtistNameDisplayComponent from "@/Pages/Projects/Components/ArtistNameDisplayComponent.vue";
+import ProjectBasicDataDisplayComponent from "@/Pages/Projects/Components/ProjectBasicDataDisplayComponent.vue";
 import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
 import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/ProjectMaterialIssueComponent.vue";
 
@@ -170,6 +171,7 @@ const componentMapping = {
     ProjectGroupDisplayComponent,
     DisclosureComponent,
     ArtistNameDisplayComponent,
+    ProjectBasicDataDisplayComponent,
     ProjectMaterialIssueComponent
 };
 

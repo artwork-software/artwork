@@ -796,12 +796,23 @@ class EventController extends Controller
         $user = Auth::user();
 
         $now = $carbonService->getNow();
+        $today = $now->format('Y-m-d');
         $shiftsOfDay = $user
             ->shifts()
             ->whereDate(
                 'shifts.start_date',
-                $now->format('Y-m-d')
+                $today
             )->with(['event','event.project','event.room', 'event.event_type'])->get();
+
+        $individualTimesOfDay = $user
+            ->individualTimes()
+            ->whereDate('start_date', '<=', $today)
+            ->where(function (Builder $query) use ($today): void {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $today);
+            })
+            ->with(['series'])
+            ->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
@@ -869,6 +880,7 @@ class EventController extends Controller
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
             'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $now)->get(),
             'shiftsOfDay' => $shiftsOfDay,
+            'individualTimesOfDay' => $individualTimesOfDay,
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),

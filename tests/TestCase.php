@@ -22,6 +22,10 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Tests sollen ohne externe Search-Services (Meilisearch) laufen.
+        config(['scout.driver' => 'null']);
+
         EventTypeArrayCache::forgetAll();
         ProjectTabArrayCache::forgetAll();
         $this->withoutVite();

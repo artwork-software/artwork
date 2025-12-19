@@ -4,6 +4,8 @@ namespace Artwork\Modules\User\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
+use Database\Factories\Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilterFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
@@ -69,4 +71,9 @@ class UserCalendarFilter extends CalendarFilter
         'room_categories' => 'array',
         'event_properties' => 'array'
     ];
+
+    protected static function newFactory(): Factory
+    {
+        return UserCalendarFilterFactory::new();
+    }
 }

@@ -47,6 +47,34 @@ class ProjectServiceTest extends TestCase
         $this->assertEquals(($currentProjectCount + $createCount), $this->projectService->getProjects()->count());
     }
 
+    public function testGetProjectsSearchMatchesNameOrArtists(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $search = 'Alpha';
+
+        $byName = Project::factory()->create([
+            'name' => 'Alpha Project',
+            'artists' => 'Someone Else',
+        ]);
+
+        $byArtist = Project::factory()->create([
+            'name' => 'Other Project',
+            'artists' => 'Alpha Artist',
+        ]);
+
+        $notMatching = Project::factory()->create([
+            'name' => 'Unrelated',
+            'artists' => 'Unrelated',
+        ]);
+
+        $results = $this->projectService->getProjects($search)->get();
+
+        $this->assertTrue($results->contains($byName));
+        $this->assertTrue($results->contains($byArtist));
+        $this->assertFalse($results->contains($notMatching));
+    }
+
     public function testPin(): void
     {
         $project = Project::factory()->create();

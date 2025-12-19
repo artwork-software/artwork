@@ -1111,6 +1111,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])
                 ->name('project.budget.sub-position-row.add');
 
+            Route::patch('/sub-position-row/reorder', [ProjectController::class, 'reorderSubPositionRows'])
+                ->name('project.budget.sub-position-row.reorder');
+
             // drop sage data
             Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
                 ->name('project.budget.drop.sage');
@@ -1498,7 +1501,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [FreelancerController::class, 'removeCraft']
     )->name('freelancer.remove.craft');
 
-    // Vacation
+    //Vacation
 
     Route::post('/freelancer/vacation/{freelancer}/add', [VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
@@ -2720,7 +2723,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('individual-time-series.destroy');
 
 
-
     // project routes
     Route::group(['prefix' => 'projects'], static function (): void {
 
@@ -2731,6 +2733,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('projects.exports.shift-plan');
         });
     });
+
+    Route::get('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'index'])
+        ->name('shift-preset-groups.index');
+    Route::post('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'store'])
+        ->name('shift-preset-groups.store');
+    Route::patch('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'update'])
+        ->name('shift-preset-groups.update');
+    Route::delete('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'destroy'])
+        ->name('shift-preset-groups.destroy');
+
+    // shifts.createFromPresets
+    Route::post('/shifts/createFromPresets', [\Artwork\Modules\Shift\Http\Controllers\ShiftController::class, 'createFromPresets'])
+        ->name('shifts.createFromPresets');
 });
 
 Route::get(

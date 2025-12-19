@@ -180,17 +180,42 @@
                             </a>
                         </div>
 
-                        <div v-if="shiftsOfDay?.length" class="px-5 pb-5">
-                            <div v-for="shift in props.shiftsOfDay" :key="shift.id" class="mb-3 last:mb-0">
+                        <div v-if="workTimesTodaySorted.length" class="px-5 pb-5">
+                            <div v-for="item in workTimesTodaySorted" :key="item.id" class="mb-3 last:mb-0">
                                 <SingleUserEventShift
+                                    v-if="item.type === 'shift'"
                                     type="user"
-                                    :event="shift.event"
-                                    :shift="shift"
-                                    :project="findProjectById(shift.event?.project_id)"
-                                    :event-type="shift.event ? findEventTypeById(shift.event?.event_type_id) : null"
+                                    :event="item.shift.event"
+                                    :shift="item.shift"
+                                    :project="findProjectById(item.shift.event?.project_id)"
+                                    :event-type="item.shift.event ? findEventTypeById(item.shift.event?.event_type_id) : null"
                                     :user-to-edit-id="user.id"
                                     :first-project-shift-tab-id="first_project_shift_tab_id"
                                 />
+
+                                <div
+                                    v-else
+                                    class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                                >
+                                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-zinc-100 text-zinc-900">
+                                        <span class="truncate text-sm font-semibold">
+                                            {{ $t('Individual time') }}: {{ item.individualTime?.title ?? '' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="px-3 py-3 space-y-3">
+                                        <div class="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2">
+                                            <span class="text-sm font-medium text-zinc-900">
+                                                <template v-if="item.individualTime?.full_day">
+                                                    {{ $t('All day') }}
+                                                </template>
+                                                <template v-else>
+                                                    {{ item.individualTime?.start_time }} – {{ item.individualTime?.end_time }}
+                                                </template>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -343,6 +368,7 @@ defineOptions({ mixins: [Permissions] })
 const props = defineProps<{
     tasks: any[],
     shiftsOfDay: any[],
+    individualTimesOfDay: any[],
     todayDate: string,
     eventsOfDay: any[],
     globalNotification: any,
@@ -368,7 +394,7 @@ const doneTaskForm = useForm({ done: false })
 const canViewShifts = computed(() => can('can view shift plan') || is('artwork admin'))
 
 const eventsCountToday = computed(() => props.eventsOfDay?.length ?? 0)
-const shiftsCountToday = computed(() => props.shiftsOfDay?.length ?? 0)
+const shiftsCountToday = computed(() => (props.shiftsOfDay?.length ?? 0) + (props.individualTimesOfDay?.length ?? 0))
 const notificationsCountToday = computed(() => props.notificationOfToday?.length ?? 0)
 const openTasksCount = computed(() => (props.tasks?.filter(t => !t.done).length) ?? 0)
 
@@ -393,6 +419,45 @@ const eventsSorted = computed(() => {
         const bs = b.earliest_start_datetime ?? b?.formatted_dates?.start_with_time ?? ''
         return as.localeCompare(bs)
     })
+})
+
+function normalizeTime(value: any): string {
+    if (!value) return ''
+    const s = String(value)
+    // Erwartet i.d.R. "HH:MM" oder "HH:MM:SS"; wir normalisieren auf HH:MM
+    if (s.length >= 5) return s.slice(0, 5)
+    return s
+}
+
+function getSortKeyForWorkItem(item: any): string {
+    if (item?.type === 'shift') {
+        return normalizeTime(item?.shift?.start ?? item?.shift?.start_time ?? item?.shift?.startPivot) || '00:00'
+    }
+
+    if (item?.type === 'individual_time') {
+        if (item?.individualTime?.full_day) return '00:00'
+        return normalizeTime(item?.individualTime?.start_time) || '00:00'
+    }
+
+    return '00:00'
+}
+
+const workTimesTodaySorted = computed(() => {
+    const shifts = (props.shiftsOfDay ?? []).map((shift: any) => ({
+        id: `shift-${shift.id}`,
+        type: 'shift',
+        shift,
+    }))
+
+    const individualTimes = (props.individualTimesOfDay ?? []).map((individualTime: any) => ({
+        id: `it-${individualTime.id}`,
+        type: 'individual_time',
+        individualTime,
+    }))
+
+    const merged = [...shifts, ...individualTimes]
+
+    return merged.sort((a: any, b: any) => getSortKeyForWorkItem(a).localeCompare(getSortKeyForWorkItem(b)))
 })
 
 function updateTaskStatus(task: any) {

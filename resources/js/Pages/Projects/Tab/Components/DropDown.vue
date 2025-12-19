@@ -43,9 +43,14 @@
                             <li
                                 @click="updateTextData(item.value)"
                                 :class="[
-                              active ? 'bg-indigo-600 text-white' : inSidebar ? 'text-white' : 'text-gray-900',
-                              'relative cursor-default select-none py-2 pl-3 pr-9'
-                            ]"
+                                    active
+                                        ? 'bg-indigo-600 text-white'
+                                        : isSelected
+                                            ? '!bg-artwork-action-buttons/10'
+                                            : '',
+                                    inSidebar ? 'text-white' : 'text-gray-900',
+                                    'relative cursor-default select-none py-2 pl-3 pr-9'
+                                ]"
                                         >
                             <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">
                               {{ item.value }}
@@ -55,7 +60,17 @@
                                     v-if="isSelected"
                                     :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                 >
-                  <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center"
+                                        @mouseenter="onClearEnter"
+                                        @mouseleave="onClearLeave"
+                                        @focusin="onClearEnter"
+                                        @focusout="onClearLeave"
+                                        @click.stop.prevent="updateTextData(null)"
+                                    >
+                                        <IconX class="h-5 w-5" aria-hidden="true" />
+                                    </button>
                 </span>
                             </li>
                         </ListboxOption>
@@ -63,6 +78,16 @@
                 </transition>
             </div>
         </Listbox>
+
+        <Teleport to="body">
+            <div
+                v-if="clearTooltip.visible"
+                class="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-sm"
+                :style="{ left: clearTooltip.x + 'px', top: clearTooltip.y + 'px' }"
+            >
+                Auswahl aufheben
+            </div>
+        </Teleport>
 
         <InfoButtonComponent :component="component" />
     </div>
@@ -76,10 +101,10 @@ import {
     ListboxOption,
     ListboxOptions,
 } from "@headlessui/vue";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import axios from 'axios';
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
-import {IconChevronDown , IconCircleCheck} from "@tabler/icons-vue";
+import {IconChevronDown , IconX} from "@tabler/icons-vue";
 import {useProjectDataListener} from "@/Composeables/Listener/useProjectDataListener.js";
 
 
@@ -107,8 +132,43 @@ const selected = ref(
     normalizeSelected(props.data.project_value ? props.data.project_value.data.selected : props.data.data.selected)
 );
 
+const clearTooltip = reactive({
+    visible: false,
+    x: 0,
+    y: 0,
+});
+
+let clearTooltipAnchorEl = null;
+
+function positionClearTooltip() {
+    if (!clearTooltipAnchorEl) return;
+    const rect = clearTooltipAnchorEl.getBoundingClientRect();
+    clearTooltip.x = rect.right + 8;
+    clearTooltip.y = rect.top + rect.height / 2;
+}
+
+async function onClearEnter(event) {
+    clearTooltipAnchorEl = event?.currentTarget ?? null;
+    await nextTick();
+    positionClearTooltip();
+    clearTooltip.visible = true;
+    window.addEventListener('scroll', positionClearTooltip, true);
+    window.addEventListener('resize', positionClearTooltip);
+}
+
+function onClearLeave() {
+    clearTooltip.visible = false;
+    clearTooltipAnchorEl = null;
+    window.removeEventListener('scroll', positionClearTooltip, true);
+    window.removeEventListener('resize', positionClearTooltip);
+}
+
 onMounted(() => {
     useProjectDataListener(projectData.value, props.projectId).init();
+});
+
+onBeforeUnmount(() => {
+    onClearLeave();
 });
 
 
@@ -121,6 +181,8 @@ watch(
 );
 
 async function updateTextData(value) {
+    // Optimistisches UI-Update (Broadcast synchronisiert final)
+    selected.value = normalizeSelected(value);
     try {
         await axios.patch(
             route("project.tab.component.update", {

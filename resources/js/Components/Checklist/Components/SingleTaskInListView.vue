@@ -33,16 +33,16 @@
             <!-- Middle: dates / done info -->
             <div class="hidden shrink-0 md:flex md:min-w-[14rem] md:items-center md:justify-end">
                 <template v-if="!localTaskDone">
-                    <IconCalendar class="h-4 w-4 mr-2" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
+                    <IconCalendar class="h-6 w-6 mr-2" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
                     <span
-                        class="text-[10px] rounded-md px-1.5 py-0.5"
+                        class="text-[14px] rounded-md px-1.5 py-0.5"
                         :class="isOverdue ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700'"
                     >
             {{ task.formatted_dates?.deadline }}
           </span>
                 </template>
                 <template v-else>
-          <span class="flex items-center text-xs text-zinc-600">
+          <span class="flex items-center text-sm text-zinc-600">
             <span class="mr-2">
               <UserPopoverTooltip
                   v-if="task.done_by_user"
@@ -104,7 +104,7 @@ import { IconCalendar, IconEdit, IconTrash } from '@tabler/icons-vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import { MenuItem } from '@headlessui/vue'
 import AddEditTaskModal from '@/Components/Checklist/Modals/AddEditTaskModal.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { EventListenerForDragging } from '@/Composeables/EventListenerForDragging.js'
@@ -143,6 +143,13 @@ const openDeleteTaskModal = ref(false)
 // local mirror for snappy checkbox UX
 const localTaskDone = ref<boolean>(!!props.task.done)
 
+watch(
+    () => props.task.done,
+    (isDone) => {
+        localTaskDone.value = !!isDone
+    }
+)
+
 const page = usePage()
 const authId = computed<number | null>(() => page.props?.auth?.user?.id ?? null)
 
@@ -170,7 +177,6 @@ const updateTaskStatus = () => {
             preserveScroll: true,
             preserveState: true,
             onError: () => { localTaskDone.value = !!props.task.done },
-            onSuccess: () => { localTaskDone.value = !!props.task.done },
         }
     )
 }

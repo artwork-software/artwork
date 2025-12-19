@@ -2727,7 +2727,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::group(['prefix' => 'exports'], function (): void {
             // pdf Shift plan exprot
-            Route::get('/pdf/{project}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
+            Route::get('/pdf/{project}/{privacyMode}/shift-plan', [ExportPDFController::class, 'exportDailyViewShiftPlanInProject'])
                 ->name('projects.exports.shift-plan');
         });
     });

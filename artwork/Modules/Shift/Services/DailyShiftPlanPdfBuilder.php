@@ -2,49 +2,39 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class DailyShiftPlanPdfBuilder
 {
-    /**
-     * Lange komplett freie Zeitsegmente (ohne irgendeine Shift/Timeline) werden als Gap dargestellt.
-     * (Wir erzeugen Rows sowieso segmentbasiert; das hier beeinflusst nur Styling/Message.)
-     */
     private int $gapProminentFromMinutes = 45;
 
-    /**
-     * Zielhöhe des Grid-Bereichs (px). Damit skalieren wir die aktiven Zeilenhöhen.
-     * Das ist absichtlich „pi mal Daumen“ für Dompdf – funktioniert aber sehr gut in der Praxis,
-     * weil wir Gaps hart komprimieren.
-     */
+    /** Zielhöhe Grid (px) – Dompdf-friendly */
     private int $gridTargetHeightPx = 520;
 
-    /**
-     * Gap-Zeilen sind stark komprimiert, damit der Tag auf eine Seite passt.
-     */
     private int $gapRowHeightPx = 14;
-
-    /**
-     * Aktive Zeilen bekommen Mindesthöhe – sonst wird Text zu gequetscht.
-     */
     private int $activeRowMinHeightPx = 18;
 
-    /**
-     * Pro Seite IMMER ein Tag
-     */
+    /** Pro Seite IMMER ein Tag */
     private int $maxChunksPerPage = 1;
 
     /** @var array<int,string> */
     private array $qualificationNameById = [];
 
-    public function buildForProject(Project $project): array
+    public function buildForProject(Project $project, User $user, bool $privacyMode = false): array
     {
         Carbon::setLocale('de');
 
         $this->qualificationNameById = $this->buildQualificationLookup($project);
+
+        $legendCrafts = $this->buildCraftLegend($project);
 
         $dayChunks = $this->buildDayChunks($project);
         $pages = $this->packChunksIntoPages($dayChunks);
@@ -52,10 +42,92 @@ class DailyShiftPlanPdfBuilder
         return [
             'project' => $project,
             'pages'   => $pages,
+            'created_by' => [
+                'name' => $user->full_name,
+                'email' => $user->email,
+            ],
+            'privacyMode' => $privacyMode,
             'meta'    => [
-                'exportedAt' => now(),
+                'exportedAt'    => now(),
+                'legendCrafts'  => $legendCrafts,
             ],
         ];
+    }
+
+    /** @return array<int,array{qid:int,name:string,sum:int,needed:int}> */
+    private function buildShiftQualificationSummary($shift): array
+    {
+        $neededByQid = $this->neededCountByQualificationId($shift); // qid => needed
+        $sumByQid = []; // qid => assignedSum
+
+        $acc = function ($rel) use (&$sumByQid): void {
+            foreach (($rel ?? []) as $p) {
+                $qid = (int)($p->pivot?->shift_qualification_id ?? 0);
+                if ($qid <= 0) continue;
+
+                $c = (int)($p->pivot?->shift_count ?? 1);
+                if ($c <= 0) $c = 1;
+
+                $sumByQid[$qid] = ($sumByQid[$qid] ?? 0) + $c;
+            }
+        };
+
+        $acc($shift->users);
+        $acc($shift->freelancer);
+        $acc($shift->serviceProvider);
+
+        $lines = [];
+
+        foreach (array_keys($neededByQid) as $qid) {
+            $lines[] = [
+                'qid'    => (int)$qid,
+                'name'   => $this->qualificationNameById[(int)$qid] ?? ('Quali #' . (int)$qid),
+                'sum'    => (int)($sumByQid[(int)$qid] ?? 0),
+                'needed' => (int)($neededByQid[(int)$qid] ?? 0),
+            ];
+        }
+
+        foreach ($sumByQid as $qid => $sum) {
+            if (isset($neededByQid[$qid])) continue;
+
+            $lines[] = [
+                'qid'    => (int)$qid,
+                'name'   => $this->qualificationNameById[(int)$qid] ?? ('Quali #' . (int)$qid),
+                'sum'    => (int)$sum,
+                'needed' => 0,
+            ];
+        }
+
+        return $lines;
+    }
+
+    /** @return array<int,array{name:string,abbr:string,color:string,bg:string,quals:array<int,string>,pos:int}> */
+    private function buildCraftLegend(Project $project): array
+    {
+        $crafts = $project->shifts
+            ->map(fn ($s) => $s->craft)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        $crafts->loadMissing('qualifications:id,name');
+
+        $out = [];
+        foreach ($crafts as $craft) {
+            $color = $this->normalizeHexColor($craft->color) ?? '#0ea5e9';
+
+            $out[] = [
+                'name'  => (string)($craft->name ?? ''),
+                'abbr'  => (string)($craft->abbreviation ?? ''),
+                'color' => $color,
+                'bg'    => $this->mixWithWhite($color, 0.92),
+                'quals' => $craft->qualifications?->pluck('name')->values()->all() ?? [],
+                'pos'   => (int)($craft->position ?? 9999),
+            ];
+        }
+
+        usort($out, fn($a, $b) => ($a['pos'] <=> $b['pos']) ?: strcmp($a['abbr'], $b['abbr']));
+        return $out;
     }
 
     /** @return array<int,string> */
@@ -88,8 +160,12 @@ class DailyShiftPlanPdfBuilder
     {
         $allDates = collect();
 
-        foreach ($project->shifts as $shift) $allDates->push($this->shiftDate($shift));
-        foreach ($project->events as $event) $allDates->push(Carbon::parse($event->earliest_start_datetime)->startOfDay());
+        foreach ($project->shifts as $shift) {
+            $allDates->push($this->shiftDate($shift));
+        }
+        foreach ($project->events as $event) {
+            $allDates->push(Carbon::parse($event->earliest_start_datetime)->startOfDay());
+        }
 
         $start = $allDates->min()?->copy() ?? now()->startOfDay();
         $end   = $allDates->max()?->copy() ?? now()->startOfDay();
@@ -116,60 +192,95 @@ class DailyShiftPlanPdfBuilder
             ->values();
 
         $eventCards = $this->buildEventCardsCompact($events);
-
-        // Blocks
         $timelineBlocks = $this->buildTimelineBlocks($events);
+
+        $timelineLanes = 1;
+        foreach ($timelineBlocks as $b) {
+            $timelineLanes = max($timelineLanes, ((int)($b['lane'] ?? 0)) + 1);
+        }
+
         $shiftBlocksByCraft = $this->buildShiftBlocksByCraft($shifts);
 
-        // craft meta + lanes
         $craftMeta = $this->buildCraftMeta($shifts);
         $craftGroups = $this->buildCraftGroupsWithLanes($shiftBlocksByCraft, $craftMeta);
         $laneColumns = $this->buildLaneColumns($craftGroups);
 
-        // --- NEU: segmentbasiertes Grid (keine 15-Min-Row-Liste mehr) ---
-        [$rows, $timelineMap, $craftLaneMaps] = $this->buildSegmentGrid(
-            $timelineBlocks,
-            $shiftBlocksByCraft,
-            $craftGroups
+        // ✅ NEU: Layout (Zeit + Timeline klein halten, damit Dompdf nicht wrappt)
+        $layout = $this->computeLayoutForDay(
+            $timelineLanes,
+            count($laneColumns)
         );
 
-        $out = collect();
+        [$rows, $timelineLaneMaps, $craftLaneMaps] = $this->buildSegmentGrid(
+            $timelineBlocks,
+            $shiftBlocksByCraft,
+            $craftGroups,
+            $timelineLanes
+        );
 
-        $out->push([
-            'day'           => $day,
-            'dateLabel'     => $day->format('d.m.Y') . ' (' . $day->translatedFormat('l') . ')',
-            'eventCards'    => $eventCards,
+        return collect([[
+            'day'              => $day,
+            'dateLabel'        => $day->format('d.m.Y') . ' (' . $day->translatedFormat('l') . ')',
+            'eventCards'       => $eventCards,
 
-            'rows'          => $rows,
-            'timelineMap'   => $timelineMap,
+            'rows'             => $rows,
 
-            'craftGroups'   => $craftGroups,
-            'laneColumns'   => $laneColumns,
-            'craftLaneMaps' => $craftLaneMaps,
-            'craftMeta'     => $craftMeta,
-        ]);
+            'layout'           => $layout, // ✅
+            'timelineLanes'    => $timelineLanes,
+            'timelineLaneMaps' => $timelineLaneMaps,
+            'craftGroups'      => $craftGroups,
+            'laneColumns'      => $laneColumns,
+            'craftLaneMaps'    => $craftLaneMaps,
+            'craftMeta'        => $craftMeta,
+        ]]);
+    }
 
-        return $out;
+    /**
+     * ✅ Zeit + Timeline sollen minimal sein.
+     * Dompdf-wrap killen wir, indem wir Timeline-Breite hart begrenzen.
+     */
+    private function computeLayoutForDay(int $timelineLanes, int $craftCols): array
+    {
+        // Zeitspalte sehr klein, aber noch gut lesbar
+        $timeCol = 44;
+
+        // Timeline gesamt sehr klein
+        $timelineMax = 120;
+        if ($craftCols >= 4) $timelineMax = 104;
+        if ($craftCols >= 6) $timelineMax = 92;
+
+        // pro Lane min/max
+        $timelineCol = (int) floor($timelineMax / max(1, $timelineLanes));
+        $timelineCol = max(36, min(52, $timelineCol));
+
+        $timelineMax = $timelineCol * max(1, $timelineLanes);
+
+        return [
+            'timeCol' => $timeCol,
+            'timelineCol' => $timelineCol,
+            'timelineMax' => $timelineMax,
+        ];
     }
 
     /**
      * Baut Rows aus Breakpoints (Start/Ende von allen Blocks).
-     * - Gap-Segmente werden extrem klein gehalten.
-     * - Aktive Segmente bekommen Höhe proportional zur Dauer, aber skaliert auf gridTargetHeightPx.
+     * Gap-Segmente werden klein, aktive Segmente skaliert.
      *
      * @return array{0:array,1:array,2:array}
      */
     private function buildSegmentGrid(
         array $timelineBlocks,
         array $shiftBlocksByCraft,
-        array $craftGroups
+        array $craftGroups,
+        int $timelineLanes
     ): array {
         $allShiftBlocksFlat = [];
-        foreach ($shiftBlocksByCraft as $blocks) foreach ($blocks as $b) $allShiftBlocksFlat[] = $b;
+        foreach ($shiftBlocksByCraft as $blocks) {
+            foreach ($blocks as $b) $allShiftBlocksFlat[] = $b;
+        }
 
         $allBlocksFlat = array_merge($timelineBlocks, $allShiftBlocksFlat);
 
-        // Wenn gar nichts da ist: mini Grid
         if (empty($allBlocksFlat)) {
             $rows = [[
                 'i' => 0,
@@ -177,15 +288,17 @@ class DailyShiftPlanPdfBuilder
                 'to' => 9 * 60,
                 'isGap' => true,
                 'label' => '08:00 – 09:00',
+                't1' => '08:00',
+                't2' => '09:00',
                 'message' => 'Keine Daten',
                 'prominent' => true,
                 'heightPx' => $this->gapRowHeightPx,
+                'minute' => 8 * 60,
             ]];
 
             return [$rows, [], []];
         }
 
-        // Day Window = min/max aus allen Blocks
         $minMin = null;
         $maxMin = null;
         foreach ($allBlocksFlat as $b) {
@@ -194,7 +307,6 @@ class DailyShiftPlanPdfBuilder
         }
         if ($maxMin <= $minMin) $maxMin = $minMin + 30;
 
-        // Breakpoints: alle Start/Ende
         $breaks = [$minMin, $maxMin];
         foreach ($allBlocksFlat as $b) {
             $breaks[] = (int)$b['start'];
@@ -203,7 +315,6 @@ class DailyShiftPlanPdfBuilder
         $breaks = array_values(array_unique(array_filter($breaks, fn($v) => $v !== null)));
         sort($breaks);
 
-        // Segmente bauen
         $segments = [];
         for ($i = 0; $i < count($breaks) - 1; $i++) {
             $from = (int)$breaks[$i];
@@ -219,13 +330,12 @@ class DailyShiftPlanPdfBuilder
             ];
         }
 
-        // Consecutive Gaps mergen (nur falls min/max padding o.ä. erzeugt wurde)
         $merged = [];
         foreach ($segments as $seg) {
             if (empty($merged)) { $merged[] = $seg; continue; }
             $lastIdx = count($merged) - 1;
-
             $last = $merged[$lastIdx];
+
             if (!$last['isActive'] && !$seg['isActive'] && $last['to'] === $seg['from']) {
                 $merged[$lastIdx]['to'] = $seg['to'];
                 continue;
@@ -233,7 +343,6 @@ class DailyShiftPlanPdfBuilder
             $merged[] = $seg;
         }
 
-        // Höhen berechnen
         $totalActiveMinutes = 0;
         $gapCount = 0;
 
@@ -246,11 +355,7 @@ class DailyShiftPlanPdfBuilder
         $gapTotalHeight = $gapCount * $this->gapRowHeightPx;
         $availableForActive = max(120, $this->gridTargetHeightPx - $gapTotalHeight);
 
-        // px pro Minute (gedeckelt, damit es nicht riesig wird)
-        $pxPerMinute = $totalActiveMinutes > 0
-            ? ($availableForActive / $totalActiveMinutes)
-            : 1.0;
-
+        $pxPerMinute = $totalActiveMinutes > 0 ? ($availableForActive / $totalActiveMinutes) : 1.0;
         $pxPerMinute = max(0.35, min(2.2, $pxPerMinute));
 
         $rows = [];
@@ -261,7 +366,10 @@ class DailyShiftPlanPdfBuilder
 
             $isGap = !$seg['isActive'];
 
-            $label = $this->minutesToTime($from) . ' – ' . $this->minutesToTime($to);
+            $t1 = $this->minutesToTime($from);
+            $t2 = $this->minutesToTime($to);
+
+            $label = $t1 . ' – ' . $t2;
 
             $height = $isGap
                 ? $this->gapRowHeightPx
@@ -273,6 +381,8 @@ class DailyShiftPlanPdfBuilder
                 'to' => $to,
                 'isGap' => $isGap,
                 'label' => $label,
+                't1' => $t1,
+                't2' => $t2,
                 'minute' => $from,
                 'heightPx' => $height,
                 'message' => $isGap ? $this->formatGapMessage($dur) : null,
@@ -280,8 +390,14 @@ class DailyShiftPlanPdfBuilder
             ];
         }
 
-        // Maps
-        $timelineMap = $this->makeSpanMapRows($rows, $timelineBlocks);
+        $timelineLaneMaps = [];
+        for ($lane = 0; $lane < $timelineLanes; $lane++) {
+            $laneBlocks = array_values(array_filter(
+                $timelineBlocks,
+                fn($b) => (int)($b['lane'] ?? 0) === $lane
+            ));
+            $timelineLaneMaps[$lane] = $this->makeSpanMapRows($rows, $laneBlocks);
+        }
 
         $craftLaneMaps = [];
         foreach ($craftGroups as $g) {
@@ -297,7 +413,7 @@ class DailyShiftPlanPdfBuilder
             }
         }
 
-        return [$rows, $timelineMap, $craftLaneMaps];
+        return [$rows, $timelineLaneMaps, $craftLaneMaps];
     }
 
     private function anyBlockOverlaps(array $blocks, int $from, int $to): bool
@@ -318,6 +434,7 @@ class DailyShiftPlanPdfBuilder
     {
         $cards = [];
 
+        /** @var Event $e */
         foreach ($events as $e) {
             $start = Carbon::parse($e->start_time);
             $end   = Carbon::parse($e->end_time);
@@ -331,10 +448,11 @@ class DailyShiftPlanPdfBuilder
                 'description' => trim((string)($e->description ?? '')) ?: null,
                 'color'       => $typeColor,
                 'bg'          => $this->mixWithWhite($typeColor, 0.93),
+                'room'        => $e->room->name ?? null,
             ];
         }
 
-        usort($cards, fn($a,$b) => strcmp($a['time'], $b['time']));
+        usort($cards, fn($a, $b) => strcmp($a['time'], $b['time']));
         return $cards;
     }
 
@@ -375,7 +493,21 @@ class DailyShiftPlanPdfBuilder
             }
         }
 
-        usort($blocks, fn($a,$b) => $a['start'] <=> $b['start']);
+        usort($blocks, fn($a, $b) => $a['start'] <=> $b['start']);
+
+        $laneEnds = [];
+        foreach ($blocks as &$b) {
+            $assigned = null;
+            foreach ($laneEnds as $li => $lend) {
+                if ($lend <= $b['start']) { $assigned = $li; break; }
+            }
+            if ($assigned === null) $assigned = count($laneEnds);
+            $b['lane'] = $assigned;
+            $laneEnds[$assigned] = $b['end'];
+            ksort($laneEnds);
+        }
+        unset($b);
+
         return $blocks;
     }
 
@@ -385,6 +517,7 @@ class DailyShiftPlanPdfBuilder
     {
         $byCraft = [];
 
+        /** @var Shift $s */
         foreach ($shifts as $s) {
             $craftKey = $this->craftKey($s);
 
@@ -394,24 +527,27 @@ class DailyShiftPlanPdfBuilder
             $start = $this->timeToMinutes($startStr);
             $end   = $this->timeToMinutesWithOvernight($startStr, $endStr);
 
-            $people = $this->collectShiftPeople($s);
+            $people  = $this->collectShiftPeople($s);
+            $summary = $this->buildShiftQualificationSummary($s);
 
             $byCraft[$craftKey][] = [
                 'start'   => $start,
                 'end'     => $end,
-                'startStr'=> $startStr,
+                'startStr' => $startStr,
                 'endStr'  => $endStr,
                 'title'   => $startStr . ' – ' . $endStr,
                 'displayTitle' => $startStr . ' – ' . $endStr,
                 'meta'    => trim((string)($s->description ?? '')) ?: null,
                 'people'  => $people,
+                'qualSummary'  => $summary,
                 'shiftId' => $s->id ?? null,
                 'lane'    => 0,
+                'room'    => $s->room?->name ?? null,
             ];
         }
 
         foreach ($byCraft as $ck => &$blocks) {
-            usort($blocks, fn($a,$b) => $a['start'] <=> $b['start']);
+            usort($blocks, fn($a, $b) => $a['start'] <=> $b['start']);
 
             $laneEnds = [];
             foreach ($blocks as &$b) {
@@ -434,50 +570,50 @@ class DailyShiftPlanPdfBuilder
     private function collectShiftPeople($shift): array
     {
         $people = [];
+        $neededByQid = $this->neededCountByQualificationId($shift);
 
+        $make = function (string $type, string $name, $pivot) use (&$people, $neededByQid): void {
+            $name = trim($name) !== '' ? trim($name) : ucfirst($type);
+
+            $count = (int)($pivot?->shift_count ?? 1);
+            if ($count <= 0) $count = 1;
+
+            $qid = (int)($pivot?->shift_qualification_id ?? 0);
+            $needed = $qid > 0 ? (int)($neededByQid[$qid] ?? 0) : 0;
+
+            $qualName = $this->qualificationLabelFromPivot($pivot) ?? '';
+
+            $people[] = [
+                'type'   => $type,
+                'name'   => $name,
+                'qual'   => $qualName,
+                'count'  => $count,
+                'needed' => $needed,
+                'qid'    => $qid,
+            ];
+        };
+
+        /** @var User $u */
         foreach (($shift->users ?? []) as $u) {
-            $name = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? ''));
-            $qual = $this->qualificationLabelFromPivot($u->pivot ?? null);
-            $count = $u->pivot->shift_count ?? null;
-
-            $people[] = [
-                'type'  => 'user',
-                'name'  => $name !== '' ? $name : ('User #' . ($u->id ?? '')),
-                'qual'  => $qual,
-                'count' => $count ? ('x' . $count) : null,
-            ];
+            $n = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? ''));
+            $make('user', $n !== '' ? $n : ('User #' . ($u->id ?? '')), $u->pivot ?? null);
         }
 
+        /** @var Freelancer $f */
         foreach (($shift->freelancer ?? []) as $f) {
-            $name = trim(($f->first_name ?? '') . ' ' . ($f->last_name ?? ''));
-            if ($name === '' && isset($f->freelancer_name)) $name = (string)$f->freelancer_name;
-            if ($name === '' && isset($f->name)) $name = (string)$f->name;
+            $n = trim(($f->first_name ?? '') . ' ' . ($f->last_name ?? ''));
+            if ($n === '' && isset($f->display_name)) $n = (string)$f->display_name;
+            if ($n === '' && isset($f->name)) $n = (string)$f->name;
 
-            $qual = $this->qualificationLabelFromPivot($f->pivot ?? null);
-            $count = $f->pivot->shift_count ?? null;
-
-            $people[] = [
-                'type'  => 'freelancer',
-                'name'  => $name !== '' ? $name : ('Freelancer #' . ($f->id ?? '')),
-                'qual'  => $qual,
-                'count' => $count ? ('x' . $count) : null,
-            ];
+            $make('freelancer', $n !== '' ? $n : ('Freelancer #' . ($f->id ?? '')), $f->pivot ?? null);
         }
 
+        /** @var ServiceProvider $sp */
         foreach (($shift->serviceProvider ?? []) as $sp) {
-            $name = trim(($sp->first_name ?? '') . ' ' . ($sp->last_name ?? ''));
-            if ($name === '' && isset($sp->provider_name)) $name = (string)$sp->provider_name;
-            if ($name === '' && isset($sp->name)) $name = (string)$sp->name;
+            $n = trim((string)($sp->provider_name ?? ''));
+            if ($n === '' && isset($sp->name)) $n = (string)$sp->name;
 
-            $qual = $this->qualificationLabelFromPivot($sp->pivot ?? null);
-            $count = $sp->pivot->shift_count ?? null;
-
-            $people[] = [
-                'type'  => 'service',
-                'name'  => $name !== '' ? $name : ('Service #' . ($sp->id ?? '')),
-                'qual'  => $qual,
-                'count' => $count ? ('x' . $count) : null,
-            ];
+            $make('service', $n !== '' ? $n : ('Service #' . ($sp->id ?? '')), $sp->pivot ?? null);
         }
 
         return $people;
@@ -499,6 +635,21 @@ class DailyShiftPlanPdfBuilder
         if ($abbr !== '') return $abbr;
 
         return null;
+    }
+
+    /** @return array<int,int> [qualificationId => neededCount] */
+    private function neededCountByQualificationId($shift): array
+    {
+        $map = [];
+
+        foreach (($shift->shiftsQualifications ?? []) as $sq) {
+            $qid = (int)($sq->shift_qualification_id ?? 0);
+            if ($qid <= 0) continue;
+
+            $map[$qid] = (int)($sq->value ?? 0);
+        }
+
+        return $map;
     }
 
     private function buildCraftMeta(Collection $shifts): array
@@ -534,7 +685,9 @@ class DailyShiftPlanPdfBuilder
 
         foreach ($shiftBlocksByCraft as $craftKey => $blocks) {
             $laneCount = 1;
-            foreach ($blocks as $b) $laneCount = max($laneCount, ((int)($b['lane'] ?? 0)) + 1);
+            foreach ($blocks as $b) {
+                $laneCount = max($laneCount, ((int)($b['lane'] ?? 0)) + 1);
+            }
 
             $m = $craftMeta[$craftKey] ?? null;
 
@@ -548,7 +701,7 @@ class DailyShiftPlanPdfBuilder
             ];
         }
 
-        usort($groups, fn($a,$b) => ($a['pos'] <=> $b['pos']) ?: strcmp($a['label'], $b['label']));
+        usort($groups, fn($a, $b) => ($a['pos'] <=> $b['pos']) ?: strcmp($a['label'], $b['label']));
         return $groups;
     }
 
@@ -560,7 +713,7 @@ class DailyShiftPlanPdfBuilder
                 $cols[] = [
                     'craftKey' => $g['key'],
                     'lane'     => $lane,
-                    'label'    => ($g['lanes'] > 1) ? '' : '',
+                    'label'    => '',
                 ];
             }
         }
@@ -573,7 +726,7 @@ class DailyShiftPlanPdfBuilder
     {
         $map = [];
 
-        usort($blocks, fn($a,$b) => $a['start'] <=> $b['start']);
+        usort($blocks, fn($a, $b) => $a['start'] <=> $b['start']);
 
         foreach ($blocks as $b) {
             $startIndex = $this->rowIndexForMinute($rows, (int)$b['start']);
@@ -582,18 +735,27 @@ class DailyShiftPlanPdfBuilder
             if ($startIndex === null || $endIndex === null) continue;
             if ($endIndex < $startIndex) continue;
 
-            // nicht über Gap spannen
-            while ($endIndex >= $startIndex && ($rows[$endIndex]['isGap'] ?? false)) $endIndex--;
+            while ($endIndex >= $startIndex && ($rows[$endIndex]['isGap'] ?? false)) {
+                $endIndex--;
+            }
             if ($endIndex < $startIndex) continue;
 
             if (isset($map[$startIndex])) continue;
 
+            $spanHeight = 0;
+            for ($i = $startIndex; $i <= $endIndex; $i++) {
+                $spanHeight += (int)($rows[$i]['heightPx'] ?? 16);
+            }
+
             $map[$startIndex] = [
-                'rowspan' => ($endIndex - $startIndex + 1),
-                'data'    => $b,
+                'rowspan'  => ($endIndex - $startIndex + 1),
+                'heightPx' => $spanHeight,
+                'data'     => $b,
             ];
 
-            for ($i = $startIndex + 1; $i <= $endIndex; $i++) $map[$i] = ['skip' => true];
+            for ($i = $startIndex + 1; $i <= $endIndex; $i++) {
+                $map[$i] = ['skip' => true];
+            }
         }
 
         return $map;
@@ -670,10 +832,11 @@ class DailyShiftPlanPdfBuilder
     private function normalizeHexColor(?string $color): ?string
     {
         if (!$color) return null;
+
         $c = trim($color);
 
         if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $c)) return $c;
-        if (preg_match('/^([0-9a-fA-F]{6})$/', $c)) return '#'.$c;
+        if (preg_match('/^([0-9a-fA-F]{6})$/', $c)) return '#' . $c;
 
         return null;
     }
@@ -681,7 +844,9 @@ class DailyShiftPlanPdfBuilder
     private function mixWithWhite(string $hex, float $mix = 0.93): string
     {
         $hex = ltrim(trim($hex), '#');
-        if (strlen($hex) === 3) $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
         if (strlen($hex) !== 6) return '#f3f4f6';
 
         $r = hexdec(substr($hex, 0, 2));

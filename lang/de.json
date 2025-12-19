@@ -3692,5 +3692,21 @@
     "Events in time blocks": "Termine in Zeitblöcken",
     "When 'Events relative to each other' is active, concurrent events are displayed side by side in the export, which reduces the readability of the information but shows overlaps better. In 'Events in time blocks' mode, events are displayed one after another per time block, which increases readability but does not allow simultaneity to be seen at a glance.": "Wenn 'Termine relativ zueinander' aktiv ist, werden zeitgleiche Termine im Export nebeneinander angezeigt, das reduziert die Lesbarkeit der Infos, aber zeigt Überschneidungen besser an. Beim Modus \"Termine in Zeitblöcken\" werden die Termine pro Zeitblock nacheinander angezeigt was die Lesbarkeit erhöht, jedoch nicht die Gleichzeitigkeit auf einen Blick ermöglicht.",
     "Without Subcategory": "Ohne Unterkategorie",
-    "No appointments yet": "Noch keine Termine"
+    "No appointments yet": "Noch keine Termine",
+    "Export Shift Plan": "Schichtplan exportieren",
+    "Export the shift plan for this project as a PDF document.": "Exportiere den Schichtplan für dieses Projekt als PDF-Dokument.",
+    "One day per page · Compact timeline layout": "Ein Tag pro Seite · Kompaktes Timeline-Layout",
+    "Privacy mode": "Privatsphäre-Modus",
+    "Hide personal data in the PDF (recommended for public sharing).": "Personenbezogene Daten im PDF ausblenden (empfohlen zum Teilen nach außen).",
+    "Toggle privacy mode": "Privatsphäre-Modus umschalten",
+    "When enabled": "Wenn aktiviert",
+    "Full names are replaced (e.g. “Max M.”).": "Vollständige Namen werden ersetzt (z. B. „Max M.“).",
+    "Contact details and internal notes are omitted (if present).": "Kontaktdaten und interne Notizen werden weggelassen (falls vorhanden).",
+    "Freelancers / providers are anonymized in the same way.": "Freelancer / Dienstleister werden auf die gleiche Weise anonymisiert.",
+    "ON": "AN",
+    "OFF": "AUS",
+    "Safe to share externally.": "Sicher zum externen Teilen.",
+    "Contains personal data.": "Enthält personenbezogene Daten.",
+    "Preparing…": "Wird vorbereitet…",
+    "Export Shift Plan as PDF": "Schichtplan als PDF exportieren"
 }

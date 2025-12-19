@@ -5,7 +5,7 @@
             v-if="ready"
             :project="projectLite"
             :date-value="dateRange"
-            :sticky-offset-top-px="80"
+            :sticky-offset-top-px="130"
             :is-in-project-view="true"
         />
         <div v-else class="text-secondary text-sm">{{ $t('Loading...') }}</div>

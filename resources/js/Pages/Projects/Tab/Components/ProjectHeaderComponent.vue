@@ -20,9 +20,9 @@
         <!-- ===== STICKY PROJECT NAVIGATOR ===== -->
         <div class="sticky top-0 z-50 w-full inset-x-0 ">
             <!-- Glassy background layer -->
-            <div class="bg-white/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-zinc-200/70">
-                <div class="artwork-container !pb-0 py-3">
-                    <div class="flex items-center gap-3">
+            <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70">
+                <div class="artwork-container pb-0! py-3">
+                    <div class="flex items-center justify-between gap-3">
                         <!-- Left: Switcher trigger -->
                         <div class="min-w-0 flex items-center gap-3">
                             <button
@@ -67,12 +67,28 @@
                                     </div>
                                 </div>
                             </button>
+
+
+
+                            <div class="mt-2 flex items-center text-[13px] text-zinc-600" v-if="headerObject.project_history.length > 0">
+                                <span>{{ $t('last modified') }}:</span>
+                                <UserPopoverTooltip
+                                    :user="headerObject.project_history[0]?.changer"
+                                    :id="headerObject.project_history[0]?.changer.id"
+                                    height="4"
+                                    width="4"
+                                    class="ml-2"
+                                />
+                                <span class="ml-2 tabular-nums">{{ headerObject.project_history[0]?.created_at }}</span>
+                                <button class="inline-flex items-center gap-1 text-artwork-buttons-create hover:text-artwork-buttons-hover transition" @click="openProjectHistoryModal()">
+                                    <PropertyIcon name="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
+                                    {{ $t('View history') }}
+                                </button>
+                            </div>
+
                         </div>
 
-                        <!-- Middle: Tabs (immer sichtbar) -->
-                        <div class="flex-1 min-w-0 px-2">
-                            <BaseTabs :tabs="tabsForBaseTabComponent" :use-translation="false" />
-                        </div>
+
 
                         <!-- Right: Actions -->
                         <div class="flex items-center gap-2 shrink-0">
@@ -149,6 +165,11 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Middle: Tabs (immer sichtbar) -->
+                    <div class="flex items-center">
+                        <BaseTabs :tabs="tabsForBaseTabComponent" :use-translation="false" />
                     </div>
 
                     <!-- Project Switcher Popover -->

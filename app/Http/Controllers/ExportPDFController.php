@@ -9,6 +9,7 @@ use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
@@ -351,24 +352,73 @@ class ExportPDFController extends Controller
         );
     }
 
-    public function exportDailyViewShiftPlanInProject(Project $project): \Symfony\Component\HttpFoundation\Response
+    public function exportDailyViewShiftPlanInProject(Project $project, bool $privacyMode): Response
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        $today = Carbon::now()->format('Y-m-d_H:i:s');
+
         $project->load([
-            // Events voll + Typfarbe
+            'shifts.shiftsQualifications', // <- neu (needed-counts)
             'events.event_type',
+            'events.room',
             'events.timelines',
-            'shifts.craft',
+            'shifts.craft.qualifications',  // <- neu
+            'shifts.room',
             'shifts.users',
-            'shifts.freelancer',       // <- Relation heißt in deinem Model "freelancer()"
-            'shifts.serviceProvider',  // <- Relation heißt "serviceProvider()"
+            'shifts.freelancer',
+            'shifts.serviceProvider',
+            'users'
         ]);
 
-        $pdfData = $this->dailyShiftPlanPdfBuilder->buildForProject($project);
+        $projectRoles = ProjectRole::query()->pluck('name', 'id')->toArray();
+
+        $groupedUsersByRole = [];
+
+        foreach ($project->users as $projUser) {
+            $raw = $projUser->pivot->roles
+                ?? $projUser->pivot_roles
+                ?? [];
+
+            if (is_string($raw)) {
+                $raw = json_decode($raw, true) ?: [];
+            }
+
+            $roleIds = collect($raw)
+                ->filter(fn ($v) => $v !== null && $v !== '')
+                ->map(fn ($v) => (int) $v)
+                ->unique()
+                ->values()
+                ->all();
+
+            if (empty($roleIds)) {
+                continue;
+            }
+
+            $userPayload = [
+                'id'        => $projUser->id,
+                'full_name' => $projUser->full_name ?? '',
+                'email'     => $projUser->email,
+            ];
+
+            foreach ($roleIds as $roleId) {
+                $roleName = $projectRoles[$roleId] ?? 'Unbekannt';
+                $groupedUsersByRole[$roleName][] = $userPayload;
+            }
+        }
+
+        $pdfData = $this->dailyShiftPlanPdfBuilder->buildForProject($project, $user, $privacyMode);
+
+        $pdfData['groupedUsersByRole'] = $groupedUsersByRole;
 
         $pdf = $this->domPdf
             ->loadView('pdf.shiftplan_daily_project', $pdfData)
+            ->setOptions([
+                'dpi'         => 300,
+                'defaultFont' => 'sans-serif'
+            ])
             ->setPaper('a4', 'landscape');
 
-        return $pdf->stream("Shiftplan_{$project->name}.pdf");
+        return $pdf->download("Shiftplan_{$project->name}_{$today}.pdf");
     }
 }

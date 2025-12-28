@@ -1,5 +1,6 @@
 services:
     artwork:
+        image: artwork-app:latest
         build:
             context: .
             dockerfile: ./dockerfiles/release.Dockerfile
@@ -13,6 +14,35 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - './:/var/www/html'
+    artwork_worker:
+        image: artwork-app:latest
+        container_name: artwork_worker
+        restart: unless-stopped
+        depends_on:
+            -   artwork
+        env_file:
+            - .env
+        environment:
+            - APP_ENV=develop
+        command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+        volumes:
+            - ./.env:/var/www/html/.env:ro
+            - ./storage:/var/www/html/storage
+    artwork_reverb:
+        image: artwork-app:latest
+        container_name: artwork_reverb
+        restart: unless-stopped
+        depends_on:
+            -   artwork
+        ports:
+            - "127.0.0.1:8080:8080"
+        env_file:
+            - .env
+        environment:
+            - APP_ENV=develop
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+        volumes:
+            - ./.env:/var/www/html/.env:ro
     db:
         image: 'mariadb:10.11'
         ports:
@@ -25,14 +55,19 @@ services:
             MYSQL_PASSWORD: '${DB_PASSWORD}'
         volumes:
             - 'artwork-db-maria:/var/lib/mysql'
-    meili:
+    meilisearch:
         image: 'getmeili/meilisearch:v1.20.0'
+        environment:
+            MEILI_MASTER_KEY: ${MEILISEARCH_KEY}
+            MEILI_ENV: develop
         ports:
             - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         volumes:
             - 'artwork-meilisearch:/data'
     redis:
         image: 'redis:alpine'
+        environment:
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
         volumes:
             - 'artwork-redis:/data'
 volumes:

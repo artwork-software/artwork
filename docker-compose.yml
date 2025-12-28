@@ -59,7 +59,7 @@ services:
         image: 'getmeili/meilisearch:v1.20.0'
         environment:
             MEILI_MASTER_KEY: ${MEILISEARCH_KEY}
-            MEILI_ENV: develop
+            MEILI_ENV: development
         ports:
             - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         volumes:

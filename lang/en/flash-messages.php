@@ -127,5 +127,19 @@ return [
         'success' => [
             'update' => 'Module visibility has been successfully updated.'
         ]
+    ],
+    'external_user_source' => [
+        'success' => [
+            'create' => 'External user source successfully created',
+            'update' => 'External user source successfully updated',
+            'delete' => 'External user source successfully deleted'
+        ]
+    ],
+    'external_user_group_mapping' => [
+        'success' => [
+            'create' => 'Group mapping successfully created',
+            'update' => 'Group mapping successfully updated',
+            'delete' => 'Group mapping successfully deleted'
+        ]
     ]
 ];

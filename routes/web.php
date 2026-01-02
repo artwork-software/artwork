@@ -99,7 +99,10 @@ use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
+use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
@@ -223,6 +226,34 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.branding');
         Route::put('/branding', [ToolSettingsBrandingController::class, 'update'])
             ->name('tool.branding.update');
+        Route::get('/external-user-management', [ToolSettingsExternalUserManagementController::class, 'index'])
+            ->name('tool.external-user-management');
+
+        // External User Sources
+        Route::get('/external-user-management/sources', [ExternalUserSourceController::class, 'index'])
+            ->name('tool.external-user-management.sources.index');
+        Route::post('/external-user-management/sources', [ExternalUserSourceController::class, 'store'])
+            ->name('tool.external-user-management.sources.store');
+        Route::put('/external-user-management/sources/{externalUserSource}', [ExternalUserSourceController::class, 'update'])
+            ->name('tool.external-user-management.sources.update');
+        Route::delete('/external-user-management/sources/{externalUserSource}', [ExternalUserSourceController::class, 'destroy'])
+            ->name('tool.external-user-management.sources.destroy');
+        Route::post('/external-user-management/sources/{externalUserSource}/test-connection', [ExternalUserSourceController::class, 'testConnection'])
+            ->name('tool.external-user-management.sources.test-connection');
+
+        Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
+            ->name('tool.external-user-management.sources.test-connection-config');
+
+        // External User Group Mappings
+        Route::get('/external-user-management/sources/{sourceId}/group-mappings', [ExternalUserGroupMappingController::class, 'index'])
+            ->name('tool.external-user-management.group-mappings.index');
+        Route::post('/external-user-management/group-mappings', [ExternalUserGroupMappingController::class, 'store'])
+            ->name('tool.external-user-management.group-mappings.store');
+        Route::put('/external-user-management/group-mappings/{externalUserGroupMapping}', [ExternalUserGroupMappingController::class, 'update'])
+            ->name('tool.external-user-management.group-mappings.update');
+        Route::delete('/external-user-management/group-mappings/{externalUserGroupMapping}', [ExternalUserGroupMappingController::class, 'destroy'])
+            ->name('tool.external-user-management.group-mappings.destroy');
+
         Route::get('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'index'])
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])

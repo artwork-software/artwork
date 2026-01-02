@@ -141,5 +141,19 @@ return [
         'success' => [
             'update' => 'Modul-Sichtbarkeit wurde erfolgreich aktualisiert.'
         ]
+    ],
+    'external_user_source' => [
+        'success' => [
+            'create' => 'Externe Nutzerquelle erfolgreich erstellt',
+            'update' => 'Externe Nutzerquelle erfolgreich aktualisiert',
+            'delete' => 'Externe Nutzerquelle erfolgreich gelöscht'
+        ]
+    ],
+    'external_user_group_mapping' => [
+        'success' => [
+            'create' => 'Gruppen-Mapping erfolgreich erstellt',
+            'update' => 'Gruppen-Mapping erfolgreich aktualisiert',
+            'delete' => 'Gruppen-Mapping erfolgreich gelöscht'
+        ]
     ]
 ];

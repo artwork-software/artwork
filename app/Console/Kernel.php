@@ -52,6 +52,11 @@ class Kernel extends ConsoleKernel
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+
+        // External User Sync - alle 30 Minuten
+        $schedule->command('external-users:sync')
+            ->everyThirtyMinutes()
+            ->runInBackground();
         
         // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
@@ -83,6 +88,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Core/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Shift/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Workflow/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

@@ -153,7 +153,7 @@ class SageAssignedDataService implements CollectiveBookingService
             $kstTraeger
         ] = $identifiers;
 
-        return $this->sageAssignedDataRepository->findParentBookingBySageIdKtoSollAndKtoHabenTraeger(
+        return $this->sageAssignedDataRepository->findBookingBySageIdKtoSollAndKtoHabenTraeger(
             $sageId,
             $ktoSoll,
             $ktoHaben,

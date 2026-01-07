@@ -1374,7 +1374,7 @@ const lockOrUnlockShift = (commit = false) => {
                         :label="$t('Save')"
                         type="submit"
                         is-add-button
-                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft"
+                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !selectedRoom"
                     />
 
                     <BaseUIButton

@@ -104,11 +104,35 @@
             >
                 <div v-if="!day.isExtraRow">
                     <div
-                        class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
+                        class="flex items-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
                         :style="dayHeaderStyle"
                     >
-                        <div class="px-16 font-lexend text-sm font-bold py-4">
-                            {{ day.dayString }}, {{ day.fullDay }}
+                        <div class="flex items-center justify-between w-full gap-x-4 px-4">
+                            <div class="flex items-center justify-start min-w-0 flex-1">
+                                <BaseUIButton
+                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    :label="$t('Add Event')"
+                                    :icon="IconCalendarPlus"
+                                    is-small
+                                    class="!bg-white/10 !text-white hover:!bg-white/20"
+                                    @click="openNewEventModalWithBaseData(day.withoutFormat, null)"
+                                />
+                            </div>
+
+                            <div class="font-lexend text-sm font-bold py-4 text-center shrink-0 px-4">
+                                {{ day.dayString }}, {{ day.fullDay }}
+                            </div>
+
+                            <div class="flex items-center justify-end min-w-0 flex-1">
+                                <BaseUIButton
+                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    :label="$t('Add Shift')"
+                                    :icon="IconCalendarUser"
+                                    is-small
+                                    class="!bg-white/10 !text-white hover:!bg-white/20"
+                                    @click="openAddShiftForRoomAndDay(day.withoutFormat, null)"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -202,12 +226,15 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {
     IconAlertSquareRounded,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
     IconX, IconFileExport,
+    IconCalendarPlus,
+    IconCalendarUser,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -313,7 +340,8 @@ const showCalendarWarning = ref(props.calendarWarningText)
 const daysLocal = shallowRef<any[]>(props.days ?? [])
 
 // shiftPlanCopy
-const shiftPlanCopy = shallowRef<any[]>(
+// WICHTIG: muss tief reaktiv sein, da Websocket-Listener tief im Objekt (room.content[day].events/shifts) mutiert.
+const shiftPlanCopy = ref<any[]>(
     Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
 )
 
@@ -458,7 +486,8 @@ const roomDayEventsIndex = shallowRef<Map<any, Map<string, AnyEvent[]>>>(new Map
 watch(
     shiftPlanCopy,
     () => { roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || []) },
-    { immediate: true }
+    // Deep nötig, damit Mutationen aus dem Websocket-Listener (push/splice in nested arrays) den Index neu bauen.
+    { immediate: true, deep: true }
 )
 
 function getEventsForRoomDay(room: any, targetDay: string): AnyEvent[] {
@@ -493,6 +522,10 @@ const roomsForDayMap = computed<Map<string, AnyRoom[]>>(() => {
     return map
 })
 
+const isDayWithoutRooms = (dayLabel: string): boolean => {
+    return (roomsForDayMap.value.get(dayLabel)?.length ?? 0) === 0
+}
+
 /**
  * roomsArray for EventComponent
  */
@@ -516,7 +549,7 @@ const shiftQualificationsArray = computed(() =>
 /**
  * Modals
  */
-const openAddShiftForRoomAndDay = (day: string, roomId: number) => {
+const openAddShiftForRoomAndDay = (day: string, roomId: number | null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = roomId
     dayForShiftAdd.value = day
@@ -530,7 +563,7 @@ const closeAddShiftModal = () => {
     dayForShiftAdd.value = null
 }
 
-const openNewEventModalWithBaseData = (day: string, roomId: number) => {
+const openNewEventModalWithBaseData = (day: string, roomId: number | null) => {
     eventToEdit.value = false
     wantedRoom.value = roomId
     wantedDate.value = day

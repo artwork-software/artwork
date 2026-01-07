@@ -1287,14 +1287,16 @@ class ShiftController extends Controller
     {
         $this->eventTimelineService->updateTimeLines($event, $request->get('dataset'));
 
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($event->fresh(), $event->fresh()->room_id));
+        $freshEvent = $event->fresh();
+        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
     }
 
     public function addTimeLine(Event $event, Request $request): void
     {
         $this->eventTimelineService->addTimeLines($event, $request->get('dataset'));
 
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($event->fresh(), $event->fresh()->room_id));
+        $freshEvent = $event->fresh();
+        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
     }
 
     public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void

@@ -416,8 +416,9 @@ watch(eventItems, (list) => {
   for (const it of list) {
     const e = it.payload
     if (eventsExpanded.value[it.id] === undefined) {
-      // Default wie im Kind: expanded wenn Timelines existieren
-      eventsExpanded.value[it.id] = Array.isArray(e?.timelines) && e.timelines.length > 0
+      // Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt lassen
+      // (damit „Create new timeline“ sofort sichtbar ist).
+      eventsExpanded.value[it.id] = true
     }
   }
 }, { immediate: true, deep: true })

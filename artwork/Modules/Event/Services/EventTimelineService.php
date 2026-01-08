@@ -3,8 +3,10 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Illuminate\Support\Facades\DB;
 
 readonly class EventTimelineService
 {
@@ -22,11 +24,14 @@ readonly class EventTimelineService
      */
     public function updateTimeLines(Event $event, array $dataset): void
     {
-        $event->timelines()->delete();
+        DB::transaction(function () use ($event, $dataset): void {
+            $event->timelines()->delete();
 
-        foreach ($dataset as $timeline) {
-            $this->createTimeline($event, $timeline);
-        }
+            $rows = $this->buildTimelineRows($event, $dataset);
+            if ($rows !== []) {
+                Timeline::query()->insert($rows);
+            }
+        });
     }
 
     /**
@@ -38,8 +43,9 @@ readonly class EventTimelineService
      */
     public function addTimeLines(Event $event, array $dataset): void
     {
-        foreach ($dataset as $timeline) {
-            $this->createTimeline($event, $timeline);
+        $rows = $this->buildTimelineRows($event, $dataset);
+        if ($rows !== []) {
+            Timeline::query()->insert($rows);
         }
     }
 
@@ -52,12 +58,19 @@ readonly class EventTimelineService
      */
     public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
     {
-        foreach ($shiftPresetTimeline->times as $timeline) {
-            $this->createTimeline($event, [
-                'start' => $timeline->start,
-                'end' => $timeline->end,
-                'description' => $timeline->description,
-            ]);
+        $rows = $this->buildTimelineRows(
+            $event,
+            $shiftPresetTimeline->times
+                ->map(fn ($timeline) => [
+                    'start' => $timeline->start,
+                    'end' => $timeline->end,
+                    'description' => $timeline->description,
+                ])
+                ->toArray()
+        );
+
+        if ($rows !== []) {
+            Timeline::query()->insert($rows);
         }
     }
 
@@ -92,23 +105,40 @@ readonly class EventTimelineService
      * @param array $timeline
      * @return void
      */
-    private function createTimeline(Event $event, array $timeline): void
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildTimelineRows(Event $event, array $dataset): array
     {
+        if ($dataset === []) {
+            return [];
+        }
 
-        [$startTime, $endTime, $allDay] = $this->eventService->processEventTimesForTimeline(
-            Carbon::parse($event->start_time),
-            $timeline['start'] ?? null,
-            $timeline['end'] ?? null
-        );
+        $baseDay = Carbon::parse($event->start_time);
+        $now = now();
 
+        $rows = [];
+        foreach ($dataset as $timeline) {
+            // `processEventTimesForTimeline` mutiert das Carbon-Objekt, daher pro Row klonen
+            [$startTime, $endTime] = $this->eventService->processEventTimesForTimeline(
+                $baseDay->copy(),
+                $timeline['start'] ?? null,
+                $timeline['end'] ?? null
+            );
 
-        $event->timelines()->create([
-            'start_date' => Carbon::parse($startTime)->format('Y-m-d'),
-            'end_date' => Carbon::parse($endTime)->format('Y-m-d'),
-            'start' => Carbon::parse($startTime)->format('H:i:s'),
-            'end' => Carbon::parse($endTime)->format('H:i:s'),
-            'description' => $timeline['description'],
-            'start_or_end' => (bool)$timeline['start'],
-        ]);
+            $rows[] = [
+                'event_id' => $event->id,
+                'start_date' => Carbon::parse($startTime)->format('Y-m-d'),
+                'end_date' => Carbon::parse($endTime)->format('Y-m-d'),
+                'start' => Carbon::parse($startTime)->format('H:i:s'),
+                'end' => Carbon::parse($endTime)->format('H:i:s'),
+                'description' => $timeline['description'] ?? null,
+                'start_or_end' => (bool) ($timeline['start'] ?? null),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        return $rows;
     }
 }

@@ -1096,8 +1096,6 @@ const shiftHeaderHeight = 32 // wie dein h-8
 const shiftColWidth = 202
 const shiftLeftWidth = 191.5
 
-// WICHTIG: Virtualisierung braucht fixe Row-Höhe.
-// Wenn expand_days wirklich "unendlich" sein soll, muss die Zelle innen scrollen.
 const shiftRowHeight = computed(() =>
     usePage().props.auth.user.calendar_settings.expand_days ? 360 : 112
 )
@@ -1392,27 +1390,22 @@ function isSelectedMultiEditCell(row: any, day: any) {
 function cellWrapperClass(row: any, day: any) {
     const classes: string[] = []
 
-    // Highlight-Mode dimmt alles außer den aktiven User
     if (highlightMode.value) {
         classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
     }
 
-    // MultiEdit-Mode dimmt alles außer dem aktiven User
     if (multiEditMode.value) {
         classes.push(isActiveMultiEditRow(row) ? '' : 'opacity-30')
     }
 
-    // ausgewählte Zelle in MultiEdit: wieder volle Sichtbarkeit + overflow
     if (multiEditMode.value && isSelectedMultiEditCell(row, day)) {
         classes.push('opacity-100! overflow-hidden!')
     }
 
-    // Highlight-Mode dimmt nur, wenn wirklich eine Auswahl existiert
     if (highlightMode.value && hasActiveHighlightSelection.value) {
         classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
     }
 
-// Hover-Preview: betroffene User kurz hervorheben
     if (hoverShiftUsersToHighlight.value && isRowInIds(row, hoverShiftUsersToHighlight.value)) {
         classes.push('!opacity-100')
     }
@@ -1421,14 +1414,12 @@ function cellWrapperClass(row: any, day: any) {
 }
 
 function shiftPlanCellInnerClass(row: any, day: any) {
-    // dein “!opacity-20” wenn die Zelle selected ist
     return (multiEditMode.value && isSelectedMultiEditCell(row, day)) ? '!opacity-20' : ''
 }
 
 function getDayServicesForCell(worker: any, day: any) {
     const key = day.withoutFormat ?? day.fullDay
     if (!key) return null
-    // wenn dayServices ein Object (map) ist:
     return worker?.dayServices?.[key] ?? null
 }
 
@@ -2051,7 +2042,6 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
     const targetIndex = scrollOffset // das ist dein Index im days-array
     const x = targetIndex * colWidth
 
-// “fixer Room-Name”-Punkt soll auf die Mitte der Zielspalte zeigen
 
 
     const roomNameElement = document.getElementById('roomNameContainer_0')
@@ -2541,8 +2531,6 @@ function handleSeriesUpdated() {
 function clearHighlightSelection() {
     idToHighlight.value = null
     typeToHighlight.value = null
-
-    // ✅ NEU
     highlightSelectionKind.value = null
     shiftUsersToHighlight.value = null
     hoverShiftUsersToHighlight.value = null

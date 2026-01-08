@@ -2,37 +2,47 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="flex items-center gap-x-3">
             <div class="inline-flex items-center">
+                <ToolTipComponent
+                    direction="bottom"
+                    :tooltip-text="$t('Time range back')"
+                    :icon="IconChevronLeft"
+                    icon-size="h-5 w-5 text-primary"
+                    @click="previousTimeRange"
+                    classesButton="ui-button"
+                />
                 <date-picker-component v-if="dateValue"
                                        :dateValueArray="dateValue"
                                        :is_shift_plan="false"
                                        :is_user_shift_plan="true"/>
-                <div class="flex items-center">
-                    <div class="flex items-center">
-                        <button class="ml-2 text-black" @click="previousTimeRange">
-                            <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-5 w-5 text-primary"/>
-                        </button>
-                        <button class="ml-2 text-black" @click="nextTimeRange">
-                            <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-5 w-5 text-primary"/>
-                        </button>
-                    </div>
-                </div>
+                <ToolTipComponent
+                    direction="bottom"
+                    :tooltip-text="$t('Time range forward')"
+                    :icon="IconChevronRight"
+                    icon-size="h-5 w-5 text-primary"
+                    @click="nextTimeRange"
+                    classesButton="ui-button"
+                />
             </div>
             <div class="flex items-center" v-if="checkIfThisIsMe">
-                <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                    <PropertyIcon name="IconCalendarStar" class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                <div @click="showCalendarAboSettingModal = true"
+                     class="flex items-center gap-x-1 text-sm group cursor-pointer">
+                    <PropertyIcon name="IconCalendarStar"
+                                  class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
                     {{ $t('Subscribe to shift calendar') }}
                 </div>
             </div>
         </div>
-<!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
-<!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
-<!--        </div>-->
-<!--        <div v-if="type === 'freelancer' || type === 'service_provider'">-->
-<!--            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}-->
-<!--        </div>-->
+        <!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
+        <!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
+        <!--        </div>-->
+        <!--        <div v-if="type === 'freelancer' || type === 'service_provider'">-->
+        <!--            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}-->
+        <!--        </div>-->
     </div>
-    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
-    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
+    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal"
+                             :eventTypes="eventTypes"/>
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false"
+                          is_shift_calendar_abo/>
 </template>
 
 <script>
@@ -48,12 +58,15 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        ToolTipComponent,
         PropertyIcon,
         CalendarAboInfoModal,
         CalendarAboSettingModal,
@@ -100,13 +113,15 @@ export default {
             // Calculate the total number of hours that need to be worked
             return (totalDays * hoursPerDay).toFixed(1);
         },
-        checkIfThisIsMe(){
-            if(this.$page.props.auth.user.id){
+        checkIfThisIsMe() {
+            if (this.$page.props.auth.user.id) {
                 return this.user_to_edit_id === this.$page.props.auth.user.id;
             }
         },
     },
     methods: {
+        IconChevronLeft,
+        IconChevronRight,
 
         previousTimeRange() {
             this.$emit('previousTimeRange')
@@ -114,9 +129,9 @@ export default {
         nextTimeRange() {
             this.$emit('nextTimeRange')
         },
-        closeCalendarAboSettingModal(bool){
+        closeCalendarAboSettingModal(bool) {
             this.showCalendarAboSettingModal = false;
-            if(bool){
+            if (bool) {
                 this.showCalendarAboInfoModal = true;
             }
         }

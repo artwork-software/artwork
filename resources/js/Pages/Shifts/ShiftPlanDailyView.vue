@@ -148,7 +148,7 @@
                         </div>
 
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="p-4 w-full relative pb-28 md:pb-32">
+                            <div class="p-4 w-full relative">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
                                     :events="getEventsForRoomDay(room, day.fullDay)"

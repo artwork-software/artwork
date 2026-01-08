@@ -2,20 +2,13 @@
     <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
         <div
             :class="[
-  // ✅ Grundpadding immer
-  'px-1',
+              'px-1',
+              (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
+              (highlightMode && matchesAnyHighlight) ? 'bg-pink-500 ring-2 ring-pink-500 ring-offset-1 ring-offset-white !text-white' : '',
+              (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-pink-500 ring-offset-1 ring-offset-white' : '',
 
-  // ✅ Dimming nur, wenn HighlightMode an UND eine Auswahl existiert UND diese Schicht NICHT passt
-  (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
-
-  // ✅ Active Style: wenn diese Schicht passt (User passt ODER Shift ist selektiert)
-  (highlightMode && matchesAnyHighlight) ? 'bg-pink-500 ring-2 ring-pink-500 ring-offset-1 ring-offset-white !text-white' : '',
-
-  // ✅ Shift selbst zusätzlich sichtbar hervorheben, wenn explizit Shift selektiert wurde
-  (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-pink-500 ring-offset-1 ring-offset-white' : '',
-
-  multiEditMode ? 'text-[10px]' : 'text-[11px]'
-]"
+              multiEditMode ? 'text-[10px]' : 'text-[11px]'
+            ]"
             class="flex items-center xsLight text-shiftText subpixel-antialiased"
             @dragover="onDragOver"
             @drop="onDrop"
@@ -543,7 +536,6 @@ function assignUser(user: any, shiftQualificationId: number) {
             craft_abbreviation: user.craft_abbreviation
         }
     ).then(() => {
-        // Optimistisch GQ-Zähler erhöhen, wenn Nutzer geforderte globale Qualifikationen besitzt
         adjustDeltaForUser(user, +1)
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
     })
@@ -575,8 +567,6 @@ const matchesUserHighlight = computed(() => {
 })
 
 const matchesAnyHighlight = computed(() => {
-    // ✅ Wenn Shift selektiert: diese Shift soll markiert sein (Ring/Background)
-    // ✅ Wenn User selektiert: alle Shifts, in denen der User drin ist, sollen markiert sein
     return isThisShiftHighlighted.value || matchesUserHighlight.value
 })
 </script>

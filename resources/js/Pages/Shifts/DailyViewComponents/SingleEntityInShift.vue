@@ -113,12 +113,13 @@
                         <component
                             :is="IconNote"
                             class="size-4 min-h-4 min-w-4 transition-all duration-150 ease-in-out cursor-pointer"
-                            :class="hasCollision ? person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700' : 'text-gray-500 hover:text-gray-700'"
+                            :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700'"
                             v-tooltip.bottom="descriptionTooltip"
                         />
                         <span
                             v-if="!hasCollision"
-                            class="truncate max-w-72 xsDark"
+
+                            class="hidden xl:block truncate max-w-56 xsDark"
                             v-tooltip.bottom="descriptionTooltip"
                         >
                             {{ person.pivot?.short_description}}

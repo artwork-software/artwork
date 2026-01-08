@@ -122,9 +122,24 @@
         </span>
             </div>
 
+            <!-- Schichtbeschreibung (nur anzeigen, nicht bearbeiten) -->
+            <div v-if="shift.description" class="border-b border-zinc-200 pb-2">
+                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-1">
+                    {{ $t('Description') }}
+                </div>
+                <p class="text-sm text-zinc-800 whitespace-pre-wrap">
+                    {{ shift.description }}
+                </p>
+            </div>
+
             <!-- Notizen -->
             <div class="w-full text-xs">
-                <ShiftNoteComponent :shift="shift" />
+                <ShiftNoteComponent
+                    :shift="shift"
+                    mode="pivot"
+                    :user-to-edit-id="userToEditId"
+                    :entity-type="type"
+                />
             </div>
         </div>
     </div>

@@ -58,7 +58,7 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-                        <div>
+                        <div :class="statusModule ? '' : 'pt-5'">
                             <BaseInput
                                 v-model="eventName"
                                 id="eventTitle"

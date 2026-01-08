@@ -3737,5 +3737,8 @@
     "Saving…": "Saving…",
     "Create group": "Create group",
     "Without Subcategory": "Without Subcategory",
-    "Search for projects or their artists": "Search for projects or their artists"
+    "Search for projects or their artists": "Search for projects or their artists",
+    "If you think this is a mistake, please check the link or contact the admin.": "If you think this is a mistake, please check the link or contact the admin.",
+    "Project not found": "Project not found",
+    "The project does not exist (anymore) or you do not have access to it.": "The project does not exist (anymore) or you do not have access to it."
 }

@@ -102,7 +102,7 @@
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
-            <div class="z-40 min-h-0" :style="{ '--dynamic-height': windowHeight + 'px' }">
+            <div class="z-40 min-h-0" :style="{ '--dynamic-height': showUserOverview ? windowHeight + 'px' : '100%' }">
                 <div
                     class="min-h-0 h-[calc(var(--dynamic-height))]"
                     :class="[isFullscreen ? '' : '']"
@@ -304,6 +304,9 @@
                                                                 @dropFeedback="showDropFeedback"
                                                                 @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
                                                                 @click-on-edit="openEditShiftModal"
+                                                                :highlightedShiftId="highlightedShiftId"
+                                                                @highlight-shift-users="highlightUsersOfShift"
+                                                                @hover-shift-users="setHoverUsersOfShift"
                                                             />
                                                         </div>
                                                     </div>
@@ -640,6 +643,7 @@
                                                 {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference }}
                                             </div>
                                         </div>
+
                                     </div>
 
                                     <!-- Normaler ShiftCell -->
@@ -773,7 +777,7 @@ import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
 import {
     computed,
     defineAsyncComponent,
-    getCurrentInstance,
+    getCurrentInstance, inject,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -988,6 +992,25 @@ const waitForModalClose = ref(false)
 const resolveModalClose = ref<null | (() => void)>(null)
 const _singlePickResolve = ref<any | null>(null)
 const _singlePickShiftId = ref<number | null>(null)
+
+type HighlightSelectionKind = 'user' | 'shift' | null
+const highlightSelectionKind = ref<HighlightSelectionKind>(null)
+
+const shiftUsersToHighlight = ref<{
+    userIds: Array<number | string>
+    freelancerIds: Array<number | string>
+    providerIds: Array<number | string>
+} | null>(null)
+
+const hoverShiftUsersToHighlight = ref<{
+    userIds: Array<number | string>
+    freelancerIds: Array<number | string>
+    providerIds: Array<number | string>
+} | null>(null)
+
+// optional (falls du später Shift oben optisch markieren willst)
+const highlightedShiftId = ref<number | string | null>(null)
+
 const multiEditSessionId = ref(0)
 const notice = reactive<{
     show: boolean;
@@ -1006,7 +1029,7 @@ const notice = reactive<{
 const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
-
+const shiftClickedInHighlightMode = ref(null)
 const showUserOverview = ref(true)
 const pageProps = usePage().props
 
@@ -1073,8 +1096,6 @@ const shiftHeaderHeight = 32 // wie dein h-8
 const shiftColWidth = 202
 const shiftLeftWidth = 191.5
 
-// WICHTIG: Virtualisierung braucht fixe Row-Höhe.
-// Wenn expand_days wirklich "unendlich" sein soll, muss die Zelle innen scrollen.
 const shiftRowHeight = computed(() =>
     usePage().props.auth.user.calendar_settings.expand_days ? 360 : 112
 )
@@ -1337,9 +1358,19 @@ function workerMapKey(row: any) {
 }
 
 function isHighlightedRow(row: any) {
-    return !!idToHighlight.value &&
-        idToHighlight.value === row.worker.element.id &&
-        row.worker.type === typeToHighlight.value
+    if (!hasActiveHighlightSelection.value) return false
+
+    if (highlightSelectionKind.value === 'user') {
+        return !!idToHighlight.value &&
+            idToHighlight.value === row.worker.element.id &&
+            row.worker.type === typeToHighlight.value
+    }
+
+    if (highlightSelectionKind.value === 'shift') {
+        return isRowInIds(row, shiftUsersToHighlight.value)
+    }
+
+    return false
 }
 
 function isActiveMultiEditRow(row: any) {
@@ -1359,33 +1390,36 @@ function isSelectedMultiEditCell(row: any, day: any) {
 function cellWrapperClass(row: any, day: any) {
     const classes: string[] = []
 
-    // Highlight-Mode dimmt alles außer den aktiven User
     if (highlightMode.value) {
         classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
     }
 
-    // MultiEdit-Mode dimmt alles außer dem aktiven User
     if (multiEditMode.value) {
         classes.push(isActiveMultiEditRow(row) ? '' : 'opacity-30')
     }
 
-    // ausgewählte Zelle in MultiEdit: wieder volle Sichtbarkeit + overflow
     if (multiEditMode.value && isSelectedMultiEditCell(row, day)) {
         classes.push('opacity-100! overflow-hidden!')
+    }
+
+    if (highlightMode.value && hasActiveHighlightSelection.value) {
+        classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
+    }
+
+    if (hoverShiftUsersToHighlight.value && isRowInIds(row, hoverShiftUsersToHighlight.value)) {
+        classes.push('!opacity-100')
     }
 
     return classes
 }
 
 function shiftPlanCellInnerClass(row: any, day: any) {
-    // dein “!opacity-20” wenn die Zelle selected ist
     return (multiEditMode.value && isSelectedMultiEditCell(row, day)) ? '!opacity-20' : ''
 }
 
 function getDayServicesForCell(worker: any, day: any) {
     const key = day.withoutFormat ?? day.fullDay
     if (!key) return null
-    // wenn dayServices ein Object (map) ist:
     return worker?.dayServices?.[key] ?? null
 }
 
@@ -1439,9 +1473,13 @@ function closeCellMultiEditCalendarDelete(booleanVal: boolean) {
     }
 }
 
-function openEditShiftModal(shift: any) {
-    shiftToEdit.value = shift
-    showAddShiftModal.value = true
+function openEditShiftModal(shift: any, mode = 'normal') {
+    if(mode === 'normal'){
+        shiftToEdit.value = shift
+        showAddShiftModal.value = true
+    } else {
+        shiftClickedInHighlightMode.value = shift.id;
+    }
 }
 
 function openAddShiftForRoomAndDay(day: any, roomId: number) {
@@ -2004,7 +2042,6 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
     const targetIndex = scrollOffset // das ist dein Index im days-array
     const x = targetIndex * colWidth
 
-// “fixer Room-Name”-Punkt soll auf die Mitte der Zielspalte zeigen
 
 
     const roomNameElement = document.getElementById('roomNameContainer_0')
@@ -2027,6 +2064,7 @@ function toggleHighlightMode() {
     typeToHighlight.value = null
     multiEditMode.value = false
     dayServiceMode.value = false
+    clearHighlightSelection()
 }
 
 function toggleMultiEditMode() {
@@ -2035,6 +2073,7 @@ function toggleMultiEditMode() {
     if (!multiEditMode.value) {
         userForMultiEdit.value = null
         multiEditCellByDayAndUser.value = {}
+        clearHighlightSelection()
     }
 }
 
@@ -2082,9 +2121,80 @@ function toggleCompactMode() {
     )
 }
 
+const hasActiveHighlightSelection = computed(() => {
+    if (!highlightMode.value) return false
+
+    if (highlightSelectionKind.value === 'user') {
+        return idToHighlight.value != null && typeToHighlight.value != null
+    }
+
+    if (highlightSelectionKind.value === 'shift') {
+        const ids = shiftUsersToHighlight.value
+        if (!ids) return false
+        return (ids.userIds?.length || 0) + (ids.freelancerIds?.length || 0) + (ids.providerIds?.length || 0) > 0
+    }
+
+    return false
+})
+
+function extractShiftUserIds(shift: any) {
+    const ids = {
+            userIds: [] as Array<number | string>,
+            freelancerIds: [] as Array<number | string>,
+            providerIds: [] as Array<number | string>,
+        }
+
+    ;(Array.isArray(shift?.users) ? shift.users : []).forEach((u: any) => ids.userIds.push(u.id))
+    ;(Array.isArray(shift?.freelancer) ? shift.freelancer : (Array.isArray(shift?.freelancers) ? shift.freelancers : [])).forEach((f: any) => ids.freelancerIds.push(f.id))
+    ;(Array.isArray(shift?.serviceProviders) ? shift.serviceProviders : (Array.isArray(shift?.service_providers) ? shift.service_providers : [])).forEach((p: any) => ids.providerIds.push(p.id))
+
+    return ids
+}
+
+function highlightUsersOfShift(shift: any) {
+    if (!highlightMode.value) return
+
+    highlightSelectionKind.value = 'shift'
+
+    // ✅ User-Highlight reset
+    idToHighlight.value = null
+    typeToHighlight.value = null
+
+    // ✅ Shift-Highlight setzen
+    shiftUsersToHighlight.value = extractShiftUserIds(shift)
+    highlightedShiftId.value = shift?.id ?? null
+}
+
+function setHoverUsersOfShift(shift: any | null) {
+    if (!shift) {
+        hoverShiftUsersToHighlight.value = null
+        return
+    }
+
+    // Hover-Preview nur wenn MultiEdit oder Highlight aktiv ist (sonst zu noisy)
+    if (!multiEditMode.value && !highlightMode.value) return
+
+    hoverShiftUsersToHighlight.value = extractShiftUserIds(shift)
+}
+
+function isRowInIds(row: any, ids: any) {
+    if (!ids || !row?.worker) return false
+    const id = row.worker.element?.id
+    const t = row.worker.type
+    if (t === 0) return (ids.userIds || []).includes(id)
+    if (t === 1) return (ids.freelancerIds || []).includes(id)
+    if (t === 2) return (ids.providerIds || []).includes(id)
+    return false
+}
+
 function highlightShiftsOfUser(id: number | string, type: number) {
+    highlightSelectionKind.value = 'user'
     idToHighlight.value = id
     typeToHighlight.value = type
+
+    // ✅ Shift-Highlight komplett entfernen
+    shiftUsersToHighlight.value = null
+    highlightedShiftId.value = null
 }
 
 function addUserToMultiEdit(item: any) {
@@ -2417,6 +2527,16 @@ function handleSeriesUpdated() {
         only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
     });
 }
+
+function clearHighlightSelection() {
+    idToHighlight.value = null
+    typeToHighlight.value = null
+    highlightSelectionKind.value = null
+    shiftUsersToHighlight.value = null
+    hoverShiftUsersToHighlight.value = null
+    highlightedShiftId.value = null
+}
+
 
 </script>
 

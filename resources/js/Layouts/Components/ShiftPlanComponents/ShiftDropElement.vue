@@ -1,7 +1,21 @@
 <template>
     <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
         <div
-            :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
+            :class="[
+  // ✅ Grundpadding immer
+  'px-1',
+
+  // ✅ Dimming nur, wenn HighlightMode an UND eine Auswahl existiert UND diese Schicht NICHT passt
+  (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
+
+  // ✅ Active Style: wenn diese Schicht passt (User passt ODER Shift ist selektiert)
+  (highlightMode && matchesAnyHighlight) ? 'bg-pink-500 ring-2 ring-pink-500 ring-offset-1 ring-offset-white !text-white' : '',
+
+  // ✅ Shift selbst zusätzlich sichtbar hervorheben, wenn explizit Shift selektiert wurde
+  (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-pink-500 ring-offset-1 ring-offset-white' : '',
+
+  multiEditMode ? 'text-[10px]' : 'text-[11px]'
+]"
             class="flex items-center xsLight text-shiftText subpixel-antialiased"
             @dragover="onDragOver"
             @drop="onDrop"
@@ -36,6 +50,7 @@
                             </span>
                         </div>
                     </div>
+
                     <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
                         <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
@@ -45,10 +60,8 @@
                                 'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount
                               }">
                         </span>
-
-
-
                     </div>
+
                     <div v-else-if="room" class="truncate">
                         , {{ room?.name }}
                     </div>
@@ -86,6 +99,7 @@
                     />
                 </div>
             </div>
+
         </div>
 
         <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
@@ -109,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
+import {computed, reactive, ref, watch, getCurrentInstance, provide} from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
@@ -142,6 +156,7 @@ const props = defineProps<{
     highlightedType?: 0 | 1 | 2 | null
     multiEditMode?: boolean
     userForMultiEdit?: any
+    highlightedShiftId?: number | string | null
     shiftQualifications: Array<{ id: number; icon?: any }>
 }>()
 
@@ -150,6 +165,8 @@ const emit = defineEmits<{
     (e: 'desiresReload', droppedId: number | string, type: 0 | 1 | 2, seriesShiftData?: any): void
     (e: 'handleShiftAndEventForMultiEdit', checked: boolean, shift: any, event: any): void
     (e: 'clickOnEdit', shift: any): void
+    (e: 'highlightShiftUsers', shift: any): void
+    (e: 'hoverShiftUsers', shift: any | null): void
 }>()
 
 /* ---------------- Lokaler State ---------------- */
@@ -161,13 +178,10 @@ const buffer = reactive({
     dayOfWeek: null as number | null
 })
 
-const selectedUser = ref<any>(null)
-const dropFeedback = ref<string | null>(null)
-const showQualificationRowExpander = ref(false)
-
 const showMultipleShiftQualificationSlotsAvailableModal = ref(false)
 const showMultipleShiftQualificationSlotsAvailableModalSlots = ref<any[] | null>(null)
 const showMultipleShiftQualificationSlotsAvailableModalDroppedUser = ref<any | null>(null)
+
 
 const droppedUser = ref<any | null>(null)
 const seriesShiftData = ref<any | null>(null)
@@ -331,6 +345,13 @@ function isIdHighlighted(highlightedId?: number | null, highlightedType?: 0 | 1 
 
 function handleClickEvent() {
     if (props.multiEditMode) return
+
+    // ✅ Highlight-Mode: Klick auf Schicht → User unten hervorheben (statt Modal)
+    if (props.highlightMode) {
+        emit('highlightShiftUsers', props.shift)
+        return
+    }
+
     // Zugriff auf $can/hasAdminRole über Mixin (global am proxy)
     const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
     const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
@@ -532,5 +553,30 @@ function handleShiftAndEventForMultiEdit(checked: boolean, shift: any, event: an
     emit('handleShiftAndEventForMultiEdit', checked, shift, event)
 }
 
-/* ---------------- Expose in Template (script setup exportiert automatisch) ---------------- */
+const hasUserHighlightSelection = computed(() => {
+    return !!props.highlightMode && props.highlightedId != null && props.highlightedType != null
+})
+
+const hasShiftHighlightSelection = computed(() => {
+    return !!props.highlightMode && props.highlightedShiftId != null
+})
+
+const hasAnyHighlightSelection = computed(() => {
+    return hasUserHighlightSelection.value || hasShiftHighlightSelection.value
+})
+
+const isThisShiftHighlighted = computed(() => {
+    return !!props.highlightMode && props.highlightedShiftId != null && props.shift?.id === props.highlightedShiftId
+})
+
+const matchesUserHighlight = computed(() => {
+    if (!hasUserHighlightSelection.value) return false
+    return isIdHighlighted(props.highlightedId, props.highlightedType)
+})
+
+const matchesAnyHighlight = computed(() => {
+    // ✅ Wenn Shift selektiert: diese Shift soll markiert sein (Ring/Background)
+    // ✅ Wenn User selektiert: alle Shifts, in denen der User drin ist, sollen markiert sein
+    return isThisShiftHighlighted.value || matchesUserHighlight.value
+})
 </script>

@@ -46,7 +46,7 @@ export default {
     <PropertyIcon name="IconSeparator" class="w-6 h-6" v-if="type === 'SeparatorComponent'" />
     <PropertyIcon name="IconCurrencyEuro" class="w-6 h-6" v-if="type === 'BudgetInformations'" />
     <PropertyIcon name="IconApps" class="w-6 h-6" v-if="type === 'BulkBody'" />
-    <PropertyIcon name="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
+    <PropertyIcon name="IconPalette" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
     <PropertyIcon name="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
     <PropertyIcon name="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
     <PropertyIcon name="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />

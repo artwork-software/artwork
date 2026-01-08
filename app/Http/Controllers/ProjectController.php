@@ -155,6 +155,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -2196,6 +2197,20 @@ class ProjectController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
 
+    private function inertiaProjectError(Request $request, int $status, string $title, string $message)
+    {
+        $projectsIndexHref = Route::has('projects.index') ? route('projects.index') : url('/projects');
+        $homeHref = Route::has('dashboard') ? route('dashboard') : url('/');
+
+        return inertia('Errors/ProjectError', [
+            'status' => $status,
+            'title' => $title,
+            'message' => $message,
+            'projectsIndexHref' => $projectsIndexHref,
+            'homeHref' => $homeHref,
+        ])->toResponse($request)->setStatusCode($status);
+    }
+
 
     /**
      * @throws Throwable
@@ -2227,6 +2242,16 @@ class ProjectController extends Controller
         EventPropertyService $eventPropertyService,
         ShiftTimePresetService $shiftTimePresetService
     ): Response|ResponseFactory {
+
+        if (method_exists($project, 'trashed') ? $project->trashed() : (bool) $project->deleted_at) {
+            return $this->inertiaProjectError(
+                $request,
+                410,
+                'Project has been deleted',
+                'This project has been deleted and is no longer available.'
+            );
+        }
+
         // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
         $headerObject = new stdClass();
         $headerObject->project = $project;

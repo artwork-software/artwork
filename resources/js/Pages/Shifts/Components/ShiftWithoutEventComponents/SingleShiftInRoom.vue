@@ -14,8 +14,12 @@
         @desires-reload="dropElementDesiresReload"
         @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
         @click-on-edit="clickOnEdit"
+        :highlightedShiftId="highlightedShiftId"
+        @highlight-shift-users="highlightShiftUsers"
+        @hover-shift-users="hoverShiftUsers"
     />
 </template>
+
 
 <script setup>
 
@@ -29,7 +33,18 @@ const {
 } = useColorHelper();
 
 // Define emits
-const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit']);
+const emit = defineEmits([
+    'dropFeedback',
+    'eventDesiresReload',
+    'handleShiftAndEventForMultiEdit',
+    'clickOnEdit',
+    'highlightShiftUsers',
+    'hoverShiftUsers'
+]);
+
+
+const highlightShiftUsers = (shift) => emit('highlightShiftUsers', shift)
+const hoverShiftUsers = (shift) => emit('hoverShiftUsers', shift)
 
 const props = defineProps({
     shift: Object,
@@ -43,6 +58,7 @@ const props = defineProps({
     shiftQualifications: Array,
     dayString: Object,
     eventType: String,
+    highlightedShiftId: [String, Number],
     firstProjectShiftTabId: [String, Number],
 })
 
@@ -51,8 +67,8 @@ const getDropFeedback = (event) => {
     emit('dropFeedback', event);
 }
 
-const clickOnEdit = (shift) => {
-    emit('clickOnEdit', shift);
+const clickOnEdit = (shift, mode = 'normal') => {
+    emit('clickOnEdit', shift, mode);
 }
 
 const areAllShiftsCommitted = (event) => {

@@ -86,6 +86,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\DTOs\ProjectSearchDTO;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
+use Artwork\Modules\Project\Events\UpdateBudget;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -155,6 +156,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -1545,6 +1547,8 @@ class ProjectController extends Controller
         $column->update([
             'name' => $request->columnName
         ]);
+
+        broadcast(new UpdateBudget($column->project_id));
     }
     public function updateTableName(Request $request): void
     {
@@ -1552,6 +1556,9 @@ class ProjectController extends Controller
         $table->update([
             'name' => $request->table_name
         ]);
+
+
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function columnDelete(
@@ -1591,6 +1598,8 @@ class ProjectController extends Controller
         $mainPosition->update([
             'name' => $request->mainPositionName
         ]);
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function updateSubPositionName(Request $request): void
@@ -1599,6 +1608,8 @@ class ProjectController extends Controller
         $subPosition->update([
             'name' => $request->subPositionName
         ]);
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function setColumnSubName(int $table_id): void
@@ -1759,6 +1770,9 @@ class ProjectController extends Controller
                 ]);
             }
         }
+
+
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function updateCellValue(
@@ -1797,6 +1811,8 @@ class ProjectController extends Controller
                 $this->notificationService
             );
         }
+
+        broadcast(new UpdateBudget($project->id))->toOthers();
     }
 
     public function changeColumnColor(Request $request): RedirectResponse
@@ -1850,6 +1866,8 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+
+        broadcast(new UpdateBudget($table->project_id))->toOthers();
     }
 
     public function reorderSubPositionRows(Request $request): RedirectResponse
@@ -1927,6 +1945,7 @@ class ProjectController extends Controller
         );
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function addSubPosition(Request $request): void
@@ -1946,6 +1965,7 @@ class ProjectController extends Controller
         ]);
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns): void
@@ -2084,8 +2104,7 @@ class ProjectController extends Controller
             ]);
         }
 
-        // Für normale Requests: Void (backward compatible)
-        return;
+        return Redirect::back();
     }
 
     /**
@@ -2196,6 +2215,20 @@ class ProjectController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
 
+    private function inertiaProjectError(Request $request, int $status, string $title, string $message)
+    {
+        $projectsIndexHref = Route::has('projects.index') ? route('projects.index') : url('/projects');
+        $homeHref = Route::has('dashboard') ? route('dashboard') : url('/');
+
+        return inertia('Errors/ProjectError', [
+            'status' => $status,
+            'title' => $title,
+            'message' => $message,
+            'projectsIndexHref' => $projectsIndexHref,
+            'homeHref' => $homeHref,
+        ])->toResponse($request)->setStatusCode($status);
+    }
+
 
     /**
      * @throws Throwable
@@ -2227,6 +2260,16 @@ class ProjectController extends Controller
         EventPropertyService $eventPropertyService,
         ShiftTimePresetService $shiftTimePresetService
     ): Response|ResponseFactory {
+
+        if (method_exists($project, 'trashed') ? $project->trashed() : (bool) $project->deleted_at) {
+            return $this->inertiaProjectError(
+                $request,
+                410,
+                'Project has been deleted',
+                'This project has been deleted and is no longer available.'
+            );
+        }
+
         // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
         $headerObject = new stdClass();
         $headerObject->project = $project;
@@ -3751,6 +3794,8 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+
         return Redirect::back();
     }
 
@@ -3783,6 +3828,8 @@ class ProjectController extends Controller
             $sageNotAssignedDataService,
             $sageAssignedDataService
         );
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
 
         return Redirect::back();
     }
@@ -3901,6 +3948,8 @@ class ProjectController extends Controller
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
         $newColumn->cells()->forceDelete();
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
+
+        broadcast(new UpdateBudget($column->project_id));
     }
 
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
@@ -3922,6 +3971,8 @@ class ProjectController extends Controller
             $newSubPositionRow->cells()->forceDelete();
             $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
         }
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function duplicateMainPosition(MainPosition $mainPosition): void
@@ -3934,6 +3985,8 @@ class ProjectController extends Controller
         foreach ($mainPosition->subPositions()->get() as $subPosition) {
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function duplicateRow(SubPositionRow $subPositionRow): void
@@ -3947,6 +4000,7 @@ class ProjectController extends Controller
             $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
             $subPositionRowCellReplicate->save();
         }
+        broadcast(new UpdateBudget($subPositionRow->subPosition->mainPosition->table->project_id));
     }
 
     public function updateCommentedStatusOfColumn(Request $request, Column $column): void

@@ -49,6 +49,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Random\RandomException;
 
 class ShiftController extends Controller
@@ -1287,14 +1288,16 @@ class ShiftController extends Controller
     {
         $this->eventTimelineService->updateTimeLines($event, $request->get('dataset'));
 
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($event->fresh(), $event->fresh()->room_id));
+        $freshEvent = $event->fresh();
+        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
     }
 
     public function addTimeLine(Event $event, Request $request): void
     {
         $this->eventTimelineService->addTimeLines($event, $request->get('dataset'));
 
-        broadcast(new \Artwork\Modules\Event\Events\EventCreated($event->fresh(), $event->fresh()->room_id));
+        $freshEvent = $event->fresh();
+        broadcast(new \Artwork\Modules\Event\Events\EventCreated($freshEvent, $freshEvent?->room_id));
     }
 
     public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
@@ -1602,8 +1605,15 @@ class ShiftController extends Controller
 
     public function updateShortDescription(Request $request): void
     {
-        $shiftId = $request->get('shiftPivotId');
-        $entity = $request->get('entity');
+        $validated = $request->validate([
+            'shiftPivotId' => ['required', 'integer'],
+            'entity' => ['required', 'array'],
+            'entity.type' => ['required', 'string', Rule::in(['user', 'freelancer', 'service_provider'])],
+            'short_description' => ['nullable', 'string', 'max:250'],
+        ]);
+
+        $shiftId = $validated['shiftPivotId'];
+        $entity = $validated['entity'];
 
         // Pivot holen
         $query = match ($entity['type']) {
@@ -1618,7 +1628,7 @@ class ShiftController extends Controller
 
         // Update the pivot with new short description
         $query->update([
-            'short_description' => $request->get('short_description'),
+            'short_description' => $validated['short_description'],
         ]);
 
         // Broadcast the updated shift

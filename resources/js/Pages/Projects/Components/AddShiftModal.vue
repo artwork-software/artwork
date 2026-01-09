@@ -246,14 +246,44 @@ function findRoomById(rawId: any) {
 
 function initSelectedRoom() {
     if (selectedRoom.value) return
-    if (props.room && typeof props.room === 'object') {
-        selectedRoom.value = props.room as any
-    } else if (props.room !== null && typeof props.room !== 'undefined') {
-        // Zahl/String → über rooms finden
-        const found = findRoomById(props.room)
-        if (found) selectedRoom.value = found
-    } else if (props.shift?.roomId) {
-        const found = findRoomById(props.shift.roomId)
+
+    // Edit-Flow: Shift-Raum hat Priorität (damit room-Prop nicht „dazwischenfunkt“)
+    if (props.edit && props.shift) {
+        const shiftRoomObj = (props.shift as any)?.room
+        if (shiftRoomObj && typeof shiftRoomObj === 'object') {
+            // Wenn der Shift bereits ein Room-Objekt liefert, direkt nutzen (auch wenn rooms-Liste noch leer ist)
+            selectedRoom.value = shiftRoomObj
+        } else {
+            const roomIdFromShift =
+                (props.shift as any)?.roomId ??
+                (props.shift as any)?.room_id ??
+                (props.shift as any)?.room?.id ??
+                (props.shift as any)?.room?.roomId
+
+            const found = findRoomById(roomIdFromShift)
+            if (found) selectedRoom.value = found
+        }
+    }
+
+    // Add-Flow / Fallback: room-Prop (z. B. aus Klick auf „Schicht hinzufügen“)
+    if (!selectedRoom.value) {
+        if (props.room && typeof props.room === 'object') {
+            selectedRoom.value = props.room as any
+        } else if (props.room !== null && typeof props.room !== 'undefined') {
+            // Zahl/String → über rooms finden
+            const found = findRoomById(props.room)
+            if (found) selectedRoom.value = found
+        }
+    }
+
+    // Letzter Fallback: wenn wir im Edit sind und nur IDs haben, nochmal versuchen
+    if (!selectedRoom.value && props.shift) {
+        const roomIdFromShift =
+            (props.shift as any)?.roomId ??
+            (props.shift as any)?.room_id ??
+            (props.shift as any)?.room?.id ??
+            (props.shift as any)?.room?.roomId
+        const found = findRoomById(roomIdFromShift)
         if (found) selectedRoom.value = found
     }
 
@@ -274,10 +304,26 @@ watch(selectedRoom, (r) => {
 
 // Reagiere auf Änderungen an rooms/room-Prop (spätes Laden möglich)
 watch(() => props.rooms, () => initSelectedRoom(), { deep: true })
-watch(() => props.room, () => {
+watch(() => props.room, (newVal, oldVal) => {
+    // Beim Editieren niemals den bereits ermittelten Shift-Raum „wegwerfen“,
+    // nur weil das room-Prop (z. B. null/stale) wechselt.
+    if (props.edit) {
+        initSelectedRoom()
+        return
+    }
+
+    // Add-Flow: room-Prop soll Auswahl steuern
+    if (newVal !== oldVal) {
+        selectedRoom.value = null
+        initSelectedRoom()
+    }
+})
+
+watch(() => props.shift, () => {
+    // Wenn der Shift im Modal wechselt (Edit), neu initialisieren
     selectedRoom.value = null
     initSelectedRoom()
-})
+}, { deep: true })
 
 onMounted(() => initSelectedRoom())
 
@@ -1374,7 +1420,7 @@ const lockOrUnlockShift = (commit = false) => {
                         :label="$t('Save')"
                         type="submit"
                         is-add-button
-                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft"
+                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !selectedRoom"
                     />
 
                     <BaseUIButton

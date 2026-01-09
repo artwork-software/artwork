@@ -104,11 +104,35 @@
             >
                 <div v-if="!day.isExtraRow">
                     <div
-                        class="flex items-center justify-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
+                        class="flex items-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
                         :style="dayHeaderStyle"
                     >
-                        <div class="px-16 font-lexend text-sm font-bold py-4">
-                            {{ day.dayString }}, {{ day.fullDay }}
+                        <div class="flex items-center justify-between w-full gap-x-4 px-4">
+                            <div class="flex items-center justify-start min-w-0 flex-1">
+                                <BaseUIButton
+                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    :label="$t('Add Event')"
+                                    :icon="IconCalendarPlus"
+                                    is-small
+                                    class="!bg-white/10 !text-white hover:!bg-white/20"
+                                    @click="openNewEventModalWithBaseData(day.withoutFormat, null)"
+                                />
+                            </div>
+
+                            <div class="font-lexend text-sm font-bold py-4 text-center shrink-0 px-4">
+                                {{ day.dayString }}, {{ day.fullDay }}
+                            </div>
+
+                            <div class="flex items-center justify-end min-w-0 flex-1">
+                                <BaseUIButton
+                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    :label="$t('Add Shift')"
+                                    :icon="IconCalendarUser"
+                                    is-small
+                                    class="!bg-white/10 !text-white hover:!bg-white/20"
+                                    @click="openAddShiftForRoomAndDay(day.withoutFormat, null)"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -124,7 +148,7 @@
                         </div>
 
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="p-4 w-full relative pb-28 md:pb-32">
+                            <div class="p-4 w-full relative">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
                                     :events="getEventsForRoomDay(room, day.fullDay)"
@@ -139,6 +163,7 @@
                                     :gap-threshold-min="90"
                                     @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
                                     @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
+                                    @addShiftByPresetOrGroup="openAddShiftByPresetOrGroup(day, room)"
                                 />
                             </div>
                         </div>
@@ -164,6 +189,18 @@
                 :shift-plan-modal="true"
                 :edit="shiftToEdit !== null"
                 :project="props.project"
+            />
+
+            <AddShiftsByPresetsAndGroupsModal
+                v-if="showAddShiftByPresetOrGroupModal"
+                :single-shift-presets="singleShiftPresetsResolved"
+                :preset-groups="shiftGroupPresetsResolved"
+                :day="dayForPreset"
+                :room="roomForPreset"
+                :projects="projectsResolved"
+                :initial-project-id="initialProjectIdResolved"
+                :initial-project="props.project ?? page.props?.currentProject ?? null"
+                @close="showAddShiftByPresetOrGroupModal = false"
             />
 
             <EventComponent
@@ -202,12 +239,15 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {
     IconAlertSquareRounded,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
     IconX, IconFileExport,
+    IconCalendarPlus,
+    IconCalendarUser,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -218,6 +258,7 @@ import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoom
 import dayjs from "dayjs";
 import { is } from "laravel-permission-to-vuejs";
 import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
+import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 
 type AnyRoom = any
 type AnyEvent = any
@@ -237,6 +278,11 @@ const props = defineProps({
     rooms: { type: [Object, Array], required: false, default: () => ([]) },
     eventStatuses: { type: [Object, Array], required: false, default: () => ([]) },
     eventTypes: { type: [Object, Array], required: false, default: () => ([]) },
+
+    shiftGroupPresets: { type: [Object, Array], required: false, default: () => ([]) },
+    singleShiftPresets: { type: [Object, Array], required: false, default: () => ([]) },
+    projects: { type: [Object, Array], required: false, default: () => ([]) },
+    projectId: { type: [Number, String, null], required: false, default: null },
 
     event_properties: { type: Object, required: false, default: () => ({}) },
     first_project_calendar_tab_id: { type: Number, required: false, default: 0 },
@@ -313,7 +359,8 @@ const showCalendarWarning = ref(props.calendarWarningText)
 const daysLocal = shallowRef<any[]>(props.days ?? [])
 
 // shiftPlanCopy
-const shiftPlanCopy = shallowRef<any[]>(
+// WICHTIG: muss tief reaktiv sein, da Websocket-Listener tief im Objekt (room.content[day].events/shifts) mutiert.
+const shiftPlanCopy = ref<any[]>(
     Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
 )
 
@@ -322,6 +369,48 @@ const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
 const openExportDailyProjectShiftPlanModal = ref(false)
+
+const dayForPreset = ref<any | null>(null)
+const roomForPreset = ref<any | null>(null)
+const showAddShiftByPresetOrGroupModal = ref(false)
+
+const singleShiftPresetsLocal = ref<any[]>([])
+const shiftGroupPresetsLocal = ref<any[]>([])
+
+const singleShiftPresetsResolved = computed(() => {
+    if (singleShiftPresetsLocal.value.length) return singleShiftPresetsLocal.value
+    const v: any = props.singleShiftPresets
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.singleShiftPresets ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const shiftGroupPresetsResolved = computed(() => {
+    if (shiftGroupPresetsLocal.value.length) return shiftGroupPresetsLocal.value
+    const v: any = props.shiftGroupPresets
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.shiftGroupPresets ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const projectsResolved = computed(() => {
+    const v: any = props.projects
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.projects ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const initialProjectIdResolved = computed(() => {
+    return (
+        (props.project as any)?.id ??
+        props.projectId ??
+        (page.props.projectId ?? null) ??
+        ((page.props as any)?.currentProject?.id ?? null)
+    )
+})
 
 const eventToEdit = ref<any | boolean>(false)
 const wantedRoom = ref<number | null>(null)
@@ -415,6 +504,18 @@ const initializeDailyShiftPlan = async () => {
 
         daysLocal.value = data.days ?? []
         shiftPlanCopy.value = Array.isArray(data.shiftPlan) ? data.shiftPlan : Object.values(data.shiftPlan ?? {})
+
+        if (data.singleShiftPresets) {
+            singleShiftPresetsLocal.value = Array.isArray(data.singleShiftPresets)
+                ? data.singleShiftPresets
+                : Object.values(data.singleShiftPresets ?? {})
+        }
+
+        if (data.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = Array.isArray(data.shiftGroupPresets)
+                ? data.shiftGroupPresets
+                : Object.values(data.shiftGroupPresets ?? {})
+        }
         return
     }
 
@@ -458,7 +559,8 @@ const roomDayEventsIndex = shallowRef<Map<any, Map<string, AnyEvent[]>>>(new Map
 watch(
     shiftPlanCopy,
     () => { roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || []) },
-    { immediate: true }
+    // Deep nötig, damit Mutationen aus dem Websocket-Listener (push/splice in nested arrays) den Index neu bauen.
+    { immediate: true, deep: true }
 )
 
 function getEventsForRoomDay(room: any, targetDay: string): AnyEvent[] {
@@ -493,6 +595,10 @@ const roomsForDayMap = computed<Map<string, AnyRoom[]>>(() => {
     return map
 })
 
+const isDayWithoutRooms = (dayLabel: string): boolean => {
+    return (roomsForDayMap.value.get(dayLabel)?.length ?? 0) === 0
+}
+
 /**
  * roomsArray for EventComponent
  */
@@ -516,11 +622,17 @@ const shiftQualificationsArray = computed(() =>
 /**
  * Modals
  */
-const openAddShiftForRoomAndDay = (day: string, roomId: number) => {
+const openAddShiftForRoomAndDay = (day: string, roomId: number | null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = roomId
     dayForShiftAdd.value = day
     showAddShiftModal.value = true
+}
+
+const openAddShiftByPresetOrGroup = (day: any, room: any) => {
+    dayForPreset.value = day
+    roomForPreset.value = room
+    showAddShiftByPresetOrGroupModal.value = true
 }
 
 const closeAddShiftModal = () => {
@@ -530,7 +642,7 @@ const closeAddShiftModal = () => {
     dayForShiftAdd.value = null
 }
 
-const openNewEventModalWithBaseData = (day: string, roomId: number) => {
+const openNewEventModalWithBaseData = (day: string, roomId: number | null) => {
     eventToEdit.value = false
     wantedRoom.value = roomId
     wantedDate.value = day

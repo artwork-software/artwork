@@ -150,10 +150,9 @@ const props = defineProps({
     },
 })
 
-// Default-Anforderung: Termine mit mindestens einer Timeline sind aufgeklappt,
-// ohne Timeline bleiben sie eingeklappt. Der bisherige Check `!== 0` führte bei
-// `undefined` fälschlich zu "true". Daher sicher mit Null-Koaleszenz prüfen.
-const showEventDetails = ref(((props.event.timelines?.length ?? 0) > 0));
+// Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt anzeigen,
+// damit der Button „Create new timeline“ direkt sichtbar ist.
+const showEventDetails = ref(true);
 const showAddTimeLineModal = ref(false);
 const showEventComponent = ref(false);
 const showConfirmDeleteModal = ref(false);

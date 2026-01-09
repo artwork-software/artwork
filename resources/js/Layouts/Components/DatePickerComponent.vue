@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, defineAsyncComponent} from "vue";
+import {ref, computed, watch, onMounted, defineAsyncComponent, nextTick} from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import '@vuepic/vue-datepicker/dist/main.css'
@@ -152,6 +152,8 @@ const startDateString = ref('');
 const endDateString = ref('');
 const startDate = ref(null);
 const endDate = ref(null);
+
+const syncingFromProps = ref(false);
 
 // Formatter
 const formatter = ref({
@@ -305,6 +307,16 @@ function getDayOfWeek(date) {
     return days[date.getDay()];
 }
 
+function toPickerDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    // ISO-Date ohne Zeit → bewusst auf Mittag setzen, um TZ-Off-by-one zu vermeiden
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return new Date(`${value}T12:00:00`);
+    }
+    return new Date(value);
+}
+
 function removeDateIcons() {
     if (startDate.value) {
         startDate.value.style.webkitAppearance = 'none';
@@ -419,10 +431,32 @@ function updateTimes() {
 
 // Watcher
 watch(dateValuePicker, () => {
+    if (syncingFromProps.value) return;
+    if (!Array.isArray(dateValuePicker.value) || !dateValuePicker.value[0] || !dateValuePicker.value[1]) return;
+
     dateValue.value[0] = format(dateValuePicker.value[0]);
     dateValue.value[1] = format(dateValuePicker.value[1]);
     updateTimes();
-});
+}, { deep: true });
+
+watch(
+    () => props.dateValueArray,
+    async (newVal) => {
+        if (!Array.isArray(newVal) || !newVal[0] || !newVal[1]) return;
+
+        syncingFromProps.value = true;
+        dateValue.value = [...newVal];
+        dateValuePicker.value = [toPickerDate(newVal[0]), toPickerDate(newVal[1])];
+
+        // Labels im Input (Wochentag) aktualisieren
+        startDateString.value = getDayOfWeek(new Date(dateValue.value[0])).replace('.', '');
+        endDateString.value = getDayOfWeek(new Date(dateValue.value[1])).replace('.', '');
+
+        await nextTick();
+        syncingFromProps.value = false;
+    },
+    { deep: true }
+);
 
 // Lifecycle
 onMounted(() => {

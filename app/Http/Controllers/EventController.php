@@ -525,6 +525,10 @@ class EventController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
         $userCalendarSettings = $user->getAttribute('calendar_settings');
+        if ($userCalendarSettings === null) {
+            // Ensure settings exist (tests/users might not have them yet)
+            $userCalendarSettings = $user->calendar_settings()->create();
+        }
 
         if ($request->get('isInProjectView')) {
             // Ensure project shift filter exists for the user
@@ -543,7 +547,21 @@ class EventController extends Controller
                 ]
             );
         } else {
-            $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
+            // Ensure shift filter exists for the user (tests/users might not have one yet)
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => UserFilterTypes::SHIFT_FILTER->value],
+                [
+                    'start_date' => null,
+                    'end_date' => null,
+                    'event_type_ids' => null,
+                    'room_ids' => null,
+                    'area_ids' => null,
+                    'room_attribute_ids' => null,
+                    'room_category_ids' => null,
+                    'event_property_ids' => null,
+                    'craft_ids' => null,
+                ]
+            );
         }
 
         // Wenn ein exakter Zeitraum angefragt wird, diesen respektieren (Projekt-Tab lädt Projektzeitraum)
@@ -594,7 +612,28 @@ class EventController extends Controller
         return response()->json([
             'days' => $period,
             'shiftPlan' => $calendarData->rooms,
-
+            'singleShiftPresets' => $this->singleShiftPresetService->getAllPresets(),
+            'shiftGroupPresets' => ShiftPresetGroup::query()
+                ->select(['id', 'name'])
+                ->withCount('presets')
+                ->with([
+                    'presets' => function ($q) {
+                        $q->select([
+                            'single_shift_presets.id',
+                            'single_shift_presets.name',
+                            'single_shift_presets.start_time',
+                            'single_shift_presets.end_time',
+                            'single_shift_presets.break_duration',
+                            'single_shift_presets.craft_id',
+                            'single_shift_presets.description',
+                        ])->with([
+                            'craft:id,name,abbreviation,color',
+                            'shiftsQualifications:id,name,icon,available',
+                        ]);
+                    }
+                ])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 

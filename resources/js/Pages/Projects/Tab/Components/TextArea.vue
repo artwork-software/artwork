@@ -1,10 +1,13 @@
 <template>
     <div class="my-2 flex items-start w-full">
         <div>
-            <label :for="'component-' + data.id" class="font-medium block subpixel-antialiased mb-1">
-                {{ data.data.label }}
+            <label
+                :for="'component-' + data.id"
+                class="block text-sm font-bold leading-6"
+                :class="inSidebar ? 'text-white' : ' text-gray-900'"
+            >
+                {{ projectData.data.label }}
             </label>
-
             <!-- Anzeige (HTML) bis geklickt wird -->
             <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1">
                 <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400" />
@@ -16,11 +19,11 @@
             </div>
 
             <!-- Editor -->
-            <div v-else class="w-full">
+            <div v-else class="w-full" ref="descriptionWrapRef">
                 <BaseTextarea
                     :disabled="!canEditComponent"
                     :label="data.data.placeholder"
-                    :ref="descriptionRef"
+                    ref="descriptionRef"
                     :rows="5"
                     :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : '!w-96'"
                     :id="'component-' + data.id"
@@ -82,6 +85,7 @@ const descriptionClicked = ref(false);
 
 // Ref auf das Textarea (falls du Fokus/Selection wieder aktivieren willst)
 const descriptionRef = ref(null);
+const descriptionWrapRef = ref(null)
 
 // Listener initialisieren (wie zuvor im mounted)
 onMounted(() => {
@@ -143,10 +147,13 @@ function handleDescriptionClick() {
         descriptionClicked.value = true;
 
         nextTick(() => {
-            // Beispiel: Fokus wieder aktivieren (wenn gewünscht)
-            // descriptionRef.value?.focus?.();
-            // descriptionRef.value?.select?.();
-        });
+            requestAnimationFrame(() => {
+                const root = descriptionWrapRef.value
+                const ta = root?.querySelector?.("textarea")
+                ta?.focus()
+                ta?.select()
+            })
+        })
     }
 }
 </script>

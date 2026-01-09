@@ -93,14 +93,14 @@
                                     :class="[index <= 1 ? 'w-36' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                                     <div
                                         v-if="index === 0 && canReorderSubPositionRows"
-                                        class="sub-position-row-drag-handle absolute left-1 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
+                                        class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
                                         @mousedown.stop
                                     >
                                         <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
                                     </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 max-w-32 justify-start pl-8' : index === 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center cell-button">
@@ -114,7 +114,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 max-w-32 justify-start pl-8' : index === 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
@@ -180,43 +180,78 @@
                             </div>
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
-                                    index <= 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
+                                    index <= 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
-                                    <div class=" flex items-center"
-                                         v-if="cell.column.type !== 'subprojects_column_for_group'">
-                                        <div class="cursor-pointer"
-                                             @click="handleCellClick(cell, 'comment', index, row)"
-                                             v-if="cell.comments_count > 0">
-                                            <PropertyIcon name="IconMessageDots"
-                                                class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        </div>
-                                        <PropertyIcon name="IconCalculator" @click="handleCellClick(cell, 'calculation', index, row)"
-                                                        v-if="cell.calculations_count > 0"
-                                                        class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <PropertyIcon name="IconLink" @click="handleCellClick(cell, 'moneysource', index, row)"
-                                                  v-if="cell.linked_money_source_id !== null"
-                                                  class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <PropertyIcon name="IconAbacus"
-                                            v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"/>
-                                        <PropertyIcon name="IconAdjustmentsAlt" v-if="cell.sage_assigned_data.length >= 1"
-                                                            @click="handleCellClick(cell, 'sageAssignedData', index, row)"
-                                                            class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md"
-                                                            :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
-                                                            stroke-width="1.5"/>
-                                        <div>
-                                            <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell"
-                                                                     :value="this.toCurrencyString(cell.sage_value)"/>
-                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1"
-                                                                     :cell="cell" class="hidden group-hover:block"/>
+                                    <div
+                                        v-if="cell.column.type !== 'subprojects_column_for_group'"
+                                        class="flex items-start gap-1 min-w-0"
+                                    >
+                                        <!-- Icons -->
+                                        <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                                            <div
+                                                v-if="cell.comments_count > 0"
+                                                class="cursor-pointer"
+                                                @click="handleCellClick(cell, 'comment', index, row)"
+                                            >
+                                                <PropertyIcon
+                                                    name="IconMessageDots"
+                                                    class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                                />
                                             </div>
-                                            <span @mousedown="storeFocus(cell.id)"
-                                                  @click="handleCellClick(cell, '', index, row)" v-else>{{
-                                                    index < 3 ? cell.value : this.toCurrencyString(cell.value)
-                                                }}</span>
+
+                                            <PropertyIcon
+                                                v-if="cell.calculations_count > 0"
+                                                name="IconCalculator"
+                                                @click="handleCellClick(cell, 'calculation', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.linked_money_source_id !== null"
+                                                name="IconLink"
+                                                @click="handleCellClick(cell, 'moneysource', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"
+                                                name="IconAbacus"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.sage_assigned_data.length >= 1"
+                                                name="IconAdjustmentsAlt"
+                                                @click="handleCellClick(cell, 'sageAssignedData', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md"
+                                                :class="cell.sage_assigned_data.length === 1
+        ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color'
+        : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
+                                                stroke-width="1.5"
+                                            />
+                                        </div>
+
+                                        <!-- Text / Content (clamped) -->
+                                        <div class="min-w-0 flex-1">
+                                            <div v-if="cell.column.type === 'sage'" class="flex items-center min-w-0">
+                                                <SageDropCellElement :cell="cell" :value="toCurrencyString(cell.sage_value)" />
+                                                <SageDragCellElement
+                                                    v-if="cell.sage_assigned_data.length >= 1"
+                                                    :cell="cell"
+                                                    class="hidden group-hover:block shrink-0"
+                                                />
+                                            </div>
+                                            <span
+                                                v-else
+                                                @mousedown="storeFocus(cell.id)"
+                                                @click="handleCellClick(cell, '', index, row)"
+                                                class="block min-w-0 overflow-hidden text-ellipsis truncate"
+                                            >
+                                          {{ index < 3 ? cell.value : toCurrencyString(cell.value) }}
+                                        </span>
                                         </div>
                                     </div>
+
                                     <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
                                         <PropertyIcon name="IconList" @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"

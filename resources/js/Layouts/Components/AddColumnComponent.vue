@@ -199,7 +199,6 @@ export default {
                     {
                         onSuccess: () => {
                             this.closeModal(true);
-                            window.location.reload();
                         }
                     }
                 );
@@ -215,7 +214,6 @@ export default {
                     {
                         onSuccess: () => {
                             this.closeModal(true);
-                            window.location.reload();
                         }
                     }
                 );

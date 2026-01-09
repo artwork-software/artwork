@@ -10,6 +10,7 @@ use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
+use Artwork\Modules\Project\Events\UpdateBudget;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
@@ -84,6 +85,7 @@ readonly class ColumnService
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): void {
+        $columnProjectId = $column->table->project_id;
         $column->subPositionSumDetails->each(
             function (SubPositionSumDetail $subPositionSumDetail) use (
                 $sumCommentService,
@@ -145,6 +147,8 @@ readonly class ColumnService
         );
 
         $this->columnRepository->forceDelete($column);
+        broadcast(new UpdateBudget($columnProjectId));
+
     }
 
     public function getColumnsGroupedByTableId(): SupportCollection

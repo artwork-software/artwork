@@ -760,6 +760,9 @@
         :preset-groups="shiftGroupPresets"
         :day="dayForPreset"
         :room="roomForPreset"
+        :projects="props.projects"
+        :initial-project-id="props.projectId"
+        :initial-project="pageProps?.currentProject ?? null"
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
         />
@@ -2543,13 +2546,12 @@ function clearHighlightSelection() {
 
 <style scoped>
 .cell {
-    overflow: overlay;
+    overflow: auto;
 }
 
 .stickyHeader {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     display: block;
     top: 0px;
 }
@@ -2557,7 +2559,6 @@ function clearHighlightSelection() {
 .stickyYAxis {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     left: 60px;
     z-index: 12;
 }
@@ -2565,7 +2566,6 @@ function clearHighlightSelection() {
 .stickyYAxisNoMarginLeft {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     left: 0;
     z-index: 12;
 }

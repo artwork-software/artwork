@@ -71,7 +71,11 @@ export default{
             hideProjectHeader: false,
             isLoadingBudget: false,
             loadBudgetError: '',
-            localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null
+            localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null,
+
+            // 🔥 Broadcast state
+            echoChannelName: null,
+            lastReloadAt: 0,
         }
     },
     computed: {
@@ -84,49 +88,82 @@ export default{
     },
     mounted() {
         this.fetchBudgetData();
+        this.initBudgetBroadcast();
+    },
+    beforeUnmount() {
+        this.destroyBudgetBroadcast();
     },
     methods: {
         usePage,
-        async fetchBudgetData() {
-            if (this.localBudgetData) {
-                return;
-            }
+
+        initBudgetBroadcast() {
+            const projectId = this.project?.id;
+            if (!projectId) return;
+
+            // falls schon aktiv
+            this.destroyBudgetBroadcast();
+
+            this.echoChannelName = `project.${projectId}`;
+
+            // Echo ist meist global (window.Echo). Falls bei dir global: einfach Echo statt window.Echo.
+            (window.Echo ?? Echo)
+                .private(this.echoChannelName)
+                .listen(".budget.update", (payload) => {
+                    // optional: nur reagieren, wenn es wirklich unser Projekt ist
+                    if (payload?.projectId && payload.projectId !== projectId) return;
+
+                    // optional: kleines Debounce/Throttle gegen Spam
+                    const now = Date.now();
+                    if (now - this.lastReloadAt < 400) return;
+                    this.lastReloadAt = now;
+
+                    this.fetchBudgetData(true);
+                });
+        },
+
+        destroyBudgetBroadcast() {
+            if (!this.echoChannelName) return;
+
+            // leave = unsub + cleanup
+            (window.Echo ?? Echo).leave(this.echoChannelName);
+            this.echoChannelName = null;
+        },
+
+        async fetchBudgetData(force = false) {
+            if (this.isLoadingBudget) return;          // ✅ Guard
+            if (!force && this.localBudgetData) return;
 
             const projectId = this.project?.id;
-            if (!projectId) {
-                return;
-            }
+            if (!projectId) return;
 
             this.isLoadingBudget = true;
-            this.loadBudgetError = '';
+            this.loadBudgetError = "";
 
             try {
-                // Query-Parameter aus URL auslesen
                 const urlParams = new URLSearchParams(window.location.search);
-                const selectedCell = urlParams.get('selectedCell');
+                const selectedCell = urlParams.get("selectedCell");
 
                 const { data } = await axios.get(
-                    route('projects.tabs.budget', { project: projectId }),
-                    {
-                        params: {
-                            selectedCell: selectedCell
-                        }
-                    }
+                    route("projects.tabs.budget", { project: projectId }),
+                    { params: { selectedCell } }
                 );
+
                 this.localBudgetData = data?.BudgetTab || null;
+
                 if (data?.users && this.headerObject?.project) {
                     this.headerObject.project.users = data.users;
                 }
             } catch (error) {
                 console.error(error);
-                this.loadBudgetError = 'Unable to load budget data.';
+                this.loadBudgetError = "Unable to load budget data.";
             } finally {
                 this.isLoadingBudget = false;
             }
         },
+
         changeProjectHeaderVisualisation(boolean) {
             this.hideProjectHeader = boolean;
-        },
+        }
     },
 }
 </script>

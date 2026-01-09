@@ -760,6 +760,8 @@
         :preset-groups="shiftGroupPresets"
         :day="dayForPreset"
         :room="roomForPreset"
+        :projects="props.projects"
+        :initial-project-id="props.projectId"
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
         />

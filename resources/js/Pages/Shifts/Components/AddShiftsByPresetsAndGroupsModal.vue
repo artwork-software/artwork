@@ -370,7 +370,7 @@
 
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -387,6 +387,7 @@ const props = defineProps({
     singleShiftPresets: { type: [Array, Object], required: true },
     projects: { type: [Array, Object], default: () => [] },
     initialProjectId: { type: [Number, String, null], default: null },
+    initialProject: { type: Object, default: null },
 });
 
 const tab = ref("groups");
@@ -405,12 +406,46 @@ const projectsList = computed(() => {
 
 const selectedProject = ref(null);
 
-if (selectedProjectId.value != null) {
+function syncSelectedProjectFromInitial() {
+    if (selectedProjectId.value == null) {
+        selectedProject.value = null;
+        return;
+    }
+
     const existing = projectsList.value.find((p) => Number(p?.id) === Number(selectedProjectId.value));
-    selectedProject.value = existing
-        ? { id: existing.id, name: existing.name }
-        : { id: selectedProjectId.value, name: `Project #${selectedProjectId.value}` };
+    if (existing?.name) {
+        selectedProject.value = { id: existing.id, name: existing.name };
+        return;
+    }
+
+    const initial = props.initialProject;
+    if (initial && Number(initial?.id) === Number(selectedProjectId.value) && initial?.name) {
+        selectedProject.value = { id: initial.id, name: initial.name };
+        return;
+    }
+
+    // Kein Platzhalter-Name ("Project #id") anzeigen. Wenn Name nicht auflösbar ist,
+    // bleibt die Auswahl leer, bis Projekte nachgeladen wurden / User eins auswählt.
+    selectedProject.value = null;
 }
+
+syncSelectedProjectFromInitial();
+
+watch(
+    () => props.initialProjectId,
+    (v) => {
+        selectedProjectId.value = v != null && v !== '' ? Number(v) : null;
+        syncSelectedProjectFromInitial();
+    }
+);
+
+watch(
+    projectsList,
+    () => {
+        // Falls die Projekte nachladen, Name für bereits gesetztes initialProjectId nachziehen
+        syncSelectedProjectFromInitial();
+    }
+);
 
 const groups = computed(() => {
     const v = props.presetGroups;

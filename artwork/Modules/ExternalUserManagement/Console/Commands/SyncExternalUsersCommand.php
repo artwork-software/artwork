@@ -82,7 +82,6 @@ class SyncExternalUsersCommand extends Command
             $email = $ldapUser['email'] ?? null;
             $groups = $ldapUser['groups'] ?? [];
 
-            // Finde oder erstelle User
             $user = $externalUserService->findOrCreateUser($ldapUser, $identifier);
 
             if (!$user->ad_managed) {
@@ -90,15 +89,13 @@ class SyncExternalUsersCommand extends Command
                 return;
             }
 
-            // Finde oder erstelle ExternalUser und verknüpfe mit User
-            $externalUser = $externalUserService->findOrCreateExternalUser(
+            $externalUserService->findOrCreateExternalUser(
                 $source,
                 $identifier,
                 $ldapUser,
                 $user
             );
 
-            // Synchronisiere Gruppen und Rechte
             $externalUserService->syncUserGroups($source, $user, $groups, $groupMappingService);
 
             $this->line("Synced user: {$email}");

@@ -15,6 +15,7 @@ use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
+use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
@@ -57,7 +58,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('external-users:sync')
             ->everyThirtyMinutes()
             ->runInBackground();
-        
+
         // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
             ->dailyAt('02:00')
@@ -77,6 +78,7 @@ class Kernel extends ConsoleKernel
                     ->runInBackground();
             }
         }
+        $schedule->command(SyncExternalUsersCommand::class)->everyThirtyMinutes()->runInBackground();
     }
 
     /**

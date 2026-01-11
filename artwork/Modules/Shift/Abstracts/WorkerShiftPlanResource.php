@@ -70,7 +70,6 @@ class WorkerShiftPlanResource extends JsonResource
         }
 
         return $shifts->map(static function (Shift $shift): array {
-            // Relations über Eloquent-Properties (sicherer als getRelation in deinem Setup)
             $pivot      = $shift->pivot;              // belongsToMany-Pivot
             $event      = $shift->event;              // kann null sein
             $room       = $event?->room ?? $shift->room;

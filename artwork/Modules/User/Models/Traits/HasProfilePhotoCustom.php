@@ -36,7 +36,7 @@ trait HasProfilePhotoCustom
      *
      * @return void
      */
-    public function deleteProfilePhoto()
+    public function deleteProfilePhoto(): void
     {
         if (! Features::managesProfilePhotos()) {
             return;
@@ -74,7 +74,8 @@ trait HasProfilePhotoCustom
      */
     protected function defaultProfilePhotoUrl()
     {
-        $name = trim(collect(explode(' ', $this->name))->map(function ($segment) {
+        $name = $this->name ?? '';
+        $name = trim(collect(explode(' ', $name))->map(function ($segment) {
             return mb_substr($segment, 0, 1);
         })->join(' '));
 

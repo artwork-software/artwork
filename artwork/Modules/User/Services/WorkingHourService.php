@@ -224,7 +224,7 @@ class WorkingHourService
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null
+        ?User $currentUser = null
     ): array {
         $usersWithPlannedWorkingHours = [];
 

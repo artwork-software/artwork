@@ -873,7 +873,7 @@ readonly class EventService
         UserFilter $filter,
         $startDate,
         $endDate,
-        UserCalendarSettings $userCalendarSettings = null,
+        ?UserCalendarSettings $userCalendarSettings = null,
         $isShiftPlan = false
     ): void {
         $q = Event::query();

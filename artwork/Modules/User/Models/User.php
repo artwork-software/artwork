@@ -299,12 +299,7 @@ class User extends Model implements
         'full_name',
         'type',
         'formated_work_time_balance',
-        'department_ids',
-        //'assigned_craft_ids',
     ];
-
-
-    //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
         /**
          * Beziehung zum InventoryUserFilter
@@ -395,11 +390,6 @@ class User extends Model implements
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
-    }
-
-    public function getDepartmentIdsAttribute(): array
-    {
-        return $this->departments()->pluck('departments.id')->toArray();
     }
 
     public function projects(): BelongsToMany

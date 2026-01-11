@@ -54,11 +54,6 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
 
-        // External User Sync - alle 30 Minuten
-        $schedule->command('external-users:sync')
-            ->everyThirtyMinutes()
-            ->runInBackground();
-
         // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
             ->dailyAt('02:00')

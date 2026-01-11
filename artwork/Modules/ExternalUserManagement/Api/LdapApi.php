@@ -43,7 +43,7 @@ class LdapApi implements ExternalUserManagementApi
     {
         // Entferne ldap:// oder ldaps:// Präfix
         $host = preg_replace('#^ldaps?://#', '', $host);
-        
+
         // Entferne Port falls vorhanden
         $host = preg_replace('#:\d+$#', '', $host);
 
@@ -61,22 +61,12 @@ class LdapApi implements ExternalUserManagementApi
             $connection->connect();
             return true;
         } catch (\Exception $e) {
-            // Exception für Sentry loggen
-            if (app()->bound('sentry') && app()->environment() !== 'local' && !app()->runningUnitTests()) {
-                app('sentry')->captureException($e);
-            }
-            // Exception weiterwerfen, damit sie auch vom Exception Handler geloggt wird
-            // Aber false zurückgeben, damit das Frontend die Fehlermeldung anzeigen kann
+            report($e);
             throw $e;
         }
         // Connection wird automatisch geschlossen wenn das Objekt zerstört wird
     }
 
-    /**
-     * Ruft alle Nutzer basierend auf dem konfigurierten Filter ab
-     *
-     * @return Collection<array{identifier: string, email: string, first_name: string, last_name: string, groups: array}>
-     */
     public function fetchUsers(ExternalUserSource $source): Collection
     {
         $connection = $this->createConnection($source);
@@ -97,7 +87,7 @@ class LdapApi implements ExternalUserManagementApi
             $email = $this->getAttributeValue($ldapUser, 'mail');
             $firstName = $this->getAttributeValue($ldapUser, 'givenName') ?? '';
             $lastName = $this->getAttributeValue($ldapUser, 'sn') ?? '';
-            
+
             // Hole Gruppenmitgliedschaften
             $groups = $this->fetchUserGroupsFromLdapUser($ldapUser, $source, $connection);
 
@@ -118,14 +108,8 @@ class LdapApi implements ExternalUserManagementApi
                 ],
             ];
         });
-        // Connection wird automatisch geschlossen wenn das Objekt zerstört wird
     }
 
-    /**
-     * Ruft die Gruppenmitgliedschaften eines Nutzers ab (inkl. verschachtelter Gruppen)
-     *
-     * @return array<string> Array von Gruppen-DNs
-     */
     public function fetchUserGroups(ExternalUserSource $source, string $userIdentifier, bool $includeNested = true): array
     {
         $connection = $this->createConnection($source);
@@ -143,14 +127,8 @@ class LdapApi implements ExternalUserManagementApi
         }
 
         return $this->fetchUserGroupsFromLdapUser($user, $source, $connection, $includeNested);
-        // Connection wird automatisch geschlossen wenn das Objekt zerstört wird
     }
 
-    /**
-     * Ruft Gruppenmitgliedschaften direkt vom LDAP-User-Objekt ab
-     *
-     * @return array<string>
-     */
     private function fetchUserGroupsFromLdapUser(
         LdapUser $ldapUser,
         ExternalUserSource $source,
@@ -160,14 +138,12 @@ class LdapApi implements ExternalUserManagementApi
         $groups = [];
         $processedGroups = [];
 
-        // Direkte Gruppenmitgliedschaften
         $memberOf = $ldapUser->getAttribute('memberOf') ?? [];
-        
+
         foreach ($memberOf as $groupDn) {
             $groups[] = $groupDn;
             $processedGroups[$groupDn] = true;
 
-            // Wenn verschachtelte Gruppen unterstützt werden sollen
             if ($includeNested) {
                 $nestedGroups = $this->fetchNestedGroups($groupDn, $connection, $processedGroups);
                 $groups = array_merge($groups, $nestedGroups);
@@ -177,18 +153,12 @@ class LdapApi implements ExternalUserManagementApi
         return array_unique($groups);
     }
 
-    /**
-     * Ruft verschachtelte Gruppen rekursiv ab
-     *
-     * @param array<string, bool> $processedGroups Vermeidet zirkuläre Referenzen
-     * @return array<string>
-     */
     private function fetchNestedGroups(string $groupDn, Connection $connection, array &$processedGroups = []): array
     {
         $nestedGroups = [];
 
         $group = Group::on($connection)->findByDn($groupDn);
-        
+
         if (!$group) {
             return [];
         }
@@ -196,7 +166,6 @@ class LdapApi implements ExternalUserManagementApi
         $memberOf = $group->getAttribute('memberOf') ?? [];
 
         foreach ($memberOf as $nestedGroupDn) {
-            // Vermeide zirkuläre Referenzen
             if (isset($processedGroups[$nestedGroupDn])) {
                 continue;
             }
@@ -204,7 +173,6 @@ class LdapApi implements ExternalUserManagementApi
             $processedGroups[$nestedGroupDn] = true;
             $nestedGroups[] = $nestedGroupDn;
 
-            // Rekursiv verschachtelte Gruppen abrufen
             $deeperNested = $this->fetchNestedGroups($nestedGroupDn, $connection, $processedGroups);
             $nestedGroups = array_merge($nestedGroups, $deeperNested);
         }
@@ -212,9 +180,6 @@ class LdapApi implements ExternalUserManagementApi
         return $nestedGroups;
     }
 
-    /**
-     * Authentifiziert einen Nutzer gegen LDAP
-     */
     public function authenticate(ExternalUserSource $source, string $username, string $password): bool
     {
         $connection = $this->createConnection($source);
@@ -223,9 +188,8 @@ class LdapApi implements ExternalUserManagementApi
         $baseDn = $config['base_dn'] ?? '';
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        // Versuche den User zu finden
         $connection->connect();
-        
+
         $user = LdapUser::on($connection)
             ->in($baseDn)
             ->where('sAMAccountName', '=', $username)
@@ -237,10 +201,9 @@ class LdapApi implements ExternalUserManagementApi
             return false;
         }
 
-        // Versuche mit den User-Credentials zu authentifizieren
         $userDn = $user->getDn();
         $config = $source->config ?? [];
-        
+
         $userConnectionConfig = [
             'hosts' => [$this->extractHost($config['host'] ?? '')],
             'base_dn' => $config['base_dn'] ?? '',
@@ -255,22 +218,17 @@ class LdapApi implements ExternalUserManagementApi
                 LDAP_OPT_REFERRALS => 0,
             ],
         ];
-        
+
         $userConnection = new Connection($userConnectionConfig);
         $userConnection->connect();
-        // Connection wird automatisch geschlossen wenn das Objekt zerstört wird
 
         return true;
-        // Connection wird automatisch geschlossen wenn das Objekt zerstört wird
     }
 
-    /**
-     * Hilfsmethode um Attribute-Werte sicher abzurufen
-     */
     private function getAttributeValue(LdapUser $ldapUser, string $attribute): ?string
     {
         $value = $ldapUser->getAttribute($attribute);
-        
+
         if (is_array($value)) {
             return $value[0] ?? null;
         }

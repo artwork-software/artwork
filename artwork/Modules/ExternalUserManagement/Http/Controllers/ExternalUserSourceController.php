@@ -22,11 +22,7 @@ class ExternalUserSourceController extends Controller
         private readonly LdapService $ldapService
     ) {
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @throws AuthorizationException
-     */
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -36,11 +32,6 @@ class ExternalUserSourceController extends Controller
         return response()->json($sources);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @throws AuthorizationException
-     */
     public function store(StoreExternalUserSourceRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -54,11 +45,6 @@ class ExternalUserSourceController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_source.success.create'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @throws AuthorizationException
-     */
     public function update(
         UpdateExternalUserSourceRequest $request,
         ExternalUserSource $externalUserSource
@@ -74,11 +60,6 @@ class ExternalUserSourceController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_source.success.update'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @throws AuthorizationException
-     */
     public function destroy(ExternalUserSource $externalUserSource): RedirectResponse|JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -92,11 +73,6 @@ class ExternalUserSourceController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_source.success.delete'));
     }
 
-    /**
-     * Test the LDAP connection for a source
-     *
-     * @throws AuthorizationException
-     */
     public function testConnection(ExternalUserSource $externalUserSource): JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -125,11 +101,6 @@ class ExternalUserSourceController extends Controller
         }
     }
 
-    /**
-     * Test the LDAP connection with provided config data (without saving)
-     *
-     * @throws AuthorizationException
-     */
     public function testConnectionConfig(Request $request): JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);

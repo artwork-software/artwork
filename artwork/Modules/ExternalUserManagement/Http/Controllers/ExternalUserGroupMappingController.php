@@ -20,11 +20,7 @@ class ExternalUserGroupMappingController extends Controller
         private readonly ExternalUserGroupMappingService $externalUserGroupMappingService
     ) {
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @throws AuthorizationException
-     */
+
     public function index(Request $request, int $sourceId): JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -34,11 +30,6 @@ class ExternalUserGroupMappingController extends Controller
         return response()->json($mappings);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @throws AuthorizationException
-     */
     public function store(StoreExternalUserGroupMappingRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);
@@ -52,11 +43,6 @@ class ExternalUserGroupMappingController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_group_mapping.success.create'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @throws AuthorizationException
-     */
     public function update(
         UpdateExternalUserGroupMappingRequest $request,
         ExternalUserGroupMapping $externalUserGroupMapping
@@ -72,11 +58,6 @@ class ExternalUserGroupMappingController extends Controller
         return Redirect::back()->with('success', __('flash-messages.external_user_group_mapping.success.update'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @throws AuthorizationException
-     */
     public function destroy(ExternalUserGroupMapping $externalUserGroupMapping): RedirectResponse|JsonResponse
     {
         $this->authorize('view', GeneralSettings::class);

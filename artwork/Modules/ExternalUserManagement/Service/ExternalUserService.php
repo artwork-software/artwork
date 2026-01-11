@@ -20,9 +20,6 @@ class ExternalUserService
     ) {
     }
 
-    /**
-     * Findet oder erstellt einen User basierend auf AD-Identifier oder Email
-     */
     public function findOrCreateUser(array $ldapUser, string $identifier): User
     {
         $email = $ldapUser['email'] ?? null;
@@ -55,7 +52,6 @@ class ExternalUserService
             ]);
             $this->userRepository->save($user);
         } elseif ($user->ad_managed) {
-            // Update nur wenn ad_managed=true
             $user->fill([
                 'first_name' => $firstName,
                 'last_name' => $lastName,
@@ -68,9 +64,6 @@ class ExternalUserService
         return $user;
     }
 
-    /**
-     * Synchronisiert Gruppenmitgliedschaften und Rechte für einen User
-     */
     public function syncUserGroups(
         ExternalUserSource $source,
         User $user,
@@ -84,19 +77,16 @@ class ExternalUserService
             $isMember = in_array($groupDn, $userGroups);
 
             if ($isMember) {
-                // Weise Permissions zu
                 if (!empty($mapping->permission_ids)) {
                     $permissions = Permission::whereIn('id', $mapping->permission_ids)->pluck('name');
                     $user->givePermissionTo($permissions);
                 }
 
-                // Weise Roles zu
                 if (!empty($mapping->role_ids)) {
                     $roles = Role::whereIn('id', $mapping->role_ids)->pluck('name');
                     $user->assignRole($roles);
                 }
             } else {
-                // Entferne Permissions/Roles wenn User nicht mehr in Gruppe ist
                 if (!empty($mapping->permission_ids)) {
                     $permissions = Permission::whereIn('id', $mapping->permission_ids)->pluck('name');
                     $user->revokePermissionTo($permissions);
@@ -104,7 +94,6 @@ class ExternalUserService
             }
         }
 
-        // Speichere Gruppen in meta_data des ExternalUser
         $externalUser = $this->externalUserRepository->findBySourceIdAndUserId($source->id, $user->id);
 
         if ($externalUser) {
@@ -114,9 +103,6 @@ class ExternalUserService
         }
     }
 
-    /**
-     * Findet oder erstellt einen ExternalUser und verknüpft ihn mit einem User
-     */
     public function findOrCreateExternalUser(
         ExternalUserSource $source,
         string $identifier,

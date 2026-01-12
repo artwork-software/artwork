@@ -67,12 +67,9 @@ class UserRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return User::query()->canWorkShifts()->with(
-            'dayServices',
-            'shifts',
-            'shifts.shiftsQualifications',
-            'shiftQualifications',
-        )->get();
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlan(User::class);
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

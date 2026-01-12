@@ -34,12 +34,9 @@ class ServiceProviderRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return ServiceProvider::query()->canWorkShifts()->with(
-            'dayServices',
-            'shifts',
-            'shifts.event',
-            'shifts.event.room'
-        )->get();
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlan(ServiceProvider::class);
     }
 
     public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection

@@ -10,6 +10,8 @@ class DayServiceRepository extends BaseRepository
 {
     public function getAll(): Collection
     {
-        return DayService::all();
+        return DayService::query()
+            ->select(['id', 'name', 'icon', 'hex_color'])
+            ->get();
     }
 }

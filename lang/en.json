@@ -3762,5 +3762,7 @@
     "Everyone with access to the project can see this tab.": "Everyone with access to the project can see this tab.",
     "If you think this is a mistake, please check the link or contact the admin.": "If you think this is a mistake, please check the link or contact the admin.",
     "Project not found": "Project not found",
-    "The project does not exist (anymore) or you do not have access to it.": "The project does not exist (anymore) or you do not have access to it."
+    "The project does not exist (anymore) or you do not have access to it.": "The project does not exist (anymore) or you do not have access to it.",
+    "Project Tab not accessible": "Project Tab not accessible",
+    "You do not have permission to access this project tab.": "You do not have permission to access this project tab."
 }

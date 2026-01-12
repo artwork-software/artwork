@@ -2259,7 +2259,7 @@ class ProjectController extends Controller
         ProjectCreateSettings $projectCreateSettings,
         EventPropertyService $eventPropertyService,
         ShiftTimePresetService $shiftTimePresetService
-    ): Response|ResponseFactory {
+    ) {
 
 
         if (method_exists($project, 'trashed') ? $project->trashed() : (bool) $project->deleted_at) {
@@ -2270,8 +2270,6 @@ class ProjectController extends Controller
                 'This project has been deleted and is no longer available.'
             );
         }
-
-        // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
 
         $headerObject = new stdClass();
         $headerObject->project = $project;
@@ -2342,8 +2340,8 @@ class ProjectController extends Controller
             return $this->inertiaProjectError(
                 $request,
                 410,
-                'Project has been deleted',
-                'This project has been deleted and is no longer available.'
+                'Project Tab not accessible',
+                'You do not have permission to access this project tab.'
             );
         }
 

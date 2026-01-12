@@ -12,6 +12,8 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
@@ -34,13 +36,14 @@ use Laravel\Scout\Searchable;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class ServiceProvider extends Model implements DayServiceable, Employable
+class ServiceProvider extends Model implements Vacationer, DayServiceable, Employable
 {
     use HasFactory;
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
     use HasShifts;
+    use GoesOnVacation;
     use Searchable;
     use HasContacts;
 

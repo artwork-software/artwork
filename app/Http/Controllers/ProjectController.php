@@ -3821,6 +3821,9 @@ class ProjectController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
+
+        $projectId = $subPosition->mainPosition->table->project_id;
+
         $subPositionService->forceDelete(
             $subPosition,
             $sumCommentService,
@@ -3836,9 +3839,9 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        broadcast(new UpdateBudget($projectId));
 
-        return Redirect::back();
+        //return Redirect::back();
     }
 
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse

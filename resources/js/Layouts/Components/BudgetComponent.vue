@@ -1639,7 +1639,7 @@ export default {
                 this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
             } else if (this.subPositionToDelete !== null) {
                 router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id), {
-                    preserveState: true,
+                    preserveState: false,
                     preserveScroll: true
                 })
                 this.successHeading = this.$t('Sub-item deleted');
@@ -1647,7 +1647,7 @@ export default {
             } else {
                 router.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: false
                 });
                 this.successHeading = this.$t('Row deleted');
                 this.successDescription = this.$t('Line successfully deleted');

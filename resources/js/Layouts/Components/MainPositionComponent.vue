@@ -35,50 +35,82 @@
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')" dots-color="text-artwork-context-light">
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
-                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLock" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Get verified by user') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Cancel verification') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Withdraw verification request') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
-                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLock" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Commitment') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
-                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5"  />
-                                                {{ $t('Canceling a fixed term') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
-                                                {{ $t('Delete') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconCopy" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
-                                    {{ $t('Duplicate') }}
-                                </a>
-                            </MenuItem>
+                        <BaseMenu
+                            v-if="hasBudgetAccess || $can('edit budget templates')"
+                            dots-color="text-artwork-context-light"
+                            white-menu-background
+                        >
+                            <!-- Get verified by user -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'"
+                                :title="$t('Get verified by user')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)"
+                            />
+
+                            <!-- Cancel verification -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
+                                        && (mainPosition.verified?.requested === $page.props.auth.user.id
+                                        || projectManagers.includes($page.props.auth.user.id))"
+                                :title="$t('Cancel verification')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="removeVerification(mainPosition, 'main')"
+                            />
+
+                            <!-- Withdraw verification request -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED'
+                                        && (mainPosition.verified?.requested_by === $page.props.auth.user.id
+                                        || projectManagers.includes($page.props.auth.user.id))"
+                                :title="$t('Withdraw verification request')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="requestRemove(mainPosition, 'main')"
+                            />
+
+                            <!-- Commitment (fix) -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed"
+                                :title="$t('Commitment')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="fixMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Canceling a fixed term (unfix) -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed"
+                                :title="$t('Canceling a fixed term')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="unfixMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Duplicate -->
+                            <BaseMenuItem
+                                :title="$t('Duplicate')"
+                                icon="IconCopy"
+                                white-menu-background
+                                @click="duplicateMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Delete -->
+                            <BaseMenuItem
+                                :title="$t('Delete')"
+                                icon="IconTrash"
+                                white-menu-background
+                                @click="openDeleteMainPositionModal(mainPosition)"
+                            />
                         </BaseMenu>
+
                     </div>
                 </div>
             </div>
@@ -164,12 +196,14 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
+        BaseMenuItem,
         PropertyIcon,
         BaseMenu,
         SageAssignedDataModal,

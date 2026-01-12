@@ -21,48 +21,46 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                      v-slot="{ active }"
-                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                <span @click="fixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconLock" stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                              aria-hidden="true"/>
-                                    {{ $t('Commitment') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                      v-slot="{ active }"
-                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
-                                <span @click="unfixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconLockOpen" stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                  aria-hidden="true"/>
-                                    {{ $t('Canceling a fixed term') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <span @click="openDeleteSubPositionModal(subPosition)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconTrash" stroke-width="1.5"
-                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                               aria-hidden="true"/>
-                                    {{ $t('Delete') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="duplicateSubpostion(subPosition.id)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                              aria-hidden="true"/>
-                                    {{ $t('Duplicate') }}
-                                </a>
-                            </MenuItem>
+                        <BaseMenu
+                            v-if="hasBudgetAccess || $can('edit budget templates')"
+                            white-menu-background
+                        >
+                            <!-- Commitment / Unfix -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed"
+                                :title="$t('Commitment')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="fixSubPosition(subPosition.id)"
+                            />
+
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed"
+                                :title="$t('Canceling a fixed term')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="unfixSubPosition(subPosition.id)"
+                            />
+
+                            <!-- Duplicate -->
+                            <BaseMenuItem
+                                :title="$t('Duplicate')"
+                                icon="IconCopy"
+                                white-menu-background
+                                @click="duplicateSubpostion(subPosition.id)"
+                            />
+
+                            <!-- Delete -->
+                            <BaseMenuItem
+                                :title="$t('Delete')"
+                                icon="IconTrash"
+                                white-menu-background
+                                @click="openDeleteSubPositionModal(subPosition)"
+                            />
                         </BaseMenu>
+
                     </div>
                 </div>
             </div>
@@ -293,52 +291,46 @@
                                             class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                         </td>
                     </div>
-                    <BaseMenu dots-color="text-artwork-buttons-context" class="invisible group-hover:visible"
-                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                        <MenuItem v-slot="{ active }"
-                                  v-if="row.commented === false"
-                                  @click="updateRowCommented(row.id, true)">
-                                        <span
-                                            @click=""
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconLock" stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Exclude') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }"
-                                  v-else
-                                  @click="updateRowCommented(row.id, false)">
-                                        <span
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconLockOpen" stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                          aria-hidden="true"/>
-                                            {{ $t('Include positions') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                                        <span
-                                            @click="duplicateRow(row.id)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Duplicate') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                                        <span
-                                            @click="openDeleteRowModal(row)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconTrash" stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                       aria-hidden="true"/>
-                                            {{ $t('Delete') }}
-                                        </span>
-                        </MenuItem>
-                    </BaseMenu>
+                            <BaseMenu
+                                dots-color="text-artwork-buttons-context"
+                                class="invisible group-hover:visible"
+                                v-if="hasBudgetAccess || $can('edit budget templates')"
+                                white-menu-background
+                            >
+                                <!-- Exclude / Include -->
+                                <BaseMenuItem
+                                    v-if="row.commented === false"
+                                    :title="$t('Exclude')"
+                                    icon="IconLock"
+                                    white-menu-background
+                                    @click="updateRowCommented(row.id, true)"
+                                />
+
+                                <BaseMenuItem
+                                    v-else
+                                    :title="$t('Include positions')"
+                                    icon="IconLockOpen"
+                                    white-menu-background
+                                    @click="updateRowCommented(row.id, false)"
+                                />
+
+                                <!-- Duplicate -->
+                                <BaseMenuItem
+                                    :title="$t('Duplicate')"
+                                    icon="IconCopy"
+                                    white-menu-background
+                                    @click="duplicateRow(row.id)"
+                                />
+
+                                <!-- Delete -->
+                                <BaseMenuItem
+                                    :title="$t('Delete')"
+                                    icon="IconTrash"
+                                    white-menu-background
+                                    @click="openDeleteRowModal(row)"
+                                />
+                            </BaseMenu>
+
                         </tr>
                         <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
                                              :sub-position-id="subPosition.id"/>
@@ -450,11 +442,13 @@ import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/Relev
 import {IconList} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import draggable from 'vuedraggable';
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        BaseMenuItem,
         PropertyIcon,
         draggable,
         RelevantBudgetDataSumModal,

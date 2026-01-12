@@ -2245,25 +2245,24 @@ class ProjectController extends Controller
         EventPropertyService $eventPropertyService,
         ShiftTimePresetService $shiftTimePresetService
     ): Response|ResponseFactory {
-        // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
+
         $headerObject = new stdClass();
         $headerObject->project = $project;
-        // explizit setzen, wie zuvor verwendet
         $headerObject->project->cost_center = $project->costCenter;
 
         $loadedProjectInformation = [];
 
         /** @var User|null $authUser */
         $authUser = $userService->getAuthUser();
+
         if ($authUser?->last_project_id !== $project->id) {
             $authUser?->update(['last_project_id' => $project->id]);
         }
 
-        $firstEvent = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEvent = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        // Tab + benötigte Relationen laden (inkl. Sortierung)
         $projectTab->load([
+            'visibleUsers:id,first_name,last_name',
+            'visibleDepartments:id,name,svg_name',
+
             // Hauptkomponenten inkl. ProjectValue
             'components.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
@@ -2271,7 +2270,8 @@ class ProjectController extends Controller
             'components' => function ($query): void {
                 $query->orderBy('order');
             },
-            // WICHTIG: Berechtigungsdaten der Hauptkomponenten (nur ID und can_write vom Pivot)
+
+            // Berechtigungsdaten der Hauptkomponenten (nur ID und can_write vom Pivot)
             'components.component.users' => function ($query): void {
                 $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
             },
@@ -2286,7 +2286,6 @@ class ProjectController extends Controller
             'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
-            // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten (nur ID und can_write vom Pivot)
             'sidebarTabs.componentsInSidebar.component.users' => function ($query): void {
                 $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
             },
@@ -2312,10 +2311,16 @@ class ProjectController extends Controller
             },
         ]);
 
-        // Alle Komponenten des Tabs inkl. Sidebar (unique, Reihenfolge beibehalten)
+        if (!$projectTab->isVisibleFor($authUser)) {
+            abort(404);
+        }
+
+        $firstEvent = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEvent  = $project->events()->orderBy('end_time', 'DESC')->first();
+
         $projectTabComponents = $projectTab
             ->components()
-            ->with('component')
+            ->with(['component'])
             ->get()
             ->concat(
                 $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
@@ -2341,18 +2346,15 @@ class ProjectController extends Controller
                 'genres',
                 'sectors',
             ]);
-
-            // keep frontend contract (`project.cost_center`)
             $headerObject->project->cost_center = $project->costCenter;
         }
 
-        $hasShiftTab = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
+        $hasShiftTab    = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
         $hasCalendarTab = in_array(ProjectTabComponentEnum::CALENDAR->value, $componentTypes, true);
-        $hasBudgetTab = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
+        $hasBudgetTab   = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
 
         foreach ($projectTabComponents as $componentInTab) {
             $component = $componentInTab->component;
-
             if ($component->type == ProjectTabComponentEnum::SHIFT_TAB->value) {
                 $this->singleShiftPresetService->shareSingleShiftPresets();
             }
@@ -2364,82 +2366,72 @@ class ProjectController extends Controller
         $headerObject->firstEventInProject = $firstEvent;
         $headerObject->lastEventInProject  = $lastEvent;
 
-        $headerObject->roomsWithAudience   = Room::withAudience($project->id)->pluck('name', 'id');
-        // eventTypes, eventStatuses, event_properties müssen in headerObject sein, weil TabContent.vue sie an Child-Komponenten weitergibt
-        $headerObject->eventTypes          = $this->eventTypeService->getAll();
-        $headerObject->eventStatuses       = app(EventSettings::class)->enable_status
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
+        $headerObject->eventTypes        = $this->eventTypeService->getAll();
+        $headerObject->eventStatuses     = app(EventSettings::class)->enable_status
             ? EventStatus::orderBy('order')->get()
             : [];
-        $headerObject->event_properties    = $eventPropertyService->getAll();
-        $headerObject->states              = $this->projectStateService->getAll();
+        $headerObject->event_properties  = $eventPropertyService->getAll();
+        $headerObject->states            = $this->projectStateService->getAll();
 
-        $headerObject->projectGroups       = $project->groups;
+        $headerObject->projectGroups     = $project->groups;
 
-        // Quick Win Step 4: GroupProjects nur laden wenn ProjectGroupComponent vorhanden (5-10% Reduktion)
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
         if ($hasGroupComponent) {
             $headerObject->groupProjects = Project::where('is_group', 1)->get();
         } else {
-            $headerObject->groupProjects = collect(); // Leere Collection für Konsistenz
+            $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup     = $project->projectsOfGroup()->get();
+        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get();
 
-        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn nötig.
-        // Achtung: Auch ohne ProjectAttributesComponent können die Daten im Header (z.B. Projekt-Basisdaten-Modal)
-        // benötigt werden. Daher zusätzlich über die CreateSettings absichern.
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
         if ($needsProjectAttributesData) {
             $headerObject->categories = $this->categoryService->getAll();
-            $headerObject->genres = $this->genreService->getAll();
-            $headerObject->sectors = $this->sectorService->getAll();
+            $headerObject->genres     = $this->genreService->getAll();
+            $headerObject->sectors    = $this->sectorService->getAll();
         } else {
-            // Leere Arrays für Konsistenz
             $headerObject->categories = [];
-            $headerObject->genres = [];
-            $headerObject->sectors = [];
+            $headerObject->genres     = [];
+            $headerObject->sectors    = [];
         }
 
-        // Projekt-spezifische Kategorien/Genres/Sektoren immer laden (für Anzeige)
-        $headerObject->projectCategories   = $project->categories;
-        $headerObject->projectGenres       = $project->genres;
-        $headerObject->projectSectors      = $project->sectors;
+        $headerObject->projectCategories = $project->categories;
+        $headerObject->projectGenres     = $project->genres;
+        $headerObject->projectSectors    = $project->sectors;
 
-        // Optimiert: Nur id und name laden statt alle Events und Admins
-        $headerObject->rooms               = Room::select('id', 'name')->whereNull('deleted_at')->get();
+        $headerObject->rooms = Room::select('id', 'name')->whereNull('deleted_at')->get();
 
-        $headerObject->projectState        = $project->state;
+        $headerObject->projectState = $project->state;
 
-        // Load full state object with is_planning for BulkBody component
         $project->load('status');
         $headerObject->project->state = $project->status;
 
         $tabInformation = [];
-        ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation): void {
-            $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
-        });
+        ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->orderBy('order')
+            ->get(['id', 'name'])
+            ->each(function ($tab) use (&$tabInformation): void {
+                $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
+            });
+        $headerObject->tabs = $tabInformation;
 
-        $headerObject->tabs  = $tabInformation;
+        $headerObject->currentTabId = $projectTab->id;
+        $headerObject->currentGroup = $groupOutput;
 
-        $headerObject->currentTabId        = $projectTab->id;
-        $headerObject->currentGroup        = $groupOutput;
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds   = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds  = $project->delete_permission_users()->pluck('user_id');
 
-        // IDs über Pivot-Tabellen beibehalten (wie bisher)
-        $headerObject->projectManagerIds   = $project->managerUsers()->pluck('user_id');
-        $headerObject->projectWriteIds     = $project->writeUsers()->pluck('user_id');
-        $headerObject->projectDeleteIds    = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectGenreIds    = $project->genres()->pluck('genre_id');
+        $headerObject->projectSectorIds   = $project->sectors()->pluck('sector_id');
 
-        $headerObject->projectCategoryIds  = $project->categories()->pluck('category_id');
-        $headerObject->projectGenreIds     = $project->genres()->pluck('genre_id');
-        $headerObject->projectSectorIds    = $project->sectors()->pluck('sector_id');
-
-        // Achtung: wird an mehreren Stellen gesetzt – Reihenfolge/Name unverändert lassen
         $headerObject->project->project_managers = $project->managerUsers;
 
-        // Safely fetch latest history entry; can be null if no history exists
         $latestHistory = $project->historyChanges()->first();
-
         $latestChange  = [];
         if ($latestHistory !== null) {
             $latestChange = [[
@@ -2456,39 +2448,50 @@ class ProjectController extends Controller
         }
         $headerObject->project_history = $latestChange;
 
-        // Basis-Daten die immer gebraucht werden
         /** @var User $user */
         $user = $this->authManager->user();
 
-        // Basis-Return-Daten
+        // ✅ First-Tab IDs dürfen NICHT auf unsichtbare Tabs zeigen
+        $firstVisibleTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->orderBy('order')
+            ->value('id');
+
+        $firstVisibleCalendarTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->byComponentsComponentType(ProjectTabComponentEnum::CALENDAR->value)
+            ->orderBy('order')
+            ->value('id') ?? $firstVisibleTabId;
+
+        $firstVisibleBudgetTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->byComponentsComponentType(ProjectTabComponentEnum::BUDGET->value)
+            ->orderBy('order')
+            ->value('id') ?? $firstVisibleTabId;
+
         $baseData = [
-            'currentTab'                  => $projectTab,
-            'headerObject'                => $headerObject,
-            'loadedProjectInformation'    => $loadedProjectInformation,
-            'first_project_tab_id'        => $this->projectTabService->getFirstProjectTabId(),
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_budget_tab_id'   => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
-            'createSettings'              => app(ProjectCreateSettings::class),
-            'printLayouts'                => $this->projectPrintLayoutService->getAll(),
-            'project'                     => $headerObject->project,
-            'eventTypes'                  => $this->eventTypeService->getAll(),
-            'eventStatuses'               => app(EventSettings::class)->enable_status
+            'currentTab'                   => $projectTab,
+            'headerObject'                 => $headerObject,
+            'loadedProjectInformation'     => $loadedProjectInformation,
+            'first_project_tab_id'         => $firstVisibleTabId,
+            'first_project_calendar_tab_id'=> $firstVisibleCalendarTabId,
+            'first_project_budget_tab_id'  => $firstVisibleBudgetTabId,
+            'createSettings'               => app(ProjectCreateSettings::class),
+            'printLayouts'                 => $this->projectPrintLayoutService->getAll(),
+            'project'                      => $headerObject->project,
+            'eventTypes'                   => $this->eventTypeService->getAll(),
+            'eventStatuses'                => app(EventSettings::class)->enable_status
                 ? EventStatus::orderBy('order')->get()
                 : [],
-            'event_properties'            => $eventPropertyService->getAll(),
-            'projectId'                   => $project->id,
+            'event_properties'             => $eventPropertyService->getAll(),
+            'projectId'                    => $project->id,
         ];
 
-        // Tab-spezifische Daten nur bei Bedarf laden
         $tabSpecificData = [];
 
         if ($hasShiftTab) {
-            // ShiftTab-Daten laden (analog EventController::viewShiftPlan)
             $this->loadShiftTabData($headerObject, $project);
 
-            // Ensure project shift filter exists for the user
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => UserFilterTypes::PROJECT_SHIFT_FILTER->value],
                 [
@@ -2503,12 +2506,12 @@ class ProjectController extends Controller
                     'craft_ids' => null,
                 ]
             );
+
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
             $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
-            $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
+            $endDate   = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
 
-            // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
             /** @var CalendarDataService $calendarDataService */
             $calendarDataService = app(CalendarDataService::class);
             $rooms = $calendarDataService->getFilteredRooms(
@@ -2519,7 +2522,6 @@ class ProjectController extends Controller
                 true
             );
 
-            // Transform Room models to RoomDTOs for frontend compatibility
             $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
                 id: $room->id,
                 name: $room->name,
@@ -2547,7 +2549,6 @@ class ProjectController extends Controller
                 $history
             ));
 
-            // Zusätzliche ShiftTab-Props
             $tabSpecificData['rooms'] = $roomDTOs;
             $tabSpecificData['user_filters'] = $userCalendarFilter;
         }
@@ -2562,6 +2563,7 @@ class ProjectController extends Controller
 
         return inertia('Projects/Tab/TabContent', array_merge($baseData, $tabSpecificData));
     }
+
 
     public function history(Project $project): JsonResponse
     {

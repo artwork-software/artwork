@@ -2746,6 +2746,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // shifts.createFromPresets
     Route::post('/shifts/createFromPresets', [\Artwork\Modules\Shift\Http\Controllers\ShiftController::class, 'createFromPresets'])
         ->name('shifts.createFromPresets');
+
+    Route::prefix('inventory')->group(function () {
+        Route::post('/filter-presets', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'store'])
+            ->name('inventory.filter-presets.store');
+
+        Route::put('/filter-presets/{preset}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'update'])
+            ->name('inventory.filter-presets.update');
+
+        Route::delete('/filter-presets/{preset}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'destroy'])
+            ->name('inventory.filter-presets.destroy');
+    });
 });
 
 Route::get(

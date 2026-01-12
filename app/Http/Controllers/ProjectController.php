@@ -694,7 +694,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function verifiedRequestMainPosition(Request $request): RedirectResponse
+    public function verifiedRequestMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->id);
         $project = $mainPosition->table()->first()->project()->first();
@@ -780,14 +780,17 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+
+        //return Redirect::back();
     }
 
-    public function takeBackVerification(Request $request): RedirectResponse
+    public function takeBackVerification(Request $request): void
     {
 
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
+        $mainPosition = null;
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_TAKE_BACK;
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
@@ -914,7 +917,9 @@ class ProjectController extends Controller
                     ->setTranslationKeyPlaceholderValues([$subPosition->name])
             );
         }
-        return Redirect::back();
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        //return Redirect::back();
     }
 
     private function deleteOldNotification($positionId, $requestedId): void
@@ -932,11 +937,11 @@ class ProjectController extends Controller
     public function removeVerification(
         Request $request,
         DatabaseNotificationService $databaseNotificationService
-    ): RedirectResponse {
+    ): void {
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_DELETED;
-
+        $mainPosition = null;
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
@@ -1065,10 +1070,10 @@ class ProjectController extends Controller
             $databaseNotificationService->deleteByKey($notificationKey);
         }
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function verifiedRequestSubPosition(Request $request): RedirectResponse
+    public function verifiedRequestSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->id);
         $mainPosition = $subPosition->mainPosition()->first();
@@ -1182,10 +1187,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function verifiedSubPosition(Request $request): RedirectResponse
+    public function verifiedSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $verifiedRequest = $subPosition->verified()->first();
@@ -1208,10 +1213,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function fixSubPosition(Request $request): RedirectResponse
+    public function fixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->setSubPositionCellVerifiedValue($subPosition);
@@ -1277,10 +1282,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function unfixSubPosition(Request $request): RedirectResponse
+    public function unfixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->removeSubPositionCellVerifiedValue($subPosition);
@@ -1345,10 +1350,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function fixMainPosition(Request $request): RedirectResponse
+    public function fixMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
@@ -1364,10 +1369,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function unfixMainPosition(Request $request): RedirectResponse
+    public function unfixMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->removeMainPositionCellVerifiedValue($mainPosition);
@@ -1383,7 +1388,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function resetTable(
@@ -1406,7 +1411,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService,
-    ): RedirectResponse {
+    ): void {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
             $project,
@@ -1432,10 +1437,10 @@ class ProjectController extends Controller
             $project,
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($project->id));
     }
 
-    public function verifiedMainPosition(Request $request): RedirectResponse
+    public function verifiedMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
@@ -1459,7 +1464,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1471,6 +1476,7 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => $cell->value]);
             }
         }
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function removeSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1482,6 +1488,7 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => null]);
             }
         }
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function setMainPositionCellVerifiedValue(MainPosition $mainPosition): void
@@ -1496,6 +1503,8 @@ class ProjectController extends Controller
                 }
             }
         }
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition): void
@@ -1510,6 +1519,7 @@ class ProjectController extends Controller
                 }
             }
         }
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function updateCellSource(
@@ -1781,7 +1791,7 @@ class ProjectController extends Controller
         MoneySourceCalculationService $moneySourceCalculationService
     ): void {
         $column = Column::find($request->column_id);
-        $project = $column->table()->first()->project()->first();
+        $project = $column->table->project;
         $cell = ColumnCell::where('column_id', $request->column_id)
             ->where('sub_position_row_id', $request->sub_position_row_id)
             ->first();
@@ -2007,6 +2017,8 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function updateCellCalculation(Request $request)
@@ -2156,18 +2168,20 @@ class ProjectController extends Controller
         }
     }
 
-    public function lockColumn(Request $request): RedirectResponse
+    public function lockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($column->table->project_id));
+        //return Redirect::back();
     }
 
-    public function unlockColumn(Request $request): RedirectResponse
+    public function unlockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => false, 'locked_by' => null]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($column->table->project_id));
+        //return Redirect::back();
     }
 
     public function updateProjectState(Request $request, Project $project): void
@@ -3806,7 +3820,7 @@ class ProjectController extends Controller
 
         broadcast(new UpdateBudget($mainPosition->table->project_id));
 
-        return Redirect::back();
+        //return Redirect::back();
     }
 
     public function deleteSubPosition(
@@ -3847,21 +3861,22 @@ class ProjectController extends Controller
         //return Redirect::back();
     }
 
-    public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
+    public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): void
     {
         $row->update(['commented' => $request->commented]);
 
         $cellIds = $row->cells->skip(3)->pluck('id');
 
         $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
-
-        return Redirect::back();
+        broadcast(new UpdateBudget($row->subPosition->mainPosition->table->project_id));
+        //return Redirect::back();
     }
 
-    public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
+    public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): void
     {
         $columnCell->update(['commented' => $request->commented]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($columnCell->column->table->project_id));
+        //return Redirect::back();
     }
 
     public function updateKeyVisual(Request $request, Project $project): RedirectResponse
@@ -4020,6 +4035,8 @@ class ProjectController extends Controller
     {
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
+
+        broadcast(new UpdateBudget($column->table->project_id));
     }
 
     public function projectBudgetExport(Project $project): BinaryFileResponse

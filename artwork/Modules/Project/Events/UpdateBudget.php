@@ -17,8 +17,11 @@ class UpdateBudget implements ShouldBroadcastNow
 
     public $projectId;
 
-    public function __construct(int $projectId)
+    public function __construct(int $projectId = null)
     {
+        if ($projectId === null) {
+            return;
+        }
         $this->projectId = $projectId;
     }
 

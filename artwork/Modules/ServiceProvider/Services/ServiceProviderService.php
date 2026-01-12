@@ -9,7 +9,6 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\DTOs\ShowDto;
-use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShowResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Repositories\ServiceProviderRepository;
@@ -27,7 +26,7 @@ readonly class ServiceProviderService
     public function __construct(
         private ServiceProviderRepository $serviceProviderRepository,
         private ProjectTabService $projectTabService,
-        private WorkingHourService $workingHourService
+        private WorkingHourService $workingHourService,
     ) {
     }
 
@@ -38,49 +37,45 @@ readonly class ServiceProviderService
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        User $currentUser = null
+        ?User $currentUser = null
     ): array {
+
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+
+        $serviceProviders = $this->serviceProviderRepository->getWorkers();
+        $serviceProviders = $workerShiftPlanService->loadWorkerRelations($serviceProviders, $startDate, $endDate);
+        $serviceProviders = $workerShiftPlanService->filterByQualifications($serviceProviders, $currentUser);
+        $qualificationsCache = $workerService->buildQualificationsCache($serviceProviders);
+
         $serviceProvidersWithPlannedWorkingHours = [];
-
-        // Get all service provider workers with shift qualifications loaded
-        $serviceProviders = $this->serviceProviderRepository->getWorkers()->load('shiftQualifications');
-
-        // Filter service providers by shift qualifications if currentUser has selected qualifications
-        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
-            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
-            $serviceProviders = $serviceProviders->filter(function ($serviceProvider) use ($selectedQualifications) {
-                // Check if service provider has at least one of the selected qualifications
-                $serviceProviderQualificationIds = $serviceProvider->shiftQualifications->pluck('id')->toArray();
-                return !empty(array_intersect($selectedQualifications, $serviceProviderQualificationIds));
-            });
-        }
 
         /** @var ServiceProvider $serviceProvider */
         foreach ($serviceProviders as $serviceProvider) {
             $desiredServiceProviderResource = $desiredResourceClass::make($serviceProvider);
 
-            if ($desiredServiceProviderResource instanceof ServiceProviderShiftPlanResource) {
-                $desiredServiceProviderResource->setStartDate($startDate)->setEndDate($endDate);
-            }
-
-            /*$plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
-                $this->workingHourService->calculateShiftTime($serviceProvider, $startDate, $endDate)
-            );*/
             $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
                 $serviceProvider,
                 $startDate,
                 $endDate
             );
 
-            $serviceProvidersWithPlannedWorkingHours[] = [
-                'service_provider' => $desiredServiceProviderResource->resolve(),
-                //'plannedWorkingHours' => $plannedWorkingHours,
+            $additionalData = [
                 'weeklyWorkingHours' => $weeklyWorkingHours,
-                'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
-                'individual_times' => $serviceProvider->individualTimes()->with(['series'])
-                    ->individualByDateRange($startDate, $endDate)->get(),
-                'shift_comments' => $serviceProvider->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];
+
+            $serviceProviderData = $workerShiftPlanService->buildWorkerData(
+                $serviceProvider,
+                $desiredServiceProviderResource,
+                $qualificationsCache,
+                $startDate,
+                $endDate,
+                false, // ServiceProvider hat kein addVacationsAndAvailabilities Parameter
+                $additionalData
+            );
+
+            $serviceProvidersWithPlannedWorkingHours[] = $serviceProviderData;
         }
 
         if ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {

@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Contracts\Activity;
@@ -203,28 +204,31 @@ class Shift extends Model
         )->without(['components', 'users']);
     }
 
-    public function users(): BelongsToMany
+    public function users(): MorphToMany
     {
         return $this
-            ->belongsToMany(User::class, 'shift_user')
-            ->using(ShiftUser::class)
+            ->morphedByMany(User::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', User::class)
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time'])
             ->without('calendar_settings');
     }
 
-    public function freelancer(): BelongsToMany
+    public function freelancer(): MorphToMany
     {
         return $this
-            ->belongsToMany(Freelancer::class, 'shifts_freelancers')
-            ->using(ShiftFreelancer::class)
+            ->morphedByMany(Freelancer::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', Freelancer::class)
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 
-    public function serviceProvider(): BelongsToMany
+    public function serviceProvider(): MorphToMany
     {
         return $this
-            ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
-            ->using(ShiftServiceProvider::class)
+            ->morphedByMany(ServiceProvider::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', ServiceProvider::class)
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 

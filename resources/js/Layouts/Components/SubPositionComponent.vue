@@ -1146,5 +1146,45 @@ export default {
     background-color: #E1D1DC;
 }
 
+.softSkyColumn {
+    background-color: #93C5FD; /* sky */
+}
+
+.softAquaColumn {
+    background-color: #67E8F9; /* aqua */
+}
+
+.softTealColumn {
+    background-color: #5EEAD4; /* teal */
+}
+
+.softMintColumn {
+    background-color: #86EFAC; /* mint */
+}
+
+.softLimeColumn {
+    background-color: #BEF264; /* lime */
+}
+
+.softAmberColumn {
+    background-color: #FCD34D; /* amber */
+}
+
+.softPeachColumn {
+    background-color: #FDBA74; /* peach */
+}
+
+.softRoseColumn {
+    background-color: #FDA4AF; /* rose */
+}
+
+.softLavenderColumn {
+    background-color: #C4B5FD; /* lavender */
+}
+
+.softSlateColumn {
+    background-color: #CBD5E1; /* slate/gray */
+}
+
 
 </style>

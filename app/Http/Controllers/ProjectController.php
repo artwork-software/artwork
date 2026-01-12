@@ -1815,11 +1815,14 @@ class ProjectController extends Controller
         broadcast(new UpdateBudget($project->id))->toOthers();
     }
 
-    public function changeColumnColor(Request $request): RedirectResponse
+    public function changeColumnColor(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['color' => $request->color]);
-        return Redirect::back();
+
+        broadcast(new UpdateBudget($column->table->project_id));
+
+        //return Redirect::back();
     }
 
     public function addSubPositionRow(Request $request): void

@@ -116,38 +116,113 @@
                                             ({{ columnCalculatedNames[column.id] }})
                                         </span>
                                     </div>
-                                    <span class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex ml-2" v-model="column.color"
-                                                 v-if="this.$can('edit budget templates') || !table.is_template">
-                                            <transition leave-active-class="transition ease-in duration-100"
-                                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                <ListboxOptions :static="column.showColorMenu"
-                                                                class="absolute w-24 z-10 mt-12 rounded-lg bg-artwork-navigation-background shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                                    <ListboxOption as="template" class=""
-                                                                   v-for="color in colors"
-                                                                   :key="color"
-                                                                   :value="color" v-slot="{ active, selected }">
-                                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
-                                                            @click="changeColumnColor(color, column.id)">
-                                                            <div class="flex">
-                                                                <span
-                                                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
-                                                                    <span class="truncate items-center ml-3 flex rounded-full h-10 w-10" :class="color">
-                                                                    </span>
-                                                                </span>
-                                                            </div>
-                                                            <span
-                                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                                <PropertyIcon name="CheckIcon" v-if="selected"
-                                                                           class="h-5 w-5 flex text-success"
-                                                                           aria-hidden="true"/>
+                                    <span
+                                        v-if="column.showColorMenu === true || column.color !== 'whiteColumn'"
+                                        class="-mt-4 relative inline-flex"
+                                    >
+                                        <Listbox
+                                            v-if="$can('edit budget templates') || !table.is_template"
+                                            as="div"
+                                            v-model="column.color"
+                                            class="relative ml-2"
+                                        >
+                                            <Transition
+                                                enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="opacity-0 translate-y-1"
+                                                enter-to-class="opacity-100 translate-y-0"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="opacity-100 translate-y-0"
+                                                leave-to-class="opacity-0 translate-y-1"
+                                            >
+                                                <ListboxOptions
+                                                    :static="column.showColorMenu"
+                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-gray-200
+                                                           bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                                >
+                                                    <!-- Header -->
+                                                    <div class="px-3 py-2 border-b border-gray-100">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-xs font-medium text-gray-500">
+                                                                {{ $t("Choose color") }}
                                                             </span>
-                                                        </li>
-                                                    </ListboxOption>
+
+                                                            <!-- kleiner Close-Icon-Click (kein Button-Element) -->
+                                                            <span
+                                                                class="inline-flex cursor-pointer rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                                                                @click="column.showColorMenu = false"
+                                                                aria-label="Close"
+                                                                role="button"
+                                                                tabindex="0"
+                                                            >
+                                                                <PropertyIcon name="IconX" class="h-4 w-4" />
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- aktuelle Auswahl -->
+                                                        <div class="mt-2 flex items-center gap-2">
+                                                            <span
+                                                                class="h-5 w-5 rounded-full ring-1 ring-gray-200"
+                                                                :class="column.color"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span class="text-xs text-gray-600">
+                                                                {{ $t("Current") }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Swatches -->
+                                                    <div class="p-3">
+                                                        <div class="grid grid-cols-6 gap-2">
+                                                            <ListboxOption
+                                                                v-for="color in colors"
+                                                                :key="color"
+                                                                :value="color"
+                                                                v-slot="{ active, selected }"
+                                                            >
+                                                                <!-- kein Button: nur span -->
+                                                                <button
+                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-gray-200 transition
+                                                                           focus:outline-none"
+                                                                    :class="[
+                                                                        color,
+                                                                        active ? 'scale-[1.03] ring-2 ring-primary/40' : '',
+                                                                        selected ? 'ring-2 ring-emerald-500/50' : ''
+                                                                    ]"
+                                                                    role="button"
+                                                                    tabindex="0"
+                                                                    @click="
+                                                                        changeColumnColor(color, column.id)
+                                                                    "
+                                                                >
+                                                                    <PropertyIcon
+                                                                        v-if="selected"
+                                                                        name="IconCheck"
+                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-emerald-600 bg-white rounded-full p-[2px] shadow"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                </button>
+                                                            </ListboxOption>
+                                                        </div>
+
+                                                        <!-- Reset (ebenfalls kein Button) -->
+                                                        <span
+                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-200
+                                                                   bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                                                            role="button"
+                                                            tabindex="0"
+                                                            @click="
+                                                                changeColumnColor('whiteColumn', column.id)
+                                                            "
+                                                        >
+                                                            {{ $t("Reset to default") }}
+                                                        </span>
+                                                    </div>
                                                 </ListboxOptions>
-                                            </transition>
+                                            </Transition>
                                         </Listbox>
                                     </span>
+
                                 </div>
                                 <div @click="column.clicked = !column.clicked" class="h-5 font-lexend text-xs w-full max-w-max"
                                      v-if="!column.clicked">
@@ -193,16 +268,6 @@
                                     icon="IconLockOpen"
                                     white-menu-background
                                     @click="unlockColumn(column.id)"
-                                />
-
-                                <!-- Delete / Duplicate -->
-                                <BaseMenuItem
-                                    v-if="column.type !== 'subprojects_column_for_group'"
-                                    v-show="index > 2"
-                                    :title="$t('Delete')"
-                                    icon="IconTrash"
-                                    white-menu-background
-                                    @click="deleteColumn(column.id)"
                                 />
 
                                 <BaseMenuItem
@@ -254,6 +319,16 @@
                                     icon="IconLock"
                                     white-menu-background
                                     @click="updateColumnCommented(column.id, true)"
+                                />
+
+                                <!-- Delete / Duplicate -->
+                                <BaseMenuItem
+                                    v-if="column.type !== 'subprojects_column_for_group'"
+                                    v-show="index > 2"
+                                    :title="$t('Delete')"
+                                    icon="IconTrash"
+                                    white-menu-background
+                                    @click="deleteColumn(column.id)"
                                 />
                             </BaseMenu>
 
@@ -907,7 +982,18 @@ export default {
                 lightGreenColumn: 'lightGreenColumn',
                 orangeColumn: 'orangeColumn',
                 redColumn: 'redColumn',
-                pinkColumn: 'pinkColumn'
+                pinkColumn: 'pinkColumn',
+                // +10 neu (heller)
+                softSkyColumn: "softSkyColumn",
+                softAquaColumn: "softAquaColumn",
+                softTealColumn: "softTealColumn",
+                softMintColumn: "softMintColumn",
+                softLimeColumn: "softLimeColumn",
+                softAmberColumn: "softAmberColumn",
+                softPeachColumn: "softPeachColumn",
+                softRoseColumn: "softRoseColumn",
+                softLavenderColumn: "softLavenderColumn",
+                softSlateColumn: "softSlateColumn",
             },
             verifiedTexts: {
                 title: this.$t('Verification'),
@@ -1879,6 +1965,48 @@ export default {
 .pinkColumn {
     background-color: #641A54;
 }
+
+.softSkyColumn {
+    background-color: #93C5FD; /* sky */
+}
+
+.softAquaColumn {
+    background-color: #67E8F9; /* aqua */
+}
+
+.softTealColumn {
+    background-color: #5EEAD4; /* teal */
+}
+
+.softMintColumn {
+    background-color: #86EFAC; /* mint */
+}
+
+.softLimeColumn {
+    background-color: #BEF264; /* lime */
+}
+
+.softAmberColumn {
+    background-color: #FCD34D; /* amber */
+}
+
+.softPeachColumn {
+    background-color: #FDBA74; /* peach */
+}
+
+.softRoseColumn {
+    background-color: #FDA4AF; /* rose */
+}
+
+.softLavenderColumn {
+    background-color: #C4B5FD; /* lavender */
+}
+
+.softSlateColumn {
+    background-color: #CBD5E1; /* slate/gray */
+}
+
+
 
 .stickyHeader {
     position: sticky;

@@ -3797,5 +3797,7 @@
     "Saving failed. Please check your inputs.": "Speichern fehlgeschlagen. Bitte prüfe deine Eingaben.",
     "Are you sure you want to delete this preset?": "Vorlage wirklich löschen?",
     "Property filters": "Eigenschaftsfilter",
-    "Tag filters": "Tag-Filter"
+    "Tag filters": "Tag-Filter",
+    "Current": "Aktuell",
+    "Choose color": "Farbe wählen"
 }

@@ -3788,5 +3788,7 @@
     "Saving failed. Please check your inputs.": "Saving failed. Please check your inputs.",
     "Are you sure you want to delete this preset?": "Are you sure you want to delete this preset?",
     "Property filters": "Property filters",
-    "Tag filters": "Tag filters"
+    "Tag filters": "Tag filters",
+    "Current": "Current",
+    "Choose color": "Choose color"
 }

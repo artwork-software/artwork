@@ -5,23 +5,21 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-                <BaseMenu class="ml-4" v-if="this.$can('edit budget templates')">
-                    <MenuItem v-slot="{ active }">
-                        <a @click="openRenameTableModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <PropertyIcon name="TrashIcon"
-                                class="mr-3 h-5 w-5 text-primaryText"
-                                aria-hidden="true"/>
-                            {{ $t('Rename') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem v-if="table.is_template" v-slot="{ active }">
-                        <a @click="deleteBudgetTemplate()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
-                            {{ $t('Delete') }}
-                        </a>
-                    </MenuItem>
+                <BaseMenu class="ml-4" v-if="$can('edit budget templates')" white-menu-background>
+                    <BaseMenuItem
+                        :title="$t('Rename')"
+                        icon="IconPencil"
+                        white-menu-background
+                        @click="openRenameTableModal()"
+                    />
+
+                    <BaseMenuItem
+                        v-if="table.is_template"
+                        :title="$t('Delete')"
+                        icon="IconTrash"
+                        white-menu-background
+                        @click="deleteBudgetTemplate()"
+                    />
                 </BaseMenu>
             </div>
         </div>

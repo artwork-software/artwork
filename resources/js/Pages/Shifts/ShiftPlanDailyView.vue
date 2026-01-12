@@ -148,7 +148,7 @@
                         </div>
 
                         <div class="flex items-stretch px-4 py-2">
-                            <div class="p-4 w-full relative pb-28 md:pb-32">
+                            <div class="p-4 w-full relative">
                                 <DailyRoomSplitTimeline
                                     :day="day.fullDay"
                                     :events="getEventsForRoomDay(room, day.fullDay)"
@@ -163,6 +163,7 @@
                                     :gap-threshold-min="90"
                                     @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
                                     @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
+                                    @addShiftByPresetOrGroup="openAddShiftByPresetOrGroup(day, room)"
                                 />
                             </div>
                         </div>
@@ -188,6 +189,18 @@
                 :shift-plan-modal="true"
                 :edit="shiftToEdit !== null"
                 :project="props.project"
+            />
+
+            <AddShiftsByPresetsAndGroupsModal
+                v-if="showAddShiftByPresetOrGroupModal"
+                :single-shift-presets="singleShiftPresetsResolved"
+                :preset-groups="shiftGroupPresetsResolved"
+                :day="dayForPreset"
+                :room="roomForPreset"
+                :projects="projectsResolved"
+                :initial-project-id="initialProjectIdResolved"
+                :initial-project="props.project ?? page.props?.currentProject ?? null"
+                @close="showAddShiftByPresetOrGroupModal = false"
             />
 
             <EventComponent
@@ -245,6 +258,7 @@ import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoom
 import dayjs from "dayjs";
 import { is } from "laravel-permission-to-vuejs";
 import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
+import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 
 type AnyRoom = any
 type AnyEvent = any
@@ -264,6 +278,11 @@ const props = defineProps({
     rooms: { type: [Object, Array], required: false, default: () => ([]) },
     eventStatuses: { type: [Object, Array], required: false, default: () => ([]) },
     eventTypes: { type: [Object, Array], required: false, default: () => ([]) },
+
+    shiftGroupPresets: { type: [Object, Array], required: false, default: () => ([]) },
+    singleShiftPresets: { type: [Object, Array], required: false, default: () => ([]) },
+    projects: { type: [Object, Array], required: false, default: () => ([]) },
+    projectId: { type: [Number, String, null], required: false, default: null },
 
     event_properties: { type: Object, required: false, default: () => ({}) },
     first_project_calendar_tab_id: { type: Number, required: false, default: 0 },
@@ -350,6 +369,48 @@ const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
 const openExportDailyProjectShiftPlanModal = ref(false)
+
+const dayForPreset = ref<any | null>(null)
+const roomForPreset = ref<any | null>(null)
+const showAddShiftByPresetOrGroupModal = ref(false)
+
+const singleShiftPresetsLocal = ref<any[]>([])
+const shiftGroupPresetsLocal = ref<any[]>([])
+
+const singleShiftPresetsResolved = computed(() => {
+    if (singleShiftPresetsLocal.value.length) return singleShiftPresetsLocal.value
+    const v: any = props.singleShiftPresets
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.singleShiftPresets ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const shiftGroupPresetsResolved = computed(() => {
+    if (shiftGroupPresetsLocal.value.length) return shiftGroupPresetsLocal.value
+    const v: any = props.shiftGroupPresets
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.shiftGroupPresets ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const projectsResolved = computed(() => {
+    const v: any = props.projects
+    if (Array.isArray(v) && v.length) return v
+    if (v && Object.keys(v).length) return Object.values(v)
+    const fromPage: any = page.props.projects ?? []
+    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage ?? {})
+})
+
+const initialProjectIdResolved = computed(() => {
+    return (
+        (props.project as any)?.id ??
+        props.projectId ??
+        (page.props.projectId ?? null) ??
+        ((page.props as any)?.currentProject?.id ?? null)
+    )
+})
 
 const eventToEdit = ref<any | boolean>(false)
 const wantedRoom = ref<number | null>(null)
@@ -443,6 +504,18 @@ const initializeDailyShiftPlan = async () => {
 
         daysLocal.value = data.days ?? []
         shiftPlanCopy.value = Array.isArray(data.shiftPlan) ? data.shiftPlan : Object.values(data.shiftPlan ?? {})
+
+        if (data.singleShiftPresets) {
+            singleShiftPresetsLocal.value = Array.isArray(data.singleShiftPresets)
+                ? data.singleShiftPresets
+                : Object.values(data.singleShiftPresets ?? {})
+        }
+
+        if (data.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = Array.isArray(data.shiftGroupPresets)
+                ? data.shiftGroupPresets
+                : Object.values(data.shiftGroupPresets ?? {})
+        }
         return
     }
 
@@ -554,6 +627,12 @@ const openAddShiftForRoomAndDay = (day: string, roomId: number | null) => {
     roomForShiftAdd.value = roomId
     dayForShiftAdd.value = day
     showAddShiftModal.value = true
+}
+
+const openAddShiftByPresetOrGroup = (day: any, room: any) => {
+    dayForPreset.value = day
+    roomForPreset.value = room
+    showAddShiftByPresetOrGroupModal.value = true
 }
 
 const closeAddShiftModal = () => {

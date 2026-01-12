@@ -9,7 +9,7 @@
                 :dateValue="dateValue"
                 :eventTypes="eventTypes"
                 @previousTimeRange="goToPrevAssignedDay"
-                @next-time-range="goToNextAssignedDay"
+                @nextTimeRange="goToNextAssignedDay"
                 :user_to_edit_id="userToEditId"
             />
         </div>
@@ -186,6 +186,13 @@ function addDays(d, days) {
     x.setDate(x.getDate() + days)
     return x
 }
+
+function toISODate(d) {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+}
 function intersects(aStart, aEnd, bStart, bEnd) {
     return aEnd >= bStart && aStart <= bEnd
 }
@@ -341,37 +348,41 @@ const roomBuckets = computed(() => {
     return arr
 })
 
-/** ---------- Prev / Next belegter Tag (an Server melden) ---------- **/
-const assignedDatesSorted = computed(() => {
-    const entries = Object.values(daysWithData.value || {})
-    const withShifts = entries.filter(d => Array.isArray(d.shifts) && d.shifts.length > 0)
-    return withShifts.map(d => d.date).sort((a, b) => a.localeCompare(b))
-})
-
+/** ---------- Prev / Next Zeitspanne (an Server melden) ---------- **/
 const goToPrevAssignedDay = () => {
-    const start = range.value.start
-    if (!start) return
-    const dates = assignedDatesSorted.value
-    const idx = dates.findIndex(d => d >= start)
-    const prev = idx > 0 ? dates[idx - 1] : null
-    if (prev) patchServerDate(prev)
+    const r = range.value
+    if (!r.start || !r.end) return
+
+    const startAt = new Date(`${r.start}T00:00:00`)
+    const endAt = new Date(`${r.end}T00:00:00`)
+    const spanDays = Math.round((endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    if (!Number.isFinite(spanDays) || spanDays <= 0) return
+
+    const newStart = addDays(startAt, -spanDays)
+    const newEnd = addDays(endAt, -spanDays)
+    patchServerDateRange(toISODate(newStart), toISODate(newEnd))
 }
 
 const goToNextAssignedDay = () => {
-    const end = range.value.end
-    if (!end) return
-    const dates = assignedDatesSorted.value
-    const idx = dates.findIndex(d => d > end)
-    const next = idx !== -1 ? dates[idx] : null
-    if (next) patchServerDate(next)
+    const r = range.value
+    if (!r.start || !r.end) return
+
+    const startAt = new Date(`${r.start}T00:00:00`)
+    const endAt = new Date(`${r.end}T00:00:00`)
+    const spanDays = Math.round((endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    if (!Number.isFinite(spanDays) || spanDays <= 0) return
+
+    const newStart = addDays(startAt, spanDays)
+    const newEnd = addDays(endAt, spanDays)
+    patchServerDateRange(toISODate(newStart), toISODate(newEnd))
 }
 
-function patchServerDate(dateStr) {
+function patchServerDateRange(startDateStr, endDateStr) {
     const userId = page.props?.auth?.user?.id
     if (!userId) return
     router.patch(
         route('update.user.worker.shift-plan.filters.update', userId),
-        { start_date: dateStr, end_date: dateStr },
+        { start_date: startDateStr, end_date: endDateStr },
         { preserveState: true, preserveScroll: true }
     )
 }

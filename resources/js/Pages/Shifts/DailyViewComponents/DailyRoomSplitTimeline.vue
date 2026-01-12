@@ -48,8 +48,17 @@
         </div>
         <div v-if="!hasAny" class="text-gray-300 text-center mt-2">{{ $t('No shifts for this day') }}</div>
 
-        <div class="mt-3">
+        <div class="mt-3 flex items-center gap-2">
           <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="$emit('addShift')" />
+
+          <ToolTipComponent
+            direction="left"
+            :tooltip-text="$t('Add Shift based on templates')"
+            :icon="IconCopyPlus"
+            icon-size="size-4"
+            @click="$emit('addShiftByPresetOrGroup')"
+            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+          />
         </div>
       </div>
     </div>
@@ -62,7 +71,8 @@ import { computed, ref, watch } from 'vue'
 import SingleEventInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue'
 import SingleShiftInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
-import { IconCalendarPlus, IconCalendarUser } from '@tabler/icons-vue'
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
+import { IconCalendarPlus, IconCalendarUser, IconCopyPlus } from '@tabler/icons-vue'
 
 const props = defineProps({
   day: { type: String, required: true }, // 'YYYY-MM-DD'

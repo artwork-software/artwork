@@ -39,7 +39,7 @@
                                 {{ multiEditCellForm.vacation_type.name }}
                             </span>
                         </div>
-                        <PropertyIcon name="ChevronDownIcon" class="h-5 w-5 text-primary" aria-hidden="true" />
+                        <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-primary" aria-hidden="true" />
                     </ListboxButton>
                     <ListboxOptions
                         class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm"
@@ -246,6 +246,7 @@ const vacationTypes = ref([
     { name: 'Verfügbar', type: 'AVAILABLE' },
     { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
     { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
+    { name: 'Frei', type: 'FREE_WORK' },
 ]);
 
 const showSaveSuccess = ref(false);

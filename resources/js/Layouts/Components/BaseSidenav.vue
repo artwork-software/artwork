@@ -52,7 +52,7 @@ export default {
                 is_sidebar_opened: this.show
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: true
             })
         }
     }

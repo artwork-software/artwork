@@ -3759,5 +3759,8 @@
     "items": "items",
     "Nothing selected yet.": "Nothing selected yet.",
     "Warning: If nobody is selected, nobody will be able to see this tab.": "Warning: If nobody is selected, nobody will be able to see this tab.",
-    "Everyone with access to the project can see this tab.": "Everyone with access to the project can see this tab."
+    "Everyone with access to the project can see this tab.": "Everyone with access to the project can see this tab.",
+    "If you think this is a mistake, please check the link or contact the admin.": "If you think this is a mistake, please check the link or contact the admin.",
+    "Project not found": "Project not found",
+    "The project does not exist (anymore) or you do not have access to it.": "The project does not exist (anymore) or you do not have access to it."
 }

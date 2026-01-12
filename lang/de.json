@@ -3768,5 +3768,8 @@
     "items": "Einträge",
     "Nothing selected yet.": "Noch nichts ausgewählt.",
     "Warning: If nobody is selected, nobody will be able to see this tab.": "Achtung: Wenn niemand ausgewählt ist, kann niemand diesen Tab sehen.",
-    "Everyone with access to the project can see this tab.": "Alle mit Zugriff auf das Projekt können diesen Tab sehen."
+    "Everyone with access to the project can see this tab.": "Alle mit Zugriff auf das Projekt können diesen Tab sehen.",
+    "If you think this is a mistake, please check the link or contact the admin.": "Wenn du denkst, dass dies ein Fehler ist, überprüfe bitte den Link oder kontaktiere den Administrator.",
+    "Project not found": "Projekt nicht gefunden",
+    "The project does not exist (anymore) or you do not have access to it.": "Das Projekt existiert (nicht mehr) oder du hast keinen Zugriff darauf."
 }

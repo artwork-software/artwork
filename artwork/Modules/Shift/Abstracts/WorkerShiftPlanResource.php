@@ -48,11 +48,32 @@ class WorkerShiftPlanResource extends JsonResource
         $shiftQualificationObjects = [];
         if ($shiftQualifications instanceof Collection) {
             $shiftQualificationObjects = $shiftQualifications->map(function ($qual) {
-                return ['id' => $qual->id];
+                $pivot = $qual->pivot ?? null;
+                return [
+                    'id' => $qual->id,
+                    'name' => $qual->name ?? null,
+                    'icon' => $qual->icon ?? null,
+                    'available' => $qual->available ?? null,
+                    'pivot' => [
+                        'craft_id' => $pivot?->craft_id ?? null,
+                    ],
+                ];
             })->toArray();
         } elseif (is_array($shiftQualifications)) {
             $shiftQualificationObjects = array_map(function ($qual) {
-                return ['id' => is_object($qual) ? $qual->id : $qual];
+                if (is_object($qual)) {
+                    $pivot = $qual->pivot ?? null;
+                    return [
+                        'id' => $qual->id,
+                        'name' => $qual->name ?? null,
+                        'icon' => $qual->icon ?? null,
+                        'available' => $qual->available ?? null,
+                        'pivot' => [
+                            'craft_id' => $pivot?->craft_id ?? null,
+                        ],
+                    ];
+                }
+                return ['id' => $qual];
             }, $shiftQualifications);
         }
 

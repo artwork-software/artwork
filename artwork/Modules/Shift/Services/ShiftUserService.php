@@ -55,71 +55,23 @@ class ShiftUserService
         ChangeService $changeService,
         ?array $seriesShiftData = null
     ): void {
-        if ($this->isUserAlreadyAssignedToShift($shift, $userId)) {
+
+        $user = User::find($userId);
+        if (!$user) {
             return;
         }
 
-        $shiftUserPivot = $this->shiftUserRepository->createForShift(
-            $shift->getAttribute('id'),
-            $userId,
-            $shiftQualificationId,
-            $craftAbbreviation,
-            $shift
-        );
-
-
-        /** @var User $user */
-        $user = $shiftUserPivot->user;
-
-
-
-        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-            $shift->getAttribute('id'),
-            $shiftQualificationId
-        );
-
-        $shiftCountService->handleShiftUsersShiftCount($shift, $userId);
-        $this->assignUserToProjectIfNecessary($shift, $user);
-
-        if ($shift->is_committed) {
-            $this->handleAssignedToShift(
-                $shift,
-                $user,
-                $shiftUserPivot->shiftQualification,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        if ($this->shiftWorkerService->shouldHandleSeriesShift($seriesShiftData)) {
-            $this->handleSeriesShiftData(
-                $shift,
-                Carbon::parse($seriesShiftData['start'])->startOfDay(),
-                Carbon::parse($seriesShiftData['end'])->endOfDay(),
-                $seriesShiftData['dayOfWeek'],
-                $userId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-
-        $this->logCommittedShiftAssignmentChange(
+        $this->shiftWorkerService->assignToShift(
             $shift,
             $user,
-            'user_assigned_to_shift',
-            $shiftUserPivot
+            $shiftQualificationId,
+            $craftAbbreviation,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService,
+            $seriesShiftData
         );
-
-        $this->logManualAssignmentActivity($shift, $shiftUserPivot);
-
     }
 
     private function isUserAlreadyAssignedToShift(Shift $shift, int $userId): bool
@@ -639,51 +591,21 @@ class ShiftUserService
             return;
         }
 
-        /** @var Shift|null $shift */
-        $shift = $shiftUserPivot->shift;
-        if (! $shift) {
+        $shiftWorkerPivot = $this->shiftWorkerService->convertShiftUserToShiftWorker($shiftUserPivot);
+        if (!$shiftWorkerPivot) {
+            // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
+            $this->forceDelete($shiftUserPivot);
             return;
         }
 
-        /** @var User|null $user */
-        $user = $shiftUserPivot->user;
-        if (! $user) {
-            return;
-        }
-
-        $this->logManualRemovalActivity($shift, $shiftUserPivot);
-
-        $this->logCommittedShiftAssignmentChange(
-            $shift,
-            $user,
-            'user_removed_from_shift',
-            $shiftUserPivot
+        $this->shiftWorkerService->removeFromShift(
+            $shiftWorkerPivot,
+            $removeFromSingleShift,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
         );
-
-        $this->forceDelete($shiftUserPivot);
-
-        if ($shift->is_committed) {
-            $this->handleRemovedFromShift(
-                $shift,
-                $user,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        if (! $removeFromSingleShift) {
-            $this->removeUserFromAllShiftsWithSameUuid(
-                $shift,
-                $user,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
     }
 
     private function logManualRemovalActivity(Shift $shift, ShiftUser $shiftUserPivot): void

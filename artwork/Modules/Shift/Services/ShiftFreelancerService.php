@@ -53,66 +53,23 @@ readonly class ShiftFreelancerService
         ChangeService $changeService,
         ?array $seriesShiftData = null,
     ): void {
-        if ($this->isFreelancerAlreadyAssignedToShift($shift, $freelancerId)) {
+
+        $freelancer = Freelancer::find($freelancerId);
+        if (!$freelancer) {
             return;
         }
 
-        $shiftFreelancerPivot = $this->shiftFreelancerRepository->createForShift(
-            $shift->id,
-            $freelancerId,
-            $shiftQualificationId,
-            $craftAbbreviation,
-            $shift
-        );
-
-        /** @var Freelancer $freelancer */
-        $freelancer = $shiftFreelancerPivot->freelancer;
-
-        // Manuelles Activitylog
-        $this->logManualAssignmentActivity($shift, $shiftFreelancerPivot);
-
-        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-            $shift->getAttribute('id'),
-            $shiftQualificationId
-        );
-
-        $shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancerId);
-
-        if ($shift->is_committed) {
-            $this->handleAssignedToShift(
-                $shift,
-                $freelancer,
-                $shiftFreelancerPivot->shiftQualification,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        $this->logCommittedShiftAssignmentChange(
+        $this->shiftWorkerService->assignToShift(
             $shift,
             $freelancer,
-            'freelancer_assigned_to_shift',
-            $shiftFreelancerPivot
+            $shiftQualificationId,
+            $craftAbbreviation,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService,
+            $seriesShiftData
         );
-
-        if ($this->shiftWorkerService->shouldHandleSeriesShift($seriesShiftData)) {
-            $this->handleSeriesShiftData(
-                $shift,
-                Carbon::parse($seriesShiftData['start'])->startOfDay(),
-                Carbon::parse($seriesShiftData['end'])->endOfDay(),
-                $seriesShiftData['dayOfWeek'],
-                $freelancerId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
     }
 
     private function isFreelancerAlreadyAssignedToShift(Shift $shift, int $freelancerId): bool
@@ -243,53 +200,21 @@ readonly class ShiftFreelancerService
             return;
         }
 
-        /** @var Shift|null $shift */
-        $shift = $shiftFreelancerPivot->shift;
-        if (! $shift) {
+        $shiftWorkerPivot = $this->shiftWorkerService->convertShiftFreelancerToShiftWorker($shiftFreelancerPivot);
+        if (!$shiftWorkerPivot) {
+            // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
+            $this->forceDelete($shiftFreelancerPivot);
             return;
         }
 
-        /** @var Freelancer|null $freelancer */
-        $freelancer = $shiftFreelancerPivot->freelancer;
-        if (! $freelancer) {
-            return;
-        }
-
-        // Manuelles Activitylog: vor Löschen, damit Pivot-Daten verfügbar sind
-        $this->logManualRemovalActivity($shift, $shiftFreelancerPivot);
-
-        $this->forceDelete($shiftFreelancerPivot);
-        $shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancer->id);
-
-        if ($shift->is_committed) {
-            $this->handleRemovedFromShift(
-                $shift,
-                $freelancer,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        $this->logCommittedShiftAssignmentChange(
-            $shift,
-            $freelancer,
-            'freelancer_removed_from_shift',
-            $shiftFreelancerPivot
+        $this->shiftWorkerService->removeFromShift(
+            $shiftWorkerPivot,
+            $removeFromSingleShift,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
         );
-
-        if (! $removeFromSingleShift) {
-            $this->removeFreelancerFromAllShiftsWithSameUuid(
-                $shift,
-                $freelancer,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
     }
 
     private function removeFreelancerFromAllShiftsWithSameUuid(
@@ -313,11 +238,10 @@ readonly class ShiftFreelancerService
             );
 
             if ($shiftFreelancerPivotByUuid instanceof ShiftWorker) {
-                $this->removeFromShift(
+                $this->shiftWorkerService->removeFromShift(
                     $shiftFreelancerPivotByUuid,
                     true,
                     $notificationService,
-                    $shiftCountService,
                     $vacationConflictService,
                     $availabilityConflictService,
                     $changeService

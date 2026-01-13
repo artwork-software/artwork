@@ -48,69 +48,23 @@ readonly class ShiftServiceProviderService
         ChangeService $changeService,
         array|null $seriesShiftData = null
     ): void {
-        if ($this->isServiceProviderAlreadyAssignedToShift($shift, $serviceProviderId)) {
+
+        $serviceProvider = ServiceProvider::find($serviceProviderId);
+        if (!$serviceProvider) {
             return;
         }
 
-        $shiftServiceProviderPivot = $this->shiftServiceProviderRepository->createForShift(
-            $shift->id,
-            $serviceProviderId,
-            $shiftQualificationId,
-            $craftAbbreviation,
-            $shift
-        );
-
-        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-            $shift->getAttribute('id'),
-            $shiftQualificationId
-        );
-
-        /** @var ServiceProvider $serviceProvider */
-        $serviceProvider = $shiftServiceProviderPivot->serviceProvider;
-
-        // Manuelles Activitylog
-        $this->logManualAssignmentActivity($shift, $shiftServiceProviderPivot);
-
-        $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProviderId);
-
-        if ($shift->is_committed && $shift?->event?->exists) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Service provider was added to the shift as')
-                    ->setTranslationKeyPlaceholderValues([
-                        $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName,
-                        $shiftServiceProviderPivot->shiftQualification->name
-                    ])
-            );
-        }
-
-        $this->logCommittedShiftAssignmentChange(
+        $this->shiftWorkerService->assignToShift(
             $shift,
             $serviceProvider,
-            'service_provider_assigned_to_shift',
-            $shiftServiceProviderPivot
+            $shiftQualificationId,
+            $craftAbbreviation,
+            null, // notificationService
+            null, // vacationConflictService
+            null, // availabilityConflictService
+            $changeService,
+            $seriesShiftData
         );
-
-        if ($this->shiftWorkerService->shouldHandleSeriesShift($seriesShiftData)) {
-            $this->handleSeriesShiftData(
-                $shift,
-                Carbon::parse($seriesShiftData['start'])->startOfDay(),
-                Carbon::parse($seriesShiftData['end'])->endOfDay(),
-                $seriesShiftData['dayOfWeek'],
-                $serviceProviderId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $shiftCountService,
-                $changeService
-            );
-        }
     }
 
     private function isServiceProviderAlreadyAssignedToShift(Shift $shift, int $serviceProviderId): bool
@@ -119,13 +73,6 @@ readonly class ShiftServiceProviderService
             ->get(['service_providers.id'])
             ->pluck('id')
             ->contains($serviceProviderId);
-    }
-
-    private function shouldHandleSeriesShift(?array $seriesShiftData): bool
-    {
-        return $seriesShiftData !== null
-            && isset($seriesShiftData['onlyThisDay'])
-            && $seriesShiftData['onlyThisDay'] === false;
     }
 
     private function handleSeriesShiftData(
@@ -193,56 +140,21 @@ readonly class ShiftServiceProviderService
             return;
         }
 
-        /** @var Shift|null $shift */
-        $shift = $shiftServiceProviderPivot->shift;
-        if (! $shift) {
+        $shiftWorkerPivot = $this->shiftWorkerService->convertShiftServiceProviderToShiftWorker($shiftServiceProviderPivot);
+        if (!$shiftWorkerPivot) {
+            // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
+            $this->forceDelete($shiftServiceProviderPivot);
             return;
         }
 
-        /** @var ServiceProvider|null $serviceProvider */
-        $serviceProvider = $shiftServiceProviderPivot->serviceProvider;
-        if (! $serviceProvider) {
-            return;
-        }
-
-        // Manuelles Activitylog: vor Löschen, damit Pivot-Daten verfügbar sind
-        $this->logManualRemovalActivity($shift, $shiftServiceProviderPivot);
-
-        $this->forceDelete($shiftServiceProviderPivot);
-        $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
-
-        if ($shift->is_committed && $shift?->event?->exists) {
-            $changeService->saveFromBuilder(
-                $changeService
-                    ->createBuilder()
-                    ->setType('shift')
-                    ->setModelClass(Shift::class)
-                    ->setModelId($shift->id)
-                    ->setShift($shift)
-                    ->setTranslationKey('Service provider was removed from shift')
-                    ->setTranslationKeyPlaceholderValues([
-                        $serviceProvider->getNameAttribute(),
-                        $shift->craft->abbreviation,
-                        $shift->event->eventName
-                    ])
-            );
-        }
-
-        $this->logCommittedShiftAssignmentChange(
-            $shift,
-            $serviceProvider,
-            'service_provider_removed_from_shift',
-            $shiftServiceProviderPivot
+        $this->shiftWorkerService->removeFromShift(
+            $shiftWorkerPivot,
+            $removeFromSingleShift,
+            null, // notificationService
+            null, // vacationConflictService
+            null, // availabilityConflictService
+            $changeService
         );
-
-        if (! $removeFromSingleShift) {
-            $this->removeServiceProviderFromAllShiftsWithSameUuid(
-                $shift,
-                $serviceProvider,
-                $shiftCountService,
-                $changeService
-            );
-        }
     }
 
     private function removeServiceProviderFromAllShiftsWithSameUuid(
@@ -263,10 +175,12 @@ readonly class ShiftServiceProviderService
             );
 
             if ($shiftServiceProviderPivotByUuid instanceof ShiftWorker) {
-                $this->removeFromShift(
+                $this->shiftWorkerService->removeFromShift(
                     $shiftServiceProviderPivotByUuid,
                     true,
-                    $shiftCountService,
+                    null, // notificationService
+                    null, // vacationConflictService
+                    null, // availabilityConflictService
                     $changeService
                 );
             }
@@ -348,7 +262,7 @@ readonly class ShiftServiceProviderService
         string $changeType,
         ?ShiftServiceProvider $pivot = null
     ): void {
-        $shiftWorker = $pivot ? $this->convertShiftServiceProviderToShiftWorker($pivot) : null;
+        $shiftWorker = $pivot ? $this->shiftWorkerService->convertShiftServiceProviderToShiftWorker($pivot) : null;
         $this->shiftWorkerService->logCommittedShiftAssignmentChange(
             $shift,
             $serviceProvider,
@@ -358,18 +272,6 @@ readonly class ShiftServiceProviderService
         );
     }
 
-    private function convertShiftServiceProviderToShiftWorker(?ShiftServiceProvider $shiftServiceProvider): ?ShiftWorker
-    {
-        if (! $shiftServiceProvider) {
-            return null;
-        }
-
-        return $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
-            ServiceProvider::class,
-            $shiftServiceProvider->service_provider_id,
-            $shiftServiceProvider->shift_id
-        );
-    }
 
     private function logManualRemovalActivity(Shift $shift, ShiftServiceProvider $shiftServiceProvider): void
     {

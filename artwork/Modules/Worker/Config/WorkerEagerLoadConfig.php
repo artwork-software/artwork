@@ -4,11 +4,6 @@ namespace Artwork\Modules\Worker\Config;
 
 class WorkerEagerLoadConfig
 {
-    /**
-     * Gibt die Eager-Loading-Konfiguration für Workers zurück
-     *
-     * @return array<string, mixed>
-     */
     public static function getShiftPlanEagerLoads(): array
     {
         return [
@@ -28,15 +23,18 @@ class WorkerEagerLoadConfig
                     },
                 ]);
             },
-            'shiftQualifications',
+            'shiftQualifications' => function ($query) {
+                $query->select([
+                    'shift_qualifications.id',
+                    'shift_qualifications.name',
+                    'shift_qualifications.icon',
+                    'shift_qualifications.available',
+                    'shift_qualifications.created_at'
+                ]);
+            },
         ];
     }
 
-    /**
-     * Gibt zusätzliche Eager-Loads für User zurück (nicht für Freelancer/ServiceProvider)
-     *
-     * @return array<string, mixed>
-     */
     public static function getUserSpecificEagerLoads(): array
     {
         return [

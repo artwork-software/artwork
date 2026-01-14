@@ -36,9 +36,18 @@ class ProjectTabController extends Controller
         $tabs = Cache::remember(self::CACHE_KEY_TABS, self::CACHE_TTL, function () {
             return ProjectTab::query()
                 ->without(['components', 'sidebarTabs'])
-                ->select(['id', 'name', 'order', 'default'])
+                ->select(['id', 'name', 'order', 'default', 'visible_for_all'])
                 ->orderBy('order')
                 ->with([
+                    'visibleUsers' => function ($q): void {
+                        /** @var \Illuminate\Database\Eloquent\Builder $q */
+                        $q->select('users.id', 'users.first_name', 'users.last_name');
+                    },
+                    'visibleDepartments' => function ($q): void {
+                        /** @var \Illuminate\Database\Eloquent\Builder $q */
+                        $q->select('departments.id', 'departments.name', 'departments.svg_name');
+                    },
+
                     // Haupt-Komponenten im Tab
                     'components' => function ($query): void {
                         /** @var \Illuminate\Database\Eloquent\Builder $query */
@@ -117,22 +126,62 @@ class ProjectTabController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): void
     {
-        // get all tabs to calculate the order
+        $data = $request->validate([
+            'name' => ['required','string','max:255'],
+            'visible_for_all' => ['required','boolean'],
+            'visible_user_ids' => ['array'],
+            'visible_user_ids.*' => ['integer','exists:users,id'],
+            'visible_department_ids' => ['array'],
+            'visible_department_ids.*' => ['integer','exists:departments,id'],
+        ]);
+
         $lastOrder = ProjectTab::orderBy('order', 'desc')->first();
         $order = $lastOrder ? $lastOrder->order + 1 : 1;
-        ProjectTab::create([
-            'name' => $request->input('name'),
+
+        /** @var ProjectTab $tab */
+        $tab = ProjectTab::create([
+            'name' => $data['name'],
             'order' => $order,
+            'visible_for_all' => $data['visible_for_all'],
         ]);
+
+        if (!$data['visible_for_all']) {
+            $tab->visibleUsers()->sync($data['visible_user_ids'] ?? []);
+            $tab->visibleDepartments()->sync($data['visible_department_ids'] ?? []);
+        } else {
+            $tab->visibleUsers()->detach();
+            $tab->visibleDepartments()->detach();
+        }
 
         $this->clearTabSettingsCache();
     }
 
+
     public function update(Request $request, ProjectTab $projectTab): void
     {
-        $projectTab->update($request->only('name'));
+        $data = $request->validate([
+            'name' => ['required','string','max:255'],
+            'visible_for_all' => ['required','boolean'],
+            'visible_user_ids' => ['array'],
+            'visible_user_ids.*' => ['integer','exists:users,id'],
+            'visible_department_ids' => ['array'],
+            'visible_department_ids.*' => ['integer','exists:departments,id'],
+        ]);
+
+        $projectTab->update([
+            'name' => $data['name'],
+            'visible_for_all' => $data['visible_for_all'],
+        ]);
+
+        if (!$data['visible_for_all']) {
+            $projectTab->visibleUsers()->sync($data['visible_user_ids'] ?? []);
+            $projectTab->visibleDepartments()->sync($data['visible_department_ids'] ?? []);
+        } else {
+            $projectTab->visibleUsers()->detach();
+            $projectTab->visibleDepartments()->detach();
+        }
 
         $this->clearTabSettingsCache();
     }
@@ -274,7 +323,8 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
     }
 
-    public function updateComponentNote(ComponentInTab $componentInTab, Request $request): void {
+    public function updateComponentNote(ComponentInTab $componentInTab, Request $request): void
+    {
         $componentInTab->update($request->only('note'));
 
         $this->clearTabSettingsCache();
@@ -289,7 +339,8 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
     }
 
-    public function addDisclosureComponent(Request $request): void {
+    public function addDisclosureComponent(Request $request): void
+    {
         // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
         DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))
             ->where('order', '>=', $request->get('order'))
@@ -305,7 +356,8 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
     }
 
-    public function addDisclosureComponentWithScopes(Request $request): void {
+    public function addDisclosureComponentWithScopes(Request $request): void
+    {
         // Verschiebe alle bestehenden Elemente mit gleicher oder größerer Order nach oben
         DisclosureComponents::where('disclosure_id', $request->get('disclosure_id'))
             ->where('order', '>=', $request->get('order'))
@@ -322,7 +374,8 @@ class ProjectTabController extends Controller
         $this->clearTabSettingsCache();
     }
 
-    public function removeComponentFormDisclosure(Request $request): void {
+    public function removeComponentFormDisclosure(Request $request): void
+    {
         // Verschiebe alle bestehenden Elemente mit größerer Order nach oben
         DisclosureComponents::find($request->get('id'))->delete();
 
@@ -338,5 +391,4 @@ class ProjectTabController extends Controller
         Cache::forget(self::CACHE_KEY_COMPONENTS);
         Cache::forget(self::CACHE_KEY_COMPONENTS_SPECIAL);
     }
-
 }

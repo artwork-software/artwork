@@ -224,4 +224,5 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
     {
         return $this->sageNotAssignedDataRepository->getForFrontend($project?->id)->get();
     }
+
 }

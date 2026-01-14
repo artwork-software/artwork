@@ -161,4 +161,10 @@ class SageAssignedDataService implements CollectiveBookingService
         );
     }
 
+    // restore
+    public function restore(SageAssignedData $sageAssignedData): void
+    {
+        $this->sageAssignedDataRepository->restore($sageAssignedData);
+    }
+
 }

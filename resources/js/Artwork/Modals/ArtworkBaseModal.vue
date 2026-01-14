@@ -62,6 +62,10 @@ import {nextTick, ref} from "vue";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
+//define options for the modal
+defineOptions({
+    name: 'ArtworkBaseModal'
+})
 
 const props = defineProps({
     modalSize: {

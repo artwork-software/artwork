@@ -471,12 +471,9 @@ const getAssignablePeople = (shiftQualificationId) => {
         return [];
     }
 
-    const craftIds = [
-        props.shift.craft.id,
-        ...Object.values(props.crafts || {})
-            .filter(c => c.universally_applicable)
-            .map(c => c.id)
-    ];
+    const shiftCraftId = props.shift.craft.id;
+    const shiftCraft = Object.values(props.crafts || {}).find(c => c.id === shiftCraftId);
+    const isShiftCraftUniversallyApplicable = shiftCraft?.universally_applicable === true;
 
     // IDs aller bereits zugewiesenen Personen pro Typ sammeln
     const assigned = {
@@ -488,7 +485,14 @@ const getAssignablePeople = (shiftQualificationId) => {
     const peopleWithCraft = [];
 
     Object.values(props.crafts).forEach(craft => {
-        // Only process crafts that match the shift's craft or are universally applicable
+        // Nur Crafts verarbeiten, die zur Schicht passen (shift.craft.id oder universally_applicable)
+        const craftIds = [
+            shiftCraftId,
+            ...Object.values(props.crafts || {})
+                .filter(c => c.universally_applicable)
+                .map(c => c.id)
+        ];
+        
         const isCraftRelevant = craftIds.includes(craft.id);
         if (!isCraftRelevant) {
             return;
@@ -502,22 +506,38 @@ const getAssignablePeople = (shiftQualificationId) => {
 
         personTypes.forEach(({ type, list }) => {
             list.forEach(person => {
+                // Prüfe ob Person zu Schichten zuweisbar ist (can_work_shifts)
+                if (person.can_work_shifts === false) {
+                    return;
+                }
+
                 const key = `${type}-${person.id}`;
                 const alreadyAdded = peopleWithCraft.some(p => p.key === key);
-                const hasQualification = person.shift_qualifications?.some(q => q.id === shiftQualificationId);
+                
+                // WICHTIG: Prüfe ob die Person die Qualifikation für das CRAFT DER SCHICHT hat
+                // Die Qualifikation muss craft-spezifisch sein und zum Craft der Schicht passen
+                // pivot.craft_id muss mit shiftCraftId übereinstimmen (nicht mit craft.id!)
+                const hasQualificationForShiftCraft = person.shift_qualifications?.some(q => 
+                    q.id === shiftQualificationId && 
+                    q.pivot?.craft_id === shiftCraftId
+                );
 
                 // Prüfen, ob Person bereits in der Schicht ist
                 const alreadyAssigned = assigned[type]?.includes(person.id);
 
-                // Zeige alle Personen mit der Qualifikation an, unabhängig davon, ob sie bereits in der Schicht sind
-                // Dies ist wichtig, um Kollisionen auch bei bereits zugewiesenen Personen zu erkennen
-                if (!alreadyAdded && hasQualification) {
+                // Zeige nur Personen an, die:
+                // 1. Die Qualifikation für das Craft der Schicht haben (nicht für ein anderes Craft)
+                // 2. Noch nicht in der Liste sind
+                if (!alreadyAdded && hasQualificationForShiftCraft) {
                     peopleWithCraft.push({
                         ...person,
                         type,
                         key,
                         alreadyAssigned, // Flag, ob die Person bereits in dieser Schicht ist
-                        qualification: person.shift_qualifications.find(q => q.id === shiftQualificationId)?.name || 'Unbekannt',
+                        qualification: person.shift_qualifications.find(q => 
+                            q.id === shiftQualificationId && 
+                            q.pivot?.craft_id === shiftCraftId
+                        )?.name || 'Unbekannt',
                         originCraft: {
                             id: craft.id,
                             name: craft.name,

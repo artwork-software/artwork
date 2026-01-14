@@ -192,6 +192,26 @@ readonly class ShiftFreelancerService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
+        if (is_int($freelancersPivot)) {
+            $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($freelancersPivot);
+            if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === Freelancer::class) {
+                if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                    $shiftWorkerPivot->load('shift');
+                }
+
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorkerPivot,
+                    $removeFromSingleShift,
+                    $notificationService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
+                return;
+            }
+        }
+
+        // Fallback: Alte Struktur (ShiftFreelancer)
         $shiftFreelancerPivot = ! $freelancersPivot instanceof ShiftFreelancer
             ? $this->shiftFreelancerRepository->getById($freelancersPivot)
             : $freelancersPivot;
@@ -200,11 +220,22 @@ readonly class ShiftFreelancerService
             return;
         }
 
+        if (!$shiftFreelancerPivot->relationLoaded('shift')) {
+            $shiftFreelancerPivot->load('shift');
+        }
+        if (!$shiftFreelancerPivot->relationLoaded('freelancer')) {
+            $shiftFreelancerPivot->load('freelancer');
+        }
+
         $shiftWorkerPivot = $this->shiftWorkerService->convertShiftFreelancerToShiftWorker($shiftFreelancerPivot);
         if (!$shiftWorkerPivot) {
             // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
             $this->forceDelete($shiftFreelancerPivot);
             return;
+        }
+
+        if (!$shiftWorkerPivot->relationLoaded('shift')) {
+            $shiftWorkerPivot->load('shift');
         }
 
         $this->shiftWorkerService->removeFromShift(
@@ -252,12 +283,39 @@ readonly class ShiftFreelancerService
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
+        $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($usersPivot);
+        if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === Freelancer::class) {
+            if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                $shiftWorkerPivot->load('shift');
+            }
+
+            $shift = $shiftWorkerPivot->shift;
+            if (!$shift) {
+                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+            }
+
+            return $shift;
+        }
+
+        // Fallback: Alte Struktur (ShiftFreelancer)
         $shiftFreelancerPivot = ! $usersPivot instanceof ShiftFreelancer
             ? $this->shiftFreelancerRepository->getById($usersPivot)
             : $usersPivot;
 
-        /** @var Shift $shiftFreelancerPivot */
-        return $shiftFreelancerPivot->shift;
+        if (!$shiftFreelancerPivot) {
+            throw new \RuntimeException("ShiftFreelancer pivot with ID {$usersPivot} not found");
+        }
+
+        if (!$shiftFreelancerPivot->relationLoaded('shift')) {
+            $shiftFreelancerPivot->load('shift');
+        }
+
+        $shift = $shiftFreelancerPivot->shift;
+        if (!$shift) {
+            throw new \RuntimeException("Shift for ShiftFreelancer pivot ID {$usersPivot} not found (shift_id: {$shiftFreelancerPivot->shift_id})");
+        }
+
+        return $shift;
     }
 
     public function removeAllFreelancersFromShift(

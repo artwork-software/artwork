@@ -1018,8 +1018,12 @@ class UserController extends Controller
             $user->chats()->detach();
             $user->verifiableEventTypes()->detach();
             $user->accessMoneySources()->detach();
-            // Reassign all shift_user entries to the placeholder user to satisfy FK constraints and preserve data
             try {
+                \Artwork\Modules\Shift\Models\ShiftWorker::withTrashed()
+                    ->where('employable_type', \Artwork\Modules\User\Models\User::class)
+                    ->where('employable_id', $user->id)
+                    ->update(['employable_id' => $reassignUserId, 'deleted_at' => null]);
+
                 ShiftUser::withTrashed()
                     ->where('user_id', $user->id)
                     ->update(['user_id' => $reassignUserId, 'deleted_at' => null]);
@@ -1029,6 +1033,10 @@ class UserController extends Controller
                 }
                 // Fallback: ensure no blocking FK remains
                 try {
+                    \Artwork\Modules\Shift\Models\ShiftWorker::withTrashed()
+                        ->where('employable_type', \Artwork\Modules\User\Models\User::class)
+                        ->where('employable_id', $user->id)
+                        ->forceDelete();
                     ShiftUser::withTrashed()->where('user_id', $user->id)->forceDelete();
                 } catch (\Throwable $e2) {
                     if (function_exists('report')) {

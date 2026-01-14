@@ -1,7 +1,6 @@
 <template>
     <div
         :class="!isInModal ? 'my-10' : ''"
-        class="relative"
         :style="{ '--bulk-function-bar-height': `${bulkFunctionBarHeight}px` }"
     >
         <!-- Loading -->
@@ -20,99 +19,100 @@
                 classes="!items-center"
             />
         </div>
+        <div
+            v-if="!isInModal"
+            ref="bulkFunctionBarEl"
+            class="sticky top-(--project-header-height) z-30 shadow-sm print:hidden bg-white/90 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70"
+
+        >
+            <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
+                <MultiEditSwitch
+                    :multi-edit="multiEdit"
+                    :room-mode="false"
+                    @update:multi-edit="UpdateMultiEditEmits"
+                    :disabled="!hasCreateEventsPermission"
+                />
+
+                <div class="flex items-center gap-x-2">
+                    <PlanningSwitch
+                        :planning="isPlanningEvent"
+                        @update:planning="isPlanningEvent = $event"
+                        :disabled="!hasCreateEventsPermission"
+                    />
+                </div>
+
+                <FunctionBarFilter
+                    :user_filters="usePage().props.user_filters"
+                    :personal-filters="usePage().props.personalFilters"
+                    :filter-options="usePage().props.filterOptions"
+                    :filter-type="'calendar_filter'"
+                />
+
+                <ToolTipComponent
+                    :icon="IconCircuitCapacitorPolarized"
+                    icon-size="size-5"
+                    :tooltip-text="$t('Customize column size')"
+                    direction="bottom"
+                    @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
+                    :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+                    classes-button="ui-button"
+                />
+                <ToolTipComponent
+                    :icon="IconFileExport"
+                    icon-size="size-5"
+                    :tooltip-text="$t('Export project list')"
+                    direction="bottom"
+                    @click="showExportModal = true"
+                    classes-button="ui-button"
+                />
+                <ToolTipComponent
+                    :icon="IconCalendarMonth"
+                    icon-size="size-5"
+                    :tooltip-text="$t('Show project period in calendar')"
+                    direction="bottom"
+                    @click="useProjectTimePeriodAndRedirect()"
+                    classes-button="ui-button"
+                />
+
+                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button"
+                          :disabled="!hasCreateEventsPermission">
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by room') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by appointment type') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Sort by day') }}
+                            <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                            {{ $t('Reset sorting') }}
+                        </div>
+                    </MenuItem>
+                </BaseMenu>
+            </div>
+            <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
+                        :multi-edit="multiEdit"/>
+        </div>
         <!-- Header + Events (horizontal scroll container) -->
-        <div class="overflow-x-auto relative w-full">
+        <div class="overflow-x-auto w-full">
             <div class="min-w-max">
                 <!-- Function bar (sticky unter ProjectHeader) -->
-                <div
-                    v-if="!isInModal"
-                    ref="bulkFunctionBarEl"
-                    class="sticky z-30 shadow-sm print:hidden bg-white/90 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70"
 
-                >
-                    <div class="flex items-center justify-center gap-x-4 py-2 px-3 print:hidden">
-                        <MultiEditSwitch
-                            :multi-edit="multiEdit"
-                            :room-mode="false"
-                            @update:multi-edit="UpdateMultiEditEmits"
-                            :disabled="!hasCreateEventsPermission"
-                        />
-
-                        <div class="flex items-center gap-x-2">
-                            <PlanningSwitch
-                                :planning="isPlanningEvent"
-                                @update:planning="isPlanningEvent = $event"
-                                :disabled="!hasCreateEventsPermission"
-                            />
-                        </div>
-
-                        <FunctionBarFilter
-                            :user_filters="usePage().props.user_filters"
-                            :personal-filters="usePage().props.personalFilters"
-                            :filter-options="usePage().props.filterOptions"
-                            :filter-type="'calendar_filter'"
-                        />
-
-                        <ToolTipComponent
-                            :icon="IconCircuitCapacitorPolarized"
-                            icon-size="size-5"
-                            :tooltip-text="$t('Customize column size')"
-                            direction="bottom"
-                            @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
-                            :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
-                            classes-button="ui-button"
-                        />
-                        <ToolTipComponent
-                            :icon="IconFileExport"
-                            icon-size="size-5"
-                            :tooltip-text="$t('Export project list')"
-                            direction="bottom"
-                            @click="showExportModal = true"
-                            classes-button="ui-button"
-                        />
-                        <ToolTipComponent
-                            :icon="IconCalendarMonth"
-                            icon-size="size-5"
-                            :tooltip-text="$t('Show project period in calendar')"
-                            direction="bottom"
-                            @click="useProjectTimePeriodAndRedirect()"
-                            classes-button="ui-button"
-                        />
-
-                        <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button"
-                                  :disabled="!hasCreateEventsPermission">
-                            <MenuItem v-slot="{ active }">
-                                <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                                    {{ $t('Sort by room') }}
-                                    <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
-                                </div>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                                    {{ $t('Sort by appointment type') }}
-                                    <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
-                                </div>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                                    {{ $t('Sort by day') }}
-                                    <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
-                                </div>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
-                                    {{ $t('Reset sorting') }}
-                                </div>
-                            </MenuItem>
-                        </BaseMenu>
-                    </div>
-                    <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
-                                :multi-edit="multiEdit"/>
-                </div>
                 <!-- Legend row-->
                 <div
                     v-if="!isInModal"

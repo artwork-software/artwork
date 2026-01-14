@@ -244,7 +244,7 @@
         </div>
 
         <!-- Multi-Edit Action Bar -->
-        <div v-else class="fixed inset-x-0 bottom-3 z-40 print:hidden">
+        <div v-else class="fixed inset-x-0 left-10 bottom-3 z-40 print:hidden">
             <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
                 <div class="relative">
                     <!-- top fade -->

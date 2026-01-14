@@ -363,8 +363,13 @@
 
                 <!-- Properties als Icons -->
                 <div class="grid grid-cols-5 md:grid-cols-2 gap-2">
-                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1">
+                    <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
                         <PropertyIcon :name="property.icon" class="size-3.5 opacity-90" />
+                        <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
+                            <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
+                                {{ property.name }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -121,6 +121,12 @@ const tabsMap = computed(() => {
             href: route("inventory.articles.trash"),
             available: true,
         },
+        "Trash/Budget": {
+            key: "Trash/Budget",
+            name: proxy?.$t ? proxy.$t("Budget") : "Budget",
+            href: route("project.budget.trashed"),
+            available: true,
+        },
     }
 })
 

@@ -5,6 +5,7 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
+
                 <BaseMenu class="ml-4" v-if="$can('edit budget templates')" white-menu-background>
                     <BaseMenuItem
                         :title="$t('Rename')"
@@ -14,11 +15,28 @@
                     />
 
                     <BaseMenuItem
-                        v-if="table.is_template"
+                        v-if="table.is_template && !isInTrash"
                         :title="$t('Delete')"
                         icon="IconTrash"
                         white-menu-background
                         @click="deleteBudgetTemplate()"
+                    />
+
+
+                    <BaseMenuItem
+                        v-if="table.is_template && isInTrash"
+                        :title="$t('Restore')"
+                        icon="IconRepeat"
+                        white-menu-background
+                        @click="restoreBudgetTemplate()"
+                    />
+
+                    <BaseMenuItem
+                        v-if="table.is_template && isInTrash"
+                        :title="$t('Delete permanently')"
+                        icon="IconTrash"
+                        white-menu-background
+                        @click="deleteForceBudgetTemplate()"
                     />
                 </BaseMenu>
             </div>
@@ -1036,7 +1054,8 @@ export default {
         'projectManager',
         'columns',
         'sageNotAssigned',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'isInTrash'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
@@ -1871,7 +1890,19 @@ export default {
             this.showDeleteModal = false;
         },
         deleteBudgetTemplate() {
+            router.delete(this.route('project.budget.table.soft.delete', this.table.id), {
+                preserveState: true,
+                preserveScroll: true
+            })
+        },
+        deleteForceBudgetTemplate() {
             router.delete(this.route('project.budget.table.delete', this.table.id), {
+                preserveState: true,
+                preserveScroll: true
+            })
+        },
+        restoreBudgetTemplate() {
+            router.patch(this.route('project.budget.table.restore', this.table.id), {
                 preserveState: true,
                 preserveScroll: true
             })

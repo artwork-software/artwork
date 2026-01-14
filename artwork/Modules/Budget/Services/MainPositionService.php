@@ -101,4 +101,144 @@ readonly class MainPositionService
 
         $this->mainPositionRepository->forceDelete($mainPosition);
     }
+
+    public function softDelete(
+        MainPosition $mainPosition,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
+            $mainPositionVerifiedService->softDelete($mainPositionVerified);
+        }
+
+        $mainPosition->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $mainPositionDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $mainPositionDetailsService->softDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $mainPosition->subPositions->each(
+            function (SubPosition $subPosition) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $subPositionService->softDelete(
+                    $subPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->mainPositionRepository->delete($mainPosition);
+    }
+
+    public function restore(
+        MainPosition $mainPosition,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
+            $mainPositionVerifiedService->restore($mainPositionVerified);
+        }
+
+        $mainPosition->mainPositionSumDetails()->withTrashed()->get()->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $mainPositionDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $mainPositionDetailsService->restore(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $mainPosition->subPositions()->withTrashed()->get()->each(
+            function (SubPosition $subPosition) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $subPositionService->restore(
+                    $subPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->mainPositionRepository->restore($mainPosition);
+    }
 }

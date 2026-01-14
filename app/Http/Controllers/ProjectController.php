@@ -3782,6 +3782,97 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function softTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+        $tableService->softDelete(
+            $table,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+
+        return Redirect::back();
+    }
+
+    public function restoreTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+
+        $tableService->restore(
+            $table,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+
+        return Redirect::back();
+    }
+
     public function deleteMainPosition(
         MainPosition $mainPosition,
         MainPositionService $mainPositionService,

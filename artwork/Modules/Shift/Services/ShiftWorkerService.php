@@ -470,12 +470,26 @@ class ShiftWorkerService
         ?AvailabilityConflictService $availabilityConflictService = null,
         ?ChangeService $changeService = null
     ): void {
+
+        if (!$pivot->relationLoaded('shift')) {
+            $pivot->load('shift');
+        }
+
         $shift = $pivot->shift;
         if (!$shift) {
             return;
         }
 
+
         $worker = $pivot->employable;
+        if (!$worker) {
+            $employableType = $pivot->employable_type;
+            $employableId = $pivot->employable_id;
+            if ($employableType && $employableId) {
+                $worker = $employableType::find($employableId);
+            }
+        }
+
         if (!$worker) {
             return;
         }

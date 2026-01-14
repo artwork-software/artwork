@@ -27,6 +27,7 @@ use Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftCountService;
@@ -325,7 +326,10 @@ class ShiftController extends Controller
         $this->shiftService->save($shift);
 
         if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
+            // Lösche alle ShiftWorker Einträge (Source of Truth)
+            ShiftWorker::where('shift_id', $shift->id)->forceDelete();
 
+            // Cleanup: Lösche auch alte Pivot-Einträge falls noch vorhanden
             ShiftUser::where('shift_id', $shift->id)->forceDelete();
             ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
             ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
@@ -1413,22 +1417,24 @@ class ShiftController extends Controller
                 $collisionShifts = [];
 
 
-            // Pivot holen
-                $query = match ($type) {
-                    'user' => ShiftUser::where('user_id', $id),
-                    'freelancer' => ShiftFreelancer::where('freelancer_id', $id),
-                    'service_provider' => ShiftServiceProvider::where('service_provider_id', $id),
+                $employableType = match ($type) {
+                    'user' => User::class,
+                    'freelancer' => Freelancer::class,
+                    'service_provider' => ServiceProvider::class,
                     default => null
                 };
-                if (!$query) {
+
+                if (!$employableType) {
                     continue;
                 }
 
-                $query = $query
-                ->with('shift.craft')
-                ->get();
+                $pivots = ShiftWorker::where('employable_type', $employableType)
+                    ->where('employable_id', $id)
+                    ->withoutTrashed()
+                    ->with('shift.craft')
+                    ->get();
 
-                foreach ($query as $pivot) {
+                foreach ($pivots as $pivot) {
                     if (!$shift = $pivot->shift) {
                         continue;
                     }
@@ -1573,20 +1579,17 @@ class ShiftController extends Controller
         $endTime = $request->get('end_time');
 
 
-        // Pivot holen
-        $query = match ($entity['type']) {
-            'user' => ShiftUser::find($shiftId),
-            'freelancer' => ShiftFreelancer::find($shiftId),
-            'service_provider' => ShiftServiceProvider::find($shiftId),
-            default => null
-        };
-        if (!$query) {
+        $pivot = ShiftWorker::withoutTrashed()->find($shiftId);
+        if (!$pivot) {
             return response()->json(['error' => 'Shift pivot not found'], 404);
         }
 
+        if (!$pivot->relationLoaded('shift')) {
+            $pivot->load('shift');
+        }
 
-        $startDate = Carbon::parse($query->start_date ?? $query->shift->start_date)->toDateString();
-        $endDate = Carbon::parse($query->end_date ?? $query->shift->end_date)->toDateString();
+        $startDate = Carbon::parse($pivot->start_date ?? $pivot->shift->start_date)->toDateString();
+        $endDate = Carbon::parse($pivot->end_date ?? $pivot->shift->end_date)->toDateString();
         $startDateTime = Carbon::parse($startDate . ' ' . $startTime);
         $endDateTime = Carbon::parse($endDate . ' ' . $endTime);
 
@@ -1595,7 +1598,7 @@ class ShiftController extends Controller
         }
 
         // Update the pivot with new start and end times
-        $query->update([
+        $pivot->update([
             'start_time' => $startTime,
             'end_time' => $endTime,
             'start_date' => $startDateTime->format('Y-m-d'),
@@ -1615,27 +1618,24 @@ class ShiftController extends Controller
         $shiftId = $validated['shiftPivotId'];
         $entity = $validated['entity'];
 
-        // Pivot holen
-        $query = match ($entity['type']) {
-            'user' => ShiftUser::find($shiftId),
-            'freelancer' => ShiftFreelancer::find($shiftId),
-            'service_provider' => ShiftServiceProvider::find($shiftId),
-            default => null
-        };
-        if (!$query) {
+        $pivot = ShiftWorker::withoutTrashed()->find($shiftId);
+        if (!$pivot) {
             return;
         }
 
-        // Update the pivot with new short description
-        $query->update([
+        $pivot->update([
             'short_description' => $validated['short_description'],
         ]);
 
+        if (!$pivot->relationLoaded('shift')) {
+            $pivot->load('shift');
+        }
+
         // Broadcast the updated shift
-        if (!$query->shift->event_id) {
-            broadcast(new UpdateShiftInShiftPlan($query->shift, $query->shift->room_id));
+        if (!$pivot->shift->event_id) {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
         } else {
-            broadcast(new UpdateShiftInShiftPlan($query->shift, $query->shift->event->room_id));
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
         }
     }
 

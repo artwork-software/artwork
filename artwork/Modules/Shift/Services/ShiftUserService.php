@@ -583,6 +583,26 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
+        if (is_int($usersPivot)) {
+            $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($usersPivot);
+            if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
+                if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                    $shiftWorkerPivot->load('shift');
+                }
+
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorkerPivot,
+                    $removeFromSingleShift,
+                    $notificationService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
+                return;
+            }
+        }
+
+        // Fallback: Alte Struktur (ShiftUser)
         $shiftUserPivot = ! $usersPivot instanceof ShiftUser
             ? $this->shiftUserRepository->getById($usersPivot)
             : $usersPivot;
@@ -591,11 +611,22 @@ class ShiftUserService
             return;
         }
 
+        if (!$shiftUserPivot->relationLoaded('shift')) {
+            $shiftUserPivot->load('shift');
+        }
+        if (!$shiftUserPivot->relationLoaded('user')) {
+            $shiftUserPivot->load('user');
+        }
+
         $shiftWorkerPivot = $this->shiftWorkerService->convertShiftUserToShiftWorker($shiftUserPivot);
         if (!$shiftWorkerPivot) {
             // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
             $this->forceDelete($shiftUserPivot);
             return;
+        }
+
+        if (!$shiftWorkerPivot->relationLoaded('shift')) {
+            $shiftWorkerPivot->load('shift');
         }
 
         $this->shiftWorkerService->removeFromShift(
@@ -668,12 +699,42 @@ class ShiftUserService
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
+
+        $shiftWorkerPivot = ShiftWorker::find($usersPivot);
+        if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
+
+            if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                $shiftWorkerPivot->load('shift');
+            }
+
+            $shift = $shiftWorkerPivot->shift;
+            if (!$shift) {
+                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+            }
+
+            return $shift;
+        }
+
+        // Fallback: Alte Struktur (ShiftUser)
         $shiftUserPivot = ! $usersPivot instanceof ShiftUser
             ? $this->shiftUserRepository->getById($usersPivot)
             : $usersPivot;
 
-        /** @var Shift $shiftUserPivot */
-        return $shiftUserPivot->shift;
+        if (!$shiftUserPivot) {
+            throw new \RuntimeException("ShiftUser pivot with ID {$usersPivot} not found");
+        }
+
+
+        if (!$shiftUserPivot->relationLoaded('shift')) {
+            $shiftUserPivot->load('shift');
+        }
+
+        $shift = $shiftUserPivot->shift;
+        if (!$shift) {
+            throw new \RuntimeException("Shift for ShiftUser pivot ID {$usersPivot} not found (shift_id: {$shiftUserPivot->shift_id})");
+        }
+
+        return $shift;
     }
 
     /**

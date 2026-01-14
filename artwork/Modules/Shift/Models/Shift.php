@@ -210,6 +210,7 @@ class Shift extends Model
             ->morphedByMany(User::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', User::class)
+            ->whereNull('shift_workers.deleted_at')
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time'])
             ->without('calendar_settings');
     }
@@ -220,6 +221,7 @@ class Shift extends Model
             ->morphedByMany(Freelancer::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', Freelancer::class)
+            ->whereNull('shift_workers.deleted_at')
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 
@@ -229,6 +231,7 @@ class Shift extends Model
             ->morphedByMany(ServiceProvider::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', ServiceProvider::class)
+            ->whereNull('shift_workers.deleted_at')
             ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
     }
 

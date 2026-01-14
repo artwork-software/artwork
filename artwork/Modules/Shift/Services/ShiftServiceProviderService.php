@@ -132,6 +132,28 @@ readonly class ShiftServiceProviderService
         ShiftCountService $shiftCountService,
         ChangeService $changeService
     ): void {
+
+        if (is_int($serviceProvidersPivot)) {
+            $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($serviceProvidersPivot);
+            if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === ServiceProvider::class) {
+                // Direkt ShiftWorker verwenden
+                if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                    $shiftWorkerPivot->load('shift');
+                }
+
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorkerPivot,
+                    $removeFromSingleShift,
+                    null, // notificationService
+                    null, // vacationConflictService
+                    null, // availabilityConflictService
+                    $changeService
+                );
+                return;
+            }
+        }
+
+        // Fallback: Alte Struktur (ShiftServiceProvider)
         $shiftServiceProviderPivot = ! $serviceProvidersPivot instanceof ShiftServiceProvider
             ? $this->shiftServiceProviderRepository->getById($serviceProvidersPivot)
             : $serviceProvidersPivot;
@@ -140,11 +162,22 @@ readonly class ShiftServiceProviderService
             return;
         }
 
+        if (!$shiftServiceProviderPivot->relationLoaded('shift')) {
+            $shiftServiceProviderPivot->load('shift');
+        }
+        if (!$shiftServiceProviderPivot->relationLoaded('serviceProvider')) {
+            $shiftServiceProviderPivot->load('serviceProvider');
+        }
+
         $shiftWorkerPivot = $this->shiftWorkerService->convertShiftServiceProviderToShiftWorker($shiftServiceProviderPivot);
         if (!$shiftWorkerPivot) {
             // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
             $this->forceDelete($shiftServiceProviderPivot);
             return;
+        }
+
+        if (!$shiftWorkerPivot->relationLoaded('shift')) {
+            $shiftWorkerPivot->load('shift');
         }
 
         $this->shiftWorkerService->removeFromShift(
@@ -189,12 +222,39 @@ readonly class ShiftServiceProviderService
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
+        $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($usersPivot);
+        if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === ServiceProvider::class) {
+            if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                $shiftWorkerPivot->load('shift');
+            }
+
+            $shift = $shiftWorkerPivot->shift;
+            if (!$shift) {
+                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+            }
+
+            return $shift;
+        }
+
+        // Fallback: Alte Struktur (ShiftServiceProvider)
         $shiftServiceProviderPivot = ! $usersPivot instanceof ShiftServiceProvider
             ? $this->shiftServiceProviderRepository->getById($usersPivot)
             : $usersPivot;
 
-        /** @var Shift $shiftServiceProviderPivot */
-        return $shiftServiceProviderPivot->shift;
+        if (!$shiftServiceProviderPivot) {
+            throw new \RuntimeException("ShiftServiceProvider pivot with ID {$usersPivot} not found");
+        }
+
+        if (!$shiftServiceProviderPivot->relationLoaded('shift')) {
+            $shiftServiceProviderPivot->load('shift');
+        }
+
+        $shift = $shiftServiceProviderPivot->shift;
+        if (!$shift) {
+            throw new \RuntimeException("Shift for ShiftServiceProvider pivot ID {$usersPivot} not found (shift_id: {$shiftServiceProviderPivot->shift_id})");
+        }
+
+        return $shift;
     }
 
     public function removeAllServiceProvidersFromShift(

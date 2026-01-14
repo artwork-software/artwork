@@ -25,6 +25,7 @@ trait HasShifts
             'shift_id'
         )
             ->using(ShiftWorker::class)
+            ->whereNull('shift_workers.deleted_at')
             ->withPivot([
                 'id',
                 'shift_qualification_id',
@@ -67,20 +68,20 @@ trait HasShifts
         if ($this->relationLoaded('shifts')) {
             $startDateStr = $startDate->toDateString();
             $endDateStr = $endDate->toDateString();
-            
+
             return $this->shifts->filter(function ($shift) use ($startDateStr, $endDateStr) {
                 $eventStartDay = $shift->event_start_day ? Carbon::parse($shift->event_start_day)->toDateString() : null;
                 $eventEndDay = $shift->event_end_day ? Carbon::parse($shift->event_end_day)->toDateString() : null;
                 $shiftStartDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null;
                 $shiftEndDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : null;
-                
+
                 return ($eventStartDay && $eventStartDay >= $startDateStr && $eventStartDay <= $endDateStr)
                     || ($eventEndDay && $eventEndDay >= $startDateStr && $eventEndDay <= $endDateStr)
                     || ($shiftStartDate && $shiftStartDate >= $startDateStr && $shiftStartDate <= $endDateStr)
                     || ($shiftEndDate && $shiftEndDate >= $startDateStr && $shiftEndDate <= $endDateStr);
             })->pluck('id');
         }
-        
+
         return $this->shifts()
             ->eventStartDayAndEventEndDayBetween($startDate, $endDate)
             ->pluck('shifts.id');
@@ -115,7 +116,7 @@ trait HasShifts
         if ($this->relationLoaded('assignedCrafts')) {
             return $this->assignedCrafts->pluck('id')->toArray();
         }
-        
+
         // Fallback: Query ausführen (für Kompatibilität)
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
@@ -131,7 +132,7 @@ trait HasShifts
         if ($this->relationLoaded('managingCrafts')) {
             return $this->managingCrafts->pluck('id')->toArray();
         }
-        
+
         // Fallback: Query ausführen (für Kompatibilität)
         return $this->craftsToManage()->pluck('id')->toArray();
     }

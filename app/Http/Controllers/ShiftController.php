@@ -326,10 +326,8 @@ class ShiftController extends Controller
         $this->shiftService->save($shift);
 
         if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
-            // Lösche alle ShiftWorker Einträge (Source of Truth)
             ShiftWorker::where('shift_id', $shift->id)->forceDelete();
 
-            // Cleanup: Lösche auch alte Pivot-Einträge falls noch vorhanden
             ShiftUser::where('shift_id', $shift->id)->forceDelete();
             ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
             ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();

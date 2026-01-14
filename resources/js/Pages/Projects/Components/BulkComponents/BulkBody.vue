@@ -1,6 +1,6 @@
 <template>
     <div
-        :class="!isInModal ? 'my-10' : ''"
+        :class="!isInModal ? 'mb-10' : ''"
         :style="{ '--bulk-function-bar-height': `${bulkFunctionBarHeight}px` }"
     >
         <!-- Loading -->
@@ -19,11 +19,11 @@
                 classes="!items-center"
             />
         </div>
+        <!-- Function Bar -->
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky top-(--project-header-height) z-30 shadow-sm print:hidden bg-white/90 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70"
-
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/80 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80"
         >
             <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch
@@ -105,14 +105,14 @@
                     </MenuItem>
                 </BaseMenu>
             </div>
-            <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
-                        :multi-edit="multiEdit"/>
+
         </div>
         <!-- Header + Events (horizontal scroll container) -->
         <div class="overflow-x-auto w-full">
             <div class="min-w-max">
                 <!-- Function bar (sticky unter ProjectHeader) -->
-
+                <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
+                            :multi-edit="multiEdit"/>
                 <!-- Legend row-->
                 <div
                     v-if="!isInModal"
@@ -736,7 +736,7 @@ const addEmptyEventForGroup = (group) => {
         index: events.value.length + 1,
         status: baseEvent?.status || props.eventStatuses?.find(s => s.default) || null,
         type: baseEvent?.type || props.eventTypes?.[0] || null,
-        name: props.isInModal ? '' : 'Blocker',
+        name: baseEvent?.name ? baseEvent?.name : 'Name',
         room: baseEvent?.room || props.rooms?.[0] || null,
         day: toISO(newDate),
         end_day: toISO(newDate),

@@ -12,11 +12,14 @@ use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftUser;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
+use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
+use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
@@ -29,8 +32,10 @@ class ShiftUserService
         private readonly ShiftUserRepository $shiftUserRepository,
         private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
         private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
+        private readonly ShiftWorkerRepository $shiftWorkerRepository,
         private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
+        private readonly ShiftWorkerService $shiftWorkerService,
         protected AuthManager $auth,
     ) {
     }
@@ -50,71 +55,23 @@ class ShiftUserService
         ChangeService $changeService,
         ?array $seriesShiftData = null
     ): void {
-        if ($this->isUserAlreadyAssignedToShift($shift, $userId)) {
+
+        $user = User::find($userId);
+        if (!$user) {
             return;
         }
 
-        $shiftUserPivot = $this->shiftUserRepository->createForShift(
-            $shift->getAttribute('id'),
-            $userId,
-            $shiftQualificationId,
-            $craftAbbreviation,
-            $shift
-        );
-
-
-        /** @var User $user */
-        $user = $shiftUserPivot->user;
-
-
-
-        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-            $shift->getAttribute('id'),
-            $shiftQualificationId
-        );
-
-        $shiftCountService->handleShiftUsersShiftCount($shift, $userId);
-        $this->assignUserToProjectIfNecessary($shift, $user);
-
-        if ($shift->is_committed) {
-            $this->handleAssignedToShift(
-                $shift,
-                $user,
-                $shiftUserPivot->shiftQualification,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        if ($this->shouldHandleSeriesShift($seriesShiftData)) {
-            $this->handleSeriesShiftData(
-                $shift,
-                Carbon::parse($seriesShiftData['start'])->startOfDay(),
-                Carbon::parse($seriesShiftData['end'])->endOfDay(),
-                $seriesShiftData['dayOfWeek'],
-                $userId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-
-        $this->logCommittedShiftAssignmentChange(
+        $this->shiftWorkerService->assignToShift(
             $shift,
             $user,
-            'user_assigned_to_shift',
-            $shiftUserPivot
+            $shiftQualificationId,
+            $craftAbbreviation,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService,
+            $seriesShiftData
         );
-
-        $this->logManualAssignmentActivity($shift, $shiftUserPivot);
-
     }
 
     private function isUserAlreadyAssignedToShift(Shift $shift, int $userId): bool
@@ -125,12 +82,6 @@ class ShiftUserService
             ->contains($userId);
     }
 
-    private function shouldHandleSeriesShift(?array $seriesShiftData): bool
-    {
-        return $seriesShiftData !== null
-            && isset($seriesShiftData['onlyThisDay'])
-            && $seriesShiftData['onlyThisDay'] === false;
-    }
 
     private function logManualAssignmentActivity(Shift $shift, ShiftUser $shiftUserPivot): void
     {
@@ -581,8 +532,8 @@ class ShiftUserService
         /** @var Shift $shiftBetweenDates */
         foreach ($this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates) {
             if (
-                $this->isSameShift($shift, $shiftBetweenDates) ||
-                $this->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
+                $this->shiftWorkerService->isSameShift($shift, $shiftBetweenDates) ||
+                $this->shiftWorkerService->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
                 $this->isUserAlreadyAssignedToShift($shiftBetweenDates, $userId)
             ) {
                 continue;
@@ -596,7 +547,7 @@ class ShiftUserService
             }
 
             if (
-                $this->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
+                $this->shiftWorkerService->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
                     $shiftBetweenDates->id,
                     $shiftQualificationId
                 ) >= $shiftsQualificationsValue
@@ -619,35 +570,6 @@ class ShiftUserService
         }
     }
 
-    private function isSameShift(Shift $shift, Shift $otherShift): bool
-    {
-        return $otherShift->id === $shift->id;
-    }
-
-    private function isDayOfWeekFilteredOut(string $dayOfWeek, Shift $shift): bool
-    {
-        if ($dayOfWeek === 'all') {
-            return false;
-        }
-
-        return Carbon::parse($shift->event_start_day)->dayOfWeek !== (int) $dayOfWeek;
-    }
-
-    private function getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-        int $shiftId,
-        int $shiftQualificationId
-    ): int {
-        return $this->shiftUserRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        ) + $this->shiftFreelancerRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        ) + $this->shiftServiceProviderRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        );
-    }
 
     /**
      * Entfernt einen User aus einer Schicht (inkl. Serienlogik).
@@ -661,6 +583,26 @@ class ShiftUserService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
     ): void {
+        if (is_int($usersPivot)) {
+            $shiftWorkerPivot = \Artwork\Modules\Shift\Models\ShiftWorker::find($usersPivot);
+            if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
+                if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                    $shiftWorkerPivot->load('shift');
+                }
+
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorkerPivot,
+                    $removeFromSingleShift,
+                    $notificationService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
+                return;
+            }
+        }
+
+        // Fallback: Alte Struktur (ShiftUser)
         $shiftUserPivot = ! $usersPivot instanceof ShiftUser
             ? $this->shiftUserRepository->getById($usersPivot)
             : $usersPivot;
@@ -669,51 +611,32 @@ class ShiftUserService
             return;
         }
 
-        /** @var Shift|null $shift */
-        $shift = $shiftUserPivot->shift;
-        if (! $shift) {
+        if (!$shiftUserPivot->relationLoaded('shift')) {
+            $shiftUserPivot->load('shift');
+        }
+        if (!$shiftUserPivot->relationLoaded('user')) {
+            $shiftUserPivot->load('user');
+        }
+
+        $shiftWorkerPivot = $this->shiftWorkerService->convertShiftUserToShiftWorker($shiftUserPivot);
+        if (!$shiftWorkerPivot) {
+            // Fallback: Wenn kein ShiftWorker gefunden, lösche direkt aus alter Tabelle
+            $this->forceDelete($shiftUserPivot);
             return;
         }
 
-        /** @var User|null $user */
-        $user = $shiftUserPivot->user;
-        if (! $user) {
-            return;
+        if (!$shiftWorkerPivot->relationLoaded('shift')) {
+            $shiftWorkerPivot->load('shift');
         }
 
-        $this->logManualRemovalActivity($shift, $shiftUserPivot);
-
-        $this->logCommittedShiftAssignmentChange(
-            $shift,
-            $user,
-            'user_removed_from_shift',
-            $shiftUserPivot
+        $this->shiftWorkerService->removeFromShift(
+            $shiftWorkerPivot,
+            $removeFromSingleShift,
+            $notificationService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
         );
-
-        $this->forceDelete($shiftUserPivot);
-
-        if ($shift->is_committed) {
-            $this->handleRemovedFromShift(
-                $shift,
-                $user,
-                $notificationService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-
-        if (! $removeFromSingleShift) {
-            $this->removeUserFromAllShiftsWithSameUuid(
-                $shift,
-                $user,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
     }
 
     private function logManualRemovalActivity(Shift $shift, ShiftUser $shiftUserPivot): void
@@ -754,9 +677,13 @@ class ShiftUserService
                 continue;
             }
 
-            $shiftUserPivotByUuid = $this->shiftRepository->getShiftUserPivotById($shiftByUuid, $user->id);
+            $shiftUserPivotByUuid = $this->shiftRepository->getShiftWorkerPivotById(
+                $shiftByUuid,
+                User::class,
+                $user->id
+            );
 
-            if ($shiftUserPivotByUuid instanceof ShiftUser) {
+            if ($shiftUserPivotByUuid instanceof ShiftWorker) {
                 $this->removeFromShift(
                     $shiftUserPivotByUuid,
                     true,
@@ -772,12 +699,42 @@ class ShiftUserService
 
     public function getShiftByUserPivotId(int $usersPivot): Shift
     {
+
+        $shiftWorkerPivot = ShiftWorker::find($usersPivot);
+        if ($shiftWorkerPivot && $shiftWorkerPivot->employable_type === User::class) {
+
+            if (!$shiftWorkerPivot->relationLoaded('shift')) {
+                $shiftWorkerPivot->load('shift');
+            }
+
+            $shift = $shiftWorkerPivot->shift;
+            if (!$shift) {
+                throw new \RuntimeException("Shift for ShiftWorker pivot ID {$usersPivot} not found (shift_id: {$shiftWorkerPivot->shift_id})");
+            }
+
+            return $shift;
+        }
+
+        // Fallback: Alte Struktur (ShiftUser)
         $shiftUserPivot = ! $usersPivot instanceof ShiftUser
             ? $this->shiftUserRepository->getById($usersPivot)
             : $usersPivot;
 
-        /** @var Shift $shiftUserPivot */
-        return $shiftUserPivot->shift;
+        if (!$shiftUserPivot) {
+            throw new \RuntimeException("ShiftUser pivot with ID {$usersPivot} not found");
+        }
+
+
+        if (!$shiftUserPivot->relationLoaded('shift')) {
+            $shiftUserPivot->load('shift');
+        }
+
+        $shift = $shiftUserPivot->shift;
+        if (!$shift) {
+            throw new \RuntimeException("Shift for ShiftUser pivot ID {$usersPivot} not found (shift_id: {$shiftUserPivot->shift_id})");
+        }
+
+        return $shift;
     }
 
     /**
@@ -926,104 +883,26 @@ class ShiftUserService
         string $changeType,
         ?ShiftUser $pivot = null
     ): void {
-        if (! $shift->is_committed) {
-            return;
-        }
-
-        $fieldChanges = [
-            'assignment' => [
-                'user_id'             => $user->id,
-                'user_name'           => $user->full_name,
-                'profile_picture_url' => $user->profile_photo_url,
-            ],
-        ];
-
-        if ($pivot) {
-            $fieldChanges['assignment']['shift_qualification_id']   = $pivot->shift_qualification_id;
-            $fieldChanges['assignment']['shift_qualification_name'] = optional($pivot->shiftQualification)->name;
-            $fieldChanges['assignment']['craft_abbreviation']       = $pivot->craft_abbreviation;
-
-            $fieldChanges['assignment']['start_date'] = optional($pivot->start_date)?->format('Y-m-d');
-            $fieldChanges['assignment']['end_date']   = optional($pivot->end_date)?->format('Y-m-d');
-            $fieldChanges['assignment']['start_time'] = $pivot->start_time
-                ? Carbon::parse($pivot->start_time)->format('H:i')
-                : null;
-            $fieldChanges['assignment']['end_time']   = $pivot->end_time
-                ? Carbon::parse($pivot->end_time)->format('H:i')
-                : null;
-
-            // 💡 Arbeitszeit-Label auf Basis von Pivot/Shift bauen
-            $workingTimeLabel = $this->formatWorkingTimeLabel($shift, $pivot);
-
-            if ($workingTimeLabel) {
-                // Bei Zuweisung: vorher "free", nachher Arbeitszeit
-                if ($changeType === 'user_assigned_to_shift') {
-                    $fieldChanges['assignment']['before_label'] = 'free';
-                    $fieldChanges['assignment']['after_label']  = $workingTimeLabel;
-                }
-
-                // Beim Entfernen: vorher Arbeitszeit, nachher "free"
-                if ($changeType === 'user_removed_from_shift') {
-                    $fieldChanges['assignment']['before_label'] = $workingTimeLabel;
-                    $fieldChanges['assignment']['after_label']  = 'free';
-                }
-            }
-        }
-
-        CommittedShiftChange::create([
-            'craft_id'                => $shift->craft_id,
-            'shift_id'                => $shift->getKey(),
-            'subject_type'            => Shift::class,
-            'subject_id'              => $shift->getKey(),
-            'change_type'             => $changeType,
-            'field_changes'           => $fieldChanges,
-            'affected_user_type'      => \Artwork\Modules\User\Models\User::class,
-            'affected_user_id'        => $user->id,
-            'changed_by_user_id'      => $this->auth->id(),
-            'changed_at'              => now(),
-            'acknowledged_at'         => null,
-            'acknowledged_by_user_id' => null,
-        ]);
+        $shiftWorker = $pivot ? $this->convertShiftUserToShiftWorker($pivot) : null;
+        $this->shiftWorkerService->logCommittedShiftAssignmentChange(
+            $shift,
+            $user,
+            $changeType,
+            User::class,
+            $shiftWorker
+        );
     }
 
-    /**
-     * Baut ein kompaktes Arbeitszeit-Label aus Pivot-/Schichtdaten,
-     * z.B. "21.11.2025 10:00 - 18:00" oder mit Enddatum, falls abweichend.
-     */
-    private function formatWorkingTimeLabel(Shift $shift, ?ShiftUser $pivot): ?string
+    private function convertShiftUserToShiftWorker(?ShiftUser $shiftUser): ?ShiftWorker
     {
-        // Fallback auf Shift, falls im Pivot nichts/teilweise gesetzt ist
-        $startDate = $pivot?->start_date ?? $shift->start_date;
-        $endDate   = $pivot?->end_date ?? $shift->end_date;
-        $startTime = $pivot?->start_time ?? $shift->start;
-        $endTime   = $pivot?->end_time ?? $shift->end;
-
-        if (! $startDate || ! $endDate || ! $startTime || ! $endTime) {
+        if (! $shiftUser) {
             return null;
         }
 
-        $startDateCarbon = $startDate instanceof Carbon ? $startDate : Carbon::parse($startDate);
-        $endDateCarbon   = $endDate instanceof Carbon ? $endDate : Carbon::parse($endDate);
-        $startTimeCarbon = $startTime instanceof Carbon ? $startTime : Carbon::parse($startTime);
-        $endTimeCarbon   = $endTime instanceof Carbon ? $endTime : Carbon::parse($endTime);
-
-        // Gleicher Tag → "21.11.2025 10:00 - 18:00"
-        if ($startDateCarbon->isSameDay($endDateCarbon)) {
-            return sprintf(
-                '%s %s - %s',
-                $startDateCarbon->format('d.m.Y'),
-                $startTimeCarbon->format('H:i'),
-                $endTimeCarbon->format('H:i')
-            );
-        }
-
-        // Mehrtägig → "21.11.2025 10:00 - 22.11.2025 18:00"
-        return sprintf(
-            '%s %s - %s %s',
-            $startDateCarbon->format('d.m.Y'),
-            $startTimeCarbon->format('H:i'),
-            $endDateCarbon->format('d.m.Y'),
-            $endTimeCarbon->format('H:i')
+        return $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
+            User::class,
+            $shiftUser->user_id,
+            $shiftUser->shift_id
         );
     }
 

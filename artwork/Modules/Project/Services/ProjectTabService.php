@@ -25,6 +25,7 @@ use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
@@ -38,14 +39,42 @@ class ProjectTabService implements ServiceWithArrayCache
     ) {
     }
 
+
+    private function authUser(): ?User
+    {
+        try {
+            /** @var UserService $userService */
+            $userService = app(UserService::class);
+            return $userService->getAuthUser();
+        } catch (\Throwable) {
+            /** @var User|null $u */
+            $u = auth()->user();
+            return $u;
+        }
+    }
+
     public function findFirstProjectTab(): ProjectTab
     {
-        return $this->projectTabRepository->findFirstProjectTab();
+        $user = $this->authUser();
+        $tab = $this->projectTabRepository->findFirstProjectTab($user);
+        if (!$tab) {
+            $tab = $this->projectTabRepository->findFirstProjectTab(null);
+        }
+
+        return $tab;
     }
 
     public function getDefaultOrFirstProjectTab(): ProjectTab
     {
-        return $this->projectTabRepository->getDefaultOrFirstProjectTab();
+        $user = $this->authUser();
+
+        $tab = $this->projectTabRepository->getDefaultOrFirstProjectTab($user);
+
+        if (!$tab) {
+            $tab = $this->projectTabRepository->getDefaultOrFirstProjectTab(null);
+        }
+
+        return $tab;
     }
 
     public function getDefaultOrFirstProjectTabId(): int
@@ -65,9 +94,14 @@ class ProjectTabService implements ServiceWithArrayCache
 
     private function findFirstProjectTabWithType(ProjectTabComponentEnum $type): ProjectTab|null
     {
-        if (!$projectTab = ProjectTabArrayCache::getItemByName($type->name)) {
+        $user = $this->authUser();
+        $uid  = $user?->id ?? 0;
+
+        $cacheKey = $type->name . '|u' . $uid;
+
+        if (!$projectTab = ProjectTabArrayCache::getItemByName($cacheKey)) {
             $projectTab = $this->projectTabRepository
-                ->findFirstProjectTabByComponentsComponentType($type);
+                ->findFirstProjectTabByComponentsComponentType($type, $user);
 
             if ($projectTab) {
                 ProjectTabArrayCache::setItem($projectTab);
@@ -99,9 +133,7 @@ class ProjectTabService implements ServiceWithArrayCache
             ($firstEventInProject = $projectService->getFirstEventInProject($project)) &&
             ($lastEventInProject = $projectService->getLastEventInProject($project))
         ) {
-            //get the start of day of the firstEventInProject
             $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-            //get the end of day of the lastEventInProject
             $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
         }
 

@@ -1,5 +1,6 @@
 <template>
     <AppLayout :title="`${project?.name} (${currentTab?.name})`">
+        <div :style="{ '--project-header-height': `${headerHeight}px` }">
         <!-- Copy Toast -->
         <transition name="fade" appear>
             <div
@@ -18,7 +19,7 @@
         </transition>
 
         <!-- ===== STICKY PROJECT NAVIGATOR ===== -->
-        <div class="sticky top-0 z-50 w-full inset-x-0 ">
+        <div ref="stickyHeaderEl" class="sticky top-0 z-40 w-full inset-x-0 ">
             <!-- Glassy background layer -->
             <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70">
                 <div class="artwork-container pb-0! py-3">
@@ -317,11 +318,12 @@
 
         <ProjectStateChangeModal :project-id="project.id" v-if="showProjectStateChangeModal" @close="closeProjectStateChangeModal" />
         <ProjectPlanningStateChangeModal :project-id="project.id" v-if="showProjectPlanningStateChangeModal" @close="closePlanningStateChangeModal" />
+        </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
@@ -352,6 +354,20 @@ const props = defineProps({
 });
 
 const page = usePage();
+
+const stickyHeaderEl = ref(null);
+const headerHeight = ref(0);
+let headerResizeObserver = null;
+
+const updateHeaderHeight = () => {
+    try {
+        const el = stickyHeaderEl.value;
+        if (!el) return;
+        headerHeight.value = el.getBoundingClientRect().height || 0;
+    } catch {
+        // ignore
+    }
+};
 
 const showProjectHistory = ref(false);
 const editingProject = ref(false);
@@ -598,6 +614,26 @@ const copyProjectUrlToClipboard = async () => {
 
 onBeforeUnmount(() => {
     if (copyToastTimer) clearTimeout(copyToastTimer);
+
+    if (headerResizeObserver) {
+        try { headerResizeObserver.disconnect(); } catch { /* ignore */ }
+        headerResizeObserver = null;
+    }
+});
+
+onMounted(() => {
+    updateHeaderHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+        headerResizeObserver = new ResizeObserver(() => updateHeaderHeight());
+        if (stickyHeaderEl.value) headerResizeObserver.observe(stickyHeaderEl.value);
+    }
+
+    window.addEventListener('resize', updateHeaderHeight, { passive: true });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateHeaderHeight);
 });
 </script>
 

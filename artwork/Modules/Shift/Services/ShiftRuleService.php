@@ -15,7 +15,7 @@ class ShiftRuleService
 {
     private ShiftRuleCheckFactory $ruleCheckFactory;
 
-    public function __construct(ShiftRuleCheckFactory $ruleCheckFactory = null)
+    public function __construct(?ShiftRuleCheckFactory $ruleCheckFactory = null)
     {
         $this->ruleCheckFactory = $ruleCheckFactory ?: new ShiftRuleCheckFactory();
     }

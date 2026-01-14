@@ -16,6 +16,7 @@ class ShiftQualificationRepository extends BaseRepository
     public function getAllOrderedByCreationDateAscending(): Collection
     {
         return ShiftQualification::query()
+            ->select(['id', 'name', 'icon', 'available', 'created_at'])
             ->orderByCreationDateAscending()
             ->get();
     }

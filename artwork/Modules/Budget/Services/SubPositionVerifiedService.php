@@ -15,4 +15,15 @@ readonly class SubPositionVerifiedService
     {
         $this->subPositionVerifiedRepository->forceDelete($subPositionVerified);
     }
+
+    public function softDelete(SubPositionVerified $subPositionVerified): void
+    {
+        $this->subPositionVerifiedRepository->delete($subPositionVerified);
+    }
+
+    // restore
+    public function restore(SubPositionVerified $subPositionVerified): void
+    {
+        $this->subPositionVerifiedRepository->restore($subPositionVerified);
+    }
 }

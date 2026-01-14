@@ -311,10 +311,10 @@ class Event extends Model
     }
 
     /**
-     * @param Shift|Collection|null $shifts
+     * @param Collection|Shift|null $shifts
      * @return array<string>
      */
-    public function getDaysOfShifts(Shift|Collection $shifts = null): array
+    public function getDaysOfShifts(Shift|Collection|null $shifts = null): array
     {
         if ($shifts instanceof Shift) {
             $shifts = collect([$shifts]);

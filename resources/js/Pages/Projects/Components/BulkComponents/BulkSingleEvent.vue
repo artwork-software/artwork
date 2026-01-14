@@ -299,7 +299,7 @@ import {
 import {usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed, nextTick, onMounted, ref} from "vue";
+import {computed, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
 import {inject} from "vue";
@@ -341,6 +341,36 @@ const showDeleteEventConfirmModal = ref(false);
 
 // Local draft state for start date to prevent immediate re-sorting while typing
 const draftStartDate = ref(props.event.day);
+
+const parseISODateToUTCMidnight = (iso) => {
+    if (!iso) return null;
+    const s = String(iso).slice(0, 10);
+    const [y, m, d] = s.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+};
+
+const formatUTCDateToISO = (date) => {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
+const addDaysISO = (iso, days) => {
+    const base = parseISODateToUTCMidnight(iso);
+    if (!base) return iso;
+    base.setUTCDate(base.getUTCDate() + Number(days || 0));
+    return formatUTCDateToISO(base);
+};
+
+const diffDaysISO = (fromISO, toISO) => {
+    const from = parseISODateToUTCMidnight(fromISO);
+    const to = parseISODateToUTCMidnight(toISO);
+    if (!from || !to) return 0;
+    const ms = to.getTime() - from.getTime();
+    return Math.round(ms / (1000 * 60 * 60 * 24));
+};
 
 const getColumnSize = (column) => ({
     minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
@@ -445,10 +475,27 @@ const removeTime = () => {
 
 const onStartDateFocusOut = () => {
     // Commit draft to actual event object only on focusout
-    props.event.day = draftStartDate.value;
+    const oldStart = props.event.day;
+    const newStart = draftStartDate.value;
+    const deltaDays = diffDaysISO(oldStart, newStart);
+
+    props.event.day = newStart;
+
+    // Keep the existing duration by shifting end_day by the same delta.
+    // If end_day is missing, treat it as equal to the old start day.
+    const oldEnd = props.event.end_day || oldStart;
+    props.event.end_day = addDaysISO(oldEnd, deltaDays);
+
     dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
     updateEventInDatabase();
 };
+
+// Keep draft in sync when event is updated externally (e.g. broadcast refresh)
+watch(() => props.event.day, (v) => {
+    if (v && v !== draftStartDate.value) {
+        draftStartDate.value = v;
+    }
+});
 
 const sortedRooms = computed(() => props.rooms.sort((a,b) => a.name.localeCompare(b.name)));
 const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.localeCompare(b.name)));

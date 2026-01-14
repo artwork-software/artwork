@@ -32,9 +32,11 @@ use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\GlobalQualification;
+use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\Traits\HasShifts;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
@@ -166,7 +168,8 @@ class User extends Model implements
     Vacationer,
     Available,
     DayServiceable,
-    WorkflowSubject
+    WorkflowSubject,
+    Employable
 {
     use Authenticatable;
     use Authorizable;
@@ -185,6 +188,7 @@ class User extends Model implements
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use HasShifts;
     use LaravelPermissionToVueJS;
     use HasWorkflows;
     use HasProfilePhotoCustom;
@@ -295,22 +299,7 @@ class User extends Model implements
         'full_name',
         'type',
         'formated_work_time_balance',
-        'department_ids',
-        //'assigned_craft_ids',
     ];
-
-    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\GlobalQualification::class,
-            'qualifiable',
-            'global_qualifiables',
-            'qualifiable_id',
-            'global_qualification_id'
-        );
-    }
-
-    //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
         /**
          * Beziehung zum InventoryUserFilter
@@ -348,22 +337,6 @@ class User extends Model implements
     }
 
 
-    public function shifts(): BelongsToMany
-    {
-        return $this->belongsToMany(Shift::class, 'shift_user')
-            ->using(ShiftUser::class)
-            ->withPivot([
-                'id',
-                'shift_qualification_id',
-                'shift_count',
-                'craft_abbreviation',
-                'short_description',
-                'start_date',
-                'end_date',
-                'start_time',
-                'end_time'
-            ]);
-    }
 
     public function getFullNameAttribute(): string
     {
@@ -417,11 +390,6 @@ class User extends Model implements
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
-    }
-
-    public function getDepartmentIdsAttribute(): array
-    {
-        return $this->departments()->pluck('departments.id')->toArray();
     }
 
     public function projects(): BelongsToMany
@@ -533,26 +501,6 @@ class User extends Model implements
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
-    public function assignedCrafts(): morphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craftable')->with(['qualifications']);
-    }
-
-    public function managingCrafts(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\ShiftQualification::class,
-            'qualifiable',
-            'shift_qualifiables',
-            'qualifiable_id',
-            'shift_qualification_id'
-        )->withPivot('craft_id');
-    }
 
     public function workerShiftPlanFilter(): HasOne
     {
@@ -564,21 +512,6 @@ class User extends Model implements
         return $this->hasOne(UserInventoryArticlePlanFilter::class);
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getAssignedCraftIdsAttribute(): array
-    {
-        return $this->assignedCrafts()->pluck('crafts.id')->all();
-    }
-
-
-    public function getShiftIdsBetweenStartDateAndEndDate(
-        Carbon $startDate,
-        Carbon $endDate
-    ): \Illuminate\Support\Collection {
-        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
-    }
 
     /**
      * @return string[]
@@ -625,16 +558,6 @@ class User extends Model implements
         ];
     }
 
-    /** @deprecated user WorkhourService */
-    public function plannedWorkingHours($startDate, $endDate): float|int
-    {
-        trigger_deprecation(
-            'artwork',
-            '0.x',
-            'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.'
-        );
-        return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate) / 60;
-    }
 
     public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder
     {
@@ -643,10 +566,6 @@ class User extends Model implements
             ->orWhere('last_name', 'like', $name . '%');
     }
 
-    public function scopeCanWorkShifts(Builder $builder): Builder
-    {
-        return $builder->where('can_work_shifts', true);
-    }
 
     public function getHasProjectManagerPermission(): bool
     {
@@ -681,18 +600,6 @@ class User extends Model implements
         );
     }
 
-    public function craftsToManage(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    public function getManagingCraftIds(): array
-    {
-        return $this->craftsToManage()->pluck('id')->toArray();
-    }
 
     public function lastProject(): HasOne
     {

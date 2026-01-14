@@ -4,9 +4,7 @@ namespace Artwork\Modules\Shift\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Models\ShiftFreelancer;
-use Artwork\Modules\Shift\Models\ShiftServiceProvider;
-use Artwork\Modules\Shift\Models\ShiftUser;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -27,19 +25,16 @@ class ShiftRepository extends BaseRepository
         return Shift::allByUuid($shiftUuid)->get();
     }
 
-    public function getShiftUserPivotById(Shift $shift, int $userId): ShiftUser|null
-    {
-        return $shift->users()->where('users.id', $userId)->first()?->pivot;
-    }
-
-    public function getShiftFreelancerPivotById(Shift $shift, int $freelancerId): ShiftFreelancer|null
-    {
-        return $shift->freelancer()->where('freelancers.id', $freelancerId)->first()?->pivot;
-    }
-
-    public function getShiftServiceProviderPivotById(Shift $shift, int $serviceProviderId): ShiftServiceProvider|null
-    {
-        return $shift->serviceProvider()->where('service_providers.id', $serviceProviderId)->first()?->pivot;
+    public function getShiftWorkerPivotById(
+        Shift $shift,
+        string $employableType,
+        int $employableId
+    ): ShiftWorker|null {
+        return ShiftWorker::query()
+            ->where('shift_id', $shift->id)
+            ->where('employable_type', $employableType)
+            ->where('employable_id', $employableId)
+            ->first();
     }
 
     public function getShiftsByUuidBetweenDates(string $shiftUuid, Carbon $startDate, Carbon $endDate): Collection

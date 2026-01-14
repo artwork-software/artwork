@@ -25,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -419,6 +420,17 @@ class ExportPDFController extends Controller
             ])
             ->setPaper('a4', 'landscape');
 
-        return $pdf->download("Shiftplan_{$project->name}_{$today}.pdf");
+        $safeProjectName = (string) Str::of((string) ($project->name ?? ''))
+            ->replace(['/', '\\'], '-')
+            ->trim();
+
+        if ($safeProjectName === '') {
+            $safeProjectName = 'Projekt';
+        }
+
+        // ':' ist zwar nicht der Auslöser dieses Fehlers, kann aber je nach Client/OS problematisch sein.
+        $safeToday = str_replace(':', '-', $today);
+
+        return $pdf->download("Shiftplan_{$safeProjectName}_{$safeToday}.pdf");
     }
 }

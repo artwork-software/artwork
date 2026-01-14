@@ -1096,6 +1096,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
 
+            Route::get('/trashed', [BudgetGeneralController::class, 'getTrashed'])
+                ->name('project.budget.trashed');
+
             // patch project.budget.column.update.relevant
             Route::patch('/column/{column}/update/relevant', [BudgetGeneralController::class, 'updateColumnRelevant'])
                 ->name('project.budget.column.update.relevant');
@@ -1225,7 +1228,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])
                 ->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])
-                ->name('project.budget.table.delete');
+                ->name('project.budget.table.delete')->withTrashed();
+
+            Route::delete('/table/{table}/soft', [ProjectController::class, 'softTable'])
+                ->name('project.budget.table.soft.delete');
+
+            Route::patch('/table/{table}/restore', [ProjectController::class, 'restoreTable'])
+                ->name('project.budget.table.restore')->withTrashed();
 
             Route::get('/sageNotAssignedData/trashed', [SageNotAssignedDataController::class, 'getTrashed'])
                 ->name('sageNotAssignedData.trashed');
@@ -2746,6 +2755,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // shifts.createFromPresets
     Route::post('/shifts/createFromPresets', [\Artwork\Modules\Shift\Http\Controllers\ShiftController::class, 'createFromPresets'])
         ->name('shifts.createFromPresets');
+
+    Route::prefix('inventory')->group(function () {
+        Route::post('/filter-presets', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'store'])
+            ->name('inventory.filter-presets.store');
+
+        Route::put('/filter-presets/{preset}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'update'])
+            ->name('inventory.filter-presets.update');
+
+        Route::delete('/filter-presets/{preset}', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'destroy'])
+            ->name('inventory.filter-presets.destroy');
+    });
 });
 
 Route::get(

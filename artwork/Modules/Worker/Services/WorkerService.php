@@ -2,10 +2,18 @@
 
 namespace Artwork\Modules\Worker\Services;
 
+use Artwork\Modules\DayService\Models\DayService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
-use Illuminate\Support\Collection;
+use Artwork\Modules\Worker\Config\WorkerEagerLoadConfig;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class WorkerService
 {
@@ -23,5 +31,110 @@ class WorkerService
         $serviceProviders = $this->serviceProviderService->searchServiceProviders($search);
 
         return $users->merge($freelancers)->merge($serviceProviders);
+    }
+
+    public function getWorkersForShiftPlan(string $workerType): Collection
+    {
+        $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads();
+
+        // Polymorphe Query basierend auf Worker-Typ
+        $query = match ($workerType) {
+            User::class => User::query()->canWorkShifts(),
+            Freelancer::class => Freelancer::query()->canWorkShifts(),
+            ServiceProvider::class => ServiceProvider::query()->canWorkShifts(),
+            default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$workerType}"),
+        };
+
+        if ($workerType === User::class) {
+            $eagerLoads = array_merge($eagerLoads, WorkerEagerLoadConfig::getUserSpecificEagerLoads());
+        }
+
+        $workers = $query->with($eagerLoads)->get();
+
+        $this->loadShiftQualificationPivots($workers);
+
+        return $workers;
+    }
+
+    private function loadShiftQualificationPivots(Collection $workers): void
+    {
+        $qualificationIds = $workers->flatMap(function ($worker) {
+            return $worker->shifts->map(function ($shift) {
+                return $shift->pivot?->shift_qualification_id;
+            })->filter();
+        })->unique();
+
+        if ($qualificationIds->isNotEmpty()) {
+            $qualifications = ShiftQualification::whereIn('id', $qualificationIds)->get()->keyBy('id');
+
+            $workers->each(function ($worker) use ($qualifications) {
+                $worker->shifts->each(function ($shift) use ($qualifications) {
+                    if ($shift->pivot && $shift->pivot->shift_qualification_id) {
+                        $shift->pivot->setRelation('shiftQualification', $qualifications->get($shift->pivot->shift_qualification_id));
+                    }
+                });
+            });
+        }
+    }
+
+    public function buildQualificationsCache(Collection $workers): array
+    {
+        $qualificationsCache = [];
+
+        foreach ($workers as $worker) {
+            foreach ($worker->shifts as $shift) {
+                if ($shift->pivot?->shift_qualification_id) {
+                    $qualId = $shift->pivot->shift_qualification_id;
+                    if (!isset($qualificationsCache[$qualId])) {
+                        if ($shift->pivot->relationLoaded('shiftQualification')) {
+                            $qualificationsCache[$qualId] = $shift->pivot->getRelation('shiftQualification');
+                        }
+                    }
+                }
+            }
+        }
+
+        return $qualificationsCache;
+    }
+
+    public function mapDayServices(?Collection $dayServices): SupportCollection
+    {
+        if (!$dayServices) {
+            return collect();
+        }
+
+        return $dayServices->map(function ($dayService) {
+            return [
+                'id' => $dayService->id,
+                'name' => $dayService->name,
+                'icon' => $dayService->icon,
+                'hex_color' => $dayService->hex_color,
+                'pivot' => [
+                    'date' => $dayService->pivot->date ?? null,
+                ],
+            ];
+        });
+    }
+
+    public function mapIndividualTimes(?Collection $individualTimes): SupportCollection
+    {
+        if (!$individualTimes) {
+            return collect();
+        }
+
+        return $individualTimes->map(function ($individualTime) {
+            return [
+                'id' => $individualTime->id,
+                'title' => $individualTime->title,
+                'start_time' => $individualTime->start_time,
+                'end_time' => $individualTime->end_time,
+                'start_date' => $individualTime->start_date,
+                'end_date' => $individualTime->end_date,
+                'full_day' => $individualTime->full_day,
+                'working_time_minutes' => $individualTime->working_time_minutes,
+                'break_minutes' => $individualTime->break_minutes,
+                'days_of_individual_time' => $individualTime->days_of_individual_time ?? [],
+            ];
+        });
     }
 }

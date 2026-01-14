@@ -13,6 +13,7 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class UpdateArtwork extends Command
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly CraftItemMigrationService $craftItemMigrationService,
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
+        private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
     ) {
         parent::__construct();
     }
@@ -53,6 +55,7 @@ class UpdateArtwork extends Command
         $this->createBasicProductBaskets();
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
+        $this->migrateShiftsWorkers();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -386,8 +389,15 @@ class UpdateArtwork extends Command
     private function addSwissCantons(): void
     {
         $this->section('Seeding swiss cantons');
-        ;
+
         $this->swissCantoneSeeder->seed();
+    }
+
+    private function migrateShiftsWorkers(): void
+    {
+        $this->section('Consolidating shifts workers');
+        $this->consolidateShiftsSeeder->seed();
+
     }
 
     private function createBasicProductBaskets(): void

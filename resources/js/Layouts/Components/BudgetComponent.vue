@@ -5,23 +5,39 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-                <BaseMenu class="ml-4" v-if="this.$can('edit budget templates')">
-                    <MenuItem v-slot="{ active }">
-                        <a @click="openRenameTableModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <PropertyIcon name="TrashIcon"
-                                class="mr-3 h-5 w-5 text-primaryText"
-                                aria-hidden="true"/>
-                            {{ $t('Rename') }}
-                        </a>
-                    </MenuItem>
-                    <MenuItem v-if="table.is_template" v-slot="{ active }">
-                        <a @click="deleteBudgetTemplate()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
-                            {{ $t('Delete') }}
-                        </a>
-                    </MenuItem>
+
+                <BaseMenu class="ml-4" v-if="$can('edit budget templates')" white-menu-background>
+                    <BaseMenuItem
+                        :title="$t('Rename')"
+                        icon="IconPencil"
+                        white-menu-background
+                        @click="openRenameTableModal()"
+                    />
+
+                    <BaseMenuItem
+                        v-if="table.is_template && !isInTrash"
+                        :title="$t('Delete')"
+                        icon="IconTrash"
+                        white-menu-background
+                        @click="deleteBudgetTemplate()"
+                    />
+
+
+                    <BaseMenuItem
+                        v-if="table.is_template && isInTrash"
+                        :title="$t('Restore')"
+                        icon="IconRepeat"
+                        white-menu-background
+                        @click="restoreBudgetTemplate()"
+                    />
+
+                    <BaseMenuItem
+                        v-if="table.is_template && isInTrash"
+                        :title="$t('Delete permanently')"
+                        icon="IconTrash"
+                        white-menu-background
+                        @click="deleteForceBudgetTemplate()"
+                    />
                 </BaseMenu>
             </div>
         </div>
@@ -116,38 +132,113 @@
                                             ({{ columnCalculatedNames[column.id] }})
                                         </span>
                                     </div>
-                                    <span class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex ml-2" v-model="column.color"
-                                                 v-if="this.$can('edit budget templates') || !table.is_template">
-                                            <transition leave-active-class="transition ease-in duration-100"
-                                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                <ListboxOptions :static="column.showColorMenu"
-                                                                class="absolute w-24 z-10 mt-12 rounded-lg bg-artwork-navigation-background shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                                    <ListboxOption as="template" class=""
-                                                                   v-for="color in colors"
-                                                                   :key="color"
-                                                                   :value="color" v-slot="{ active, selected }">
-                                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
-                                                            @click="changeColumnColor(color, column.id)">
-                                                            <div class="flex">
-                                                                <span
-                                                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
-                                                                    <span class="truncate items-center ml-3 flex rounded-full h-10 w-10" :class="color">
-                                                                    </span>
-                                                                </span>
-                                                            </div>
-                                                            <span
-                                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                                <PropertyIcon name="CheckIcon" v-if="selected"
-                                                                           class="h-5 w-5 flex text-success"
-                                                                           aria-hidden="true"/>
+                                    <span
+                                        v-if="column.showColorMenu === true || column.color !== 'whiteColumn'"
+                                        class="-mt-4 relative inline-flex"
+                                    >
+                                        <Listbox
+                                            v-if="$can('edit budget templates') || !table.is_template"
+                                            as="div"
+                                            v-model="column.color"
+                                            class="relative ml-2"
+                                        >
+                                            <Transition
+                                                enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="opacity-0 translate-y-1"
+                                                enter-to-class="opacity-100 translate-y-0"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="opacity-100 translate-y-0"
+                                                leave-to-class="opacity-0 translate-y-1"
+                                            >
+                                                <ListboxOptions
+                                                    :static="column.showColorMenu"
+                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-gray-200
+                                                           bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                                >
+                                                    <!-- Header -->
+                                                    <div class="px-3 py-2 border-b border-gray-100">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-xs font-medium text-gray-500">
+                                                                {{ $t("Choose color") }}
                                                             </span>
-                                                        </li>
-                                                    </ListboxOption>
+
+                                                            <!-- kleiner Close-Icon-Click (kein Button-Element) -->
+                                                            <span
+                                                                class="inline-flex cursor-pointer rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                                                                @click="column.showColorMenu = false"
+                                                                aria-label="Close"
+                                                                role="button"
+                                                                tabindex="0"
+                                                            >
+                                                                <PropertyIcon name="IconX" class="h-4 w-4" />
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- aktuelle Auswahl -->
+                                                        <div class="mt-2 flex items-center gap-2">
+                                                            <span
+                                                                class="h-5 w-5 rounded-full ring-1 ring-gray-200"
+                                                                :class="column.color"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span class="text-xs text-gray-600">
+                                                                {{ $t("Current") }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Swatches -->
+                                                    <div class="p-3">
+                                                        <div class="grid grid-cols-6 gap-2">
+                                                            <ListboxOption
+                                                                v-for="color in colors"
+                                                                :key="color"
+                                                                :value="color"
+                                                                v-slot="{ active, selected }"
+                                                            >
+                                                                <!-- kein Button: nur span -->
+                                                                <button
+                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-gray-200 transition
+                                                                           focus:outline-none"
+                                                                    :class="[
+                                                                        color,
+                                                                        active ? 'scale-[1.03] ring-2 ring-primary/40' : '',
+                                                                        selected ? 'ring-2 ring-emerald-500/50' : ''
+                                                                    ]"
+                                                                    role="button"
+                                                                    tabindex="0"
+                                                                    @click="
+                                                                        changeColumnColor(color, column.id)
+                                                                    "
+                                                                >
+                                                                    <PropertyIcon
+                                                                        v-if="selected"
+                                                                        name="IconCheck"
+                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-emerald-600 bg-white rounded-full p-[2px] shadow"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                </button>
+                                                            </ListboxOption>
+                                                        </div>
+
+                                                        <!-- Reset (ebenfalls kein Button) -->
+                                                        <span
+                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-200
+                                                                   bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                                                            role="button"
+                                                            tabindex="0"
+                                                            @click="
+                                                                changeColumnColor('whiteColumn', column.id)
+                                                            "
+                                                        >
+                                                            {{ $t("Reset to default") }}
+                                                        </span>
+                                                    </div>
                                                 </ListboxOptions>
-                                            </transition>
+                                            </Transition>
                                         </Listbox>
                                     </span>
+
                                 </div>
                                 <div @click="column.clicked = !column.clicked" class="h-5 font-lexend text-xs w-full max-w-max"
                                      v-if="!column.clicked">
@@ -161,94 +252,102 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-white" has-no-offset menu-width="w-fit"
-                                      class="invisible group-hover:visible"
-                                      v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
-                                <MenuItem v-slot="{ active }">
-                                    <a @click="column.showColorMenu = true"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="1.5" stroke="currentColor"
-                                             class="mr-3 h-5 w-5 text-primaryText">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
-                                        </svg>
-                                        {{ $t('Coloring') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }"
-                                          v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                          v-if="!column.is_locked">
-                                    <a @click="lockColumn(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="1.5" stroke="currentColor"
-                                             class="mr-3 h-5 w-5 text-primaryText">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-                                        </svg>
-                                        {{ $t('Lock') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }"
-                                          v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                          v-if="column.is_locked">
-                                    <a @click="unlockColumn(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconLockOpen" stroke-width="1.5" stroke="currentColor"
-                                                      class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Unlock') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
-                                    <a v-show="index > 2" @click="deleteColumn(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Delete') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }" v-if="column.type !== 'subprojects_column_for_group'">
-                                    <a v-show="index > 2" @click="duplicateColumn(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconCopy" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Duplicate') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }"
-                                          v-if="!column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
-                                    <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Relevant for project-group') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }"
-                                          v-if="column.relevant_for_project_groups && column.type !== 'subprojects_column_for_group' && !project.is_group">
-                                    <a v-show="index > 2" @click="setRelevantForProjectGroup(column.id)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconFlagUp class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Not Relevant for project-group') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
-                                    <a @click="updateColumnCommented(column.id, false)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconLockOpen" stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText"
-                                                      aria-hidden="true"/>
-                                        {{ $t('Include column') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
-                                    <a @click="updateColumnCommented(column.id, true)"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconLock" stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText"
-                                                  aria-hidden="true"/>
-                                        {{ $t('Exclude column') }}
-                                    </a>
-                                </MenuItem>
+                            <BaseMenu
+                                dots-color="text-white"
+                                has-no-offset
+                                class="invisible group-hover:visible"
+                                white-menu-background
+                                v-if="hasBudgetAccess() || $can('edit budget templates')"
+                            >
+                                <!-- Coloring -->
+                                <BaseMenuItem
+                                    :title="$t('Coloring')"
+                                    icon="IconPalette"
+                                    white-menu-background
+                                    @click="column.showColorMenu = true"
+                                />
+
+                                <!-- Lock / Unlock -->
+                                <BaseMenuItem
+                                    v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                    v-if="!column.is_locked"
+                                    :title="$t('Lock')"
+                                    icon="IconLock"
+                                    white-menu-background
+                                    @click="lockColumn(column.id)"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                    v-if="column.is_locked"
+                                    :title="$t('Unlock')"
+                                    icon="IconLockOpen"
+                                    white-menu-background
+                                    @click="unlockColumn(column.id)"
+                                />
+
+                                <BaseMenuItem
+                                    v-if="column.type !== 'subprojects_column_for_group'"
+                                    v-show="index > 2"
+                                    :title="$t('Duplicate')"
+                                    icon="IconCopy"
+                                    white-menu-background
+                                    @click="duplicateColumn(column.id)"
+                                />
+
+                                <!-- Relevant for project-group toggle -->
+                                <BaseMenuItem
+                                    v-if="!column.relevant_for_project_groups
+                                            && column.type !== 'subprojects_column_for_group'
+                                            && !project?.is_group"
+                                    v-show="index > 2"
+                                    :title="$t('Relevant for project-group')"
+                                    icon="IconFlagUp"
+                                    white-menu-background
+                                    @click="setRelevantForProjectGroup(column.id)"
+                                />
+
+                                <BaseMenuItem
+                                    v-if="column.relevant_for_project_groups
+                                            && column.type !== 'subprojects_column_for_group'
+                                            && !project?.is_group"
+                                    v-show="index > 2"
+                                    :title="$t('Not Relevant for project-group')"
+                                    icon="IconFlagUp"
+                                    white-menu-background
+                                    @click="setRelevantForProjectGroup(column.id)"
+                                />
+
+                                <!-- Include / Exclude column -->
+                                <BaseMenuItem
+                                    v-show="index > 2"
+                                    v-if="column.commented === 1"
+                                    :title="$t('Include column')"
+                                    icon="IconLockOpen"
+                                    white-menu-background
+                                    @click="updateColumnCommented(column.id, false)"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="index > 2"
+                                    v-else
+                                    :title="$t('Exclude column')"
+                                    icon="IconLock"
+                                    white-menu-background
+                                    @click="updateColumnCommented(column.id, true)"
+                                />
+
+                                <!-- Delete / Duplicate -->
+                                <BaseMenuItem
+                                    v-if="column.type !== 'subprojects_column_for_group'"
+                                    v-show="index > 2"
+                                    :title="$t('Delete')"
+                                    icon="IconTrash"
+                                    white-menu-background
+                                    @click="deleteColumn(column.id)"
+                                />
                             </BaseMenu>
+
                         </div>
                     </th>
 
@@ -273,46 +372,46 @@
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                                 </button>
                             </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" v-if="this.hasBudgetAccess()">
-                                <MenuItem v-slot="{ active }">
-                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconFileImport" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Import template') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a v-show="tableIsEmpty && !table.is_template"
-                                       @click="openUseTemplateFromProjectModal()"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconFileImport" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Import from project') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a v-show="!tableIsEmpty && !table.is_template"
-                                       @click="openAddBudgetTemplateModal()"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconFilePlus" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Save as template') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconRestore"
-                                            class="mr-3 h-5 w-5 text-primaryText"
-                                            aria-hidden="true"/>
-                                        {{ $t('Reset') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a v-show="table.is_template" @click="deleteBudgetTemplate()"
-                                       :class="[active ? '' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText"/>
-                                        {{ $t('Delete') }}
-                                    </a>
-                                </MenuItem>
+                            <BaseMenu dots-color="text-artwork-context-dark" white-menu-background v-if="hasBudgetAccess()">
+                                <BaseMenuItem
+                                    v-show="tableIsEmpty && !table.is_template"
+                                    :title="$t('Import template')"
+                                    icon="IconFileImport"
+                                    white-menu-background
+                                    @click="openUseTemplateModal()"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="tableIsEmpty && !table.is_template"
+                                    :title="$t('Import from project')"
+                                    icon="IconFileImport"
+                                    white-menu-background
+                                    @click="openUseTemplateFromProjectModal()"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="!tableIsEmpty && !table.is_template"
+                                    :title="$t('Save as template')"
+                                    icon="IconFilePlus"
+                                    white-menu-background
+                                    @click="openAddBudgetTemplateModal()"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="!tableIsEmpty && !table.is_template"
+                                    :title="$t('Reset')"
+                                    icon="IconRestore"
+                                    white-menu-background
+                                    @click="resetBudgetTable"
+                                />
+
+                                <BaseMenuItem
+                                    v-show="table.is_template"
+                                    :title="$t('Delete')"
+                                    icon="IconTrash"
+                                    white-menu-background
+                                    @click="deleteBudgetTemplate()"
+                                />
                             </BaseMenu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
@@ -802,11 +901,13 @@ import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        BaseMenuItem,
         PropertyIcon,
         ArtworkBaseModal,
         BaseUIButton,
@@ -897,7 +998,18 @@ export default {
                 lightGreenColumn: 'lightGreenColumn',
                 orangeColumn: 'orangeColumn',
                 redColumn: 'redColumn',
-                pinkColumn: 'pinkColumn'
+                pinkColumn: 'pinkColumn',
+                // +10 neu (heller)
+                softSkyColumn: "softSkyColumn",
+                softAquaColumn: "softAquaColumn",
+                softTealColumn: "softTealColumn",
+                softMintColumn: "softMintColumn",
+                softLimeColumn: "softLimeColumn",
+                softAmberColumn: "softAmberColumn",
+                softPeachColumn: "softPeachColumn",
+                softRoseColumn: "softRoseColumn",
+                softLavenderColumn: "softLavenderColumn",
+                softSlateColumn: "softSlateColumn",
             },
             verifiedTexts: {
                 title: this.$t('Verification'),
@@ -942,7 +1054,8 @@ export default {
         'projectManager',
         'columns',
         'sageNotAssigned',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'isInTrash'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
@@ -1639,7 +1752,7 @@ export default {
                 this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
             } else if (this.subPositionToDelete !== null) {
                 router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id), {
-                    preserveState: true,
+                    preserveState: false,
                     preserveScroll: true
                 })
                 this.successHeading = this.$t('Sub-item deleted');
@@ -1647,7 +1760,7 @@ export default {
             } else {
                 router.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: false
                 });
                 this.successHeading = this.$t('Row deleted');
                 this.successDescription = this.$t('Line successfully deleted');
@@ -1777,7 +1890,19 @@ export default {
             this.showDeleteModal = false;
         },
         deleteBudgetTemplate() {
+            router.delete(this.route('project.budget.table.soft.delete', this.table.id), {
+                preserveState: true,
+                preserveScroll: true
+            })
+        },
+        deleteForceBudgetTemplate() {
             router.delete(this.route('project.budget.table.delete', this.table.id), {
+                preserveState: true,
+                preserveScroll: true
+            })
+        },
+        restoreBudgetTemplate() {
+            router.patch(this.route('project.budget.table.restore', this.table.id), {
                 preserveState: true,
                 preserveScroll: true
             })
@@ -1869,6 +1994,48 @@ export default {
 .pinkColumn {
     background-color: #641A54;
 }
+
+.softSkyColumn {
+    background-color: #93C5FD; /* sky */
+}
+
+.softAquaColumn {
+    background-color: #67E8F9; /* aqua */
+}
+
+.softTealColumn {
+    background-color: #5EEAD4; /* teal */
+}
+
+.softMintColumn {
+    background-color: #86EFAC; /* mint */
+}
+
+.softLimeColumn {
+    background-color: #BEF264; /* lime */
+}
+
+.softAmberColumn {
+    background-color: #FCD34D; /* amber */
+}
+
+.softPeachColumn {
+    background-color: #FDBA74; /* peach */
+}
+
+.softRoseColumn {
+    background-color: #FDA4AF; /* rose */
+}
+
+.softLavenderColumn {
+    background-color: #C4B5FD; /* lavender */
+}
+
+.softSlateColumn {
+    background-color: #CBD5E1; /* slate/gray */
+}
+
+
 
 .stickyHeader {
     position: sticky;

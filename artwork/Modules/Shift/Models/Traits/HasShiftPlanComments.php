@@ -19,13 +19,18 @@ trait HasShiftPlanComments
         $end = Carbon::parse($endDate)->endOfDay();
 
         $comments = $this->shiftPlanComments()
+            ->select(['id', 'comment', 'date'])
             ->whereBetween('date', [$start, $end])
             ->get();
 
         $groupedComments = [];
 
         foreach ($comments as $comment) {
-            $groupedComments[$comment->date][] = $comment;
+            $groupedComments[$comment->date][] = [
+                'id' => $comment->id,
+                'comment' => $comment->comment,
+                'date' => $comment->date,
+            ];
         }
 
         return $groupedComments;

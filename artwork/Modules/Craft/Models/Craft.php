@@ -102,20 +102,24 @@ class Craft extends Model
 
     public function users(): MorphToMany
     {
-        return $this->morphedByMany(User::class, 'craftable')->without([
-            'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
-        ])->with(['shiftQualifications']);
+        return $this->morphedByMany(User::class, 'craftable')
+            ->where('can_work_shifts', true)
+            ->without([
+                'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
+            ])->with(['shiftQualifications']);
     }
 
     public function freelancers(): MorphToMany
     {
         return $this->morphedByMany(Freelancer::class, 'craftable')
+            ->where('can_work_shifts', true)
             ->with(['shiftQualifications']);
     }
 
     public function serviceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'craftable')
+            ->where('can_work_shifts', true)
             ->with(['shiftQualifications']);
     }
 

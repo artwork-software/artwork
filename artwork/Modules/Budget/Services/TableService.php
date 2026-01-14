@@ -123,4 +123,187 @@ readonly class TableService
 
         $this->tableRepository->forceDelete($table);
     }
+
+
+    public function softDelete(
+        Table $table,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $table->mainPositions->each(
+            function (MainPosition $mainPosition) use (
+                $mainPositionService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $mainPositionVerifiedService,
+                $mainPositionDetailsService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $mainPositionService->softDelete(
+                    $mainPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $mainPositionVerifiedService,
+                    $mainPositionDetailsService,
+                    $subPositionService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $table->columns->each(
+            function (Column $column) use (
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService,
+                $subPositionSumDetailService,
+                $budgetSumDetailsService,
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnService->softDelete(
+                    $column,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $mainPositionDetailsService,
+                    $subPositionSumDetailService,
+                    $budgetSumDetailsService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->tableRepository->delete($table);
+    }
+
+    public function restore(
+        Table $table,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $table->mainPositions()->withTrashed()->get()->each(
+            function (MainPosition $mainPosition) use (
+                $mainPositionService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $mainPositionVerifiedService,
+                $mainPositionDetailsService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $mainPositionService->restore(
+                    $mainPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $mainPositionVerifiedService,
+                    $mainPositionDetailsService,
+                    $subPositionService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $table->columns()->withTrashed()->get()->each(
+            function (Column $column) use (
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService,
+                $subPositionSumDetailService,
+                $budgetSumDetailsService,
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnService->restore(
+                    $column,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $mainPositionDetailsService,
+                    $subPositionSumDetailService,
+                    $budgetSumDetailsService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->tableRepository->restore($table);
+    }
 }

@@ -585,20 +585,25 @@ readonly class EventService
             }
         }
 
+        // Shifts use the morph pivot table `shift_workers` for workers (users/freelancers/service providers).
+        // When filtering via `whereHas()`, the callback targets the RELATED model query. Use `whereKey()`
+        // to generate a qualified primary key condition (avoids invalid `*_id` columns and `id` ambiguity).
         $mapping = [
-            'freelancer' => ['id' => 'freelancer_id', 'relation' => 'freelancer'],
-            'service_provider' => ['id' => 'service_provider_id', 'relation' => 'serviceProvider'],
+            'user' => 'users',
+            'freelancer' => 'freelancer',
+            'service_provider' => 'serviceProvider',
         ];
 
-        $modelToFind = $mapping[$modelType]['id'] ?? 'user_id';
-        $relationToFind = $mapping[$modelType]['relation'] ?? 'users';
+        $relationToFind = $mapping[$modelType] ?? 'users';
 
         $events = Event::query()
             ->with(
                 [
                     'room',
-                    'shifts' => function (HasMany $query) use ($relationToFind, $modelToFind, $modelId): void {
-                        $query->whereRelation($relationToFind, $modelToFind, $modelId);
+                    'shifts' => function (HasMany $query) use ($relationToFind, $modelId): void {
+                        $query->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
+                            $builder->whereKey($modelId);
+                        });
                         $query->orderBy('start_date');
                         $query->orderBy('start');
                         $query->orderBy('end_date');
@@ -613,8 +618,8 @@ readonly class EventService
             )
             ->whereHas(
                 'shifts.' . $relationToFind,
-                function (Builder $builder) use ($modelToFind, $modelId): void {
-                    $builder->where($modelToFind, $modelId);
+                function (Builder $builder) use ($modelId): void {
+                    $builder->whereKey($modelId);
                 }
             )
             ->whereBetween('start_time', $period)
@@ -669,8 +674,8 @@ readonly class EventService
 
         $shifts = Shift::query()
             ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
-            ->whereHas($relationToFind, function (Builder $builder) use ($modelToFind, $modelId): void {
-                $builder->where($modelToFind, $modelId);
+            ->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
+                $builder->whereKey($modelId);
             })
             ->whereBetween('start_date', [$startDate, $endDate])
             ->whereBetween('end_date', [$startDate, $endDate])
@@ -873,7 +878,7 @@ readonly class EventService
         UserFilter $filter,
         $startDate,
         $endDate,
-        UserCalendarSettings $userCalendarSettings = null,
+        ?UserCalendarSettings $userCalendarSettings = null,
         $isShiftPlan = false
     ): void {
         $q = Event::query();

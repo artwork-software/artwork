@@ -23,6 +23,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
+use Artwork\Modules\Event\Events\BulkEventChanged;
 use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
@@ -2723,6 +2724,7 @@ class EventController extends Controller
         //$eventBeforeDelete = $event->replicate();
         $this->authorize('delete', $event);
         broadcast(new RemoveEvent($event, $event->room_id));
+        broadcast(new BulkEventChanged($event, 'deleted'));
         $this->eventService->delete(
             $event,
             $shiftsQualificationsService,
@@ -3560,6 +3562,7 @@ class EventController extends Controller
         // Broadcast deletions for each affected event
         foreach ($events as $event) {
             broadcast(new RemoveEvent($event, $event->room_id));
+            broadcast(new BulkEventChanged($event, 'deleted'));
         }
     }
 

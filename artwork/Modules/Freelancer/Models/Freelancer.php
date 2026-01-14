@@ -9,19 +9,12 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
-use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\Shift\Models\FreelancerShiftQualification;
-use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShifts;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 
 /**
@@ -55,7 +48,7 @@ use Laravel\Scout\Searchable;
  * @property-read Collection<int, \Artwork\Modules\Shift\Models\GlobalQualification> $globalQualifications
  *
  */
-class Freelancer extends Model implements Vacationer, Available, DayServiceable
+class Freelancer extends Model implements Vacationer, Available, DayServiceable, Employable
 {
     use HasFactory;
     use GoesOnVacation;
@@ -63,6 +56,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use HasShifts;
     use Searchable;
 
     /**
@@ -99,23 +93,6 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         'can_work_shifts' => 'boolean'
     ];
 
-    public function shifts(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(Shift::class, 'shifts_freelancers')
-            ->using(ShiftFreelancer::class)
-            ->withPivot([
-                'id',
-                'shift_qualification_id',
-                'shift_count',
-                'craft_abbreviation',
-                'short_description',
-                'start_date',
-                'end_date',
-                'start_time',
-                'end_time'
-            ]);
-    }
 
     public function getProfilePhotoUrlAttribute(): string
     {
@@ -143,97 +120,4 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function assignedCrafts(): morphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
-    }
-
-    public function managingCrafts(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getAssignedCraftIdsAttribute(): array
-    {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
-    }
-
-    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\ShiftQualification::class,
-            'qualifiable',
-            'shift_qualifiables',
-            'qualifiable_id',
-            'shift_qualification_id'
-        )->withPivot('craft_id');
-    }
-
-    public function getShiftIdsBetweenStartDateAndEndDate(
-        Carbon $startDate,
-        Carbon $endDate
-    ): Collection {
-        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
-    }
-
-    //@todo refactor this too
-    public function plannedWorkingHours($startDate, $endDate): float|int
-    {
-        $shiftsInDateRange = $this->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->get();
-
-        $plannedWorkingHours = 0;
-
-        $individualTimes = $this->individualTimes()
-            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
-            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
-            $breakMinutes = $shift->break_minutes;
-
-            $shiftStart = Carbon::parse($shiftStart);
-            $shiftEnd = Carbon::parse($shiftEnd);
-
-
-            $shiftDuration = (($shiftEnd->diffInRealMinutes($shiftStart) + $individualTimes) - $breakMinutes) / 60;
-            $plannedWorkingHours += $shiftDuration;
-        }
-
-
-        return $plannedWorkingHours;
-    }
-
-    public function scopeCanWorkShifts(Builder $builder): Builder
-    {
-        return $builder->where('can_work_shifts', true);
-    }
-
-    public function craftsToManage(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    public function getManagingCraftIds(): array
-    {
-        return $this->craftsToManage()->pluck('id')->toArray();
-    }
-
-    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\GlobalQualification::class,
-            'qualifiable',
-            'global_qualifiables',
-            'qualifiable_id',
-            'global_qualification_id'
-        );
-    }
 }

@@ -44,7 +44,9 @@ class InventoryArticleService
     public function getArticleList(
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
-        ?string $search = ''
+        ?string $search = '',
+        ?array $resolvedFilters = null,
+        ?array $resolvedTagIds = null
     ): LengthAwarePaginator {
         $query = $this->buildArticleQuery($category, $subCategory, $search);
 
@@ -63,24 +65,18 @@ class InventoryArticleService
         ]);
 
         // Property-Filter
-        $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
+        $filters = $resolvedFilters ?? [];
         $query = $this->articleRepository->applyFilters($query, $filters);
 
-        // 🔹 Tag-Filter
-        $tagIds = Request::input('tag_ids', []);
-
-        if (!empty($tagIds) && is_array($tagIds)) {
-            $tagIds = array_filter(array_map('intval', $tagIds));
-
-            if (!empty($tagIds)) {
-                $query->whereHas('tags', function ($q) use ($tagIds): void {
-                    $q->whereIn('inventory_tags.id', $tagIds);
-                });
-            }
+        // Tag-Filter
+        $tagIds = $resolvedTagIds ?? [];
+        if (!empty($tagIds)) {
+            $query->whereHas('tags', function ($q) use ($tagIds): void {
+                $q->whereIn('inventory_tags.id', $tagIds);
+            });
         }
 
         $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
-
         return $query->paginate($perPage);
     }
 

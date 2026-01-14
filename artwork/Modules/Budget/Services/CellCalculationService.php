@@ -25,4 +25,10 @@ readonly class CellCalculationService
     {
         $this->cellCalculationsRepository->update($cellCalculation, $attributes);
     }
+
+    // restore function
+    public function restore(CellCalculation $cellCalculation): void
+    {
+        $this->cellCalculationsRepository->restore($cellCalculation);
+    }
 }

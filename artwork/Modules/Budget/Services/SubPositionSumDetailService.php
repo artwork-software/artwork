@@ -28,4 +28,37 @@ readonly class SubPositionSumDetailService
 
         $this->subPositionSumDetailRepository->forceDelete($subPositionSumDetail);
     }
+
+    public function softDelete(
+        SubPositionSumDetail $subPositionSumDetail,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
+    ): void {
+        $subPositionSumDetail->comments->each(function (SumComment $sumComment) use ($sumCommentService): void {
+            $sumCommentService->softDelete($sumComment);
+        });
+
+        if (($sumMoneySource = $subPositionSumDetail->sumMoneySource) instanceof SumMoneySource) {
+            $sumMoneySourceService->softDelete($sumMoneySource);
+        }
+
+        $this->subPositionSumDetailRepository->delete($subPositionSumDetail);
+    }
+
+    public function restore(
+        SubPositionSumDetail $subPositionSumDetail,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
+    ): void {
+        $subPositionSumDetail->comments()->withTrashed()->get()->each(
+            fn (SumComment $sumComment) => $sumCommentService->restore($sumComment)
+        );
+
+        $sumMoneySource = $subPositionSumDetail->sumMoneySource()->withTrashed()->first();
+        if ($sumMoneySource instanceof SumMoneySource) {
+            $sumMoneySourceService->restore($sumMoneySource);
+        }
+
+        $this->subPositionSumDetailRepository->restore($subPositionSumDetail);
+    }
 }

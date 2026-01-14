@@ -200,7 +200,7 @@ class EventRepository extends BaseRepository
         return Event::find($id);
     }
 
-    public function getEventsWithoutRoom(int|Project $project = null, ?array $with = null): Collection
+    public function getEventsWithoutRoom(int|Project|null $project = null, ?array $with = null): Collection
     {
         /** @var Builder $builder */
         $builder = Event::query()->hasNoRoom();

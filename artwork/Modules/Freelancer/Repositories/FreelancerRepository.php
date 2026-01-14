@@ -4,6 +4,7 @@ namespace Artwork\Modules\Freelancer\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,14 +29,9 @@ class FreelancerRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return Freelancer::query()->canWorkShifts()->with(
-            'dayServices',
-            'shifts',
-            'shifts.event',
-            'shifts.event.room',
-            'shifts.shiftsQualifications',
-            'shiftQualifications',
-        )->get();
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlan(Freelancer::class);
     }
 
     public function findWorker(int $workerId): Freelancer|null

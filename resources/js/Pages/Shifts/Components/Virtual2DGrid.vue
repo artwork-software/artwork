@@ -137,7 +137,7 @@ const colsLeft = computed(() => props.stickyColWidth + c0.value * props.colWidth
                         <div
                             v-for="vc in visibleCols"
                             :key="vc.col.fullDay ?? vc.c"
-                            class="flex-none"
+                            class="flex-none p-0.5"
                             :style="{ width: colWidth + 'px', height: rowHeight + 'px' }"
                         >
                             <slot name="cell" :row="vr.row" :day="vc.col" :rowIndex="vr.r" :colIndex="vc.c" />

@@ -747,6 +747,7 @@
     "Delete checklist": "To-do-Liste löschen",
     "Are you sure you want to delete the checklist?": "Bist du sicher, dass du die To-do-Liste {0} löschen willst?",
     "Edit checklist": "To-do-Liste bearbeiten",
+    "Edit cost unit": "Kostenträger bearbeiten",
     "Edit your checklist": "Bearbeite deine To-do-Liste",
     "Name of the checklist": "Name der To-do-Liste",
     "This changes the visibility of the checklist": "Dies ändert die Sichtbarkeit der To-do-Liste",
@@ -3799,5 +3800,7 @@
     "Property filters": "Eigenschaftsfilter",
     "Tag filters": "Tag-Filter",
     "Current": "Aktuell",
-    "Choose color": "Farbe wählen"
+    "Choose color": "Farbe wählen",
+    "Project cost center display component": "Projekt-Kostenträger-Anzeige-Komponente",
+    "ProjectCostCenterDisplayComponent": "Projekt-Kostenträger-Anzeige-Komponente"
 }

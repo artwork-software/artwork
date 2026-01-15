@@ -4207,6 +4207,24 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function updateCostCenter(Request $request, Project $project): RedirectResponse
+    {
+        $oldCostCenter = $project->cost_center_id;
+        $costCenter = null;
+
+        if (!empty($request->cost_center_name)) {
+            $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center_name]);
+        }
+
+        $project->update([
+            'cost_center_id' => $costCenter->id ?? null,
+        ]);
+
+        $this->checkProjectCostCenterChanges($project->id, $oldCostCenter, $costCenter->id ?? null);
+
+        return Redirect::back();
+    }
+
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter): void
     {
         if ($newCostCenter === null && $oldCostCenter !== null) {

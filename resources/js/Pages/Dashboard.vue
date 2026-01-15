@@ -155,7 +155,7 @@
                                         <div class="break-keep">
                                             <button @click="openCalendarWithEventId(event)" class="inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800 break-keep">
                                                 {{ $t('Open in calendar') }}
-                                                <PropertyIcon name="ChevronRightIcon" class="h-3 w-3" />
+                                                <PropertyIcon name="IconChevronRight" class="h-3 w-3" />
                                             </button>
                                         </div>
                                     </div>
@@ -332,7 +332,7 @@
                                     class="mt-2 inline-flex items-center gap-1 text-[11px] text-indigo-700 hover:text-indigo-800"
                                 >
                                     {{ task.projectName }}
-                                    <PropertyIcon name="ChevronRightIcon" class="h-3 w-3" />
+                                    <PropertyIcon name="IconChevronRight" class="h-3 w-3" />
                                     {{ task.checklistName }}
                                 </Link>
                             </div>

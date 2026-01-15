@@ -728,7 +728,6 @@ watch(
 )
 
 onMounted(() => {
-    console.log(props)
     if (props.wantedDate) {
         startDate.value = props.wantedDate
         startTime.value = '09:00'
@@ -763,8 +762,7 @@ function findRoomById(rawId) {
     return list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
 }
 function openModal() {
-    canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole()
-
+    canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole() || can('create events without request')
     if (!props.event) {
         selectedEventType.value = props.eventTypes?.[0] ?? null
         selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null

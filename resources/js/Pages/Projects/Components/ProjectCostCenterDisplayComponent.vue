@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-3">
             <div
                 class="font-lexend font-black tracking-wide"
-                :class="inSidebar ? 'text-white text-lg' : 'text-primaryText text-xl'"
+                :class="inSidebar ? 'text-white text-md' : 'text-primaryText text-md'"
             >
                 {{ $t('Name of the cost unit') }}
             </div>
@@ -36,18 +36,13 @@
                 </div>
 
                 <div>
-                    <label
-                        for="cost_center_input"
-                        class="block text-sm font-medium text-secondary mb-1"
-                    >
-                        {{ $t('Name of the cost unit') }}
-                    </label>
-                    <input
+                    <BaseInput
                         id="cost_center_input"
                         v-model="costCenterName"
                         type="text"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-context"
+                        :label="$t('Name of the cost unit')"
                         :placeholder="$t('Name of the cost unit')"
+                        without-translation
                     />
                 </div>
 
@@ -77,11 +72,12 @@ import {defineComponent} from 'vue';
 import {can, is} from 'laravel-permission-to-vuejs';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import BaseModal from '@/Components/Modals/BaseModal.vue';
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import {router} from '@inertiajs/vue3';
 
 export default defineComponent({
     name: 'ProjectCostCenterDisplayComponent',
-    components: {BaseModal, PropertyIcon},
+    components: {BaseModal, PropertyIcon, BaseInput},
     props: {
         project: {
             type: Object,

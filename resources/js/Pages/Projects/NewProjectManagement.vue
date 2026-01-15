@@ -95,8 +95,8 @@
                         </div>
                     </BaseFilter>
 
-                    <!-- Sort -->
-                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
+                    <!-- Sort --><div class="flex items-center mr-6">
+                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes-button="ui-button">
                         <div class="flex items-center justify-between">
                             <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
                             <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
@@ -116,7 +116,7 @@
                             </div>
                         </MenuItem>
                     </BaseMenu>
-
+                </div>
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
                         <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />

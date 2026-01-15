@@ -20,12 +20,12 @@
                         :aria-pressed="!!showOnlyMyProjects"
                         class="ui-button flex items-center gap-2"
                         :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
-                        <span class="size-2 rounded-full" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
+                        <span class="size-2 rounded-full my-2" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
                         {{ $t('Only mine') }}
                     </button>
 
                     <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-5">
+                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
@@ -96,8 +96,8 @@
                     </BaseFilter>
 
                     <!-- Sort -->
-                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
-                        <div class="flex items-center justify-between py-1 px-1">
+                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes="ui-button">
+                        <div class="flex items-center justify-between">
                             <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
                             <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
                                 {{ $t('Reset') }}
@@ -119,7 +119,7 @@
 
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
-                        <ToolTipComponent :icon="IconFileExport" icon-size="size-5" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
                     </button>
 
                     <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />

@@ -6,7 +6,7 @@
                 :icon="IconGeometry"
                 :title="$t('Projects')"
                 icon-bg-class="bg-blue-600/10 text-blue-700"
-                :description="projects.data.length + ' ' + $t('projects in total')"
+                :description="projects.total + ' ' + $t('projects in total')"
                 v-model="project_search"
                 :search-enabled="true"
                 :search-label="$t('Search for projects or their artists')"
@@ -391,7 +391,7 @@ const gridTemplateColumns = computed(() =>
     props.components
         .map((component) => {
             if (component.type === "ProjectTitleComponent") return "20rem";
-            if (component.type === "ActionsComponent") return "5rem";
+            if (component.type === "ActionsComponent") return "8rem";
             return "14rem";
         })
         .join(" ")

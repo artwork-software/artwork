@@ -603,6 +603,7 @@
     "Delete checklist": "Delete checklist",
     "Are you sure you want to delete the checklist?": "Are you sure you want to delete the checklist {0}?",
     "Edit checklist": "Edit checklist",
+    "Edit cost unit": "Edit cost unit",
     "Edit your checklist": "Edit your checklist",
     "Name of the checklist": "Name of the checklist",
     "This changes the visibility of the checklist": "This changes the visibility of the checklist",
@@ -3790,5 +3791,7 @@
     "Property filters": "Property filters",
     "Tag filters": "Tag filters",
     "Current": "Current",
-    "Choose color": "Choose color"
+    "Choose color": "Choose color",
+    "Project cost center display component": "Project cost center display component",
+    "ProjectCostCenterDisplayComponent": "Project cost center display component"
 }

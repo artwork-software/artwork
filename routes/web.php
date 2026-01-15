@@ -1394,6 +1394,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
         ->name('project.copyright.update');
 
+    Route::post('/project/{project}/cost-center/update', [ProjectController::class, 'updateCostCenter'])
+        ->name('projects.update.cost-center');
+
     // ContractTypes
     Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');
     Route::post('/contract_types', [ContractTypeController::class, 'store'])->name('contract_types.store');

@@ -99,5 +99,19 @@ class AddNewComponents extends Command
         } else {
             $this->info('Component Project Material Issue Component already exists');
         }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::PROJECT_COST_CENTER_DISPLAY)->first()) {
+            Component::create([
+                'name' => 'Project cost center display component',
+                'type' => ProjectTabComponentEnum::PROJECT_COST_CENTER_DISPLAY,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Component Project cost center display component added');
+        } else {
+            $this->info('Component Project cost center display component already exists');
+        }
     }
 }

@@ -1278,9 +1278,10 @@ async function initializeShiftPlan() {
     if (!hasInitialDays || !hasInitialShiftPlan) {
         const { data } = await axios.get(route('shift.plan.all'), {
             params: {
-                start_date: props.dateValue[0],
-                end_date: props.dateValue[1],
+                start_date: props.dateValue?.[0],
+                end_date: props.dateValue?.[1],
                 projectId: props.projectId,
+                isInProjectView: !!props.projectId, // oder ein echtes UI-Flag
             },
         })
 

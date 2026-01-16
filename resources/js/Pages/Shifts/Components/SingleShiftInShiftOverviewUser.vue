@@ -118,7 +118,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['shiftDeleted'])
-
+const page = usePage()
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
 const isDeletingUser = ref(false);
@@ -164,8 +164,15 @@ const blackColorIfColorIsWhite = (color) => {
 }
 
 const isCurrentUserPlannerOfShiftCraft = computed(() => {
-    return props.shift.craft.craft_shift_planer.some(planner => planner.id === usePage().props.auth.user.id);
-});
+    const currentUserId = page.props.auth?.user?.id
+    if (!currentUserId) return false
+
+    const planners = props.shift?.craft?.craft_shift_planer
+
+    if (!Array.isArray(planners)) return false
+
+    return planners.some((planner) => planner?.id === currentUserId)
+})
 
 const typMapping = {
     0: 'user',

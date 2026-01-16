@@ -9,6 +9,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
@@ -192,6 +193,57 @@ class VacationController extends Controller
         $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
         foreach ($shifts as $shift) {
             $shift->freelancer()->detach($freelancer->id);
+        }
+    }
+
+    public function checkVacationServiceProvider(
+        Request $request,
+        ServiceProvider $serviceProvider
+    ): void {
+        $day = Carbon::parse($request->day)->format('Y-m-d');
+        $checked = $request->get('checked');
+        $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
+        $vacations = $this->vacationService->findVacationWithinInterval($serviceProvider, $day);
+        if ($checked['type'] === VacationEnum::AVAILABLE->value) {
+            if ($vacations->count() > 0) {
+                $this->vacationService->deleteVacationInterval($serviceProvider, $day);
+                return;
+            }
+            return;
+        }
+
+        if ($vacations->count() === 0) {
+            $createVacationRequest = new CreateVacationRequest([
+                'date' => $day,
+                'type' => 'vacation',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => $checked['type'],
+            ]);
+            $this->vacationService->create(
+                $serviceProvider,
+                $createVacationRequest,
+                $this->vacationConflictService,
+                $this->vacationSeriesService,
+                $this->changeService,
+                $this->schedulingService,
+                $this->notificationService,
+                $checked['type']
+            );
+        } else {
+            foreach ($vacations as $vacation) {
+                if ((string)$vacation->comment === (string)$vacationTypeBeforeUpdate['type']) {
+                    $vacation->update([
+                        'type' => $checked['type'],
+                        'comment' => $checked['type'],
+                    ]);
+                }
+            }
+        }
+
+        $shifts = $serviceProvider->shifts()->where('event_start_day', $day)->get();
+        foreach ($shifts as $shift) {
+            $shift->serviceProvider()->detach($serviceProvider->id);
         }
     }
 

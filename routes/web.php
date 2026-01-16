@@ -1723,6 +1723,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');
 
+    Route::patch('/service-provider/{service_provider}/check/vacation', [VacationController::class, 'checkVacationServiceProvider'])
+        ->name('service_provider.check.vacation');
+
     Route::post('/individual-times/add', [IndividualTimeController::class, 'store'])
         ->name('add.update.individualTimesAndShiftPlanComment');
 

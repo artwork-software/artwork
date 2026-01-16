@@ -144,8 +144,13 @@ SVG;
             return mb_substr($segment, 0, 1);
         })->join(' '));
 
+        $firstName = $this->first_name ?? '';
+        $lastName = $this->last_name ?? '';
+        $firstLetter = !empty($firstName) ? mb_substr($firstName, 0, 1) : '';
+        $lastLetter = !empty($lastName) ? mb_substr($lastName, 0, 1) : '';
+        $letters = $firstLetter . $lastLetter;
 
-        return  route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
+        return  route('generate-avatar-image', ['letters' => $letters ?: 'U']);
     }
 
     /**

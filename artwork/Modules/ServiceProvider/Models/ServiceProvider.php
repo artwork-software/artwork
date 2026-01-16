@@ -12,10 +12,12 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 
 /**
@@ -46,6 +48,7 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
     use GoesOnVacation;
     use Searchable;
     use HasContacts;
+    use HasProfilePhotoCustom;
 
     protected $fillable = [
         'profile_image',
@@ -97,9 +100,37 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
         if ($isUrl) {
             return $this->profile_image;
         }
-        return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
-            : route('generate-avatar-image', ['letters' => $this->provider_name[0] ?? 'S']);
+
+        if ($this->profile_image) {
+            return asset('storage/' . $this->profile_image);
+        }
+
+        // Verwende makeAvatarSvg aus HasProfilePhotoCustom Trait
+        $letters = $this->initials();
+        $bg = (string) config('artwork.avatar.bg', '#4F46E5');
+        $fg = (string) config('artwork.avatar.fg', '#FFFFFF');
+
+        $svg = $this->makeAvatarSvg($letters, $bg, $fg);
+
+        return $this->svgToDataUri($svg);
+    }
+
+    private function initials(): string
+    {
+        $name = trim((string) ($this->provider_name ?? ''));
+
+        if ($name === '') {
+            $fallback = trim((string) ($this->work_name ?? $this->email ?? 'SP'));
+
+            if (str_contains($fallback, '@')) {
+                $fallback = Str::before($fallback, '@');
+            }
+
+            return Str::upper(Str::substr($fallback, 0, 2));
+        }
+
+        // Für provider_name: nimm die ersten 2 Buchstaben
+        return Str::upper(Str::substr($name, 0, 2));
     }
 
 }

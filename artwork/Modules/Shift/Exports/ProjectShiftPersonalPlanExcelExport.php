@@ -122,13 +122,14 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             $q->orderByCreationDateAscending();
         }
 
-        // absolute Stabilität
         $q->orderBy('name');
 
         return $q->get(['id', 'name']);
     }
 
     /**
+     * ✅ Änderung: Users mit is_freelancer=true werden als extern gezählt.
+     *
      * @param Collection<int, ShiftQualification> $quals
      */
     private function buildRow(Shift $shift, Collection $quals): array
@@ -144,14 +145,29 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
         $breakMinutes = (int)($shift->break_minutes ?? 0);
         $breakLabel   = $breakMinutes > 0 ? ($breakMinutes . ' min') : '0 min';
 
-        $intCounts = $this->countByQualifications($shift->users, $quals);
-        $extWorkers = $shift->freelancer->concat($shift->serviceProvider);
+        // ------------------------------------------------------------
+        // ✅ Intern/Extern-Partition für Users anhand is_freelancer
+        // ------------------------------------------------------------
+        $internalUsers = $shift->users->filter(fn ($u) => !$this->isFreelancerUser($u));
+        $freelancerUsersFromUsers = $shift->users->filter(fn ($u) => $this->isFreelancerUser($u));
+
+        // Intern zählt nur "echte" interne Users
+        $intCounts = $this->countByQualifications($internalUsers, $quals);
+
+        // Extern = Freelancer-Relation + ServiceProvider-Relation + Users(is_freelancer=true)
+        $extWorkers = $shift->freelancer
+            ->concat($shift->serviceProvider)
+            ->concat($freelancerUsersFromUsers);
+
         $extCounts = $this->countByQualifications($extWorkers, $quals);
 
         $intSum = array_sum($intCounts);
         $extSum = array_sum($extCounts);
         $totalHeadcount = $intSum + $extSum;
 
+        // Minuten-Logik:
+        // intern: Pause abziehen
+        // extern: Pause NICHT abziehen
         $intWorkMinutes = max(0, $durationMinutes - $breakMinutes);
         $extWorkMinutes = $durationMinutes;
 
@@ -206,6 +222,32 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
     }
 
     /**
+     * ✅ robust: falls Feld als bool, int, string oder nullable kommt.
+     */
+    private function isFreelancerUser(mixed $user): bool
+    {
+        // bevorzugt Attribute/Property "is_freelancer"
+        $val = null;
+
+        if (is_object($user)) {
+            // Eloquent
+            if (method_exists($user, 'getAttribute')) {
+                $val = $user->getAttribute('is_freelancer');
+            }
+            if ($val === null && property_exists($user, 'is_freelancer')) {
+                $val = $user->is_freelancer;
+            }
+        }
+
+        // string/bool/int normalisieren
+        if (is_bool($val)) return $val;
+        if (is_int($val)) return $val === 1;
+        if (is_string($val)) return in_array(strtolower($val), ['1', 'true', 'yes', 'y', 'on'], true);
+
+        return false;
+    }
+
+    /**
      * @param \Illuminate\Support\Collection<int,mixed> $workers
      * @param Collection<int, ShiftQualification> $quals
      * @return array<int,int> id => count
@@ -232,9 +274,6 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
         return $out;
     }
 
-    /**
-     * @return array{0:int} minutes
-     */
     private function duration(mixed $start, mixed $end): array
     {
         $s = $this->parseTime($start);
@@ -244,9 +283,7 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             $e = $e->copy()->addDay();
         }
 
-        $minutes = $s->diffInMinutes($e);
-
-        return [$minutes];
+        return [$s->diffInMinutes($e)];
     }
 
     private function parseTime(mixed $value): Carbon
@@ -266,8 +303,7 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
     private function formatShiftDate(mixed $value, string $lang): string
     {
         $d = $value instanceof Carbon ? $value->copy() : Carbon::parse($value);
-        $label = $d->locale($lang)->translatedFormat('D, d.m.y');
-        return str_replace('.', '', $label);
+        return $d->locale($lang)->translatedFormat('D, d.m.Y');
     }
 
     private function computePeriod(Collection $shifts): array
@@ -435,45 +471,18 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                     ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
                 $this->setNumberFormatRange(
-                    $sheet,
-                    $shiftsStart,
-                    $shiftsInternEnd,
-                    $dataStart,
-                    $totalRow,
-                    NumberFormat::FORMAT_NUMBER
+                    $sheet, $shiftsStart, $shiftsInternEnd, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet,
-                    $shiftsExternStart,
-                    $shiftsExternEnd,
-                    $dataStart,
-                    $totalRow,
-                    NumberFormat::FORMAT_NUMBER
+                    $sheet, $shiftsExternStart, $shiftsExternEnd, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet,
-                    $shiftsInternSum,
-                    $shiftsInternSum,
-                    $dataStart,
-                    $totalRow,
-                    NumberFormat::FORMAT_NUMBER
+                    $sheet, $shiftsInternSum, $shiftsInternSum, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange(
-                    $sheet,
-                    $shiftsExternSum,
-                    $shiftsExternSum,
-                    $dataStart,
-                    $totalRow,
-                    NumberFormat::FORMAT_NUMBER
+                    $sheet, $shiftsExternSum, $shiftsExternSum, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
                 );
-                $this->setNumberFormatRange(
-                    $sheet,
-                    $headcountCol,
-                    $headcountCol,
-                    $dataStart,
-                    $totalRow,
-                    NumberFormat::FORMAT_NUMBER
-                );
+                $this->setNumberFormatRange($sheet, $headcountCol, $headcountCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER);
             },
         ];
     }

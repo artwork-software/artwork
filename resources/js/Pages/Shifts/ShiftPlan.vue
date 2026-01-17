@@ -1278,9 +1278,10 @@ async function initializeShiftPlan() {
     if (!hasInitialDays || !hasInitialShiftPlan) {
         const { data } = await axios.get(route('shift.plan.all'), {
             params: {
-                start_date: props.dateValue[0],
-                end_date: props.dateValue[1],
+                start_date: props.dateValue?.[0],
+                end_date: props.dateValue?.[1],
                 projectId: props.projectId,
+                isInProjectView: !!props.projectId, // oder ein echtes UI-Flag
             },
         })
 
@@ -2159,11 +2160,11 @@ function highlightUsersOfShift(shift: any) {
 
     highlightSelectionKind.value = 'shift'
 
-    // ✅ User-Highlight reset
+
     idToHighlight.value = null
     typeToHighlight.value = null
 
-    // ✅ Shift-Highlight setzen
+
     shiftUsersToHighlight.value = extractShiftUserIds(shift)
     highlightedShiftId.value = shift?.id ?? null
 }
@@ -2195,7 +2196,7 @@ function highlightShiftsOfUser(id: number | string, type: number) {
     idToHighlight.value = id
     typeToHighlight.value = type
 
-    // ✅ Shift-Highlight komplett entfernen
+
     shiftUsersToHighlight.value = null
     highlightedShiftId.value = null
 }

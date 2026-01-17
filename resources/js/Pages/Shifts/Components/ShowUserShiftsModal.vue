@@ -879,7 +879,7 @@ function sendCheckVacation() {
                 },
             },
         );
-    } else if (props.user.type === 1) {
+    } else if (props.user.type === 2) {
         router.patch(
             route('service_provider.check.vacation', {
                 service_provider: props.user.element.id,
@@ -898,7 +898,23 @@ function sendCheckVacation() {
             },
         );
     } else {
-        closeModal(false);
+        router.patch(
+            route('freelancer.check.vacation', {
+                freelancer: props.user.element.id,
+            }),
+            {
+                checked: checked.value,
+                day: props.day.fullDay,
+                vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    closeModal(true);
+                },
+            },
+        );
     }
 }
 

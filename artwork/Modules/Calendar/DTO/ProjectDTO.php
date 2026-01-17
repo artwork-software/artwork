@@ -47,4 +47,20 @@ class ProjectDTO extends Data
         );
     }
 
+    public static function fromModelForCalendar(Project $project): self
+    {
+        return new self(
+            id: $project->id,
+            name: $project->name,
+            status: $project->status,      // ist eager loaded
+            artistNames: $project->artists,
+            leaders: collect(),            // keine managerUsers/groups/users im Kalender
+            color: $project->color,
+            icon: $project->icon,
+            isGroup: $project->is_group,
+            isInGroup: false,
+            group: null,
+            userIds: null,
+        );
+    }
 }

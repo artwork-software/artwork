@@ -1,13 +1,13 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
     <div :class="['w-full min-w-64 rounded-lg select-none border']"
-         :style="{ backgroundColor: `${shift.craft.color}50`, borderColor: borderColor }">
+         :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}50`, borderColor: borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full gap-y-0.5">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
-                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${shift.craft.color}90` }">
+                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         {{ shift.start }} - {{ shift.end }}
                     </div>
                     <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
@@ -19,7 +19,7 @@
                         :aria-label="craftTitleFull"
                         @click.stop="toggleShiftDetails"
                     >
-                        {{ shift.craft.name }}
+                        {{ fullCraft.name }}
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
@@ -87,10 +87,11 @@
 
         <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${shift.craft.color}20` }">
+                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
                         :person="person"
                         :shift="shift"
+                        :craft-color="fullCraft.color"
                         :shift-qualifications="shiftQualifications"
                         :has-collision="hasCollision"
                         @userRemoved="onChildUserRemoved"
@@ -492,7 +493,7 @@ const getAssignablePeople = (shiftQualificationId) => {
                 .filter(c => c.universally_applicable)
                 .map(c => c.id)
         ];
-        
+
         const isCraftRelevant = craftIds.includes(craft.id);
         if (!isCraftRelevant) {
             return;
@@ -513,12 +514,12 @@ const getAssignablePeople = (shiftQualificationId) => {
 
                 const key = `${type}-${person.id}`;
                 const alreadyAdded = peopleWithCraft.some(p => p.key === key);
-                
+
                 // WICHTIG: Prüfe ob die Person die Qualifikation für das CRAFT DER SCHICHT hat
                 // Die Qualifikation muss craft-spezifisch sein und zum Craft der Schicht passen
                 // pivot.craft_id muss mit shiftCraftId übereinstimmen (nicht mit craft.id!)
-                const hasQualificationForShiftCraft = person.shift_qualifications?.some(q => 
-                    q.id === shiftQualificationId && 
+                const hasQualificationForShiftCraft = person.shift_qualifications?.some(q =>
+                    q.id === shiftQualificationId &&
                     q.pivot?.craft_id === shiftCraftId
                 );
 
@@ -534,8 +535,8 @@ const getAssignablePeople = (shiftQualificationId) => {
                         type,
                         key,
                         alreadyAssigned, // Flag, ob die Person bereits in dieser Schicht ist
-                        qualification: person.shift_qualifications.find(q => 
-                            q.id === shiftQualificationId && 
+                        qualification: person.shift_qualifications.find(q =>
+                            q.id === shiftQualificationId &&
                             q.pivot?.craft_id === shiftCraftId
                         )?.name || 'Unbekannt',
                         originCraft: {
@@ -693,13 +694,31 @@ onMounted(() => {
 });
 
 
+// Computed property to get full craft data with color from props.crafts
+const fullCraft = computed(() => {
+    const shiftCraftId = props.shift?.craft?.id
+    if (!shiftCraftId || !props.crafts) {
+        return props.shift?.craft || {}
+    }
+
+    // Look up craft in props.crafts (can be Array or Object)
+    const craftsArray = Array.isArray(props.crafts)
+        ? props.crafts
+        : Object.values(props.crafts || {})
+
+    const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
+
+    // Merge shift.craft with found craft data, prioritizing found craft
+    return foundCraft ? { ...props.shift.craft, ...foundCraft } : props.shift?.craft || {}
+})
+
 const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')
 // Konsistente Hierarchie wie bei Terminen
 const titleTextClass = computed(() => props.hasCollision ? 'text-sm font-semibold' : 'text-base font-semibold')
 const subtitleTextClass = computed(() => props.hasCollision ? 'text-xs' : 'text-sm')
 const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-gray-300 bg-white' : 'text-xs border-gray-300 bg-white')
-const craftTitleFull = computed(() => `[${props.shift?.craft?.abbreviation}] ${props.shift?.craft?.name}`)
-const borderColor = computed(() => props.hasCollision ? `${props.shift?.craft?.color ?? '#999999'}A0` : 'transparent')
+const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
+const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
 
 // Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
 watch(() => props.shift, () => {

@@ -130,7 +130,7 @@ export default{
         },
 
         async fetchBudgetData(force = false) {
-            if (this.isLoadingBudget) return;          // ✅ Guard
+            if (this.isLoadingBudget) return;
             if (!force && this.localBudgetData) return;
 
             const projectId = this.project?.id;

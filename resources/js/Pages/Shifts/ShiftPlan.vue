@@ -2160,11 +2160,11 @@ function highlightUsersOfShift(shift: any) {
 
     highlightSelectionKind.value = 'shift'
 
-    // ✅ User-Highlight reset
+
     idToHighlight.value = null
     typeToHighlight.value = null
 
-    // ✅ Shift-Highlight setzen
+
     shiftUsersToHighlight.value = extractShiftUserIds(shift)
     highlightedShiftId.value = shift?.id ?? null
 }
@@ -2196,7 +2196,7 @@ function highlightShiftsOfUser(id: number | string, type: number) {
     idToHighlight.value = id
     typeToHighlight.value = type
 
-    // ✅ Shift-Highlight komplett entfernen
+
     shiftUsersToHighlight.value = null
     highlightedShiftId.value = null
 }

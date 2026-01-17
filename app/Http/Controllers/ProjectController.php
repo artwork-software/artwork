@@ -2498,7 +2498,7 @@ class ProjectController extends Controller
         /** @var User $user */
         $user = $this->authManager->user();
 
-        // ✅ First-Tab IDs dürfen NICHT auf unsichtbare Tabs zeigen
+
         $firstVisibleTabId = ProjectTab::query()
             ->visibleForUser($authUser)
             ->orderBy('order')

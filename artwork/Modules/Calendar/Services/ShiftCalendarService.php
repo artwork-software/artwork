@@ -47,7 +47,7 @@ class ShiftCalendarService
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
             'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'eventProperties:id,name,icon', // ✅ minimal!
+            'eventProperties:id,name,icon',
         ];
 
         if ($addTimeline) {

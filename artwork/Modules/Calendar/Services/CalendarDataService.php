@@ -167,7 +167,7 @@ readonly class CalendarDataService
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $considerShiftsForOccupancy = false,
-        ?Project $project = null // ✅ NEU
+        ?Project $project = null
     ): SupportCollection {
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
             // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
@@ -183,7 +183,6 @@ readonly class CalendarDataService
                 ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'));
 
-            // ✅ event_property_ids (Pivot: event_event_property)
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;
 
@@ -208,8 +207,7 @@ readonly class CalendarDataService
 
         $rooms = Room::query()
             ->select(['id', 'name', 'temporary', 'start_date', 'end_date'])
-            ->with(['admins:id,first_name,last_name,profile_photo_path']) // ✅ minimal
-            // ->withCount('events') // ❗️wenn im Response nicht gebraucht: raus = schneller
+            ->with(['admins:id,first_name,last_name,profile_photo_path'])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($filter?->room_ids)
             ->unlessRoomAttributeIds($filter?->room_attribute_ids)

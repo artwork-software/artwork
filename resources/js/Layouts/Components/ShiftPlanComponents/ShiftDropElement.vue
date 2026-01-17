@@ -339,7 +339,7 @@ function isIdHighlighted(highlightedId?: number | null, highlightedType?: 0 | 1 
 function handleClickEvent() {
     if (props.multiEditMode) return
 
-    // ✅ Highlight-Mode: Klick auf Schicht → User unten hervorheben (statt Modal)
+
     if (props.highlightMode) {
         emit('highlightShiftUsers', props.shift)
         return

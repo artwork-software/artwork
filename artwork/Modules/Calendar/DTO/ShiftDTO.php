@@ -7,6 +7,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftGroup;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 
@@ -42,43 +43,35 @@ class ShiftDTO extends Data
     }
 
 
-    public static function fromModel(Shift $shift): ShiftDTO
+    public static function fromModel(Shift $shift, ?Project $project = null): ShiftDTO
     {
-        // Ensure global qualifications of assigned persons are loaded so the frontend
-        // can compute personGlobalQualificationsInDemand correctly.
-        // We keep the payload minimal by selecting only the id on the related models.
-        $shift->loadMissing([
-            'users.globalQualifications:id',
-            'freelancer.globalQualifications:id',
-            'serviceProvider.globalQualifications:id',
-        ]);
-
         return new self(
             id: $shift->id,
-            startDate: $shift->start_date,
-            endDate: $shift->end_date,
-            start: $shift->start,
-            end: $shift->end,
-            break_minutes: $shift->break_minutes,
-            eventId: $shift?->event_id,
+            startDate: (string) $shift->start_date,
+            endDate: (string) $shift->end_date,
+            start: (string) $shift->start,
+            end: (string) $shift->end,
+            break_minutes: (int) $shift->break_minutes,
+            eventId: $shift->event_id,
             description: $shift->description,
-            craft: $shift->craft()->with('qualifications')->first(),
+            craft: $shift->craft,
             shifts_qualifications: $shift->shiftsQualifications,
             users: $shift->users,
             freelancer: $shift->freelancer,
             serviceProviders: $shift->serviceProvider,
             room: $shift->room,
             daysOfShift: $shift->getAttribute('days_of_shift'),
-            roomId: $shift?->room_id,
+            roomId: $shift->room_id,
             formatted_dates: $shift->getAttribute('formatted_dates'),
-            startOfShift: $shift->getAttribute('start_date')->format('d.m.Y'),
+            startOfShift: $shift->start_date instanceof \Carbon\CarbonInterface
+                ? $shift->start_date->format('d.m.Y')
+                : Carbon::parse($shift->start_date)->format('d.m.Y'),
             isCommitted: $shift->is_committed,
             inWorkflow: $shift->in_workflow,
-            project: $shift?->project,
+            project: $project,
             globalQualifications: $shift->globalQualifications,
             shiftGroupId: $shift->shift_group_id,
             shiftGroup: $shift->shiftGroup,
-            //event: EventDTO::fromModel($shift->event)
         );
     }
 }

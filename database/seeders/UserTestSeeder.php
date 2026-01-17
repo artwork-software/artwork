@@ -3,7 +3,14 @@
 namespace Database\Seeders;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Inventory\Services\ProductBasketService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Shift\Repositories\UserShiftQualificationRepository;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserProjectManagementSettingService;
+use Artwork\Modules\User\Services\UserUserManagementSettingService;
+use Carbon\Carbon;
 use Faker\Factory as Faker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -11,6 +18,11 @@ use Illuminate\Support\Facades\Hash;
 
 class UserTestSeeder extends Seeder
 {
+
+    public function __construct(
+        protected ProductBasketService $productBasketService,
+    ) {
+    }
     /**
      * Run the database seeds.
      */
@@ -25,7 +37,7 @@ class UserTestSeeder extends Seeder
             return;
         }
 
-        $total = 300;
+        $total = 200;
 
         for ($i = 0; $i < $total; $i++) {
             $first = $faker->firstName();
@@ -46,6 +58,35 @@ class UserTestSeeder extends Seeder
                 'can_work_shifts'  => $faker->boolean(80),
                 'work_time_balance' => $faker->numberBetween(-4800, 4800), // Minuten
             ]);
+
+            $user->userFilters()->create([
+                'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
+                'start_date' => Carbon::now()->startOfDay(),
+                'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+            ]);
+
+            $user->userFilters()->create([
+                'filter_type' => UserFilterTypes::PLANNING_FILTER->value,
+                'start_date' => Carbon::now()->startOfDay(),
+                'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+            ]);
+
+            $user->userFilters()->create([
+                'filter_type' => UserFilterTypes::SHIFT_FILTER->value,
+                'start_date' => Carbon::now()->startOfDay(),
+                'end_date' => Carbon::now()->addWeeks(2)->endOfDay()
+            ]);
+            $user->calendar_settings()->create();
+            foreach (NotificationEnum::cases() as $notificationType) {
+                $user->notificationSettings()->create([
+                    'group_type' => $notificationType->groupType(),
+                    'type' => $notificationType->value,
+                    'title' => $notificationType->title(),
+                    'description' => $notificationType->description()
+                ]);
+            }
+
+            $this->productBasketService->createBasisBasket($user);
 
             // zufällige 1-5 Gewerke anhängen (falls vorhanden)
             $attachCount = $faker->numberBetween(1, min(5, count($craftIds)));

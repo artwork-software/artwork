@@ -32,120 +32,144 @@ class ShiftCalendarService
         bool $addTimeline = false,
         ?Project $project = null
     ): Collection {
-        $roomIds = $rooms->pluck('id')->all();
+        $roomIds = $rooms->modelKeys();
 
-        // Gemeinsame Overlap-Logik für Zeiträume
-        $applyIntervalOverlap = function ($query, string $startColumn, string $endColumn) use ($startDate, $endDate): void {
-            $query->whereBetween($startColumn, [$startDate, $endDate])
-                ->orWhereBetween($endColumn, [$startDate, $endDate])
-                ->orWhere(function ($q) use ($startColumn, $endColumn, $startDate, $endDate): void {
-                    $q->where($startColumn, '<', $startDate)
-                        ->where($endColumn, '>', $endDate);
-                });
+        $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
+            $q->where($startCol, '<=', $endDate)
+                ->where($endCol, '>=', $startDate);
         };
 
+        // -------------------------
+        // 1) Events (minimal + eager)
+        // -------------------------
         $eventWith = [
-            'project:id,name,state,artists,is_group,icon,color',
-            'project.status:id,name,color',
-            'project.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'project.groups',
             'eventStatus:id,color',
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
             'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
-            'shifts',
-            'eventProperties',
-            'verifications' => function ($query): void {
-                $query->where('status', 'pending');
-            },
+            'eventProperties:id,name,icon',
         ];
 
         if ($addTimeline) {
-            $eventWith['timelines'] = function ($query): void {
-                $query->orderBy('start');
-            };
+            $eventWith['timelines'] = fn ($q) => $q->orderBy('start');
+            // Optional: ->select(['id','event_id','start','end', ...]) wenn du Spalten kennst
         }
 
-        // Events laden
-        $events = Event::select([
-            'id',
-            'start_time',
-            'end_time',
-            'eventName',
-            'description',
-            'project_id',
-            'event_type_id',
-            'event_status_id',
-            'allDay',
-            'room_id',
-            'user_id',
-            'occupancy_option',
-            'declined_room_id',
-        ])
+        $events = Event::query()
+            ->select([
+                'id',
+                'start_time',
+                'end_time',
+                'eventName',
+                'description',
+                'project_id',
+                'event_type_id',
+                'event_status_id',
+                'allDay',
+                'room_id',
+                'user_id',
+                'occupancy_option',
+                'declined_room_id',
+            ])
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
             ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
-            ->where(function ($query) use ($applyIntervalOverlap): void {
-                $applyIntervalOverlap($query, 'start_time', 'end_time');
+            ->when(!empty($filter->event_type_ids), fn ($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
+            ->when(!empty($filter->event_property_ids), function ($q) use ($filter) {
+                $ids = $filter->event_property_ids;
+
+                // Variante A (sauber & nutzt die Relation)
+                $q->whereHas('eventProperties', fn ($p) => $p->whereIn('event_properties.id', $ids));
+                // Achtung: Table-Name event_properties ist Standard. Falls bei euch anders: anpassen.
             })
-            ->when(!empty($filter->event_type_ids), fn ($query) => $query->whereIn('event_type_id', $filter->event_type_ids))
+            ->where(fn ($q) => $overlap($q, 'start_time', 'end_time'))
             ->orderBy('start_time')
             ->get();
 
-        // Standalone Shifts laden
-        $shifts = Shift::whereNull('event_id')
+        // -------------------------
+        // 2) Standalone Shifts (eager alles was DTO braucht)
+        // -------------------------
+        $shifts = Shift::query()
+            ->select([
+                'id',
+                'start_date',
+                'end_date',
+                'start',
+                'end',
+                'break_minutes',
+                'event_id',
+                'description',
+                'craft_id',
+                'room_id',
+                'project_id',
+                'is_committed',
+                'in_workflow',
+                'shift_group_id',
+            ])
+            ->whereNull('event_id')
             ->whereIn('room_id', $roomIds)
             ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
-            // optional: Filter auf craft_ids analog zu getFilteredRooms
             ->when(!empty($filter->craft_ids), fn ($q) => $q->whereIn('craft_id', $filter->craft_ids))
-            ->where(function ($query) use ($applyIntervalOverlap): void {
-                $applyIntervalOverlap($query, 'shifts.start_date', 'shifts.end_date');
-            })
-            // order by start_date asc
+            ->where(fn ($q) => $overlap($q, 'start_date', 'end_date'))
+            ->with([
+                'room:id,name',
+                'craft:id,name',                 // + benötigte Felder
+                'craft.qualifications:id,name',  // wenn Frontend es braucht
+                'shiftsQualifications',          // ggf. später: select-minimal
+                'users:id,first_name,last_name,pronouns,position,profile_photo_path',
+                'users.globalQualifications:id',
+                'freelancer:id,first_name,last_name,position,profile_image',
+                'freelancer.globalQualifications:id',
+                'serviceProvider:id,provider_name,profile_image',
+                'serviceProvider.globalQualifications:id',
+                'shiftGroup:id,name',
+                'craft.craftShiftPlaner'
+            ])
             ->orderBy('start_date', 'ASC')
             ->get();
 
-        // Hilfsdaten für DTOs
-        $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $userIds      = $events->pluck('user_id')->unique();
+        // -------------------------
+        // 3) Projekte NUR für das Ergebnis laden (statt alle 809)
+        // -------------------------
+        $projectIds = $events->pluck('project_id')
+            ->merge($shifts->pluck('project_id'))
+            ->filter()
+            ->unique()
+            ->values();
 
-        $users = User::whereIn('id', $userIds)
-            ->select([
-                'id',
-                'first_name',
-                'last_name',
-                'pronouns',
-                'position',
-                'email_private',
-                'email',
-                'phone_number',
-                'phone_private',
-                'description',
-                'profile_photo_path',
+        $projects = Project::query()
+            ->select(['id','name','state','artists','is_group','icon','color'])
+            ->with([
+                'status:id,name,color',
+                'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+                'users:id',
+                'groups:id,name,state,artists,is_group,icon,color',
+                'groups.status:id,name,color',
+                'groups.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+                'groups.users:id',
             ])
+            ->whereIn('id', $projectIds)
             ->get()
             ->keyBy('id');
 
-        $eventTypes = EventType::whereIn('id', $eventTypeIds)
-            ->select(['id', 'name', 'abbreviation', 'hex_code'])
-            ->get()
-            ->keyBy('id');
-
-        // DTOs bauen & pro Raum gruppieren
+        // -------------------------
+        // 4) DTOs (ohne weitere Queries)
+        // -------------------------
         $eventDTOs = $events
             ->map(fn ($event) => EventShiftPlanDTO::fromModel(
                 $event,
-                $eventTypes,
-                $users,
+                $projects->get($event->project_id),
                 $addTimeline
             ))
             ->groupBy('roomId');
 
         $shiftDTOs = $shifts
-            ->map(fn ($shift) => ShiftDTO::fromModel($shift))
+            ->map(fn ($shift) => ShiftDTO::fromModel(
+                $shift,
+                $projects->get($shift->project_id)
+            ))
             ->groupBy('roomId');
 
-        // Events & Shifts an Räume hängen
         foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();
             $room->shifts = $shiftDTOs[$room->id] ?? collect();
@@ -153,6 +177,7 @@ class ShiftCalendarService
 
         return $rooms;
     }
+
 
 
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate): CalendarFrontendDataDTO

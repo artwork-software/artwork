@@ -65,6 +65,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Scout\Searchable;
@@ -304,10 +305,10 @@ class User extends Model implements
         /**
          * Beziehung zum InventoryUserFilter
          */
-        public function inventoryUserFilter()
-        {
-            return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
-        }
+    public function inventoryUserFilter()
+    {
+        return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+    }
 
     public function getTypeAttribute(): string
     {
@@ -328,15 +329,6 @@ class User extends Model implements
     {
         return $this->hasOne(UserCalendarAbo::class);
     }
-
-    public function getProfilePhotoUrlAttribute(): string
-    {
-        return $this->profile_photo_path
-            ? asset('storage/' . $this->profile_photo_path)
-            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
-    }
-
-
 
     public function getFullNameAttribute(): string
     {
@@ -748,5 +740,4 @@ class User extends Model implements
             'inventory_tag_id'
         );
     }
-
 }

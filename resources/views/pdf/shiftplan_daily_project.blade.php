@@ -4,7 +4,7 @@
     <meta charset="utf-8">
 
     <style>
-        /* ✅ Drucker-sicherer Rand (mm statt px) */
+
         @page { margin: 10mm 10mm 5mm 10mm; }  /* oben/rechts/unten/links */
 
         :root{
@@ -18,8 +18,8 @@
             --radius: 10px;
         }
 
-        /* ✅ 300dpi: pt statt px, klein & lesbar */
-        /* ✅ Browser/Dompdf Default-Body-Margins ausschalten (sonst “doppelt”/komisch) */
+
+
         body{
             margin: 0;
             padding: 0;
@@ -520,7 +520,7 @@
                 {{-- GRID --}}
                 <table class="grid">
 
-                    {{-- ✅ Dompdf-wrap verhindern: harte col widths für Zeit + Timeline --}}
+                    {{-- Dompdf-wrap verhindern: harte col widths für Zeit + Timeline --}}
                     <colgroup>
                         <col style="width: {{ $timeW }}px;">
                         @for($tl = 0; $tl < $tlCols; $tl++)

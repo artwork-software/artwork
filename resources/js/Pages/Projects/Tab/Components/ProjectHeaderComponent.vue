@@ -220,7 +220,7 @@
                                                     <div class="truncate font-semibold text-sm text-zinc-900">
                                                         {{ p.name }}
                                                     </div>
-                                                    <!-- ✅ Type Badge -->
+                                                    <!-- Type Badge -->
                                                     <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-semibold text-zinc-600">
                                                         <img
                                                             v-if="p.is_group"

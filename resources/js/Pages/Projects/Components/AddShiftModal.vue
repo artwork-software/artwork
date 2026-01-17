@@ -742,7 +742,7 @@ function saveShift() {
     if (shiftForm.id) {
         shiftForm.patch(route('event.shift.update', props.shift.id), {
             preserveScroll: true,
-            preserveState: false,
+            preserveState: true,
             onSuccess: () => {
                 shiftForm.reset()
                 // Im Shift-Plan (Daily View) per WebSockets aktualisieren – kein Reload nötig

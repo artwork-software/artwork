@@ -205,7 +205,7 @@ class DailyShiftPlanPdfBuilder
         $craftGroups = $this->buildCraftGroupsWithLanes($shiftBlocksByCraft, $craftMeta);
         $laneColumns = $this->buildLaneColumns($craftGroups);
 
-        // ✅ NEU: Layout (Zeit + Timeline klein halten, damit Dompdf nicht wrappt)
+
         $layout = $this->computeLayoutForDay(
             $timelineLanes,
             count($laneColumns)
@@ -225,7 +225,7 @@ class DailyShiftPlanPdfBuilder
 
             'rows'             => $rows,
 
-            'layout'           => $layout, // ✅
+            'layout'           => $layout,
             'timelineLanes'    => $timelineLanes,
             'timelineLaneMaps' => $timelineLaneMaps,
             'craftGroups'      => $craftGroups,
@@ -236,7 +236,7 @@ class DailyShiftPlanPdfBuilder
     }
 
     /**
-     * ✅ Zeit + Timeline sollen minimal sein.
+     * Zeit + Timeline sollen minimal sein.
      * Dompdf-wrap killen wir, indem wir Timeline-Breite hart begrenzen.
      */
     private function computeLayoutForDay(int $timelineLanes, int $craftCols): array

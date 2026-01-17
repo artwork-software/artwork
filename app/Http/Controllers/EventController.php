@@ -519,56 +519,49 @@ class EventController extends Controller
 
     public function shiftPlanEventAPI(Request $request): JsonResponse
     {
-        $project = $request->get('projectId')
-            ? $this->projectService->findById($request->get('projectId'))
+        // GET via axios.get(..., { params: ... }) => Query-String
+        $projectId = $request->query('projectId'); // statt get()
+        $project = !empty($projectId)
+            ? $this->projectService->findById($projectId)
             : null;
+
+        // boolean sauber auslesen (akzeptiert "1", "true", 1, true, "on", ...)
+        // Optional: Wenn projectId gesetzt ist, ist es praktisch immer "Project View"
+        $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
 
         /** @var User $user */
         $user = $this->authManager->user();
+
         $userCalendarSettings = $user->getAttribute('calendar_settings');
         if ($userCalendarSettings === null) {
-            // Ensure settings exist (tests/users might not have them yet)
             $userCalendarSettings = $user->calendar_settings()->create();
         }
 
-        if ($request->get('isInProjectView')) {
-            // Ensure project shift filter exists for the user
-            $userCalendarFilter = $user->userFilters()->firstOrCreate(
-                ['filter_type' => UserFilterTypes::PROJECT_SHIFT_FILTER->value],
-                [
-                    'start_date' => null,
-                    'end_date' => null,
-                    'event_type_ids' => null,
-                    'room_ids' => null,
-                    'area_ids' => null,
-                    'room_attribute_ids' => null,
-                    'room_category_ids' => null,
-                    'event_property_ids' => null,
-                    'craft_ids' => null,
-                ]
-            );
-        } else {
-            // Ensure shift filter exists for the user (tests/users might not have one yet)
-            $userCalendarFilter = $user->userFilters()->firstOrCreate(
-                ['filter_type' => UserFilterTypes::SHIFT_FILTER->value],
-                [
-                    'start_date' => null,
-                    'end_date' => null,
-                    'event_type_ids' => null,
-                    'room_ids' => null,
-                    'area_ids' => null,
-                    'room_attribute_ids' => null,
-                    'room_category_ids' => null,
-                    'event_property_ids' => null,
-                    'craft_ids' => null,
-                ]
-            );
-        }
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $isInProjectView
+                ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value
+            ],
+            [
+                'start_date' => null,
+                'end_date' => null,
+                'event_type_ids' => null,
+                'room_ids' => null,
+                'area_ids' => null,
+                'room_attribute_ids' => null,
+                'room_category_ids' => null,
+                'event_property_ids' => null,
+                'craft_ids' => null,
+            ]
+        );
 
-        // Wenn ein exakter Zeitraum angefragt wird, diesen respektieren (Projekt-Tab lädt Projektzeitraum)
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
-            $endDate   = Carbon::parse($request->get('end_date'))->endOfDay();
+        // Zeitraum aus Request respektieren
+        $startDateParam = $request->query('start_date');
+        $endDateParam   = $request->query('end_date');
+
+        if (!empty($startDateParam) && !empty($endDateParam)) {
+            $startDate = Carbon::parse($startDateParam)->startOfDay();
+            $endDate   = Carbon::parse($endDateParam)->endOfDay();
         } else {
             [$startDate, $endDate] = $this->calendarDataService
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
@@ -579,7 +572,8 @@ class EventController extends Controller
             $userCalendarSettings,
             $startDate,
             $endDate,
-            true // Shift plan: consider standalone shifts for occupancy
+            true,
+            $project
         );
 
         $period = $this->calendarDataService->createCalendarPeriodDto(
@@ -593,7 +587,7 @@ class EventController extends Controller
             $userCalendarFilter,
             $startDate,
             $endDate,
-            $project || (bool)$user->getAttribute('daily_view'),
+            (bool) $project || (bool) $user->getAttribute('daily_view'),
             $project
         );
 
@@ -602,7 +596,6 @@ class EventController extends Controller
             $startDate,
             $endDate,
         );
-
 
         if ($userCalendarSettings->hide_unoccupied_days) {
             $result = $this->calendarDataService->hideUnoccupiedDays($calendarData, $period);
@@ -694,7 +687,7 @@ class EventController extends Controller
                 'managingFreelancers',
                 'managingServiceProviders',
                 'qualifications'
-            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
+            ])->get(),
 
             //'eventTypes' => EventType::all(),
             //'eventStatuses' => EventStatus::orderBy('order')->get(),

@@ -87,7 +87,6 @@ function updateComponentOrder(components) {
                 console.log('⏳ Request gestartet...');
             },
             onSuccess: (page) => {
-                console.log('✅ Reihenfolge erfolgreich aktualisiert');
                 console.log('📄 Response:', page);
             },
             onError: (errors) => {
@@ -132,7 +131,6 @@ function removeDisclosureComponent(id) {
         router.delete(route("sidebar.disclosure.component.remove", { disclosureComponent: id }), {
             preserveScroll: true,
             onSuccess: () => {
-                console.log('✅ Komponente erfolgreich aus Ordner entfernt');
                 router.reload({ only: ['tabs'] });
             },
             onError: (errors) => {

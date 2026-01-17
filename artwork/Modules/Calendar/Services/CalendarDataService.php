@@ -166,75 +166,65 @@ readonly class CalendarDataService
         ?UserCalendarSettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
-        bool $considerShiftsForOccupancy = false
+        bool $considerShiftsForOccupancy = false,
+        ?Project $project = null
     ): SupportCollection {
-        $eventOccupancySubquery = function ($eventQuery) use ($filter, $startDate, $endDate): void {
-            $eventQuery->selectRaw(1)
-                ->from('events')
-                ->whereColumn('events.room_id', 'rooms.id')
-                ->unless(empty($filter?->event_type_ids), function ($q) use ($filter): void {
-                    $q->whereIn('events.event_type_id', $filter->event_type_ids);
-                })
-                ->where(function ($q) use ($startDate, $endDate): void {
-                    $q->where(function ($q) use ($startDate, $endDate): void {
-                        $q->whereBetween('start_time', [$startDate, $endDate])
-                            ->orWhereBetween('end_time', [$startDate, $endDate]);
-                    })->orWhere(function ($q) use ($startDate, $endDate): void {
-                        $q->where('start_time', '<=', $startDate)
-                            ->where('end_time', '>=', $endDate);
-                    });
-                });
+        $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
+            // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
+            $q->where($startCol, '<=', $endDate)
+                ->where($endCol, '>=', $startDate);
         };
 
-        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $startDate, $endDate): void {
-            $shiftQuery->selectRaw(1)
+        $eventOccupancySubquery = function ($eventQuery) use ($filter, $project, $overlap): void {
+            $eventQuery->selectRaw('1')
+                ->from('events')
+                ->whereColumn('events.room_id', 'rooms.id')
+                ->when($project !== null, fn ($q) => $q->where('events.project_id', $project->id))
+                ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
+                ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'));
+
+            if (!empty($filter?->event_property_ids)) {
+                $ids = $filter->event_property_ids;
+
+                $eventQuery->whereExists(function ($sq) use ($ids) {
+                    $sq->selectRaw('1')
+                        ->from('event_event_property as eep')
+                        ->whereColumn('eep.event_id', 'events.id')
+                        ->whereIn('eep.event_property_id', $ids);
+                });
+            }
+        };
+
+        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $project, $overlap): void {
+            $shiftQuery->selectRaw('1')
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
                 ->whereColumn('shifts.room_id', 'rooms.id')
-                ->unless(empty($filter?->craft_ids), function ($q) use ($filter): void {
-                    $q->whereIn('shifts.craft_id', $filter->craft_ids);
-                })
-                ->where(function ($q) use ($startDate, $endDate): void {
-                    $q->whereBetween('shifts.start_date', [$startDate, $endDate])
-                        ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
-                        ->orWhere(function ($q) use ($startDate, $endDate): void {
-                            $q->where('shifts.start_date', '<=', $startDate)
-                                ->where('shifts.end_date', '>=', $endDate);
-                        });
-                });
+                ->when($project !== null, fn ($q) => $q->where('shifts.project_id', $project->id))
+                ->when(!empty($filter?->craft_ids), fn ($q) => $q->whereIn('shifts.craft_id', $filter->craft_ids))
+                ->where(fn ($q) => $overlap($q, 'shifts.start_date', 'shifts.end_date'));
         };
 
-        $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
-            ->with(['admins'])
-            ->withCount('events')
+        $rooms = Room::query()
+            ->select(['id', 'name', 'temporary', 'start_date', 'end_date'])
+            ->with(['admins:id,first_name,last_name,profile_photo_path'])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($filter?->room_ids)
             ->unlessRoomAttributeIds($filter?->room_attribute_ids)
             ->unlessAreaIds($filter?->area_ids)
             ->unlessRoomCategoryIds($filter?->room_category_ids)
-            // temporäre Räume nur, wenn Zeitraum sich überschneidet
             ->where(function ($q) use ($startDate, $endDate): void {
                 $q->where('temporary', false)
                     ->orWhereNull('temporary')
                     ->orWhere(function ($q) use ($startDate, $endDate): void {
                         $q->where('temporary', true)
-                            ->where(function ($q) use ($startDate, $endDate): void {
-                                $q->whereBetween('start_date', [$startDate, $endDate])
-                                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                                    ->orWhere(function ($q) use ($startDate, $endDate): void {
-                                        $q->where('start_date', '<=', $startDate)
-                                            ->where('end_date', '>=', $endDate);
-                                    });
-                            });
+                            ->where('start_date', '<=', $endDate)
+                            ->where('end_date', '>=', $startDate);
                     });
             })
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
-                function ($query) use (
-                    $eventOccupancySubquery,
-                    $shiftOccupancySubquery,
-                    $considerShiftsForOccupancy
-                ): void {
+                function ($query) use ($eventOccupancySubquery, $shiftOccupancySubquery, $considerShiftsForOccupancy): void {
                     if (!$considerShiftsForOccupancy) {
                         $query->whereExists($eventOccupancySubquery);
                     } else {

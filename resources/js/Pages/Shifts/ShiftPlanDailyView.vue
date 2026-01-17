@@ -266,7 +266,7 @@ type AnyEvent = any
 const page = usePage()
 const pageProps = computed(() => page.props).value
 
-// ✅ defineProps: KEIN usePage() hier drin!
+
 const props = defineProps({
     project: { type: Object as any, required: false, default: null },
     days: { type: Array, required: false, default: () => [] },
@@ -297,9 +297,7 @@ const props = defineProps({
 
 const hasAdminRole = () => is("artwork admin")
 
-/**
- * ✅ Resolver: Props -> fallback auf Inertia page.props
- */
+
 const shiftQualificationsResolved = computed(() => {
     const v: any = props.shiftQualifications
     if (Array.isArray(v)) return v

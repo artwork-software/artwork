@@ -45,18 +45,15 @@ class EventShiftPlanDTO extends Data
 
     public static function fromModel(
         Event $event,
-        Collection $eventTypes,
-        Collection $users,
-        ?bool $addTimeline = false,
-    ): EventShiftPlanDTO
-    {
-        // For all-day events, set time to 00:00 - 23:59 to display them as full-day events
+        ?Project $project,
+        ?bool $addTimeline = false
+    ): EventShiftPlanDTO {
         if ($event->allDay) {
             $startTime = Carbon::parse($event->start_time)->format('Y-m-d') . ' 00:00';
-            $endTime = Carbon::parse($event->end_time)->format('Y-m-d') . ' 23:59';
+            $endTime   = Carbon::parse($event->end_time)->format('Y-m-d') . ' 23:59';
         } else {
             $startTime = Carbon::parse($event->start_time)->format('Y-m-d H:i');
-            $endTime = Carbon::parse($event->end_time)->format('Y-m-d H:i');
+            $endTime   = Carbon::parse($event->end_time)->format('Y-m-d H:i');
         }
 
         return new self(
@@ -65,22 +62,22 @@ class EventShiftPlanDTO extends Data
             end: $endTime,
             eventName: $event->eventName,
             description: $event->description,
-            project: $event->project ? ProjectDTO::fromModel($event->project) : null,
-            eventType: $eventTypes[$event->event_type_id] ?? null,
-            shifts: $event->shifts->map(fn($shift) => ShiftDTO::fromModel($shift)),
+            project: $project ? ProjectDTO::fromModelForCalendar($project) : null, // wichtig!
+            eventType: $event->event_type,
+            shifts: collect([]),
             allDay: $event->allDay,
             roomId: $event->room_id,
-            roomName: $event->room->name,
+            roomName: $event->room?->name,
             daysOfEvent: $event->getAttribute('days_of_event') ?? [],
-            created_by: $event->user_id ? $users[$event->user_id] : null,
+            created_by: $event->creator,
             formattedDates: $event->getAttribute('formatted_dates') ?? [],
             is_series: $event->is_series,
             eventProperties: $event->eventProperties,
             occupancy_option: $event->occupancy_option,
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
-            hasVerification: $event->getAttribute('has_verification') ?? false,
-            timelines: $addTimeline ? $event->getAttribute('timelines') : collect([]),
+            hasVerification: false,
+            timelines: $addTimeline ? ($event->getAttribute('timelines') ?? collect()) : collect(),
         );
     }
 }

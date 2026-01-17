@@ -219,7 +219,12 @@ const props = defineProps({
     hasCollision: {
         type: Boolean,
         default: false
-    }
+    },
+    craftColor: {
+        type: String,
+        required: false,
+        default: null
+    },
 })
 
 
@@ -380,7 +385,7 @@ const isCurrentUserPlannerOfShiftCraft = computed(() => {
 });
 
 const returnCraftColor = computed(() => {
-    const color = props.shift?.craft?.color?.toLowerCase();
+    const color = props.craftColor?.toLowerCase();
     if (!color || color === '#ffffff') {
         return '#9e9e9e60'; // Standardgrau mit Transparenz
     }

@@ -242,6 +242,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.interfaces.sage.update');
         Route::post('/interfaces/sage/initialize', [ToolSettingsInterfacesController::class, 'initializeSage'])
             ->name('tool.interfaces.sage.initialize');
+        Route::get('/interfaces/api/logs/{token}', [ToolSettingsInterfacesController::class, 'tokenLogs'])
+            ->name('tool.interfaces.api.logs');
         Route::post(
             '/interfaces/sage/initializeSpecificDay',
             [

@@ -113,7 +113,7 @@ class ShiftCalendarService
             ->where(fn ($q) => $overlap($q, 'start_date', 'end_date'))
             ->with([
                 'room:id,name',
-                'craft:id,name',                 // + benötigte Felder
+                'craft:id,name,abbreviation',                 // + benötigte Felder
                 'craft.qualifications:id,name',  // wenn Frontend es braucht
                 'shiftsQualifications',          // ggf. später: select-minimal
                 'users:id,first_name,last_name,pronouns,position,profile_photo_path',

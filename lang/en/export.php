@@ -75,4 +75,37 @@ return [
     'civil_name' => 'Civil Name',
     'phone_number' => 'Phone Number',
     'position' => 'Position',
+    'shift_plan' => [
+        'title'  => ':project staffing plan',
+        'period' => 'Period',
+
+        'sections' => [
+            'shifts'     => 'Shifts',
+            'work_hours' => 'Work hours',
+        ],
+
+        'subsections' => [
+            'internal' => 'internal',
+            'external' => 'external',
+            'total'    => 'Total',
+        ],
+
+        'columns' => [
+            'craft'      => 'Shift',
+            'date'       => 'Date',
+            'room'       => 'Room',
+            'start'      => 'Start',
+            'end'        => 'End time',
+            'duration'   => 'Total hours',
+            'break_time' => 'Break time',
+        ],
+
+        'symbols' => [
+            'sum' => '∑',
+        ],
+
+        'defaults' => [
+            'zero_duration' => '0 h 00 min',
+        ],
+    ],
 ];

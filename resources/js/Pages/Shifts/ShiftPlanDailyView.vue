@@ -91,6 +91,16 @@
                             classesButton="ui-button"
                         />
 
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Export Shift personnel plan as xlsx')"
+                            :icon="IconFileTypeXls"
+                            icon-size="h-5 w-5"
+                            @click="downloadShiftPersonnelPlanXLSX()"
+                            v-if="isInProjectView"
+                            classesButton="ui-button"
+                        />
+
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
@@ -125,7 +135,7 @@
 
                             <div class="flex items-center justify-end min-w-0 flex-1">
                                 <BaseUIButton
-                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    v-if="isDayWithoutRooms(day.fullDay) && (can('can plan shifts') || is('artwork admin'))"
                                     :label="$t('Add Shift')"
                                     :icon="IconCalendarUser"
                                     is-small
@@ -146,7 +156,6 @@
                                 {{ room.roomName }}
                             </div>
                         </div>
-
                         <div class="flex items-stretch px-4 py-2">
                             <div class="p-4 w-full relative">
                                 <DailyRoomSplitTimeline
@@ -247,7 +256,7 @@ import {
     IconCalendarMonth,
     IconX, IconFileExport,
     IconCalendarPlus,
-    IconCalendarUser,
+    IconCalendarUser, IconFileTypeXls,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -256,7 +265,7 @@ import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
-import { is } from "laravel-permission-to-vuejs";
+import {can, is} from "laravel-permission-to-vuejs";
 import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 
@@ -794,6 +803,11 @@ let ro: ResizeObserver | null = null
 function measureTopBarHeight() {
     const h = topBarEl.value?.offsetHeight
     if (typeof h === "number" && h > 0 && h !== topBarHeightPx.value) topBarHeightPx.value = h
+}
+
+const downloadShiftPersonnelPlanXLSX = () => {
+    const url = route("projects.exports.shifts-personal-plan", props.project.id)
+    window.open(url, "_blank")
 }
 
 onMounted(async () => {

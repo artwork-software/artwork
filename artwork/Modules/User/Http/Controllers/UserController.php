@@ -1501,4 +1501,9 @@ class UserController extends Controller
         }
         return Redirect::back();
     }
+
+    public function updateOpenedCrafts(User $user, Request $request): void
+    {
+        $user->update($request->only('opened_crafts'));
+    }
 }

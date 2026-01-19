@@ -60,6 +60,7 @@
                 </div>
             </transition>
             <div class="bg-white grow">
+
                 <ShiftPlanFunctionBar
                     @previousTimeRange="previousTimeRange"
                     @next-time-range="nextTimeRange"
@@ -214,13 +215,13 @@
                                 <!-- MultiEditCalendar Overlay -->
                                 <div
                                     v-if="!day.isExtraRow && multiEditModeCalendar"
-                                    class="absolute inset-0"
+                                    class="absolute inset-0 z-100"
                                     :class="[
-          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
-            : '',
-          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
-        ]"
+                                          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
+                                            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            : '',
+                                          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
+                                    ]"
                                     @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"
                                 ></div>
 
@@ -322,6 +323,7 @@
                                             :tooltip-text="$t('Add Shift based on templates')"
                                             icon="IconCopyPlus"
                                             icon-size="size-4"
+                                            v-if="can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftByPresetOrGroup(day, room)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -333,7 +335,7 @@
                                             :tooltip-text="$t('Add Shift')"
                                             icon="IconPlus"
                                             icon-size="size-4"
-                                            v-if="!multiEditModeCalendar"
+                                            v-if="!multiEditModeCalendar && can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -394,16 +396,17 @@
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
-                                <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
+                                <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Create individual time series')"
                                     icon="IconClockShield"
                                     icon-size="h-5 w-5"
+                                    v-if="can('can plan shifts') || is('artwork admin')"
                                     @click="showIndividualTimeSeriesModal = true"
                                     classesButton="ui-button-small"
                                 />
-                                <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
+                                <div v-if="dayServices && selectedDayService && (can('can plan shifts') || is('artwork admin'))" class="flex items-center gap-x-2">
                                     <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')"
                                                        size="md" @change="toggleDayServiceMode"
                                                        :icon="selectedDayService?.icon"/>
@@ -580,7 +583,7 @@
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             class="h-4 w-4 transition-transform duration-200"
-                                            :class="closedCrafts.includes(row.craft.id) ? '' : 'rotate-180'"
+                                            :class="usePage().props.auth.user.opened_crafts?.includes(row.craft.id) ? 'rotate-180' : ''"
                                         />
                                     </div>
                                 </div>
@@ -954,13 +957,21 @@ const userForMultiEdit = ref<any | null>(null)
 const userToMultiEditCurrentShifts = ref<number[]>([])
 const userToMultiEditCheckedShiftsAndEvents = ref<any[]>([])
 const dropFeedback = ref<string | null>(null)
-const closedCrafts = ref<number[]>([])
+
 const dayForPreset = ref()
 const roomForPreset = ref()
 const showAddShiftByPresetOrGroupModal = ref(false)
 const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShift: any[] }>({
     assignToShift: [],
     removeFromShift: [],
+})
+
+// closed crafts filter bei usePage().props.auth.user.opened_crafts
+const closedCrafts = computed(() => {
+    const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
+    return props.crafts
+        .map((c) => c.id)
+        .filter((craftId) => !openedCrafts.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -1035,6 +1046,7 @@ const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
 const showUserOverview = ref(true)
 const pageProps = usePage().props
+const auth = pageProps.auth.user;
 
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
@@ -1920,8 +1932,10 @@ function handleCellClick(user: any, day: any) {
         }
         return
     }
+    if(can('can plan shifts') || is('artwork admin')){
+        openShowUserShiftModal(user, day)
+    }
 
-    openShowUserShiftModal(user, day)
 }
 
 function updateSelectedDayService(dayService: any) {
@@ -2316,6 +2330,12 @@ function changeCraftVisibility(id: number) {
     } else {
         closedCrafts.value.push(id)
     }
+
+    router.patch(
+        route('user.update.open.crafts', {user: usePage().props.auth.user.id}),
+        {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
+        {preserveState: true, preserveScroll: true},
+    )
 }
 
 function applySort(shiftPlanWorkerSortEnumName: string) {

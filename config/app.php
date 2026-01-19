@@ -187,6 +187,7 @@ return [
         Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
+        Clockwork\Support\Laravel\ClockworkServiceProvider::class
     ],
 
     /*
@@ -202,6 +203,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Image' => Intervention\Image\Facades\Image::class,
+        'Clockwork' => Clockwork\Support\Laravel\Facade::class,
     ])->toArray(),
 
 ];

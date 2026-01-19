@@ -48,7 +48,7 @@
         </div>
         <div v-if="!hasAny" class="text-gray-300 text-center mt-2">{{ $t('No shifts for this day') }}</div>
 
-        <div class="mt-3 flex items-center gap-2">
+        <div v-if="can('can plan shifts') || is('artwork admin')" class="mt-3 flex items-center gap-2">
           <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="$emit('addShift')" />
 
           <ToolTipComponent
@@ -73,6 +73,7 @@ import SingleShiftInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/Sing
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import { IconCalendarPlus, IconCalendarUser, IconCopyPlus } from '@tabler/icons-vue'
+import { is, can } from 'laravel-permission-to-vuejs'
 
 const props = defineProps({
   day: { type: String, required: true }, // 'YYYY-MM-DD'
@@ -731,7 +732,10 @@ function getEventItemStyle(item: any, block: any) {
   // SingleEventInDailyShiftView nutzt diese Prop, um kompaktes Design bei Überschneidungen zu aktivieren.
   if (item?.props) item.props.hasCollision = !!item.hasCollision
   // Hintergrundfarbe gemäß EventType (mit schwacher Opacity)
-  const typeHex: string | undefined = item?.payload?.eventType?.hex_code || item?.props?.event?.eventType?.hex_code
+  const eventTypeId = item?.payload?.eventType?.id || item?.props?.event?.eventType?.id
+  const eventTypesArray = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes || {})
+  const foundType = eventTypesArray.find((t: any) => t.id === eventTypeId)
+  const typeHex: string | undefined = foundType?.hex_code || item?.payload?.eventType?.hex_code || item?.props?.event?.eventType?.hex_code
   const bg = typeHex ? hexToRgba(typeHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',
@@ -768,7 +772,10 @@ function getShiftItemStyle(item: any, block: any) {
   const heightPx = getShiftItemHeightPx(item, block)
   // Wichtig laut Vorgabe: Schicht-Styling ändert sich nicht bei Kollisionen; daher kein hasCollision-Prop.
   // Hintergrundfarbe gemäß Gewerk-Farbe (mit schwacher Opacity) – analog zu getEventItemStyle
-  const craftHex: string | undefined = item?.payload?.craft?.color || item?.props?.shift?.craft?.color
+  const craftId = item?.payload?.craft?.id || item?.props?.shift?.craft?.id
+  const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+  const foundCraft = craftsArray.find((c: any) => c.id === craftId)
+  const craftHex: string | undefined = foundCraft?.color || item?.payload?.craft?.color || item?.props?.shift?.craft?.color
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',

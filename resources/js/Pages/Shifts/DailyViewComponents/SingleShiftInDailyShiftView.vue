@@ -23,7 +23,7 @@
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
-                <div class="flex items-center min-w-0 pr-1">
+                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center min-w-0 pr-1">
                     <div class="flex transition-opacity duration-150">
                         <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
@@ -202,6 +202,13 @@
         description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
         @closed="handleConfirmDelete"
     />
+
+    <NotificationToast
+        v-model:show="toastVisible"
+        :title="toastTitle"
+        :description="toastDescription"
+        :type="toastType"
+    />
 </template>
 
 <script setup>
@@ -229,6 +236,13 @@ const ConfirmationComponent = defineAsyncComponent({
     delay: 200,
 });
 
+const NotificationToast = defineAsyncComponent({
+    loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
+    delay: 200,
+});
+
+const canPlanShifts = computed(() => can('can plan shifts') || is('artwork admin'));
+
 const props = defineProps({
     shift: Object,
     // Kann als Array ODER als Objekt (Map) geliefert werden → wir normalisieren unten
@@ -248,6 +262,12 @@ const { t } = useI18n();
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
 const showConfirmDeleteModal = ref(false);
+
+const toastVisible = ref(false);
+const toastTitle = ref('');
+const toastDescription = ref('');
+const toastType = ref('success');
+
 const droppedUser = ref({});
 const seriesShiftData = ref(null);
 // Initialisiere Cache mit leeren Arrays pro Qualifikation
@@ -603,7 +623,7 @@ const getCollisionTooltip = (user) => {
     return tooltip + '<br>' + collisionDetails.join('<br>');
 };
 
-const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
+const createOnDropElementAndSave = async (user, craft, shiftQualificationId) => {
 
     let userType = 0;
     if (user.type === 'freelancer') {
@@ -623,6 +643,15 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
         craft_universally_applicable: craft?.universally_applicable ?? false,
         craft_abbreviation: craft.abbreviation ?? '',
     };
+    await nextTick();
+
+    if(!canPlanShifts.value) {
+        toastTitle.value = t('You do not have permission to assign users to shifts.');
+        toastDescription.value = '';
+        toastType.value = 'danger';
+        toastVisible.value = true;
+        return;
+    }
     assignUser(droppedUser, shiftQualificationId, user);
 }
 

@@ -24,9 +24,6 @@
               {{ $t('Created') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {{ $t('Last Used') }}
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {{ $t('Expires') }}
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -49,9 +46,6 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {{ formatDate(token.created_at) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ token.last_used_at ? formatDate(token.last_used_at) : $t('Never') }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {{ token.expires_at ? formatDate(token.expires_at) : $t('Never') }}
@@ -87,6 +81,12 @@
                       class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       {{ $t('Show') }}
+                    </button>
+                    <button
+                      @click="showLogs(token)"
+                      class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      {{ $t('Log') }}
                     </button>
                     <button
                       @click="confirmDeleteToken(token)"
@@ -208,6 +208,108 @@
       :confirm="$t('Revoke')"
       @closed="handleDeleteConfirmation"
     />
+
+    <BaseModal
+      v-if="showLogModal"
+      @closed="closeLogModal"
+      modalSize="sm:max-w-4xl"
+    >
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            {{ $t('API Logs') }}: {{ currentLogToken?.name }}
+          </h3>
+          <button @click="closeLogModal" class="text-gray-400 hover:text-gray-500">
+            <XIcon class="h-5 w-5" />
+          </button>
+        </div>
+
+        <div v-if="loadingLogs" class="flex justify-center items-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-artwork-primary"></div>
+        </div>
+
+        <div v-else>
+          <div v-if="logs.data && logs.data.length > 0" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {{ $t('Date') }}
+                  </th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ $t('IP') }}
+                    </th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {{ $t('Method') }}
+                  </th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {{ $t('URL') }}
+                  </th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {{ $t('UserAgent') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="log in logs.data" :key="log.id" class="hover:bg-gray-50">
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {{ formatDate(log.created_at) }}
+                  </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {{ log.ip }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                    <span
+                      :class="getMethodClass(log.method)"
+                      class="px-2 py-1 rounded text-xs font-semibold"
+                    >
+                      {{ log.method }}
+                    </span>
+                  </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" :title="log.url">
+                    {{ log.url }}
+                  </td>
+                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" :title="log.url">
+                    {{ log.user_agent }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 mt-4">
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                  {{ $t('Showing') }} {{ logs.from }} {{ $t('to') }} {{ logs.to }} {{ $t('of') }} {{ logs.total }} {{ $t('entries') }}
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    @click="loadLogs(logs.current_page - 1)"
+                    :disabled="!logs.prev_page_url"
+                    class="relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ $t('Previous') }}
+                  </button>
+                  <span class="relative inline-flex items-center px-3 py-1 text-sm font-medium text-gray-700">
+                    {{ logs.current_page }} / {{ logs.last_page }}
+                  </span>
+                  <button
+                    @click="loadLogs(logs.current_page + 1)"
+                    :disabled="!logs.next_page_url"
+                    class="relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ $t('Next') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="text-center py-8 text-gray-500">
+            {{ $t('No logs found') }}
+          </div>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -247,6 +349,19 @@ export default defineComponent({
       tokenToDelete: null,
       activeDropdown: null,
       selectedToken: null,
+      showLogModal: false,
+      currentLogToken: null,
+      logs: {
+        data: [],
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+        from: 0,
+        to: 0,
+        prev_page_url: null,
+        next_page_url: null
+      },
+      loadingLogs: false,
       form: useForm({
         name: '',
         expires_at: null
@@ -346,6 +461,64 @@ export default defineComponent({
       if (token.revoked) return 'bg-red-100 text-red-800';
       if (this.isExpired(token)) return 'bg-orange-100 text-orange-800';
       return 'bg-green-100 text-green-800';
+    },
+    showLogs(token) {
+      this.activeDropdown = null;
+      this.currentLogToken = token;
+      this.showLogModal = true;
+      this.loadLogs(1);
+    },
+    async loadLogs(page = 1) {
+      this.loadingLogs = true;
+      try {
+        const response = await axios.get(route('tool.interfaces.api.logs', this.currentLogToken.id), {
+          params: { page }
+        });
+        this.logs = response.data.logs;
+      } catch (error) {
+        console.error('Error loading logs:', error);
+        if (this.$toast) {
+          this.$toast.error(this.$t('Failed to load logs'));
+        }
+      } finally {
+        this.loadingLogs = false;
+      }
+    },
+    closeLogModal() {
+      this.showLogModal = false;
+      this.currentLogToken = null;
+      this.logs = {
+        data: [],
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+        from: 0,
+        to: 0,
+        prev_page_url: null,
+        next_page_url: null
+      };
+    },
+    getMethodClass(method) {
+      const classes = {
+        'GET': 'bg-blue-100 text-blue-800',
+        'POST': 'bg-green-100 text-green-800',
+        'PUT': 'bg-yellow-100 text-yellow-800',
+        'PATCH': 'bg-orange-100 text-orange-800',
+        'DELETE': 'bg-red-100 text-red-800'
+      };
+      return classes[method] || 'bg-gray-100 text-gray-800';
+    },
+    getHttpStatusClass(statusCode) {
+      if (statusCode >= 200 && statusCode < 300) {
+        return 'bg-green-100 text-green-800';
+      } else if (statusCode >= 300 && statusCode < 400) {
+        return 'bg-blue-100 text-blue-800';
+      } else if (statusCode >= 400 && statusCode < 500) {
+        return 'bg-orange-100 text-orange-800';
+      } else if (statusCode >= 500) {
+        return 'bg-red-100 text-red-800';
+      }
+      return 'bg-gray-100 text-gray-800';
     }
   }
 })

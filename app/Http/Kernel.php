@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\SetDeveloperEnvironment;
 use App\Http\Middleware\UpdateUserStatus;
+use Artwork\Core\Api\Middleware\ApiAccessLog;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -66,6 +67,7 @@ class Kernel extends HttpKernel
             EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             SubstituteBindings::class,
+            ApiAccessLog::class,
         ],
     ];
 

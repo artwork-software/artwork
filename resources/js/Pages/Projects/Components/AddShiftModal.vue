@@ -235,6 +235,17 @@ const initComputedShiftQualifications = computed(() => {
 const selectedRoom = ref<any | null>(null)
 const roomsList = computed<any[]>(() => Array.isArray(props.rooms) ? (props.rooms as any[]) : Object.values(props.rooms || {}))
 
+const checkIfMultiEditEnabled = computed(() => {
+    // if props.multiAddMode is true and props.roomsAndDatesForMultiEdit is an array with more than one item return true
+    // if props.multiAddMode is false check if selectedRoom is not null
+    if (props.multiAddMode) {
+        return Array.isArray(props.roomsAndDatesForMultiEdit) && props.roomsAndDatesForMultiEdit.length > 1
+    } else {
+        return selectedRoom.value !== null
+    }
+})
+
+
 function findRoomById(rawId: any) {
     if (rawId === null || typeof rawId === 'undefined') return null
     const rid = Number(rawId)
@@ -1139,7 +1150,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
                     <!-- Room -->
 
-                        <div class="grid grid-cols-1 my-4 gap-2">
+                        <div class="grid grid-cols-1 my-4 gap-2" v-if="!multiAddMode">
                             <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
                             <div v-else
                                  class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
@@ -1420,7 +1431,7 @@ const lockOrUnlockShift = (commit = false) => {
                         :label="$t('Save')"
                         type="submit"
                         is-add-button
-                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !selectedRoom"
+                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !checkIfMultiEditEnabled"
                     />
 
                     <BaseUIButton

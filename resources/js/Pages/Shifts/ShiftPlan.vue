@@ -60,6 +60,7 @@
                 </div>
             </transition>
             <div class="bg-white grow">
+
                 <ShiftPlanFunctionBar
                     @previousTimeRange="previousTimeRange"
                     @next-time-range="nextTimeRange"
@@ -214,13 +215,13 @@
                                 <!-- MultiEditCalendar Overlay -->
                                 <div
                                     v-if="!day.isExtraRow && multiEditModeCalendar"
-                                    class="absolute inset-0"
+                                    class="absolute inset-0 z-100"
                                     :class="[
-          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
-            : '',
-          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
-        ]"
+                                          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
+                                            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            : '',
+                                          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
+                                    ]"
                                     @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"
                                 ></div>
 
@@ -582,7 +583,7 @@
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             class="h-4 w-4 transition-transform duration-200"
-                                            :class="closedCrafts.includes(row.craft.id) ? '' : 'rotate-180'"
+                                            :class="usePage().props.auth.user.opened_crafts?.includes(row.craft.id) ? 'rotate-180' : ''"
                                         />
                                     </div>
                                 </div>
@@ -956,13 +957,21 @@ const userForMultiEdit = ref<any | null>(null)
 const userToMultiEditCurrentShifts = ref<number[]>([])
 const userToMultiEditCheckedShiftsAndEvents = ref<any[]>([])
 const dropFeedback = ref<string | null>(null)
-const closedCrafts = ref<number[]>([])
+
 const dayForPreset = ref()
 const roomForPreset = ref()
 const showAddShiftByPresetOrGroupModal = ref(false)
 const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShift: any[] }>({
     assignToShift: [],
     removeFromShift: [],
+})
+
+// closed crafts filter bei usePage().props.auth.user.opened_crafts
+const closedCrafts = computed(() => {
+    const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
+    return props.crafts
+        .map((c) => c.id)
+        .filter((craftId) => !openedCrafts.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -1037,6 +1046,7 @@ const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
 const showUserOverview = ref(true)
 const pageProps = usePage().props
+const auth = pageProps.auth.user;
 
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
@@ -2320,6 +2330,12 @@ function changeCraftVisibility(id: number) {
     } else {
         closedCrafts.value.push(id)
     }
+
+    router.patch(
+        route('user.update.open.crafts', {user: usePage().props.auth.user.id}),
+        {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
+        {preserveState: true, preserveScroll: true},
+    )
 }
 
 function applySort(shiftPlanWorkerSortEnumName: string) {

@@ -353,6 +353,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('user.edit.worktimes');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
+    // user.update.open.crafts
+    Route::patch('/users/{user}/open-crafts', [UserController::class, 'updateOpenedCrafts'])
+        ->name('user.update.open.crafts');
+
     // Neue Route: Popup-Chat-Position speichern
     Route::patch('/users/{user}/chat/popup-settings', [UserController::class, 'updateChatPopupSettings'])
         ->name('user.chat.popup-settings');

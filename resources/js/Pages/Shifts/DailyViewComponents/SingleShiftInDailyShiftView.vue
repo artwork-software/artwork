@@ -241,6 +241,8 @@ const NotificationToast = defineAsyncComponent({
     delay: 200,
 });
 
+const canPlanShifts = computed(() => can('can plan shifts') || is('artwork admin'));
+
 const props = defineProps({
     shift: Object,
     // Kann als Array ODER als Objekt (Map) geliefert werden → wir normalisieren unten
@@ -621,8 +623,8 @@ const getCollisionTooltip = (user) => {
     return tooltip + '<br>' + collisionDetails.join('<br>');
 };
 
-const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
-    if(can('can plan shifts') || is('artwork admin')){
+const createOnDropElementAndSave = async (user, craft, shiftQualificationId) => {
+
     let userType = 0;
     if (user.type === 'freelancer') {
         userType = 1;
@@ -641,13 +643,16 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
         craft_universally_applicable: craft?.universally_applicable ?? false,
         craft_abbreviation: craft.abbreviation ?? '',
     };
-    assignUser(droppedUser, shiftQualificationId, user);
-    }else {
+    await nextTick();
+
+    if(!canPlanShifts.value) {
         toastTitle.value = t('You do not have permission to assign users to shifts.');
         toastDescription.value = '';
         toastType.value = 'danger';
         toastVisible.value = true;
+        return;
     }
+    assignUser(droppedUser, shiftQualificationId, user);
 }
 
 const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {

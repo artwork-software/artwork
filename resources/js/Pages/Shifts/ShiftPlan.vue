@@ -322,6 +322,7 @@
                                             :tooltip-text="$t('Add Shift based on templates')"
                                             icon="IconCopyPlus"
                                             icon-size="size-4"
+                                            v-if="can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftByPresetOrGroup(day, room)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -333,7 +334,7 @@
                                             :tooltip-text="$t('Add Shift')"
                                             icon="IconPlus"
                                             icon-size="size-4"
-                                            v-if="!multiEditModeCalendar"
+                                            v-if="!multiEditModeCalendar && can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -394,16 +395,17 @@
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
-                                <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
+                                <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Create individual time series')"
                                     icon="IconClockShield"
                                     icon-size="h-5 w-5"
+                                    v-if="can('can plan shifts') || is('artwork admin')"
                                     @click="showIndividualTimeSeriesModal = true"
                                     classesButton="ui-button-small"
                                 />
-                                <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
+                                <div v-if="dayServices && selectedDayService && (can('can plan shifts') || is('artwork admin'))" class="flex items-center gap-x-2">
                                     <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')"
                                                        size="md" @change="toggleDayServiceMode"
                                                        :icon="selectedDayService?.icon"/>
@@ -1920,8 +1922,10 @@ function handleCellClick(user: any, day: any) {
         }
         return
     }
+    if(can('can plan shifts') || is('artwork admin')){
+        openShowUserShiftModal(user, day)
+    }
 
-    openShowUserShiftModal(user, day)
 }
 
 function updateSelectedDayService(dayService: any) {

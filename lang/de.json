@@ -3802,5 +3802,6 @@
     "Current": "Aktuell",
     "Choose color": "Farbe wählen",
     "Project cost center display component": "Projekt-Kostenträger-Anzeige-Komponente",
-    "ProjectCostCenterDisplayComponent": "Projekt-Kostenträger-Anzeige-Komponente"
+    "ProjectCostCenterDisplayComponent": "Projekt-Kostenträger-Anzeige-Komponente",
+    "You do not have permission to assign users to shifts.": "Du hast keine Berechtigung, Nutzer*innen Schichten zuzuweisen."
 }

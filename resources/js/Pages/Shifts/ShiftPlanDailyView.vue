@@ -125,7 +125,7 @@
 
                             <div class="flex items-center justify-end min-w-0 flex-1">
                                 <BaseUIButton
-                                    v-if="isDayWithoutRooms(day.fullDay)"
+                                    v-if="isDayWithoutRooms(day.fullDay) && (can('can plan shifts') || is('artwork admin'))"
                                     :label="$t('Add Shift')"
                                     :icon="IconCalendarUser"
                                     is-small
@@ -146,7 +146,6 @@
                                 {{ room.roomName }}
                             </div>
                         </div>
-
                         <div class="flex items-stretch px-4 py-2">
                             <div class="p-4 w-full relative">
                                 <DailyRoomSplitTimeline
@@ -256,7 +255,7 @@ import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
-import { is } from "laravel-permission-to-vuejs";
+import {can, is} from "laravel-permission-to-vuejs";
 import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 

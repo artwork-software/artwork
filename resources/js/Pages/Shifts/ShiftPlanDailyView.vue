@@ -91,6 +91,16 @@
                             classesButton="ui-button"
                         />
 
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="$t('Export Shift personnel plan as xlsx')"
+                            :icon="IconFileTypeXls"
+                            icon-size="h-5 w-5"
+                            @click="downloadShiftPersonnelPlanXLSX()"
+                            v-if="isInProjectView"
+                            classesButton="ui-button"
+                        />
+
                         <FunctionBarSetting :is-planning="false" is-in-shift-plan />
                     </div>
                 </div>
@@ -246,7 +256,7 @@ import {
     IconCalendarMonth,
     IconX, IconFileExport,
     IconCalendarPlus,
-    IconCalendarUser,
+    IconCalendarUser, IconFileTypeXls,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
@@ -793,6 +803,11 @@ let ro: ResizeObserver | null = null
 function measureTopBarHeight() {
     const h = topBarEl.value?.offsetHeight
     if (typeof h === "number" && h > 0 && h !== topBarHeightPx.value) topBarHeightPx.value = h
+}
+
+const downloadShiftPersonnelPlanXLSX = () => {
+    const url = route("projects.exports.shifts-personal-plan", props.project.id)
+    window.open(url, "_blank")
 }
 
 onMounted(async () => {

@@ -75,4 +75,38 @@ return [
     'civil_name' => 'Zivilname',
     'phone_number' => 'Telefonnummer',
     'position' => 'Position',
+
+    'shift_plan' => [
+        'title'  => ':project Personalplanung',
+        'period' => 'Zeitraum',
+
+        'sections' => [
+            'shifts'     => 'Schichten',
+            'work_hours' => 'Arbeitsstunden',
+        ],
+
+        'subsections' => [
+            'internal' => 'intern',
+            'external' => 'extern',
+            'total'    => 'Gesamt',
+        ],
+
+        'columns' => [
+            'craft'      => 'Schicht',
+            'date'       => 'Datum',
+            'room'       => 'Raum',
+            'start'      => 'Start',
+            'end'        => 'Endzeit',
+            'duration'   => 'Stunden insgesamt',
+            'break_time' => 'Pausenzeit',
+        ],
+
+        'symbols' => [
+            'sum' => '∑',
+        ],
+
+        'defaults' => [
+            'zero_duration' => '0 Std. 00 min',
+        ],
+    ],
 ];

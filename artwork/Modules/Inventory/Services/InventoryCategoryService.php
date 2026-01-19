@@ -177,4 +177,9 @@ class InventoryCategoryService
             }
         }
     }
+
+    public function paginateForApi(int $perPage = 50): LengthAwarePaginator
+    {
+        return $this->categoryRepository->paginateWithRelations($perPage);
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\Api\Models\ApiLog;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
@@ -56,6 +57,26 @@ class ToolSettingsInterfacesController extends Controller
                 'tokens' => $tokens,
             ]
         );
+    }
+
+    public function tokenLogs(Request $request, Token $token)
+    {
+        $this->authorize('view', Token::class);
+
+        $logs = ApiLog::where('token_id', '=', $token->apiAccessToken->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(50);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'logs' => $logs,
+            ]);
+        }
+
+        return Inertia::render('Interfaces/TokenLogs', [
+            'logs' => $logs,
+            'token' => $token,
+        ]);
     }
 
     /**

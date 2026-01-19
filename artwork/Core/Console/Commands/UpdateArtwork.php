@@ -64,7 +64,7 @@ class UpdateArtwork extends Command
     {
         $this->section('Project Management Builder');
         if ($this->projectManagementBuilderService->getProjectManagementBuilder()->isEmpty()) {
-            $this->call('db:seed', ['--class' => 'ProjectManagementBuilderSeed']);
+            $this->call('db:seed', ['--class' => 'ProjectManagementBuilderSeed' , '--force' => true]);
             $this->info('Seed executed');
         } else {
             $this->info('Already seeded');

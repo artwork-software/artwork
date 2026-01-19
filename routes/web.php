@@ -140,6 +140,7 @@ use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
+use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
@@ -242,6 +243,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.interfaces.sage.update');
         Route::post('/interfaces/sage/initialize', [ToolSettingsInterfacesController::class, 'initializeSage'])
             ->name('tool.interfaces.sage.initialize');
+        Route::get('/interfaces/api/logs/{token}', [ToolSettingsInterfacesController::class, 'tokenLogs'])
+            ->name('tool.interfaces.api.logs');
         Route::post(
             '/interfaces/sage/initializeSpecificDay',
             [
@@ -349,6 +352,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can manage workers')
         ->name('user.edit.worktimes');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
+
+    // user.update.open.crafts
+    Route::patch('/users/{user}/open-crafts', [UserController::class, 'updateOpenedCrafts'])
+        ->name('user.update.open.crafts');
 
     // Neue Route: Popup-Chat-Position speichern
     Route::patch('/users/{user}/chat/popup-settings', [UserController::class, 'updateChatPopupSettings'])
@@ -1045,6 +1052,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
         Route::get('/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])
             ->name('project.download.keyVisual');
+
+        Route::get('/{project}/exports/shifts-personal-plan', ProjectShiftPersonalPlanExportController::class)
+            ->name('projects.exports.shifts-personal-plan');
 
         // POST
         Route::post('/{shift}/assign', [ShiftController::class, 'assignToShift'])

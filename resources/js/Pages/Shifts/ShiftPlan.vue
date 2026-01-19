@@ -214,13 +214,13 @@
                                 <!-- MultiEditCalendar Overlay -->
                                 <div
                                     v-if="!day.isExtraRow && multiEditModeCalendar"
-                                    class="absolute inset-0"
+                                    class="absolute inset-0 z-100"
                                     :class="[
-          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
-            : '',
-          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
-        ]"
+                                          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
+                                            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            : '',
+                                          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
+                                    ]"
                                     @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"
                                 ></div>
 

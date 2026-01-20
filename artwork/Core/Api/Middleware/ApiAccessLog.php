@@ -12,9 +12,19 @@ class ApiAccessLog
     public function handle(Request $request, \Closure $next)
     {
         $apiKey = Str::after($request->header('authorization', ''), "Bearer ");
-        $tokenId = ApiAccessToken::where('access_token', $apiKey)->firstOrFail()->id;
+
+        if (!$apiKey) {
+            return $next($request);
+        }
+
+        $apiAccessToken = ApiAccessToken::where('access_token', $apiKey)->first();
+
+        if (!$apiAccessToken) {
+            return $next($request);
+        }
+
         $apiLog = new ApiLog();
-        $apiLog->token_id = $tokenId;
+        $apiLog->token_id = $apiAccessToken->id;
         $apiLog->ip = $request->ip();
         $apiLog->method = $request->method();
         $apiLog->url = $request->url();

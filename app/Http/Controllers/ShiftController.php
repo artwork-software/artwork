@@ -807,19 +807,18 @@ class ShiftController extends Controller
                     $shiftCountService,
                     $changeService
                 );
-
-                continue;
+            } else {
+                $serviceToUse->removeFromShiftByUserIdAndShiftId(
+                    $request->get('userTypeId'),
+                    $shiftIdToRemove,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
             }
 
-            $serviceToUse->removeFromShiftByUserIdAndShiftId(
-                $request->get('userTypeId'),
-                $shiftIdToRemove,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
             $shift = $shiftService->getById($shiftIdToRemove);
 
             broadcast(new RemoveEntityFormShiftEvent(

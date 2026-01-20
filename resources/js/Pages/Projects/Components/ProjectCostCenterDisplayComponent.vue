@@ -5,7 +5,7 @@
                 class="font-lexend font-black tracking-wide"
                 :class="inSidebar ? 'text-white text-md' : 'text-primaryText text-md'"
             >
-                {{ $t('Name of the cost unit') }}
+                {{ $t('cost unit') }}
             </div>
 
             <PropertyIcon

@@ -178,7 +178,7 @@ class WorkTimeChangeRequestController extends Controller
         $shift = $workTimeChangeRequest->shift;
         $user = $workTimeChangeRequest->user;
 
-        $oldPivot = $shift->users()->where('user_id', $user->id)->first()?->pivot;
+        $oldPivot = $shift->users()->where('shift_workers.employable_id', $user->id)->first()?->pivot;
 
         if (!$oldPivot) {
             abort(404, 'Ursprüngliche Schicht nicht gefunden.');

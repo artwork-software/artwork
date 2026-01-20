@@ -77,8 +77,39 @@ class InventoryArticleService
         }
 
         $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
+        $this->applyStableOrdering($query, $category, $subCategory);
         return $query->paginate($perPage);
     }
+
+    protected function applyStableOrdering(Builder $query, ?InventoryCategory $category, ?InventorySubCategory $subCategory): void
+    {
+        // Wenn eine Subkategorie fix ist: innerhalb einfach nach Name
+        if ($subCategory) {
+            $query->orderBy('inventory_articles.name', 'asc')
+                ->orderBy('inventory_articles.id', 'asc');
+            return;
+        }
+
+        // Wenn Kategorie fix ist: nach Subkategorie-Name, dann Artikelname
+        if ($category) {
+            $query->leftJoin('inventory_sub_categories as isc', 'isc.id', '=', 'inventory_articles.inventory_sub_category_id')
+                ->select('inventory_articles.*')
+                ->orderBy('isc.name', 'asc')
+                ->orderBy('inventory_articles.name', 'asc')
+                ->orderBy('inventory_articles.id', 'asc');
+            return;
+        }
+
+        // Global: Kategorie -> Subkategorie -> Artikelname
+        $query->leftJoin('inventory_categories as ic', 'ic.id', '=', 'inventory_articles.inventory_category_id')
+            ->leftJoin('inventory_sub_categories as isc', 'isc.id', '=', 'inventory_articles.inventory_sub_category_id')
+            ->select('inventory_articles.*')
+            ->orderBy('ic.name', 'asc')
+            ->orderBy('isc.name', 'asc')
+            ->orderBy('inventory_articles.name', 'asc')
+            ->orderBy('inventory_articles.id', 'asc');
+    }
+
 
     /**
      * Build the base query for article list with filters
@@ -92,20 +123,22 @@ class InventoryArticleService
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
         ?string $search = ''
-    ): Builder|HasMany {
-        $query = $this->articleRepository->baseQuery();
+    ): Builder {
+        $query = $this->articleRepository->baseQuery()->withoutTrashed();
 
-        if ($search) {
+        // Kategorie/Subkategorie IMMER anwenden (auch bei Search)
+        if ($category) {
+            $query->where('inventory_articles.inventory_category_id', $category->id);
+        }
+
+        if ($subCategory) {
+            $query->where('inventory_articles.inventory_sub_category_id', $subCategory->id);
+        }
+
+        // Search anwenden (innerhalb der gewählten Kategorie/Subkategorie)
+        if (!empty($search)) {
             $ids = $this->articleRepository->search($search)->pluck('id');
-            $query->whereIn('id', $ids);
-        }
-
-        if ($category && !$subCategory && !$search) {
-            return $category->articles();
-        }
-
-        if ($category && $subCategory && !$search) {
-            return $subCategory->articles();
+            $query->whereIn('inventory_articles.id', $ids);
         }
 
         return $query;

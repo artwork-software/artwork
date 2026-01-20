@@ -44,6 +44,8 @@ class RemoveEntityFormShiftEvent implements ShouldBroadcastNow
     {
         return [
             'shift' => ShiftDTO::fromModel($this->shift),
+            'roomId' => $this->roomId,
+            'daysOfShift' => $this->shift->getAttribute('days_of_shift'),
             'entity' => $this->entity,
             'entityType' => $this->entityType,
         ];

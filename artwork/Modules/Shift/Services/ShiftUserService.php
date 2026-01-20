@@ -779,6 +779,24 @@ class ShiftUserService
         $pivot = $this->shiftUserRepository->findByUserIdAndShiftId($userId, $shiftId);
 
         if (! $pivot instanceof ShiftUser) {
+            // Check in shift_workers table as well
+            $shiftWorker = $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
+                User::class,
+                $userId,
+                $shiftId
+            );
+
+            if ($shiftWorker instanceof ShiftWorker) {
+                $this->removeFromShift(
+                    $shiftWorker->id,
+                    true,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
+            }
             return;
         }
 

@@ -90,7 +90,7 @@
                     label="Name"
                     @mousedown="storeFocus('name-' + index)"
                     @focusout="updateEventInDatabase"
-                    :disabled="canEditComponent === false"
+                    :disabled="canEditComponent === false || !hasPermission"
                 />
                 <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
                     {{ $t('Event name is mandatory') }}

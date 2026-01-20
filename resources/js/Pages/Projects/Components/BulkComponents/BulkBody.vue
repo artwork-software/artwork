@@ -30,7 +30,7 @@
                     :multi-edit="multiEdit"
                     :room-mode="false"
                     @update:multi-edit="UpdateMultiEditEmits"
-                    :disabled="!hasCreateEventsPermission"
+                    v-if="hasCreateEventsPermission && canEditComponent"
                 />
 
                 <div class="flex items-center gap-x-2">
@@ -38,6 +38,7 @@
                         :planning="isPlanningEvent"
                         @update:planning="isPlanningEvent = $event"
                         :disabled="!hasCreateEventsPermission"
+                        v-if="hasCreateEventsPermission && canEditComponent"
                     />
                 </div>
 

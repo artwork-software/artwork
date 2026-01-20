@@ -506,7 +506,8 @@ class ShiftWorkerService
             $pivot
         );
 
-        $pivot->delete();
+        $pivot->forceDelete();
+        \Illuminate\Support\Facades\Log::info("Deleted shift worker pivot", ["id" => $pivot->id]);
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),

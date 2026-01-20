@@ -250,7 +250,7 @@ export function useShiftCalendarListener(newShiftPlanData) {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-remove-entity', (data) => {
-                    updateShiftForUserOrEntity(data);
+                    updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
                 })
                 .listen('.shift-updated', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);

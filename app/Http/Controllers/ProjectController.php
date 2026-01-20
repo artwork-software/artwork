@@ -200,6 +200,7 @@ class ProjectController extends Controller
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly FilterService $filterService,
+        private readonly \Artwork\Modules\Inventory\Services\InventoryUserFilterShareService $inventoryUserFilterShareService,
     ) {
     }
 
@@ -2361,6 +2362,8 @@ class ProjectController extends Controller
                 'You do not have permission to access this project tab.'
             );
         }
+
+        $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
 
         $firstEvent = $project->events()->orderBy('start_time', 'ASC')->first();
         $lastEvent  = $project->events()->orderBy('end_time', 'DESC')->first();

@@ -59,7 +59,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { IconEdit } from "@tabler/icons-vue";
 
 // Für DevTools
-defineOptions({ name: "TextField" });
+defineOptions({ name: "LinkComponent" });
 
 const props = defineProps({
     data: { type: Object, required: true },

@@ -12,6 +12,8 @@ enum ProjectTabComponentEnum: string
     case TITLE = 'Title';
     case LINK = 'Link';
 
+    case LINK_LIST = 'LinkList';
+
 
     // default tab component types
     case PROJECT_GROUP_DISPLAY = 'ProjectGroupDisplayComponent';
@@ -118,7 +120,17 @@ enum ProjectTabComponentEnum: string
                 'availableFields' => [
                     'label' => '',
                 ]
-            ]
+            ],
+            self::LINK_LIST->value => [
+                'name' => 'LinkList',
+                'availableFields' => [
+                    'title' => '',
+                    'label' => 'Linkliste',
+                    'placeholder_label' => 'Anzeige',
+                    'placeholder_url' => 'https://…',
+                    'max_items' => 20,
+                ],
+            ],
         ];
     }
 }

@@ -598,16 +598,13 @@ class UserController extends Controller
 
     private function convertMinutesToHoursAndMinutes(int $inputMinutes, bool $forcePositive = false): string
     {
-        if ($forcePositive) {
-            $inputMinutes = abs($inputMinutes);
-        }
-
-        $hours = floor($inputMinutes / 60);
-        $minutes = abs($inputMinutes % 60); // wichtig: immer positiv anzeigen
+        $absMinutes = abs($inputMinutes);
+        $hours = floor($absMinutes / 60);
+        $minutes = $absMinutes % 60;
 
         $sign = (!$forcePositive && $inputMinutes < 0) ? '-' : '';
 
-        return sprintf('%s%02d:%02d', $sign, abs($hours), $minutes);
+        return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
     }
 
 

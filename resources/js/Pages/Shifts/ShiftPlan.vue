@@ -699,8 +699,12 @@
             <ShiftHistoryModal
                 v-if="showHistoryModal"
                 :logs="history"
-                @closed="showHistoryModal = false"
+                :crafts="crafts"
+                :initialStartDate="dateValue[0]"
+                :initialEndDate="dateValue[1]"
+                @close="showHistoryModal = false"
             />
+
         </ShiftHeader>
     </div>
     <SideNotification

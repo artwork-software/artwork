@@ -1509,7 +1509,29 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
     showAddShiftModal.value = true
 }
 
-function closeAddShiftModal() {
+function closeAddShiftModal(success = false, shift = null) {
+    if (success && shift) {
+        // Find and update the shift in newShiftPlanData to ensure immediate UI update
+        for (const room of newShiftPlanData.value) {
+            for (const day in room.content) {
+                const dayData = room.content[day];
+
+                // Update in room shifts
+                const shiftIndex = dayData.shifts.findIndex(s => s.id === shift.id);
+                if (shiftIndex !== -1) {
+                    dayData.shifts[shiftIndex] = shift;
+                }
+
+                // Update in events
+                for (const event of dayData.events) {
+                    const eventShiftIndex = event.shifts.findIndex(s => s.id === shift.id);
+                    if (eventShiftIndex !== -1) {
+                        event.shifts[eventShiftIndex] = shift;
+                    }
+                }
+            }
+        }
+    }
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null

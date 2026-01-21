@@ -241,12 +241,32 @@
                                             </div>
                                             <span
                                                 v-else
-                                                @mousedown="storeFocus(cell.id)"
-                                                @click="handleCellClick(cell, '', index, row)"
-                                                class="block min-w-0 overflow-hidden text-ellipsis truncate"
+                                                class="relative group/tt block min-w-0"
+                                                @mouseenter="maybeUpdateTruncation(cell.id, index)"
                                             >
-                                          {{ index < 3 ? cell.value : toCurrencyString(cell.value) }}
-                                        </span>
+                                                <span
+                                                    :ref="el => setTruncEl(cell.id, el)"
+                                                    @mousedown="storeFocus(cell.id)"
+                                                    @click="handleCellClick(cell, '', index, row)"
+                                                    class="block min-w-0 overflow-hidden text-ellipsis truncate"
+                                                >
+                                                    {{ index < 3 ? (cell.display_value ?? cell.value) : toCurrencyString(cell.value) }}
+                                                </span>
+                                                <span
+                                                    v-if="index < 3 && isTruncated[cell.id]"
+                                                    class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
+                                                           rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                           opacity-0 translate-y-1 transition-all duration-150
+                                                           group-hover/tt:opacity-100 group-hover/tt:translate-y-0
+                                                           whitespace-normal wrap-break-word"
+                                                >
+                                                    <span
+                                                        class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
+                                                               border-l border-t border-gray-200"
+                                                    />
+                                                    {{ String(cell.display_value ?? cell.value ?? '') }}
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
 
@@ -534,6 +554,8 @@ export default {
             dataToDisplayInRelevantDataModal: null,
             showRelevantBudgetDataSumModal: false,
             nextCellId: localStorage.getItem('nextCellId') ?? null,
+            truncEls: {},
+            isTruncated: {},
         }
     },
     computed: {
@@ -566,18 +588,41 @@ export default {
 
     },
     mounted() {
-        // check if main Position in localStorage in "closedSubPositions"
         this.checkIfSubPositionClosed();
+
+        this._onResize = () => {
+            Object.keys(this.truncEls || {}).forEach((id) => this.updateTruncation(id));
+        };
+        window.addEventListener("resize", this._onResize);
+    },
+    beforeUnmount() {
+        localStorage.removeItem('nextCellId');
+        localStorage.removeItem('closedSubPositions');
+
+        window.removeEventListener("resize", this._onResize);
     },
     updated() {
         this.checkIfSubPositionClosed();
     },
-    beforeUnmount() {
-        // remove localeStorage key "closedSubPositions"
-        localStorage.removeItem('nextCellId');
-        localStorage.removeItem('closedSubPositions')
-    },
     methods: {
+        setTruncEl(id, el) {
+            if (!el) return;
+            this.truncEls[id] = el;
+            this.updateTruncation(id);
+        },
+
+        updateTruncation(id) {
+            const el = this.truncEls?.[id];
+            if (!el) return;
+            this.$set
+                ? this.$set(this.isTruncated, id, el.scrollWidth > el.clientWidth)
+                : (this.isTruncated[id] = el.scrollWidth > el.clientWidth);
+        },
+
+        maybeUpdateTruncation(id, index) {
+            if (index >= 3) return;
+            requestAnimationFrame(() => this.updateTruncation(id));
+        },
         IconList,
         usePage,
         persistSubPositionRowOrder(evt = null) {

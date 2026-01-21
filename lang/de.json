@@ -3805,5 +3805,9 @@
     "ProjectCostCenterDisplayComponent": "Projekt-Kostenträger-Anzeige-Komponente",
     "You do not have permission to assign users to shifts.": "Du hast keine Berechtigung, Nutzer*innen Schichten zuzuweisen.",
     "Export Shift personnel plan as xlsx": "Schicht-Personalplan als xlsx exportieren",
-    "cost unit": "Kostenträger"
+    "cost unit": "Kostenträger",
+    "Display": "Anzeige",
+    "Add Link": "Link hinzufügen",
+    "Max links": "Max. Links",
+    "LinkList": "Link-Liste"
 }

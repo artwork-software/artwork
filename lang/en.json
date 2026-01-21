@@ -3796,5 +3796,9 @@
     "ProjectCostCenterDisplayComponent": "Project cost center display component",
     "You do not have permission to assign users to shifts.": "You do not have permission to assign users to shifts.",
     "Export Shift personnel plan as xlsx": "Export Shift personnel plan as xlsx",
-    "cost unit": "Cost unit"
+    "cost unit": "Cost unit",
+    "Display": "Display",
+    "Add Link": "Add Link",
+    "Max links": "Max links",
+    "LinkList": "Link List"
 }

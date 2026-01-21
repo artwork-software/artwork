@@ -4,8 +4,8 @@
             <div class="h-9 flex items-center cursor-pointer" @click="showCraftFilter = !showCraftFilter">
                 <div class="" :class="is_tiny ? 'flex items-center text-white text-xs' : 'flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500'">
                     {{ $t('Crafts') }}
-                    <IconChevronDown v-if="!showCraftFilter" class="w-4 h-4 ml-2"/>
-                    <IconChevronUp v-if="showCraftFilter" class="w-4 h-4 ml-2"/>
+                    <PropertyIcon name="IconChevronDown" v-if="!showCraftFilter" class="w-4 h-4 ml-2 text-white"/>
+                    <PropertyIcon name="IconChevronUp" v-if="showCraftFilter" class="w-4 h-4 ml-2 text-white"/>
                 </div>
             </div>
             <div v-if="showCraftFilter">
@@ -26,9 +26,11 @@
 
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "CraftFilter",
+    components: {PropertyIcon},
     mixins: [IconLib],
     props: {
         is_tiny: {

@@ -464,8 +464,8 @@
                                                     <div class="flex items-center text-xs text-white">
                                                         {{ $t('Shift qualifications') }}
                                                         <PropertyIcon name="IconChevronDown" v-if="!showShiftQualificationFilter"
-                                                                      class="ml-2 h-4 w-4"/>
-                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4"/>
+                                                                      class="ml-2 h-4 w-4 text-white"/>
+                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4 text-white"/>
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">

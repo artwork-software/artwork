@@ -68,7 +68,7 @@ class ShiftDTO extends Data
                 : Carbon::parse($shift->start_date)->format('d.m.Y'),
             isCommitted: $shift->is_committed,
             inWorkflow: $shift->in_workflow,
-            project: $project,
+            project: $project ?? $shift->project,
             globalQualifications: $shift->globalQualifications,
             shiftGroupId: $shift->shift_group_id,
             shiftGroup: $shift->shiftGroup,

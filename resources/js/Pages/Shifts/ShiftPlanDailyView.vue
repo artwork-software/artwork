@@ -642,7 +642,29 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
     showAddShiftByPresetOrGroupModal.value = true
 }
 
-const closeAddShiftModal = () => {
+const closeAddShiftModal = (success = false, shift = null) => {
+    if (success && shift) {
+        // Find and update the shift in shiftPlanCopy to ensure immediate UI update
+        for (const room of shiftPlanCopy.value) {
+            for (const day in room.content) {
+                const dayData = room.content[day];
+
+                // Update in room shifts
+                const shiftIndex = dayData.shifts.findIndex((s: any) => s.id === shift.id);
+                if (shiftIndex !== -1) {
+                    dayData.shifts[shiftIndex] = shift;
+                }
+
+                // Update in events
+                for (const event of dayData.events) {
+                    const eventShiftIndex = event.shifts.findIndex((s: any) => s.id === shift.id);
+                    if (eventShiftIndex !== -1) {
+                        event.shifts[eventShiftIndex] = shift;
+                    }
+                }
+            }
+        }
+    }
     showAddShiftModal.value = false
     shiftToEdit.value = null
     roomForShiftAdd.value = null

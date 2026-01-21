@@ -135,6 +135,7 @@ import ProjectBasicDataDisplayComponent from "@/Pages/Projects/Components/Projec
 import ProjectCostCenterDisplayComponent from "@/Pages/Projects/Components/ProjectCostCenterDisplayComponent.vue";
 import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
 import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/ProjectMaterialIssueComponent.vue";
+import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -176,7 +177,8 @@ const componentMapping = {
     ArtistNameDisplayComponent,
     ProjectBasicDataDisplayComponent,
     ProjectCostCenterDisplayComponent,
-    ProjectMaterialIssueComponent
+    ProjectMaterialIssueComponent,
+    LinkList: LinkListComponent
 };
 
 const props = defineProps({

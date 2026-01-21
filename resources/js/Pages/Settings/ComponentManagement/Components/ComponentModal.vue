@@ -58,6 +58,31 @@
                         <BaseInput :label="$t('Placeholder')" v-model="textData.placeholder" id="placeholder" />
                     </div>
 
+                    <!-- Placeholder Label -->
+                    <div v-if="'placeholder_label' in textData">
+                        <BaseInput :label="$t('Placeholder label')" v-model="textData.placeholder_label" id="placeholder_label" />
+                    </div>
+
+                    <!-- Placeholder URL -->
+                    <div v-if="'placeholder_url' in textData">
+                        <BaseInput :label="$t('Placeholder URL')" v-model="textData.placeholder_url" id="placeholder_url" />
+                    </div>
+
+                    <!-- Max Items -->
+                    <div v-if="'max_items' in textData">
+                        <label for="max_items" class="text-xs text-gray-500">
+                            {{ $t('Max links') }}
+                        </label>
+                        <input
+                            id="max_items"
+                            type="number"
+                            min="1"
+                            max="200"
+                            v-model.number="textData.max_items"
+                            class="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        />
+                    </div>
+
                     <!-- Höhe (Range) -->
                     <div v-if="'height' in textData">
                         <label for="height" class="text-xs text-gray-500">

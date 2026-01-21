@@ -144,6 +144,7 @@ use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportControl
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
+use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
@@ -1763,6 +1764,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'destroy'
         ]
     );
+
+    Route::get('/shift-history', [ShiftHistoryController::class, 'index'])
+        ->name('shift.history.index');
 
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
         ->name('event.standard.values');

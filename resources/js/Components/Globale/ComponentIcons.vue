@@ -55,6 +55,7 @@ export default {
     <PropertyIcon name="IconPackage" class="w-6 h-6" v-if="type === 'ProjectMaterialIssueComponent'" />
     <PropertyIcon name="IconBuildingBank" class="w-6 h-6" v-if="type === 'ProjectCostCenterDisplayComponent'" />
     <PropertyIcon name="IconPalette" class="w-6 h-6" v-if="type === 'ArtistNameDisplayComponent'" />
+    <PropertyIcon name="IconLink" class="w-6 h-6" v-if="type === 'LinkList'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

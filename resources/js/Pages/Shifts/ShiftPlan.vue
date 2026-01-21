@@ -464,8 +464,8 @@
                                                     <div class="flex items-center text-xs text-white">
                                                         {{ $t('Shift qualifications') }}
                                                         <PropertyIcon name="IconChevronDown" v-if="!showShiftQualificationFilter"
-                                                                      class="ml-2 h-4 w-4"/>
-                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4"/>
+                                                                      class="ml-2 h-4 w-4 text-white"/>
+                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4 text-white"/>
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">
@@ -699,8 +699,12 @@
             <ShiftHistoryModal
                 v-if="showHistoryModal"
                 :logs="history"
-                @closed="showHistoryModal = false"
+                :crafts="crafts"
+                :initialStartDate="dateValue[0]"
+                :initialEndDate="dateValue[1]"
+                @close="showHistoryModal = false"
             />
+
         </ShiftHeader>
     </div>
     <SideNotification
@@ -1505,7 +1509,29 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
     showAddShiftModal.value = true
 }
 
-function closeAddShiftModal() {
+function closeAddShiftModal(success = false, shift = null) {
+    if (success && shift) {
+        // Find and update the shift in newShiftPlanData to ensure immediate UI update
+        for (const room of newShiftPlanData.value) {
+            for (const day in room.content) {
+                const dayData = room.content[day];
+
+                // Update in room shifts
+                const shiftIndex = dayData.shifts.findIndex(s => s.id === shift.id);
+                if (shiftIndex !== -1) {
+                    dayData.shifts[shiftIndex] = shift;
+                }
+
+                // Update in events
+                for (const event of dayData.events) {
+                    const eventShiftIndex = event.shifts.findIndex(s => s.id === shift.id);
+                    if (eventShiftIndex !== -1) {
+                        event.shifts[eventShiftIndex] = shift;
+                    }
+                }
+            }
+        }
+    }
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null

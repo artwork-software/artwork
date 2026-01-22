@@ -1,9 +1,5 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-light-background-gray'">
-        <pre>
-            {{access_budget}}
-            {{managerUsers}}
-        </pre>
         <div class="flex bg-light-background-gray w-[95%]">
 
             <BudgetComponent v-if="resolvedTable"

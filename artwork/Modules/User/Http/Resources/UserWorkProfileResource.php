@@ -43,8 +43,14 @@ class UserWorkProfileResource extends JsonResource
             'work_description' => $this->getAttribute('work_description'),
             'can_work_shifts' => $this->getAttribute('can_work_shifts'),
             'accessibleCrafts' => $this->can('can plan shifts') ?
-                $this->crafts->filter(fn(Craft $craft) => $craft->getAttribute('assignable_by_all') === true)
+                $this->crafts->filter(fn(Craft $craft) =>
+                    $craft->getAttribute('assignable_by_all') === true ||
+                    $craft->craftShiftPlaner->contains($this->resource->id)
+                )
                     ->merge($this->getAttribute('assignedCrafts'))
+                    ->merge($this->getAttribute('managingCrafts'))
+                    ->unique('id')
+                    ->values()
                     ->toArray() :
                 [],
             'assignedCrafts' => $assignedCrafts,

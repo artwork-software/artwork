@@ -3,7 +3,7 @@
     <div :class="['w-full min-w-64 rounded-lg select-none border']"
          :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}50`, borderColor: borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
-        <div class="flex flex-col w-full gap-y-0.5">
+        <div class="flex flex-col w-full">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
@@ -40,7 +40,7 @@
             </div>
 
             <!-- Zeile 3: Funktionen (Badges/Liste) -->
-            <div class="flex justify-between flex-wrap items-center gap-1 ml-2 mt-0.5">
+            <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
                 <div class="flex gap-x-2">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
                     <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">

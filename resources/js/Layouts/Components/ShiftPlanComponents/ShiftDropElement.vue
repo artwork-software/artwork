@@ -293,21 +293,14 @@ const shiftUserIds = computed(() => {
 })
 
 
-const checkIfUserIsInCraft = computed<boolean>(() => {
+const checkIfUserIsInCraft = computed(() => {
     const u = props.userForMultiEdit
     const craftId = props.shift?.craft?.id
-
-    // Fehlende Daten → kein Match
     if (!u || craftId == null) return false
+    if (isUniversallyApplicablePerson(u)) return true
 
-    // Universell anwendbar → immer true
-    if (u.craft_are_universally_applicable) return true
-
-    // IDs normalisieren (z. B. string → number) und performant prüfen
-    const assigned = new Set((u.assigned_craft_ids ?? []).map(Number))
-
-    // Treffer, wenn explizit zugeteilt ODER Primärcraft identisch
-    return assigned.has(Number(craftId)) || u.craftId === craftId
+    const assigned = new Set((u.assigned_craft_ids ?? u.craft_ids ?? []).map(Number))
+    return assigned.has(Number(craftId)) || Number(u.craftId) === Number(craftId)
 })
 
 /* ---------------- Watcher ---------------- */
@@ -354,15 +347,116 @@ function handleClickEvent() {
     }
 }
 
+function getTargetCraftIdFromShift(): number | null {
+    const id =
+        props.shift?.craft?.id ??
+        props.shift?.craft_id ??
+        props.shift?.craftId ??
+        props.craftId ??
+        null
+    return id == null ? null : Number(id)
+}
+
+function getPersonCraftId(person: any): number | null {
+    const id = person?.craft_id ?? person?.craftId ?? person?.craft?.id ?? null
+    return id == null ? null : Number(id)
+}
+
+const craftsById = computed<Record<number, any>>(() => {
+    // falls du crafts irgendwo in page props hast (optional)
+    const raw =
+        (page?.props as any)?.crafts ??
+        (page?.props as any)?.allCrafts ??
+        (page?.props as any)?.craftList ??
+        []
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {})
+    const map: Record<number, any> = {}
+    arr.forEach((c: any) => {
+        if (c?.id != null) map[Number(c.id)] = c
+    })
+    return map
+})
+
+function isUniversallyApplicablePerson(person: any): boolean {
+    if (!person) return false
+
+    // akzeptiere beide Naming-Varianten + ggf. nested craft
+    if (person.craft_universally_applicable === true) return true
+    if (person.craft_are_universally_applicable === true) return true
+    if (person.craft?.universally_applicable === true) return true
+
+    // manchmal kommen booleans als 0/1
+    if (person.craft_universally_applicable === 1) return true
+    if (person.craft_are_universally_applicable === 1) return true
+    if (person.craft?.universally_applicable === 1) return true
+
+    // Fallback: craftId lookup (wenn crafts in page props vorhanden)
+    const cid = getPersonCraftId(person)
+    if (cid != null && craftsById.value[cid] != null) {
+        return !!craftsById.value[cid]?.universally_applicable
+    }
+
+    return false
+}
+
+function personCanWorkOnCraft(person: any, targetCraftId: number): boolean {
+    if (isUniversallyApplicablePerson(person)) return true
+
+    const ids = new Set<number>([
+        ...(person.craft_ids ?? []),
+        ...(person.assigned_craft_ids ?? []),
+    ].map(Number).filter((n) => Number.isFinite(n)))
+
+    const primary = getPersonCraftId(person)
+    return ids.has(Number(targetCraftId)) || (primary != null && primary === Number(targetCraftId))
+}
+
+function requiredQualificationIdsForShift(): number[] {
+    const sq = Array.isArray(props.shift?.shifts_qualifications)
+        ? props.shift.shifts_qualifications
+        : Object.values(props.shift?.shifts_qualifications || {})
+
+    // nur Qualis mit echten Slots (>0)
+    return sq
+        .filter((x: any) => (x?.value ?? 0) > 0)
+        .map((x: any) => Number(x.shift_qualification_id))
+        .filter((n: any) => Number.isFinite(n))
+}
+
+function matchingUserQualisForShift(person: any, targetCraftId: number): any[] {
+    const requiredIds = new Set(requiredQualificationIdsForShift())
+    const userQualis = Array.isArray(person?.shift_qualifications)
+        ? person.shift_qualifications
+        : Object.values(person?.shift_qualifications || {})
+
+    const universal = isUniversallyApplicablePerson(person)
+
+    return userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
+
+        if (universal) return true // <- KEY FIX: universal ignoriert pivot.craft_id
+
+        const uqCraftId = uq?.pivot?.craft_id
+        if (uqCraftId == null) return true
+        return Number(uqCraftId) === Number(targetCraftId)
+    })
+}
+
 function onDragOver(event: DragEvent) {
     event.preventDefault()
 }
 
 function onDrop(event: DragEvent) {
     event.preventDefault()
+
+    const raw =
+        event.dataTransfer?.getData('application/json') ||
+        event.dataTransfer?.getData('text/plain') ||
+        ''
+
     try {
-        const data = event.dataTransfer?.getData('application/json')
-        droppedUser.value = data ? JSON.parse(data) : null
+        droppedUser.value = raw ? JSON.parse(raw) : null
     } catch {
         droppedUser.value = null
     }
@@ -450,34 +544,44 @@ function saveUser() {
     const user = droppedUser.value
     if (!user) return
 
-    const craftId = props.shift?.craft?.id ?? props.craftId
-    const qualificationsForCraft = (user.shift_qualifications || []).filter((q: any) => q.pivot && q.pivot.craft_id === craftId)
+    const targetCraftId = getTargetCraftIdFromShift()
+    if (targetCraftId == null) return
 
-    if (!user.craft_universally_applicable) {
-        if (!user.craft_ids || !user.craft_ids.includes(craftId)) {
-            const label = user.type === 0
-                ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
-                : user.type === 1
-                    ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
-                    : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+    // 1) Craft-Zulassung (universal => immer ok)
+    if (!personCanWorkOnCraft(user, targetCraftId)) {
+        const label = user.type === 0
+            ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
+            : user.type === 1
+                ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
+                : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
 
-            emit('dropFeedback',
-                (proxy as any)?.$t?.('{0} cannot be assigned to shifts of this craft.', [label]) ??
-                `${label} cannot be assigned to shifts of this craft.`
-            )
-            return
-        }
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('{0} cannot be assigned to shifts of this craft.', [label]) ??
+            `${label} cannot be assigned to shifts of this craft.`
+        )
+        return
     }
 
+    // 2) Already assigned?
     if (droppedUserAlreadyWorksOnShift(user)) {
         dropFeedbackUserAlreadyWorksOnShift(user.type)
         return
     }
-    if (droppedUserHasNoQualifications(user)) {
-        dropFeedbackUserHasNoQualifications(user.type)
+
+    // 3) Slots/Qualifikationen prüfen
+    const requiredIds = requiredQualificationIdsForShift()
+
+    // wenn die Schicht keine Slots hat (alle 0 / leer), bleibt das Verhalten wie bisher:
+    // -> keine offene Funktion
+    if (requiredIds.length === 0) {
+        dropFeedbackNoSlotsForQualification(user.type)
         return
     }
-    if (qualificationsForCraft.length === 0) {
+
+    // User muss passende Quali haben (bei universal: craft-unabhängig matchen!)
+    const matches = matchingUserQualisForShift(user, targetCraftId)
+
+    if (!matches.length) {
         const label = user.type === 0
             ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
             : user.type === 1
@@ -491,18 +595,15 @@ function saveUser() {
         return
     }
 
-    // Check if there are available slots for any of the user's qualifications
-    const qualificationsWithAvailableSlots = qualificationsForCraft.filter((q: any) => {
+    // 4) freie Slots je Quali prüfen
+    const qualificationsWithAvailableSlots = matches.filter((q: any) => {
         const qualificationData = computedShiftsQualificationsWithWorkerCount.value.find(
             (sq: any) => sq.shift_qualification_id === q.id
         )
-        // If no data found or maxWorkerCount is 0, no slots available
         if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
-        // Check if there are free slots (workerCount < maxWorkerCount)
         return qualificationData.workerCount < qualificationData.maxWorkerCount
     })
 
-    // If no qualifications have available slots, show error message
     if (qualificationsWithAvailableSlots.length === 0) {
         const label = user.type === 0
             ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
@@ -525,6 +626,7 @@ function saveUser() {
     openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsWithAvailableSlots)
 }
 
+
 function assignUser(user: any, shiftQualificationId: number) {
     axios.post(
         route('shift.assignUserByType', { shift: props.shift.id }),
@@ -538,8 +640,13 @@ function assignUser(user: any, shiftQualificationId: number) {
     ).then(() => {
         adjustDeltaForUser(user, +1)
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
+    }).catch(() => {
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('Saving failed') ?? 'Saving failed'
+        )
     })
 }
+
 
 function handleShiftAndEventForMultiEdit(checked: boolean, shift: any, event: any) {
     emit('handleShiftAndEventForMultiEdit', checked, shift, event)

@@ -47,6 +47,19 @@ export default {
                 return true;
             }
 
+            if (component.type === 'BudgetTab' || component.type === 'BudgetComponent') {
+                const project = this.$page.props.project || this.$page.props.headerObject?.project;
+                const usersArray = project?.usersArray || project?.users;
+
+                if (Array.isArray(usersArray)) {
+                    const currentUserId = this.$page.props.auth.user.id;
+                    const currentUserInTeam = usersArray.find(u => String(u.id) === String(currentUserId));
+                    if (currentUserInTeam?.pivot_access_budget) {
+                        return true;
+                    }
+                }
+            }
+
             if (component.permission_type === 'allSeeSomeEdit') {
                 return this.isCurrentUserInComponentUsers(component.users) ||
                     this.isCurrentUserInComponentDepartments(component.departments);

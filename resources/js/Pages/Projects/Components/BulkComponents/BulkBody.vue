@@ -556,7 +556,9 @@ const getEventGroups = () => {
 // Nur bei Sortierung nach Tag (3) lokal sortieren – sonst Server-Reihenfolge belassen.
 const sortedEvents = computed(() => {
     const list = [...events.value];
-    if (usePage().props.auth.user?.bulk_sort_id === 3) {
+    const sortId = usePage().props.auth.user?.bulk_sort_id;
+
+    if (sortId === 3) {
         list.sort((a, b) => {
             if ((a.day || '') === (b.day || '')) {
                 const as = a.start_time || '';
@@ -569,6 +571,46 @@ const sortedEvents = computed(() => {
                 return as.localeCompare(bs);
             }
             return (a.day || '').localeCompare(b.day || '');
+        });
+    } else if (sortId === 1) {
+        // Sort by room, then by time
+        list.sort((a, b) => {
+            const roomA = a.room?.name || '';
+            const roomB = b.room?.name || '';
+            if (roomA === roomB) {
+                const dayA = a.day || '';
+                const dayB = b.day || '';
+                if (dayA === dayB) {
+                    return (a.start_time || '').localeCompare(b.start_time || '');
+                }
+                return dayA.localeCompare(dayB);
+            }
+            return roomA.localeCompare(roomB);
+        });
+    } else if (sortId === 2) {
+        // Sort by type, then by time
+        list.sort((a, b) => {
+            const typeA = a.type?.name || '';
+            const typeB = b.type?.name || '';
+            if (typeA === typeB) {
+                const dayA = a.day || '';
+                const dayB = b.day || '';
+                if (dayA === dayB) {
+                    return (a.start_time || '').localeCompare(b.start_time || '');
+                }
+                return dayA.localeCompare(dayB);
+            }
+            return typeA.localeCompare(typeB);
+        });
+    } else {
+        // Default: chronologisch
+        list.sort((a, b) => {
+            const dayA = a.day || '';
+            const dayB = b.day || '';
+            if (dayA === dayB) {
+                return (a.start_time || '').localeCompare(b.start_time || '');
+            }
+            return dayA.localeCompare(dayB);
         });
     }
     return list;

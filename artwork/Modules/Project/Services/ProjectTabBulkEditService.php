@@ -28,6 +28,7 @@ class ProjectTabBulkEditService
         $eventsQuery = $project->events()
             ->with(['event_type', 'room', 'eventStatus'])
             ->without(['series', 'subEvents', 'creator'])
+            ->orderBy('start_time', 'asc')
             // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
             ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
                 $q->whereIn('event_type_id', $userCalendarFilter->event_type_ids);
@@ -60,8 +61,14 @@ class ProjectTabBulkEditService
 
         // Sortierung
         $eventsSorted = match ($userBulkSortId) {
-            1 => $eventsUnsorted->sortBy('roomName')->values(),
-            2 => $eventsUnsorted->sortBy('eventTypeName')->values(),
+            1 => $eventsUnsorted->sortBy([
+                ['roomName', 'asc'],
+                ['startTime', 'asc'],
+            ])->values(),
+            2 => $eventsUnsorted->sortBy([
+                ['eventTypeName', 'asc'],
+                ['startTime', 'asc'],
+            ])->values(),
             3 => $eventsUnsorted->sortBy('startTime')->values(),
             default => $eventsUnsorted,
         };

@@ -54,7 +54,7 @@ class ShiftDTO extends Data
             break_minutes: (int) $shift->break_minutes,
             eventId: $shift->event_id,
             description: $shift->description,
-            craft: $shift->craft,
+            craft: $shift->craft?->loadMissing('qualifications'),
             shifts_qualifications: $shift->shiftsQualifications,
             users: $shift->users,
             freelancer: $shift->freelancer,

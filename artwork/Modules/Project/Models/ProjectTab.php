@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\ComponentInTab;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -61,8 +62,11 @@ class ProjectTab extends Model
         );
     }
 
-    public function isVisibleFor(?User $user): bool
+    public function visibleForUser(?User $user): bool
     {
+        if($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
         if ($this->visible_for_all) {
             return true;
         }
@@ -91,9 +95,15 @@ class ProjectTab extends Model
 
     public function scopeVisibleForUser(Builder $q, User $user): Builder
     {
-        return $q->where('visible_for_all', true)
-            ->orWhereHas('visibleUsers', fn (Builder $uq) => $uq->where('users.id', $user->id))
-            ->orWhereHas('visibleDepartments.users', fn (Builder $dq) => $dq->where('users.id', $user->id));
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return $q;
+        }
+
+        return $q->where(function (Builder $query) use ($user) {
+            $query->where('visible_for_all', true)
+                ->orWhereHas('visibleUsers', fn (Builder $uq) => $uq->where('users.id', $user->id))
+                ->orWhereHas('visibleDepartments.users', fn (Builder $dq) => $dq->where('users.id', $user->id));
+        });
     }
 
 

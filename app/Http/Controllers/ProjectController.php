@@ -2354,7 +2354,7 @@ class ProjectController extends Controller
             },
         ]);
 
-        if (!$projectTab->isVisibleFor($authUser)) {
+        if (!$projectTab->visibleForUser($authUser)) {
             return $this->inertiaProjectError(
                 $request,
                 410,

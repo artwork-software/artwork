@@ -22,7 +22,7 @@ class ProjectTabBudgetService
             $loadedProjectInformation
         );
 
-        $users = $project->users->map(
+        $usersData = $project->users->map(
             fn (User $user) => [
                 'id'                  => $user->id,
                 'first_name'          => $user->first_name,
@@ -43,7 +43,9 @@ class ProjectTabBudgetService
 
         return [
             'BudgetTab' => $loadedProjectInformation['BudgetTab'] ?? [],
-            'users' => $users->values()->toArray(),
+            'users' => $usersData->values()->toArray(),
+            'access_budget' => $usersData->filter(fn($u) => $u['pivot_access_budget'])->values()->toArray(),
+            'managerUsers' => $usersData->filter(fn($u) => $u['pivot_is_manager'])->values()->toArray(),
         ];
     }
 }

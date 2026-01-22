@@ -1,6 +1,11 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-light-background-gray'">
+        <pre>
+            {{access_budget}}
+            {{managerUsers}}
+        </pre>
         <div class="flex bg-light-background-gray w-[95%]">
+
             <BudgetComponent v-if="resolvedTable"
                              :sage-not-assigned="sageNotAssigned ?? effectiveBudgetData?.sageNotAssigned"
                              :hide-project-header="hideProjectHeader"
@@ -12,8 +17,8 @@
                              :templates="budget?.templates ?? effectiveBudgetData?.budget?.templates"
                              :selected-sum-detail="budget?.selectedSumDetail ?? effectiveBudgetData?.budget?.selectedSumDetail"
                              :money-sources="moneySources ?? effectiveBudgetData?.moneySources"
-                             :budget-access="project?.access_budget ?? headerObject?.access_budget"
-                             :project-manager="project?.managerUsers ?? headerObject?.managerUsers"
+                             :budget-access="access_budget ?? project?.access_budget ?? headerObject?.access_budget"
+                             :project-manager="managerUsers ?? project?.managerUsers ?? headerObject?.managerUsers"
                              :first_project_budget_tab_id="first_project_budget_tab_id"
                              :can-edit-component="canEditComponent"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
@@ -72,6 +77,8 @@ export default{
             isLoadingBudget: false,
             loadBudgetError: '',
             localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null,
+            access_budget: null,
+            managerUsers: null,
 
             // 🔥 Broadcast state
             echoChannelName: null,
@@ -149,6 +156,8 @@ export default{
                 );
 
                 this.localBudgetData = data?.BudgetTab || null;
+                this.access_budget = data?.access_budget || null;
+                this.managerUsers = data?.managerUsers || null;
 
                 if (data?.users && this.headerObject?.project) {
                     this.headerObject.project.users = data.users;

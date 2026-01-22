@@ -103,6 +103,8 @@
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
+
+
             <div class="z-40 min-h-0" :style="{ '--dynamic-height': showUserOverview ? windowHeight + 'px' : '100%' }">
                 <div
                     class="min-h-0 h-[calc(var(--dynamic-height))]"
@@ -1276,6 +1278,8 @@ function normalizeShiftPlan(sp: any[] | Record<string, any> | null | undefined):
     return Array.isArray(sp) ? sp : Object.values(sp)
 }
 
+
+
 function pickInitialCurrentDay(daysList: any[]) {
     return daysList.find((d: any) => !d.isExtraRow) ?? null
 }
@@ -2402,7 +2406,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
         userForMultiEdit.value.shift_ids = Array.from(optimistic)
 
         enqueueSave(async () => {
-            const needsQuali = (shift.shifts_qualifications ?? []).length > 0
+            const needsQuali = requiredQualificationIdsForShift(shift).length > 0
             let qualificationId: number | null = null
 
             if (needsQuali) {
@@ -2451,34 +2455,44 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
 
 async function resolveQualificationFor(desiredShift: any) {
     const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
-    const required = desiredShift.shifts_qualifications ?? []
-    if (required.length === 0) return null
+    const requiredIds = new Set(requiredQualificationIdsForShift(desiredShift))
+    if (requiredIds.size === 0) return null
+
     const shiftCraftId =
         desiredShift.craft_id ??
         desiredShift.craftId ??
         desiredShift.craft?.id ??
         null
-    const available = userQualis.filter((uq: any) => {
-        const matchesQualification = required.some(
-            (req: any) => req.shift_qualification_id === uq.id,
-        )
 
-        if (!matchesQualification) return false
+    const isUniversal = isUniversallyApplicablePerson(userForMultiEdit.value)
+
+    const available = userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
+
+        // 🔥 KEY FIX:
+        // Universal -> craft-unabhängig matchen (pivot.craft_id egal)
+        if (isUniversal) return true
+
+        // Nicht-universal: wenn shiftCraftId unbekannt -> ok, sonst pivot prüfen
         if (!shiftCraftId) return true
 
         const uqCraftId = uq.pivot?.craft_id ?? null
         if (uqCraftId === null) return true
-        return uqCraftId === shiftCraftId
+        return Number(uqCraftId) === Number(shiftCraftId)
     })
 
     if (available.length === 0) return null
     if (available.length === 1) return available[0].id
+
     if (openQualificationPicker) {
         const picked = await openQualificationPicker(desiredShift, available)
         return picked?.id ?? null
     }
+
     return available[0].id
 }
+
 
 
 function openQualificationPicker(desiredShift: any, options: any[]) {
@@ -2533,6 +2547,32 @@ function enqueueSave(taskFn: () => Promise<any>) {
 
 function isSaving(shiftId: number) {
     return savingShiftIds.value.has(shiftId)
+}
+
+function isUniversallyApplicablePerson(u: any): boolean {
+    if (!u) return false
+
+    // beide Naming-Varianten + nested craft abdecken
+    return (
+        u.craft_universally_applicable === true ||
+        u.craft_universally_applicable === 1 ||
+        u.craft_are_universally_applicable === true ||
+        u.craft_are_universally_applicable === 1 ||
+        u.craft?.universally_applicable === true ||
+        u.craft?.universally_applicable === 1
+    )
+}
+
+function requiredQualificationIdsForShift(shift: any): number[] {
+    const req = Array.isArray(shift?.shifts_qualifications)
+        ? shift.shifts_qualifications
+        : Object.values(shift?.shifts_qualifications || {})
+
+    // nur Qualis die wirklich Slots haben
+    return req
+        .filter((r: any) => (r?.value ?? 0) > 0)
+        .map((r: any) => Number(r.shift_qualification_id))
+        .filter((n: any) => Number.isFinite(n))
 }
 
 function showNotice(kind: 'success' | 'error' | 'info', title: string, message: string, {timeout = 3500} = {}) {

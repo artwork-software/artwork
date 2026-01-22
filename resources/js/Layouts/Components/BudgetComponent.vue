@@ -1055,7 +1055,8 @@ export default {
         'columns',
         'sageNotAssigned',
         'first_project_budget_tab_id',
-        'isInTrash'
+        'isInTrash',
+        'canEditComponent'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {

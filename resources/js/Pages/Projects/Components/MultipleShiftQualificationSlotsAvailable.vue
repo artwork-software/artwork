@@ -3,10 +3,9 @@
                       :description="$t('In which qualification should the user be added?')"  is-in-shift-plan>
             <div class="mx-4">
                 <div class="grid grid-cols-2 w-full gap-4">
-
                     <BaseUIButton
                         v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
-                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name])"
+                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name]) + (shouldShowAbbreviation(availableShiftQualificationSlot) && availableShiftQualificationSlot.pivot?.craft_id ? ' [' + getCraftAbbreviation(availableShiftQualificationSlot.pivot.craft_id) + ']' : '')"
                         @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id)"
                         :icon="availableShiftQualificationSlot.icon"
                         is-add-button
@@ -43,12 +42,37 @@ export default defineComponent({
     props: [
         'show',
         'availableShiftQualificationSlots',
-        'droppedUser'
+        'droppedUser',
+        'crafts'
     ],
     emits: [
         'close'
     ],
+    computed: {
+        hasDuplicateQualifications() {
+            if (!this.availableShiftQualificationSlots) return false;
+            const counts = {};
+            for (const slot of this.availableShiftQualificationSlots) {
+                counts[slot.id] = (counts[slot.id] || 0) + 1;
+            }
+            return Object.values(counts).some(count => count > 1);
+        }
+    },
     methods: {
+        shouldShowAbbreviation(slot) {
+            if (!this.hasDuplicateQualifications) return false;
+
+            const qualificationId = slot.id;
+            const occurrences = this.availableShiftQualificationSlots.filter(s => s.id === qualificationId).length;
+
+            return occurrences > 1;
+        },
+        getCraftAbbreviation(craftId) {
+            const crafts = this.crafts || this.$page.props.crafts;
+            if (!crafts || !craftId) return '';
+            const craft = crafts.find(c => c.id === craftId);
+            return craft ? craft.abbreviation : '';
+        },
         close(event, droppedUser = null, shiftQualificationId = null, closeOnButton = false) {
             this.$emit('close', droppedUser, shiftQualificationId, closeOnButton);
         }

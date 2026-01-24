@@ -313,16 +313,22 @@ class ShiftPlanRequestController extends Controller
             'days'              => ['array'],
             'days.*.date'       => ['required','date'],
             'days.*.reason'     => ['nullable','string'],
+
             'shifts'            => ['array'],
             'shifts.*.shift_id' => ['required','integer','exists:shifts,id'],
+            'shifts.*.unique_key' => ['required','string'],
+            'shifts.*.row_type' => ['required','string'],
+            'shifts.*.row_id' => ['nullable','integer'],
             'shifts.*.reason'   => ['nullable','string'],
         ]);
 
         // Request als abgelehnt markieren
-        $shiftPlanRequest->status              = 'rejected';
+        $shiftPlanRequest->rejected_days   = $payload['days'] ?? [];
+        $shiftPlanRequest->rejected_shifts = $payload['shifts'] ?? [];
+        $shiftPlanRequest->review_comment  = $payload['global_reason'] ?? null;
+        $shiftPlanRequest->status = 'rejected';
         $shiftPlanRequest->reviewed_by_user_id = $user->id;
-        $shiftPlanRequest->reviewed_at         = now();
-        $shiftPlanRequest->review_comment      = $payload['global_reason'] ?? null; // globaler Grund
+        $shiftPlanRequest->reviewed_at = now();
         $shiftPlanRequest->save();
 
         // Alle Schichten, die zu diesem Request gehören
@@ -332,12 +338,12 @@ class ShiftPlanRequestController extends Controller
 
         // Gründe pro Schicht
         $shiftReasons = collect($payload['shifts'] ?? [])
-            ->mapWithKeys(fn($s) => [$s['shift_id'] => $s['reason']])
+            ->pluck('reason', 'shift_id')
             ->filter(fn($r) => $r !== null && trim($r) !== '');
 
         // Gründe pro Tag
         $dayReasons = collect($payload['days'] ?? [])
-            ->mapWithKeys(fn($d) => [$d['date'] => $d['reason']])
+            ->pluck('reason', 'date')
             ->filter(fn($r) => $r !== null && trim($r) !== '');
 
         // Felder, die im Workflow getrackt werden und auf _initial zurück sollen

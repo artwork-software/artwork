@@ -50,7 +50,7 @@
                     </div>
                 </div>
 
-                <div v-if="request.review_comment" class="max-w-xs text-right text-[11px] text-gray-500">“{{ request.review_comment }}”</div>
+                <div v-if="request.review_comment" :class="request.status === 'rejected' || 'denied' ? 'text-artwork-error' : request.status === ('approved' || 'accepted')? 'text-emerald-700' : 'text-gray-500'" class="max-w-xs text-right text-[11px]">{{request.status === 'rejected' || 'denied' ? $t('Rejection Reason') + ': ' : ''}}{{ request.review_comment }}</div>
 
                 <!-- show who requested if not my request -->
                 <div v-if="!isMyRequest && request.requested_by" class="flex items-center gap-2 mt-2">

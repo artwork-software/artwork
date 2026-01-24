@@ -46,12 +46,17 @@
         <!-- Body -->
         <div class="px-3 py-3 space-y-3">
             <!-- Zeit & Raum -->
-            <div class="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2">
-        <span class="text-sm font-medium text-zinc-900">
-          {{ shift.start }} – {{ shift.end }}
-          <span class="text-zinc-500">·</span>
-          <span class="text-zinc-700">{{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
-        </span>
+            <div class="flex flex-col border-b border-zinc-200 pb-2">
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-sm font-medium text-zinc-900">
+                      {{ getDisplayTime() }}
+                      <span class="text-zinc-500">·</span>
+                      <span class="text-zinc-700">{{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
+                    </span>
+                </div>
+                <div v-if="hasIndivTime" class="text-[10px] text-zinc-500 mt-0.5">
+                    {{ $t('individual user time, original shift time: {start} - {end}', { start: shift.start, end: shift.end }) }}
+                </div>
             </div>
 
             <!-- Kolleg*innen -->
@@ -148,7 +153,12 @@
     <RequestWorkTimeChangeModal
         v-if="showRequestWorkTimeChangeModal"
         :user="shift.users.find(u => u.id === userToEditId)"
-        :shift="shift"
+        :shift="{
+            ...shift,
+            start: getDisplayTime().split(' – ')[0],
+            end: getDisplayTime().split(' – ')[1],
+            start_of_shift: shift.start_of_shift ?? (shift._day ? formatDateDMYForModal(shift._day) : null)
+        }"
         @close="showRequestWorkTimeChangeModal = false"
     />
 </template>
@@ -177,6 +187,52 @@ const props = defineProps({
 })
 
 const showRequestWorkTimeChangeModal = ref(false)
+const hasIndivTime = ref(false)
+
+const formatDateDMYForModal = (dateStr) => {
+    if (!dateStr) return null
+    // dateStr ist YYYY-MM-DD
+    const [y, m, d] = dateStr.split('-')
+    if (!y || !m || !d) return dateStr
+    return `${d}.${m}.${y}`
+}
+
+const getDisplayTime = () => {
+    let startTime = props.shift.start
+    let endTime = props.shift.end
+
+    let currentUser = null
+    if (props.type === 'user' && props.shift?.users) {
+        currentUser = props.shift.users.find(u => u.id === props.userToEditId)
+    } else if (props.type === 'freelancer' && props.shift?.freelancer) {
+        currentUser = props.shift.freelancer.find(f => f.id === props.userToEditId)
+    } else if (props.type === 'service_provider' && props.shift?.service_provider) {
+        currentUser = props.shift.service_provider.find(sp => sp.id === props.userToEditId)
+    }
+
+    if (currentUser?.pivot) {
+        let pivotStart = null
+        let pivotEnd = null
+
+        if (currentUser.pivot.start_time) {
+            pivotStart = currentUser.pivot.start_time.slice(0, 5)
+        }
+        if (currentUser.pivot.end_time) {
+            pivotEnd = currentUser.pivot.end_time.slice(0, 5)
+        }
+
+        if (pivotStart && pivotStart !== props.shift.start.slice(0, 5)) {
+            startTime = pivotStart
+            hasIndivTime.value = true
+        }
+        if (pivotEnd && pivotEnd !== props.shift.end.slice(0, 5)) {
+            endTime = pivotEnd
+            hasIndivTime.value = true
+        }
+    }
+
+    return `${startTime} – ${endTime}`
+}
 
 const hasColleaguesOnShift = (shift) => {
     // Eigene Schicht ist immer in users enthalten – Kollegen = weitere Personen

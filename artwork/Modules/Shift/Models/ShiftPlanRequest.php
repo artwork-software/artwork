@@ -40,11 +40,15 @@ class ShiftPlanRequest extends Model
         'reviewed_by_user_id',
         'reviewed_at',
         'review_comment',
+        'rejected_days',
+        'rejected_shifts',
     ];
 
     protected $casts = [
         'requested_at' => 'datetime',
         'reviewed_at'  => 'datetime',
+        'rejected_days' => 'array',
+        'rejected_shifts' => 'array',
     ];
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\HasMany

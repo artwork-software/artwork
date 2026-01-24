@@ -187,8 +187,9 @@
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
-                                      icon-size="h-5 w-5" classes-button="ui-button" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
+                                      :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>

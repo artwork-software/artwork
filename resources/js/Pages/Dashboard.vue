@@ -186,7 +186,10 @@
                                     v-if="item.type === 'shift'"
                                     type="user"
                                     :event="item.shift.event"
-                                    :shift="item.shift"
+                                    :shift="{
+                                        ...item.shift,
+                                        start_of_shift: item.shift.start_of_shift ?? formatDateDMYFromISO(todayDate)
+                                    }"
                                     :project="findProjectById(item.shift.event?.project_id)"
                                     :event-type="item.shift.event ? findEventTypeById(item.shift.event?.event_type_id) : null"
                                     :user-to-edit-id="user.id"
@@ -495,6 +498,13 @@ const openCalendarWithEventId = (eventForCalendar) => {
     router.get(route('dashboard.redirect-to-calendar', eventForCalendar.id))
 
 };
+
+const formatDateDMYFromISO = (dateStr: string) => {
+    if (!dateStr) return null
+    const [y, m, d] = dateStr.split('-')
+    if (!y || !m || !d) return dateStr
+    return `${d}.${m}.${y}`
+}
 </script>
 
 <style scoped>

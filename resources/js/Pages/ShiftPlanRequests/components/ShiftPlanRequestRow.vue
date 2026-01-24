@@ -25,6 +25,7 @@
                 <ShiftDayCell
                     v-for="day in days"
                     :key="day.date"
+                    :day="day"
                     :entries="row.days[day.date]"
                     :reject-active="rejectActive"
                     :day-date="day.date"

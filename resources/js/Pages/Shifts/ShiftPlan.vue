@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full flex flex-col">
+    <div id="shiftPlan" class="w-full flex flex-col bg-white">
         <ShiftHeader>
             <div aria-live="assertive"
                  class="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
@@ -1332,6 +1332,19 @@ async function initializeShiftPlan() {
 onMounted(async () => {
     await initializeShiftPlan()
 
+    document.addEventListener('fullscreenchange', () => {
+        isFullscreen.value = !!document.fullscreenElement
+    })
+    document.addEventListener('webkitfullscreenchange', () => {
+        isFullscreen.value = !!(document as any).webkitFullscreenElement
+    })
+    document.addEventListener('mozfullscreenchange', () => {
+        isFullscreen.value = !!(document as any).mozFullScreenElement
+    })
+    document.addEventListener('MSFullscreenChange', () => {
+        isFullscreen.value = !!(document as any).msFullscreenElement
+    })
+
     // currentDayRef folgt immer currentDayOnView
     watch(
         () => currentDayOnView.value,
@@ -1992,13 +2005,22 @@ function showDropFeedback(feedback: string) {
 function openFullscreen() {
     const elem = document.getElementById('shiftPlan') as any
     if (!elem) return
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen()
-        isFullscreen.value = true
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen()
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen()
+    if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).msFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen()
+        } else if ((document as any).webkitExitFullscreen) {
+            (document as any).webkitExitFullscreen()
+        } else if ((document as any).msExitFullscreen) {
+            (document as any).msExitFullscreen()
+        }
+    } else {
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen()
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen()
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen()
+        }
     }
 }
 

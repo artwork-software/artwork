@@ -1,4 +1,5 @@
 {
+    "individual user time, original shift time: {start} - {end}": "individuelle Userzeit, originale Schichtzeit: {start} - {end}",
     "End date cannot be earlier than start date": "Enddatum darf nicht vor dem Startdatum liegen",
     "Return date cannot be earlier than issue date": "Rückgabedatum darf nicht vor dem Ausgabedatum liegen",
     "Add Event": "Veranstaltung hinzufügen",

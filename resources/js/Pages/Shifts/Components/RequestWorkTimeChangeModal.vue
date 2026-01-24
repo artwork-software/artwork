@@ -24,16 +24,17 @@
 
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Raum</label>
-                    <div class="mt-1 text-gray-900">{{ shift.roomName ?? shift?.room?.name }}</div>
+                    <div class="mt-1 text-gray-900">{{ shift.roomName ?? shift?.room?.name ?? '-' }}</div>
                 </div>
 
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Firma</label>
-                    <div class="mt-1 text-gray-900">{{ shift.craft.name }} [{{ shift.craft.abbreviation }}]</div>
+                    <div class="mt-1 text-gray-900" v-if="shift.craft">{{ shift.craft.name }} [{{ shift.craft.abbreviation }}]</div>
+                    <div class="mt-1 text-gray-900" v-else>-</div>
                 </div>
             </div>
 
-            <div>
+            <div v-if="shift.craft">
                 <label class="block font-medium text-gray-700 mb-1 font-lexend">Zuständige Personen</label>
                 <ul class="space-y-2">
                     <li v-for="person in shift.craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg shadow border border-gray-200">
@@ -98,12 +99,12 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const requestForm = useForm({
-    request_start_time: props.shift.start,
-    request_end_time:  props.shift.end,
+    request_start_time: props.shift.start || props.shift.start_time || '',
+    request_end_time:  props.shift.end || props.shift.end_time || '',
     shift_id: props.shift.id,
-    craft_id: props.shift.craft.id,
+    craft_id: props.shift.craft?.id,
     request_comment: '',
-    user_id: props.user.id,
+    user_id: props.user?.id,
     requested_by: usePage().props.auth.user.id
 });
 

@@ -158,26 +158,30 @@ class DailyShiftPlanPdfBuilder
 
     private function buildDayChunks(Project $project): Collection
     {
-        $allDates = collect();
+        $dayKeys = collect();
 
         foreach ($project->shifts as $shift) {
-            $allDates->push($this->shiftDate($shift));
-        }
-        foreach ($project->events as $event) {
-            $allDates->push(Carbon::parse($event->earliest_start_datetime)->startOfDay());
+            $dayKeys->push($this->shiftDate($shift)->toDateString());
         }
 
-        $start = $allDates->min()?->copy() ?? now()->startOfDay();
-        $end   = $allDates->max()?->copy() ?? now()->startOfDay();
+        foreach ($project->events as $event) {
+            $dayKeys->push(
+                Carbon::parse($event->earliest_start_datetime)->startOfDay()->toDateString()
+            );
+        }
+
+        $dayKeys = $dayKeys->filter()->unique()->sort()->values();
 
         $chunks = collect();
-
-        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-            $chunks = $chunks->merge($this->buildChunksForSingleDay($project, $d->copy()));
+        foreach ($dayKeys as $key) {
+            $chunks = $chunks->merge(
+                $this->buildChunksForSingleDay($project, Carbon::parse($key)->startOfDay())
+            );
         }
 
         return $chunks;
     }
+
 
     private function buildChunksForSingleDay(Project $project, Carbon $day): Collection
     {
@@ -193,6 +197,12 @@ class DailyShiftPlanPdfBuilder
 
         $eventCards = $this->buildEventCardsCompact($events);
         $timelineBlocks = $this->buildTimelineBlocks($events);
+
+        // komplett leer? -> keinen Chunk erzeugen
+        if ($events->isEmpty() && $shifts->isEmpty() && empty($timelineBlocks) && empty($eventCards)) {
+            return collect();
+        }
+
 
         $timelineLanes = 1;
         foreach ($timelineBlocks as $b) {
@@ -475,17 +485,78 @@ class DailyShiftPlanPdfBuilder
 
         foreach ($events as $e) {
             foreach (($e->timelines ?? []) as $t) {
-                $startStr = $t->start ?? ($t['start'] ?? null);
-                $endStr   = $t->end ?? ($t['end'] ?? null);
-                if (!$startStr || !$endStr) continue;
+                // Obj + Array kompatibel
+                $startStr = trim((string)(is_array($t) ? ($t['start'] ?? '') : ($t->start ?? '')));
+                $endStr   = trim((string)(is_array($t) ? ($t['end'] ?? '')   : ($t->end ?? '')));
+                $desc     = is_array($t) ? ($t['description'] ?? '') : ($t->description ?? '');
 
+                // start_or_end: 0 => "bis", 1 => "ab" (cast boolean)
+                // Achtung: boolean-cast macht aus 0/1 -> false/true
+                $startOrEnd = is_array($t)
+                    ? ($t['start_or_end'] ?? null)
+                    : ($t->start_or_end ?? null);
+
+                $hasStart = $startStr !== '';
+                $hasEnd   = $endStr !== '';
+
+                if (!$hasStart && !$hasEnd) {
+                    continue;
+                }
+
+                // Helper: meta-Präfix bestimmen
+                $metaPrefix = function () use ($startOrEnd): string {
+                    // Wenn nicht gesetzt: fallback auf "ab"
+                    if ($startOrEnd === null) return 'ab ';
+                    // boolean false => 0 => bis
+                    return ((bool)$startOrEnd) ? 'ab ' : 'bis ';
+                };
+
+                // ---- POINT CASE: nur ein Zeitwert vorhanden -> 1 Minute Slot ----
+                if ($hasStart xor $hasEnd) {
+                    $timeStr = $hasStart ? $startStr : $endStr;
+
+                    $start = $this->timeToMinutes($timeStr);
+                    $end   = $start + 1;
+
+                    $blocks[] = [
+                        'start' => $start,
+                        'end'   => $end,
+                        'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
+                        'meta'  => $metaPrefix() . $timeStr,
+                        'color' => '#16a34a',
+                        'bg'    => $this->mixWithWhite('#16a34a', 0.93),
+                    ];
+
+                    continue;
+                }
+
+                // ---- RANGE CASE: Start + Ende vorhanden ----
                 $start = $this->timeToMinutes($startStr);
                 $end   = $this->timeToMinutesWithOvernight($startStr, $endStr);
 
+                // identisch => Minimal-Slot + ab/bis anhand start_or_end
+                if ($end === $start) {
+                    $end += 1;
+
+                    // Anzeige als Marker statt "12:00 – 12:00"
+                    // Zeit nehmen wir aus startStr (weil bei euch bei Punkt-Timelines start==end ist)
+                    $blocks[] = [
+                        'start' => $start,
+                        'end'   => $end,
+                        'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
+                        'meta'  => $metaPrefix() . $startStr,
+                        'color' => '#16a34a',
+                        'bg'    => $this->mixWithWhite('#16a34a', 0.93),
+                    ];
+
+                    continue;
+                }
+
+                // normaler Range-Fall
                 $blocks[] = [
                     'start' => $start,
                     'end'   => $end,
-                    'title' => trim((string)($t->description ?? ($t['description'] ?? ''))) ?: 'Timeline',
+                    'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
                     'meta'  => sprintf('%s – %s', $startStr, $endStr),
                     'color' => '#16a34a',
                     'bg'    => $this->mixWithWhite('#16a34a', 0.93),
@@ -495,6 +566,7 @@ class DailyShiftPlanPdfBuilder
 
         usort($blocks, fn($a, $b) => $a['start'] <=> $b['start']);
 
+        // Lane Packing
         $laneEnds = [];
         foreach ($blocks as &$b) {
             $assigned = null;
@@ -502,6 +574,7 @@ class DailyShiftPlanPdfBuilder
                 if ($lend <= $b['start']) { $assigned = $li; break; }
             }
             if ($assigned === null) $assigned = count($laneEnds);
+
             $b['lane'] = $assigned;
             $laneEnds[$assigned] = $b['end'];
             ksort($laneEnds);
@@ -510,6 +583,9 @@ class DailyShiftPlanPdfBuilder
 
         return $blocks;
     }
+
+
+
 
     /* ----------------------------- SHIFTS ----------------------------- */
 
@@ -521,11 +597,22 @@ class DailyShiftPlanPdfBuilder
         foreach ($shifts as $s) {
             $craftKey = $this->craftKey($s);
 
-            $startStr = (string)$s->start;
-            $endStr   = (string)$s->end;
+            $startStr = (string)($s->start ?? '');
+            $endStr   = (string)($s->end ?? '');
+
+            if ($startStr === '' && $endStr === '') continue;
+
+            if ($startStr === '') $startStr = $endStr;
+            if ($endStr === '') $endStr = $startStr;
 
             $start = $this->timeToMinutes($startStr);
-            $end   = $this->timeToMinutesWithOvernight($startStr, $endStr);
+            $end   = ($s->start && $s->end)
+                ? $this->timeToMinutesWithOvernight($startStr, $endStr)
+                : $start + 1;
+
+            if ($start === $end) {
+                $end += 1;
+            }
 
             $people  = $this->collectShiftPeople($s);
             $summary = $this->buildShiftQualificationSummary($s);
@@ -809,7 +896,12 @@ class DailyShiftPlanPdfBuilder
     {
         $s = $this->timeToMinutes($start);
         $e = $this->timeToMinutes($end);
-        if ($e <= $s) $e += 24 * 60;
+
+        // WICHTIG: Gleichheit ist NICHT "overnight"
+        if ($e < $s) {
+            $e += 24 * 60;
+        }
+
         return $e;
     }
 

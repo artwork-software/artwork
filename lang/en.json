@@ -1,4 +1,5 @@
 {
+    "individual user time, original shift time: {start} - {end}": "individual user time, original shift time: {start} - {end}",
     "End date cannot be earlier than start date": "End date cannot be earlier than start date",
     "Return date cannot be earlier than issue date": "Return date cannot be earlier than issue date",
     "Add Event": "Add Event",

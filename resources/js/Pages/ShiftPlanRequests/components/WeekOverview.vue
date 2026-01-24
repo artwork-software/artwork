@@ -1,17 +1,23 @@
 <template>
-    <div class="rounded-2xl border border-gray-200 bg-white shadow-sm p-3">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-medium text-gray-600">{{ $t('Week overview') }}</span>
-        </div>
-        <div class="grid text-xs font-medium text-gray-600" :style="gridStyle">
-            <div v-for="day in days" :key="day.date" class="flex flex-col items-center gap-1 rounded-xl px-2 py-2" :class="day.is_today ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-50 text-gray-600'">
-                <span>{{ day.label }}</span>
-                <span class="text-[11px] text-gray-400" v-if="day.is_today">{{ $t('Today') }}</span>
+    <div class="grid gap-2" :style="gridStyle">
+        <div
+            v-for="day in days"
+            :key="day.date"
+            class="rounded-xl border p-2 text-center"
+            :class="day.is_rejected ? 'border-red-500 bg-red-50/30' : 'border-gray-200 bg-white'"
+        >
+            <div class="text-xs font-medium text-gray-900">{{ day.label }}</div>
+
+            <div v-if="day.rejection_reason" class="mt-1 text-[10px] font-semibold text-red-600 leading-tight">
+                {{ day.rejection_reason }}
             </div>
         </div>
     </div>
 </template>
-<script setup>
-const props = defineProps({ days: { type: Array, required: true }, gridStyle: { type: Object, required: true } });
-</script>
 
+<script setup>
+defineProps({
+    days: { type: Array, required: true },
+    gridStyle: { type: Object, required: true }
+});
+</script>

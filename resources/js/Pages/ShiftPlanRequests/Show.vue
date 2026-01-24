@@ -98,7 +98,16 @@ const props = defineProps({
     isMyRequest: {type: Boolean, required: false, default: false},
 });
 
-const daysComputed = computed(() => props.days);
+const daysComputed = computed(() => {
+    return props.days.map(day => {
+        const rejection = props.request.rejected_days?.find(rd => rd.date === day.date);
+        return {
+            ...day,
+            is_rejected: !!rejection,
+            rejection_reason: rejection?.reason || null,
+        };
+    });
+});
 const gridStyle = computed(() => {
     const cols = daysComputed.value.length || 7;
     return {gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`};
@@ -112,21 +121,26 @@ const rejectState = reactive({
     globalComment: '',
     selectedDays: {}, // date => true
     dayReasons: {},   // date => reason string
-    shiftSelections: {}, // shiftId => true
-    shiftReasons: {}, // shiftId => reason string
+    shiftSelections: {}, // uniqueKey => true
+    shiftReasons: {}, // uniqueKey => reason string
 });
 
 const hasAnySelection = computed(() => Object.keys(rejectState.selectedDays).length > 0 || Object.keys(rejectState.shiftSelections).length > 0);
 const canConfirmReject = computed(() => {
     if (!rejectState.active) return false;
+
     // Wenn keine Auswahl, dann globaler Kommentar muss vorhanden sein
-    if (!hasAnySelection.value) return rejectState.globalComment.trim().length > 0;
-    // Wenn Auswahl: Pro ausgewähltem Tag oder Schicht entweder ein individueller Grund oder globaler Grund muss existieren
-    // Mindestens irgendein Grund insgesamt
-    const dayReasonsOk = Object.keys(rejectState.selectedDays).every(d => (rejectState.dayReasons[d] && rejectState.dayReasons[d].trim().length > 0) || rejectState.globalComment.trim().length > 0);
-    const shiftReasonsOk = Object.keys(rejectState.shiftSelections).every(id => (rejectState.shiftReasons[id] && rejectState.shiftReasons[id].trim().length > 0) || rejectState.globalComment.trim().length > 0);
-    const anyReason = rejectState.globalComment.trim().length > 0 || Object.values(rejectState.dayReasons).some(r => r?.trim().length) || Object.values(rejectState.shiftReasons).some(r => r?.trim().length);
-    return dayReasonsOk && shiftReasonsOk && anyReason;
+    if (!hasAnySelection.value) {
+        return rejectState.globalComment.trim().length > 0;
+    }
+
+    // Wenn Auswahl: Alle ausgewählten Elemente müssen validiert werden
+    // Mindestens irgendein Grund insgesamt muss existieren
+    const anyReason = rejectState.globalComment.trim().length > 0 ||
+                      Object.values(rejectState.dayReasons).some(r => r?.trim().length) ||
+                      Object.values(rejectState.shiftReasons).some(r => r?.trim().length);
+
+    return anyReason;
 });
 
 // Auswahl Handler
@@ -138,16 +152,16 @@ const toggleDaySelection = (dayDate) => {
         rejectState.selectedDays[dayDate] = true;
     }
 };
-const toggleShiftSelection = (shiftId) => {
-    if (rejectState.shiftSelections[shiftId]) {
-        delete rejectState.shiftSelections[shiftId];
-        delete rejectState.shiftReasons[shiftId];
+const toggleShiftSelection = (uniqueKey) => {
+    if (rejectState.shiftSelections[uniqueKey]) {
+        delete rejectState.shiftSelections[uniqueKey];
+        delete rejectState.shiftReasons[uniqueKey];
     } else {
-        rejectState.shiftSelections[shiftId] = true;
+        rejectState.shiftSelections[uniqueKey] = true;
     }
 };
-const updateShiftReason = ({shiftId, reason}) => {
-    rejectState.shiftReasons[shiftId] = reason;
+const updateShiftReason = ({uniqueKey, reason}) => {
+    rejectState.shiftReasons[uniqueKey] = reason;
 };
 const updateDayReason = ({day, reason}) => {
     rejectState.dayReasons[day] = reason;
@@ -172,17 +186,30 @@ const cancelReject = () => {
 
 const confirmReject = () => {
     if (!canConfirmReject.value) return;
+
+    const parseUniqueKey = (key) => {
+        const parts = key.split('-');
+        return {
+            shift_id: Number(parts[0]),
+            row_type: parts[1],               // user / freelancer / service_provider / unassigned
+            row_id: parts[2] === 'null' ? null : Number(parts[2]),
+            unique_key: key,
+        };
+    };
+
     const payload = {
         global_reason: rejectState.globalComment || null,
         days: Object.keys(rejectState.selectedDays).map(date => ({
             date,
-            reason: rejectState.dayReasons[date] || rejectState.globalComment || null,
+            reason: rejectState.dayReasons[date] || null,
         })),
-        shifts: Object.keys(rejectState.shiftSelections).map(id => ({
-            shift_id: Number(id),
-            reason: rejectState.shiftReasons[id] || rejectState.globalComment || null,
+        shifts: Object.keys(rejectState.shiftSelections).map(key => ({
+            ...parseUniqueKey(key),
+            reason: rejectState.shiftReasons[key] || null,
         })),
     };
+
+
     router.post(
         route('shift-plan-requests.reject', props.request.id),
         payload,
@@ -212,6 +239,15 @@ const acceptRequest = () => {
 };
 
 // Rows aus Shifts bauen
+const rejectedMap = computed(() => {
+    const list = props.request.rejected_shifts ?? [];
+    const map = {};
+    for (const item of list) {
+        if (item?.unique_key) map[item.unique_key] = item.reason;
+    }
+    return map;
+});
+
 const rows = computed(() => {
     const map = new Map();
     const ensureRow = (key, base) => {
@@ -231,13 +267,21 @@ const rows = computed(() => {
     };
     const addEntry = (row, date, shift, meta = {}) => {
         if (!row.days[date]) row.days[date] = [];
+        const uniqueKey = `${shift.id}-${row.type}-${row.id}`;
+
+        // Find existing entry to avoid duplicates if same shift is assigned to same person multiple times (shouldn't happen but just in case)
+        const existing = row.days[date].find(e => e.unique_key === uniqueKey);
+        if (existing) return;
+
         row.days[date].push({
+            unique_key: uniqueKey,
             shift_id: shift.id,
             start_time: shift.start,
             end_time: shift.end,
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
+            workflow_rejection_reason: rejectedMap.value[uniqueKey] ?? shift.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false
         });

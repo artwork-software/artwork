@@ -73,7 +73,6 @@
             </div>
         </div>
     </div>
-
     <EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
@@ -82,7 +81,7 @@
         :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
         :project="null"
         :event="event"
-        :wantedRoomId="wantedRoom"
+        :wantedRoomId="wantedRoomId"
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
@@ -128,15 +127,15 @@ const props = defineProps({
         default: () => ({})
     },
     rooms: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventStatuses: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventTypes: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     first_project_calendar_tab_id: {
@@ -159,7 +158,7 @@ const showConfirmDeleteModal = ref(false);
 const hexColor = computed(() => props.event.eventType.hex_code || '#cccccc');
 const borderColor = computed(() => hexColor.value + 'A0')
 
-const wantedRoom = ref(null);
+const wantedRoomId = ref(props.event.roomId);
 const wantedDate = ref(null);
 const isPlanning = ref(false);
 const roomCollisions = ref([]);

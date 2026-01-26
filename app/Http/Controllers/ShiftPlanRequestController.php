@@ -171,7 +171,12 @@ class ShiftPlanRequestController extends Controller
             $shiftsQuery->update([
                 'current_request_id' => $shiftPlanRequest->id,
                 'in_workflow'        => true,
+                'workflow_rejection_reason' => null,
             ]);
+
+            DB::table('shift_workers')
+                ->whereIn('shift_id', $shiftIdsToAttach)
+                ->update(['workflow_rejection_reason' => null]);
         }
 
         // 7. Websockets: Alle betroffenen Schichten updaten
@@ -265,6 +270,10 @@ class ShiftPlanRequestController extends Controller
             $shift->committing_user_id = $this->auth->id();
             $shift->save();
 
+            DB::table('shift_workers')
+                ->where('shift_id', $shift->id)
+                ->update(['workflow_rejection_reason' => null]);
+
             activity()
                 ->performedOn($shift)
                 ->causedBy($user)
@@ -309,23 +318,23 @@ class ShiftPlanRequestController extends Controller
         $user = $this->auth->user();
 
         $payload = $request->validate([
-            'global_reason'     => ['nullable','string'],
-            'days'              => ['array'],
-            'days.*.date'       => ['required','date'],
-            'days.*.reason'     => ['nullable','string'],
+            'global_reason' => ['nullable', 'string'],
+            'days' => ['array'],
+            'days.*.date' => ['required', 'date'],
+            'days.*.reason' => ['nullable', 'string'],
 
-            'shifts'            => ['array'],
-            'shifts.*.shift_id' => ['required','integer','exists:shifts,id'],
-            'shifts.*.unique_key' => ['required','string'],
-            'shifts.*.row_type' => ['required','string'],
-            'shifts.*.row_id' => ['nullable','integer'],
-            'shifts.*.reason'   => ['nullable','string'],
+            'shifts' => ['array'],
+            'shifts.*.shift_id' => ['required', 'integer', 'exists:shifts,id'],
+            'shifts.*.unique_key' => ['required', 'string'],
+            'shifts.*.row_type' => ['required', 'string', \Illuminate\Validation\Rule::in(['user', 'freelancer', 'service_provider', 'unassigned'])],
+            'shifts.*.row_id' => ['nullable', 'integer'],
+            'shifts.*.reason' => ['nullable', 'string'],
         ]);
 
         // Request als abgelehnt markieren
-        $shiftPlanRequest->rejected_days   = $payload['days'] ?? [];
+        $shiftPlanRequest->rejected_days = $payload['days'] ?? [];
         $shiftPlanRequest->rejected_shifts = $payload['shifts'] ?? [];
-        $shiftPlanRequest->review_comment  = $payload['global_reason'] ?? null;
+        $shiftPlanRequest->review_comment = $payload['global_reason'] ?? null;
         $shiftPlanRequest->status = 'rejected';
         $shiftPlanRequest->reviewed_by_user_id = $user->id;
         $shiftPlanRequest->reviewed_at = now();
@@ -336,15 +345,14 @@ class ShiftPlanRequestController extends Controller
             ->where('current_request_id', $shiftPlanRequest->id)
             ->get();
 
-        // Gründe pro Schicht
-        $shiftReasons = collect($payload['shifts'] ?? [])
-            ->pluck('reason', 'shift_id')
-            ->filter(fn($r) => $r !== null && trim($r) !== '');
+        $selectedEntries = collect($payload['shifts'] ?? []);
+        $entriesByShift = $selectedEntries->groupBy('shift_id');
 
         // Gründe pro Tag
         $dayReasons = collect($payload['days'] ?? [])
             ->pluck('reason', 'date')
-            ->filter(fn($r) => $r !== null && trim($r) !== '');
+            ->map(fn($r) => $this->cleanReason($r))
+            ->filter();
 
         // Felder, die im Workflow getrackt werden und auf _initial zurück sollen
         $fieldsToRevert = [
@@ -372,9 +380,51 @@ class ShiftPlanRequestController extends Controller
                 $date = $shift->event_start_day; // falls du das im Format Y-m-d speicherst
             }
 
-            $reason = $shiftReasons->get($shift->id)
-                ?? ($date ? $dayReasons->get($date) : null)
-                ?? ($payload['global_reason'] ?? null);
+            $dayReason = $date ? ($dayReasons->get($date) ?? null) : null;
+            $globalReason = $this->cleanReason($payload['global_reason'] ?? null);
+
+            // alle Entry-Reasons für diese Schicht
+            $entries = $entriesByShift->get($shift->id, collect());
+
+            // ✅ ganz wichtig: alte Pivot-Reasons löschen, sonst schleppst du Altlasten mit
+            DB::table('shift_workers')
+                ->where('shift_id', $shift->id)
+                ->update(['workflow_rejection_reason' => null]);
+
+            // Summary fürs Shift-Activitylog (nicht fürs UI)
+            $summaryReason = null;
+
+            foreach ($entries as $entry) {
+                $rowType = $entry['row_type'] ?? null;
+                $rowId = isset($entry['row_id']) ? (int)$entry['row_id'] : null;
+
+                $entryReason = $this->cleanReason($entry['reason'] ?? null) ?? $dayReason ?? $globalReason;
+
+                // unassigned → bleibt am Shift (weil es kein Assignment gibt)
+                if ($rowType === 'unassigned' || empty($rowId)) {
+                    $summaryReason ??= $entryReason;
+                    continue;
+                }
+
+                $employableClass = $this->rowTypeToEmployableClass($rowType);
+
+                if (!$employableClass) {
+                    continue;
+                }
+
+                // ✅ pro (shift × employable) setzen (alle rows, falls mehrere qualification-rows existieren)
+                DB::table('shift_workers')
+                    ->where('shift_id', $shift->id)
+                    ->where('employable_type', $employableClass)
+                    ->where('employable_id', $rowId)
+                    ->whereNull('deleted_at')
+                    ->update(['workflow_rejection_reason' => $entryReason]);
+
+                $summaryReason ??= $entryReason;
+            }
+
+            // wenn nix auf Entry-Ebene da war, nimm Tag/Global
+            $summaryReason ??= $dayReason ?? $globalReason;
 
             // ---------- 2) Initial-Daten aus erster ShiftPlanRequestChange holen ----------
             /** @var ShiftPlanRequestChange|null $firstChange */
@@ -600,7 +650,7 @@ class ShiftPlanRequestController extends Controller
                 'workflow_rejection_reason' => $originalBeforeRollback['workflow_rejection_reason'] ?? $shift->workflow_rejection_reason,
             ];
 
-            $shift->workflow_rejection_reason = $reason;
+            $shift->workflow_rejection_reason = $summaryReason;
             $shift->in_workflow               = false; // aus Workflow entfernen
             $shift->is_committed              = false; // Sicherheitshalber nicht festgeschrieben
             // $shift->current_request_id kannst du lassen, wenn du die Zuordnung behalten willst
@@ -653,6 +703,22 @@ class ShiftPlanRequestController extends Controller
         }
 
         return back()->with('success', __('Shift plan request rejected successfully.'));
+    }
+
+    private function rowTypeToEmployableClass(?string $rowType): ?string
+    {
+        return match ($rowType) {
+            'user' => \Artwork\Modules\User\Models\User::class,
+            'freelancer' => \Artwork\Modules\Freelancer\Models\Freelancer::class,
+            'service_provider' => \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+            default => null,
+        };
+    }
+
+    private function cleanReason(?string $reason): ?string
+    {
+        $r = is_string($reason) ? trim($reason) : null;
+        return ($r === '') ? null : $r;
     }
 
     public function changes(?Craft $craft = null): \Inertia\Response

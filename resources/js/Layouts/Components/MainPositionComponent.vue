@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                <input class="my-2 ml-1 xsDark bg-white" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
                     <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                     <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />

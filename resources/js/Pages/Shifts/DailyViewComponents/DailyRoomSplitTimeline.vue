@@ -1,6 +1,12 @@
 <template>
   <div class="space-y-3 select-none">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div v-if="shouldCompressCalendarHours" class="flex xxsDark items-center px-4 mt-1.5 text-xs text-gray-500">
+          {{ $t('Hours between {start} - {end} are hidden', {
+              start: calendarHoursRange.start,
+              end: calendarHoursRange.end
+          }) }}
+      </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       <!-- EVENTS (left) -->
       <div class="col-span-1">
         <!-- Zeitblöcke: Events-Spalte -->
@@ -30,7 +36,7 @@
       </div>
 
       <!-- SHIFTS (right) -->
-      <div class="col-span-1">
+      <div class="col-span-1 md:col-span-2">
         <!-- Zeitblöcke: Shifts-Spalte -->
         <div v-if="layoutBlocks.length" class="overflow-x-auto">
           <div>
@@ -74,6 +80,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import { IconCalendarPlus, IconCalendarUser, IconCopyPlus } from '@tabler/icons-vue'
 import { is, can } from 'laravel-permission-to-vuejs'
+import { usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
   day: { type: String, required: true }, // 'YYYY-MM-DD'
@@ -90,6 +97,120 @@ const props = defineProps({
   pxPerMin: { type: Number, default: 1.0 },
   gapThresholdMin: { type: Number, default: 90 },
 })
+
+const page = usePage()
+
+const calendarHoursArray = computed<string[]>(() => {
+    const v = (page.props as any)?.calendarHours
+    return Array.isArray(v) ? v.filter(Boolean) : []
+})
+
+const calendarHoursRange = computed(() => {
+    const arr = calendarHoursArray.value
+    if (!arr.length) return { start: null as string | null, end: null as string | null }
+
+    return {
+        start: arr[0] ?? null,
+        end: arr[arr.length - 1] ?? null,
+    }
+})
+
+const calStartMin = computed(() => clampDay(toMin(calendarHoursRange.value.start)) ?? 0)
+const calEndMin   = computed(() => clampDay(toMin(calendarHoursRange.value.end)) ?? 0)
+
+
+const calRangeLen = computed(() => {
+    const s = calStartMin.value
+    const e = calEndMin.value
+    if (s === e) return 0
+    // komprimierter Bereich: forward distance start -> end
+    return (e - s + 1440) % 1440
+})
+
+
+
+const shouldCompressCalendarHours = computed(() => {
+    const len = calRangeLen.value
+    if (!len) return false
+
+    // 1) Gibt es einen allDay-Termin in diesem Tag/Raum?
+    const hasAllDay = (props.events as any[] || []).some(e => e?.allDay === true)
+    if (!hasAllDay) return false
+
+    const s = calStartMin.value
+    const e = calEndMin.value
+
+    // Hilfscheck: liegt Start ODER Ende innerhalb [s,e]?
+    const startsOrEndsInHours = (startMin: number, endMin: number) => {
+        const startIn = startMin >= s && startMin < e
+        const endIn   = endMin   >  s && endMin   <= e   // Ende darf e treffen (optional)
+        return startIn || endIn
+    }
+
+
+    // 2) Gibt es *weitere* (nicht-allDay) Termine ODER Schichten,
+    //    die innerhalb der calendarHours starten/enden?
+    const hasNonAllDayEventInHours = (props.events as any[] || []).some(ev => {
+        if (ev?.allDay === true) return false
+
+        // ev.start / ev.end sind bei dir "YYYY-MM-DD HH:MM"
+        const rawStartTime = String(ev.start || '').split(' ')[1]
+        const rawEndTime   = String(ev.end || '').split(' ')[1]
+        const st = clampDay(toMin(rawStartTime))
+        const en = clampDay(toMin(rawEndTime))
+        if (st === null || en === null) return false
+
+        const endAdj = en <= st ? 1440 : en
+        return anyMinuteInCompressed(st, endAdj)
+
+
+    })
+
+    const hasShiftInHours = (props.shifts as any[] || []).some(sh => {
+        const st = clampDay(toMin(sh?.start))
+        const enRaw = clampDay(toMin(sh?.end))
+        if (st === null || enRaw === null) return false
+        const endAdj = enRaw <= st ? 1440 : enRaw
+        return anyMinuteInCompressed(st, endAdj)
+    })
+
+    return !(hasNonAllDayEventInHours || hasShiftInHours)
+
+})
+
+function compressMinute(minute: number): number {
+    if (!shouldCompressCalendarHours.value) return minute
+
+    // Support > 1440 (Endzeiten über Mitternacht)
+    if (minute > 1440) {
+        // mappe in den nächsten Tag: 1440 + compress(minute-1440)
+        return 1440 + compressMinute(minute - 1440)
+    }
+
+    const s = calStartMin.value
+    const e = calEndMin.value
+    if (s === e) return minute
+    if (!isInVisibleSegment(minute)) return 0
+    if (minute >= e) return minute - e
+    return (1440 - e) + minute
+}
+
+
+function isInCompressedSegment(minute: number): boolean {
+    const s = calStartMin.value
+    const e = calEndMin.value
+    if (s === e) return false
+
+    // compressed ist das Komplement zum visible Segment
+    return !isInVisibleSegment(minute)
+}
+
+const startsOrEndsInCompressed = (startMin: number, endMin: number) => {
+    // du kannst hier auch "strict" machen, aber so ist's robust
+    return isInCompressedSegment(startMin) || isInCompressedSegment(endMin)
+}
+
+
 
 // Helpers
 const toMin = (hhmm?: string | null) => {
@@ -188,12 +309,47 @@ const eventItems = computed<Item[]>(() => {
             if (startDate && dayYmd && dayYmd !== startDate) continue
 
             let end = endRaw
-            if (end <= start) end = 1440
+            if (end <= start) end = 1440 + endRaw
+
             // Treat 23:59 (minute 1439) as end of day (1440) for all-day events to ensure proper collision detection
             if (end === 1439) end = 1440
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
+        // --- AllDay: immer den kompletten SICHTBAREN Bereich abdecken ---
+        if (e?.allDay === true) {
+            // In der Daily-Ansicht soll AllDay immer von oben nach unten gehen.
+            // Wenn komprimiert: nur über die sichtbaren Stunden (visibleLen).
+            // Wenn nicht komprimiert: über den ganzen Tag (1440).
+            const endMapped = shouldCompressCalendarHours.value ? visibleLen.value : 1440
+
+            items.push({
+                key: `event-${e.id}`,
+                id: e.id,
+                type: 'event',
+                startMin: 0,
+                endMin: Math.max(15, endMapped),
+                isMultiDay,
+                dayRole,
+                payload: e,
+                props: {
+                    event: e,
+                    eventTypes: props.eventTypes,
+                    rooms: props.rooms,
+                    first_project_calendar_tab_id: props.first_project_calendar_tab_id,
+                    eventStatuses: props.eventStatuses,
+                },
+            })
+
+            continue
+        }
+
+// sonst normal (nicht-allDay) mappen
+        adjustedStart = compressMinute(adjustedStart)
+        adjustedEnd   = compressMinute(adjustedEnd)
+
+
+
         items.push({
             key: `event-${e.id}`,
             id: e.id,
@@ -216,6 +372,23 @@ const eventItems = computed<Item[]>(() => {
     return items.sort((a, b) => a.startMin - b.startMin)
 })
 
+function anyMinuteInCompressed(startMin: number, endMin: number): boolean {
+    // wir betrachten Intervalle als [start, end)
+    // => End-Boundary selbst zählt nicht
+    if (startMin === null || endMin === null) return false
+
+    const s = clampDay(startMin)
+    const e = clampDay(endMin)
+
+    if (s === null || e === null) return false
+    if (s === e) return false
+
+    // Overnight bei dir: wenn e <= s, dann geht es bis Tagesende (1440)
+    // ABER für diese "liegt im hidden?"-Prüfung behandeln wir das so,
+    // wie du es im Caller schon machst (endAdj etc.). Daher hier nur:
+    const endProbe = Math.max(0, Math.min(1439, e - 1)) // 1 Minute vor Ende
+    return isInCompressedSegment(s) || isInCompressedSegment(endProbe)
+}
 
 
 
@@ -280,12 +453,17 @@ const shiftItems = computed<Item[]>(() => {
             if (startDate && dayYmd && dayYmd !== startDate) continue
 
             let end = endRaw
-            if (end <= start) end = 1440
+            if (end <= start) end = 1440 + endRaw
+
             // Treat 23:59 (minute 1439) as end of day (1440) for proper collision detection
             if (end === 1439) end = 1440
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
+
+        adjustedStart = compressMinute(adjustedStart)
+        adjustedEnd   = compressMinute(adjustedEnd)
+
 
         items.push({
             key: `shift-${s.id}`,
@@ -307,6 +485,35 @@ const shiftItems = computed<Item[]>(() => {
 
     return items.sort((a, b) => a.startMin - b.startMin)
 })
+
+const visibleLen = computed(() => {
+    const s = calStartMin.value
+    const e = calEndMin.value
+    if (s === e) return 1440 // Sonderfall: nichts komprimieren
+    // distance forward from e -> s
+    return (s - e + 1440) % 1440
+})
+
+const compressedLen = computed(() => {
+    const v = visibleLen.value
+    if (v >= 1440) return 0
+    return 1440 - v
+})
+
+function isInVisibleSegment(minute: number): boolean {
+    const s = calStartMin.value
+    const e = calEndMin.value
+    if (s === e) return true // kein Cut
+
+    if (e < s) {
+        // visible = [e, s)
+        return minute >= e && minute < s
+    }
+
+    // wrap: visible = [e, 1440) U [0, s)
+    return (minute >= e && minute < 1440) || (minute >= 0 && minute < s)
+}
+
 
 // Build unified blocks from both lists to keep vertical alignment between columns
 function buildBlocks(evItems: Item[], shItems: Item[]) {

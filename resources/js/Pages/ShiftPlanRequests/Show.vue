@@ -22,7 +22,6 @@
 
             <!-- Day Header -->
             <WeekOverview :days="daysComputed" :grid-style="gridStyle"/>
-
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -281,7 +280,7 @@ const rows = computed(() => {
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
-            workflow_rejection_reason: rejectedMap.value[uniqueKey] ?? shift.workflow_rejection_reason ?? null,
+            workflow_rejection_reason: rejectedMap.value[uniqueKey] ?? meta.workflow_rejection_reason ?? shift.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false
         });
@@ -310,7 +309,8 @@ const rows = computed(() => {
                     qualification: user.pivot?.short_description ?? null,
                     short_description: user.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: user.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }
@@ -331,7 +331,8 @@ const rows = computed(() => {
                     qualification: fl.pivot?.short_description ?? null,
                     short_description: fl.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: fl.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }
@@ -352,7 +353,8 @@ const rows = computed(() => {
                     qualification: sp.pivot?.short_description ?? null,
                     short_description: sp.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: sp.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }

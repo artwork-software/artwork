@@ -189,7 +189,6 @@
                 </div>
             </div>
         </div>
-
     <AddShiftModal
         v-if="showAddShiftModal"
         :crafts="crafts"

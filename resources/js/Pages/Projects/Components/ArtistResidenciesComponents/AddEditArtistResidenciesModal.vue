@@ -52,7 +52,7 @@
 
                                 <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige leeres Formular -->
                                 <div v-else-if="!selectArtist" class=" grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <BaseInput v-model="artistResidency.name" :label="$t('Artist name')" id="name" no-margin-top required />
+                                    <BaseInput v-model="artistResidency.name" :label="$t('Name')" id="name" no-margin-top required />
                                     <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
                                     <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
                                     <BaseInput v-model="artistResidency.position" label="Position" id="position" />

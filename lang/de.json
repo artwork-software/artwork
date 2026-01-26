@@ -3834,5 +3834,7 @@
     "Failed to load history.": "Historie konnte nicht geladen werden.",
     "Unknown user": "Unbekannter Benutzer",
     "Change in shift": "Änderung in der Schicht",
-    "No options available": "Keine Optionen verfügbar"
+    "No options available": "Keine Optionen verfügbar",
+    "Add Function": "Schichtplatz hinzufügen",
+    "Select a function to add to the shift": "Wähle eine Funktion, um sie zur Schicht hinzuzufügen"
 }

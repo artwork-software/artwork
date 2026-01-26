@@ -3825,5 +3825,7 @@
     "Failed to load history.": "Failed to load history.",
     "Unknown user": "Unknown user",
     "Change in shift": "Change in shift",
-    "No options available": "No options available"
+    "No options available": "No options available",
+    "Add Function": "Add Function",
+    "Select a function to add to the shift": "Select a function to add to the shift"
 }

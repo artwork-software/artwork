@@ -175,6 +175,19 @@
                     </Float>
                 </Menu>
             </div>
+
+            <!-- "Funktion hinzufügen" Button -->
+            <div
+                v-if="canPlanShifts"
+                class="flex items-center w-full gap-x-2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-gray-400"
+                :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }"
+                @click="showAddFunctionModal = true"
+            >
+                <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-gray-700">
+                    <component :is="IconPlus" class="size-4" />
+                    <span class="text-xs font-medium">{{ $t('Add Function') }}</span>
+                </div>
+            </div>
         </div>
 
     <AddShiftModal
@@ -193,6 +206,14 @@
         :edit="shift !== null"
         :rooms="usePage().props.rooms"
         :room="shift?.roomId ?? shift?.room_id ?? null"
+    />
+
+    <AddFunctionToShiftModal
+        v-if="showAddFunctionModal"
+        :shift="shift"
+        :shift-qualifications="shiftQualificationsArray"
+        :crafts="crafts"
+        @close="showAddFunctionModal = false"
     />
 
     <!-- Bestätigungsmodal: Schicht löschen -->
@@ -226,7 +247,8 @@ import {
     IconBuildingCommunity,
     IconClock, IconEdit, IconTrash,
     IconId,
-    IconInfoTriangle
+    IconInfoTriangle,
+    IconPlus
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -238,6 +260,11 @@ const ConfirmationComponent = defineAsyncComponent({
 
 const NotificationToast = defineAsyncComponent({
     loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
+    delay: 200,
+});
+
+const AddFunctionToShiftModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/DailyViewComponents/AddFunctionToShiftModal.vue'),
     delay: 200,
 });
 
@@ -261,6 +288,7 @@ const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
+const showAddFunctionModal = ref(false);
 const showConfirmDeleteModal = ref(false);
 
 const toastVisible = ref(false);

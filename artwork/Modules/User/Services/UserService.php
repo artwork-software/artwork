@@ -182,6 +182,10 @@ class UserService
             $this->getAuthUser()
         );
 
+        if ($month === null) {
+            $month = $requestedStartDate->format('Y-m-d');
+        }
+
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(
                 function (Carbon $date) {

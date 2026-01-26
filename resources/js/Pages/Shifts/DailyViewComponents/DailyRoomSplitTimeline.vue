@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3 select-none">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       <!-- EVENTS (left) -->
       <div class="col-span-1">
         <!-- Zeitblöcke: Events-Spalte -->
@@ -30,7 +30,7 @@
       </div>
 
       <!-- SHIFTS (right) -->
-      <div class="col-span-1">
+      <div class="col-span-1 md:col-span-2">
         <!-- Zeitblöcke: Shifts-Spalte -->
         <div v-if="layoutBlocks.length" class="overflow-x-auto">
           <div>
@@ -74,6 +74,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import { IconCalendarPlus, IconCalendarUser, IconCopyPlus } from '@tabler/icons-vue'
 import { is, can } from 'laravel-permission-to-vuejs'
+import { usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
   day: { type: String, required: true }, // 'YYYY-MM-DD'
@@ -90,6 +91,100 @@ const props = defineProps({
   pxPerMin: { type: Number, default: 1.0 },
   gapThresholdMin: { type: Number, default: 90 },
 })
+
+const page = usePage()
+
+const calendarHoursArray = computed<string[]>(() => {
+    const v = (page.props as any)?.calendarHours
+    return Array.isArray(v) ? v.filter(Boolean) : []
+})
+
+const calendarHoursRange = computed(() => {
+    const arr = calendarHoursArray.value
+    if (!arr.length) return { start: null as string | null, end: null as string | null }
+
+    return {
+        start: arr[0] ?? null,                 // z.B. "00:00"
+        end: arr[arr.length - 1] ?? null,      // z.B. "14:00"  (Pivot!)
+    }
+})
+
+const calStartMin = computed(() => clampDay(toMin(calendarHoursRange.value.start)) ?? 0)
+const calEndMin   = computed(() => clampDay(toMin(calendarHoursRange.value.end)) ?? 0)
+
+const calRangeLen = computed(() => {
+    const s = calStartMin.value
+    const e = calEndMin.value
+    const len = e - s
+    return len > 0 ? len : 0
+})
+
+
+const shouldCompressCalendarHours = computed(() => {
+    const len = calRangeLen.value
+    if (!len) return false
+
+    // 1) Gibt es einen allDay-Termin in diesem Tag/Raum?
+    const hasAllDay = (props.events as any[] || []).some(e => e?.allDay === true)
+    if (!hasAllDay) return false
+
+    const s = calStartMin.value
+    const e = calEndMin.value
+
+    // Hilfscheck: liegt Start ODER Ende innerhalb [s,e]?
+    const startsOrEndsInHours = (startMin: number, endMin: number) => {
+        const startIn = startMin >= s && startMin < e
+        const endIn   = endMin   >  s && endMin   <= e   // Ende darf e treffen (optional)
+        return startIn || endIn
+    }
+
+
+    // 2) Gibt es *weitere* (nicht-allDay) Termine ODER Schichten,
+    //    die innerhalb der calendarHours starten/enden?
+    const hasNonAllDayEventInHours = (props.events as any[] || []).some(ev => {
+        if (ev?.allDay === true) return false
+
+        // ev.start / ev.end sind bei dir "YYYY-MM-DD HH:MM"
+        const rawStartTime = String(ev.start || '').split(' ')[1]
+        const rawEndTime   = String(ev.end || '').split(' ')[1]
+        const st = clampDay(toMin(rawStartTime))
+        const en = clampDay(toMin(rawEndTime))
+        if (st === null || en === null) return false
+
+        // gleiche Logik wie unten: wenn en <= st -> 1440
+        const endAdj = en <= st ? 1440 : en
+        return startsOrEndsInHours(st, endAdj)
+    })
+
+    const hasShiftInHours = (props.shifts as any[] || []).some(sh => {
+        const st = clampDay(toMin(sh?.start))
+        const enRaw = clampDay(toMin(sh?.end))
+        if (st === null || enRaw === null) return false
+        const endAdj = enRaw <= st ? 1440 : enRaw
+        return startsOrEndsInHours(st, endAdj)
+    })
+
+    return !(hasNonAllDayEventInHours || hasShiftInHours)
+})
+
+function compressMinute(minute: number): number {
+    if (!shouldCompressCalendarHours.value) return minute
+
+    const s = calStartMin.value
+    const e = calEndMin.value
+    const len = calRangeLen.value
+    if (!len) return minute
+
+    // Pivot: 14:00 ist neue "0"
+    if (minute >= e) return minute - len
+
+    // im abgeschnittenen Bereich sollte nichts liegen
+    if (minute >= s && minute < e) return s
+
+    return minute
+}
+
+
 
 // Helpers
 const toMin = (hhmm?: string | null) => {
@@ -194,6 +289,15 @@ const eventItems = computed<Item[]>(() => {
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
+        if (shouldCompressCalendarHours.value && e?.allDay === true) {
+            adjustedStart = Math.max(adjustedStart, calEndMin.value)
+        }
+
+
+        // Danach immer mappen (wenn aktiv, sonst noop)
+        adjustedStart = compressMinute(adjustedStart)
+        adjustedEnd   = compressMinute(adjustedEnd)
+
         items.push({
             key: `event-${e.id}`,
             id: e.id,
@@ -286,6 +390,10 @@ const shiftItems = computed<Item[]>(() => {
             adjustedStart = start
             adjustedEnd   = Math.max(start + 15, end)
         }
+
+        adjustedStart = compressMinute(adjustedStart)
+        adjustedEnd   = compressMinute(adjustedEnd)
+
 
         items.push({
             key: `shift-${s.id}`,

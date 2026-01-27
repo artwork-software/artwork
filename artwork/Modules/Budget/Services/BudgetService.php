@@ -21,6 +21,7 @@ use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -284,15 +285,23 @@ class BudgetService
         $globalGroup = collect();
 
         if ($this->sageApiSettingsService->getFirst()?->enabled) {
-            $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
+            $user = Auth::user();
+            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
+            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
 
-            $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
-                if ($item->project_id === null) {
-                    $globalGroup->push($item);
-                } elseif ($item->project_id === $project->id) {
-                    $projectsGroup->push($item);
-                }
-            });
+            if ($canViewProjectSageData || $canViewGlobalSageData) {
+                $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
+
+                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
+                    if ($item->project_id === null && $canViewGlobalSageData) {
+                        $globalGroup->push($item);
+                    } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
+                        $projectsGroup->push($item);
+                    }
+                });
+            }
         }
 
         $groupedProjectData = [];

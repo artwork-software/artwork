@@ -1,6 +1,6 @@
 <template>
     <div class="my-3 ml-6">
-        <div>
+        <div v-if="this.$canAny(['can view project sage data', 'can view and delete sage100-api-data'])">
             <div class="flex items-center gap-x-1 cursor-pointer"
                  @click="this.projectGroupOpened = !this.projectGroupOpened">
                 <h4 class="font-bold">{{ $t('Project-related Sage data') }}</h4>
@@ -37,7 +37,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="this.$can('can view and delete sage100-api-data')">
+        <div v-if="this.$canAny(['can view global sage data', 'can view and delete sage100-api-data'])">
             <div class="flex items-center gap-x-1 cursor-pointer"
                  @click="this.globalGroupOpened = !this.globalGroupOpened">
                 <h4 class="font-bold">{{ $t('Global Sage data') }}</h4>

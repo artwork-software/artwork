@@ -683,7 +683,7 @@ const navigation = ref([
         current: route().current('contracts.index') || route().current('document-requests.index'),
         isMenu: true,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules') || is('artwork admin')),
+        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules | can create document requests | can edit document requests') || is('artwork admin')),
         prefetch: false,
         subMenus: [
             {
@@ -698,7 +698,7 @@ const navigation = ref([
                 href: route('document-requests.index'),
                 icon: 'IconFileDescription',
                 current: route().current('document-requests.index'),
-                has_permission: can('view edit upload contracts') || is('artwork admin')
+                has_permission: can('view edit upload contracts') || can('can create document requests') || can('can edit document requests') || is('artwork admin')
             },
         ]
     },

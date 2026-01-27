@@ -29,7 +29,7 @@
                     >
                         {{ $t('Assigned to me') }}
                         <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                            {{ assignedRequests.length }}
+                            {{ openAssignedRequests.length }}
                         </span>
                     </button>
                     <button
@@ -43,7 +43,21 @@
                     >
                         {{ $t('Created by me') }}
                         <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                            {{ createdRequests.length }}
+                            {{ openCreatedRequests.length }}
+                        </span>
+                    </button>
+                    <button
+                        @click="activeTab = 'completed'"
+                        :class="[
+                            activeTab === 'completed'
+                                ? 'border-green-500 text-green-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium'
+                        ]"
+                    >
+                        {{ $t('Completed requests') }}
+                        <span class="ml-2 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-600">
+                            {{ completedRequests.length }}
                         </span>
                     </button>
                 </nav>
@@ -52,7 +66,7 @@
             <!-- Assigned Requests Table -->
             <div v-if="activeTab === 'assigned'">
                 <BaseTable
-                    :rows="assignedRequests"
+                    :rows="openAssignedRequests"
                     :columns="cols"
                     row-key="id"
                     v-model:page="page"
@@ -103,7 +117,7 @@
             <!-- Created Requests Table -->
             <div v-if="activeTab === 'created'">
                 <BaseTable
-                    :rows="createdRequests"
+                    :rows="openCreatedRequests"
                     :columns="colsCreated"
                     row-key="id"
                     v-model:page="page"
@@ -153,6 +167,64 @@
                     </template>
                 </BaseTable>
             </div>
+
+            <!-- Completed Requests Table -->
+            <div v-if="activeTab === 'completed'">
+                <BaseTable
+                    :rows="completedRequests"
+                    :columns="colsCompleted"
+                    row-key="id"
+                    v-model:page="page"
+                    :empty-title="$t('No document requests')"
+                    :empty-message="$t('No completed document requests yet.')"
+                >
+                    <template #cell-title="{ row }">
+                        <div class="font-medium text-gray-900">{{ row.title }}</div>
+                        <div class="text-sm text-gray-500">{{ row.description }}</div>
+                    </template>
+
+                    <template #cell-requester="{ row }">
+                        <div v-if="row.requester" class="flex items-center">
+                            <img :src="row.requester.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ row.requester.first_name }} {{ row.requester.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template #cell-requested="{ row }">
+                        <div v-if="row.requested" class="flex items-center">
+                            <img :src="row.requested.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ row.requested.first_name }} {{ row.requested.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template #cell-project="{ row }">
+                        <span v-if="row.project" class="text-sm text-gray-900">{{ row.project.name }}</span>
+                        <span v-else class="text-sm text-gray-400">-</span>
+                    </template>
+
+                    <template #cell-file="{ row }">
+                        <a v-if="row.contract" :href="route('contracts.download', row.contract.id)" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                            <IconDownload class="size-4 mr-1" />
+                            {{ row.contract.name }}
+                        </a>
+                        <span v-else class="text-sm text-gray-400">-</span>
+                    </template>
+
+                    <template #row-actions="{ row }">
+                        <BaseMenu has-no-offset white-menu-background>
+                            <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
+                        </BaseMenu>
+                    </template>
+                </BaseTable>
+            </div>
         </div>
 
         <!-- Create Document Request Modal -->
@@ -182,6 +254,18 @@
             @close="showDetailModal = false"
         />
 
+        <!-- Contract Upload Modal -->
+        <ContractUploadModal
+            v-if="showUploadModal"
+            :show="showUploadModal"
+            :company-types="company_types"
+            :contract-types="contract_types"
+            :currencies="currencies"
+            :document-request="selectedRequest"
+            :first_project_calendar_tab_id="first_project_calendar_tab_id"
+            @close-modal="closeUploadModal"
+        />
+
         <!-- Delete Modal -->
         <BaseModal @closed="closeDeleteModal" v-if="showDeleteModal" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
@@ -203,9 +287,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { IconCirclePlus, IconFileDescription, IconUpload, IconEye, IconEdit, IconTrash } from '@tabler/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import { IconCirclePlus, IconFileDescription, IconUpload, IconEye, IconEdit, IconTrash, IconDownload } from '@tabler/icons-vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
@@ -216,6 +300,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import DocumentRequestCreateModal from './Components/DocumentRequestCreateModal.vue'
 import DocumentRequestEditModal from './Components/DocumentRequestEditModal.vue'
 import DocumentRequestDetailModal from './Components/DocumentRequestDetailModal.vue'
+import ContractUploadModal from '@/Layouts/Components/ContractUploadModal.vue'
 
 const props = defineProps({
     createdRequests: {
@@ -237,11 +322,26 @@ const props = defineProps({
     currencies: {
         type: Array,
         default: () => []
+    },
+    first_project_calendar_tab_id: {
+        type: Number,
+        default: null
     }
 })
 
 const activeTab = ref('assigned')
 const page = ref(1)
+
+// Check URL query parameter for tab
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    if (tabParam === 'completed') {
+        activeTab.value = 'completed'
+    } else if (tabParam === 'created') {
+        activeTab.value = 'created'
+    }
+})
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showDetailModal = ref(false)
@@ -249,6 +349,27 @@ const showDeleteModal = ref(false)
 const selectedRequest = ref(null)
 
 const totalRequests = computed(() => props.createdRequests.length + props.assignedRequests.length)
+
+// Filter for open/in_progress requests (not completed)
+const openAssignedRequests = computed(() =>
+    props.assignedRequests.filter(r => r.status !== 'completed')
+)
+
+const openCreatedRequests = computed(() =>
+    props.createdRequests.filter(r => r.status !== 'completed')
+)
+
+// Completed requests from both created and assigned
+const completedRequests = computed(() => {
+    const completed = [
+        ...props.createdRequests.filter(r => r.status === 'completed'),
+        ...props.assignedRequests.filter(r => r.status === 'completed')
+    ]
+    // Remove duplicates by id
+    return completed.filter((r, index, self) =>
+        index === self.findIndex(t => t.id === r.id)
+    )
+})
 
 const cols = ref([
     { key: 'title', label: 'Title', sortable: false },
@@ -264,6 +385,14 @@ const colsCreated = ref([
     { key: 'project', label: 'Project', sortable: false },
     { key: 'status', label: 'Status', sortable: false },
     { key: 'contract', label: 'Document', sortable: false },
+])
+
+const colsCompleted = ref([
+    { key: 'title', label: 'Title', sortable: false },
+    { key: 'requester', label: 'Requested by', sortable: false },
+    { key: 'requested', label: 'Assigned to', sortable: false },
+    { key: 'project', label: 'Project', sortable: false },
+    { key: 'file', label: 'File', sortable: false },
 ])
 
 const getStatusClass = (status) => {
@@ -292,9 +421,16 @@ const getStatusLabel = (status) => {
     }
 }
 
+const showUploadModal = ref(false)
+
 const openUploadModal = (request) => {
     selectedRequest.value = request
-    // TODO: Implement upload modal
+    showUploadModal.value = true
+}
+
+const closeUploadModal = () => {
+    showUploadModal.value = false
+    selectedRequest.value = null
 }
 
 const openDetailModal = (request) => {

@@ -37,22 +37,28 @@
 
                 <!-- Project -->
                 <div class="col-span-full relative">
-                    <BaseInput
-                        :label="$t('Link to project (optional)')"
-                        v-model="project_query"
-                        id="project_query"
-                    />
-                    <div v-if="project_search_results.length > 0" class="absolute bg-primary rounded-lg truncate sm:text-sm z-20 w-full top-16">
-                        <div v-for="(project, index) in project_search_results" :key="index"
-                             @click="selectProject(project)"
-                             class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer w-[88%]">
-                            {{ project.name }}
-                        </div>
+                    <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Project assignment') }}</div>
+
+                    <!-- Selected Project Chip -->
+                    <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 mb-2">
+                        <span class="text-sm text-zinc-700">{{ $t('Connected project:') }}</span>
+                        <span class="font-medium text-zinc-900">{{ selectedProject.name }}</span>
+                        <button type="button" class="ml-auto text-zinc-400 hover:text-rose-600 transition" @click="selectedProject = null">
+                            <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                        </button>
                     </div>
-                    <div v-if="selectedProject" class="mt-2 text-sm text-gray-700">
-                        {{ $t('Selected:') }} {{ selectedProject.name }}
-                        <button type="button" @click="selectedProject = null" class="ml-2 text-red-500 hover:text-red-700">×</button>
-                    </div>
+
+                    <!-- Project Search (only when no project selected) -->
+                    <template v-if="!selectedProject">
+                        <ProjectSearch
+                            :label="$t('Search for projects')"
+                            @project-selected="selectProject"
+                        />
+                        <LastedProjects
+                            :limit="10"
+                            @select="selectProject"
+                        />
+                    </template>
                 </div>
 
                 <hr class="col-span-full border-gray-200">
@@ -83,54 +89,68 @@
 
                 <!-- Legal Form -->
                 <div class="">
-                    <Listbox as="div" class="flex relative" v-model="selectedLegalForm">
-                        <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
-                            <div>{{ selectedLegalForm.name }}</div>
-                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxButton v-else class="menu-button">
-                            <span>{{ $t('Legal form')}}</span>
-                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                            {{ legalForm.name }}
-                                        </span>
-                                        <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </Listbox>
+                    <div class="flex relative">
+                        <Listbox as="div" class="flex-1 relative" v-model="selectedLegalForm">
+                            <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
+                                <div class="flex items-center justify-between w-full">
+                                    <span>{{ selectedLegalForm.name }}</span>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </div>
+                            </ListboxButton>
+                            <ListboxButton v-else class="menu-button">
+                                <span>{{ $t('Legal form')}}</span>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                {{ legalForm.name }}
+                                            </span>
+                                            <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </Listbox>
+                        <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Contract Type -->
                 <div class="">
-                    <Listbox as="div" class="flex relative" v-model="selectedContractType">
-                        <ListboxButton v-if="selectedContractType !== null" class="menu-button">
-                            <span>{{ selectedContractType.name }}</span>
-                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxButton v-else class="menu-button">
-                            <span>{{ $t('Contract type')}}</span>
-                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                        </ListboxButton>
-                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                            {{ contractType.name }}
-                                        </span>
-                                        <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </transition>
-                    </Listbox>
+                    <div class="flex relative">
+                        <Listbox as="div" class="flex-1 relative" v-model="selectedContractType">
+                            <ListboxButton v-if="selectedContractType !== null" class="menu-button">
+                                <div class="flex items-center justify-between w-full">
+                                    <span>{{ selectedContractType.name }}</span>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </div>
+                            </ListboxButton>
+                            <ListboxButton v-else class="menu-button">
+                                <span>{{ $t('Contract type')}}</span>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                {{ contractType.name }}
+                                            </span>
+                                            <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </Listbox>
+                        <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- KSK -->
@@ -166,7 +186,7 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="form.foreign_tax">
+                    <div class="grid grid-cols-1 gap-4 mb-4" v-if="form.foreign_tax">
                         <BaseInput
                             type="number"
                             step="0.01"
@@ -235,6 +255,8 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -258,34 +280,18 @@ export default {
         BaseTextarea,
         BaseInput,
         UserSearch,
+        ProjectSearch,
+        LastedProjects,
         Listbox,
         ListboxOption,
         ListboxOptions,
         ListboxButton,
-    },
-    watch: {
-        project_query: {
-            handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: { query: this.project_query }
-                    }).then(response => {
-                        this.project_search_results = response.data
-                    })
-                } else {
-                    this.project_search_results = []
-                }
-            },
-            deep: true
-        },
     },
     data() {
         return {
             selectedUser: null,
             user_query: '',
             selectedProject: null,
-            project_query: '',
-            project_search_results: [],
             selectedLegalForm: null,
             selectedContractType: null,
             form: useForm({
@@ -316,8 +322,19 @@ export default {
         },
         selectProject(project) {
             this.selectedProject = project;
-            this.project_query = '';
-            this.project_search_results = [];
+
+            // Fetch project details to get budget_deadline
+            if (project?.id) {
+                axios.get(`/projects/${project.id}/basic`)
+                    .then(response => {
+                        if (response.data?.budget_deadline) {
+                            this.form.deadline_date = response.data.budget_deadline;
+                        }
+                    })
+                    .catch(() => {
+                        // Ignore errors, deadline can be set manually
+                    });
+            }
         },
         closeModal() {
             this.form.reset();

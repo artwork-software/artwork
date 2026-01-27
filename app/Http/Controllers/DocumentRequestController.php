@@ -49,6 +49,9 @@ class DocumentRequestController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
+            'first_project_calendar_tab_id' => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                ProjectTabComponentEnum::CALENDAR
+            ),
         ]);
     }
 
@@ -244,7 +247,10 @@ class DocumentRequestController extends Controller
 
         $notificationTitle = __(
             'notification.document_request.completed',
-            ['name' => $requestedUser->first_name . ' ' . $requestedUser->last_name],
+            [
+                'title' => $documentRequest->title,
+                'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name
+            ],
             $requesterUser->language
         );
 

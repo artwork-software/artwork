@@ -13,6 +13,7 @@ use Artwork\Modules\Contract\Http\Resources\ContractModuleResource;
 use Artwork\Modules\Contract\Models\ContractModule;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -167,6 +168,64 @@ class ContractController extends Controller
         }
 
         $contract->save();
+
+        // Check if this upload is for a document request
+        if ($request->document_request_id) {
+            $documentRequest = DocumentRequest::find($request->document_request_id);
+            if ($documentRequest) {
+                // Link the contract to the document request and set status to completed
+                $documentRequest->update([
+                    'contract_id' => $contract->id,
+                    'status' => DocumentRequest::STATUS_COMPLETED
+                ]);
+
+                // Send notification to the requester
+                $requester = $documentRequest->requester;
+                if ($requester) {
+                    $uploader = Auth::user();
+                    $uploaderName = $uploader->first_name . ' ' . $uploader->last_name;
+
+                    $notificationTitle = __(
+                        'notification.document_request.completed',
+                        ['title' => $documentRequest->title, 'user' => $uploaderName],
+                        $requester->language
+                    );
+
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $notificationTitle
+                    ];
+
+                    $notificationDescription = [
+                        1 => [
+                            'type' => 'string',
+                            'title' => __('notification.document_request.completed_description', [
+                                'title' => $documentRequest->title,
+                                'user' => $uploaderName
+                            ], $requester->language),
+                            'href' => null
+                        ],
+                        2 => [
+                            'type' => 'link',
+                            'title' => __('Document requests', [], $requester->language),
+                            'href' => route('document-requests.index') . '?tab=completed',
+                        ]
+                    ];
+
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
+                    $this->notificationService->setNotificationConstEnum(
+                        NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED
+                    );
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setDescription($notificationDescription);
+                    $this->notificationService->setNotificationTo($requester);
+                    $this->notificationService->createNotification();
+                }
+            }
+        }
 
         return Redirect::route('contracts.index');
     }

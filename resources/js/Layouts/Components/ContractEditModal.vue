@@ -158,42 +158,97 @@
                     </div>
                     <div class="col-span-full">
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.kskLiable"
+                            <input id="kskLiableEdit" type="checkbox" v-model="this.kskLiable"
                                    class="input-checklist"/>
-                            <label for="hasGroup" :class="this.kskLiable ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="kskLiableEdit" :class="this.kskLiable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('KSK-liable')}}
                             </label>
                         </div>
+                        <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="this.kskLiable">
+                            <BaseInput
+                                type="number"
+                                step="0.01"
+                                id="kskAmountEdit"
+                                v-model="this.kskAmount"
+                                :label="$t('KSK Amount')"
+                            />
+                            <BaseTextarea
+                                :label="$t('KSK Reason')"
+                                id="kskReasonEdit"
+                                v-model="this.kskReason"
+                                rows="2"
+                            />
+                        </div>
 
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad"
-                                   @click="this.hasPowerOfAttorney = false; this.isFreed = false"
+                            <input id="residentAbroadEdit" type="checkbox" v-model="this.isAbroad"
+                                   @click="this.hasPowerOfAttorney = false; this.isFreed = false; this.foreignTax = false"
                                    class="input-checklist"/>
-                            <label for="hasGroup" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="residentAbroadEdit" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('Resident abroad')}}
                             </label>
                         </div>
                         <div class="ml-4" v-if="this.isAbroad">
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasPowerOfAttorney"
+                                <input id="hasPowerOfAttorneyEdit" type="checkbox" v-model="this.hasPowerOfAttorney"
                                        class="input-checklist"/>
-                                <label for="hasGroup"
+                                <label for="hasPowerOfAttorneyEdit"
                                        :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{$t('Power of attorney is available')}}
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.isFreed"
+                                <input id="isFreedEdit" type="checkbox" v-model="this.isFreed"
                                        class="input-checklist"/>
-                                <label for="hasGroup" :class="this.isFreed ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="isFreedEdit" :class="this.isFreed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Liberated at home')}}
                                 </label>
                             </div>
+                            <div class="flex items-center mb-2">
+                                <input id="foreignTaxEdit" type="checkbox" v-model="this.foreignTax"
+                                       class="input-checklist"/>
+                                <label for="foreignTaxEdit" :class="this.foreignTax ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    {{ $t('Foreign tax')}}
+                                </label>
+                            </div>
+                            <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="this.foreignTax">
+                                <BaseInput
+                                    type="number"
+                                    step="0.01"
+                                    id="foreignTaxAmountEdit"
+                                    v-model="this.foreignTaxAmount"
+                                    :label="$t('Foreign tax amount')"
+                                />
+                                <BaseTextarea
+                                    :label="$t('Foreign tax reason')"
+                                    id="foreignTaxReasonEdit"
+                                    v-model="this.foreignTaxReason"
+                                    rows="2"
+                                />
+                            </div>
                         </div>
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="number"
+                            step="0.01"
+                            id="reverseChargeAmountEdit"
+                            v-model="this.reverseChargeAmount"
+                            :label="$t('Reverse Charge Amount')"
+                        />
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="date"
+                            id="deadlineDateEdit"
+                            v-model="this.deadlineDate"
+                            :label="$t('Deadline date')"
+                        />
                     </div>
                     <div class="col-span-full">
                         <BaseTextarea
@@ -413,7 +468,14 @@ export default {
             this.contractForm.contract_type_id = this.selectedContractType?.id;
             this.contractForm.amount = this.contractAmount;
             this.contractForm.ksk_liable = this.kskLiable;
+            this.contractForm.ksk_amount = this.kskAmount;
+            this.contractForm.ksk_reason = this.kskReason;
             this.contractForm.resident_abroad = this.isAbroad;
+            this.contractForm.foreign_tax = this.foreignTax;
+            this.contractForm.foreign_tax_amount = this.foreignTaxAmount;
+            this.contractForm.foreign_tax_reason = this.foreignTaxReason;
+            this.contractForm.reverse_charge_amount = this.reverseChargeAmount;
+            this.contractForm.deadline_date = this.deadlineDate;
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
             this.contractForm.is_freed = this.isFreed;
             this.contractForm.comment = this.comment;
@@ -452,7 +514,14 @@ export default {
             user_query: '',
             usersWithAccess: this.contract?.accessibleUsers ? this.contract.accessibleUsers : [],
             kskLiable: this.contract?.ksk_liable,
+            kskAmount: this.contract?.ksk_amount,
+            kskReason: this.contract?.ksk_reason,
             isAbroad: this.contract?.resident_abroad,
+            foreignTax: this.contract?.foreign_tax,
+            foreignTaxAmount: this.contract?.foreign_tax_amount,
+            foreignTaxReason: this.contract?.foreign_tax_reason,
+            reverseChargeAmount: this.contract?.reverse_charge_amount,
+            deadlineDate: this.contract?.deadline_date,
             hasPowerOfAttorney: this.contract?.has_power_of_attorney,
             isFreed: this.contract?.is_freed,
             tasks: [],
@@ -468,7 +537,14 @@ export default {
                 currency_id: this.contract?.currency?.id,
                 amount: this.contract?.amount,
                 ksk_liable: this.contract?.ksk_liable,
+                ksk_amount: this.contract?.ksk_amount,
+                ksk_reason: this.contract?.ksk_reason,
                 resident_abroad: this.contract?.resident_abroad,
+                foreign_tax: this.contract?.foreign_tax,
+                foreign_tax_amount: this.contract?.foreign_tax_amount,
+                foreign_tax_reason: this.contract?.foreign_tax_reason,
+                reverse_charge_amount: this.contract?.reverse_charge_amount,
+                deadline_date: this.contract?.deadline_date,
                 has_power_of_attorney: this.contract?.has_power_of_attorney,
                 is_freed: this.contract?.is_freed,
                 description: this.contract?.description,

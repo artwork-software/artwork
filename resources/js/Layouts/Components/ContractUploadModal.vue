@@ -165,42 +165,97 @@
                     </div>
                     <div class="col-span-full">
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="contractForm.ksk_liable"
+                            <input id="kskLiable" type="checkbox" v-model="contractForm.ksk_liable"
                                    class="input-checklist"/>
-                            <label for="hasGroup" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="kskLiable" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('KSK-liable')}}
                             </label>
                         </div>
+                        <div class="grid grid-cols-1 gap-4 mb-4" v-if="contractForm.ksk_liable">
+                            <BaseInput
+                                type="number"
+                                step="0.01"
+                                id="kskAmount"
+                                v-model="contractForm.ksk_amount"
+                                :label="$t('KSK Amount')"
+                            />
+                            <BaseTextarea
+                                :label="$t('KSK Reason')"
+                                id="kskReason"
+                                v-model="contractForm.ksk_reason"
+                                rows="2"
+                            />
+                        </div>
 
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="contractForm.resident_abroad"
-                                   @click="contractForm.has_power_of_attorney = false; contractForm.is_freed = false"
+                            <input id="residentAbroad" type="checkbox" v-model="contractForm.resident_abroad"
+                                   @click="contractForm.has_power_of_attorney = false; contractForm.is_freed = false; contractForm.foreign_tax = false"
                                    class="input-checklist"/>
-                            <label for="hasGroup" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="residentAbroad" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('Resident abroad')}}
                             </label>
                         </div>
                         <div class="ml-4" v-if="contractForm.resident_abroad">
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="contractForm.has_power_of_attorney"
+                                <input id="hasPowerOfAttorney" type="checkbox" v-model="contractForm.has_power_of_attorney"
                                        class="input-checklist"/>
-                                <label for="hasGroup"
+                                <label for="hasPowerOfAttorney"
                                        :class="contractForm.has_power_of_attorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Power of attorney is available')}}
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="contractForm.is_freed"
+                                <input id="isFreed" type="checkbox" v-model="contractForm.is_freed"
                                        class="input-checklist"/>
-                                <label for="hasGroup" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="isFreed" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Liberated at home')}}
                                 </label>
                             </div>
+                            <div class="flex items-center mb-2">
+                                <input id="foreignTax" type="checkbox" v-model="contractForm.foreign_tax"
+                                       class="input-checklist"/>
+                                <label for="foreignTax" :class="contractForm.foreign_tax ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    {{ $t('Foreign tax')}}
+                                </label>
+                            </div>
+                            <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="contractForm.foreign_tax">
+                                <BaseInput
+                                    type="number"
+                                    step="0.01"
+                                    id="foreignTaxAmount"
+                                    v-model="contractForm.foreign_tax_amount"
+                                    :label="$t('Foreign tax amount')"
+                                />
+                                <BaseTextarea
+                                    :label="$t('Foreign tax reason')"
+                                    id="foreignTaxReason"
+                                    v-model="contractForm.foreign_tax_reason"
+                                    rows="2"
+                                />
+                            </div>
                         </div>
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="number"
+                            step="0.01"
+                            id="reverseChargeAmount"
+                            v-model="contractForm.reverse_charge_amount"
+                            :label="$t('Reverse Charge Amount')"
+                        />
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="date"
+                            id="deadlineDate"
+                            v-model="contractForm.deadline_date"
+                            :label="$t('Deadline date')"
+                        />
                     </div>
                     <div class="col-span-full">
                         <BaseTextarea
@@ -368,13 +423,15 @@ export default {
         },
         project_query: {
             handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        this.project_search_results = response.data
-                    })
+                if (this.project_query.length === 0) {
+                    this.project_search_results = [];
+                    return;
                 }
+                axios.get(this.route('projects.search'), {
+                    params: {query: this.project_query}
+                }).then(response => {
+                    this.project_search_results = response.data
+                })
             },
             deep: true
         },
@@ -407,7 +464,14 @@ export default {
                 amount: '',
                 currency_id: 1,
                 ksk_liable: false,
+                ksk_amount: null,
+                ksk_reason: '',
                 resident_abroad: false,
+                foreign_tax: false,
+                foreign_tax_amount: null,
+                foreign_tax_reason: '',
+                reverse_charge_amount: null,
+                deadline_date: null,
                 has_power_of_attorney: false,
                 is_freed: false,
                 description: '',

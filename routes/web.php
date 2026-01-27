@@ -22,6 +22,7 @@ use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
+use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
@@ -921,6 +922,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])
         ->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
+
+    //DocumentRequests
+    Route::get('/document-requests', [DocumentRequestController::class, 'index'])->name('document-requests.index');
+    Route::post('/document-requests', [DocumentRequestController::class, 'store'])->name('document-requests.store');
+    Route::patch('/document-requests/{documentRequest}', [DocumentRequestController::class, 'update'])
+        ->name('document-requests.update');
+    Route::delete('/document-requests/{documentRequest}', [DocumentRequestController::class, 'destroy'])
+        ->name('document-requests.destroy');
+    Route::post('/document-requests/{documentRequest}/link-contract', [DocumentRequestController::class, 'linkContract'])
+        ->name('document-requests.link-contract');
 
     //MoneySourceTasks
     Route::patch('money_source/task/{moneySourceTask}/done', [MoneySourceTaskController::class, 'markAsDone'])

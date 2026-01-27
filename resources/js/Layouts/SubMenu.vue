@@ -677,14 +677,30 @@ const navigation = ref([
         prefetch: false,
     },
     {
-        name: 'Contracts',
-        href: route('contracts.index'),
+        name: 'Documents',
+        href: '#',
         icon: 'IconFileText',
-        current: route().current('contracts.index'),
-        isMenu: false,
+        current: route().current('contracts.index') || route().current('document-requests.index'),
+        isMenu: true,
         showToolTipForItem: false,
         has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules') || is('artwork admin')),
         prefetch: false,
+        subMenus: [
+            {
+                name: 'Contracts',
+                href: route('contracts.index'),
+                icon: 'IconFileText',
+                current: route().current('contracts.index'),
+                has_permission: can('view edit upload contracts | can see and download contract modules') || is('artwork admin')
+            },
+            {
+                name: 'Document requests',
+                href: route('document-requests.index'),
+                icon: 'IconFileDescription',
+                current: route().current('document-requests.index'),
+                has_permission: can('view edit upload contracts') || is('artwork admin')
+            },
+        ]
     },
     {
         name: 'System',

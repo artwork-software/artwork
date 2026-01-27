@@ -56,12 +56,14 @@ import { Head, usePage } from "@inertiajs/vue3"
 import { IconCheck, IconTrash } from "@tabler/icons-vue"
 import { getCurrentInstance } from "vue"
 import {can, is} from "laravel-permission-to-vuejs"
+import {usePermission} from "@/Composeables/Permission.js"
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue"
 
 // Zugriff auf $can / $canAny (wie vorher aus deinem Mixin-System)
 const page = usePage()
 const instance = getCurrentInstance()
 const proxy = instance?.proxy
+const { canAny } = usePermission(page.props)
 
 const activeKey = computed(() => page.component)
 
@@ -101,7 +103,7 @@ const tabsMap = computed(() => {
             key: "Trash/SageNotAssignedData",
             name: proxy?.$t ? proxy.$t("Sage API data sets") : "Sage API data sets",
             href: route("sageNotAssignedData.trashed"),
-            available: can("can view and delete sage100-api-data") || is('artwork admin'),
+            available: canAny(["can view project sage data", "can view global sage data", "can view and delete sage100-api-data"]) || is('artwork admin'),
         },
         "Trash/BudgetManagementAccount": {
             key: "Trash/BudgetManagementAccount",

@@ -309,12 +309,21 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
-                'name' => PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value,
-                'name_de' => "Sage-Datensätze einsehen",
-                'translation_key' => "View and delete Sage data records",
+                'name' => PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+                'name_de' => "Projektbezogene Sage-Daten einsehen",
+                'translation_key' => "View project-related Sage data",
                 'group' => 'Interfaces',
-                'tooltipText' => 'Nutzer*innen mit diesem Recht können nicht zugewiesene Datensätze von Sage sehen.',
-                'tooltipKey' => "Users with this permission can view unassigned Sage data records.",
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können projektbezogene, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view project-related unassigned Sage data records.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+                'name_de' => "Globale Sage-Daten einsehen",
+                'translation_key' => "View global Sage data",
+                'group' => 'Interfaces',
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können globale, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view global unassigned Sage data records.",
                 'checked' => false
             ],
             [

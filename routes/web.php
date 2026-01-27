@@ -78,6 +78,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
 use App\Http\Controllers\SageAssignedDataCommentController;
+use App\Http\Controllers\SageAssignedDataController;
 use App\Http\Controllers\SageNotAssignedDataController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
@@ -1276,6 +1277,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::resource('sageAssignedDataComments', SageAssignedDataCommentController::class)
                 ->only(['store', 'destroy']);
+
+            Route::delete(
+                '/sageAssignedData/{sageAssignedData}',
+                [
+                    SageAssignedDataController::class, 'destroy'
+                ]
+            )
+                ->name('sageAssignedData.destroy');
         });
     });
 

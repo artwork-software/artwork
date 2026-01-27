@@ -432,6 +432,7 @@
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal"
+                                                       @budget-updated="handleBudgetUpdated"
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
@@ -542,6 +543,7 @@
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal"
+                                                       @budget-updated="handleBudgetUpdated"
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
@@ -1058,7 +1060,7 @@ export default {
         'isInTrash',
         'canEditComponent'
     ],
-    emits: ['changeProjectHeaderVisualisation'],
+    emits: ['changeProjectHeaderVisualisation', 'budget-updated'],
     computed: {
         computedSortedColumns: function () {
             return this.sortColumns();
@@ -1932,20 +1934,22 @@ export default {
         showSageNotAssignedDataConfirmationModalHandler(closedToDelete) {
             if (closedToDelete) {
                 router.delete(
-                    route('sageNotAssignedData.destroy',
-                        {
-                            sageNotAssignedData: this.sageNotAssignedDataToDelete.id
-                        },
-                        {
-                            preserveState: true,
-                            preserveScroll: true
-                        }
-                    )
+                    route('sageNotAssignedData.destroy', {
+                        sageNotAssignedData: this.sageNotAssignedDataToDelete.id
+                    }),
+                    {
+                        preserveState: true,
+                        preserveScroll: true
+                    }
                 )
             }
 
             this.showDeleteSageNotAssignedDataConfirmationModal = false;
             this.sageNotAssignedDataToDelete = null;
+        },
+        handleBudgetUpdated() {
+            // Emit event to parent (BudgetTab) to reload budget data
+            this.$emit('budget-updated');
         }
     },
 }

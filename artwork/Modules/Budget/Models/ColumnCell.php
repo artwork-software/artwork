@@ -94,11 +94,10 @@ class ColumnCell extends Model
 
     public function getSageValueAttribute(): ?string
     {
-        // Ensure the relationship is loaded
         if (!$this->relationLoaded('sageAssignedData')) {
             $this->load('sageAssignedData');
         }
-        
+
         if ($this->sageAssignedData->isNotEmpty()) {
             return (string) $this->sageAssignedData->sum('buchungsbetrag');
         }

@@ -22,12 +22,6 @@ class SageAssignedDataController extends Controller
         $columnCell = $sageAssignedData->columnCell;
         $projectId = $columnCell?->subPositionRow?->subPosition?->mainPosition?->table?->project_id;
 
-        /*
-         * check if other SageAssignedData entities exist by sage_id, except the given one
-         * if multiple are found we iterate through and forceDelete them, right after a global SageNotAssignedData
-         * entity was created - it means "sage_id" was also assigned to one or more project group(s)
-         * if not given SageAssignedData is moved to SageNotAssignedData as project related
-         */
         $assignedSageDataBySageIdExcluded = $this->sageAssignedDataService->findAllBySageIdExcluded(
             $sageAssignedData->getAttribute('sage_id'),
             [$sageAssignedData->getAttribute('id')]

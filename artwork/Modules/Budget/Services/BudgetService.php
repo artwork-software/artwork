@@ -408,11 +408,9 @@ class BudgetService
                                                 }
                                             }
 
-                                            // Sage-Daten aus Unterprojekten sammeln
                                             if ($sageColumn) {
                                                 $sageCell = $subRow->cells()->where('column_id', $sageColumn->id)->first();
                                                 if ($sageCell) {
-                                                    // Sage-Daten explizit laden, falls noch nicht geladen
                                                     if (!$sageCell->relationLoaded('sageAssignedData')) {
                                                         $sageCell->load('sageAssignedData');
                                                     }
@@ -712,13 +710,11 @@ class BudgetService
                         }
                     }
 
-                    // Für Sage-Spalte prüfen, ob bereits Sage-Daten in der Projektgruppe existieren
                     if ($sageColumn) {
                         $sageColumnId = (int) $sageColumn->id;
                         $groupSageCell = $row->cells?->firstWhere('column_id', $sageColumnId);
 
                         if ($groupSageCell && $groupSageCell->sageAssignedData && $groupSageCell->sageAssignedData->isNotEmpty()) {
-                            // Wenn bereits Sage-Daten in der Projektgruppe existieren, verwende diese
                             $sageValue = (string) $groupSageCell->sageAssignedData->sum('buchungsbetrag');
 
                             if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
@@ -728,14 +724,12 @@ class BudgetService
                         }
                     }
 
-                    // Summiere alle relevanten Spalten für die Unterprojekte-Spalte
                     if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
                         continue;
                     }
 
                     $totalSum = '0';
                     foreach ($sumByGroupRowIdAndColumn[$rowId] as $colId => $colSum) {
-                        // Nur relevante Spalten und Sage-Spalte berücksichtigen
                         $col = $columns->firstWhere('id', $colId);
                         if ($col && (($col->relevant_for_project_groups ?? false) || $col->type === 'sage')) {
                             $totalSum = bcadd($totalSum, $colSum, 2);

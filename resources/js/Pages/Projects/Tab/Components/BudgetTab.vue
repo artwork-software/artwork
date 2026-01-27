@@ -18,6 +18,7 @@
                              :first_project_budget_tab_id="first_project_budget_tab_id"
                              :can-edit-component="canEditComponent"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
+                             @budget-updated="handleBudgetUpdated"
             />
             <div v-else class="w-full py-8">
                 <div v-if="loadBudgetError" class="text-error text-sm">
@@ -168,6 +169,10 @@ export default{
 
         changeProjectHeaderVisualisation(boolean) {
             this.hideProjectHeader = boolean;
+        },
+        handleBudgetUpdated() {
+            // Force reload budget data after deletion
+            this.fetchBudgetData(true);
         }
     },
 }

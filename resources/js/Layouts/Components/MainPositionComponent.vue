@@ -180,6 +180,7 @@
                               :show="this.showSageAssignedDataModal"
                               :cell="this.showSageAssignedDataModalCell"
                               @close="this.closeSageAssignedDataModal"
+                              @budget-updated="this.handleBudgetUpdated"
     />
 </template>
 
@@ -237,7 +238,8 @@ export default {
         'openSubPositionSumDetailModal',
         'openMainPositionSumDetailModal',
         'openCellDetailModal',
-        'openVerifiedModal'
+        'openVerifiedModal',
+        'budget-updated'
     ],
     data(){
         return{
@@ -510,6 +512,9 @@ export default {
         closeSageAssignedDataModal() {
             this.showSageAssignedDataModal = false;
             this.showSageAssignedDataModalCell = null;
+        },
+        handleBudgetUpdated() {
+            this.$emit('budget-updated');
         }
     },
 

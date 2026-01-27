@@ -1,11 +1,18 @@
 <template>
     <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
         <div class="mx-4">
-            <div class="mt-8 headline1">
-                {{ $t('Booking details') }}
-                <span v-if="currentSageAssignedData.is_collective_booking">
+            <div class="mt-8 headline1 flex items-center justify-between">
+                <div>
+                    {{ $t('Booking details') }}
+                    <span v-if="currentSageAssignedData.is_collective_booking">
           - {{ $t('Collective Booking') }}
         </span>
+                </div>
+                <TrashIcon
+                    v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data', 'can view and delete sage100-api-data'])"
+                    class="w-6 h-6 hover:text-red-600 cursor-pointer"
+                    @click="showDeleteConfirmation"
+                />
             </div>
             <div class="flex mt-4">
                 <div v-if="!cell.sage_assigned_data">
@@ -131,6 +138,13 @@
                 </div>
             </div>
         </div>
+        <ConfirmationComponent
+            v-if="showDeleteConfirmationModal"
+            @closed="handleDeleteConfirmation"
+            :description="$t('Do you really want to put the data set in the trash?', [currentSageAssignedData?.buchungstext])"
+            :titel="$t('Move to the trash')"
+            :z-index="200"
+        />
     </BaseModal>
 </template>
 
@@ -146,6 +160,7 @@ import BookingModalContents from '@/Layouts/Components/Budget/BookingModalConten
 import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue';
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue';
 import CurrencyFloatToStringFormatter from '@/Mixins/CurrencyFloatToStringFormatter.vue';
+import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue';
 
 export default defineComponent({
     components: {
@@ -156,11 +171,12 @@ export default defineComponent({
         BaseModal,
         BookingModalContents,
         UserPopoverTooltip,
-        FormButton
+        FormButton,
+        ConfirmationComponent
     },
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     props: ['show', 'cell'],
-    emits: ['close'],
+    emits: ['close', 'budget-updated'],
     data() {
         return {
             bookingDataCommentForm: useForm({
@@ -170,7 +186,8 @@ export default defineComponent({
             }),
             currentIndex: 0,
             maxIndex: this.cell.sage_assigned_data.length,
-            openChildren: {}
+            openChildren: {},
+            showDeleteConfirmationModal: false
         };
     },
     computed: {
@@ -215,6 +232,46 @@ export default defineComponent({
                     if (idx > -1) this.currentSageAssignedData.comments.splice(idx, 1);
                 }
             });
+        },
+        showDeleteConfirmation() {
+            this.showDeleteConfirmationModal = true;
+        },
+        handleDeleteConfirmation(confirmed) {
+            if (confirmed) {
+                router.delete(
+                    route('sageAssignedData.destroy', {
+                        sageAssignedData: this.currentSageAssignedData.id
+                    }),
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            // Remove the deleted item from the array
+                            const idx = this.cell.sage_assigned_data.findIndex(
+                                item => item.id === this.currentSageAssignedData.id
+                            );
+                            if (idx > -1) {
+                                this.cell.sage_assigned_data.splice(idx, 1);
+                                // Adjust currentIndex if needed
+                                if (this.currentIndex >= this.cell.sage_assigned_data.length) {
+                                    this.currentIndex = Math.max(0, this.cell.sage_assigned_data.length - 1);
+                                }
+                                this.maxIndex = this.cell.sage_assigned_data.length;
+                                // If no more items, close the modal
+                                if (this.cell.sage_assigned_data.length === 0) {
+                                    this.close();
+                                    // Emit event to reload budget after closing
+                                    this.$emit('budget-updated');
+                                } else {
+                                    // Emit event to reload budget even if modal stays open
+                                    this.$emit('budget-updated');
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+            this.showDeleteConfirmationModal = false;
         },
         close() {
             this.$emit('close');

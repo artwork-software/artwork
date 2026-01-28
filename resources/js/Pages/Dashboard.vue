@@ -188,7 +188,8 @@
                                     :event="item.shift.event"
                                     :shift="{
                                         ...item.shift,
-                                        start_of_shift: item.shift.start_of_shift ?? formatDateDMYFromISO(todayDate)
+                                        start_of_shift: item.shift.start_of_shift ?? formatDateDMYFromISO(todayDate),
+                                        room: item.shift.room ?? item.shift.event?.room
                                     }"
                                     :project="findProjectById(item.shift.event?.project_id)"
                                     :event-type="item.shift.event ? findEventTypeById(item.shift.event?.event_type_id) : null"

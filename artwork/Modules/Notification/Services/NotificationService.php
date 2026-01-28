@@ -492,6 +492,15 @@ class NotificationService
                     );
                 }
                 break;
+            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
+            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new BudgetVerified($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
         }
 
         $this->sendBroadcastMessage($this->getNotificationTo());

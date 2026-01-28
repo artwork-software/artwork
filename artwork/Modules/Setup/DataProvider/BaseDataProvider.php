@@ -103,6 +103,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_CREATE->value,
+                'name_de' => "Dokumentenanfragen erstellen",
+                'translation_key' => "Create document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen erstellen und an andere Nutzer*innen zuweisen.',
+                'tooltipKey' => "User is allowed to create document requests and assign them to other users.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_EDIT->value,
+                'name_de' => "Dokumentenanfragen bearbeiten",
+                'translation_key' => "Edit document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen bearbeiten und den Status ändern.',
+                'tooltipKey' => "User is allowed to edit document requests and change their status.",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
                 'name_de' => "Finanzierungsquellen anlegen und verwalten",
                 'translation_key' => "Create and manage funding sources",

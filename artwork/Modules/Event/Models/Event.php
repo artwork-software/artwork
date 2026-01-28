@@ -406,8 +406,10 @@ class Event extends Model
         return $builder->where(
             function (Builder $query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und enden
-                $query->whereBetween('start_time', [$start, $end])
-                    ->whereBetween('end_time', [$start, $end]);
+                $query->where('start_time', '>=', $start)
+                    ->where('start_time', '<', $end)
+                    ->where('end_time', '>', $start)
+                    ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
@@ -417,14 +419,16 @@ class Event extends Model
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden (überlappend)
                 $query->where('start_time', '<', $start)
-                    ->whereBetween('end_time', [$start, $end]);
+                    ->where('end_time', '>', $start)
+                    ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
-                $query->whereBetween('start_time', [$start, $end])
+                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden (überlappend)
+                $query->where('start_time', '>=', $start)
+                    ->where('start_time', '<', $end)
                     ->where('end_time', '>', $end);
             }
         );

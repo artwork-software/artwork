@@ -63,4 +63,7 @@ enum PermissionEnum : string
     case INVENTORY_DISPOSITION = 'inventory.disposition';
     case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
 
+    case DOCUMENT_REQUEST_CREATE = 'can create document requests';
+    case DOCUMENT_REQUEST_EDIT = 'can edit document requests';
+
 }

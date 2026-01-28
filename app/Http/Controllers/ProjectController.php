@@ -440,6 +440,23 @@ class ProjectController extends Controller
         return $filteredObjects;
     }
 
+    /**
+     * Get basic project information including budget_deadline.
+     */
+    public function showBasic(Project $project): JsonResponse
+    {
+        $budgetDeadline = $project->budget_deadline;
+        if ($budgetDeadline instanceof \Carbon\Carbon) {
+            $budgetDeadline = $budgetDeadline->format('Y-m-d');
+        }
+
+        return response()->json([
+            'id' => $project->id,
+            'name' => $project->name,
+            'budget_deadline' => $budgetDeadline,
+        ]);
+    }
+
     public function create(): Response|ResponseFactory
     {
         return inertia('Projects/Create');

@@ -29,7 +29,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $company_type_id
  * @property string $currency_id
  * @property bool $ksk_liable
+ * @property float|null $ksk_amount
+ * @property string|null $ksk_reason
  * @property bool $resident_abroad
+ * @property bool $foreign_tax
+ * @property float|null $foreign_tax_amount
+ * @property string|null $foreign_tax_reason
+ * @property float|null $reverse_charge_amount
+ * @property string|null $deadline_date
  * @property bool $is_freed
  * @property bool $has_power_of_attorney
  * @property string $created_at
@@ -54,7 +61,14 @@ class Contract extends Model
         'company_type_id',
         'currency_id',
         'ksk_liable',
+        'ksk_amount',
+        'ksk_reason',
         'resident_abroad',
+        'foreign_tax',
+        'foreign_tax_amount',
+        'foreign_tax_reason',
+        'reverse_charge_amount',
+        'deadline_date',
     ];
 
     protected $guarded = [
@@ -63,7 +77,12 @@ class Contract extends Model
 
     protected $casts = [
         'ksk_liable' => 'boolean',
+        'ksk_amount' => 'decimal:2',
         'resident_abroad' => 'boolean',
+        'foreign_tax' => 'boolean',
+        'foreign_tax_amount' => 'decimal:2',
+        'reverse_charge_amount' => 'decimal:2',
+        'deadline_date' => 'date',
         'is_freed' => 'boolean',
         'has_power_of_attorney' => 'boolean',
     ];

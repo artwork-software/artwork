@@ -22,6 +22,7 @@ use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
+use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
@@ -417,6 +418,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+    Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -912,9 +914,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
+    Route::get('/contracts/export/excel', [ContractController::class, 'export'])->name('contracts.export');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contract.delete');
     Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
+    Route::post('/contracts/filter/save', [ContractController::class, 'saveFilter'])->name('contracts.filter.save');
 
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
@@ -922,6 +926,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])
         ->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
+
+    //DocumentRequests
+    Route::get('/document-requests', [DocumentRequestController::class, 'index'])->name('document-requests.index');
+    Route::post('/document-requests', [DocumentRequestController::class, 'store'])->name('document-requests.store');
+    Route::patch('/document-requests/{documentRequest}', [DocumentRequestController::class, 'update'])
+        ->name('document-requests.update');
+    Route::delete('/document-requests/{documentRequest}', [DocumentRequestController::class, 'destroy'])
+        ->name('document-requests.destroy');
+    Route::post('/document-requests/{documentRequest}/link-contract', [DocumentRequestController::class, 'linkContract'])
+        ->name('document-requests.link-contract');
 
     //MoneySourceTasks
     Route::patch('money_source/task/{moneySourceTask}/done', [MoneySourceTaskController::class, 'markAsDone'])

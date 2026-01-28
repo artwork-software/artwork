@@ -237,6 +237,20 @@ watch(() => [props.companyTypes, props.contractTypes], () => {
     initializeFilters();
 }, { deep: true });
 
+// Watch for modelValue changes (e.g., when parent resets filters)
+watch(() => props.modelValue, (newVal) => {
+    localFilters.value.kskLiable = newVal.kskLiable || false;
+    localFilters.value.foreignTax = newVal.foreignTax || false;
+    localFilters.value.dateFrom = newVal.dateFrom || null;
+    localFilters.value.dateTo = newVal.dateTo || null;
+    localFilters.value.legalForms.forEach(f => {
+        f.checked = newVal.legalForms?.some(nf => nf.id === f.id && nf.checked) || false;
+    });
+    localFilters.value.contractTypes.forEach(f => {
+        f.checked = newVal.contractTypes?.some(nf => nf.id === f.id && nf.checked) || false;
+    });
+}, { deep: true });
+
 // Expose reset method for parent components
 const resetFilters = () => {
     localFilters.value.kskLiable = false;

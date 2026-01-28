@@ -3900,5 +3900,9 @@
     "File": "Datei",
     "No completed document requests yet.": "Es gibt noch keine erledigten Dokumentenanfragen.",
     "Contract options": "Vertragsoptionen",
-    "Deadline period": "Stichtagszeitraum"
+    "Deadline period": "Stichtagszeitraum",
+    "Export contracts": "Verträge exportieren",
+    "Filter contracts by various criteria to find the relevant information quickly.": "Filtere Verträge nach verschiedenen Kriterien, um die relevanten Informationen schnell zu finden.",
+    "Contract Filter": "Vertragsfilter",
+    "Filter contracts and export them to Excel.": "Filtere Verträge und exportiere sie als Excel-Datei."
 }

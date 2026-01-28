@@ -8,12 +8,29 @@
                 :description="filteredContracts.length ? `${filteredContracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>
-                    <button class="ui-button-secondary" @click="openContractFilterModal">
-                        <component :is="IconFilter" stroke-width="1.5" class="size-5" />
-                        <span v-if="activeFilterCount > 0" class="absolute top-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                            {{ activeFilterCount }}
-                        </span>
-                    </button>
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Filter')"
+                        :icon="IconFilter"
+                        icon-size="h-5 w-5"
+                        @click="openContractFilterModal"
+                        classesButton="ui-button"
+                    >
+                        <template #badge v-if="activeFilterCount > 0">
+                            <span class="absolute top-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                {{ activeFilterCount }}
+                            </span>
+                        </template>
+                    </ToolTipComponent>
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Export')"
+                        :icon="IconFileSpreadsheet"
+                        icon-size="h-5 w-5"
+                        @click="openContractExportModal"
+                        classesButton="ui-button"
+                    />
 
                     <button class="ui-button-add" @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -23,20 +40,20 @@
             </ToolbarHeader>
 
             <!-- Active filter tags -->
-            <div class="flex flex-wrap gap-2 mb-4" v-if="hasActiveFilters">
+            <div class="flex flex-wrap gap-2 mt-1" v-if="hasActiveFilters">
                 <!-- KSK-liable tag -->
-                <BaseFilterTag v-if="filter.kskLiable" :filter="{ name: $t('KSK-liable'), type: 'kskLiable' }" @remove-filter="filter.kskLiable = false" />
+                <BaseFilterTag v-if="filter.kskLiable" :filter="{ name: $t('KSK-liable'), type: 'kskLiable' }" @remove-filter="removeKskLiableFilter" />
                 <!-- Foreign tax tag -->
-                <BaseFilterTag v-if="filter.foreignTax" :filter="{ name: $t('Foreign tax'), type: 'foreignTax' }" @remove-filter="filter.foreignTax = false" />
+                <BaseFilterTag v-if="filter.foreignTax" :filter="{ name: $t('Foreign tax'), type: 'foreignTax' }" @remove-filter="removeForeignTaxFilter" />
                 <!-- Date range tag -->
                 <BaseFilterTag v-if="filter.dateFrom || filter.dateTo" :filter="{ name: `${$t('Deadline')}: ${formatDateDisplay(filter.dateFrom) || '...'} - ${formatDateDisplay(filter.dateTo) || '...'}`, type: 'dateRange' }" @remove-filter="clearDateRange" />
                 <!-- Legal form tags -->
                 <div v-for="filterItem in filter.legalForms" :key="'tag-company-' + filterItem.id">
-                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="filterItem.checked = false" />
+                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="removeLegalFormFilter(filterItem)" />
                 </div>
                 <!-- Contract type tags -->
                 <div v-for="filterItem in filter.contractTypes" :key="'tag-contract-' + filterItem.id">
-                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="filterItem.checked = false" />
+                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="removeContractTypeFilter(filterItem)" />
                 </div>
             </div>
 
@@ -141,12 +158,21 @@
             @close="closeContractFilterModal"
             @apply="applyContractFilter"
         />
+
+        <!-- Contract Export Modal -->
+        <ContractExportModal
+            v-if="showContractExportModal"
+            :company-types="company_types"
+            :contract-types="contract_types"
+            :initial-filter="filter"
+            @close="closeContractExportModal"
+        />
     </app-layout>
 </template>
 
 <script>
 import { ref, computed } from 'vue'
-import {IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload, IconFilter} from '@tabler/icons-vue'
+import {IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload, IconFilter, IconFileSpreadsheet} from '@tabler/icons-vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue"
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav.vue"
@@ -156,16 +182,20 @@ import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue"
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue"
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue"
 import ContractFilterModal from "@/Pages/Contracts/Components/ContractFilterModal.vue"
+import ContractExportModal from "@/Pages/Contracts/Components/ContractExportModal.vue"
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue"
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
+import axios from 'axios'
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
         ContractFilterModal,
+        ContractExportModal,
         IconDownload,
         BaseMenuItem,
         BaseMenu,
@@ -175,6 +205,7 @@ export default {
         ContractDeleteModal,
         ContractUploadModal,
         BaseFilterTag,
+        ToolTipComponent,
         ContractModuleSidenav,
         BaseSidenav,
         AppLayout,
@@ -186,7 +217,8 @@ export default {
         'contract_types',
         'currencies',
         'first_project_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'saved_filter'
     ],
     setup() {
         return {
@@ -196,6 +228,7 @@ export default {
             IconTrash,
             IconDownload,
             IconFilter,
+            IconFileSpreadsheet,
         }
     },
     data() {
@@ -205,6 +238,7 @@ export default {
             showContractDeleteModal: null,
             showContractEditModal: null,
             showContractFilterModal: false,
+            showContractExportModal: false,
             selectedContract: null,
             filter: {
                 kskLiable: false,
@@ -223,22 +257,35 @@ export default {
         }
     },
     mounted() {
+        // Initialize legalForms with saved filter state
+        const savedLegalFormIds = this.saved_filter?.legalFormIds || [];
         this.filter.legalForms = this.company_types.map((companyType) => {
             return {
                 id: companyType.id,
                 name: companyType.name,
-                checked: false,
+                checked: savedLegalFormIds.includes(companyType.id),
                 type: 'legal_form'
             }
         });
+
+        // Initialize contractTypes with saved filter state
+        const savedContractTypeIds = this.saved_filter?.contractTypeIds || [];
         this.filter.contractTypes = this.contract_types.map((contractType) => {
             return {
                 id: contractType.id,
                 name: contractType.name,
-                checked: false,
+                checked: savedContractTypeIds.includes(contractType.id),
                 type: 'contract_type'
             }
         });
+
+        // Load other saved filter values
+        if (this.saved_filter) {
+            this.filter.kskLiable = this.saved_filter.kskLiable || false;
+            this.filter.foreignTax = this.saved_filter.foreignTax || false;
+            this.filter.dateFrom = this.saved_filter.dateFrom || null;
+            this.filter.dateTo = this.saved_filter.dateTo || null;
+        }
     },
     computed: {
         hasActiveFilters() {
@@ -335,10 +382,44 @@ export default {
                     ct.checked = matchingFilter ? matchingFilter.checked : false;
                 });
             }
+
+            // Save filters to backend
+            this.saveFilter();
+        },
+        saveFilter() {
+            const filterData = {
+                kskLiable: this.filter.kskLiable,
+                foreignTax: this.filter.foreignTax,
+                dateFrom: this.filter.dateFrom,
+                dateTo: this.filter.dateTo,
+                legalFormIds: this.filter.legalForms.filter(f => f.checked).map(f => f.id),
+                contractTypeIds: this.filter.contractTypes.filter(f => f.checked).map(f => f.id),
+            };
+
+            axios.post(route('contracts.filter.save'), filterData).catch(error => {
+                console.error('Failed to save contract filter:', error);
+            });
         },
         clearDateRange() {
             this.filter.dateFrom = null;
             this.filter.dateTo = null;
+            this.saveFilter();
+        },
+        removeKskLiableFilter() {
+            this.filter.kskLiable = false;
+            this.saveFilter();
+        },
+        removeForeignTaxFilter() {
+            this.filter.foreignTax = false;
+            this.saveFilter();
+        },
+        removeLegalFormFilter(filterItem) {
+            filterItem.checked = false;
+            this.saveFilter();
+        },
+        removeContractTypeFilter(filterItem) {
+            filterItem.checked = false;
+            this.saveFilter();
         },
         formatDateDisplay(dateString) {
             if (!dateString) return null;
@@ -366,6 +447,12 @@ export default {
         },
         closeContractUploadModal() {
             this.showContractUploadModal = false;
+        },
+        openContractExportModal() {
+            this.showContractExportModal = true;
+        },
+        closeContractExportModal() {
+            this.showContractExportModal = false;
         }
     }
 }

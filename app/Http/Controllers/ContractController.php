@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\Contract\Exports\ContractExcelExport;
 use Artwork\Modules\Contract\Http\Requests\ContractUpdateRequest;
 use Artwork\Modules\Contract\Http\Resources\ContractResource;
 use Artwork\Modules\Contract\Models\Contract;
@@ -23,6 +24,7 @@ use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Models\UserContractFilter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +57,10 @@ class ContractController extends Controller
             $query->where('user_id', Auth::id());
         })->get();
         $contracts = $contracts->merge($accessing_contracts);
+
+        // Load saved contract filter for current user
+        $savedFilter = Auth::user()->contractFilter;
+
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts)->resolve(),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
@@ -63,7 +69,15 @@ class ContractController extends Controller
             'currencies' => Currency::all(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'saved_filter' => $savedFilter ? [
+                'kskLiable' => $savedFilter->ksk_liable,
+                'foreignTax' => $savedFilter->foreign_tax,
+                'dateFrom' => $savedFilter->date_from,
+                'dateTo' => $savedFilter->date_to,
+                'legalFormIds' => $savedFilter->legal_form_ids ?? [],
+                'contractTypeIds' => $savedFilter->contract_type_ids ?? [],
+            ] : null,
         ]);
     }
 
@@ -423,5 +437,81 @@ class ContractController extends Controller
             ]);
             $contract->comments()->save($comment);
         }
+    }
+
+    public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $query = Contract::query()
+            ->with(['project', 'contract_type', 'company_type', 'currency', 'creator']);
+
+        // Filter by KSK-liable
+        if ($request->boolean('kskLiable')) {
+            $query->where('ksk_liable', true);
+        }
+
+        // Filter by foreign tax
+        if ($request->boolean('foreignTax')) {
+            $query->where('foreign_tax', true);
+        }
+
+        // Filter by date range (deadline_date)
+        if ($request->filled('dateFrom')) {
+            $query->whereDate('deadline_date', '>=', $request->input('dateFrom'));
+        }
+        if ($request->filled('dateTo')) {
+            $query->whereDate('deadline_date', '<=', $request->input('dateTo'));
+        }
+
+        // Filter by legal forms (company_type_id)
+        if ($request->filled('legalFormIds')) {
+            $legalFormIds = $request->input('legalFormIds');
+            if (is_array($legalFormIds) && count($legalFormIds) > 0) {
+                $query->whereIn('company_type_id', $legalFormIds);
+            }
+        }
+
+        // Filter by contract types
+        if ($request->filled('contractTypeIds')) {
+            $contractTypeIds = $request->input('contractTypeIds');
+            if (is_array($contractTypeIds) && count($contractTypeIds) > 0) {
+                $query->whereIn('contract_type_id', $contractTypeIds);
+            }
+        }
+
+        // Only get contracts where user is creator or has access
+        $userId = Auth::id();
+        $query->where(function ($q) use ($userId): void {
+            $q->where('creator_id', $userId)
+                ->orWhereHas('accessingUsers', function ($subQuery) use ($userId): void {
+                    $subQuery->where('user_id', $userId);
+                });
+        });
+
+        $contracts = $query->get();
+        $language = Auth::user()->language ?? 'de';
+
+        $export = new ContractExcelExport($contracts, $language);
+        $filename = 'contracts_export_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+        return $export->download($filename)->deleteFileAfterSend();
+    }
+
+    public function saveFilter(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+
+        UserContractFilter::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'ksk_liable' => $request->boolean('kskLiable'),
+                'foreign_tax' => $request->boolean('foreignTax'),
+                'date_from' => $request->input('dateFrom'),
+                'date_to' => $request->input('dateTo'),
+                'legal_form_ids' => $request->input('legalFormIds', []),
+                'contract_type_ids' => $request->input('contractTypeIds', []),
+            ]
+        );
+
+        return response()->json(['success' => true]);
     }
 }

@@ -3862,5 +3862,7 @@
     "View document requests": "View document requests",
     "Completed requests": "Completed requests",
     "File": "File",
-    "No completed document requests yet.": "No completed document requests yet."
+    "No completed document requests yet.": "No completed document requests yet.",
+    "Contract options": "Contract options",
+    "Deadline period": "Deadline period"
 }

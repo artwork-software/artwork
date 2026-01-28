@@ -8,36 +8,12 @@
                 :description="filteredContracts.length ? `${filteredContracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>
-                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-zinc-900" menu-width="w-72" classes="ui-button" :menu-button-text="$t('Filter')">
-                        <div class="px-4 py-2">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-zinc-700">{{ $t('Additional costs') }}</span>
-                                <button @click="resetContractFilter" class="text-xs text-zinc-500 hover:text-zinc-700">
-                                    {{ $t('Reset') }}
-                                </button>
-                            </div>
-                            <div v-for="(filterItem, index) in filter.costsFilter" :key="'cost-' + index" class="flex items-center py-1">
-                                <input v-model="filterItem.checked" :id="'costs-' + index" type="checkbox" class="input-checklist" />
-                                <label :for="'costs-' + index" class="ml-2 text-sm text-zinc-600">{{ filterItem.name }}</label>
-                            </div>
-                        </div>
-                        <hr class="my-2">
-                        <div class="px-4 py-2">
-                            <span class="text-sm font-medium text-zinc-700">{{ $t('Legal form') }}</span>
-                            <div v-for="(filterItem, index) in filter.companyTypesFilter" :key="'company-' + index" class="flex items-center py-1">
-                                <input v-model="filterItem.checked" :id="'company-' + index" type="checkbox" class="input-checklist" />
-                                <label :for="'company-' + index" class="ml-2 text-sm text-zinc-600">{{ filterItem.name }}</label>
-                            </div>
-                        </div>
-                        <hr class="my-2">
-                        <div class="px-4 py-2">
-                            <span class="text-sm font-medium text-zinc-700">{{ $t('Contract type') }}</span>
-                            <div v-for="(filterItem, index) in filter.contractTypesFilter" :key="'contract-' + index" class="flex items-center py-1">
-                                <input v-model="filterItem.checked" :id="'contract-' + index" type="checkbox" class="input-checklist" />
-                                <label :for="'contract-' + index" class="ml-2 text-sm text-zinc-600">{{ filterItem.name }}</label>
-                            </div>
-                        </div>
-                    </BaseMenu>
+                    <button class="ui-button-secondary" @click="openContractFilterModal">
+                        <component :is="IconFilter" stroke-width="1.5" class="size-5" />
+                        <span v-if="activeFilterCount > 0" class="absolute top-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                            {{ activeFilterCount }}
+                        </span>
+                    </button>
 
                     <button class="ui-button-add" @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -48,14 +24,19 @@
 
             <!-- Active filter tags -->
             <div class="flex flex-wrap gap-2 mb-4" v-if="hasActiveFilters">
-                <div v-for="filterItem in filter.costsFilter" :key="'tag-cost-' + filterItem.name">
-                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="removeFilter(filterItem)" />
+                <!-- KSK-liable tag -->
+                <BaseFilterTag v-if="filter.kskLiable" :filter="{ name: $t('KSK-liable'), type: 'kskLiable' }" @remove-filter="filter.kskLiable = false" />
+                <!-- Foreign tax tag -->
+                <BaseFilterTag v-if="filter.foreignTax" :filter="{ name: $t('Foreign tax'), type: 'foreignTax' }" @remove-filter="filter.foreignTax = false" />
+                <!-- Date range tag -->
+                <BaseFilterTag v-if="filter.dateFrom || filter.dateTo" :filter="{ name: `${$t('Deadline')}: ${formatDateDisplay(filter.dateFrom) || '...'} - ${formatDateDisplay(filter.dateTo) || '...'}`, type: 'dateRange' }" @remove-filter="clearDateRange" />
+                <!-- Legal form tags -->
+                <div v-for="filterItem in filter.legalForms" :key="'tag-company-' + filterItem.id">
+                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="filterItem.checked = false" />
                 </div>
-                <div v-for="filterItem in filter.companyTypesFilter" :key="'tag-company-' + filterItem.name">
-                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="removeFilter(filterItem)" />
-                </div>
-                <div v-for="filterItem in filter.contractTypesFilter" :key="'tag-contract-' + filterItem.name">
-                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="removeFilter(filterItem)" />
+                <!-- Contract type tags -->
+                <div v-for="filterItem in filter.contractTypes" :key="'tag-contract-' + filterItem.id">
+                    <BaseFilterTag v-if="filterItem.checked" :filter="filterItem" @remove-filter="filterItem.checked = false" />
                 </div>
             </div>
 
@@ -139,7 +120,7 @@
             :currencies="currencies"
             :company-types="company_types"
             :show="showContractEditModal !== null"
-            :close-modal="closeContractEditModal"
+            @closeModal="closeContractEditModal"
             :contract="selectedContract"
         />
 
@@ -150,12 +131,22 @@
             :close-modal="closeContractDeleteModal"
             :contract="selectedContract"
         />
+
+        <!-- Contract Filter Modal -->
+        <ContractFilterModal
+            v-if="showContractFilterModal"
+            :company-types="company_types"
+            :contract-types="contract_types"
+            :current-filters="filter"
+            @close="closeContractFilterModal"
+            @apply="applyContractFilter"
+        />
     </app-layout>
 </template>
 
 <script>
 import { ref, computed } from 'vue'
-import { IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload } from '@tabler/icons-vue'
+import {IconFileText, IconCirclePlus, IconEdit, IconTrash, IconDownload, IconFilter} from '@tabler/icons-vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue"
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav.vue"
@@ -164,6 +155,7 @@ import Permissions from "@/Mixins/Permissions.vue"
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue"
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue"
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue"
+import ContractFilterModal from "@/Pages/Contracts/Components/ContractFilterModal.vue"
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue"
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
@@ -173,6 +165,7 @@ export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        ContractFilterModal,
         IconDownload,
         BaseMenuItem,
         BaseMenu,
@@ -202,6 +195,7 @@ export default {
             IconEdit,
             IconTrash,
             IconDownload,
+            IconFilter,
         }
     },
     data() {
@@ -210,19 +204,15 @@ export default {
             showContractUploadModal: false,
             showContractDeleteModal: null,
             showContractEditModal: null,
+            showContractFilterModal: false,
             selectedContract: null,
             filter: {
-                costsFilter: [{
-                    name: 'KSK-pflichtig',
-                    checked: false,
-                    type: 'cost'
-                }, {
-                    name: 'Im Ausland ansässig',
-                    checked: false,
-                    type: 'cost'
-                }],
-                companyTypesFilter: [],
-                contractTypesFilter: []
+                kskLiable: false,
+                foreignTax: false,
+                dateFrom: null,
+                dateTo: null,
+                legalForms: [],
+                contractTypes: []
             },
             cols: [
                 { key: 'partner', label: 'Contract partner', sortable: false },
@@ -233,15 +223,15 @@ export default {
         }
     },
     mounted() {
-        this.filter.companyTypesFilter = this.company_types.map((companyType) => {
+        this.filter.legalForms = this.company_types.map((companyType) => {
             return {
                 id: companyType.id,
                 name: companyType.name,
                 checked: false,
-                type: 'company_type'
+                type: 'legal_form'
             }
         });
-        this.filter.contractTypesFilter = this.contract_types.map((contractType) => {
+        this.filter.contractTypes = this.contract_types.map((contractType) => {
             return {
                 id: contractType.id,
                 name: contractType.name,
@@ -252,57 +242,108 @@ export default {
     },
     computed: {
         hasActiveFilters() {
-            return this.filter.costsFilter.some(f => f.checked) ||
-                   this.filter.companyTypesFilter.some(f => f.checked) ||
-                   this.filter.contractTypesFilter.some(f => f.checked);
+            return this.filter.kskLiable ||
+                   this.filter.foreignTax ||
+                   this.filter.dateFrom ||
+                   this.filter.dateTo ||
+                   this.filter.legalForms.some(f => f.checked) ||
+                   this.filter.contractTypes.some(f => f.checked);
+        },
+        activeFilterCount() {
+            let count = 0;
+            if (this.filter.kskLiable) count++;
+            if (this.filter.foreignTax) count++;
+            if (this.filter.dateFrom || this.filter.dateTo) count++;
+            count += this.filter.legalForms.filter(f => f.checked).length;
+            count += this.filter.contractTypes.filter(f => f.checked).length;
+            return count;
         },
         filteredContracts() {
             let filteredContracts = this.contracts;
-            // filter by costs
-            this.filter.costsFilter.forEach((cost) => {
-                if(cost.checked) {
-                    if(cost.name === this.$t('KSK-liable') || cost.name === 'KSK-pflichtig') {
-                        filteredContracts = filteredContracts.filter((contract) => {
-                            return contract.ksk_liable
-                        })
-                    }
-                    if(cost.name === this.$t('Resident abroad') || cost.name === 'Im Ausland ansässig') {
-                        filteredContracts = filteredContracts.filter((contract) => {
-                            return contract.resident_abroad
-                        })
-                    }
-                }
-            })
-            // filter by company type
-            this.filter.companyTypesFilter.forEach((companyType) => {
-                if(companyType.checked) {
-                    filteredContracts = filteredContracts.filter((contract) => {
-                        return contract?.company_type?.id === companyType?.id
-                    })
-                }
-            })
-            // filter by contract type
-            this.filter.contractTypesFilter.forEach((contractType) => {
-                if(contractType.checked) {
-                    filteredContracts = filteredContracts.filter((contract) => {
-                        return contract?.contract_type?.id === contractType?.id
-                    })
-                }
-            })
+
+            // Filter by KSK-liable
+            if (this.filter.kskLiable) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    return contract.ksk_liable;
+                });
+            }
+
+            // Filter by foreign tax
+            if (this.filter.foreignTax) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    return contract.has_foreign_tax;
+                });
+            }
+
+            // Filter by date range (deadline_date within the range, inclusive)
+            if (this.filter.dateFrom || this.filter.dateTo) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    if (!contract.deadline_date) return false;
+                    // Extract only the date part (YYYY-MM-DD) for comparison in case deadline_date includes time
+                    const deadlineDate = contract.deadline_date.substring(0, 10);
+                    // Inclusive comparison: deadline on start or end date should be included
+                    if (this.filter.dateFrom && deadlineDate < this.filter.dateFrom) return false;
+                    if (this.filter.dateTo && deadlineDate > this.filter.dateTo) return false;
+                    return true;
+                });
+            }
+
+            // Filter by legal form (company type)
+            const selectedLegalForms = this.filter.legalForms.filter(f => f.checked);
+            if (selectedLegalForms.length > 0) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    return selectedLegalForms.some(lf => contract?.company_type?.id === lf.id);
+                });
+            }
+
+            // Filter by contract type
+            const selectedContractTypes = this.filter.contractTypes.filter(f => f.checked);
+            if (selectedContractTypes.length > 0) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    return selectedContractTypes.some(ct => contract?.contract_type?.id === ct.id);
+                });
+            }
+
             return filteredContracts;
         },
     },
     methods: {
-        resetContractFilter() {
-            this.filter.costsFilter.forEach((cost) => {
-                cost.checked = false;
-            })
-            this.filter.companyTypesFilter.forEach((companyType) => {
-                companyType.checked = false;
-            })
-            this.filter.contractTypesFilter.forEach((contractType) => {
-                contractType.checked = false;
-            })
+        openContractFilterModal() {
+            this.showContractFilterModal = true;
+        },
+        closeContractFilterModal() {
+            this.showContractFilterModal = false;
+        },
+        applyContractFilter(newFilters) {
+            this.filter.kskLiable = newFilters.kskLiable;
+            this.filter.foreignTax = newFilters.foreignTax;
+            this.filter.dateFrom = newFilters.dateFrom;
+            this.filter.dateTo = newFilters.dateTo;
+
+            // Update legalForms checked state
+            if (newFilters.legalForms) {
+                this.filter.legalForms.forEach(lf => {
+                    const matchingFilter = newFilters.legalForms.find(f => f.id === lf.id);
+                    lf.checked = matchingFilter ? matchingFilter.checked : false;
+                });
+            }
+
+            // Update contractTypes checked state
+            if (newFilters.contractTypes) {
+                this.filter.contractTypes.forEach(ct => {
+                    const matchingFilter = newFilters.contractTypes.find(f => f.id === ct.id);
+                    ct.checked = matchingFilter ? matchingFilter.checked : false;
+                });
+            }
+        },
+        clearDateRange() {
+            this.filter.dateFrom = null;
+            this.filter.dateTo = null;
+        },
+        formatDateDisplay(dateString) {
+            if (!dateString) return null;
+            const [year, month, day] = dateString.split('-');
+            return `${day}.${month}.${year}`;
         },
         openContractEditModal(contract) {
             this.selectedContract = contract;
@@ -325,29 +366,6 @@ export default {
         },
         closeContractUploadModal() {
             this.showContractUploadModal = false;
-        },
-        removeFilter(filter) {
-            if(filter.type === 'cost') {
-                this.filter.costsFilter.forEach((cost) => {
-                    if(cost.name === filter.name) {
-                        cost.checked = false;
-                    }
-                })
-            }
-            if(filter.type === 'company_type') {
-                this.filter.companyTypesFilter.forEach((companyType) => {
-                    if(companyType.name === filter.name) {
-                        companyType.checked = false;
-                    }
-                })
-            }
-            if(filter.type === 'contract_type') {
-                this.filter.contractTypesFilter.forEach((contractType) => {
-                    if(contractType.name === filter.name) {
-                        contractType.checked = false;
-                    }
-                })
-            }
         }
     }
 }

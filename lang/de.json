@@ -3898,5 +3898,7 @@
     "View document requests": "Dokumentenanfragen anzeigen",
     "Completed requests": "Erledigte Anfragen",
     "File": "Datei",
-    "No completed document requests yet.": "Es gibt noch keine erledigten Dokumentenanfragen."
+    "No completed document requests yet.": "Es gibt noch keine erledigten Dokumentenanfragen.",
+    "Contract options": "Vertragsoptionen",
+    "Deadline period": "Stichtagszeitraum"
 }

@@ -487,12 +487,16 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        // Do not automatically add the creator to the project team.
-        // Only attach the creator if they are explicitly included in assignedUsers.
         $assignedUsers = collect($request->get('assignedUsers'));
-        if ($assignedUsers->contains(Auth::id())) {
-            // If the creator is explicitly assigned, they should be a manager
-            // as per previous behaviour when present in assignedUsers.
+        $currentUser = Auth::user();
+
+        // Users without "view all projects" permission should automatically be added to the project team
+        // Users with this permission should NOT be automatically added (unless explicitly assigned)
+        if (!$currentUser->can(PermissionEnum::PROJECT_VIEW->value)) {
+            // User doesn't have global read access, so add them to the project team
+            $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
+        } elseif ($assignedUsers->contains(Auth::id())) {
+            // User has global read access but is explicitly included in assignedUsers
             $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
         }
 

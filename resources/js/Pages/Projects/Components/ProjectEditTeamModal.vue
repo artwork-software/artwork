@@ -305,6 +305,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import Dropdown from '@/Jetstream/Dropdown.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import { XCircleIcon, XIcon } from '@heroicons/vue/solid'
+import {is} from "laravel-permission-to-vuejs";
 
 defineOptions({
     name: 'ProjectEditTeamModal',
@@ -317,6 +318,7 @@ const props = defineProps({
     assignedUsers: { type: Array, required: true },
     assignedDepartments: { type: Array, required: true },
     userIsProjectManager: { type: Boolean, required: true },
+    userIsProjectCreator: { type: Boolean, default: false },
     projectId: { type: [Number, String], required: true },
     projectRoles: { type: Array, required: true },
 })
@@ -445,8 +447,9 @@ const editProjectTeam = () => {
 
 const checkUserAuth = (user) => {
     if (props.userIsProjectManager) return true
+    if (props.userIsProjectCreator) return true
     if (authUserId.value === user.id && user.project_management) return true
-
+    if(is('artwork admin')) return true
     // hasAdminRole kommt vom Mixin Permissions
     return typeof (/* @ts-ignore */ hasAdminRole) === 'function'
         ? /* @ts-ignore */ hasAdminRole()

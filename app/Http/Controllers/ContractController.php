@@ -51,15 +51,16 @@ class ContractController extends Controller
 
     public function index(): Response|ResponseFactory
     {
+        $user = Auth::user();
         // get all contracts where i am creator or i am accessing user
-        $contracts = Contract::where('creator_id', Auth::id())->get();
-        $accessing_contracts = Contract::whereHas('accessingUsers', function ($query): void {
-            $query->where('user_id', Auth::id());
+        $contracts = Contract::where('creator_id', $user->id)->get();
+        $accessing_contracts = Contract::whereHas('accessingUsers', function ($query) use ($user): void {
+            $query->where('user_id', $user->id);
         })->get();
         $contracts = $contracts->merge($accessing_contracts);
 
         // Load saved contract filter for current user
-        $savedFilter = Auth::user()->contractFilter;
+        $savedFilter = $user->contractFilter;
 
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts)->resolve(),

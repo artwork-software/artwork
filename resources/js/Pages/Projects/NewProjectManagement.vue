@@ -19,8 +19,8 @@
                         @click="toggleMyProjects()"
                         :aria-pressed="!!showOnlyMyProjects"
                         class="ui-button flex items-center gap-2"
-                        :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
-                        <span class="size-2 rounded-full my-2" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
+                        :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 '">
+                        <span class="size-2 rounded-full my-2" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 '"></span>
                         {{ $t('Only mine') }}
                     </button>
 
@@ -28,8 +28,8 @@
                     <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
-                                <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
-                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetFilter">
+                                <div class="text-sm font-medium text-zinc-700 ">{{ $t('Filters') }}</div>
+                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700   transition" @click="resetFilter">
                                     {{ $t('Deselect all') }}
                                 </button>
                             </div>
@@ -37,37 +37,37 @@
                             <div class="space-y-3">
                                 <!-- Toggles -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 0 px-3 py-2">
                                         <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Project groups') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Project groups') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                         <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Projects') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                         <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show expired projects') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show expired projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                         <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show future projects') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show future projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                         <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show projects without events') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show projects without events') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                         <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show only projects without group') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show only projects without group') }}</span>
                                     </label>
                                 </div>
 
                                 <!-- States -->
-                                <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2">
+                                <div class="border-t border-zinc-200  pt-2">
                                     <button
                                         type="button"
-                                        class="w-full flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-200"
+                                        class="w-full flex items-center justify-between text-sm text-zinc-700 "
                                         @click="showProjectStateFilter = !showProjectStateFilter"
                                     >
                                         <span>{{ $t('Project status') }}</span>
@@ -75,9 +75,9 @@
                                         <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
                                     </button>
                                     <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                             <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200 truncate">{{ state.name }}</span>
+                                            <span class="text-sm text-zinc-700  truncate">{{ state.name }}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -98,8 +98,8 @@
                     <!-- Sort --><div class="flex items-center mr-6">
                     <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes-button="ui-button">
                         <div class="flex items-center justify-between">
-                            <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
-                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
+                            <div class="text-sm font-medium text-zinc-700 ">{{ $t('Sort by') }}</div>
+                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700  transition" @click="resetSort()">
                                 {{ $t('Reset') }}
                             </button>
                         </div>
@@ -129,7 +129,7 @@
             <!-- Last visited -->
             <div class="my-5 flex items-center justify-between">
                 <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
-                    <div class="text-sm text-zinc-600 dark:text-zinc-300">{{ $t('Last visited project') }}:</div>
+                    <div class="text-sm text-zinc-600 ">{{ $t('Last visited project') }}:</div>
                     <a
                         class="text-artwork-buttons-create text-sm font-semibold inline-flex items-center gap-1"
                         :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })"

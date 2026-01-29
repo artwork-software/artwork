@@ -1193,7 +1193,8 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
 
     // 1) Gruppieren
     for (const shift of shifts) {
-        if (!shift.daysOfShift?.includes(dayLabel)) continue
+        // Nur am Starttag anzeigen, nicht an allen Tagen der Schicht
+        if (shift.startOfShift !== dayLabel) continue
 
         const hasProject = !!shift.project
         const key = hasProject ? `project_${shift.project.id}` : PROJECTLESS_KEY

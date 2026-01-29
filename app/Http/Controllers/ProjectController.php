@@ -2213,11 +2213,11 @@ class ProjectController extends Controller
 
 
 
-        // Aktualisiere nur, wenn wirklich eine neue State-ID kommt
-        // (kleine Absicherung, damit wir nicht sinnlos speichern)
+        // Aktualisiere nur, wenn wirklich eine Änderung vorliegt
         $newStateId = $request->input('state');
 
-        if ($newStateId !== null && (int) $project->state !== (int) $newStateId) {
+        // Prüfe ob sich der State geändert hat (auch wenn auf null gesetzt wird)
+        if ($project->state !== $newStateId && ($newStateId === null || (int) $project->state !== (int) $newStateId)) {
             $project->update([
                 'state' => $newStateId,
             ]);

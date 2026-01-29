@@ -587,7 +587,13 @@ class UserController extends Controller
             $workEnd = min($shiftEnd, $dayEnd);
 
             if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd) - $breakMinutes;
+                $duration = $workStart->diffInMinutes($workEnd);
+                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
+                $shiftStartDay = $shiftStart->copy()->startOfDay();
+                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
+                if ($isFirstDayOfShift) {
+                    $duration -= $breakMinutes;
+                }
                 $total += max(0, $duration);
             }
         }

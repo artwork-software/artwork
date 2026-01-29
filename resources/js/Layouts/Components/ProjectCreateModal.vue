@@ -184,22 +184,32 @@
                                 </div>
                             </div>
                             <div class="px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
-                                <Listbox as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
+                                <!-- Show tag when state is selected -->
+                                <div v-if="selectedState" class="w-full">
+                                    <div class="text-gray-500 text-xs mb-2">
+                                        {{ t('Project status') }}
+                                    </div>
+                                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-gray-300 bg-white">
+                                        <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
+                                        <span class="text-sm flex items-center gap-x-1">
+                                            {{ selectedState.name }}
+                                            <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
+                                        </span>
+                                        <button type="button" @click="selectedState = null" class="ml-1">
+                                            <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Show dropdown when no state is selected -->
+                                <Listbox v-else as="div" class="w-full relative" v-model="selectedState" @update:model-value="handleStateChange($event)">
                                     <ListboxButton class="menu-button-no-padding relative">
                                         <div class="truncate">
                                             <div class="top-2 left-4 absolute text-gray-500 text-xs">
                                                 {{ t('Project status') }}
                                             </div>
                                             <div class="pt-6 pb-2 flex items-center gap-x-2">
-                                                <div v-if="selectedState">
-                                                    <div class="block w-4 h-4 rounded-full" :style="{'backgroundColor' : states?.find(state => state.id === selectedState.id)?.color }"/>
-                                                </div>
                                                 <div class="truncate">
-                                                    <span v-if="selectedState" class="flex items-center gap-x-1">
-                                                        {{ states?.find(state => state.id === selectedState.id)?.name }}
-                                                        <IconCalendarMonth v-if="states?.find(state => state.id === selectedState.id)?.is_planning === true || states?.find(state => state.id === selectedState.id)?.is_planning === 1" class="w-4 h-4" />
-                                                    </span>
-                                                    <span v-else>
+                                                    <span>
                                                         {{ t('Select project status') }}
                                                     </span>
                                                 </div>
@@ -683,9 +693,9 @@ const createProjectForm = useForm({
 const projectGroupProjects = ref([]);
 const projectGroupSearchResults = ref([]);
 const projectGroupQuery = ref('');
-const selectedState = ref(props.project ? props.states.find(state => state.id === props.project?.state) : null);
+const selectedState = ref(props.project && props.project.state && props.states ? props.states.find(state => state.id === (typeof props.project.state === 'object' ? props.project.state.id : props.project.state)) : null);
 const selectedStateObject = ref(props.project ? props.project?.state : null);
-const initialStatePlanning = ref(props.project && props.project.state ? props.states.find(state => state.id === props.project.state)?.is_planning : null);
+const initialStatePlanning = ref(props.project && props.project.state ? props.states?.find(state => state.id === (typeof props.project.state === 'object' ? props.project.state.id : props.project.state))?.is_planning : null);
 const assignedUsers = ref(props.project ? props.project.manager_users ? props.project.manager_users : [] : []);
 const keyVisualForm = useForm({
     keyVisual: null,
@@ -751,7 +761,7 @@ const addProject = (bool) => {
     });
 
     createProjectForm.assignedUsers = assignedUsers.value?.map(user => user.id);
-    createProjectForm.state = selectedState.value?.id;
+    createProjectForm.state = selectedState.value ? selectedState.value.id : null;
 
     if (createProjectGroup.value) {
         createProjectForm.isGroup = true;
@@ -767,7 +777,6 @@ const addProject = (bool) => {
                         emit('openProjectPlanningStateChangeModal', props.project);
                     }
                     emit('closeCreateProjectModal', bool);
-
                 }
             }
         );

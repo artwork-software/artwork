@@ -51,9 +51,10 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
                     $query
                         ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
                         ->orderBy('position')
-                        ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
+                        ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END')
+                        ->with('sageAssignedData')
+                        ->select('column_sub_position_row.*');
                 },
-                'mainPositions.subPositions.subPositionRows.cells.sageAssignedData',
             ])
             ->first();
 

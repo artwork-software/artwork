@@ -21,6 +21,7 @@ use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -284,15 +285,23 @@ class BudgetService
         $globalGroup = collect();
 
         if ($this->sageApiSettingsService->getFirst()?->enabled) {
-            $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
+            $user = Auth::user();
+            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
+            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
 
-            $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
-                if ($item->project_id === null) {
-                    $globalGroup->push($item);
-                } elseif ($item->project_id === $project->id) {
-                    $projectsGroup->push($item);
-                }
-            });
+            if ($canViewProjectSageData || $canViewGlobalSageData) {
+                $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
+
+                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
+                    if ($item->project_id === null && $canViewGlobalSageData) {
+                        $globalGroup->push($item);
+                    } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
+                        $projectsGroup->push($item);
+                    }
+                });
+            }
         }
 
         $groupedProjectData = [];
@@ -348,6 +357,7 @@ class BudgetService
 
                             [$firstSubColumn, $secondSubColumn] = [$firstTwoSubColumns->first(), $firstTwoSubColumns->last()];
                             $relevantColumns = $subProjectColumns->where('relevant_for_project_groups', true);
+                            $sageColumn = $subProjectColumns->firstWhere('type', 'sage');
 
                             foreach ($subProject->table()->first()?->mainPositions ?? [] as $subMainPosition) {
                                 foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
@@ -395,6 +405,48 @@ class BudgetService
                                                     }
 
                                                     $existingEntries[$uniqueKey] = true;
+                                                }
+                                            }
+
+                                            if ($sageColumn) {
+                                                $sageCell = $subRow->cells()->where('column_id', $sageColumn->id)->first();
+                                                if ($sageCell) {
+                                                    if (!$sageCell->relationLoaded('sageAssignedData')) {
+                                                        $sageCell->load('sageAssignedData');
+                                                    }
+
+                                                    if ($sageCell->sageAssignedData && $sageCell->sageAssignedData->isNotEmpty()) {
+                                                        $sageValue = (string) $sageCell->sageAssignedData->sum('buchungsbetrag');
+                                                        $sageCellId = $sageCell->id;
+                                                        $uniqueSageKey = $sageCellId . '-sage';
+
+                                                        if (!isset($existingEntries[$uniqueSageKey])) {
+                                                            $sageDtoObject = new MatchRelevantProjectGroupDTO(
+                                                                $subProject->id,
+                                                                $subProject->name,
+                                                                $groupRow->id,
+                                                                $groupRow->name,
+                                                                $groupSubPosition->id,
+                                                                $groupMainPosition->id,
+                                                                $sageColumn->id,
+                                                                $sageColumn->name,
+                                                                $sageValue,
+                                                                $sageCellId,
+                                                                $subMainPosition->type,
+                                                                $groupRow->commented,
+                                                                $subFirstValue,
+                                                                $subSecondValue
+                                                            );
+
+                                                            if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
+                                                                $groupedProjectData['BUDGET_TYPE_EARNING'][] = $sageDtoObject;
+                                                            } else {
+                                                                $groupedProjectData['BUDGET_TYPE_COST'][] = $sageDtoObject;
+                                                            }
+
+                                                            $existingEntries[$uniqueSageKey] = true;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -608,8 +660,11 @@ class BudgetService
             return;
         }
 
-        // Summe pro Gruppen-Zeile (groupRowId) aggregieren
-        $sumByGroupRowId = [];
+        $columns = $table->columns ?? collect();
+        $relevantColumns = $columns->where('relevant_for_project_groups', true);
+        $sageColumn = $columns->firstWhere('type', 'sage');
+
+        $sumByGroupRowIdAndColumn = [];
 
         foreach ($groupedProjectData as $typeEntries) {
             foreach ($typeEntries as $dto) {
@@ -618,15 +673,20 @@ class BudgetService
                 }
 
                 $groupRowId = (int) $dto->groupRowId;
+                $columnId = (int) $dto->relevantColumnId;
                 $raw = str_replace(',', '.', (string) ($dto->value ?? '0'));
                 $raw = $raw === '' ? '0' : $raw;
 
-                $sumByGroupRowId[$groupRowId] = bcadd($sumByGroupRowId[$groupRowId] ?? '0', $raw, 2);
-            }
-        }
+                if (!isset($sumByGroupRowIdAndColumn[$groupRowId])) {
+                    $sumByGroupRowIdAndColumn[$groupRowId] = [];
+                }
 
-        if (empty($sumByGroupRowId)) {
-            return;
+                $sumByGroupRowIdAndColumn[$groupRowId][$columnId] = bcadd(
+                    $sumByGroupRowIdAndColumn[$groupRowId][$columnId] ?? '0',
+                    $raw,
+                    2
+                );
+            }
         }
 
         // Werte in die geladenen Zellen schreiben (Response-only)
@@ -634,12 +694,49 @@ class BudgetService
             foreach ($mainPosition->subPositions ?? [] as $subPosition) {
                 foreach ($subPosition->subPositionRows ?? [] as $row) {
                     $rowId = (int) $row->id;
-                    if (!isset($sumByGroupRowId[$rowId])) {
+
+                    foreach ($relevantColumns as $relevantColumn) {
+                        $columnId = (int) $relevantColumn->id;
+                        $groupCell = $row->cells?->firstWhere('column_id', $columnId);
+
+                        if ($groupCell && trim((string) ($groupCell->value ?? '')) !== '') {
+                            $groupValue = str_replace(',', '.', (string) $groupCell->value);
+                            $groupValue = $groupValue === '' ? '0' : $groupValue;
+
+                            if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
+                                $sumByGroupRowIdAndColumn[$rowId] = [];
+                            }
+                            $sumByGroupRowIdAndColumn[$rowId][$columnId] = $groupValue;
+                        }
+                    }
+
+                    if ($sageColumn) {
+                        $sageColumnId = (int) $sageColumn->id;
+                        $groupSageCell = $row->cells?->firstWhere('column_id', $sageColumnId);
+
+                        if ($groupSageCell && $groupSageCell->sageAssignedData && $groupSageCell->sageAssignedData->isNotEmpty()) {
+                            $sageValue = (string) $groupSageCell->sageAssignedData->sum('buchungsbetrag');
+
+                            if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
+                                $sumByGroupRowIdAndColumn[$rowId] = [];
+                            }
+                            $sumByGroupRowIdAndColumn[$rowId][$sageColumnId] = $sageValue;
+                        }
+                    }
+
+                    if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
                         continue;
                     }
 
-                    $sum = $sumByGroupRowId[$rowId]; // string mit '.' als Dezimaltrenner
-                    $sumForFrontend = str_replace('.', ',', $sum);
+                    $totalSum = '0';
+                    foreach ($sumByGroupRowIdAndColumn[$rowId] as $colId => $colSum) {
+                        $col = $columns->firstWhere('id', $colId);
+                        if ($col && (($col->relevant_for_project_groups ?? false) || $col->type === 'sage')) {
+                            $totalSum = bcadd($totalSum, $colSum, 2);
+                        }
+                    }
+
+                    $sumForFrontend = str_replace('.', ',', $totalSum);
 
                     $cell = $row->cells?->firstWhere('column_id', $subprojectsColumnId);
                     if ($cell) {

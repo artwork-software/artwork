@@ -36,6 +36,9 @@ enum PermissionEnum : string
 
     case VIEW_AND_DELETE_SAGE100_API_DATA = 'can view and delete sage100-api-data';
 
+    case VIEW_PROJECT_SAGE_DATA = 'can view project sage data';
+    case VIEW_GLOBAL_SAGE_DATA = 'can view global sage data';
+
     case CHECKLIST_USE_PERMISSION = 'can use checklists';
     case CHECKLIST_EDIT_PERMISSION = 'can edit checklist';
 
@@ -59,5 +62,8 @@ enum PermissionEnum : string
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
     case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
+
+    case DOCUMENT_REQUEST_CREATE = 'can create document requests';
+    case DOCUMENT_REQUEST_EDIT = 'can edit document requests';
 
 }

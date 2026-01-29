@@ -4,7 +4,7 @@
             <BasePageTitle title="Project team" :white-text="inSidebar" />
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
-                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
+                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator())"
             />
         </div>
         <div v-if="loadError" class="text-xs text-rose-600 mt-2">
@@ -63,6 +63,7 @@
                               :assigned-departments="teamProject.departments ? teamProject.departments : []"
                               :project-id="currentProjectId()"
                               :userIsProjectManager="this.userIsProjectManager()"
+                              :userIsProjectCreator="this.userIsProjectCreator()"
                               @closed="this.showTeamModal = false"
                               :projectRoles="teamProject.projectRoles || []"
         />
@@ -213,6 +214,9 @@ export default defineComponent({
                 }
             )
             return managerIdArray.includes(this.$page.props.auth.user.id);
+        },
+        userIsProjectCreator() {
+            return this.teamProject?.user_id === this.$page.props.auth.user.id;
         },
         checkRoleHasUser(role) {
             return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id));

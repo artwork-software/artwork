@@ -103,6 +103,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_CREATE->value,
+                'name_de' => "Dokumentenanfragen erstellen",
+                'translation_key' => "Create document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen erstellen und an andere Nutzer*innen zuweisen.',
+                'tooltipKey' => "User is allowed to create document requests and assign them to other users.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_EDIT->value,
+                'name_de' => "Dokumentenanfragen bearbeiten",
+                'translation_key' => "Edit document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen bearbeiten und den Status ändern.',
+                'tooltipKey' => "User is allowed to edit document requests and change their status.",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
                 'name_de' => "Finanzierungsquellen anlegen und verwalten",
                 'translation_key' => "Create and manage funding sources",
@@ -309,12 +327,21 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
-                'name' => PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value,
-                'name_de' => "Sage-Datensätze einsehen",
-                'translation_key' => "View and delete Sage data records",
+                'name' => PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+                'name_de' => "Projektbezogene Sage-Daten einsehen",
+                'translation_key' => "View project-related Sage data",
                 'group' => 'Interfaces',
-                'tooltipText' => 'Nutzer*innen mit diesem Recht können nicht zugewiesene Datensätze von Sage sehen.',
-                'tooltipKey' => "Users with this permission can view unassigned Sage data records.",
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können projektbezogene, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view project-related unassigned Sage data records.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+                'name_de' => "Globale Sage-Daten einsehen",
+                'translation_key' => "View global Sage data",
+                'group' => 'Interfaces',
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können globale, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view global unassigned Sage data records.",
                 'checked' => false
             ],
             [

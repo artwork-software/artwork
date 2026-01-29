@@ -79,22 +79,47 @@
                     <span v-else class="text-gray-400">-</span>
                 </template>
 
-                <!-- Access Users -->
+                <!-- Access Users & Departments -->
                 <template #cell-accessUsers="{ row }">
                     <div class="flex items-center">
                         <div class="flex -space-x-2">
                             <img
                                 v-for="user in row.accessibleUsers?.slice(0, 3)"
-                                :key="user.id"
+                                :key="'user-' + user.id"
                                 :src="user.profile_photo_url"
                                 :alt="user.first_name + ' ' + user.last_name"
                                 class="size-8 rounded-full ring-2 ring-white object-cover"
                                 v-tooltip.top="{ value: user.first_name + ' ' + user.last_name, appendTo: 'body', class: 'aw-tooltip' }"
                             />
+                            <div
+                                v-for="department in row.accessibleDepartments?.slice(0, Math.max(0, 3 - (row.accessibleUsers?.length || 0)))"
+                                :key="'dept-' + department.id"
+                                class="size-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center"
+                                v-tooltip.top="{ value: department.name, appendTo: 'body', class: 'aw-tooltip' }"
+                            >
+                                <TeamIconCollection :iconName="department.svg_name" class="size-6" />
+                            </div>
                         </div>
-                        <span v-if="row.accessibleUsers?.length > 3" class="ml-2 text-xs text-gray-500">
-                            +{{ row.accessibleUsers.length - 3 }}
-                        </span>
+                        <BaseMenu
+                            v-if="(row.accessibleUsers?.length || 0) + (row.accessibleDepartments?.length || 0) > 3"
+                            :show-icon="false"
+                            :show-menu-button-text="true"
+                            :menu-button-text="'+' + ((row.accessibleUsers?.length || 0) + (row.accessibleDepartments?.length || 0) - 3)"
+                            classes="ml-2 cursor-pointer"
+                            classes-button="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                            white-menu-background
+                        >
+                            <div class="p-2 min-w-48">
+                                <div v-for="user in row.accessibleUsers" :key="'menu-user-' + user.id" class="flex items-center py-1.5 px-2 hover:bg-gray-50 rounded">
+                                    <img :src="user.profile_photo_url" :alt="user.first_name + ' ' + user.last_name" class="size-6 rounded-full object-cover mr-2" />
+                                    <span class="text-sm text-gray-700">{{ user.first_name }} {{ user.last_name }}</span>
+                                </div>
+                                <div v-for="department in row.accessibleDepartments" :key="'menu-dept-' + department.id" class="flex items-center py-1.5 px-2 hover:bg-gray-50 rounded">
+                                    <TeamIconCollection :iconName="department.svg_name" class="size-6 mr-2" />
+                                    <span class="text-sm text-gray-700">{{ department.name }}</span>
+                                </div>
+                            </div>
+                        </BaseMenu>
                     </div>
                 </template>
 
@@ -188,6 +213,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue"
 import axios from 'axios'
 
 export default {
@@ -209,6 +235,7 @@ export default {
         ContractModuleSidenav,
         BaseSidenav,
         AppLayout,
+        TeamIconCollection,
     },
     props: [
         'contracts',

@@ -3868,5 +3868,9 @@
     "Export contracts": "Export contracts",
     "Filter contracts by various criteria to find the relevant information quickly.": "Filter contracts by various criteria to find the relevant information quickly.",
     "Contract Filter": "Contract Filter",
-    "Filter contracts and export them to Excel.": "Filter contracts and export them to Excel."
+    "Filter contracts and export them to Excel.": "Filter contracts and export them to Excel.",
+    "Or select teams, who should get access": "Or select teams, who should get access",
+    "My received work schedule adjustment requests": "My received work schedule adjustment requests",
+    "Delete material issue": "Delete material issue",
+    "Are you sure you want to delete this material issue?": "Are you sure you want to delete this material issue?"
 }

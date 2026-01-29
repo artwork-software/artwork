@@ -401,6 +401,22 @@ watch(breakMinutes, (v) => {
 
 }, { immediate: true, deep: true })
 
+// Automatische Anpassung des Enddatums basierend auf Start-/Endzeit
+watch([() => shiftForm.start, () => shiftForm.end], ([startTime, endTime]) => {
+    if (!startTime || !endTime || !shiftForm.start_date) return
+
+    // Wenn Endzeit >= Startzeit, dann soll das Enddatum dem Startdatum entsprechen
+    // Wenn Endzeit < Startzeit, dann geht die Schicht über Mitternacht und Enddatum = Startdatum + 1 Tag
+    if (endTime >= startTime) {
+        shiftForm.end_date = shiftForm.start_date
+    } else {
+        // Endzeit < Startzeit bedeutet Schicht geht über Mitternacht
+        const startDate = new Date(shiftForm.start_date)
+        startDate.setDate(startDate.getDate() + 1)
+        shiftForm.end_date = startDate.toISOString().slice(0, 10)
+    }
+})
+
 onMounted(() => {
     if (props.edit)
     {

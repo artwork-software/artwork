@@ -141,8 +141,8 @@
                 />
             </tr>
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
-                <td class="w-36"></td>
-                <td class="w-36"></td>
+                <td class="w-48"></td>
+                <td class="w-48"></td>
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[

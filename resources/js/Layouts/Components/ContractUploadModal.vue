@@ -50,7 +50,7 @@
                         <!-- Project Search (only when no project selected) -->
                         <template v-if="!selectedProject">
                             <ProjectSearch
-                                :label="$t('Search for projects')"
+                                :label="$t('Search for projects') + '*'"
                                 @project-selected="selectProject"
                             />
                             <LastedProjects
@@ -282,8 +282,8 @@
                         <div class="relative w-full">
                             <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for')"/>
                         </div>
-                        <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
-                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
+                        <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
                                     <span class="flex ml-4 sDark">
@@ -291,6 +291,43 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromContractUserArray(index)">
                                         <span class="sr-only">{{ $t('Remove user from contract')}}</span>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Department Search -->
+                        <div class="relative w-full mt-4">
+                            <BaseInput
+                                id="departmentSearch"
+                                v-model="department_query"
+                                :label="$t('Or select teams, who should get access')"
+                                class="w-full"
+                                @focus="department_query = ''"
+                            />
+                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(department, index) in department_search_results" :key="index" class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4" @click="addDepartmentToContractArray(department)">
+                                            <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
+                                                <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-8 w-8 object-cover"/>
+                                                <span class="ml-2 truncate">{{ department.name }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="departmentsWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
+                            <div v-for="(department,index) in departmentsWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
+                                    <span class="flex ml-4 sDark">
+                                        {{ department.name }}
+                                    </span>
+                                    <button type="button" @click="deleteDepartmentFromContractArray(index)">
+                                        <span class="sr-only">{{ $t('Remove team from contract')}}</span>
                                         <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
                                     </button>
                                 </div>
@@ -374,6 +411,7 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -399,6 +437,7 @@ export default {
         UserSearch,
         ProjectSearch,
         LastedProjects,
+        TeamIconCollection,
         TextareaComponent,
         NumberInputComponent,
         TextInputComponent,
@@ -452,6 +491,20 @@ export default {
             },
             deep: true
         },
+        department_query: {
+            handler() {
+                if (!this.department_query || this.department_query.length === 0) {
+                    this.department_search_results = [];
+                    return;
+                }
+                axios.get('/departments/search', {
+                    params: {query: this.department_query}
+                }).then(response => {
+                    this.department_search_results = response.data
+                })
+            },
+            deep: true
+        },
     },
     mounted() {
         // Add requester to usersWithAccess if opening from a document request
@@ -478,6 +531,9 @@ export default {
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
+            department_search_results: [],
+            department_query: '',
+            departmentsWithAccess: [],
             showExtraSettings: false,
             contractForm: useForm({
                 file: null,
@@ -499,6 +555,7 @@ export default {
                 is_freed: this.documentRequest?.is_freed || false,
                 description: this.documentRequest?.description || '',
                 accessibleUsers: [],
+                accessibleDepartments: [],
                 tasks: [],
                 document_request_id: this.documentRequest?.id || null,
             }),
@@ -542,6 +599,16 @@ export default {
         deleteUserFromContractUserArray(index) {
             this.usersWithAccess.splice(index, 1);
         },
+        addDepartmentToContractArray(department) {
+            if (!this.departmentsWithAccess.find(d => d.id === department.id)) {
+                this.departmentsWithAccess.push(department);
+            }
+            this.department_query = '';
+            this.department_search_results = [];
+        },
+        deleteDepartmentFromContractArray(index) {
+            this.departmentsWithAccess.splice(index, 1);
+        },
         selectNewFiles() {
             this.$refs.module_files.click();
         },
@@ -558,6 +625,9 @@ export default {
             this.description = "";
             this.user_query = '';
             this.usersWithAccess = [];
+            this.department_query = '';
+            this.departmentsWithAccess = [];
+            this.department_search_results = [];
             this.showExtraSettings = false;
             this.creatingNewTask = false;
             this.tasks = [];
@@ -569,6 +639,12 @@ export default {
             this.$refs.task_form.clearForm();
         },
         storeContract() {
+            const projectIdToUse = this.projectId || this.selectedProject?.id;
+            if (!projectIdToUse) {
+                this.uploadDocumentFeedback = this.$t('Please select a project');
+                return;
+            }
+
             this.contractForm.file = this.file;
             this.contractForm.company_type_id = this.selectedLegalForm?.id;
             this.contractForm.contract_type_id = this.selectedContractType?.id;
@@ -577,30 +653,21 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
+            const departmentIds = [];
+            this.departmentsWithAccess.forEach((department) => {
+                departmentIds.push(department.id);
+            })
+            this.contractForm.accessibleDepartments = departmentIds;
             this.contractForm.tasks = this.tasks
-            if(this.projectId){
-                this.contractForm.post(this.route('contracts.store', this.projectId), {
-                    // TODO: Richtige einbauweise
-                    forceFormData: true,
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        this.contractForm.reset()
-                        this.closeModal()
-                    },
-                });
-            }else{
-                this.contractForm.post(this.route('contracts.store', this.selectedProject.id), {
-                    // TODO: Richtige einbauweise
-                    forceFormData: true,
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        this.contractForm.reset()
-                        this.closeModal()
-                    },
-                });
-            }
+            this.contractForm.post(this.route('contracts.store', projectIdToUse), {
+                forceFormData: true,
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.contractForm.reset()
+                    this.closeModal()
+                },
+            });
         }
     },
 }

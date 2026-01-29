@@ -1,5 +1,5 @@
 <template>
-    <div class="relative">
+    <div class="relative" v-bind="$attrs">
         <textarea
             :id="id"
             :value="modelValue"
@@ -21,6 +21,10 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+
+defineOptions({
+    inheritAttrs: false
+})
 
 const props = defineProps({
     modelValue: String,

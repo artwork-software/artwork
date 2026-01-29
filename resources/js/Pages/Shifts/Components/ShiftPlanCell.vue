@@ -129,19 +129,57 @@ const cellParts = computed(() => {
                 ? ` [${s.craftAbbreviationUser}]`
                 : ''
 
+        // Determine time display for multi-day shifts
+        let timeDisplay = `${s.startPivot} - ${s.endPivot}`
+        const daysOfShift = s?.days_of_shift
+        if (Array.isArray(daysOfShift) && daysOfShift.length > 1 && s.startPivot && s.endPivot) {
+            const currentDayFormatted = props.day.fullDay // Format: d.m.Y
+            const firstDay = daysOfShift[0]
+            const lastDay = daysOfShift[daysOfShift.length - 1]
+
+            if (currentDayFormatted === firstDay) {
+                // First day: show startPivot - 00:00
+                timeDisplay = `${s.startPivot} - 00:00`
+            } else if (currentDayFormatted === lastDay) {
+                // Last day: show 00:00 - endPivot
+                timeDisplay = `00:00 - ${s.endPivot}`
+            } else {
+                // Middle day: show full day
+                timeDisplay = '00:00 - 00:00'
+            }
+        }
+
         parts.push({
             key: `shift:${s.id}`,
-            text: `${s.startPivot} - ${s.endPivot} ${s?.roomName ?? ''}${craftSuffix}, `,
+            text: `${timeDisplay} ${s?.roomName ?? ''}${craftSuffix}, `,
             class: '',
         })
     }
 
     // Individual Times
     for (const it of individualTimesToday.value) {
-        const time =
-            it?.start_time && it?.end_time
-                ? `${it.start_time} - ${it.end_time}`
-                : 'All day'
+        let time = 'All day'
+        if (it?.start_time && it?.end_time) {
+            const currentDay = props.day.withoutFormat
+            const startDate = it?.start_date
+            const endDate = it?.end_date
+
+            // Check if individual time spans multiple days
+            if (startDate && endDate && startDate !== endDate) {
+                if (currentDay === startDate) {
+                    // First day: show start_time - 00:00
+                    time = `${it.start_time} - 00:00`
+                } else if (currentDay === endDate) {
+                    // Last day: show 00:00 - end_time
+                    time = `00:00 - ${it.end_time}`
+                } else {
+                    // Middle day (if any): show full day
+                    time = '00:00 - 00:00'
+                }
+            } else {
+                time = `${it.start_time} - ${it.end_time}`
+            }
+        }
 
         parts.push({
             key: `it:${it.id}`,

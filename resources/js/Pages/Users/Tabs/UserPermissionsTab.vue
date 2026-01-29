@@ -223,7 +223,9 @@ const groupedPermissions = computed(() => {
     const grouped = {}
     for (const [groupName, perms] of Object.entries(props.all_permissions)) {
         const filtered = (perms || []).filter((p) => {
-            if (p.name === 'can view and delete sage100-api-data') {
+            if (p.name === 'can view and delete sage100-api-data' ||
+                p.name === 'can view project sage data' ||
+                p.name === 'can view global sage data') {
                 return !!page.props?.sageApiEnabled
             }
             return true

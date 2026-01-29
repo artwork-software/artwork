@@ -148,6 +148,7 @@ class WorkingHourService
 
             // Iteriere nur über betroffene Tage
             $currentDay = $dayStart->copy();
+            $breakAlreadyDeducted = false;
             while ($currentDay->lte($dayEnd)) {
                 $dateStr = $currentDay->toDateString();
                 $dayStartTimestamp = $currentDay->timestamp;
@@ -157,7 +158,12 @@ class WorkingHourService
                 $workEndTimestamp = min($shiftEnd->timestamp, $dayEndTimestamp);
 
                 if ($workStartTimestamp < $workEndTimestamp) {
-                    $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60) - $breakMinutes;
+                    $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60);
+                    // Bei mehrtägigen Schichten: Pause nur einmal (am ersten Tag) abziehen
+                    if (!$breakAlreadyDeducted) {
+                        $duration -= $breakMinutes;
+                        $breakAlreadyDeducted = true;
+                    }
                     $shiftMinutesPerDay[$dateStr] += max(0, $duration);
                 }
 
@@ -709,7 +715,13 @@ class WorkingHourService
             $workEndTimestamp = min($shiftEnd->timestamp, $dayEndTimestamp);
 
             if ($workStartTimestamp < $workEndTimestamp) {
-                $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60) - $breakMinutes;
+                $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60);
+                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
+                $shiftStartDay = $shiftStart->copy()->startOfDay();
+                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
+                if ($isFirstDayOfShift) {
+                    $duration -= $breakMinutes;
+                }
                 $total += max(0, $duration);
             }
         }

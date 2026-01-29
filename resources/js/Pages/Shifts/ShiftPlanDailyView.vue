@@ -163,7 +163,7 @@
                                     :events="getEventsForRoomDay(room, day.fullDay)"
                                     :shifts="getFilteredShiftsForRoomDay(room, day.fullDay)"
                                     :event-types="eventTypesResolved"
-                                    :rooms="roomsResolved"
+                                    :rooms="roomsArray"
                                     :first_project_calendar_tab_id="first_project_calendar_tab_idResolved"
                                     :event-statuses="eventStatusesResolved"
                                     :crafts="craftsResolved"

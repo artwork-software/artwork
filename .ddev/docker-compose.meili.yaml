@@ -2,13 +2,13 @@ services:
   meilisearch:
     container_name: ddev-${DDEV_SITENAME}-meilisearch
     hostname: ${DDEV_SITENAME}-meilisearch
-    image: getmeili/meilisearch:v1.14
+    image: getmeili/meilisearch:v1.20
     networks: [default, ddev_default]
     restart: "no"
     expose:
       - "7700"
     environment:
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-ddev}
+      - MEILI_MASTER_KEY=${MEILISEARCH_KEY:-ddev}
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - HTTP_EXPOSE=7700:7700
       - HTTPS_EXPOSE=7701:7700
@@ -16,10 +16,10 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
     volumes:
-      - "meili_data14:/meili_data"
+      - "meili_data20:/meili_data"
       - ".:/mnt/ddev_config"
   web:
     links:
       - meilisearch:meilisearch
 volumes:
-  meili_data14:
+  meili_data20:

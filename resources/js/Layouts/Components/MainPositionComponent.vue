@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                <input class="my-2 ml-1 xsDark bg-white" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
                     <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                     <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
@@ -141,8 +141,8 @@
                 />
             </tr>
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
-                <td class="w-36"></td>
-                <td class="w-36"></td>
+                <td class="w-48"></td>
+                <td class="w-48"></td>
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
@@ -180,6 +180,7 @@
                               :show="this.showSageAssignedDataModal"
                               :cell="this.showSageAssignedDataModalCell"
                               @close="this.closeSageAssignedDataModal"
+                              @budget-updated="this.handleBudgetUpdated"
     />
 </template>
 
@@ -237,7 +238,8 @@ export default {
         'openSubPositionSumDetailModal',
         'openMainPositionSumDetailModal',
         'openCellDetailModal',
-        'openVerifiedModal'
+        'openVerifiedModal',
+        'budget-updated'
     ],
     data(){
         return{
@@ -510,6 +512,9 @@ export default {
         closeSageAssignedDataModal() {
             this.showSageAssignedDataModal = false;
             this.showSageAssignedDataModalCell = null;
+        },
+        handleBudgetUpdated() {
+            this.$emit('budget-updated');
         }
     },
 

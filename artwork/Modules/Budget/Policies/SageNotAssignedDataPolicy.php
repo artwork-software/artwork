@@ -12,21 +12,37 @@ class SageNotAssignedDataPolicy
 
     public function delete(User $user): bool
     {
-        return $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+        return $user->canAny([
+            PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+            PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
+        ]);
     }
 
     public function getTrashed(User $user): bool
     {
-        return $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+        return $user->canAny([
+            PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+            PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
+        ]);
     }
 
     public function restore(User $user): bool
     {
-        return $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+        return $user->canAny([
+            PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+            PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
+        ]);
     }
 
     public function forceDelete(User $user): bool
     {
-        return $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+        return $user->canAny([
+            PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+            PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
+        ]);
     }
 }

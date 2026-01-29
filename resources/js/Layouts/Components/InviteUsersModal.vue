@@ -366,7 +366,9 @@ const groupedPermissions = computed(() => {
         const perms = []
         list.forEach(p => {
             if (
-                p.name === 'can view and delete sage100-api-data' &&
+                (p.name === 'can view and delete sage100-api-data' ||
+                 p.name === 'can view project sage data' ||
+                 p.name === 'can view global sage data') &&
                 !sageEnabled.value
             ) {
                 return

@@ -133,7 +133,13 @@ class WorkTimeBookingService
             $workEnd = min($end, $dayEnd);
 
             if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd) - $break;
+                $duration = $workStart->diffInMinutes($workEnd);
+                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
+                $shiftStartDay = $start->copy()->startOfDay();
+                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
+                if ($isFirstDayOfShift) {
+                    $duration -= $break;
+                }
                 $total += max(0, $duration);
 
                 $nightOverlap1Start = max($workStart, $night1Start);

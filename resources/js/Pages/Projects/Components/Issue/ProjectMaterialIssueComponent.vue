@@ -174,6 +174,13 @@
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
                     </button>
+                    <button
+                        type="button"
+                        class="new-button text-red-500 hover:text-red-700"
+                        @click="openDeleteModal(issue)">
+                        <IconTrash class="size-4" />
+                        {{ $t('Delete')}}
+                    </button>
                 </div>
             </header>
 
@@ -482,6 +489,14 @@
         :first-event="headerObject?.firstEventInProject"
         :last-event="headerObject?.lastEventInProject"
     />
+
+    <ConfirmDeleteModal
+        v-if="showDeleteModal"
+        :title="$t('Delete material issue')"
+        :description="$t('Are you sure you want to delete this material issue?')"
+        @closed="showDeleteModal = false"
+        @delete="confirmDelete"
+    />
 </template>
 
 <script setup lang="ts">
@@ -490,9 +505,11 @@ import axios from 'axios'
 import {
     IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
-    IconSticker2, IconCircleCheck, IconWindowMaximize,
+    IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import { router } from '@inertiajs/vue3';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
@@ -544,6 +561,8 @@ const emit = defineEmits<{
 
 const showIssueOfMaterialModal = ref(false)
 const materialIssueToEdit = ref(null)
+const showDeleteModal = ref(false)
+const issueToDelete = ref<InternalIssue | null>(null)
 const isLoadingMaterials = ref(false)
 const loadMaterialsError = ref('')
 const localMaterials = ref<InternalIssue[]>(props.materials ?? [])
@@ -736,6 +755,26 @@ const openCreateMaterialIssue = () => {
 
 const handleMaterialIssueSaved = () => {
     fetchMaterials()
+}
+
+const openDeleteModal = (issue: InternalIssue) => {
+    issueToDelete.value = issue
+    showDeleteModal.value = true
+}
+
+const confirmDelete = () => {
+    if (!issueToDelete.value) return
+    router.delete(route('issue-of-material.destroy', issueToDelete.value.id), {
+        onSuccess: () => {
+            showDeleteModal.value = false
+            issueToDelete.value = null
+            fetchMaterials()
+        },
+        onError: () => {
+            showDeleteModal.value = false
+            issueToDelete.value = null
+        }
+    })
 }
 
 /** Article Lightbox Functions */

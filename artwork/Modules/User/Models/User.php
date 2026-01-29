@@ -506,6 +506,10 @@ class User extends Model implements
         return $this->hasOne(UserInventoryArticlePlanFilter::class);
     }
 
+    public function contractFilter(): HasOne
+    {
+        return $this->hasOne(UserContractFilter::class);
+    }
 
     /**
      * @return string[]

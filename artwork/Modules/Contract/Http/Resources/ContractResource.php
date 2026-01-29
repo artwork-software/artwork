@@ -46,8 +46,15 @@ class ContractResource extends JsonResource
             'contract_type' => $this->contract_type,
             'company_type' => $this->company_type,
             'ksk_liable' => $this->ksk_liable,
+            'ksk_amount' => $this->ksk_amount,
+            'ksk_reason' => $this->ksk_reason,
             'partner' => $this->contract_partner,
             'resident_abroad' => $this->resident_abroad,
+            'foreign_tax' => $this->foreign_tax,
+            'foreign_tax_amount' => $this->foreign_tax_amount,
+            'foreign_tax_reason' => $this->foreign_tax_reason,
+            'reverse_charge_amount' => $this->reverse_charge_amount,
+            'deadline_date' => $this->deadline_date,
             'has_power_of_attorney' => $this->has_power_of_attorney,
             'currency' => $this->currency,
             'is_freed' => $this->is_freed,
@@ -69,6 +76,11 @@ class ContractResource extends JsonResource
                 'assigned_craft_ids' => $user->getAssignedCraftIdsAttribute(),
             ]),
             //'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
+            'accessibleDepartments' => $this->accessingDepartments->map(fn ($department) => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'svg_name' => $department->svg_name,
+            ]),
             'tasks' => Task::where('contract_id', $this->id)->get(),
             'comments' => CommentResource::collection($this->comments)->resolve()
         ];

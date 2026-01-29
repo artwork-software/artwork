@@ -12,6 +12,7 @@ use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Sage100\Helpers\PermissionUpdater;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
 use Artwork\Modules\User\Models\User;
@@ -29,6 +30,7 @@ class UpdateArtwork extends Command
         private readonly CraftItemMigrationService $craftItemMigrationService,
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
         private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
+        private readonly PermissionUpdater $sagePermissionUpdater,
     ) {
         parent::__construct();
     }
@@ -56,6 +58,7 @@ class UpdateArtwork extends Command
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
         $this->migrateShiftsWorkers();
+        $this->updateSagePermissions();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -474,5 +477,12 @@ class UpdateArtwork extends Command
         }
 
         $this->info('Special components sidebar settings updated');
+    }
+
+    private function updateSagePermissions(): void
+    {
+        $this->section('Sage Permissions Split');
+
+        $this->sagePermissionUpdater->seed();
     }
 }

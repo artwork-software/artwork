@@ -52,33 +52,24 @@
                 </Link>
             </div>
 
-            <!-- Räume & Schichten (über gesamten Zeitraum) -->
+            <!-- Schichten (chronologisch über gesamten Zeitraum) -->
             <div class="grid grid-cols-1 gap-4">
-                <div
-                    v-for="bucket in roomBuckets"
-                    :key="bucket.key"
-                    class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden"
-                >
-                    <!-- Raumkopf -->
-                    <div class="flex items-center justify-between border-b border-zinc-200 px-3 py-2">
-                        <div class="text-sm font-semibold text-zinc-900">
-                            {{ bucket.title }}
-                        </div>
-                        <div class="text-xs text-zinc-500">
-                            {{ $t('Shifts') }}: {{ bucket.items.length }}
-                        </div>
-                    </div>
-
+                <div class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
                     <!-- Schichtenliste -->
                     <div class="p-3 space-y-3">
-                        <div v-for="i in bucket.items" :key="i._key" class="space-y-1">
+                        <div v-for="i in workItemsInRange" :key="i._key" class="space-y-1">
                             <!-- kleine Kopfzeile je Eintrag mit Datum + +1-Tag Hinweis -->
-                            <div class="text-xs text-zinc-600">
-                                {{ formatDateDMY(i._startAt) }}
-                                · {{ i.start }}–{{ i.end }}
-                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5">
-                                    → +1&nbsp;Tag
-                                </span>
+                            <div class="text-xs text-zinc-600 flex items-center justify-between">
+                                <div>
+                                    {{ formatDateDMY(i._startAt) }}
+                                    · {{ i.start }}–{{ i.end }}
+                                    <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5">
+                                        → +1&nbsp;Tag
+                                    </span>
+                                </div>
+                                <div v-if="i._type === 'shift'" class="text-zinc-500 font-medium">
+                                    {{ i?.room?.name ?? i?.event?.room?.name ?? $page.props?.translations?.no_room ?? 'Ohne Raum' }}
+                                </div>
                             </div>
 
                             <SingleUserEventShift
@@ -318,35 +309,6 @@ const uniqueGroupsForRange = computed(() => {
     return Array.from(map.values())
 })
 
-/** ---------- Raum-Buckets (über gesamten Zeitraum) ---------- **/
-const roomBuckets = computed(() => {
-    const buckets = new Map()
-
-    workItemsInRange.value.forEach(i => {
-        const room = i?._type === 'shift' ? (i?.room ?? i?.event?.room ?? null) : null
-        const key = room?.id ? String(room.id) : 'no-room'
-
-        if (!buckets.has(key)) {
-            buckets.set(key, {
-                key,
-                room,
-                title: room?.name ?? page.props?.translations?.no_room ?? 'Ohne Raum',
-                items: []
-            })
-        }
-        buckets.get(key).items.push(i)
-    })
-
-    // sort innerhalb der Buckets nach Startzeit
-    buckets.forEach(b => {
-        b.items.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())
-    })
-
-    // "Ohne Raum" nach unten
-    const arr = Array.from(buckets.values())
-    arr.sort((a, b) => (a.key === 'no-room') - (b.key === 'no-room'))
-    return arr
-})
 
 /** ---------- Prev / Next Zeitspanne (an Server melden) ---------- **/
 const goToPrevAssignedDay = () => {
@@ -382,7 +344,10 @@ function patchServerDateRange(startDateStr, endDateStr) {
     if (!userId) return
     router.patch(
         route('update.user.worker.shift-plan.filters.update', userId),
-        { start_date: startDateStr, end_date: endDateStr },
+        {
+            start_date: startDateStr,
+            end_date: endDateStr
+        },
         { preserveState: true, preserveScroll: true }
     )
 }

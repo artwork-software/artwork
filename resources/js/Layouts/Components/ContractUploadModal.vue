@@ -29,28 +29,37 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex xsDark items-center col-span-full" v-if="selectedProject">
-                        {{ $t('Currently assigned to:')}}
-                        <a v-if="this.selectedProject?.id"
-                           :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                           class="ml-3 flex xsDark">
-                            {{ this.selectedProject?.name }}
-                        </a>
-                    </div>
-                    <div class="col-span-full relative" v-if="!this.projectId">
-                        <BaseInput
-                            :label="$t('Save in which project?*')"
-                            v-model="project_query"
-                            id="project_query"
-                        />
-                        <div v-if="project_search_results.length > 0" class="absolute bg-primary rounded-lg truncate sm:text-sm z-20 w-full top-16">
-                            <div v-for="(project, index) in project_search_results" :key="index"
-                                 @click="selectProject(project)"
-                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer w-[88%]">
-                                {{ project.name }}
-                            </div>
+                    <!-- Project Section -->
+                    <div class="col-span-full" v-if="!this.projectId">
+                        <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Project assignment') }}</div>
+
+                        <!-- Selected Project Chip -->
+                        <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 mb-2">
+                            <span class="text-sm text-zinc-700">{{ $t('Connected project:') }}</span>
+                            <a v-if="this.selectedProject?.id && this.first_project_calendar_tab_id"
+                               :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
+                               class="font-medium text-indigo-600 hover:underline">
+                                {{ this.selectedProject?.name }}
+                            </a>
+                            <span v-else class="font-medium text-zinc-900">{{ this.selectedProject?.name }}</span>
+                            <button type="button" class="ml-auto text-zinc-400 hover:text-rose-600 transition" @click="removeProject">
+                                <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                            </button>
                         </div>
+
+                        <!-- Project Search (only when no project selected) -->
+                        <template v-if="!selectedProject">
+                            <ProjectSearch
+                                :label="$t('Search for projects') + '*'"
+                                @project-selected="selectProject"
+                            />
+                            <LastedProjects
+                                :limit="10"
+                                @select="selectProject"
+                            />
+                        </template>
                     </div>
+
                     <div class="">
                         <BaseInput
                             v-model="contractForm.contract_partner"
@@ -59,70 +68,82 @@
                         />
                     </div>
                     <div class="">
-                        <Listbox as="div" class="flex relative" v-model="selectedLegalForm" id="eventType">
-                            <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
-                                <div>{{ selectedLegalForm.name }}</div>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                            </ListboxButton>
-                            <ListboxButton v-else class="menu-button">
-                                <span>{{ $t('Legal form')}}</span>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                            </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm" :value="legalForm" v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <div class="flex">
-                                                <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                    {{ legalForm.name }}
+                        <div class="flex relative">
+                            <Listbox as="div" class="flex-1 relative" v-model="selectedLegalForm" id="legalFormSelect">
+                                <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
+                                    <div class="flex items-center justify-between w-full">
+                                        <span>{{ selectedLegalForm.name }}</span>
+                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </div>
+                                </ListboxButton>
+                                <ListboxButton v-else class="menu-button">
+                                    <span>{{ $t('Legal form')}}</span>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
+                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <div class="flex">
+                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                        {{ legalForm.name }}
+                                                    </span>
+                                                </div>
+                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                 </span>
-                                            </div>
-                                            <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                            </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                            <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                                <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-span-full">
-                        <Listbox as="div" class="flex relative" v-model="selectedContractType" id="eventType">
-                            <ListboxButton v-if="selectedContractType !== null" class="menu-button">
-                                <div class="flex items-center justify-between w-full">
-                                    <span class="truncate items-center flex">
-                                        <span>{{ selectedContractType.name }}</span>
-                                    </span>
+                        <div class="flex relative">
+                            <Listbox as="div" class="flex-1 relative" v-model="selectedContractType" id="contractTypeSelect">
+                                <ListboxButton v-if="selectedContractType !== null" class="menu-button">
+                                    <div class="flex items-center justify-between w-full">
+                                        <span class="truncate items-center flex">
+                                            <span>{{ selectedContractType.name }}</span>
+                                        </span>
+                                        <span class="pointer-events-none">
+                                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </span>
+                                    </div>
+                                </ListboxButton>
+                                <ListboxButton v-else class="menu-button">
+                                    <div class="flex flex-grow xsLight text-left subpixel-antialiased">
+                                        {{ $t('Contract type')}}
+                                    </div>
                                     <span class="pointer-events-none">
-                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
-                                </div>
-                            </ListboxButton>
-                            <ListboxButton v-else class="menu-button">
-                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    {{ $t('Contract type')}}
-                                </div>
-                                <span class="pointer-events-none">
-                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
-                            </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType" :value="contractType" v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <div class="flex">
-                                                <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                    {{ contractType.name }}
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
+                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <div class="flex">
+                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                        {{ contractType.name }}
+                                                    </span>
+                                                </div>
+                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                 </span>
-                                            </div>
-                                            <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                            </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                            <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                                <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-span-full">
                         <div class="flex">
@@ -130,18 +151,18 @@
                                 type="number"
                                 id="amount"
                                 v-model="contractForm.amount"
-                                :label="$t('Amount* (fee, co-production contribution, etc.)')"
+                                :label="$t('Amount (fee, co-production contribution, etc.)')"
                             />
-                            <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="eventType">
+                            <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="currencySelect">
                                 <ListboxButton class="menu-button">
-                                    <span>{{ selectedCurrency.name }}</span>
+                                    <span>{{ selectedCurrency?.name || '€' }}</span>
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="currency in currencies"
-                                                       :key="currency"
+                                                       :key="currency.id"
                                                        :value="currency"
                                                        v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
@@ -165,42 +186,88 @@
                     </div>
                     <div class="col-span-full">
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="contractForm.ksk_liable"
+                            <input id="kskLiable" type="checkbox" v-model="contractForm.ksk_liable"
                                    class="input-checklist"/>
-                            <label for="hasGroup" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="kskLiable" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('KSK-liable')}}
                             </label>
                         </div>
-
-                        <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="contractForm.resident_abroad"
-                                   @click="contractForm.has_power_of_attorney = false; contractForm.is_freed = false"
-                                   class="input-checklist"/>
-                            <label for="hasGroup" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                   class="ml-2">
-                                {{ $t('Resident abroad')}}
-                            </label>
+                        <div class="grid grid-cols-1 gap-4 mb-4" v-if="contractForm.ksk_liable">
+                            <BaseInput
+                                type="number"
+                                step="0.01"
+                                id="kskAmount"
+                                v-model="contractForm.ksk_amount"
+                                :label="$t('KSK Amount')"
+                            />
+                            <BaseTextarea
+                                :label="$t('KSK Reason')"
+                                id="kskReason"
+                                v-model="contractForm.ksk_reason"
+                                rows="2"
+                            />
                         </div>
                         <div class="ml-4" v-if="contractForm.resident_abroad">
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="contractForm.has_power_of_attorney"
+                                <input id="hasPowerOfAttorney" type="checkbox" v-model="contractForm.has_power_of_attorney"
                                        class="input-checklist"/>
-                                <label for="hasGroup"
+                                <label for="hasPowerOfAttorney"
                                        :class="contractForm.has_power_of_attorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Power of attorney is available')}}
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="contractForm.is_freed"
+                                <input id="isFreed" type="checkbox" v-model="contractForm.is_freed"
                                        class="input-checklist"/>
-                                <label for="hasGroup" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="isFreed" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Liberated at home')}}
                                 </label>
                             </div>
                         </div>
+
+                        <div class="flex items-center mb-2">
+                            <input id="foreignTax" type="checkbox" v-model="contractForm.foreign_tax"
+                                   class="input-checklist"/>
+                            <label for="foreignTax" :class="contractForm.foreign_tax ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                   class="ml-2">
+                                {{ $t('Foreign tax')}}
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mb-4" v-if="contractForm.foreign_tax">
+                            <BaseInput
+                                type="number"
+                                step="0.01"
+                                id="foreignTaxAmount"
+                                v-model="contractForm.foreign_tax_amount"
+                                :label="$t('Foreign tax amount')"
+                            />
+                            <BaseTextarea
+                                :label="$t('Foreign tax reason')"
+                                id="foreignTaxReason"
+                                v-model="contractForm.foreign_tax_reason"
+                                rows="2"
+                            />
+                        </div>
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="number"
+                            step="0.01"
+                            id="reverseChargeAmount"
+                            v-model="contractForm.reverse_charge_amount"
+                            :label="$t('Reverse Charge Amount')"
+                        />
+                    </div>
+                    <div class="">
+                        <BaseInput
+                            type="date"
+                            id="deadlineDate"
+                            v-model="contractForm.deadline_date"
+                            :label="$t('Deadline date')"
+                        />
                     </div>
                     <div class="col-span-full">
                         <BaseTextarea
@@ -213,10 +280,10 @@
 
                     <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-gray-300">
                         <div class="relative w-full">
-                            <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for') + '*'"/>
+                            <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for')"/>
                         </div>
-                        <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
-                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
+                        <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
                                     <span class="flex ml-4 sDark">
@@ -224,6 +291,43 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromContractUserArray(index)">
                                         <span class="sr-only">{{ $t('Remove user from contract')}}</span>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Department Search -->
+                        <div class="relative w-full mt-4">
+                            <BaseInput
+                                id="departmentSearch"
+                                v-model="department_query"
+                                :label="$t('Or select teams, who should get access')"
+                                class="w-full"
+                                @focus="department_query = ''"
+                            />
+                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(department, index) in department_search_results" :key="index" class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4" @click="addDepartmentToContractArray(department)">
+                                            <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
+                                                <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-8 w-8 object-cover"/>
+                                                <span class="ml-2 truncate">{{ department.name }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="departmentsWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
+                            <div v-for="(department,index) in departmentsWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
+                                    <span class="flex ml-4 sDark">
+                                        {{ department.name }}
+                                    </span>
+                                    <button type="button" @click="deleteDepartmentFromContractArray(index)">
+                                        <span class="sr-only">{{ $t('Remove team from contract')}}</span>
                                         <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
                                     </button>
                                 </div>
@@ -274,7 +378,7 @@
                     <BaseUIButton
                         :label="$t('Upload contract')"
                         is-add-button
-                        :disabled="file === null || contractForm.amount === '' || contractForm.contract_partner === '' || (!this.projectId && this.selectedProject === null)"
+                        :disabled="file === null || contractForm.contract_partner === ''"
                         @click="storeContract" />
                 </div>
             </div>
@@ -299,12 +403,15 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -317,7 +424,8 @@ export default {
         'contractTypes',
         'companyTypes',
         'currencies',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'documentRequest'
     ],
     components: {
         PropertyIcon,
@@ -327,6 +435,9 @@ export default {
         BaseInput,
         MultiAlertComponent,
         UserSearch,
+        ProjectSearch,
+        LastedProjects,
+        TeamIconCollection,
         TextareaComponent,
         NumberInputComponent,
         TextInputComponent,
@@ -368,20 +479,42 @@ export default {
         },
         project_query: {
             handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        this.project_search_results = response.data
-                    })
+                if (this.project_query.length === 0) {
+                    this.project_search_results = [];
+                    return;
                 }
+                axios.get(this.route('projects.search'), {
+                    params: {query: this.project_query}
+                }).then(response => {
+                    this.project_search_results = response.data
+                })
+            },
+            deep: true
+        },
+        department_query: {
+            handler() {
+                if (!this.department_query || this.department_query.length === 0) {
+                    this.department_search_results = [];
+                    return;
+                }
+                axios.get('/departments/search', {
+                    params: {query: this.department_query}
+                }).then(response => {
+                    this.department_search_results = response.data
+                })
             },
             deep: true
         },
     },
+    mounted() {
+        // Add requester to usersWithAccess if opening from a document request
+        if (this.documentRequest?.requester) {
+            this.usersWithAccess.push(this.documentRequest.requester);
+        }
+    },
     data() {
         return {
-            selectedProject: null,
+            selectedProject: this.documentRequest?.project || null,
             project_query: '',
             project_search_results: [],
 
@@ -390,29 +523,41 @@ export default {
             tasks: [],
             uploadDocumentFeedback: "",
             file: null,
-            description: "",
-            contractPartner: '',
-            selectedLegalForm: null,
-            selectedContractType: null,
-            selectedCurrency: {id: 1, name: '€'},
+            description: this.documentRequest?.description || "",
+            contractPartner: this.documentRequest?.contract_partner || '',
+            selectedLegalForm: this.documentRequest?.company_type_id ? this.companyTypes?.find(ct => ct.id === this.documentRequest.company_type_id) : null,
+            selectedContractType: this.documentRequest?.contract_type_id ? this.contractTypes?.find(ct => ct.id === this.documentRequest.contract_type_id) : null,
+            selectedCurrency: this.documentRequest?.currency_id ? (this.currencies?.find(c => c.id === this.documentRequest.currency_id) || {id: 1, name: '€'}) : {id: 1, name: '€'},
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
+            department_search_results: [],
+            department_query: '',
+            departmentsWithAccess: [],
             showExtraSettings: false,
             contractForm: useForm({
                 file: null,
-                contract_partner: '',
-                company_type_id: null,
-                contract_type_id: null,
-                amount: '',
-                currency_id: 1,
-                ksk_liable: false,
-                resident_abroad: false,
-                has_power_of_attorney: false,
-                is_freed: false,
-                description: '',
+                contract_partner: this.documentRequest?.contract_partner || '',
+                company_type_id: this.documentRequest?.company_type_id || null,
+                contract_type_id: this.documentRequest?.contract_type_id || null,
+                amount: this.documentRequest?.amount || '',
+                currency_id: this.documentRequest?.currency_id || 1,
+                ksk_liable: this.documentRequest?.ksk_liable || false,
+                ksk_amount: this.documentRequest?.ksk_amount || null,
+                ksk_reason: this.documentRequest?.ksk_reason || '',
+                resident_abroad: this.documentRequest?.resident_abroad || false,
+                foreign_tax: this.documentRequest?.foreign_tax || false,
+                foreign_tax_amount: this.documentRequest?.foreign_tax_amount || null,
+                foreign_tax_reason: this.documentRequest?.foreign_tax_reason || '',
+                reverse_charge_amount: this.documentRequest?.reverse_charge_amount || null,
+                deadline_date: this.documentRequest?.deadline_date || null,
+                has_power_of_attorney: this.documentRequest?.has_power_of_attorney || false,
+                is_freed: this.documentRequest?.is_freed || false,
+                description: this.documentRequest?.description || '',
                 accessibleUsers: [],
+                accessibleDepartments: [],
                 tasks: [],
+                document_request_id: this.documentRequest?.id || null,
             }),
         }
     },
@@ -424,6 +569,22 @@ export default {
             this.selectedProject = project;
             this.project_query = '';
             this.project_search_results = [];
+
+            // Fetch project details to get budget_deadline
+            if (project?.id) {
+                axios.get(`/projects/${project.id}/basic`)
+                    .then(response => {
+                        if (response.data?.budget_deadline) {
+                            this.contractForm.deadline_date = response.data.budget_deadline;
+                        }
+                    })
+                    .catch(() => {
+                        // Ignore errors, deadline can be set manually
+                    });
+            }
+        },
+        removeProject() {
+            this.selectedProject = null;
         },
         addTask(task) {
             this.tasks.push(task)
@@ -437,6 +598,16 @@ export default {
         },
         deleteUserFromContractUserArray(index) {
             this.usersWithAccess.splice(index, 1);
+        },
+        addDepartmentToContractArray(department) {
+            if (!this.departmentsWithAccess.find(d => d.id === department.id)) {
+                this.departmentsWithAccess.push(department);
+            }
+            this.department_query = '';
+            this.department_search_results = [];
+        },
+        deleteDepartmentFromContractArray(index) {
+            this.departmentsWithAccess.splice(index, 1);
         },
         selectNewFiles() {
             this.$refs.module_files.click();
@@ -454,6 +625,9 @@ export default {
             this.description = "";
             this.user_query = '';
             this.usersWithAccess = [];
+            this.department_query = '';
+            this.departmentsWithAccess = [];
+            this.department_search_results = [];
             this.showExtraSettings = false;
             this.creatingNewTask = false;
             this.tasks = [];
@@ -465,6 +639,12 @@ export default {
             this.$refs.task_form.clearForm();
         },
         storeContract() {
+            const projectIdToUse = this.projectId || this.selectedProject?.id;
+            if (!projectIdToUse) {
+                this.uploadDocumentFeedback = this.$t('Please select a project');
+                return;
+            }
+
             this.contractForm.file = this.file;
             this.contractForm.company_type_id = this.selectedLegalForm?.id;
             this.contractForm.contract_type_id = this.selectedContractType?.id;
@@ -473,30 +653,21 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
+            const departmentIds = [];
+            this.departmentsWithAccess.forEach((department) => {
+                departmentIds.push(department.id);
+            })
+            this.contractForm.accessibleDepartments = departmentIds;
             this.contractForm.tasks = this.tasks
-            if(this.projectId){
-                this.contractForm.post(this.route('contracts.store', this.projectId), {
-                    // TODO: Richtige einbauweise
-                    forceFormData: true,
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        this.contractForm.reset()
-                        this.closeModal()
-                    },
-                });
-            }else{
-                this.contractForm.post(this.route('contracts.store', this.selectedProject.id), {
-                    // TODO: Richtige einbauweise
-                    forceFormData: true,
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        this.contractForm.reset()
-                        this.closeModal()
-                    },
-                });
-            }
+            this.contractForm.post(this.route('contracts.store', projectIdToUse), {
+                forceFormData: true,
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.contractForm.reset()
+                    this.closeModal()
+                },
+            });
         }
     },
 }

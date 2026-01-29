@@ -440,6 +440,23 @@ class ProjectController extends Controller
         return $filteredObjects;
     }
 
+    /**
+     * Get basic project information including budget_deadline.
+     */
+    public function showBasic(Project $project): JsonResponse
+    {
+        $budgetDeadline = $project->budget_deadline;
+        if ($budgetDeadline instanceof \Carbon\Carbon) {
+            $budgetDeadline = $budgetDeadline->format('Y-m-d');
+        }
+
+        return response()->json([
+            'id' => $project->id,
+            'name' => $project->name,
+            'budget_deadline' => $budgetDeadline,
+        ]);
+    }
+
     public function create(): Response|ResponseFactory
     {
         return inertia('Projects/Create');
@@ -470,12 +487,16 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        // Do not automatically add the creator to the project team.
-        // Only attach the creator if they are explicitly included in assignedUsers.
         $assignedUsers = collect($request->get('assignedUsers'));
-        if ($assignedUsers->contains(Auth::id())) {
-            // If the creator is explicitly assigned, they should be a manager
-            // as per previous behaviour when present in assignedUsers.
+        $currentUser = Auth::user();
+
+        // Users without "view all projects" permission should automatically be added to the project team
+        // Users with this permission should NOT be automatically added (unless explicitly assigned)
+        if (!$currentUser->can(PermissionEnum::PROJECT_VIEW->value)) {
+            // User doesn't have global read access, so add them to the project team
+            $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
+        } elseif ($assignedUsers->contains(Auth::id())) {
+            // User has global read access but is explicitly included in assignedUsers
             $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
         }
 
@@ -2192,11 +2213,11 @@ class ProjectController extends Controller
 
 
 
-        // Aktualisiere nur, wenn wirklich eine neue State-ID kommt
-        // (kleine Absicherung, damit wir nicht sinnlos speichern)
+        // Aktualisiere nur, wenn wirklich eine Änderung vorliegt
         $newStateId = $request->input('state');
 
-        if ($newStateId !== null && (int) $project->state !== (int) $newStateId) {
+        // Prüfe ob sich der State geändert hat (auch wenn auf null gesetzt wird)
+        if ($project->state !== $newStateId && ($newStateId === null || (int) $project->state !== (int) $newStateId)) {
             $project->update([
                 'state' => $newStateId,
             ]);

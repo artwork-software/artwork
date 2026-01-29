@@ -1,6 +1,6 @@
 <template>
     <div class="my-2 flex items-start w-full">
-        <div>
+        <div class="w-full">
             <label
                 :for="'component-' + data.id"
                 class="block text-sm font-bold leading-6"
@@ -9,23 +9,25 @@
                 {{ projectData.data.label }}
             </label>
             <!-- Anzeige (HTML) bis geklickt wird -->
-            <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1">
-                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400" />
+            <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1 w-full">
+                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400 shrink-0" />
                 <div
-                    class="subpixel-antialiased"
+                    class="subpixel-antialiased flex-1"
                     :class="[projectData.project_value?.data?.text ? inSidebar ? 'text-gray-400 text-sm' : 'text-gray-800 text-sm' : 'text-gray-400 text-sm italic', ]"
                     v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '')">
                 </div>
             </div>
 
             <!-- Editor -->
-            <div v-else class="w-full" ref="descriptionWrapRef">
+            <div v-else class="w-full flex" ref="descriptionWrapRef">
                 <BaseTextarea
                     :disabled="!canEditComponent"
                     :label="data.data.placeholder"
                     ref="descriptionRef"
                     :rows="5"
-                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : '!w-96'"
+                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : ''"
+                    class="w-full"
+                    :class="inSidebar ? '!w-80' : 'w-full'"
                     :id="'component-' + data.id"
                     :show-label="false"
                     no-margin-top

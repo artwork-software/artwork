@@ -87,12 +87,12 @@
 
 
         <div class="w-full flex sticky top-16 bg-[#CECDD8] z-30">
-            <table class="w-full flex ml-10 py-5">
+            <table class="w-full flex ml-8 py-5">
                 <thead>
                 <tr class="relative">
                     <th v-for="(column,index) in computedSortedColumns"
                         v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                        :class="index === 0 ? 'w-36' : index === 1 ? 'w-36' : index === 2 ? 'w-72' : 'w-48'">
+                        :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id"
                              :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
@@ -246,7 +246,7 @@
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index === 0 ? 'w-36' : index === 1 ? 'w-36' : index === 2 ? 'w-72' : 'w-48'"
+                                        :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'"
                                         class="xsDark h-5  pr-1 mr-1 flex " type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
@@ -432,6 +432,7 @@
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal"
+                                                       @budget-updated="handleBudgetUpdated"
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
@@ -441,8 +442,8 @@
                                 />
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right te">
-                                <td class="w-36"></td>
-                                <td class="w-36"></td>
+                                <td class="w-48"></td>
+                                <td class="w-48"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)"
@@ -483,8 +484,8 @@
                                 </td>
                             </tr>
                             <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                                <td class="w-36"></td>
-                                <td class="w-36"></td>
+                                <td class="w-48"></td>
+                                <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
@@ -542,6 +543,7 @@
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal"
+                                                       @budget-updated="handleBudgetUpdated"
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
@@ -551,8 +553,8 @@
                                 />
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
-                                <td class="w-36"></td>
-                                <td class="w-36"></td>
+                                <td class="w-48"></td>
+                                <td class="w-48"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
@@ -594,8 +596,8 @@
 
                             </tr>
                             <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                                <td class="w-36"></td>
-                                <td class="w-36"></td>
+                                <td class="w-48"></td>
+                                <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)"
@@ -1058,7 +1060,7 @@ export default {
         'isInTrash',
         'canEditComponent'
     ],
-    emits: ['changeProjectHeaderVisualisation'],
+    emits: ['changeProjectHeaderVisualisation', 'budget-updated'],
     computed: {
         computedSortedColumns: function () {
             return this.sortColumns();
@@ -1932,20 +1934,22 @@ export default {
         showSageNotAssignedDataConfirmationModalHandler(closedToDelete) {
             if (closedToDelete) {
                 router.delete(
-                    route('sageNotAssignedData.destroy',
-                        {
-                            sageNotAssignedData: this.sageNotAssignedDataToDelete.id
-                        },
-                        {
-                            preserveState: true,
-                            preserveScroll: true
-                        }
-                    )
+                    route('sageNotAssignedData.destroy', {
+                        sageNotAssignedData: this.sageNotAssignedDataToDelete.id
+                    }),
+                    {
+                        preserveState: true,
+                        preserveScroll: true
+                    }
                 )
             }
 
             this.showDeleteSageNotAssignedDataConfirmationModal = false;
             this.sageNotAssignedDataToDelete = null;
+        },
+        handleBudgetUpdated() {
+            // Emit event to parent (BudgetTab) to reload budget data
+            this.$emit('budget-updated');
         }
     },
 }

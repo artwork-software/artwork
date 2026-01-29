@@ -76,6 +76,11 @@ class ContractResource extends JsonResource
                 'assigned_craft_ids' => $user->getAssignedCraftIdsAttribute(),
             ]),
             //'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
+            'accessibleDepartments' => $this->accessingDepartments->map(fn ($department) => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'svg_name' => $department->svg_name,
+            ]),
             'tasks' => Task::where('contract_id', $this->id)->get(),
             'comments' => CommentResource::collection($this->comments)->resolve()
         ];

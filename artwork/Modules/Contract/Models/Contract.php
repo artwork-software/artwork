@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Models\Task;
@@ -134,6 +135,11 @@ class Contract extends Model
     public function accessingUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function accessingDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class);
     }
 
     public function creator(): BelongsTo

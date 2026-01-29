@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="`${project?.name} (${currentTab?.name})`">
+    <AppLayout :title="pageTitle">
         <div :style="{ '--project-header-height': `${headerHeight}px` }">
         <!-- Copy Toast -->
         <transition name="fade" appear>
@@ -434,6 +434,28 @@ const stickySubline = computed(() => {
         return [s, e].filter(Boolean).join(" – ");
     }
     return "";
+});
+
+const formatDateGerman = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+};
+
+const pageTitle = computed(() => {
+    let title = `${props.project?.name} (${props.currentTab?.name})`;
+    if (hasProjectPeriod.value) {
+        const startDate = props.headerObject?.firstEventInProject?.start_time;
+        const endDate = props.headerObject?.lastEventInProject?.end_time;
+        if (startDate && endDate) {
+            title += ` ${formatDateGerman(startDate)} - ${formatDateGerman(endDate)}`;
+        }
+    }
+    return title;
 });
 
 const projectsOfGroup = computed(() => props.headerObject?.projectsOfGroup || []);

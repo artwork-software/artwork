@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Duty rosters & shift templates')">
+    <app-layout :title="$t('Shift plan')">
         <div class="-ml-4">
             <slot></slot>
         </div>

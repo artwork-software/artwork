@@ -88,7 +88,7 @@
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
                                     v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                                    :class="[index <= 1 ? 'w-36' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                                    :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                                     <div
                                         v-if="index === 0 && canReorderSubPositionRows"
                                         class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
@@ -98,21 +98,41 @@
                                     </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 max-w-32 justify-start pl-8' : index === 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
-                                    <div class=" flex items-center cell-button">
-                                        <div
-                                             :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate'"
-                                             :title="cell.display_value ?? cell.value"
-                                             @mousedown="storeFocus(cell.id)"
-                                             @click="this.handleCellClick(cell, '', index, row)">
-                                            {{ cell.display_value ?? cell.value }}
-                                        </div>
+                                    <div class="flex items-center cell-button">
+                                        <span
+                                            class="relative group/tt block min-w-0"
+                                            @mouseenter="maybeUpdateTruncation(cell.id, index)"
+                                        >
+                                            <span
+                                                :ref="el => setTruncEl(cell.id, el)"
+                                                :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
+                                                @mousedown="storeFocus(cell.id)"
+                                                @click="this.handleCellClick(cell, '', index, row)"
+                                            >
+                                                {{ cell.display_value ?? cell.value }}
+                                            </span>
+                                            <span
+                                                v-if="isTruncated[cell.id]"
+                                                class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
+                                                       rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                       opacity-0 translate-y-1 transition-all duration-150
+                                                       group-hover/tt:opacity-100 group-hover/tt:translate-y-0
+                                                       whitespace-normal wrap-break-word"
+                                            >
+                                                <span
+                                                    class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
+                                                           border-l border-t border-gray-200"
+                                                />
+                                                {{ String(cell.display_value ?? cell.value ?? '') }}
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 max-w-32 justify-start pl-8' : index === 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
@@ -178,7 +198,7 @@
                             </div>
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
-                                    index <= 1 ? 'w-32 max-w-32 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
+                                    index <= 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div
@@ -379,8 +399,8 @@
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
-                <td class="w-28"></td>
-                <td class="w-28"></td>
+                <td class="w-48"></td>
+                <td class="w-48"></td>
                 <td class="w-72 my-2">SUM</td>
                 <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48"
                     v-for="column in columns.slice(3)"

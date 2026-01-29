@@ -3910,5 +3910,7 @@
     "Contract Filter": "Vertragsfilter",
     "Filter contracts and export them to Excel.": "Filtere Verträge und exportiere sie als Excel-Datei.",
     "Or select teams, who should get access": "oder wähle Teams aus, die Zugriff bekommen sollen",
-    "My received work schedule adjustment requests": "Meine erhaltenen Arbeitszeitanpassungsanfragen"
+    "My received work schedule adjustment requests": "Meine erhaltenen Arbeitszeitanpassungsanfragen",
+    "Delete material issue": "Materialausgabe löschen",
+    "Are you sure you want to delete this material issue?": "Möchten Sie diese Materialausgabe wirklich löschen?"
 }

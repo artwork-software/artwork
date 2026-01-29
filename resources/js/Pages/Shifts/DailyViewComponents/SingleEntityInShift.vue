@@ -106,7 +106,7 @@
                 </template>
             </div>
         </div>
-        <div class=" items-center flex col-span-2 min-w-0 flex-1">
+        <div v-if="$page.props.auth.user.calendar_settings.shift_notes" class=" items-center flex col-span-2 min-w-0 flex-1">
             <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                 <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                     <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full !ring-0 border-none">

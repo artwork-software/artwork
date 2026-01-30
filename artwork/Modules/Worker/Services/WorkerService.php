@@ -13,6 +13,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Worker\Config\WorkerEagerLoadConfig;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 
 class WorkerService
@@ -33,10 +34,9 @@ class WorkerService
         return $users->merge($freelancers)->merge($serviceProviders);
     }
 
-    public function getWorkersForShiftPlan(string $workerType): Collection
+    public function getWorkersForShiftPlan(string $workerType, Carbon|null $startDate = null, Carbon|null $endDate = null): Collection
     {
-        $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads();
-
+        $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
         // Polymorphe Query basierend auf Worker-Typ
         $query = match ($workerType) {
             User::class => User::query()->canWorkShifts(),
@@ -44,10 +44,6 @@ class WorkerService
             ServiceProvider::class => ServiceProvider::query()->canWorkShifts(),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$workerType}"),
         };
-
-        if ($workerType === User::class) {
-            $eagerLoads = array_merge($eagerLoads, WorkerEagerLoadConfig::getUserSpecificEagerLoads());
-        }
 
         $workers = $query->with($eagerLoads)->get();
 

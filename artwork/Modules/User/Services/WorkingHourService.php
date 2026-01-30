@@ -275,13 +275,9 @@ class WorkingHourService
         $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
 
-        $workers = $this->userRepository->getWorkers();
+        $workers = $this->userRepository->getWorkers($startDate, $endDate);
         $workers = $workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
         $workers = $workerShiftPlanService->filterByQualifications($workers, $currentUser);
-        $plannedMinutesCache = $this->precomputePlannedMinutes($workers, $startDate, $endDate);
-        $expectedMinutesCache = $this->precomputeExpectedMinutes($workers, $startDate, $endDate);
-        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
-
         $qualificationsCache = $workerService->buildQualificationsCache($workers);
 
         $usersWithPlannedWorkingHours = [];
@@ -291,18 +287,8 @@ class WorkingHourService
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
 
-            $userId = $user->id;
-            $plannedWorkingHours = $this->convertMinutesInHours(
-                $plannedMinutesCache[$userId] ?? 0
-            );
-
             $additionalData = [
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'expectedWorkingHours' => $this->convertMinutesInHours(
-                    $expectedMinutesCache[$userId] ?? 0
-                ),
                 'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
-                'weeklyWorkingHours' => $weeklyWorkingHoursCache[$userId] ?? [],
             ];
 
             $userData = $workerShiftPlanService->buildWorkerData(

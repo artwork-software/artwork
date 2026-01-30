@@ -65,11 +65,11 @@ class UserRepository extends BaseRepository
         return $user;
     }
 
-    public function getWorkers(): Collection
+    public function getWorkers(\Illuminate\Support\Carbon $startDate, \Illuminate\Support\Carbon $endDate): Collection
     {
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
-        return $workerService->getWorkersForShiftPlan(User::class);
+        return $workerService->getWorkersForShiftPlan(User::class, $startDate, $endDate);
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

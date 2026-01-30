@@ -5,7 +5,6 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-
                 <BaseMenu class="ml-4" v-if="$can('edit budget templates')" white-menu-background>
                     <BaseMenuItem
                         :title="$t('Rename')"
@@ -42,7 +41,6 @@
             </div>
         </div>
         <div class="w-full sticky top-31.5 z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
-
             <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
                 label="New column"
                 use-translation
@@ -786,17 +784,22 @@
         :cell="tempCellData"
         :project-id="project.id"
         :initial-tab="cellDetailOpenTab"
+        :budget-type="cellDetailBudgetType"
         @closed="closeCellDetailModal()"
         @comment-saved="handleCommentSaved"
         @comment-deleted="handleCommentDeleted"
         @calculations-saved="handleCalculationsSaved"
     />
     <sum-detail-component
-        :selectedSumDetail="selectedSumDetail"
-        v-if="showSumDetailModal"
+        :selectedSumDetail="tempSumDetailData"
+        v-if="showSumDetailModal && tempSumDetailData"
         :project-id="project.id"
         :openTab="sumDetailOpenTab"
-        @closed="showSumDetailModal = false"
+        :budget-type="sumDetailBudgetType"
+        @closed="closeSumDetailModal"
+        @comment-saved="handleSumCommentSaved"
+        @comment-deleted="handleSumCommentDeleted"
+        @money-source-updated="handleSumMoneySourceUpdated"
     />
     <use-template-component
         v-if="showUseTemplateModal"
@@ -990,6 +993,7 @@ export default {
                 position: 0
             },
             tempCellData: null,  // Temporäre Cell-Daten für Modal
+            tempSumDetailData: null,  // Temporäre Sum-Detail-Daten für Modal
             colors: {
                 whiteColumn: 'whiteColumn',
                 darkBlueColumn: 'darkBlueColumn',
@@ -1034,7 +1038,9 @@ export default {
                 table_id: this.table?.id
             }),
             cellDetailOpenTab: 'calculation',
+            cellDetailBudgetType: null,
             sumDetailOpenTab: 'comment',
+            sumDetailBudgetType: null,
             userExcludeCommentedBudgetItems: this.$page.props.auth.user.commented_budget_items_setting ?
                 this.$page.props.auth.user.commented_budget_items_setting.exclude === 1 :
                 false,
@@ -1093,29 +1099,18 @@ export default {
         }
     },
     watch: {
-        // selectedCell Watch nicht mehr benötigt - wir laden Daten direkt
-        /*
-        selectedCell: {
-            handler(newSelectedCell) {
-                console.log('selectedCell changed:', newSelectedCell);
-
-                if (newSelectedCell && typeof newSelectedCell === 'object' && newSelectedCell.column && newSelectedCell.id) {
-                    console.log('Opening modal with valid cell data');
-                    this.showCellDetailModal = true;
-                } else {
-                    if (this.showCellDetailModal) {
-                        console.log('Closing modal - invalid cell data');
-                        this.showCellDetailModal = false;
-                    }
-
-                    if (newSelectedCell && typeof newSelectedCell === 'object') {
-                        console.warn('selectedCell is incomplete:', newSelectedCell);
-                    }
+        // Watcher für selectedSumDetail - öffnet Modal automatisch wenn vom Backend populated
+        selectedSumDetail: {
+            handler(newVal) {
+                console.log('selectedSumDetail watcher triggered:', newVal);
+                if (newVal && (newVal.id || Object.keys(newVal).length > 0)) {
+                    console.log('Opening SumDetailModal');
+                    this.showSumDetailModal = true;
                 }
             },
-            immediate: false
+            immediate: true,
+            deep: true
         },
-        */
         userExcludeCommentedBudgetItems: {
             handler(excludeHiddenItems) {
                 if (this.$page.props.auth.user.commented_budget_items_setting === null) {
@@ -1501,18 +1496,19 @@ export default {
             this.cellDetailOpenTab = type;
 
             // 1. Finde die vollständige Cell in der Tabelle
-            const fullCell = this.findCellInTable(cell.id);
+            const result = this.findCellInTable(cell.id);
 
-            if (!fullCell) {
+            if (!result) {
                 console.error('Cell not found in table:', cell.id);
                 alert(this.$t('Cell not found. Please refresh the page.'));
                 return;
             }
 
-            console.log('Full cell found:', fullCell);
+            console.log('Full cell found:', result.cell, 'budgetType:', result.budgetType);
 
             // 2. Öffne Modal SOFORT mit vorhandenen Daten
-            this.tempCellData = fullCell;
+            this.tempCellData = result.cell;
+            this.cellDetailBudgetType = result.budgetType;
             this.showCellDetailModal = true;
 
             // KEIN automatisches Laden von Kalkulationen mehr!
@@ -1555,65 +1551,118 @@ export default {
                     for (const row of subPosition.sub_position_rows || []) {
                         const cell = row.cells?.find(c => c.id === cellId);
                         if (cell) {
-                            return cell;
+                            return { cell, budgetType: mainPosition.type };
                         }
                     }
                 }
             }
             return null;
         },
-        openBudgetSumDetailModal(type, column, tab = 'comment') {
-            router.get(route('projects.tab', {
-                project: this.project.id,
-                projectTab: this.first_project_budget_tab_id
-            }), {
-                selectedBudgetType: type,
-                selectedColumn: column.id,
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.sumDetailOpenTab = tab;
-                    this.showSumDetailModal = true;
-                }
-            })
-        },
-        openSubPositionSumDetailModal(subPosition, column, type) {
-            router.get(route('projects.tab', {
-                project: this.project.id,
-                projectTab: this.first_project_budget_tab_id
-            }), {
-                selectedSubPosition: subPosition.id,
-                selectedColumn: column.id,
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.sumDetailOpenTab = type;
-                    this.showSumDetailModal = true;
+        async openBudgetSumDetailModal(type, column, tab = 'comment') {
+            this.sumDetailOpenTab = tab;
+            this.sumDetailBudgetType = type === 'COST' ? 'BUDGET_TYPE_COST' : 'BUDGET_TYPE_EARNING';
 
-                }
-            })
-        },
-        openMainPositionSumDetailModal(mainPosition, column, type) {
-            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
-                {
-                    selectedMainPosition: mainPosition.id,
-                    selectedColumn: column.id,
-                },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.sumDetailOpenTab = type;
-                        this.showSumDetailModal = true;
+            try {
+                const { data } = await axios.get(route('project.budget.sum-details.show'), {
+                    params: {
+                        type: 'budget',
+                        position_id: type, // COST or EARNING
+                        column_id: column.id
                     }
+                });
+
+                if (data.sumDetail) {
+                    this.tempSumDetailData = data.sumDetail;
+                    this.showSumDetailModal = true;
                 }
-            )
+            } catch (error) {
+                console.error('Error loading budget sum details:', error);
+            }
+        },
+        async openSubPositionSumDetailModal(subPosition, column, type) {
+            const mainPosition = this.table.main_positions?.find(mp =>
+                mp.sub_positions?.some(sp => sp.id === subPosition.id)
+            );
+            this.sumDetailOpenTab = type;
+            this.sumDetailBudgetType = mainPosition?.type || null;
+
+            try {
+                const { data } = await axios.get(route('project.budget.sum-details.show'), {
+                    params: {
+                        type: 'subPosition',
+                        position_id: subPosition.id,
+                        column_id: column.id
+                    }
+                });
+
+                if (data.sumDetail) {
+                    this.tempSumDetailData = data.sumDetail;
+                    this.showSumDetailModal = true;
+                }
+            } catch (error) {
+                console.error('Error loading sub position sum details:', error);
+            }
+        },
+        async openMainPositionSumDetailModal(mainPosition, column, type) {
+            this.sumDetailOpenTab = type;
+            this.sumDetailBudgetType = mainPosition.type;
+
+            try {
+                const { data } = await axios.get(route('project.budget.sum-details.show'), {
+                    params: {
+                        type: 'mainPosition',
+                        position_id: mainPosition.id,
+                        column_id: column.id
+                    }
+                });
+
+                if (data.sumDetail) {
+                    this.tempSumDetailData = data.sumDetail;
+                    this.showSumDetailModal = true;
+                }
+            } catch (error) {
+                console.error('Error loading main position sum details:', error);
+            }
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
             this.tempCellData = null;  // Clear temporäre Daten
+        },
+
+        closeSumDetailModal() {
+            this.showSumDetailModal = false;
+            this.tempSumDetailData = null;
+        },
+
+        handleSumCommentSaved(data) {
+            if (this.tempSumDetailData && this.tempSumDetailData.id === data.sumDetailId) {
+                if (!this.tempSumDetailData.comments) {
+                    this.tempSumDetailData.comments = [];
+                }
+                const exists = this.tempSumDetailData.comments.some(c => c.id === data.comment.id);
+                if (!exists) {
+                    this.tempSumDetailData.comments.unshift(data.comment);
+                }
+            }
+            // Trigger budget update to refresh sums display
+            this.$emit('budget-updated');
+        },
+
+        handleSumCommentDeleted(data) {
+            if (this.tempSumDetailData && this.tempSumDetailData.id === data.sumDetailId) {
+                if (this.tempSumDetailData.comments) {
+                    const index = this.tempSumDetailData.comments.findIndex(c => c.id === data.commentId);
+                    if (index !== -1) {
+                        this.tempSumDetailData.comments.splice(index, 1);
+                    }
+                }
+            }
+            this.$emit('budget-updated');
+        },
+
+        handleSumMoneySourceUpdated() {
+            // Trigger budget update to refresh money source links in sums
+            this.$emit('budget-updated');
         },
 
         handleCommentSaved(data) {

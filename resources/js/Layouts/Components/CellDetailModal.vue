@@ -429,22 +429,31 @@ export default {
         initialTab: {
             type: String,
             default: null
+        },
+        budgetType: {
+            type: String,
+            default: null
         }
     },
     data() {
+        // Default linkedType basierend auf budgetType setzen
+        const defaultLinkedType = this.budgetType === 'BUDGET_TYPE_COST'
+            ? { name: this.$t('Expenses'), type: 'COST' }
+            : { name: this.$t('Revenue'), type: 'EARNING' };
+
         return {
             activeTab: 'calculation',
             calculations: [],
             newComment: '',
             isLinked: false,
-            linkedType: { name: this.$t('Revenue'), type: 'EARNING' },
+            linkedType: defaultLinkedType,
             selectedMoneySource: null,
             moneySourceQuery: '',
             moneySourceSearchResults: [],
             hoveredCommentId: null,
             linkTypes: [
                 { name: this.$t('Revenue'), type: 'EARNING' },
-                { name: this.$t('Expenses'), type: 'SPENDING' }
+                { name: this.$t('Expenses'), type: 'COST' }
             ],
             tempIdCounter: 0,
             isLoading: true,

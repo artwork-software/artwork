@@ -1122,6 +1122,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
 
+            Route::get('/sum-details', [SumDetailsController::class, 'show'])
+                ->name('project.budget.sum-details.show');
+
             Route::get('/trashed', [BudgetGeneralController::class, 'getTrashed'])
                 ->name('project.budget.trashed');
 

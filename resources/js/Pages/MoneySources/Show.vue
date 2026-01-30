@@ -197,13 +197,14 @@
                                 <div class="flex-1">
                                     <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                                         <div
-                                            class="h-2 rounded-full bg-sky-500"
+                                            class="h-2 rounded-full"
+                                            :class="sum >= 0 ? 'bg-emerald-500' : 'bg-red-500'"
                                             :style="{ width: barWidth(sum) + '%' }"
                                         />
                                     </div>
                                 </div>
-                                <div class="w-28 text-right text-xs font-medium">
-                                    {{ toCurrency(sum) }}
+                                <div class="w-28 text-right text-xs font-medium" :class="sum >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                                    <span v-if="sum >= 0">+</span>{{ toCurrency(sum) }}
                                 </div>
                             </div>
                         </div>
@@ -416,14 +417,19 @@ const filteredPositions = computed<any[]>(() => {
     return allPositions.value.filter(p => p.project?.id === pid)
 })
 
-/** Sums per project (over current filter) */
+/** Sums per project (over current filter) - COST wird abgezogen, EARNING aufaddiert */
 const positionSumsPerProject = computed<Record<number, number>>(() => {
     const sums: Record<number, number> = {}
     filteredPositions.value.forEach(p => {
         const pid = p.project?.id
         const val = parseFloat(p.value) || 0
         if (pid == null) return
-        sums[pid] = (sums[pid] ?? 0) + val
+        // COST abziehen, EARNING aufaddieren
+        if (p.type === 'COST') {
+            sums[pid] = (sums[pid] ?? 0) - val
+        } else {
+            sums[pid] = (sums[pid] ?? 0) + val
+        }
     })
     return sums
 })

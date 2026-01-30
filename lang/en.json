@@ -1340,6 +1340,7 @@
     "Delete account permanently": "Delete account permanently",
     "Are you sure you want to permanently delete your artwork account? All settings will be lost.": "Are you sure you want to permanently delete your artwork account? All settings will be lost.",
     "Delete account": "Delete account",
+    "Delete all": "Delete all",
     "First name and surname are required": "First name and surname are required",
     "Only .png and .jpeg files are supported": "Only .png and .jpeg files are supported",
     "Edit the room": "Edit the room",
@@ -3873,5 +3874,7 @@
     "My received work schedule adjustment requests": "My received work schedule adjustment requests",
     "Delete material issue": "Delete material issue",
     "Are you sure you want to delete this material issue?": "Are you sure you want to delete this material issue?",
-    "Project is part of project group": "Project is part of project group"
+    "Project is part of project group": "Project is part of project group",
+    "This sum was linked to a funding source. The link will be removed when you save.": "This sum was linked to a funding source. The link will be removed when you save.",
+    "Remove link": "Remove link"
 }

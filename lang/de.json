@@ -1340,6 +1340,7 @@
     "Delete account permanently": "Konto endgültig löschen",
     "Are you sure you want to permanently delete your artwork account? All settings will be lost.": "Bist du sicher, dass du dein artwork-Konto endgültig löschen möchtest? Sämtliche Einstellungen gehen verloren.",
     "Delete account": "Konto Löschen",
+    "Delete all": "Alle löschen",
     "First name and surname are required": "Vorname und Nachname sind notwendig",
     "Only .png and .jpeg files are supported": "Es werden nur .png und .jpeg Dateien unterstützt",
     "Edit the room": "Bearbeite den Raum",
@@ -3913,5 +3914,7 @@
     "My received work schedule adjustment requests": "Meine erhaltenen Arbeitszeitanpassungsanfragen",
     "Delete material issue": "Materialausgabe löschen",
     "Are you sure you want to delete this material issue?": "Möchten Sie diese Materialausgabe wirklich löschen?",
-    "Project is part of project group": "Projekt ist Teil der Projektgruppe"
+    "Project is part of project group": "Projekt ist Teil der Projektgruppe",
+    "This sum was linked to a funding source. The link will be removed when you save.": "Diese Summe war mit einer Finanzierungsquelle verknüpft. Die Verknüpfung wird entfernt, wenn Sie speichern.",
+    "Remove link": "Verknüpfung entfernen"
 }

@@ -73,7 +73,7 @@
                         />
                     </div>
 
-                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
@@ -495,6 +495,15 @@ const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
 const enableVerification = ref(false);
 const isCalendarUsingProjectTimePeriod = computed(() => {
     return usePage().props.auth.user.calendar_settings.use_project_time_period;
+});
+
+const startAndEndDateInDifferentMonths = computed(() => {
+    if (!dateValue || !dateValue[0] || !dateValue[1]) {
+        return false;
+    }
+    const startDate = new Date(dateValue[0]);
+    const endDate = new Date(dateValue[1]);
+    return startDate.getMonth() !== endDate.getMonth() || startDate.getFullYear() !== endDate.getFullYear();
 });
 
 const getTimePeriodProjectId = () => {

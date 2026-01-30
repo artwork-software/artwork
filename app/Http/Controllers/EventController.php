@@ -3554,7 +3554,9 @@ class EventController extends Controller
 
         // Broadcast deletions for each affected event
         foreach ($events as $event) {
-            broadcast(new RemoveEvent($event, $event->room_id));
+            if ($event->room_id !== null) {
+                broadcast(new RemoveEvent($event, $event->room_id));
+            }
             broadcast(new BulkEventChanged($event, 'deleted'));
         }
     }

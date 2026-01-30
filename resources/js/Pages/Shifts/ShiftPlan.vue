@@ -2087,17 +2087,32 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
         }
     } else {
         const periodKey = period === 'week' ? 'weekNumber' : 'monthNumber'
-        const condition = (d: Day) => (period === 'week' ? d.isMonday : d.isFirstDayOfMonth)
         const periodValue = (currentDayOnView.value as any)?.[periodKey]
 
-        let targetIndex = days.value.findIndex(d => (d as any)[periodKey] === periodValue && condition(d))
-        while (true) {
-            targetIndex += indexModifier
-            if (targetIndex < 0 || targetIndex >= days.value.length) break
-            const day = days.value[targetIndex]
-            if (!day.isExtraRow && condition(day)) {
-                scrollOffset = targetIndex
-                break
+        if (period === 'week') {
+            // Bei Woche: zur KW-Spalte (isExtraRow) scrollen
+            let targetIndex = days.value.findIndex(d => (d as any).weekNumber === periodValue && d.isExtraRow)
+            while (true) {
+                targetIndex += indexModifier
+                if (targetIndex < 0 || targetIndex >= days.value.length) break
+                const day = days.value[targetIndex]
+                if (day.isExtraRow) {
+                    scrollOffset = targetIndex
+                    break
+                }
+            }
+        } else {
+            // Bei Monat: zum ersten Tag des Monats scrollen
+            const condition = (d: Day) => d.isFirstDayOfMonth
+            let targetIndex = days.value.findIndex(d => (d as any)[periodKey] === periodValue && condition(d))
+            while (true) {
+                targetIndex += indexModifier
+                if (targetIndex < 0 || targetIndex >= days.value.length) break
+                const day = days.value[targetIndex]
+                if (!day.isExtraRow && condition(day)) {
+                    scrollOffset = targetIndex
+                    break
+                }
             }
         }
     }

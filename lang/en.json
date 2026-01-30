@@ -3876,5 +3876,14 @@
     "Are you sure you want to delete this material issue?": "Are you sure you want to delete this material issue?",
     "Project is part of project group": "Project is part of project group",
     "This sum was linked to a funding source. The link will be removed when you save.": "This sum was linked to a funding source. The link will be removed when you save.",
-    "Remove link": "Remove link"
+    "Remove link": "Remove link",
+    "Scroll back by day": "Scroll back by day",
+    "Scroll back by week": "Scroll back by week",
+    "Scroll back by month": "Scroll back by month",
+    "Scroll forward by day": "Scroll forward by day",
+    "Scroll forward by week": "Scroll forward by week",
+    "Scroll forward by month": "Scroll forward by month",
+    "Change scroll mode": "Change scroll mode",
+    "Previous time range": "Previous time range",
+    "Next time range": "Next time range"
 }

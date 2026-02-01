@@ -978,6 +978,45 @@ const craftsResolved = computed(() =>
     (craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]
 )
 
+// Workers loaded asynchronously from API (craft-first)
+const workersLoaded = ref<{
+    usersForShifts: any[]
+    freelancersForShifts: any[]
+    serviceProvidersForShifts: any[]
+}>({
+    usersForShifts: [],
+    freelancersForShifts: [],
+    serviceProvidersForShifts: [],
+})
+const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts)
+const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
+const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
+
+async function loadShiftPlanWorkers() {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end) return
+    try {
+        const params: Record<string, any> = { start_date: start, end_date: end }
+        const craftIds = props.user_filters?.craft_ids
+        if (craftIds?.length) {
+            params.craft_ids = craftIds
+        }
+        const { data } = await axios.get(route('shifts.workers'), { params })
+        workersLoaded.value = {
+            usersForShifts: data.usersForShifts ?? [],
+            freelancersForShifts: data.freelancersForShifts ?? [],
+            serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
+        }
+    } catch {
+        workersLoaded.value = {
+            usersForShifts: [],
+            freelancersForShifts: [],
+            serviceProvidersForShifts: [],
+        }
+    }
+}
+
 // closed crafts filter bei usePage().props.auth.user.opened_crafts
 const closedCrafts = computed(() => {
     const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
@@ -1347,6 +1386,8 @@ onMounted(async () => {
         craftsLoaded.value = []
     }
 
+    await loadShiftPlanWorkers()
+
     document.addEventListener('fullscreenchange', () => {
         isFullscreen.value = !!document.fullscreenElement
     })
@@ -1379,6 +1420,15 @@ onMounted(async () => {
             // falls sich Tage komplett ändern, ggf. currentDay neu setzen
             currentDayOnView.value = pickInitialCurrentDay(newDays)
         },
+    )
+
+    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden
+    watch(
+        () => [props.dateValue?.[0], props.dateValue?.[1], props.user_filters?.craft_ids],
+        () => {
+            loadShiftPlanWorkers()
+        },
+        { deep: true },
     )
 
     attach()
@@ -1697,12 +1747,12 @@ const gridRows = computed<GridRow[]>(() => {
 const gridCols = computed(() => days.value) // dein day-array (inkl. extraRow) bleibt “Columns”
 
 /**
- * Alle DropWorker nur EINMAL aus Props bauen
+ * Alle DropWorker aus asynchron geladenen Worker-Daten bauen
  */
 const dropWorkers = computed<any[]>(() => {
     const users: any[] = []
 
-    ;(props.usersForShifts ?? []).forEach((user: any) => {
+    ;(usersForShiftsResolved.value ?? []).forEach((user: any) => {
         if (!showFreelancers.value && user.user.is_freelancer) return
 
         users.push({
@@ -1721,7 +1771,7 @@ const dropWorkers = computed<any[]>(() => {
     })
 
     if (showFreelancers.value) {
-        ;(props.freelancersForShifts ?? []).forEach((freelancer: any) => {
+        ;(freelancersForShiftsResolved.value ?? []).forEach((freelancer: any) => {
             users.push({
                 element: freelancer.freelancer,
                 type: 1,
@@ -1737,7 +1787,7 @@ const dropWorkers = computed<any[]>(() => {
         })
     }
 
-    ;(props.serviceProvidersForShifts ?? []).forEach((sp: any) => {
+    ;(serviceProvidersForShiftsResolved.value ?? []).forEach((sp: any) => {
         users.push({
             element: sp.service_provider,
             type: 2,
@@ -1964,15 +2014,21 @@ function handleCellClick(user: any, day: any) {
             const data = response.data
             const dayServicesRef = data.dayServices
             switch (data.type) {
-                case 'user':
-                    ;(props.usersForShifts as any[]).find((u) => u.user.id === data.id).dayServices = dayServicesRef
+                case 'user': {
+                    const u = workersLoaded.value.usersForShifts.find((x: any) => x.user.id === data.id)
+                    if (u) u.dayServices = dayServicesRef
                     break
-                case 'freelancer':
-                    ;(props.freelancersForShifts as any[]).find((f) => f.freelancer.id === data.id).dayServices = dayServicesRef
+                }
+                case 'freelancer': {
+                    const f = workersLoaded.value.freelancersForShifts.find((x: any) => x.freelancer.id === data.id)
+                    if (f) f.dayServices = dayServicesRef
                     break
-                case 'service_provider':
-                    ;(props.serviceProvidersForShifts as any[]).find((s) => s.service_provider.id === data.id).dayServices = dayServicesRef
+                }
+                case 'service_provider': {
+                    const s = workersLoaded.value.serviceProvidersForShifts.find((x: any) => x.service_provider.id === data.id)
+                    if (s) s.dayServices = dayServicesRef
                     break
+                }
             }
         }
 
@@ -2189,9 +2245,7 @@ function closeMultiEditCellModal(eventData: any) {
     showCellMultiEditModal.value = false
     if (eventData && eventData.saved) {
         multiEditCellByDayAndUser.value = {}
-        router.reload({
-            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-        })
+        loadShiftPlanWorkers()
     }
 }
 
@@ -2665,9 +2719,7 @@ function saveShiftQualificationFilter(event: any) {
 
 function handleSeriesUpdated() {
     showIndividualTimeSeriesModal.value = false;
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    loadShiftPlanWorkers();
 }
 
 function clearHighlightSelection() {

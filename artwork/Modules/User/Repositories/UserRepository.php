@@ -72,6 +72,18 @@ class UserRepository extends BaseRepository
         return $workerService->getWorkersForShiftPlan(User::class, $startDate, $endDate);
     }
 
+    /**
+     * @param  array<int>  $userIds
+     */
+    public function getWorkersByIds(
+        array $userIds,
+        \Illuminate\Support\Carbon $startDate,
+        \Illuminate\Support\Carbon $endDate
+    ): Collection {
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlanByIds(User::class, $userIds, $startDate, $endDate);
+    }
+
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(
         int|User $user,
         Carbon $startDate,

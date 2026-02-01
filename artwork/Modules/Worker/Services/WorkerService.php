@@ -52,6 +52,31 @@ class WorkerService
         return $workers;
     }
 
+    public function getWorkersForShiftPlanByIds(
+        string $workerType,
+        array $ids,
+        Carbon|null $startDate = null,
+        Carbon|null $endDate = null
+    ): Collection {
+        if ($ids === []) {
+            return new Collection();
+        }
+
+        $eagerLoads = WorkerEagerLoadConfig::getShiftPlanEagerLoads($startDate, $endDate);
+        $query = match ($workerType) {
+            User::class => User::query()->canWorkShifts()->whereIn('id', $ids),
+            Freelancer::class => Freelancer::query()->canWorkShifts()->whereIn('id', $ids),
+            ServiceProvider::class => ServiceProvider::query()->canWorkShifts()->whereIn('id', $ids),
+            default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$workerType}"),
+        };
+
+        $workers = $query->with($eagerLoads)->get();
+
+        $this->loadShiftQualificationPivots($workers);
+
+        return $workers;
+    }
+
     private function loadShiftQualificationPivots(Collection $workers): void
     {
         $qualificationIds = $workers->flatMap(function ($worker) {

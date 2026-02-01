@@ -4,7 +4,11 @@ namespace Artwork\Modules\Craft\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class CraftRepository extends BaseRepository
 {
@@ -54,5 +58,42 @@ class CraftRepository extends BaseRepository
     public function findById(int $id): Craft
     {
         return Craft::find($id);
+    }
+
+    public function getWorkerIdsByCraftIds(array $craftIds = []): array
+    {
+        $query = DB::table('craftables')
+            ->select('craftable_type', 'craftable_id');
+
+        if ($craftIds !== []) {
+            $query->whereIn('craft_id', $craftIds);
+        }
+
+        $rows = $query->get();
+
+        $userIds = [];
+        $freelancerIds = [];
+        $serviceProviderIds = [];
+
+        foreach ($rows as $row) {
+            $id = (int) $row->craftable_id;
+            switch ($row->craftable_type) {
+                case User::class:
+                    $userIds[$id] = true;
+                    break;
+                case Freelancer::class:
+                    $freelancerIds[$id] = true;
+                    break;
+                case ServiceProvider::class:
+                    $serviceProviderIds[$id] = true;
+                    break;
+            }
+        }
+
+        return [
+            'user_ids' => array_keys($userIds),
+            'freelancer_ids' => array_keys($freelancerIds),
+            'service_provider_ids' => array_keys($serviceProviderIds),
+        ];
     }
 }

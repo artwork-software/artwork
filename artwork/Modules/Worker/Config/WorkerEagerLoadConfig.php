@@ -16,7 +16,7 @@ class WorkerEagerLoadConfig
             'managingCrafts',
             'vacations' => function ($query) use ($startDate, $endDate) {
                 if ($startDate && $endDate) {
-                    $query->where('vacations.start_time', '>=', $startDate)->where('vacations.end_time', '<=', $endDate);
+                    $query->whereBetween('vacations.date', [$startDate->toDateString(), $endDate->toDateString()]);
                 }
             },
             'shifts' => function ($query) use ($startDate, $endDate) {

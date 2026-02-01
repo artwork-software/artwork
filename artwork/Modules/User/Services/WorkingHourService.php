@@ -269,16 +269,25 @@ class WorkingHourService
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        ?User $currentUser = null
+        ?User $currentUser = null,
+        ?array $craftIds = null
     ): array {
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
         $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
 
-        $workers = $this->userRepository->getWorkers($startDate, $endDate);
+        $workers = $craftIds !== null
+            ? $this->userRepository->getWorkersByIds(
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['user_ids'],
+                $startDate,
+                $endDate
+            )
+            : $this->userRepository->getWorkers($startDate, $endDate);
         $workers = $workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
         $workers = $workerShiftPlanService->filterByQualifications($workers, $currentUser);
         $qualificationsCache = $workerService->buildQualificationsCache($workers);
+
+        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
 
         $usersWithPlannedWorkingHours = [];
 
@@ -289,6 +298,7 @@ class WorkingHourService
 
             $additionalData = [
                 'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
+                'weeklyWorkingHours' => $weeklyWorkingHoursCache[$user->id] ?? [],
             ];
 
             $userData = $workerShiftPlanService->buildWorkerData(

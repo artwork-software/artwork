@@ -679,16 +679,6 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->get(),
-
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
@@ -3609,6 +3599,24 @@ class EventController extends Controller
 
         // Merge both collections and remove duplicates by craft id
         return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
+    }
+
+    /**
+     * Return crafts for shift plan (loaded asynchronously by frontend).
+     */
+    public function getShiftPlanCrafts(): JsonResponse
+    {
+        $crafts = Craft::with([
+            'users',
+            'freelancers',
+            'serviceProviders',
+            'managingUsers',
+            'managingFreelancers',
+            'managingServiceProviders',
+            'qualifications'
+        ])->get();
+
+        return new JsonResponse(['crafts' => $crafts]);
     }
 
     public function getTimelines(Event $event): JsonResponse

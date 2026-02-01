@@ -72,7 +72,7 @@
                     @enterFullscreenMode="openFullscreen"
                     @openHistoryModal="openHistoryModal"
                     :user_filters="user_filters"
-                    :crafts="crafts"
+                    :crafts="craftsResolved"
                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     @select-go-to-next-mode="selectGoToNextMode"
@@ -457,7 +457,7 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids"
+                                        <CraftFilter :crafts="craftsResolved" :filtered-craft-ids="user_filters.craft_ids"
                                                      is_tiny/>
                                         <div class="py-4">
                                             <div>
@@ -701,7 +701,7 @@
             <ShiftHistoryModal
                 v-if="showHistoryModal"
                 :logs="history"
-                :crafts="crafts"
+                :crafts="craftsResolved"
                 :initialStartDate="dateValue[0]"
                 :initialEndDate="dateValue[1]"
                 @close="showHistoryModal = false"
@@ -739,7 +739,7 @@
     />
     <AddShiftModal
         v-if="showAddShiftModal"
-        :crafts="crafts"
+        :crafts="craftsResolved"
         :event="null"
         :shift="shiftToEdit"
         :current-user-crafts="currentUserCrafts"
@@ -972,12 +972,18 @@ const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShi
     removeFromShift: [],
 })
 
+// Crafts loaded asynchronously from API
+const craftsLoaded = ref<any[]>([])
+const craftsResolved = computed(() =>
+    (craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]
+)
+
 // closed crafts filter bei usePage().props.auth.user.opened_crafts
 const closedCrafts = computed(() => {
     const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
-    return props.crafts
-        .map((c) => c.id)
-        .filter((craftId) => !openedCrafts.includes(craftId))
+    return craftsResolved.value
+        .map((c: any) => c.id)
+        .filter((craftId: number) => !openedCrafts.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -1332,6 +1338,14 @@ async function initializeShiftPlan() {
 
 onMounted(async () => {
     await initializeShiftPlan()
+
+    // Load crafts asynchronously for shift plan
+    try {
+        const { data } = await axios.get(route('shifts.crafts'))
+        craftsLoaded.value = data.crafts ?? []
+    } catch {
+        craftsLoaded.value = []
+    }
 
     document.addEventListener('fullscreenchange', () => {
         isFullscreen.value = !!document.fullscreenElement
@@ -1852,7 +1866,7 @@ function filterAndSortWorkersOfCraft(craft: any) {
 // -----------------------------------------------------
 
 const craftsToDisplay = computed(() => {
-    const allCrafts = (props.crafts ?? []).map((craft: any) => ({
+    const allCrafts = (craftsResolved.value ?? []).map((craft: any) => ({
         id: craft.id,
         name: craft.name,
         abbreviation: craft.abbreviation,

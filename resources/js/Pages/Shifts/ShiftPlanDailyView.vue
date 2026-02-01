@@ -315,7 +315,10 @@ const shiftQualificationsResolved = computed(() => {
     return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
 })
 
+// Crafts loaded asynchronously from API
+const craftsLoaded = ref<any[]>([])
 const craftsResolved = computed(() => {
+    if (craftsLoaded.value?.length) return craftsLoaded.value
     const v: any = props.crafts
     if (Array.isArray(v)) return v
     if (v && Object.keys(v).length) return Object.values(v)
@@ -836,6 +839,14 @@ onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
     await initializeDailyShiftPlan()
+
+    // Load crafts asynchronously for shift plan
+    try {
+        const { data } = await axios.get(route("shifts.crafts"))
+        craftsLoaded.value = data.crafts ?? []
+    } catch {
+        craftsLoaded.value = []
+    }
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any)
     ShiftCalendarListener.init()

@@ -739,6 +739,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.plan')
         ->can('can view shift plan');
 
+    Route::get('/shifts/crafts', [EventController::class, 'getShiftPlanCrafts'])
+        ->name('shifts.crafts')
+        ->can('can view shift plan');
+
 
     Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
         ->name('multi-edit.calendar.cell.delete');

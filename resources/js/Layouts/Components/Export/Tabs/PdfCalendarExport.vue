@@ -88,8 +88,46 @@
 
             <!-- Filter -->
             <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <!-- Gespeicherte Filter Presets -->
+                <div v-if="savedFilterPresets.length > 0" class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">
+                        {{ $t('Saved filter presets') }}
+                    </label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div
+                            v-for="preset in savedFilterPresets"
+                            :key="preset.id"
+                            class="group flex items-center bg-green-50 px-3 py-1.5 rounded-full border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                            @click="applyFilterPreset(preset)"
+                        >
+                            <span class="text-green-700 text-xs font-medium">{{ preset.name }}</span>
+                            <button
+                                type="button"
+                                class="ml-2 text-green-500 hover:text-red-500 transition-colors"
+                                @click.stop="confirmDeletePreset(preset)"
+                            >
+                                <component :is="IconX" class="size-3.5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aktive Filter + Speichern Button -->
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
-                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-zinc-700">
+                            {{ $t('Active filters') }}
+                        </label>
+                        <button
+                            v-if="activeFilters.length > 0"
+                            type="button"
+                            class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                            @click="showSavePresetModal = true"
+                        >
+                            {{ $t('Save current filters as preset') }}
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
                         <div
                             v-for="(filter, index) in activeFilters"
                             :key="`${filter.id}-${filter.value ?? ''}-${index}`"
@@ -375,10 +413,28 @@
             </section>
         </div>
     </div>
+
+    <!-- Save Filter Preset Modal -->
+    <SaveFilterPresetModal
+        v-if="showSavePresetModal"
+        :active-filters="activeFilters"
+        :filter-data="getCurrentFilterData()"
+        @close="showSavePresetModal = false"
+        @saved="onPresetSaved"
+    />
+
+    <!-- Confirm Delete Preset Modal -->
+    <ConfirmDeleteModal
+        v-if="showDeletePresetModal"
+        :title="$t('Delete filter preset')"
+        :description="$t('Are you sure you want to delete this filter preset?')"
+        @closed="showDeletePresetModal = false"
+        @delete="deletePreset"
+    />
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import {useForm, usePage} from '@inertiajs/vue3'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -390,6 +446,8 @@ import { useTranslation } from '@/Composeables/Translation.js'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
+import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
@@ -440,6 +498,93 @@ const checkedOrientation = ref<'portrait' | 'landscape'>('portrait')
 const orientationDisabled = ref(false)
 
 const closeModal = (bool: boolean) => emits('closed', bool)
+
+// Filter Preset State
+const savedFilterPresets = ref<any[]>([])
+const showSavePresetModal = ref(false)
+const showDeletePresetModal = ref(false)
+const presetToDelete = ref<any>(null)
+
+// Filter Presets laden
+const loadFilterPresets = async () => {
+    try {
+        const response = await axios.get(route('pdf-export-user-filters.index'))
+        savedFilterPresets.value = response.data
+    } catch (error) {
+        console.error('Failed to load filter presets:', error)
+    }
+}
+
+// Beim Mount laden
+onMounted(() => {
+    loadFilterPresets()
+})
+
+// Aktuellen Filter-Status für das Speichern sammeln
+const getCurrentFilterData = () => {
+    const data: Record<string, number[] | null> = {}
+    Object.assign(data, extractCheckedIds('roomFilters'))
+    Object.assign(data, extractCheckedIds('areaFilters'))
+    Object.assign(data, extractCheckedIds('eventFilters'))
+    return data
+}
+
+// Gespeichertes Preset anwenden
+const applyFilterPreset = (preset: any) => {
+    // Erst alle Filter deaktivieren
+    const cats = filteredOptionsByCategories.value
+    Object.keys(cats).forEach(category => {
+        Object.keys(cats[category]).forEach(subCategory => {
+            cats[category][subCategory].forEach((f: any) => {
+                f.checked = false
+            })
+        })
+    })
+
+    // Dann die gespeicherten Filter aktivieren
+    if (preset.filters) {
+        Object.entries(preset.filters).forEach(([filterKey, ids]) => {
+            if (!ids || !Array.isArray(ids)) return
+
+            Object.keys(cats).forEach(category => {
+                if (cats[category][filterKey]) {
+                    cats[category][filterKey].forEach((f: any) => {
+                        if (ids.includes(f.id)) {
+                            f.checked = true
+                        }
+                    })
+                }
+            })
+        })
+    }
+}
+
+// Preset speichern callback
+const onPresetSaved = (newPreset: any) => {
+    savedFilterPresets.value.push(newPreset)
+    savedFilterPresets.value.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// Preset löschen vorbereiten
+const confirmDeletePreset = (preset: any) => {
+    presetToDelete.value = preset
+    showDeletePresetModal.value = true
+}
+
+// Preset tatsächlich löschen
+const deletePreset = async () => {
+    if (!presetToDelete.value) return
+
+    try {
+        await axios.delete(route('pdf-export-user-filters.destroy', presetToDelete.value.id))
+        savedFilterPresets.value = savedFilterPresets.value.filter(p => p.id !== presetToDelete.value.id)
+    } catch (error) {
+        console.error('Failed to delete preset:', error)
+    } finally {
+        showDeletePresetModal.value = false
+        presetToDelete.value = null
+    }
+}
 
 const createPdf = () => {
     pdf.paperSize = selectedPaperSize.value.id

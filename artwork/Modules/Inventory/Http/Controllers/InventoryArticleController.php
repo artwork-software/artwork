@@ -230,9 +230,15 @@ class InventoryArticleController extends Controller
     public function loadArticlesByFilter(Request $request) {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $search = $request->get('search');
         /** @var User $user */
         $user = $this->authManager->user();
         $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticlesNew($user);
+
+        // Apply search filter if provided
+        if (!empty($search)) {
+            $articlesByFilter = $articlesByFilter->where('name', 'like', '%' . $search . '%');
+        }
 
         return response()->json([
             'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties', 'tags'])

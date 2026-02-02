@@ -590,7 +590,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             (bool) $project || (bool) $user->getAttribute('daily_view'),
-            $project
+            $project,
+            true
         );
 
         $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(

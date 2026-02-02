@@ -2,18 +2,12 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Event\Models\SeriesEvents;
-use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Lazy;
 use Spatie\LaravelData\Optional;
 
 class EventShiftPlanDTO extends Data
@@ -31,7 +25,7 @@ class EventShiftPlanDTO extends Data
         public ?int $roomId,
         public ?string $roomName,
         public ?array $daysOfEvent,
-        public User|null|Optional $created_by,
+        public MinimalCreatorDTO|Optional|null $created_by,
         public ?array $formattedDates,
         public ?bool $is_series,
         public Collection $eventProperties,
@@ -69,7 +63,12 @@ class EventShiftPlanDTO extends Data
             roomId: $event->room_id,
             roomName: $event->room?->name,
             daysOfEvent: $event->getAttribute('days_of_event') ?? [],
-            created_by: $event->creator,
+            created_by: $event->creator ? new MinimalCreatorDTO(
+                id: $event->creator->id,
+                first_name: $event->creator->first_name,
+                last_name: $event->creator->last_name,
+                profile_photo_url: $event->creator->getAttribute('profile_photo_url'),
+            ) : null,
             formattedDates: $event->getAttribute('formatted_dates') ?? [],
             is_series: $event->is_series,
             eventProperties: $event->eventProperties,

@@ -12,6 +12,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarFilter;
@@ -30,7 +31,8 @@ class ShiftCalendarService
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $addTimeline = false,
-        ?Project $project = null
+        ?Project $project = null,
+        bool $minimalWorkerData = false
     ): Collection {
         $roomIds = $rooms->modelKeys();
 
@@ -46,7 +48,7 @@ class ShiftCalendarService
             'eventStatus:id,color',
             'event_type:id,name,abbreviation,hex_code',
             'room:id,name',
-            'creator:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
+            'creator:id,first_name,last_name,profile_photo_path',
             'eventProperties:id,name,icon',
         ];
 
@@ -89,6 +91,33 @@ class ShiftCalendarService
         // -------------------------
         // 2) Standalone Shifts (eager alles was DTO braucht)
         // -------------------------
+        $shiftWorkerWith = $minimalWorkerData
+            ? [
+                'room:id,name',
+                'craft:id,name,abbreviation',
+                'craft.qualifications:id,name',
+                'shiftsQualifications',
+                'users:id,first_name,last_name',
+                'freelancer:id,first_name,last_name,profile_image',
+                'serviceProvider:id,provider_name,profile_image',
+                'shiftGroup:id,name',
+                'craft.craftShiftPlaner',
+            ]
+            : [
+                'room:id,name',
+                'craft:id,name,abbreviation',
+                'craft.qualifications:id,name',
+                'shiftsQualifications',
+                'users:id,first_name,last_name,pronouns,position,profile_photo_path',
+                'users.globalQualifications:id',
+                'freelancer:id,first_name,last_name,position,profile_image',
+                'freelancer.globalQualifications:id',
+                'serviceProvider:id,provider_name,profile_image',
+                'serviceProvider.globalQualifications:id',
+                'shiftGroup:id,name',
+                'craft.craftShiftPlaner',
+            ];
+
         $shifts = Shift::query()
             ->select([
                 'id',
@@ -111,20 +140,7 @@ class ShiftCalendarService
             ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->craft_ids), fn ($q) => $q->whereIn('craft_id', $filter->craft_ids))
             ->where(fn ($q) => $overlap($q, 'start_date', 'end_date'))
-            ->with([
-                'room:id,name',
-                'craft:id,name,abbreviation',                 // + benötigte Felder
-                'craft.qualifications:id,name',  // wenn Frontend es braucht
-                'shiftsQualifications',          // ggf. später: select-minimal
-                'users:id,first_name,last_name,pronouns,position,profile_photo_path',
-                'users.globalQualifications:id',
-                'freelancer:id,first_name,last_name,position,profile_image',
-                'freelancer.globalQualifications:id',
-                'serviceProvider:id,provider_name,profile_image',
-                'serviceProvider.globalQualifications:id',
-                'shiftGroup:id,name',
-                'craft.craftShiftPlaner'
-            ])
+            ->with($shiftWorkerWith)
             ->orderBy('start_date', 'ASC')
             ->get();
 
@@ -141,11 +157,9 @@ class ShiftCalendarService
             ->select(['id','name','state','artists','is_group','icon','color'])
             ->with([
                 'status:id,name,color',
-                'managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
                 'users:id',
                 'groups:id,name,state,artists,is_group,icon,color',
                 'groups.status:id,name,color',
-                'groups.managerUsers:id,first_name,last_name,pronouns,position,email_private,email,phone_number,phone_private,description,profile_photo_path',
                 'groups.users:id',
             ])
             ->whereIn('id', $projectIds)
@@ -183,34 +197,48 @@ class ShiftCalendarService
     public function mapRoomsToContentForCalendar(Collection $rooms, $startDate, $endDate): CalendarFrontendDataDTO
     {
         $period = collect(CarbonPeriod::create($startDate, '1 day', $endDate))
-            ->mapWithKeys(fn($date) => [$date->format('d.m.Y') => ['events' => [], 'shifts' => []]])
+            ->mapWithKeys(fn ($date) => [$date->format('d.m.Y') => ['eventIds' => [], 'shiftIds' => []]])
             ->toArray();
 
-        $roomsData = $rooms->map(function ($room) use ($period) {
+        $roomsData = $rooms->map(function (Room $room) use ($period) {
             $content = $period;
 
-            $groupedEvents = $room->events->flatMap(fn($eventDTO) =>
-            collect($eventDTO->daysOfEvent)->map(fn($date) => ['date' => $date, 'event' => $eventDTO]))->groupBy('date');
+            $eventsById = [];
+            foreach ($room->events as $eventDTO) {
+                $eventsById[$eventDTO->id] = $eventDTO;
+            }
 
-            $groupedShifts = $room->shifts->flatMap(fn($shiftDTO) =>
-            collect($shiftDTO->daysOfShift)->map(fn($date) => ['date' => $date, 'shift' => $shiftDTO]))->groupBy('date');
+            $shiftsById = [];
+            foreach ($room->shifts as $shiftDTO) {
+                $shiftsById[$shiftDTO->id] = $shiftDTO;
+            }
 
-            foreach ($groupedEvents as $date => $eventsOnDate) {
+            $groupedEventIds = $room->events->flatMap(fn ($eventDTO) =>
+                collect($eventDTO->daysOfEvent)->map(fn ($date) => ['date' => $date, 'id' => $eventDTO->id])
+            )->groupBy('date');
+
+            $groupedShiftIds = $room->shifts->flatMap(fn ($shiftDTO) =>
+                collect($shiftDTO->daysOfShift)->map(fn ($date) => ['date' => $date, 'id' => $shiftDTO->id])
+            )->groupBy('date');
+
+            foreach ($groupedEventIds as $date => $eventsOnDate) {
                 if (isset($content[$date])) {
-                    $content[$date]['events'] = $eventsOnDate->pluck('event')->all();
+                    $content[$date]['eventIds'] = $eventsOnDate->pluck('id')->values()->all();
                 }
             }
 
-            foreach ($groupedShifts as $date => $shiftsOnDate) {
+            foreach ($groupedShiftIds as $date => $shiftsOnDate) {
                 if (isset($content[$date])) {
-                    $content[$date]['shifts'] = $shiftsOnDate->pluck('shift')->all();
+                    $content[$date]['shiftIds'] = $shiftsOnDate->pluck('id')->values()->all();
                 }
             }
 
             return new CalendarRoomDTO(
                 roomId: $room->id,
                 roomName: $room->name,
-                content: $content
+                content: $content,
+                eventsById: $eventsById,
+                shiftsById: $shiftsById,
             );
         })->toArray();
 

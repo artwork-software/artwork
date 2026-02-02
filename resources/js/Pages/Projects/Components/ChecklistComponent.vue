@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import {ref, computed, nextTick, watch, onMounted} from 'vue';
+import {ref, computed, nextTick, watch, onMounted, onUnmounted} from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
@@ -236,6 +236,23 @@ const openSearchBar = () => {
     });
 };
 
+// Echo listener for real-time checklist updates
+let echoChannel = null;
+
+onMounted(() => {
+    if (props.project?.id) {
+        echoChannel = Echo.private('project.' + props.project.id)
+            .listen('.checklist.updated', () => {
+                fetchChecklists();
+            });
+    }
+});
+
+onUnmounted(() => {
+    if (echoChannel && props.project?.id) {
+        Echo.leave('project.' + props.project.id);
+    }
+});
 
 </script>
 

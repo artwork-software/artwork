@@ -132,7 +132,7 @@
                 <div class="flex items-center justify-end">
                     <BaseUIButton
                         type="submit"
-                        :disabled="((!selectedTemplate.id) ? checklistForm.name.length === 0 : false) || (((selectedProject || project) && !tab_id) && !(selectedTab && selectedTab.id))"
+                        :disabled="((!selectedTemplate.id) ? checklistForm.name.length === 0 : false) || (((selectedProject || project) && !tab_id) && !(selectedTab && selectedTab.id)) || checklistForm.processing"
                         :label="checklistToEdit ? $t('Save') : $t('Create')"
                     />
                 </div>

@@ -223,6 +223,7 @@
             </div>
         </div>
     </div>
+    {{crafts}}
     <div class="mb-1 ml-4 flex items-center w-full">
         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
     </div>
@@ -237,6 +238,7 @@
 
     <ShiftCommitDateSelectModal
         :date-array="dateValue"
+        :crafts="crafts"
         v-if="showShiftCommitDateSelectModal"
         @close="showShiftCommitDateSelectModal = false"
 

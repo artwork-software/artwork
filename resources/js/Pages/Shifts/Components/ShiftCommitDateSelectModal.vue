@@ -160,6 +160,11 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const emit = defineEmits(['close'])
 
+const props = defineProps({
+    dateArray: Array,
+    crafts: Array,
+});
+
 /**
  * Hilfsfunktion für ISO-Kalenderwoche
  */
@@ -189,7 +194,7 @@ const dateRange = ref({
 const isLoadingDateRange = ref(false)
 const dateRangeError = ref(null)
 const isShiftCommitWorkflowEnabled = ref(usePage().props.shiftCommitWorkflow)
-const crafts = ref(usePage().props.crafts || [])
+const crafts = ref(props.crafts || [])
 const selectedCraft = ref(null)
 
 const getDateRangeByCalendarWeekAndYear = async (week, year) => {

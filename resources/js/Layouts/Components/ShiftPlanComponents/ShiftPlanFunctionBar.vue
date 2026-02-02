@@ -33,19 +33,29 @@
                         />
                     </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <PropertyIcon name="IconChevronLeftPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                             @click="previousTimeRange"/>
-                        <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                         @click="scrollToPreviousDay"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Previous time range')"
+                            icon="IconChevronLeftPipe"
+                            icon-size="h-7 w-7"
+                            @click="previousTimeRange"
+                        />
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="scrollBackTooltip"
+                            icon="IconChevronLeft"
+                            icon-size="h-7 w-7"
+                            @click="scrollToPreviousDay"
+                        />
                         <Menu as="div" class="relative inline-block text-left">
                             <div class="flex items-center">
                                 <MenuButton class="">
-                                    <PropertyIcon name="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                       v-if="userGotoMode === 'month'"/>
-                                    <PropertyIcon name="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                      v-if="userGotoMode === 'week'"/>
-                                    <PropertyIcon name="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                  v-if="userGotoMode === 'day'"/>
+                                    <ToolTipComponent
+                                        direction="bottom"
+                                        :tooltip-text="$t('Change scroll mode')"
+                                        :icon="userGotoMode === 'month' ? 'IconCalendarMonth' : (userGotoMode === 'week' ? 'IconCalendarWeek' : 'IconCalendar')"
+                                        icon-size="h-5 w-5"
+                                    />
                                 </MenuButton>
                             </div>
 
@@ -92,11 +102,21 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                          @click="scrollToNextDay"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="scrollForwardTooltip"
+                            icon="IconChevronRight"
+                            icon-size="h-7 w-7"
+                            @click="scrollToNextDay"
+                        />
 
-                        <PropertyIcon name="IconChevronRightPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                              @click="nextTimeRange"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Next time range')"
+                            icon="IconChevronRightPipe"
+                            icon-size="h-7 w-7"
+                            @click="nextTimeRange"
+                        />
                     </div>
                     <div class="items-center hidden">
                         <div class="flex items-center">
@@ -217,6 +237,7 @@
 
     <ShiftCommitDateSelectModal
         :date-array="dateValue"
+        :crafts="crafts"
         v-if="showShiftCommitDateSelectModal"
         @close="showShiftCommitDateSelectModal = false"
 
@@ -250,6 +271,8 @@ import {router, useForm, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
+import {useI18n} from "vue-i18n";
+const {t: $t} = useI18n();
 import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
@@ -328,6 +351,22 @@ const isCalendarUsingProjectTimePeriod = computed(() => {
 
 const userGotoMode = computed(() => {
     return usePage().props.auth.user.goto_mode;
+});
+
+const scrollBackTooltip = computed(() => {
+    const mode = userGotoMode.value;
+    if (mode === 'day') return $t('Scroll back by day');
+    if (mode === 'week') return $t('Scroll back by week');
+    if (mode === 'month') return $t('Scroll back by month');
+    return $t('Scroll back by day');
+});
+
+const scrollForwardTooltip = computed(() => {
+    const mode = userGotoMode.value;
+    if (mode === 'day') return $t('Scroll forward by day');
+    if (mode === 'week') return $t('Scroll forward by week');
+    if (mode === 'month') return $t('Scroll forward by month');
+    return $t('Scroll forward by day');
 });
 
 // Methods

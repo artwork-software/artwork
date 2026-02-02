@@ -4,6 +4,7 @@ namespace Artwork\Modules\ServiceProvider\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
@@ -37,6 +38,20 @@ class ServiceProviderRepository extends BaseRepository
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
         return $workerService->getWorkersForShiftPlan(ServiceProvider::class);
+    }
+
+    public function getWorkersByIds(
+        array $serviceProviderIds,
+        Carbon $startDate,
+        Carbon $endDate
+    ): Collection {
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlanByIds(
+            ServiceProvider::class,
+            $serviceProviderIds,
+            $startDate,
+            $endDate
+        );
     }
 
     public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection

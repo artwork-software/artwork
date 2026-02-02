@@ -52,6 +52,7 @@ class UpdateArtwork extends Command
         $this->removeOldCalendarComponent();
         $this->migrateFilterToNewFilterStructure();
         $this->addOrderInInventoryStatus();
+        $this->cleanupDuplicateRoomTypes();
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
@@ -377,9 +378,21 @@ class UpdateArtwork extends Command
     /**
      * Wandelt interne Felder zu DB-Feldern um.
      */
+    private function cleanupDuplicateRoomTypes(): void
+    {
+        $this->section('Cleanup Duplicate Room Types');
+        $this->call('artwork:cleanup-duplicate-room-types');
+    }
+
     private function addRoomTypes(): void
     {
         $this->section('Adding Room Types');
+
+        if (\Artwork\Modules\Accommodation\Models\AccommodationRoomType::exists()) {
+            $this->info('Room types already exist, skipping.');
+            return;
+        }
+
         $roomTypes = TypOfRoom::cases();
 
         foreach ($roomTypes as $roomType) {

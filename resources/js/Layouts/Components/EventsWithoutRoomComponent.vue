@@ -6,6 +6,15 @@
         :description="'These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.'"
     >
         <div class="">
+            <div class="flex justify-end mb-4" v-if="computedEventsWithoutRoom.length > 0">
+                <button
+                    @click="deleteAllEventsWithoutRoom"
+                    class="flex rounded-2xl items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 cursor-pointer"
+                >
+                    <IconTrash class="h-5 w-5" />
+                    {{ $t('Delete all') }}
+                </button>
+            </div>
             <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                 <SingleEventInEventsWithoutRoom
                     :computed-events-without-room="computedEventsWithoutRoom"
@@ -52,6 +61,9 @@ import IconLib from "@/Mixins/IconLib.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
 import {provide, inject} from "vue";
+import {
+    IconTrash,
+} from "@tabler/icons-vue";
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
@@ -81,7 +93,8 @@ export default {
         TrashIcon,
         DotsVerticalIcon,
         ConfirmationComponent,
-        TagComponent
+        TagComponent,
+        IconTrash
     },
     data() {
         return {
@@ -367,6 +380,20 @@ export default {
                     //this.closeModal();
                 }
             })
+        },
+        deleteAllEventsWithoutRoom() {
+            const eventIds = this.computedEventsWithoutRoom.map(event => event.id);
+            if (eventIds.length === 0) return;
+
+            axios.delete('/events/bulk/delete', { data: { eventIds: eventIds } })
+                .then(() => {
+                    // Clear the local array so UI updates immediately
+                    this.eventsWithoutRoom.splice(0, this.eventsWithoutRoom.length);
+                    this.closeModal(true);
+                })
+                .catch(error => {
+                    console.error('Error deleting events:', error);
+                });
         },
         eventData(event) {
             return {

@@ -193,12 +193,22 @@
                                 v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
                                 class="size-3.5 shrink-0"
                                 stroke-width="2"
+                                :style="{
+                                    color: getTextColorBasedOnBackground(
+                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                                    )
+                                }"
                             />
                             <component
                                 :is="IconClock"
                                 v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                                 class="size-3.5 shrink-0"
                                 stroke-width="2"
+                                :style="{
+                                    color: getTextColorBasedOnBackground(
+                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                                    )
+                                }"
                             />
                             <div
                                 class="subpixel-antialiased"
@@ -364,7 +374,15 @@
                 <!-- Properties als Icons -->
                 <div class="grid grid-cols-5 md:grid-cols-2 gap-2">
                     <div v-for="property in event.eventProperties" :key="property.id" class="col-span-1 group/property relative">
-                        <PropertyIcon :name="property.icon" class="size-3.5 opacity-90" />
+                        <PropertyIcon
+                            :name="property.icon"
+                            class="size-3.5 opacity-90"
+                            :style="{
+                                color: getTextColorBasedOnBackground(
+                                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                                )
+                            }"
+                        />
                         <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
                             <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
                                 {{ property.name }}
@@ -382,8 +400,19 @@
                     <component
                         :is="IconTimeline"
                         class="size-5"
-                        :class="event.hasTimelines ? 'text-black' : 'text-gray-400'"
                         stroke-width="1.5"
+                        :style="{
+                            color: event.hasTimelines
+                                ? getTextColorBasedOnBackground(
+                                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                                  )
+                                : (usePage().props.auth.user.calendar_settings.high_contrast
+                                    ? getTextColorBasedOnBackground(
+                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
+                                      ) + '80'
+                                    : undefined)
+                        }"
+                        :class="!event.hasTimelines && !usePage().props.auth.user.calendar_settings.high_contrast ? 'text-gray-400' : ''"
                     />
                 </div>
             </div>

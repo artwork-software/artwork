@@ -1,7 +1,6 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-light-background-gray'">
         <div class="flex bg-light-background-gray w-[95%]">
-
             <BudgetComponent v-if="resolvedTable"
                              :sage-not-assigned="sageNotAssigned ?? effectiveBudgetData?.sageNotAssigned"
                              :hide-project-header="hideProjectHeader"
@@ -11,7 +10,7 @@
                              :selectedCell="budget?.selectedCell ?? effectiveBudgetData?.budget?.selectedCell"
                              :selectedRow="budget?.selectedRow ?? effectiveBudgetData?.budget?.selectedRow"
                              :templates="budget?.templates ?? effectiveBudgetData?.budget?.templates"
-                             :selected-sum-detail="budget?.selectedSumDetail ?? effectiveBudgetData?.budget?.selectedSumDetail"
+                             :selected-sum-detail="localSelectedSumDetail ?? effectiveBudgetData?.selectedSumDetail"
                              :money-sources="moneySources ?? effectiveBudgetData?.moneySources"
                              :budget-access="access_budget ?? project?.access_budget ?? headerObject?.access_budget"
                              :project-manager="managerUsers ?? project?.managerUsers ?? headerObject?.managerUsers"
@@ -19,6 +18,7 @@
                              :can-edit-component="canEditComponent"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
                              @budget-updated="handleBudgetUpdated"
+                             @sumDetailLoaded="handleSumDetailLoaded"
             />
             <div v-else class="w-full py-8">
                 <div v-if="loadBudgetError" class="text-error text-sm">
@@ -74,6 +74,7 @@ export default{
             isLoadingBudget: false,
             loadBudgetError: '',
             localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null,
+            localSelectedSumDetail: null,
             access_budget: null,
             managerUsers: null,
 
@@ -173,6 +174,9 @@ export default{
         handleBudgetUpdated() {
             // Force reload budget data after deletion
             this.fetchBudgetData(true);
+        },
+        handleSumDetailLoaded(sumDetail) {
+            this.localSelectedSumDetail = sumDetail;
         }
     },
 }

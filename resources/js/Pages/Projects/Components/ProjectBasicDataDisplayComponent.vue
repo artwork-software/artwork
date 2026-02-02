@@ -48,8 +48,8 @@
                 <!-- state badge -->
                 <div v-else-if="row.type === 'state'" class="pt-0.5">
                     <span
-                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex text-white"
-                        :style="{ backgroundColor: row.value?.color ?? undefined }"
+                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex"
+                        :style="getStateStyles(row.value?.color)"
                     >
                         {{ row.value?.name ?? '' }}
                     </span>
@@ -250,6 +250,30 @@ export default defineComponent({
         }
     },
     methods: {
+        getStateStyles(color) {
+            if (!color) return {};
+            const hexColor = color.startsWith('#') ? color : '#' + color;
+            return {
+                backgroundColor: hexColor,
+                color: this.getTextColorForHex(color)
+            };
+        },
+        getTextColorForHex(color) {
+            if (!color) return '#000000';
+            const hexMatch = color.match(/^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/);
+            if (hexMatch) {
+                let hex = hexMatch[1];
+                if (hex.length === 3) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                return luminance > 0.5 ? '#000000' : '#ffffff';
+            }
+            return '#ffffff';
+        },
         formatDate(dateValue) {
             if (!dateValue) {
                 return '';

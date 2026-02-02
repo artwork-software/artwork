@@ -664,16 +664,41 @@ const conflicts = computed(() => {
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
 
-// Filtered articles based on search input
+// Filtered articles based on search input - now returns all articles since filtering is done server-side
 const filteredArticles = computed(() => {
-    if (!articleSearchFilter.value) {
-        return articles.value;
+    return articles.value;
+})
+
+// Server-side search for articles
+const searchArticlesFromServer = debounce(async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+        // Bei leerem Suchfeld: normale Pagination laden
+        await reloadArticlesWithNewFilter();
+        return;
     }
 
-    const searchTerm = articleSearchFilter.value.toLowerCase();
-    return articles.value.filter(article =>
-        article.name?.toLowerCase().includes(searchTerm)
-    );
+    loadingMore.value = true;
+    try {
+        const response = await axios.get(route('inventory.articles.api', {
+            search: searchTerm,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        }));
+
+        articles.value = response.data.articles.data;
+        hasMoreArticles.value = !!response.data.articles.next_page_url;
+        paginationPage.value = 2;
+
+        await checkFoundArticlesAvailability();
+    } catch (e) {
+        console.error('Fehler bei der Suche:', e);
+    }
+    loadingMore.value = false;
+}, 300);
+
+// Watch for search input changes
+watch(articleSearchFilter, (newValue) => {
+    searchArticlesFromServer(newValue);
 })
 
 // Group selected articles by category and subcategory

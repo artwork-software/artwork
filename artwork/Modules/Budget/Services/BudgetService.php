@@ -252,31 +252,32 @@ class BudgetService
 
         $selectedSumDetail = null;
 
+
         if (request('selectedSubPosition') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(
-                SubPositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
-                    ->where('sub_position_id', request('selectedSubPosition'))
-                    ->where('column_id', request('selectedColumn'))
-                    ->first()
-            )->merge(['class' => SubPositionSumDetail::class]);
+            $sumDetail = SubPositionSumDetail::firstOrCreate([
+                'sub_position_id' => request('selectedSubPosition'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => SubPositionSumDetail::class]);
         }
 
         if (request('selectedMainPosition') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(
-                MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                    ->where('main_position_id', request('selectedMainPosition'))
-                    ->where('column_id', request('selectedColumn'))
-                    ->first()
-            )->merge(['class' => MainPositionDetails::class]);
+            $sumDetail = MainPositionDetails::firstOrCreate([
+                'main_position_id' => request('selectedMainPosition'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => MainPositionDetails::class]);
         }
 
         if (request('selectedBudgetType') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(
-                BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                    ->where('type', request('selectedBudgetType'))
-                    ->where('column_id', request('selectedColumn'))
-                    ->first()
-            )->merge(['class' => BudgetSumDetails::class]);
+            $sumDetail = BudgetSumDetails::firstOrCreate([
+                'type' => request('selectedBudgetType'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => BudgetSumDetails::class]);
         }
 
         //load commented budget items setting for given user

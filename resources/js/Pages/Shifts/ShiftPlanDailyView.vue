@@ -315,13 +315,53 @@ const shiftQualificationsResolved = computed(() => {
     return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
 })
 
+// Crafts loaded asynchronously from API
+const craftsLoaded = ref<any[]>([])
 const craftsResolved = computed(() => {
+    if (craftsLoaded.value?.length) return craftsLoaded.value
     const v: any = props.crafts
     if (Array.isArray(v)) return v
     if (v && Object.keys(v).length) return Object.values(v)
     const fromPage: any = page.props.crafts ?? {}
     return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
 })
+
+// Workers loaded asynchronously from API (craft-first), für spätere Nutzung vorbereitet
+const workersLoaded = ref<{
+    usersForShifts: any[]
+    freelancersForShifts: any[]
+    serviceProvidersForShifts: any[]
+}>({
+    usersForShifts: [],
+    freelancersForShifts: [],
+    serviceProvidersForShifts: [],
+})
+const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts)
+const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
+const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
+
+async function loadShiftPlanWorkers() {
+    const start = Array.isArray(props.dateValue) ? props.dateValue[0] : null
+    const end = Array.isArray(props.dateValue) ? props.dateValue[1] : null
+    if (!start || !end) return
+    try {
+        const params: Record<string, any> = { start_date: start, end_date: end }
+        const craftIds = (user_filtersResolved.value as any)?.craft_ids
+        if (Array.isArray(craftIds) && craftIds.length) params.craft_ids = craftIds
+        const { data } = await axios.get(route("shifts.workers"), { params })
+        workersLoaded.value = {
+            usersForShifts: data.usersForShifts ?? [],
+            freelancersForShifts: data.freelancersForShifts ?? [],
+            serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
+        }
+    } catch {
+        workersLoaded.value = {
+            usersForShifts: [],
+            freelancersForShifts: [],
+            serviceProvidersForShifts: [],
+        }
+    }
+}
 
 const roomsResolved = computed(() => {
     const v: any = props.rooms
@@ -836,6 +876,16 @@ onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
     await initializeDailyShiftPlan()
+
+    // Load crafts asynchronously for shift plan
+    try {
+        const { data } = await axios.get(route("shifts.crafts"))
+        craftsLoaded.value = data.crafts ?? []
+    } catch {
+        craftsLoaded.value = []
+    }
+
+    await loadShiftPlanWorkers()
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any)
     ShiftCalendarListener.init()

@@ -34,6 +34,20 @@ class FreelancerRepository extends BaseRepository
         return $workerService->getWorkersForShiftPlan(Freelancer::class);
     }
 
+    public function getWorkersByIds(
+        array $freelancerIds,
+        Carbon $startDate,
+        Carbon $endDate
+    ): Collection {
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlanByIds(
+            Freelancer::class,
+            $freelancerIds,
+            $startDate,
+            $endDate
+        );
+    }
+
     public function findWorker(int $workerId): Freelancer|null
     {
         return Freelancer::query()->canWorkShifts()->where('id', $workerId)->first();

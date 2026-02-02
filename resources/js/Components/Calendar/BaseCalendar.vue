@@ -66,7 +66,7 @@
                     'group/container relative',                 // Basis
                     'border-dashed',                            // Linienoptik wie zuvor
                     // Dünne Standard-Linie:
-                    'border-t border-gray-300',
+                    'border-t border-gray-400',
 
                     // -> Hervorhebung bei >2 Terminen (nur wenn nicht expand_days):
                     (!settings.expand_days && eventsCount(day, room) > 1)

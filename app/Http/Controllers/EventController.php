@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GetShiftPlanWorkersRequest;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
@@ -98,6 +99,7 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -679,16 +681,6 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->get(),
-
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
@@ -715,26 +707,6 @@ class EventController extends Controller
             ),
             'useFirstNameForSort' => (new ShiftSettings())->use_first_name_for_sort,
             'userShiftPlanShiftQualificationFilters' => $user->getAttribute('show_qualifications'),
-            'freelancersForShifts' => $this->freelancerService->getFreelancersWithPlannedWorkingHours(
-                $startDate,
-                $endDate,
-                FreelancerShiftPlanResource::class,
-                true,
-                $user
-            ),
-            'serviceProvidersForShifts' => $this->serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
-                $startDate,
-                $endDate,
-                ServiceProviderShiftPlanResource::class,
-                $user
-            ),
-            'usersForShifts' => $this->workingHourService->getUsersWithPlannedWorkingHours(
-                $startDate,
-                $endDate,
-                UserShiftPlanResource::class,
-                true,
-                $user
-            ),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'shiftGroupPresets' => ShiftPresetGroup::query()
@@ -3554,7 +3526,9 @@ class EventController extends Controller
 
         // Broadcast deletions for each affected event
         foreach ($events as $event) {
-            broadcast(new RemoveEvent($event, $event->room_id));
+            if ($event->room_id !== null) {
+                broadcast(new RemoveEvent($event, $event->room_id));
+            }
             broadcast(new BulkEventChanged($event, 'deleted'));
         }
     }
@@ -3607,6 +3581,67 @@ class EventController extends Controller
 
         // Merge both collections and remove duplicates by craft id
         return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
+    }
+
+    public function getShiftPlanWorkers(GetShiftPlanWorkersRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $startDate = IlluminateCarbon::parse($validated['start_date']);
+        $endDate = IlluminateCarbon::parse($validated['end_date']);
+        $craftIds = $validated['craft_ids'] ?? [];
+
+        $user = $request->user();
+
+        $usersForShifts = $this->workingHourService->getUsersWithPlannedWorkingHours(
+            $startDate,
+            $endDate,
+            UserShiftPlanResource::class,
+            true,
+            $user,
+            $craftIds
+        );
+
+        $freelancersForShifts = $this->freelancerService->getFreelancersWithPlannedWorkingHours(
+            $startDate,
+            $endDate,
+            FreelancerShiftPlanResource::class,
+            true,
+            $user,
+            $craftIds
+        );
+
+        $serviceProvidersForShifts = $this->serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
+            $startDate,
+            $endDate,
+            ServiceProviderShiftPlanResource::class,
+            $user,
+            $craftIds
+        );
+
+        return new JsonResponse([
+            'usersForShifts' => $usersForShifts,
+            'freelancersForShifts' => $freelancersForShifts,
+            'serviceProvidersForShifts' => $serviceProvidersForShifts,
+        ]);
+    }
+
+    /**
+     * Return crafts for shift plan (loaded asynchronously by frontend).
+     */
+    public function getShiftPlanCrafts(): JsonResponse
+    {
+        $crafts = Craft::with([
+            'users',
+            'freelancers',
+            'serviceProviders',
+            'managingUsers',
+            'managingFreelancers',
+            'managingServiceProviders',
+            'qualifications'
+        ])->get();
+
+        return new JsonResponse(['crafts' => $crafts]);
     }
 
     public function getTimelines(Event $event): JsonResponse

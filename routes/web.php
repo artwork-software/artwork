@@ -739,6 +739,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.plan')
         ->can('can view shift plan');
 
+    Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
+        ->name('shifts.workers')
+        ->can('can view shift plan');
+
+    Route::get('/shifts/crafts', [EventController::class, 'getShiftPlanCrafts'])
+        ->name('shifts.crafts')
+        ->can('can view shift plan');
+
 
     Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
         ->name('multi-edit.calendar.cell.delete');
@@ -1121,6 +1129,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // GET
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
+
+            Route::get('/sum-details', [SumDetailsController::class, 'show'])
+                ->name('project.budget.sum-details.show');
 
             Route::get('/trashed', [BudgetGeneralController::class, 'getTrashed'])
                 ->name('project.budget.trashed');

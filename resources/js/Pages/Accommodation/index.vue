@@ -57,7 +57,7 @@
                     <div>
                         <!-- map with comma -->
                         <span v-for="(roomType, index) in row.room_types" :key="roomType.id">
-                            {{ roomType.name }}<span v-if="index < row.room_types.length - 1">, </span>
+                            {{ isPredefinedRoomType(roomType.name) ? $t(roomType.name) : roomType.name }}<span v-if="index < row.room_types.length - 1">, </span>
                         </span>
                     </div>
                 </template>
@@ -101,6 +101,16 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Link, router} from "@inertiajs/vue3";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
+
+// Predefined room types from TypOfRoom enum - only these should be translated
+const predefinedRoomTypes = [
+    'appartement', 'bungalow', 'duplex_room', 'single_room', 'double_room',
+    'family_room', 'holiday_home', 'junior_suite', 'maisonette', 'multi_bed_room',
+    'penthouse', 'dormitory', 'standard_room', 'studio', 'suite', 'twin_room',
+    'chambre_de_hotel', 'chambre_du_salon'
+];
+
+const isPredefinedRoomType = (name) => predefinedRoomTypes.includes(name);
 
 const props = defineProps({
     accommodations: {

@@ -168,6 +168,35 @@
                         </div>
                     </div>
 
+                    <!-- Project belongs to groups -->
+                    <div v-if="project.groups && project.groups.length > 0" class="mt-1">
+                        <div class="flex items-center gap-2">
+                            <div class="text-[11px] font-semibold text-zinc-500 shrink-0">
+                                {{ $t('Project is part of project group') }}:
+                            </div>
+
+                            <div class="flex-1 overflow-x-auto no-scrollbar">
+                                <div class="flex gap-2 min-w-max">
+                                    <a
+                                        v-for="group in project.groups"
+                                        :key="group.id"
+                                        :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"
+                                        class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/60 px-2 py-1 text-[12px] text-zinc-700 hover:bg-white hover:border-zinc-300 transition"
+                                    >
+                                        <img
+                                            class="size-5 rounded-full object-cover ring-1 ring-white"
+                                            :src="group?.key_visual_path ? `/storage/keyVisual/${group.key_visual_path}` : fallbackLogoSrc"
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                        <span class="max-w-[15rem] truncate">{{ group.name }}</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Middle: Tabs (immer sichtbar) -->
                     <div class="flex items-center">
                         <BaseTabs :tabs="tabsForBaseTabComponent" :use-translation="false" />

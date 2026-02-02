@@ -63,7 +63,7 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="roomType in selectedRoomTypes" :key="roomType.id" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm font-medium text-gray-900">{{ $t(roomType.name) }}</span>
+                                        <span class="text-sm font-medium text-gray-900">{{ isPredefinedRoomType(roomType.name) ? $t(roomType.name) : roomType.name }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="w-32">
@@ -207,6 +207,16 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+
+// Predefined room types from TypOfRoom enum - only these should be translated
+const predefinedRoomTypes = [
+    'appartement', 'bungalow', 'duplex_room', 'single_room', 'double_room',
+    'family_room', 'holiday_home', 'junior_suite', 'maisonette', 'multi_bed_room',
+    'penthouse', 'dormitory', 'standard_room', 'studio', 'suite', 'twin_room',
+    'chambre_de_hotel', 'chambre_du_salon'
+];
+
+const isPredefinedRoomType = (name) => predefinedRoomTypes.includes(name);
 
 const props = defineProps({
     accommodation: {

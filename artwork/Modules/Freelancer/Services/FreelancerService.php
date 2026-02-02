@@ -40,14 +40,21 @@ readonly class FreelancerService
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        ?User $currentUser = null
+        ?User $currentUser = null,
+        ?array $craftIds = null
     ): array {
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
 
         $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
 
-        $freelancers = $this->freelancerRepository->getWorkers();
+        $freelancers = $craftIds !== null
+            ? $this->freelancerRepository->getWorkersByIds(
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['freelancer_ids'],
+                $startDate,
+                $endDate
+            )
+            : $this->freelancerRepository->getWorkers();
         $freelancers = $workerShiftPlanService->loadWorkerRelations($freelancers, $startDate, $endDate);
         $freelancers = $workerShiftPlanService->filterByQualifications($freelancers, $currentUser);
         $qualificationsCache = $workerService->buildQualificationsCache($freelancers);

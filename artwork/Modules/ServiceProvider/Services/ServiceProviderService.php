@@ -37,14 +37,21 @@ readonly class ServiceProviderService
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        ?User $currentUser = null
+        ?User $currentUser = null,
+        ?array $craftIds = null
     ): array {
 
         // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
         $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
         $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
 
-        $serviceProviders = $this->serviceProviderRepository->getWorkers();
+        $serviceProviders = $craftIds !== null
+            ? $this->serviceProviderRepository->getWorkersByIds(
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['service_provider_ids'],
+                $startDate,
+                $endDate
+            )
+            : $this->serviceProviderRepository->getWorkers();
         $serviceProviders = $workerShiftPlanService->loadWorkerRelations($serviceProviders, $startDate, $endDate);
         $serviceProviders = $workerShiftPlanService->filterByQualifications($serviceProviders, $currentUser);
         $qualificationsCache = $workerService->buildQualificationsCache($serviceProviders);

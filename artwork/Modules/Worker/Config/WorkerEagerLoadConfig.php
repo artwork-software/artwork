@@ -2,26 +2,34 @@
 
 namespace Artwork\Modules\Worker\Config;
 
+use Carbon\Carbon;
+
 class WorkerEagerLoadConfig
 {
-    public static function getShiftPlanEagerLoads(): array
+    public static function getShiftPlanEagerLoads(Carbon|null $startDate, Carbon|null $endDate): array
     {
         return [
-            'dayServices',
+            'dayServices' => function ($query) use ($startDate, $endDate){
+                $query->whereBetween('day_serviceables.date', [$startDate, $endDate]);
+            },
             'assignedCrafts',
             'managingCrafts',
-            'vacations',
-            'shifts' => function ($query) {
+            'vacations' => function ($query) use ($startDate, $endDate) {
+                if ($startDate && $endDate) {
+                    $query->whereBetween('vacations.date', [$startDate->toDateString(), $endDate->toDateString()]);
+                }
+            },
+            'shifts' => function ($query) use ($startDate, $endDate) {
                 $query->with([
-                    'event',
-                    'event.room',
-                    'event.event_type',
                     'craft',
                     'shiftGroup',
                     'shiftsQualifications' => function ($q) {
                         $q->select(['id', 'shift_id', 'shift_qualification_id', 'value', 'deleted_at']);
                     },
                 ]);
+                if ($startDate && $endDate) {
+                    $query->where('shifts.start_date', '>=', $startDate)->where('shifts.end_date', '<=', $endDate);
+                }
             },
             'shiftQualifications' => function ($query) {
                 $query->select([
@@ -32,14 +40,6 @@ class WorkerEagerLoadConfig
                     'shift_qualifications.created_at'
                 ]);
             },
-        ];
-    }
-
-    public static function getUserSpecificEagerLoads(): array
-    {
-        return [
-            'workTimeBookings',
-            'workTimes',
         ];
     }
 }

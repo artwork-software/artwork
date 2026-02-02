@@ -628,6 +628,7 @@
                             </template>
 
                             <template #cell="{ row, day }">
+
                                 <!-- Craft row: keine Zellen -->
                                 <div v-if="row.kind === 'craft'" class="h-full w-full"></div>
 

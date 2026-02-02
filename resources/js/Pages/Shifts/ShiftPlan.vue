@@ -237,9 +237,9 @@
                                     :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12 h-full' : 'h-full overflow-y-auto'"
                                 >
                                     <!-- Project Groups in Events -->
-                                    <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content?.[day.fullDay]?.events">
+                                    <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && getRoomDayEvents(room, day.fullDay)?.length">
                                         <template
-                                            v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)"
+                                            v-for="group in getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, day.fullDay))"
                                             :key="group.id"
                                         >
                                             <Link
@@ -254,8 +254,8 @@
                                     </template>
 
                                     <!-- Events -->
-                                    <template v-if="room.content?.[day.fullDay]?.events">
-                                        <div v-for="event in room.content[day.fullDay].events" :key="event.id || event.uuid || event.name" class="mb-1">
+                                    <template v-if="getRoomDayEvents(room, day.fullDay)?.length">
+                                        <div v-for="event in getRoomDayEvents(room, day.fullDay)" :key="event.id || event.uuid || event.name" class="mb-1">
                                             <SingleEventInShiftPlan
                                                 v-if="!checkIfEventHasShiftsToDisplay(event)"
                                                 :event="event"
@@ -267,9 +267,9 @@
 
                                     <!-- Shifts -->
                                     <div class="space-y-0.5">
-                                        <template v-if="room.content?.[day.fullDay]?.shifts?.length">
+                                        <template v-if="getRoomDayShifts(room, day.fullDay)?.length">
                                             <template
-                                                v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)"
+                                                v-for="group in groupShiftsByProject(getRoomDayShifts(room, day.fullDay), day.fullDay)"
                                                 :key="group.projectId ?? `no-project-${day.fullDay}`"
                                             >
                                                 <div
@@ -1189,6 +1189,18 @@ type ShiftGroup = {
     shifts: any[]
 }
 
+/** Resolve events for a room+day from eventsById + content[day].eventIds (Option B deduplication) */
+function getRoomDayEvents(room: any, day: string): any[] {
+    if (!room?.eventsById || !room?.content?.[day]?.eventIds) return []
+    return room.content[day].eventIds.map((id: number) => room.eventsById[id]).filter(Boolean)
+}
+
+/** Resolve shifts for a room+day from shiftsById + content[day].shiftIds (Option B deduplication) */
+function getRoomDayShifts(room: any, day: string): any[] {
+    if (!room?.shiftsById || !room?.content?.[day]?.shiftIds) return []
+    return room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
+}
+
 function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
     const groupsMap = new Map<string, ShiftGroup>()
     const PROJECTLESS_KEY = 'no_project'
@@ -1594,22 +1606,16 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
 
 function closeAddShiftModal(success = false, shift = null) {
     if (success && shift) {
-        // Find and update the shift in newShiftPlanData to ensure immediate UI update
         for (const room of newShiftPlanData.value) {
-            for (const day in room.content) {
-                const dayData = room.content[day];
-
-                // Update in room shifts
-                const shiftIndex = dayData.shifts.findIndex(s => s.id === shift.id);
-                if (shiftIndex !== -1) {
-                    dayData.shifts[shiftIndex] = shift;
-                }
-
-                // Update in events
-                for (const event of dayData.events) {
-                    const eventShiftIndex = event.shifts.findIndex(s => s.id === shift.id);
-                    if (eventShiftIndex !== -1) {
-                        event.shifts[eventShiftIndex] = shift;
+            if (room.shiftsById && room.shiftsById[shift.id]) {
+                room.shiftsById[shift.id] = shift;
+            }
+            if (room.eventsById) {
+                for (const eventId of Object.keys(room.eventsById)) {
+                    const event = room.eventsById[eventId];
+                    if (Array.isArray(event.shifts)) {
+                        const idx = event.shifts.findIndex((s) => s.id === shift.id);
+                        if (idx !== -1) event.shifts[idx] = shift;
                     }
                 }
             }

@@ -51,12 +51,34 @@ class CleanupDuplicateRoomTypes extends Command
                 $duplicatesToDelete = $duplicates->skip(1);
 
                 foreach ($duplicatesToDelete as $duplicate) {
-                    // Alle Zuweisungen auf den zu behaltenden Raumtyp umleiten
-                    DB::table('accommodation_accommodation_room_type')
+                    // Alle Accommodation-IDs holen, die dem Duplikat zugewiesen sind
+                    $accommodationIds = DB::table('accommodation_accommodation_room_type')
                         ->where('accommodation_room_type_id', $duplicate->id)
-                        ->update(['accommodation_room_type_id' => $keepRoomType->id]);
+                        ->pluck('accommodation_id');
 
-                    // Duplikat löschen
+                    foreach ($accommodationIds as $accommodationId) {
+                        // Prüfen ob die Accommodation bereits den Ziel-RoomType hat
+                        $exists = DB::table('accommodation_accommodation_room_type')
+                            ->where('accommodation_id', $accommodationId)
+                            ->where('accommodation_room_type_id', $keepRoomType->id)
+                            ->exists();
+
+                        if ($exists) {
+                            // Duplikat-Zuweisung löschen (Ziel existiert bereits)
+                            DB::table('accommodation_accommodation_room_type')
+                                ->where('accommodation_id', $accommodationId)
+                                ->where('accommodation_room_type_id', $duplicate->id)
+                                ->delete();
+                        } else {
+                            // Auf den beibehaltenen RoomType umleiten
+                            DB::table('accommodation_accommodation_room_type')
+                                ->where('accommodation_id', $accommodationId)
+                                ->where('accommodation_room_type_id', $duplicate->id)
+                                ->update(['accommodation_room_type_id' => $keepRoomType->id]);
+                        }
+                    }
+
+                    // Duplikat-RoomType löschen
                     $duplicate->delete();
                     $this->info("  - Deleted duplicate ID: {$duplicate->id}, reassigned to ID: {$keepRoomType->id}");
                 }

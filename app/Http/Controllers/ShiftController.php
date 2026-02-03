@@ -1402,6 +1402,56 @@ class ShiftController extends Controller
                 return response()->json(['error' => 'Invalid date/time format'], 400);
             }
 
+            // Build lookup maps for batch query to avoid N+1
+            $peopleByType = [
+                'user' => [],
+                'freelancer' => [],
+                'service_provider' => [],
+            ];
+
+            foreach ($people as $person) {
+                if (!isset($person['type']) || !isset($person['id'])) {
+                    continue;
+                }
+                if (isset($peopleByType[$person['type']])) {
+                    $peopleByType[$person['type']][] = $person['id'];
+                }
+            }
+
+            // Batch load all ShiftWorkers for all people in one query
+            $allPivots = ShiftWorker::withoutTrashed()
+                ->with('shift.craft')
+                ->where(function ($query) use ($peopleByType) {
+                    if (!empty($peopleByType['user'])) {
+                        $query->orWhere(function ($q) use ($peopleByType) {
+                            $q->where('employable_type', User::class)
+                              ->whereIn('employable_id', $peopleByType['user']);
+                        });
+                    }
+                    if (!empty($peopleByType['freelancer'])) {
+                        $query->orWhere(function ($q) use ($peopleByType) {
+                            $q->where('employable_type', Freelancer::class)
+                              ->whereIn('employable_id', $peopleByType['freelancer']);
+                        });
+                    }
+                    if (!empty($peopleByType['service_provider'])) {
+                        $query->orWhere(function ($q) use ($peopleByType) {
+                            $q->where('employable_type', ServiceProvider::class)
+                              ->whereIn('employable_id', $peopleByType['service_provider']);
+                        });
+                    }
+                })
+                ->get()
+                ->groupBy(function ($pivot) {
+                    $typeKey = match ($pivot->employable_type) {
+                        User::class => 'user',
+                        Freelancer::class => 'freelancer',
+                        ServiceProvider::class => 'service_provider',
+                        default => 'unknown'
+                    };
+                    return $typeKey . '_' . $pivot->employable_id;
+                });
+
             $results = [];
             foreach ($people as $person) {
                 if (!isset($person['type']) || !isset($person['id'])) {
@@ -1413,23 +1463,7 @@ class ShiftController extends Controller
                 $hasCollision = false;
                 $collisionShifts = [];
 
-
-                $employableType = match ($type) {
-                    'user' => User::class,
-                    'freelancer' => Freelancer::class,
-                    'service_provider' => ServiceProvider::class,
-                    default => null
-                };
-
-                if (!$employableType) {
-                    continue;
-                }
-
-                $pivots = ShiftWorker::where('employable_type', $employableType)
-                    ->where('employable_id', $id)
-                    ->withoutTrashed()
-                    ->with('shift.craft')
-                    ->get();
+                $pivots = $allPivots->get($type . '_' . $id, collect());
 
                 foreach ($pivots as $pivot) {
                     if (!$shift = $pivot->shift) {

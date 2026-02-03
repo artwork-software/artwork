@@ -119,8 +119,12 @@ readonly class EventCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email,profile_photo_path',
-                'shifts:id,event_id,start_date,end_date,craft_id'
-            ]);
+                'shifts:id,event_id,start_date,end_date,craft_id',
+                'eventProperties',
+                'subEvents',
+                'series',
+            ])
+            ->withExists('timelines');
     }
 
     private function getEventQueryWithMinimalData(): Builder

@@ -495,6 +495,11 @@ class User extends Model implements
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
+    public function assignedCrafts(): BelongsToMany
+    {
+        return $this->belongsToMany(Craft::class, 'craft_users');
+    }
+
 
     public function workerShiftPlanFilter(): HasOne
     {

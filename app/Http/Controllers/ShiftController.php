@@ -1333,7 +1333,7 @@ class ShiftController extends Controller
             $shiftsQualificationsService->createShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
         /** @var Shift $shiftSave */
-        broadcast(new CreatedShiftInShiftPlan($shiftSave, $shiftSave->room_id));
+        broadcast(new MultiShiftCreateInShiftPlan(collect([$shiftSave])));
     }
 
     public function deleteCalendarCell(Request $request): void

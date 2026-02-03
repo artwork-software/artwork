@@ -1483,7 +1483,9 @@ onMounted(async () => {
 
     attach()
 
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef)
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
+        onWorkersNeedReload: loadShiftPlanWorkers,
+    })
     ShiftCalendarListener.init()
 
     setupInertiaNavigationGuard()

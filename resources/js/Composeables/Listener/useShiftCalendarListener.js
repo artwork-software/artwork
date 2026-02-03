@@ -199,13 +199,19 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 })
                 .listen('.shift-assign-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
-                    // User-Daten neu laden, damit ShiftPlanCell aktualisiert wird
-                    if (onWorkersNeedReload) onWorkersNeedReload();
+                    // GlobalQualifications und User-Daten neu laden
+                    router.reload({
+                        only: ['globalQualifications', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+                        preserveScroll: true,
+                    });
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
-                    // User-Daten neu laden
-                    if (onWorkersNeedReload) onWorkersNeedReload();
+                    // GlobalQualifications und User-Daten neu laden
+                    router.reload({
+                        only: ['globalQualifications', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
+                        preserveScroll: true,
+                    });
                 })
                 .listen('.shift-updated', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);

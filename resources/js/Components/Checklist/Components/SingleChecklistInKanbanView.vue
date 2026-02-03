@@ -37,20 +37,20 @@
                 </div>
             </div>
             <div class="checklist-card-body">
-                <div v-for="element in orderTasksByDeadline">
-                    <SingleTaskInKanbanView
-                        :can-edit-component="canEditComponent"
-                        :project-manager-ids="projectManagerIds"
-                        :project-can-write-ids="projectCanWriteIds"
-                        :is-admin="isAdmin"
-                        :task="element"
-                        :project="project"
-                        :tab_id="tab_id"
-                        :checklist="checklist"
-                        :is-in-own-task-management="isInOwnTaskManagement"
-                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-                    />
-                </div>
+                <SingleTaskInKanbanView
+                    v-for="element in orderTasksByDeadline"
+                    :key="`task-${element.id}`"
+                    v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+                    :can-edit-component="canEditComponent"
+                    :project-manager-ids="projectManagerIds"
+                    :project-can-write-ids="projectCanWriteIds"
+                    :is-admin="isAdmin"
+                    :task="element"
+                    :project="project"
+                    :tab_id="tab_id"
+                    :checklist="checklist"
+                    :is-in-own-task-management="isInOwnTaskManagement"
+                />
 
                 <!--<draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @change="updateTaskOrder(checklist.tasks)" class="text-sm">
                     <template #item="{element}" :key="element.id">

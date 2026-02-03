@@ -406,7 +406,7 @@ const showCalendarWarning = ref(props.calendarWarningText)
 const daysLocal = shallowRef<any[]>(props.days ?? [])
 
 // shiftPlanCopy
-// WICHTIG: muss tief reaktiv sein, da Websocket-Listener tief im Objekt (room.content[day].events/shifts) mutiert.
+// WICHTIG: muss tief reaktiv sein, da Websocket-Listener eventsById/shiftsById und content[day].eventIds/shiftIds mutiert.
 const shiftPlanCopy = ref<any[]>(
     Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
 )
@@ -486,6 +486,18 @@ function extractDate(raw: any): string | null {
     return null
 }
 
+/** Resolve events for a room+day from eventsById + content[day].eventIds (Option B deduplication) */
+function getRoomDayEvents(room: any, day: string): any[] {
+    if (!room?.eventsById || !room?.content?.[day]?.eventIds) return []
+    return room.content[day].eventIds.map((id: number) => room.eventsById[id]).filter(Boolean)
+}
+
+/** Resolve shifts for a room+day from shiftsById + content[day].shiftIds (Option B deduplication) */
+function getRoomDayShifts(room: any, day: string): any[] {
+    if (!room?.shiftsById || !room?.content?.[day]?.shiftIds) return []
+    return room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
+}
+
 function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEvent[]>> {
     const index = new Map<any, Map<string, AnyEvent[]>>()
 
@@ -504,7 +516,7 @@ function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEven
 
         for (const dayKey of Object.keys(content)) {
             const dayIso = extractDate(dayKey)
-            const dayEvents: AnyEvent[] = content?.[dayKey]?.events || []
+            const dayEvents: AnyEvent[] = getRoomDayEvents(room, dayKey)
 
             if (dayIso) {
                 for (const ev of dayEvents) push(roomId, dayIso, ev)
@@ -540,29 +552,48 @@ const initializeDailyShiftPlan = async () => {
         (Array.isArray(props.shiftPlan) ? props.shiftPlan.length > 0 : Object.keys(props.shiftPlan).length > 0)
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route("shift.plan.all"), {
-            params: {
-                start_date: props.dateValue?.[0],
-                end_date: props.dateValue?.[1],
-                projectId: (props.project as any)?.id ?? page.props.currentProject?.id ?? null,
-                isInProjectView: props.isInProjectView,
-            },
+        const baseParams = {
+            start_date: props.dateValue?.[0],
+            end_date: props.dateValue?.[1],
+            projectId: (props.project as any)?.id ?? page.props.currentProject?.id ?? null,
+            isInProjectView: props.isInProjectView,
+        }
+
+        const { data: metaData } = await axios.get(route("shift.plan.meta"), {
+            params: baseParams,
         })
 
-        daysLocal.value = data.days ?? []
-        shiftPlanCopy.value = Array.isArray(data.shiftPlan) ? data.shiftPlan : Object.values(data.shiftPlan ?? {})
+        const metaRooms = metaData.rooms ?? []
+        daysLocal.value = metaData.days ?? []
 
-        if (data.singleShiftPresets) {
-            singleShiftPresetsLocal.value = Array.isArray(data.singleShiftPresets)
-                ? data.singleShiftPresets
-                : Object.values(data.singleShiftPresets ?? {})
+        shiftPlanCopy.value = metaRooms.map((r: any) => ({
+            roomId: r.roomId,
+            roomName: r.roomName,
+            content: {},
+        }))
+
+        if (metaData.singleShiftPresets) {
+            singleShiftPresetsLocal.value = Array.isArray(metaData.singleShiftPresets)
+                ? metaData.singleShiftPresets
+                : Object.values(metaData.singleShiftPresets ?? {})
+        }
+        if (metaData.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = Array.isArray(metaData.shiftGroupPresets)
+                ? metaData.shiftGroupPresets
+                : Object.values(metaData.shiftGroupPresets ?? {})
         }
 
-        if (data.shiftGroupPresets) {
-            shiftGroupPresetsLocal.value = Array.isArray(data.shiftGroupPresets)
-                ? data.shiftGroupPresets
-                : Object.values(data.shiftGroupPresets ?? {})
-        }
+        const roomPayloads = await Promise.all(
+            metaRooms.map((r: any) =>
+                axios
+                    .get(route("shift.plan.room"), {
+                        params: { ...baseParams, room_id: r.roomId },
+                    })
+                    .then((res) => res.data.room),
+            ),
+        )
+
+        shiftPlanCopy.value = roomPayloads.filter(Boolean)
         return
     }
 
@@ -584,8 +615,7 @@ const craftIdSet = computed<Set<any>>(() => {
 })
 
 function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
-    const dayContent = room?.content?.[dayLabel]
-    const shiftsRaw: any[] = Array.isArray(dayContent?.shifts) ? dayContent.shifts : []
+    const shiftsRaw: any[] = getRoomDayShifts(room, dayLabel)
     const set = craftIdSet.value
     if (set.size === 0) return shiftsRaw
     return shiftsRaw.filter(s => set.has(s?.craft?.id))
@@ -684,22 +714,16 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
 
 const closeAddShiftModal = (success = false, shift = null) => {
     if (success && shift) {
-        // Find and update the shift in shiftPlanCopy to ensure immediate UI update
         for (const room of shiftPlanCopy.value) {
-            for (const day in room.content) {
-                const dayData = room.content[day];
-
-                // Update in room shifts
-                const shiftIndex = dayData.shifts.findIndex((s: any) => s.id === shift.id);
-                if (shiftIndex !== -1) {
-                    dayData.shifts[shiftIndex] = shift;
-                }
-
-                // Update in events
-                for (const event of dayData.events) {
-                    const eventShiftIndex = event.shifts.findIndex((s: any) => s.id === shift.id);
-                    if (eventShiftIndex !== -1) {
-                        event.shifts[eventShiftIndex] = shift;
+            if (room.shiftsById && room.shiftsById[shift.id]) {
+                room.shiftsById[shift.id] = shift;
+            }
+            if (room.eventsById) {
+                for (const eventId of Object.keys(room.eventsById)) {
+                    const event = room.eventsById[eventId];
+                    if (Array.isArray(event.shifts)) {
+                        const idx = event.shifts.findIndex((s: any) => s.id === shift.id);
+                        if (idx !== -1) event.shifts[idx] = shift;
                     }
                 }
             }

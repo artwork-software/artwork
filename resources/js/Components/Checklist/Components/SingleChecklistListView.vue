@@ -36,21 +36,20 @@
             </div>
             <div class="my-4 border-b border-dashed border-gray-200 pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
                 <div class="">
-                    <div class="" v-for="element in orderTasksByDeadline" :key="element.id">
-                        <SingleTaskInListView
-                            :can-edit-component="canEditComponent"
-                            :project-manager-ids="projectManagerIds"
-                            :project-can-write-ids="projectCanWriteIds"
-                            :is-admin="isAdmin"
-                            :task="element"
-                            :project="project ?? checklist?.project"
-                            :tab_id="tab_id"
-                            :checklist="checklist"
-                            :is-in-own-task-management="isInOwnTaskManagement"
-                            v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-
-                        />
-                    </div>
+                    <SingleTaskInListView
+                        v-for="element in orderTasksByDeadline"
+                        :key="`task-${element.id}`"
+                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
+                        :can-edit-component="canEditComponent"
+                        :project-manager-ids="projectManagerIds"
+                        :project-can-write-ids="projectCanWriteIds"
+                        :is-admin="isAdmin"
+                        :task="element"
+                        :project="project ?? checklist?.project"
+                        :tab_id="tab_id"
+                        :checklist="checklist"
+                        :is-in-own-task-management="isInOwnTaskManagement"
+                    />
                 </div>
             </div>
 

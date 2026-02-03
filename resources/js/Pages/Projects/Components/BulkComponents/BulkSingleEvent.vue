@@ -141,14 +141,14 @@
             <div class="col-span-1" :style="getColumnSize(6)">
                 <div class="flex items-center" v-if="timeArray">
                     <BaseInput
-                        v-model="event.start_time"
+                        v-model="draftStartTime"
                         type="time"
                         :id="'start-time-' + index"
                         :label="$t('Start time')"
                         class="print:border-0"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('start-time-' + index)"
-                        @focusout="updateEventInDatabase"
+                        @focusout="onStartTimeFocusOut"
                     />
                 </div>
             </div>
@@ -172,13 +172,13 @@
             <div class="col-span-1" :style="getColumnSize(6)">
                 <div class="flex items-center" v-if="timeArray">
                     <BaseInput
-                        v-model="event.end_time"
+                        v-model="draftEndTime"
                         type="time"
                         :id="'end_time-' + index"
                         :label="$t('End time')"
                         class="print:border-0"
                         :disabled="canEditComponent === false"
-                        @focusout="updateEventInDatabase"
+                        @focusout="onEndTimeFocusOut"
                         @mousedown="storeFocus('end_time-' + index)"
                     />
                 </div>
@@ -342,6 +342,10 @@ const showDeleteEventConfirmModal = ref(false);
 // Local draft state for start date to prevent immediate re-sorting while typing
 const draftStartDate = ref(props.event.day);
 
+// Local draft state for times to prevent immediate re-sorting while typing
+const draftStartTime = ref(props.event.start_time || '');
+const draftEndTime = ref(props.event.end_time || '');
+
 const parseISODateToUTCMidnight = (iso) => {
     if (!iso) return null;
     const s = String(iso).slice(0, 10);
@@ -470,6 +474,8 @@ const updateEventInDatabase = async () => {
 const removeTime = () => {
     props.event.start_time = null;
     props.event.end_time = null;
+    draftStartTime.value = '';
+    draftEndTime.value = '';
     updateEventInDatabase();
 };
 
@@ -490,10 +496,36 @@ const onStartDateFocusOut = () => {
     updateEventInDatabase();
 };
 
+const onStartTimeFocusOut = () => {
+    // Commit draft start time to actual event object only on focusout
+    props.event.start_time = draftStartTime.value;
+    updateEventInDatabase();
+};
+
+const onEndTimeFocusOut = () => {
+    // Commit draft end time to actual event object only on focusout
+    props.event.end_time = draftEndTime.value;
+    updateEventInDatabase();
+};
+
 // Keep draft in sync when event is updated externally (e.g. broadcast refresh)
 watch(() => props.event.day, (v) => {
     if (v && v !== draftStartDate.value) {
         draftStartDate.value = v;
+    }
+});
+
+watch(() => props.event.start_time, (v) => {
+    const newVal = v || '';
+    if (newVal !== draftStartTime.value) {
+        draftStartTime.value = newVal;
+    }
+});
+
+watch(() => props.event.end_time, (v) => {
+    const newVal = v || '';
+    if (newVal !== draftEndTime.value) {
+        draftEndTime.value = newVal;
     }
 });
 

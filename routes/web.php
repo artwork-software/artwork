@@ -15,6 +15,7 @@ use App\Http\Controllers\CellCalculationsController;
 use App\Http\Controllers\CellCommentsController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
+use App\Http\Controllers\LinkListTemplateController;
 use App\Http\Controllers\CollectingSocietyController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompanyTypeController;
@@ -572,6 +573,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )
         ->name('checklist_templates.duplicate');
 
+    //LinkListTemplates
+    Route::get('/link_list_templates', [LinkListTemplateController::class, 'index'])
+        ->name('link_list_templates.index');
+    Route::post('/link_list_templates', [LinkListTemplateController::class, 'store'])
+        ->name('link_list_templates.store');
+    Route::patch('/link_list_templates/{linkListTemplate}', [LinkListTemplateController::class, 'update'])
+        ->name('link_list_templates.update');
+    Route::delete('/link_list_templates/{linkListTemplate}', [LinkListTemplateController::class, 'destroy'])
+        ->name('link_list_templates.destroy');
+
     //TaskTemplates
     Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
     Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
@@ -693,6 +704,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('dashboard.redirect-to-calendar');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
+    Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');
+    Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
@@ -1785,6 +1798,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']
     )->name('calendar.export.pdf.download');
+
+    Route::get('/pdf-export-user-filters', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'index'])
+        ->name('pdf-export-user-filters.index');
+    Route::post('/pdf-export-user-filters', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'store'])
+        ->name('pdf-export-user-filters.store');
+    Route::delete('/pdf-export-user-filters/{pdfExportUserFilter}', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'destroy'])
+        ->name('pdf-export-user-filters.destroy');
 
     Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
 

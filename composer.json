@@ -56,6 +56,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^v1.20.0",
+        "fruitcake/laravel-debugbar": "^4.0",
         "larastan/larastan": "^3.4",
         "laravel/dusk": "^8.2",
         "laravel/sail": "^v1.16.2",

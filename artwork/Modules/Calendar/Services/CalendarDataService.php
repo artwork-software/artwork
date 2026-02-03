@@ -342,8 +342,8 @@ readonly class CalendarDataService
             }
 
             foreach ($room['content'] as $dateKey => $bucket) {
-                $hasEvents = isset($bucket['events']) && !empty($bucket['events']);
-                $hasShifts = isset($bucket['shifts']) && !empty($bucket['shifts']);
+                $hasEvents = isset($bucket['eventIds']) && !empty($bucket['eventIds']);
+                $hasShifts = isset($bucket['shiftIds']) && !empty($bucket['shiftIds']);
 
                 if ($hasEvents || $hasShifts) {
                     $occupiedDays[$dateKey] = true;

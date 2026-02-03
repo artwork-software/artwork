@@ -20,9 +20,27 @@ class WorkerEagerLoadConfig
                 }
             },
             'shifts' => function ($query) use ($startDate, $endDate) {
-                $query->with([
-                    'craft',
-                    'shiftGroup',
+                $query->select([
+                    'shifts.id',
+                    'shifts.start_date',
+                    'shifts.end_date',
+                    'shifts.start',
+                    'shifts.end',
+                    'shifts.description',
+                    'shifts.is_committed',
+                    'shifts.event_start_day',
+                    'shifts.event_end_day',
+                    'shifts.craft_id',
+                    'shifts.room_id',
+                    'shifts.event_id',
+                    'shifts.shift_group_id',
+                ])->with([
+                    'craft:id,name,abbreviation',
+                    'shiftGroup:id,name',
+                    'event:id,name,eventName,room_id,event_type_id',
+                    'event.room:id,name',
+                    'event.event_type:id,abbreviation',
+                    'room:id,name',
                     'shiftsQualifications' => function ($q) {
                         $q->select(['id', 'shift_id', 'shift_qualification_id', 'value', 'deleted_at']);
                     },

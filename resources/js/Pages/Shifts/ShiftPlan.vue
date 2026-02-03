@@ -766,8 +766,8 @@
     />
 
     <AddShiftsByPresetsAndGroupsModal
-        :single-shift-presets="page.props.singleShiftPresets"
-        :preset-groups="shiftGroupPresets"
+        :single-shift-presets="singleShiftPresetsResolved"
+        :preset-groups="shiftGroupPresetsResolved"
         :day="dayForPreset"
         :room="roomForPreset"
         :projects="props.projects"
@@ -972,6 +972,16 @@ const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShi
     assignToShift: [],
     removeFromShift: [],
 })
+
+// Presets from meta API when loading per-room (otherwise from props)
+const singleShiftPresetsLocal = ref<any[]>([])
+const shiftGroupPresetsLocal = ref<any>([])
+const shiftGroupPresetsResolved = computed(() =>
+    (shiftGroupPresetsLocal.value?.length ? shiftGroupPresetsLocal.value : props.shiftGroupPresets) ?? {},
+)
+const singleShiftPresetsResolved = computed(() =>
+    (singleShiftPresetsLocal.value?.length ? singleShiftPresetsLocal.value : (usePage().props as any).singleShiftPresets) ?? [],
+)
 
 // Crafts loaded asynchronously from API
 const craftsLoaded = ref<any[]>([])
@@ -1355,22 +1365,49 @@ async function initializeShiftPlan() {
         )
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route('shift.plan.all'), {
-            params: {
-                start_date: props.dateValue?.[0],
-                end_date: props.dateValue?.[1],
-                projectId: props.projectId,
-                isInProjectView: !!props.projectId, // oder ein echtes UI-Flag
-            },
+        const baseParams = {
+            start_date: props.dateValue?.[0],
+            end_date: props.dateValue?.[1],
+            projectId: props.projectId,
+            isInProjectView: !!props.projectId,
+        }
+
+        const { data: metaData } = await axios.get(route('shift.plan.meta'), {
+            params: baseParams,
         })
 
-        const loadedDays = data.days ?? []
-        const loadedShiftPlan = data.shiftPlan ?? []
+        const loadedDays = metaData.days ?? []
+        const metaRooms = metaData.rooms ?? []
 
         days.value = loadedDays
         daysRef.value = loadedDays
-        rooms.value = normalizeShiftPlan(loadedShiftPlan)
-        newShiftPlanData.value = loadedShiftPlan
+
+        newShiftPlanData.value = metaRooms.map((r: any) => ({
+            roomId: r.roomId,
+            roomName: r.roomName,
+            content: {},
+        }))
+        rooms.value = normalizeShiftPlan(newShiftPlanData.value)
+
+        if (metaData.singleShiftPresets) {
+            singleShiftPresetsLocal.value = metaData.singleShiftPresets
+        }
+        if (metaData.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = metaData.shiftGroupPresets
+        }
+
+        const roomPayloads = await Promise.all(
+            metaRooms.map((r: any) =>
+                axios
+                    .get(route('shift.plan.room'), {
+                        params: { ...baseParams, room_id: r.roomId },
+                    })
+                    .then((res) => res.data.room),
+            ),
+        )
+
+        newShiftPlanData.value = roomPayloads.filter(Boolean)
+        rooms.value = normalizeShiftPlan(newShiftPlanData.value)
     } else {
         const initialDays = props.days ?? []
         const initialShiftPlan = props.shiftPlan ?? []

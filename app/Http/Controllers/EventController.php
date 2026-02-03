@@ -19,6 +19,7 @@ use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\EventPlanningCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
+use Artwork\Modules\Calendar\Services\ShiftPlanService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -129,6 +130,7 @@ class EventController extends Controller
         private readonly FilterService $filterService,
         private readonly AreaService $areaService,
         private readonly ShiftCalendarService $shiftCalendarService,
+        private readonly ShiftPlanService $shiftPlanService,
         private readonly CraftService $craftService,
         private readonly ShiftQualificationService $shiftQualificationService,
         private readonly DayServicesService $dayServicesService,
@@ -634,6 +636,24 @@ class EventController extends Controller
         ]);
     }
 
+    public function shiftPlanMetaAPI(Request $request): JsonResponse
+    {
+        return response()->json($this->shiftPlanService->getMeta($request));
+    }
+
+    public function shiftPlanRoomAPI(Request $request): JsonResponse
+    {
+        if ($request->query('room_id') === null || $request->query('room_id') === '') {
+            return response()->json(['error' => 'room_id required'], 422);
+        }
+
+        $result = $this->shiftPlanService->getRoomContent($request);
+        if ($result === null) {
+            return response()->json(['error' => 'Room not found or not in filter'], 404);
+        }
+
+        return response()->json($result);
+    }
 
     public function viewShiftPlan(?Project $project = null): Response
     {

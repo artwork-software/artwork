@@ -18,10 +18,18 @@ trait HasShiftPlanComments
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->endOfDay();
 
-        $comments = $this->shiftPlanComments()
-            ->select(['id', 'comment', 'date'])
-            ->whereBetween('date', [$start, $end])
-            ->get();
+        // Use already loaded relation if available, otherwise query
+        if ($this->relationLoaded('shiftPlanComments')) {
+            $comments = $this->shiftPlanComments->filter(function ($comment) use ($start, $end) {
+                $date = Carbon::parse($comment->date);
+                return $date->between($start, $end);
+            });
+        } else {
+            $comments = $this->shiftPlanComments()
+                ->select(['id', 'comment', 'date'])
+                ->whereBetween('date', [$start, $end])
+                ->get();
+        }
 
         $groupedComments = [];
 

@@ -27,6 +27,11 @@ readonly class WorkerShiftPlanService
             },
             'dayServices',
             'shiftQualifications',
+            'vacations',
+            'shiftPlanComments' => function ($query) use ($startDate, $endDate): void {
+                $query->select(['id', 'comment', 'date', 'commentable_type', 'commentable_id'])
+                    ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+            },
         ];
 
         // User-spezifische Relations

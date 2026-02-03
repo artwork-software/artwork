@@ -540,29 +540,48 @@ const initializeDailyShiftPlan = async () => {
         (Array.isArray(props.shiftPlan) ? props.shiftPlan.length > 0 : Object.keys(props.shiftPlan).length > 0)
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route("shift.plan.all"), {
-            params: {
-                start_date: props.dateValue?.[0],
-                end_date: props.dateValue?.[1],
-                projectId: (props.project as any)?.id ?? page.props.currentProject?.id ?? null,
-                isInProjectView: props.isInProjectView,
-            },
+        const baseParams = {
+            start_date: props.dateValue?.[0],
+            end_date: props.dateValue?.[1],
+            projectId: (props.project as any)?.id ?? page.props.currentProject?.id ?? null,
+            isInProjectView: props.isInProjectView,
+        }
+
+        const { data: metaData } = await axios.get(route("shift.plan.meta"), {
+            params: baseParams,
         })
 
-        daysLocal.value = data.days ?? []
-        shiftPlanCopy.value = Array.isArray(data.shiftPlan) ? data.shiftPlan : Object.values(data.shiftPlan ?? {})
+        const metaRooms = metaData.rooms ?? []
+        daysLocal.value = metaData.days ?? []
 
-        if (data.singleShiftPresets) {
-            singleShiftPresetsLocal.value = Array.isArray(data.singleShiftPresets)
-                ? data.singleShiftPresets
-                : Object.values(data.singleShiftPresets ?? {})
+        shiftPlanCopy.value = metaRooms.map((r: any) => ({
+            roomId: r.roomId,
+            roomName: r.roomName,
+            content: {},
+        }))
+
+        if (metaData.singleShiftPresets) {
+            singleShiftPresetsLocal.value = Array.isArray(metaData.singleShiftPresets)
+                ? metaData.singleShiftPresets
+                : Object.values(metaData.singleShiftPresets ?? {})
+        }
+        if (metaData.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = Array.isArray(metaData.shiftGroupPresets)
+                ? metaData.shiftGroupPresets
+                : Object.values(metaData.shiftGroupPresets ?? {})
         }
 
-        if (data.shiftGroupPresets) {
-            shiftGroupPresetsLocal.value = Array.isArray(data.shiftGroupPresets)
-                ? data.shiftGroupPresets
-                : Object.values(data.shiftGroupPresets ?? {})
-        }
+        const roomPayloads = await Promise.all(
+            metaRooms.map((r: any) =>
+                axios
+                    .get(route("shift.plan.room"), {
+                        params: { ...baseParams, room_id: r.roomId },
+                    })
+                    .then((res) => res.data.room),
+            ),
+        )
+
+        shiftPlanCopy.value = roomPayloads.filter(Boolean)
         return
     }
 

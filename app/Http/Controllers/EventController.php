@@ -633,6 +633,193 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * Bootstrap for shift plan: days, room list (id+name), presets. No event/shift content.
+     */
+    public function shiftPlanMetaAPI(Request $request): JsonResponse
+    {
+        $projectId = $request->query('projectId');
+        $project = !empty($projectId)
+            ? $this->projectService->findById($projectId)
+            : null;
+
+        $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        if ($userCalendarSettings === null) {
+            $userCalendarSettings = $user->calendar_settings()->create();
+        }
+
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $isInProjectView
+                ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value
+            ],
+            [
+                'start_date' => null,
+                'end_date' => null,
+                'event_type_ids' => null,
+                'room_ids' => null,
+                'area_ids' => null,
+                'room_attribute_ids' => null,
+                'room_category_ids' => null,
+                'event_property_ids' => null,
+                'craft_ids' => null,
+            ]
+        );
+
+        $startDateParam = $request->query('start_date');
+        $endDateParam   = $request->query('end_date');
+
+        if (!empty($startDateParam) && !empty($endDateParam)) {
+            $startDate = Carbon::parse($startDateParam)->startOfDay();
+            $endDate   = Carbon::parse($endDateParam)->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        }
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true,
+            $project
+        );
+
+        $period = $this->calendarDataService->createCalendarPeriodDto(
+            $startDate,
+            $endDate,
+            $user,
+        );
+
+        $roomsPayload = $rooms->map(fn ($r) => [
+            'roomId'   => $r->id,
+            'roomName' => $r->name,
+        ])->values()->all();
+
+        return response()->json([
+            'days' => $period,
+            'rooms' => $roomsPayload,
+            'singleShiftPresets' => $this->singleShiftPresetService->getAllPresets(),
+            'shiftGroupPresets' => ShiftPresetGroup::query()
+                ->select(['id', 'name'])
+                ->withCount('presets')
+                ->with([
+                    'presets' => function ($q) {
+                        $q->select([
+                            'single_shift_presets.id',
+                            'single_shift_presets.name',
+                            'single_shift_presets.start_time',
+                            'single_shift_presets.end_time',
+                            'single_shift_presets.break_duration',
+                            'single_shift_presets.craft_id',
+                            'single_shift_presets.description',
+                        ])->with([
+                            'craft:id,name,abbreviation,color',
+                            'shiftsQualifications:id,name,icon,available',
+                        ]);
+                    }
+                ])
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * Single room content for shift plan. Requires room_id; same query params as shift plan (start_date, end_date, projectId, isInProjectView).
+     */
+    public function shiftPlanRoomAPI(Request $request): JsonResponse
+    {
+        $roomId = $request->query('room_id');
+        if ($roomId === null || $roomId === '') {
+            return response()->json(['error' => 'room_id required'], 422);
+        }
+
+        $roomId = (int) $roomId;
+
+        $projectId = $request->query('projectId');
+        $project = !empty($projectId)
+            ? $this->projectService->findById($projectId)
+            : null;
+
+        $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
+
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        if ($userCalendarSettings === null) {
+            $userCalendarSettings = $user->calendar_settings()->create();
+        }
+
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $isInProjectView
+                ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value
+            ],
+            [
+                'start_date' => null,
+                'end_date' => null,
+                'event_type_ids' => null,
+                'room_ids' => null,
+                'area_ids' => null,
+                'room_attribute_ids' => null,
+                'room_category_ids' => null,
+                'event_property_ids' => null,
+                'craft_ids' => null,
+            ]
+        );
+
+        $startDateParam = $request->query('start_date');
+        $endDateParam   = $request->query('end_date');
+
+        if (!empty($startDateParam) && !empty($endDateParam)) {
+            $startDate = Carbon::parse($startDateParam)->startOfDay();
+            $endDate   = Carbon::parse($endDateParam)->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+        }
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true,
+            $project
+        );
+
+        $rooms = $rooms->where('id', $roomId)->values();
+
+        if ($rooms->isEmpty()) {
+            return response()->json(['error' => 'Room not found or not in filter'], 404);
+        }
+
+        $this->shiftCalendarService->filterRoomsEventsAndShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            (bool) $project || (bool) $user->getAttribute('daily_view'),
+            $project
+        );
+
+        $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate,
+        );
+
+        $roomPayload = $calendarData->rooms[0] ?? null;
+
+        return response()->json(['room' => $roomPayload]);
+    }
 
     public function viewShiftPlan(?Project $project = null): Response
     {

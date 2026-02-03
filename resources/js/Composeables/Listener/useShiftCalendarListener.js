@@ -1,6 +1,4 @@
-import { router } from '@inertiajs/vue3';
-
-export function useShiftCalendarListener(newShiftPlanData) {
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload } = {}) {
 
     function sortArrayByStartDateTimes(array) {
         // Create a cache for parsed dates to avoid repeated parsing
@@ -59,11 +57,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
             }
         }
 
-        if (updated) {
-            router.reload({
-                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-                preserveScroll: true,
-            });
+        if (updated && onWorkersNeedReload) {
+            onWorkersNeedReload();
         }
     }
 
@@ -183,10 +178,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
         }
 
         // Only reload if something was actually removed
-        if (updated) {
-            router.reload({
-                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-            });
+        if (updated && onWorkersNeedReload) {
+            onWorkersNeedReload();
         }
     }
 
@@ -206,9 +199,13 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 })
                 .listen('.shift-assign-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
+                    // User-Daten neu laden, damit ShiftPlanCell aktualisiert wird
+                    if (onWorkersNeedReload) onWorkersNeedReload();
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
+                    // User-Daten neu laden
+                    if (onWorkersNeedReload) onWorkersNeedReload();
                 })
                 .listen('.shift-updated', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
@@ -250,10 +247,8 @@ export function useShiftCalendarListener(newShiftPlanData) {
                 const updated = addShiftsToRoomAndDay(data.shifts);
 
                 // If shifts were added, we might want to reload certain data
-                if (updated) {
-                    router.reload({
-                        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-                    });
+                if (updated && onWorkersNeedReload) {
+                    onWorkersNeedReload();
                 }
             });
     }

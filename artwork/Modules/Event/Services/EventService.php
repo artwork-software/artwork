@@ -673,7 +673,17 @@ readonly class EventService
         }
 
         $shifts = Shift::query()
-            ->with(['room', 'users', 'users.dayServices', 'freelancer', 'serviceProvider', 'shiftsQualifications'])
+            ->with([
+                'room',
+                'users',
+                'users.dayServices',
+                'users.globalQualifications',
+                'freelancer',
+                'freelancer.globalQualifications',
+                'serviceProvider',
+                'serviceProvider.globalQualifications',
+                'shiftsQualifications'
+            ])
             ->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                 $builder->whereKey($modelId);
             })

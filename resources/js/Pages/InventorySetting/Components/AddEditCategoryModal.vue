@@ -385,8 +385,8 @@
                                                                         </div>
                                                                     </template>
                                                                     <template v-slot:menu>
-                                                                        <div v-if="filteredPropertiesByCategoryAndSubCategory.length > 0">
-                                                                            <div v-for="property in filteredPropertiesByCategoryAndSubCategory">
+                                                                        <div v-if="getFilteredPropertiesForSubCategory(subCategory).length > 0">
+                                                                            <div v-for="property in getFilteredPropertiesForSubCategory(subCategory)">
                                                                                 <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
                                                                                     <div class="xsDark">
                                                                                         {{ property.name }}
@@ -504,13 +504,13 @@ const filteredPropertiesByCategory = computed(() => {
     });
 });
 
-const filteredPropertiesByCategoryAndSubCategory = computed(() => {
-    // if property is already in category and subCategory.properties, do not show it
+const getFilteredPropertiesForSubCategory = (currentSubCategory) => {
+    // Nur prüfen ob bereits in der Hauptkategorie ODER in dieser spezifischen Unterkategorie
     return props.properties.filter(property => {
         return !categoryForm.properties.some(p => p.id === property.id) &&
-            !subCategories.value.some(subCategory => subCategory.properties.some(p => p.id === property.id));
+            !currentSubCategory.properties.some(p => p.id === property.id);
     });
-})
+}
 
 const addEmptySubCategory = () => {
     subCategories.value.push({

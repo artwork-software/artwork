@@ -51,8 +51,8 @@ class InventoryArticleService
         $query = $this->buildArticleQuery($category, $subCategory, $search);
 
         $query->with([
-            'category',
-            'subCategory',
+            'category.properties',
+            'subCategory.properties',
             'properties',
             'images' => function ($query): void {
                 $query->orderBy('is_main_image', 'desc')->orderBy('id');

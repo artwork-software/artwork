@@ -93,7 +93,7 @@ class EventDTO extends Data
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
-            hasTimelines: $event->hasTimelines()
+            hasTimelines: $event->timelines_exists ?? $event->hasTimelines()
         );
     }
 }

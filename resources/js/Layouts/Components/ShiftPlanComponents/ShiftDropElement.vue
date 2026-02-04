@@ -223,22 +223,9 @@ function countAssignedForGlobalQualificationBase(globalQualificationId: number):
     return groups.reduce((acc, list: any[]) => acc + list.filter((p: any) => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0)
 }
 
-// Optimistische Deltas, damit Zähler nach Zuweisung sofort steigen
-const globalQualificationDeltas = ref<Record<number, number>>({})
-
+// Zählung direkt aus dem Shift-Objekt (ohne Delta-System)
 function countAssignedForGlobalQualification(globalQualificationId: number): number {
-    const base = countAssignedForGlobalQualificationBase(globalQualificationId)
-    const delta = globalQualificationDeltas.value[globalQualificationId] ?? 0
-    return base + delta
-}
-
-function adjustDeltaForUser(person: any, direction = 1) {
-    if (!person) return
-    const demanded = new Set((demandedGlobalQualifications.value || []).map((g: any) => g.id))
-    getPersonGlobalQualificationIds(person).forEach((id) => {
-        if (!demanded.has(id)) return
-        globalQualificationDeltas.value[id] = (globalQualificationDeltas.value[id] ?? 0) + direction
-    })
+    return countAssignedForGlobalQualificationBase(globalQualificationId)
 }
 const computedMaxWorkerCount = computed(() => {
     let maxWorkerCount = 0
@@ -638,7 +625,6 @@ function assignUser(user: any, shiftQualificationId: number) {
             craft_abbreviation: user.craft_abbreviation
         }
     ).then(() => {
-        adjustDeltaForUser(user, +1)
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
     }).catch(() => {
         emit('dropFeedback',

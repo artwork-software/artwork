@@ -1199,9 +1199,9 @@ const buildProp = (src, existing = null) => {
 }
 
 const mergePropsById = (currentProps = [], incoming = []) => {
-    const byId = new Map(currentProps.map(p => [p.id, {...p}]))
-    for (const np of incoming) byId.set(np.id, buildProp(np, byId.get(np.id)))
-    return [...byId.values()]
+    const currentMap = new Map(currentProps.map(p => [p.id, {...p}]))
+    // NUR incoming Properties zurückgeben, aber mit Werten aus currentProps mergen
+    return incoming.map(np => buildProp(np, currentMap.get(np.id)))
 }
 
 const applyPropsToForm = (newProps) => {
@@ -1464,8 +1464,18 @@ const updateSelectedSubCategory = (sc) => {
     })
 }
 
-watch(selectedCategory, (val) => {
-    let propsArr = getCurrentProps().filter(p => !p.categoryProperty)
+watch(selectedCategory, (val, oldVal) => {
+    let propsArr = getCurrentProps()
+
+    // Alte Kategorie-Properties explizit entfernen (basierend auf alter Kategorie)
+    if (oldVal && Array.isArray(oldVal.properties)) {
+        const oldCatPropIds = new Set(oldVal.properties.map(p => p.id))
+        propsArr = propsArr.filter(p => !oldCatPropIds.has(p.id))
+    }
+
+    // Zusätzlich alle mit categoryProperty-Flag entfernen (Fallback)
+    propsArr = propsArr.filter(p => !p.categoryProperty)
+
     if (!val || !Array.isArray(val.properties)) {
         articleForm.inventory_category_id = null;
         applyPropsToForm(propsArr);
@@ -1488,16 +1498,35 @@ watch(selectedCategory, (val) => {
     syncAcrossValuesToDetailedArticles()
 })
 
-watch(selectedSubCategory, (val) => {
+watch(selectedSubCategory, (val, oldVal) => {
     let propsArr = getCurrentProps()
+
+    // Alte Subkategorie-Properties explizit entfernen (basierend auf alter Subkategorie)
+    if (oldVal && Array.isArray(oldVal.properties)) {
+        const oldSubCatPropIds = new Set(oldVal.properties.map(p => p.id))
+        propsArr = propsArr.filter(p => !oldSubCatPropIds.has(p.id))
+    }
+
+    // Wenn keine Subkategorie mehr: NUR Kategorie-Properties behalten
     if (!val) {
         articleForm.inventory_sub_category_id = null
-        if (selectedCategory.value) {
-            const catIds = new Set((selectedCategory.value.properties || []).map(p => p.id))
+        if (selectedCategory.value && Array.isArray(selectedCategory.value.properties)) {
+            const catIds = new Set(selectedCategory.value.properties.map(p => p.id))
+            // Behalte nur: manuelle Properties (!categoryProperty) ODER echte Kategorie-Properties
             propsArr = propsArr.filter(p => !p.categoryProperty || catIds.has(p.id))
-        } else propsArr = propsArr.filter(p => !p.categoryProperty)
+        } else {
+            propsArr = propsArr.filter(p => !p.categoryProperty)
+        }
         applyPropsToForm(propsArr);
         return
+    }
+
+    // Alte Subkategorie-Properties entfernen, aber Kategorie-Properties behalten (für Wechsel zu neuer Subkategorie)
+    if (selectedCategory.value) {
+        const catIds = new Set((selectedCategory.value.properties || []).map(p => p.id))
+        propsArr = propsArr.filter(p => !p.categoryProperty || catIds.has(p.id))
+    } else {
+        propsArr = propsArr.filter(p => !p.categoryProperty)
     }
 
     if (!Array.isArray(val.properties)) return
@@ -1621,9 +1650,12 @@ onMounted(() => {
                     status: defaultStatus()
                 }]
             } else {
-                articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
-                    name: da.name, description: da.description, quantity: da.quantity,
-                    properties: da.properties.map(p => ({
+                articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => {
+                    const daProps = da.properties || []
+                    const daPropIds = new Set(daProps.map(p => p.id))
+
+                    // Existing detailed article properties with their values
+                    const existingDaProps = daProps.map(p => ({
                         id: p.id,
                         name: p.name,
                         tooltip_text: p.tooltip_text,
@@ -1634,26 +1666,44 @@ onMounted(() => {
                         individual_value: p.individual_value ?? false,
                         categoryProperty: getIsDeletable(p.id),
                         select_values: p.select_values
-                    })),
-                    status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
-                }))
+                    }))
+
+                    // Add new category properties that are not yet in this detailed article
+                    const newCatProps = categoryProps.filter(cp => !daPropIds.has(cp.id))
+
+                    return {
+                        name: da.name,
+                        description: da.description,
+                        quantity: da.quantity,
+                        properties: [...existingDaProps, ...newCatProps],
+                        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+                    }
+                })
             }
             articleForm.properties = []
         } else {
-            articleForm.properties = props.article.properties?.length
-                ? props.article.properties.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    tooltip_text: p.tooltip_text,
-                    type: p.type,
-                    value: p.value ?? p.pivot?.value ?? '',
-                    is_required: p.is_required,
-                    across_articles: p.across_articles ?? false,
-                    individual_value: p.individual_value ?? false,
-                    categoryProperty: getIsDeletable(p.id),
-                    select_values: p.select_values
-                }))
-                : [...categoryProps]
+            // Merge article properties with category/subcategory properties
+            const articleProps = props.article.properties || []
+            const articlePropIds = new Set(articleProps.map(p => p.id))
+
+            // Existing article properties with their values
+            const existingProps = articleProps.map(p => ({
+                id: p.id,
+                name: p.name,
+                tooltip_text: p.tooltip_text,
+                type: p.type,
+                value: p.value ?? p.pivot?.value ?? '',
+                is_required: p.is_required,
+                across_articles: p.across_articles ?? false,
+                individual_value: p.individual_value ?? false,
+                categoryProperty: getIsDeletable(p.id),
+                select_values: p.select_values
+            }))
+
+            // Add new category properties that are not yet in the article
+            const newCategoryProps = categoryProps.filter(cp => !articlePropIds.has(cp.id))
+
+            articleForm.properties = [...existingProps, ...newCategoryProps]
             articleForm.detailed_article_quantities = []
         }
 

@@ -353,23 +353,17 @@ const groupedArticles = computed(() => {
         }
 
         if (!grouped[categoryId].subcategories[subCategoryId]) {
+            // Load properties directly from subcategory or category definition
+            const definedProperties = article.sub_category?.properties || article.category?.properties || []
             grouped[categoryId].subcategories[subCategoryId] = {
                 id: subCategoryId,
                 name: subCategoryName,
                 articles: [],
-                properties: []
+                properties: [...definedProperties]
             }
         }
 
         grouped[categoryId].subcategories[subCategoryId].articles.push(article)
-
-        // Collect unique properties for this subcategory
-        article.properties.forEach((property) => {
-            const subCat = grouped[categoryId].subcategories[subCategoryId]
-            if (!subCat.properties.find((p) => p.id === property.id)) {
-                subCat.properties.push(property)
-            }
-        })
     })
 
     return grouped

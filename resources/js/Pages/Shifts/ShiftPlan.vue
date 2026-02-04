@@ -98,7 +98,7 @@
                     <template #moreButtons>
                         <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Daily view')" size="md"
                                            @change="changeDailyViewMode" icon="IconCalendarWeek"/>
-                        <SwitchIconTooltip v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
+                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>

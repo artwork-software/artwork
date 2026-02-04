@@ -165,8 +165,10 @@
                             <DividerChip
                                 v-if="group.label && usePage().props.auth.user.bulk_sort_id !== 0"
                                 class="mb-6"
+                                :class="usePage().props.auth.user.bulk_sort_id === 3 ? 'cursor-pointer' : ''"
                                 variant="brand"
                                 :label="group.label"
+                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(group.key, $event) : null"
                             />
 
                             <!-- Events in this group -->
@@ -984,6 +986,19 @@ const useProjectTimePeriodAndRedirect = () => {
     );
 };
 
+const navigateToCalendarForDay = (groupKey, event) => {
+    // groupKey format: "day_YYYY-MM-DD"
+    const dateStr = groupKey.replace('day_', '');
+    const url = route('calendar.redirect-by-day', { day: dateStr });
+
+    // Open in new tab if cmd+click (Mac) or ctrl+click (Windows/Linux)
+    if (event?.metaKey || event?.ctrlKey) {
+        window.open(url, '_blank');
+    } else {
+        window.location.href = url;
+    }
+};
+
 // Lifecycle
 async function fetchBulkEditData() {
     const projectId = props.project?.id;
@@ -1039,7 +1054,6 @@ async function fetchBulkEditData() {
             usePage().props.filterOptions = data.filterOptions;
         }
     } catch (error) {
-        console.error(error);
         loadBulkDataError.value = 'Unable to load bulk edit data.';
     } finally {
         isLoadingBulkData.value = false;

@@ -168,7 +168,7 @@
                                 :class="usePage().props.auth.user.bulk_sort_id === 3 ? 'cursor-pointer' : ''"
                                 variant="brand"
                                 :label="group.label"
-                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(group.key) : null"
+                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(group.key, $event) : null"
                             />
 
                             <!-- Events in this group -->
@@ -986,11 +986,17 @@ const useProjectTimePeriodAndRedirect = () => {
     );
 };
 
-const navigateToCalendarForDay = (groupKey) => {
+const navigateToCalendarForDay = (groupKey, event) => {
     // groupKey format: "day_YYYY-MM-DD"
     const dateStr = groupKey.replace('day_', '');
-    // Use backend route which updates filter and redirects to calendar
-    window.location.href = route('calendar.redirect-by-day', { day: dateStr });
+    const url = route('calendar.redirect-by-day', { day: dateStr });
+
+    // Open in new tab if cmd+click (Mac) or ctrl+click (Windows/Linux)
+    if (event?.metaKey || event?.ctrlKey) {
+        window.open(url, '_blank');
+    } else {
+        window.location.href = url;
+    }
 };
 
 // Lifecycle

@@ -311,11 +311,15 @@ class ProjectController extends Controller
      */
     private function mapProjectsToComponents($projects, $components, $componentData)
     {
-        return $projects->map(function ($project) use ($components, $componentData) {
+        // Cache these values outside the loop to avoid N+1 queries
+        $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
+        $projectStates = ProjectState::all()->keyBy('id');
+
+        return $projects->map(function ($project) use ($components, $componentData, $firstTabId, $projectStates) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
+            $projectData->firstTabId = $firstTabId;
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -335,7 +339,7 @@ class ProjectController extends Controller
                         $projectData->artist_name = $project->artists;
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                        $projectData->state = ProjectState::find($project->state);
+                        $projectData->state = $projectStates->get($project->state);
                         break;
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
                         $projectData->group = $project->groups;

@@ -26,8 +26,21 @@ class ProjectTabBulkEditService
 
         // Events-Query mit Filtern
         $eventsQuery = $project->events()
-            ->with(['event_type', 'room', 'eventStatus'])
-            ->without(['series', 'subEvents', 'creator'])
+            ->with([
+                'event_type',
+                'room',
+                'eventStatus',
+                'creator',
+                'project.status',
+                'project.managerUsers',
+                'subEvents',
+                'series',
+                'shifts.craft',
+                'shifts.users',
+                'shifts.freelancer',
+                'shifts.serviceProvider',
+                'shifts.shiftsQualifications',
+            ])
             ->orderBy('start_time', 'asc')
             // Eventtypen filtern (nur diese zulassen, wenn gesetzt)
             ->when(!empty($userCalendarFilter?->event_type_ids), function ($q) use ($userCalendarFilter) {
@@ -73,12 +86,12 @@ class ProjectTabBulkEditService
             default => $eventsUnsorted,
         };
 
-        // IDs der zuletzt bearbeiteten Events bestimmen
-        $lastUpdatedEvent = $project->events()->orderBy('updated_at', 'DESC')->first();
+        // IDs der zuletzt bearbeiteten Events bestimmen (reuse loaded events to avoid N+1)
+        $lastUpdatedEvent = $eventsUnsorted->sortByDesc('updated_at')->first();
         $lastEditEventIds = [];
         if ($lastUpdatedEvent) {
-            $lastEditEventIds = $project->events()
-                ->where('updated_at', $lastUpdatedEvent->updated_at)
+            $lastEditEventIds = $eventsUnsorted
+                ->where('updated_at', $lastUpdatedEvent['updated_at'])
                 ->pluck('id')
                 ->toArray();
         }

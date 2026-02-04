@@ -164,6 +164,7 @@
             border-left-width: 3px;
             background-clip: padding-box;
             overflow: hidden;
+            z-index: 3;
         }
 
         .event-inner { padding: 2px 3px; overflow: hidden; }
@@ -377,8 +378,8 @@
         $topPx = $topPxBase;
         $bottomPx = $bottomPxBase;
 
-        // Mindesthöhe: genug für Titel + Zeit
-        $minHeightPx = 18;
+        // Mindesthöhe: genug für 3 Zeilen (Titel + Projekt + Zeit)
+        $minHeightPx = 28;
 
         $heightPx = $bottomPx - $topPx;
 
@@ -453,7 +454,12 @@
         $g = hexdec(substr($hexColor, 3, 2));
         $b = hexdec(substr($hexColor, 5, 2));
 
-        $bgRGBA     = "rgba($r,$g,$b,0.14)";
+        // Hintergrund opak (nicht transparent), damit Linien nicht durchscheinen
+        // Mische die Event-Farbe mit Weiß für einen hellen, aber undurchsichtigen Hintergrund
+        $bgR = (int)round($r * 0.14 + 255 * 0.86);
+        $bgG = (int)round($g * 0.14 + 255 * 0.86);
+        $bgB = (int)round($b * 0.14 + 255 * 0.86);
+        $bgRGBA     = "rgb($bgR,$bgG,$bgB)";
         $borderRGBA = "rgba($r,$g,$b,0.95)";
         $leftRGBA   = "rgba($r,$g,$b,1)";
 

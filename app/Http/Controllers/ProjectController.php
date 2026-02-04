@@ -2718,9 +2718,7 @@ class ProjectController extends Controller
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'currentUserCrafts' => $userService->getAuthUserCrafts()->merge(
-                $craftService->getAssignableByAllCrafts()
-            ),
+            'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
             'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
             'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
@@ -2791,6 +2789,26 @@ class ProjectController extends Controller
             ->first();
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
+    }
+
+    /**
+     * Get crafts that the current user is allowed to assign in shift planning.
+     */
+    private function getCurrentUserCraftsForShiftTab(User $user, CraftService $craftService): \Illuminate\Database\Eloquent\Collection
+    {
+        // If user is admin, return all crafts with qualifications
+        if ($user->hasRole('artwork admin')) {
+            return $craftService->getAll(['qualifications']);
+        }
+
+        // Get crafts that are assignable by all (not restricted)
+        $assignableByAllCrafts = $craftService->getAssignableByAllCrafts();
+
+        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
+        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
+
+        // Merge both collections and remove duplicates by craft id
+        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 
     public function addTimeLineRow(Event $event): void

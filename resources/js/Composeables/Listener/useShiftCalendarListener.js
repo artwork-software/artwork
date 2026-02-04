@@ -19,7 +19,9 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
     }
 
     function findRoomById(roomId) {
-        return newShiftPlanData.value.find((shiftPlanObject) => shiftPlanObject.roomId === roomId);
+        return newShiftPlanData.value.find((shiftPlanObject) =>
+            (shiftPlanObject.roomId ?? shiftPlanObject.id) === roomId
+        );
     }
 
     function updateOrAddShift(shiftsAtDay, data) {
@@ -63,6 +65,20 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
     }
 
     function addEventToRoomAndDay(eventData) {
+        // Check if this is BaseCalendar structure (content[day].events array) or ShiftPlan structure (eventsById)
+        const isBaseCalendarStructure = newShiftPlanData.value.some(room => {
+            if (!room.content) return false;
+            for (const day in room.content) {
+                if (Array.isArray(room.content[day]?.events)) return true;
+            }
+            return false;
+        });
+
+        if (isBaseCalendarStructure) {
+            return updateEventInBaseCalendar(eventData);
+        }
+
+        // ShiftPlan structure handling
         for (const room of newShiftPlanData.value) {
             if (room.eventsById && room.eventsById[eventData.id]) {
                 delete room.eventsById[eventData.id];
@@ -89,6 +105,56 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 room.content[day].eventIds.push(eventData.id);
             }
         }
+        return true;
+    }
+
+    function updateEventInBaseCalendar(eventData) {
+        const roomId = eventData.roomId ?? eventData.room_id;
+
+        // First, remove the event from all rooms/days (in case room changed)
+        for (const room of newShiftPlanData.value) {
+            if (!room.content) continue;
+            for (const day in room.content) {
+                const events = room.content[day]?.events;
+                if (Array.isArray(events)) {
+                    const idx = events.findIndex(e => e.id === eventData.id);
+                    if (idx !== -1) {
+                        events.splice(idx, 1);
+                    }
+                }
+            }
+        }
+
+        // Find the target room
+        const room = newShiftPlanData.value.find(r => (r.roomId ?? r.id) === roomId);
+        if (!room || !room.content) return false;
+
+        // Add/update the event in the correct days
+        const daysOfEvent = eventData.daysOfEvent || [];
+        for (const day of daysOfEvent) {
+            // Day key might be in German format (dd.mm.yyyy) - need to match
+            let dayKey = day;
+            // Try to find matching day key in content
+            if (!room.content[dayKey]) {
+                // Try converting ISO to German format
+                const parts = day.split('-');
+                if (parts.length === 3) {
+                    dayKey = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                }
+            }
+
+            if (!room.content[dayKey]) continue;
+            if (!room.content[dayKey].events) room.content[dayKey].events = [];
+
+            // Check if event already exists, update it; otherwise add it
+            const existingIdx = room.content[dayKey].events.findIndex(e => e.id === eventData.id);
+            if (existingIdx !== -1) {
+                room.content[dayKey].events[existingIdx] = eventData;
+            } else {
+                room.content[dayKey].events.push(eventData);
+            }
+        }
+
         return true;
     }
 
@@ -231,16 +297,27 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 .listen('.event.created', (data) => {
                     addEventToRoomAndDay(data.event);
                 })
+                .listen('.event.updated', (data) => {
+                    addEventToRoomAndDay(data.event);
+                })
                 .listen('.event.removed', (data) => {
                     for (const currentRoom of newShiftPlanData.value) {
+                        // ShiftPlan structure
                         if (currentRoom.eventsById && currentRoom.eventsById[data.event.id]) {
                             delete currentRoom.eventsById[data.event.id];
-                            for (const day in currentRoom.content || {}) {
-                                const ids = currentRoom.content[day].eventIds;
-                                if (Array.isArray(ids)) {
-                                    const i = ids.indexOf(data.event.id);
-                                    if (i !== -1) ids.splice(i, 1);
-                                }
+                        }
+                        for (const day in currentRoom.content || {}) {
+                            // ShiftPlan structure: eventIds
+                            const ids = currentRoom.content[day].eventIds;
+                            if (Array.isArray(ids)) {
+                                const i = ids.indexOf(data.event.id);
+                                if (i !== -1) ids.splice(i, 1);
+                            }
+                            // BaseCalendar structure: events array
+                            const events = currentRoom.content[day].events;
+                            if (Array.isArray(events)) {
+                                const idx = events.findIndex(e => e.id === data.event.id);
+                                if (idx !== -1) events.splice(idx, 1);
                             }
                         }
                     }

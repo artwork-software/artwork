@@ -702,6 +702,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/dashboard/redirect/calendar/{event}', [EventController::class, 'redirectToCalendar'])
         ->name('dashboard.redirect-to-calendar');
+    Route::get('/calendar/redirect/day/{day}', [EventController::class, 'redirectToCalendarByDay'])
+        ->name('calendar.redirect-by-day');
     Route::get('/response/all/events', [EventController::class, 'allEventsAPI'])->name('events.all');
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
     Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');

@@ -203,11 +203,11 @@
                         <div>
                             <dl
                                 class="divide-y divide-gray-100"
-                                v-if="article.properties?.length > 0"
+                                v-if="mergedProperties.length > 0"
                             >
                                 <div
                                     class="pr-2 py-4 flex items-center justify-between"
-                                    v-for="property in article.properties"
+                                    v-for="property in mergedProperties"
                                     :key="property.id"
                                 >
                                     <dt class="text-sm font-bold text-primary font-lexend">
@@ -338,11 +338,11 @@
                                     </dl>
                                     <dl
                                         class="divide-y divide-gray-100"
-                                        v-if="detailedArticle.properties.length > 0"
+                                        v-if="getMergedDetailedProperties(detailedArticle).length > 0"
                                     >
                                         <div
                                             class="py-4 flex items-center justify-between"
-                                            v-for="property in detailedArticle.properties"
+                                            v-for="property in getMergedDetailedProperties(detailedArticle)"
                                             :key="property.id"
                                         >
                                             <dt class="text-sm font-bold text-primary font-lexend">
@@ -426,6 +426,37 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'openArticleEditModal'])
+
+// Merged properties for simple articles (includes new category/subcategory properties)
+const mergedProperties = computed(() => {
+    const articleProps = props.article.properties || []
+    const categoryProps = props.article.category?.properties || []
+    const subCategoryProps = props.article.sub_category?.properties || []
+
+    const allCatProps = [...categoryProps, ...subCategoryProps]
+    const articlePropIds = new Set(articleProps.map(p => p.id))
+
+    // Add new category properties (with empty value)
+    const newProps = allCatProps.filter(cp => !articlePropIds.has(cp.id))
+        .map(p => ({ ...p, pivot: { value: '' } }))
+
+    return [...articleProps, ...newProps]
+})
+
+// Merged properties for detailed articles
+const getMergedDetailedProperties = (detailedArticle) => {
+    const daProps = detailedArticle.properties || []
+    const categoryProps = props.article.category?.properties || []
+    const subCategoryProps = props.article.sub_category?.properties || []
+
+    const allCatProps = [...categoryProps, ...subCategoryProps]
+    const daPropIds = new Set(daProps.map(p => p.id))
+
+    const newProps = allCatProps.filter(cp => !daPropIds.has(cp.id))
+        .map(p => ({ ...p, pivot: { value: '' } }))
+
+    return [...daProps, ...newProps]
+}
 
 const showConfirmDelete = ref(false)
 const activeIndex = ref(0)

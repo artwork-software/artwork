@@ -495,9 +495,9 @@ class User extends Model implements
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
-    public function assignedCrafts(): BelongsToMany
+    public function assignedCrafts(): MorphToMany
     {
-        return $this->belongsToMany(Craft::class, 'craft_users');
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
 

@@ -177,6 +177,22 @@ class EventController extends Controller
             'highlightEventId' => $event->id
         ]);
     }
+
+    public function redirectToCalendarByDay(string $day): \Illuminate\Http\RedirectResponse
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $startDate = Carbon::parse($day);
+        $endDate = $startDate->copy()->addDays(7);
+
+        $user->userFilters()->calendarFilter()->first()->update([
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+        ]);
+
+        return redirect()->route('events');
+    }
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
         ProjectService $projectService

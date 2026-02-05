@@ -8,7 +8,7 @@
                 :description="totalRequests ? `${totalRequests} ${$t('Requests')}` : ''"
             >
                 <template #actions>
-                    <button class="ui-button-add" @click="showCreateModal = true">
+                    <button v-if="can('can create document requests')" class="ui-button-add" @click="showCreateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create document request') }}
                     </button>
@@ -161,8 +161,8 @@
                     <template #row-actions="{ row }">
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
-                            <BaseMenuItem :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
-                            <BaseMenuItem :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests')" :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests')" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
                         </BaseMenu>
                     </template>
                 </BaseTable>
@@ -301,6 +301,7 @@ import DocumentRequestCreateModal from './Components/DocumentRequestCreateModal.
 import DocumentRequestEditModal from './Components/DocumentRequestEditModal.vue'
 import DocumentRequestDetailModal from './Components/DocumentRequestDetailModal.vue'
 import ContractUploadModal from '@/Layouts/Components/ContractUploadModal.vue'
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     createdRequests: {

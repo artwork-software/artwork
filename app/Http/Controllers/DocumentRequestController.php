@@ -10,6 +10,7 @@ use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -105,7 +106,7 @@ class DocumentRequestController extends Controller
         // Send notification to requested user
         $this->sendDocumentRequestNotification($documentRequest);
 
-        return Redirect::route('document-requests.index');
+        return Redirect::back();
     }
 
     /**
@@ -142,6 +143,11 @@ class DocumentRequestController extends Controller
             $this->sendDocumentRequestCompletedNotification($documentRequest);
         }
 
+        // Broadcast update for project contracts/documents component
+        if ($documentRequest->project_id) {
+            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+        }
+
         return Redirect::back();
     }
 
@@ -171,6 +177,11 @@ class DocumentRequestController extends Controller
 
         // Notify requester that the document has been uploaded
         $this->sendDocumentRequestCompletedNotification($documentRequest);
+
+        // Broadcast update for project contracts/documents component
+        if ($documentRequest->project_id) {
+            broadcast(new UpdateProjectContractsDocuments($documentRequest->project_id));
+        }
 
         return Redirect::back();
     }

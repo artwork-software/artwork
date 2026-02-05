@@ -161,9 +161,10 @@
                             {{ $t('KSK-liable')}}
                         </label>
                     </div>
-                    <div class="grid grid-cols-1 gap-4 mb-4" v-if="form.ksk_liable">
+                    <div class="grid grid-cols-1 gap-4 mb-4" >
                         <BaseInput
                             type="number"
+                            v-if="form.ksk_liable"
                             step="0.01"
                             id="kskAmount"
                             v-model="form.ksk_amount"
@@ -186,10 +187,11 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="grid grid-cols-1 gap-4 mb-4" v-if="form.foreign_tax">
+                    <div class="grid grid-cols-1 gap-4 mb-4" >
                         <BaseInput
                             type="number"
                             step="0.01"
+                            v-if="form.foreign_tax"
                             id="foreignTaxAmount"
                             v-model="form.foreign_tax_amount"
                             :label="$t('Foreign tax amount')"
@@ -271,6 +273,10 @@ export default {
         companyTypes: {
             type: Array,
             default: () => []
+        },
+        preselectedProject: {
+            type: Object,
+            default: null
         }
     },
     components: {
@@ -291,7 +297,7 @@ export default {
         return {
             selectedUser: null,
             user_query: '',
-            selectedProject: null,
+            selectedProject: this.preselectedProject,
             selectedLegalForm: null,
             selectedContractType: null,
             form: useForm({
@@ -349,6 +355,8 @@ export default {
             this.form.project_id = this.selectedProject?.id;
             this.form.company_type_id = this.selectedLegalForm?.id;
             this.form.contract_type_id = this.selectedContractType?.id;
+            // If preselectedProject prop is set, we're in a project tab context - stay there after submit
+            this.form.redirect_back = !!this.preselectedProject;
 
             this.form.post(this.route('document-requests.store'), {
                 preserveScroll: true,

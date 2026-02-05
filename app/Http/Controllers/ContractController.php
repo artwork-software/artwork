@@ -14,6 +14,7 @@ use Artwork\Modules\Contract\Services\ContractService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Illuminate\Http\RedirectResponse;
@@ -97,7 +98,7 @@ class ContractController extends Controller
             $this->contractService->storeTasksAndComments($contract, $request->tasks, $request->comment);
         }
 
-        return Redirect::route('contracts.index');
+        return Redirect::back();
     }
 
     public function download(Contract $contract): StreamedResponse
@@ -119,6 +120,11 @@ class ContractController extends Controller
 
         if (isset($request->tasks) || $request->comment) {
             $this->contractService->storeTasksAndComments($contract, $request->tasks, $request->comment);
+        }
+
+        // Broadcast update for project contracts/documents component
+        if ($contract->project_id) {
+            broadcast(new UpdateProjectContractsDocuments($contract->project_id));
         }
 
         return Redirect::back();

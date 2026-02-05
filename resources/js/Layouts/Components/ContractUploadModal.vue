@@ -151,7 +151,7 @@
                                 type="number"
                                 id="amount"
                                 v-model="contractForm.amount"
-                                :label="$t('Amount (fee, co-production contribution, etc.)')"
+                                :label="$t('Amount')"
                             />
                             <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="currencySelect">
                                 <ListboxButton class="menu-button">
@@ -201,6 +201,8 @@
                                 v-model="contractForm.ksk_amount"
                                 :label="$t('KSK Amount')"
                             />
+                        </div>
+                        <div class="mb-4">
                             <BaseTextarea
                                 :label="$t('KSK Reason')"
                                 id="kskReason"
@@ -244,6 +246,8 @@
                                 v-model="contractForm.foreign_tax_amount"
                                 :label="$t('Foreign tax amount')"
                             />
+                        </div>
+                        <div class="mb-4">
                             <BaseTextarea
                                 :label="$t('Foreign tax reason')"
                                 id="foreignTaxReason"
@@ -659,6 +663,8 @@ export default {
             })
             this.contractForm.accessibleDepartments = departmentIds;
             this.contractForm.tasks = this.tasks
+            // If projectId prop is set or documentRequest is set, we're in a project tab context - stay there after submit
+            this.contractForm.redirect_back = !!(this.projectId || this.documentRequest);
             this.contractForm.post(this.route('contracts.store', projectIdToUse), {
                 forceFormData: true,
                 preserveScroll: true,

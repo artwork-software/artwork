@@ -129,8 +129,9 @@
                             {{ $t('KSK-liable')}}
                         </label>
                     </div>
-                    <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="form.ksk_liable">
+                    <div class="grid grid-cols-1 gap-4 my-2">
                         <BaseInput
+                            v-if="form.ksk_liable"
                             type="number"
                             step="0.01"
                             id="kskAmountEdit"
@@ -154,8 +155,9 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="ml-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="form.foreign_tax">
+                    <div class="grid grid-cols-1 gap-4 my-2">
                         <BaseInput
+                            v-if="form.foreign_tax"
                             type="number"
                             step="0.01"
                             id="foreignTaxAmountEdit"

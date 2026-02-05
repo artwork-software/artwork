@@ -101,7 +101,7 @@
                 :description="totalRequests ? `${totalRequests} ${$t('Requests')}` : ''"
             >
                 <template #actions>
-                    <button class="ui-button-add" @click="showCreateRequestModal = true">
+                    <button v-if="can('can create document requests')" class="ui-button-add" @click="showCreateRequestModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create document request') }}
                     </button>
@@ -413,6 +413,7 @@ import ContractDeleteModal from '@/Layouts/Components/ContractDeleteModal.vue'
 import DocumentRequestCreateModal from '@/Pages/DocumentRequests/Components/DocumentRequestCreateModal.vue'
 import DocumentRequestEditModal from '@/Pages/DocumentRequests/Components/DocumentRequestEditModal.vue'
 import DocumentRequestDetailModal from '@/Pages/DocumentRequests/Components/DocumentRequestDetailModal.vue'
+import {can} from "laravel-permission-to-vuejs";
 
 const props = defineProps({
     project: {

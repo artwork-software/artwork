@@ -96,11 +96,11 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_BUDGET_STATE_CHANGED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
-            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
             self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => "BUDGET",
 
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
             self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
             self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "DOCUMENTS",
 
@@ -216,6 +216,9 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
+
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "New document request",
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Document request completed",
         };
     }
 
@@ -261,6 +264,9 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "Find out if there is a new shift commit workflow request.",
+
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "Find out if someone has created a document request for you.",
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Find out if a document request you created has been completed.",
         };
     }
 

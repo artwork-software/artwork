@@ -2636,6 +2636,23 @@ class ProjectController extends Controller
             $tabSpecificData = array_merge($tabSpecificData, $this->getBudgetTabInertiaData());
         }
 
+        // Load data for PROJECT_CONTRACTS_DOCUMENTS component
+        $hasContractsDocumentsComponent = in_array(
+            ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value,
+            $componentTypes,
+            true
+        );
+
+        if ($hasContractsDocumentsComponent) {
+            $tabSpecificData = array_merge($tabSpecificData, $this->getContractsDocumentsTabInertiaData(
+                $project,
+                $authUser,
+                $contractTypeService,
+                $companyTypeService,
+                $currencyService
+            ));
+        }
+
         return inertia('Projects/Tab/TabContent', array_merge($baseData, $tabSpecificData));
     }
 
@@ -2749,6 +2766,136 @@ class ProjectController extends Controller
         // BudgetTab-spezifische Daten können hier hinzugefügt werden
         // Aktuell werden diese bei Bedarf geladen
         return [];
+    }
+
+    /**
+     * Liefert Contracts & Documents Tab-spezifische Daten als Array für Inertia.
+     *
+     * @return array<string,mixed>
+     */
+    private function getContractsDocumentsTabInertiaData(
+        Project $project,
+        ?User $authUser,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService
+    ): array {
+        $userId = $authUser?->id;
+
+        // Load contracts for this project with necessary relations
+        $contracts = $project->contracts()
+            ->with(['accessingUsers', 'accessingDepartments', 'contract_type', 'company_type', 'currency'])
+            ->get()
+            ->map(function ($contract) use ($project) {
+                return [
+                    'id' => $contract->id,
+                    'name' => $contract->name,
+                    'basename' => $contract->basename,
+                    'partner' => $contract->contract_partner,
+                    'accessibleUsers' => $contract->accessingUsers->map(fn($user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
+                    ]),
+                    'accessibleDepartments' => $contract->accessingDepartments->map(fn($dept) => [
+                        'id' => $dept->id,
+                        'name' => $dept->name,
+                        'svg_name' => $dept->svg_name,
+                    ]),
+                    'project' => [
+                        'id' => $project->id,
+                        'name' => $project->name,
+                    ],
+                    'contract_type' => $contract->contract_type,
+                    'company_type' => $contract->company_type,
+                    'currency' => $contract->currency,
+                    'ksk_liable' => $contract->ksk_liable,
+                    'ksk_amount' => $contract->ksk_amount,
+                    'ksk_reason' => $contract->ksk_reason,
+                    'resident_abroad' => $contract->resident_abroad,
+                    'has_foreign_tax' => $contract->foreign_tax,
+                    'foreign_tax_amount' => $contract->foreign_tax_amount,
+                    'foreign_tax_reason' => $contract->foreign_tax_reason,
+                    'reverse_charge_amount' => $contract->reverse_charge_amount,
+                    'has_power_of_attorney' => $contract->has_power_of_attorney,
+                    'is_freed' => $contract->is_freed,
+                    'deadline_date' => $contract->deadline_date,
+                    'amount' => $contract->amount,
+                    'description' => $contract->description,
+                    'currency_id' => $contract->currency_id,
+                ];
+            });
+
+        // Load document requests for this project (created by user or assigned to user)
+        $createdRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requester_id', $userId)
+            ->where('project_id', $project->id)
+            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->get()
+            ->map(fn($request) => $this->mapDocumentRequest($request));
+
+        $assignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requested_id', $userId)
+            ->where('project_id', $project->id)
+            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->get()
+            ->map(fn($request) => $this->mapDocumentRequest($request));
+
+        return [
+            'projectContracts' => $contracts,
+            'projectCreatedRequests' => $createdRequests,
+            'projectAssignedRequests' => $assignedRequests,
+            'contractTypes' => $contractTypeService->getAll(),
+            'companyTypes' => $companyTypeService->getAll(),
+            'currencies' => $currencyService->getAll(),
+        ];
+    }
+
+    /**
+     * Map a document request to an array for frontend.
+     *
+     * @return array<string,mixed>
+     */
+    private function mapDocumentRequest(\Artwork\Modules\DocumentRequest\Models\DocumentRequest $request): array
+    {
+        return [
+            'id' => $request->id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
+            'deadline_date' => $request->deadline_date?->format('Y-m-d'),
+            'contract_partner' => $request->contract_partner,
+            'contract_value' => $request->contract_value,
+            'ksk_liable' => $request->ksk_liable,
+            'ksk_amount' => $request->ksk_amount,
+            'ksk_reason' => $request->ksk_reason,
+            'foreign_tax' => $request->foreign_tax,
+            'foreign_tax_amount' => $request->foreign_tax_amount,
+            'foreign_tax_reason' => $request->foreign_tax_reason,
+            'reverse_charge_amount' => $request->reverse_charge_amount,
+            'comment' => $request->comment,
+            'contract_type' => $request->contractType,
+            'company_type' => $request->companyType,
+            'requester' => $request->requester ? [
+                'id' => $request->requester->id,
+                'first_name' => $request->requester->first_name,
+                'last_name' => $request->requester->last_name,
+                'profile_photo_url' => $request->requester->profile_photo_url,
+            ] : null,
+            'requested' => $request->requested ? [
+                'id' => $request->requested->id,
+                'first_name' => $request->requested->first_name,
+                'last_name' => $request->requested->last_name,
+                'profile_photo_url' => $request->requested->profile_photo_url,
+            ] : null,
+            'project' => $request->project ? [
+                'id' => $request->project->id,
+                'name' => $request->project->name,
+            ] : null,
+            'contract' => $request->contract ? [
+                'id' => $request->contract->id,
+                'name' => $request->contract->name,
+            ] : null,
+        ];
     }
 
     /**

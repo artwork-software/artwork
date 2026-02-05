@@ -202,6 +202,8 @@
                                 v-model="kskAmount"
                                 :label="$t('KSK Amount')"
                             />
+                        </div>
+                        <div class="mb-4">
                             <BaseTextarea
                                 :label="$t('KSK Reason')"
                                 id="kskReasonEdit"
@@ -245,6 +247,8 @@
                                 v-model="foreignTaxAmount"
                                 :label="$t('Foreign tax amount')"
                             />
+                        </div>
+                        <div class="mb-4">
                             <BaseTextarea
                                 :label="$t('Foreign tax reason')"
                                 id="foreignTaxReasonEdit"

@@ -15,7 +15,9 @@
                     <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user?.profile_photo_url" alt=""/>
                 </div>
                 <div class="col-span-3">
-                    <div class="font-black font-lexend text-white text-lg">
+                    <div class="font-black font-lexend text-white text-lg"
+                         :class="{'underline cursor-pointer': canViewUserInfo}"
+                         @click="goToUserInfo">
                         {{ user.first_name }} {{ user.last_name }}
                     </div>
                     <div class="-mt-1">
@@ -39,7 +41,9 @@
                     <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user?.profile_photo_url" alt=""/>
                 </div>
                 <div class="col-span-3">
-                    <div class="font-black font-lexend text-white text-lg">
+                    <div class="font-black font-lexend text-white text-lg"
+                         :class="{'underline cursor-pointer': canViewUserInfo}"
+                         @click="goToUserInfo">
                         {{ user.first_name }} {{ user.last_name }}
                     </div>
                     <div class="-mt-1">
@@ -64,18 +68,34 @@
 
 
 <script>
-import Permissions from "@/Mixins/Permissions.vue";
+import {router, usePage} from "@inertiajs/vue3";
+import {usePermission} from "@/Composeables/Permission.js";
+import {can} from "laravel-permission-to-vuejs";
 
 export default {
-    mixins: [Permissions],
     name: "NewUserToolTip",
     props: ['user', 'id', 'height', 'width','type'],
+    setup() {
+        const { hasAdminRole } = usePermission(usePage().props);
+    },
+    computed: {
+        canViewUserInfo() {
+            return hasAdminRole() ||
+                can('can manage workers') ||
+                can('can view private user info');
+        }
+    },
     methods: {
         showTooltip(id) {
             document.getElementById("tooltip" + id).classList.remove("hidden");
         },
         hideTooltip(id) {
             document.getElementById("tooltip" + id).classList.add("hidden");
+        },
+        goToUserInfo() {
+            if (this.canViewUserInfo && this.user?.id) {
+                router.visit(route('user.edit.info', {user: this.user.id}));
+            }
         },
     },
 }

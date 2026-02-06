@@ -17,7 +17,7 @@
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
                             <div class="">
                                 <div class="font-black font-lexend  text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600" :class="isWhite ? 'text-gray-900' : 'text-white'">
-                                    {{ user.first_name }} {{ user.last_name }}
+                                    <span :class="{'underline cursor-pointer': canViewUserInfo}" @click="goToUserInfo">{{ user.first_name }} {{ user.last_name }}</span>
                                     <div class="text-gray-300 text-xs my-1">
                                         {{ user.pronouns }}
                                     </div>
@@ -62,10 +62,16 @@ import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import {router, usePage} from "@inertiajs/vue3";
+import {usePermission} from "@/Composeables/Permission.js";
 
 export default {
     name: "UserPopoverTooltip",
     mixins: [IconLib, Permissions],
+    setup() {
+        const { can, hasAdminRole } = usePermission(usePage().props);
+        return { can, hasAdminRole };
+    },
     components: {
         PropertyIcon,
         Popover,
@@ -111,12 +117,24 @@ export default {
             },
         }
     },
+    computed: {
+        canViewUserInfo() {
+            return this.hasAdminRole() ||
+                this.can('can manage workers') ||
+                this.can('can view private user info');
+        }
+    },
     methods: {
         calculatePopoverPosition(event) {
             const {top, left, height, width} = event.target.getBoundingClientRect();
 
             this.popoverStyle.top = `${top + window.scrollY + height}px`;
             this.popoverStyle.left = `${left + width / 2}px`;
+        },
+        goToUserInfo() {
+            if (this.canViewUserInfo && this.user?.id) {
+                router.visit(route('user.edit.info', {user: this.user.id}));
+            }
         },
     },
 }

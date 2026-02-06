@@ -40,7 +40,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="w-full sticky top-31.5 z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray">
+        <div class="w-full sticky z-40 flex flex-row-reverse gap-x-4 py-4 items-center bg-light-background-gray" :style="{ top: 'calc(var(--project-header-height, 126px))' }">
             <BaseUIButton v-if="this.$can('edit budget templates') || !table.is_template" @click="openAddColumnModal()"
                 label="New column"
                 use-translation
@@ -84,7 +84,7 @@
         </div>
 
 
-        <div class="w-full flex sticky top-16 bg-[#CECDD8] z-30">
+        <div class="w-full flex sticky bg-[#CECDD8] z-30" :style="{ top: 'calc(var(--project-header-height, 126px) + 64px)' }">
             <table class="w-full flex ml-8 py-5">
                 <thead>
                 <tr class="relative">

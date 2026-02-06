@@ -969,7 +969,12 @@ const topBarContainerClass = computed(() => {
     return "card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
 })
 
-const topBarStyle = computed(() => ({ top: `${props.stickyOffsetTopPx}px` }))
+const topBarStyle = computed(() => {
+    if (props.isInProjectView) {
+        return { top: 'var(--project-header-height, 130px)' }
+    }
+    return { top: `${props.stickyOffsetTopPx}px` }
+})
 
 const topBarEl = ref<HTMLElement | null>(null)
 const topBarHeightPx = ref<number>(72)
@@ -1028,9 +1033,12 @@ onUnmounted(() => {
 
 
 
-const dayHeaderStyle = computed(() => ({
-    top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`,
-}))
+const dayHeaderStyle = computed(() => {
+    if (props.isInProjectView) {
+        return { top: `calc(var(--project-header-height, 130px) + ${topBarHeightPx.value}px)` }
+    }
+    return { top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px` }
+})
 </script>
 
 <style scoped>

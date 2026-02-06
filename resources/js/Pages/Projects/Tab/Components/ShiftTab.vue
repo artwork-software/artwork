@@ -5,7 +5,7 @@
             v-if="ready"
             :project="projectLite"
             :date-value="dateRange"
-            :sticky-offset-top-px="130"
+            :sticky-offset-top-px="stickyOffset"
             :is-in-project-view="true"
         />
         <div v-else class="text-secondary text-sm">{{ $t('Loading...') }}</div>
@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import ShiftPlanDailyView from '@/Pages/Shifts/ShiftPlanDailyView.vue'
 import dayjs from 'dayjs'
@@ -52,8 +52,30 @@ const dateRange = computed(() => {
 
 // Verwende die gespeicherte Einstellung des Benutzers
 const ready = ref(false)
+
+// Dynamische Sticky-Offset basierend auf der ProjectHeader-Höhe
+const stickyOffset = ref(130)
+
+const updateStickyOffset = () => {
+    // Die CSS-Variable wird im ProjectHeaderComponent auf einem inneren div gesetzt,
+    // daher suchen wir das Element, das die Variable definiert
+    const el = document.querySelector('[style*="--project-header-height"]')
+    if (el) {
+        const headerHeight = getComputedStyle(el).getPropertyValue('--project-header-height')
+        if (headerHeight) {
+            stickyOffset.value = parseInt(headerHeight, 10) || 130
+        }
+    }
+}
+
 onMounted(() => {
     ready.value = true
+    updateStickyOffset()
+    window.addEventListener('resize', updateStickyOffset)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateStickyOffset)
 })
 </script>
 

@@ -189,17 +189,17 @@
             </div>
             <div class="mt-[4.5rem] w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
-                    <div v-for="room in newCalendarData" :key="room.roomId">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
                         <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
-                            <SingleRoomInHeader :room="room" is-light   />
+                            <SingleRoomInHeader :room="room" is-light />
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-0.5">
-                    <div v-for="room in newCalendarData">
-                        <div v-for="events in room.content" :key="events" class="flex flex-col">
-                            <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
-                                <div class="py-0.5" :key="event.id" @click="onEventClick(event, $event)">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }">
+                        <template v-for="day in days" :key="day.fullDay">
+                            <div v-for="event in eventsInCell(day, room)" :key="event.id" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
+                                <div class="py-0.5" @click="onEventClick(event, $event)">
                                     <AsyncSingleEventInCalendar
                                         :event="event"
                                         :multi-edit="multiEdit"
@@ -221,7 +221,7 @@
                                     />
                                 </div>
                             </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
             </div>

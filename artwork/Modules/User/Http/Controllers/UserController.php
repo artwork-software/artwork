@@ -686,6 +686,8 @@ class UserController extends Controller
         CraftService $craftService
     ): Response|ResponseFactory {
 
+        $user->load(['assignedCrafts.qualifications', 'shiftQualifications']);
+
         $globalQualifications = $this->qualificationService->getAll()->map(function ($qualification) use ($user) {
             return [
                 'id' => $qualification->id,

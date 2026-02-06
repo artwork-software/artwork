@@ -185,3 +185,116 @@ ddev artisan make:test TestName         # for feature tests
 ```
 
 This project requires DDEV for proper development environment setup and testing. All tests depend on database connectivity through DDEV's containerized environment.
+
+---
+
+## Internationalization (i18n)
+
+### Translation Files
+- **Location**: `lang/de.json` and `lang/en.json`
+- **Key Format**: Always use the **English text** as the key (flat structure)
+- **Rule**: Always update **both files** simultaneously
+
+```json
+// lang/en.json
+{
+  "Save changes": "Save changes"
+}
+
+// lang/de.json
+{
+  "Save changes": "Änderungen speichern"
+}
+```
+
+### Frontend Usage
+```vue
+<template>
+  <span>{{ $t('Save changes') }}</span>
+</template>
+```
+
+---
+
+## Permissions
+
+### Seeder
+All new permissions must be added to `RolesAndPermissionsSeeder.php`
+
+### Naming Convention
+Format: `"can <action> <resource>"`
+
+Examples:
+- `"can view contracts"`
+- `"can edit contracts"`
+- `"can create contracts"`
+- `"can delete contracts"`
+
+### Frontend Permission Check
+```javascript
+import { usePermission } from "@/Composeables/Permission.js";
+
+const { can, hasAdminRole } = usePermission();
+
+// ALWAYS include hasAdminRole() - admins can do everything!
+if (can('can edit document requests') || hasAdminRole()) {
+  // Action allowed
+}
+```
+
+---
+
+## Creating New Project Components
+
+### Checklist
+1. **Add Enum Value**: `artwork/Modules/Project/Enum/ProjectTabComponentEnum.php`
+2. **Create Vue Component**: `resources/js/Pages/Projects/Components/YourComponent.vue`
+3. **Register in TabContent.vue**: Import and add to component mapping
+4. **Add to Command**: Update `artwork:add-new-components` command
+5. **Add Translations**: Human-readable display text in `de.json` and `en.json` (NOT the enum name!)
+6. **Add Icon**: Use `PropertyIcon.vue` with tabler.io icon
+
+---
+
+## UI Component Snippets
+
+### Icons (tabler.io)
+```vue
+<PropertyIcon icon="IconName" />
+```
+Reference: https://tabler.io/icons
+
+### Modal (always use as base)
+```vue
+<ArtworkBaseModal @closed="closeModal">
+  <template #header>
+    {{ $t('Modal Title') }}
+  </template>
+  <!-- Modal content -->
+</ArtworkBaseModal>
+```
+
+### Input
+```vue
+<BaseInput v-model="value" :label="$t('Label')" />
+```
+
+### Tooltip
+```vue
+<ToolTipComponent>
+  <template #content>
+    {{ $t('Tooltip text') }}
+  </template>
+</ToolTipComponent>
+```
+
+### User Tooltip
+```vue
+<NewUserToolTip :user="user" :id="uniqueId" height="10" width="10" />
+```
+
+---
+
+## Testing Policy
+
+**IMPORTANT**: Do NOT run tests automatically. The test suite is currently outdated and not maintained. Only run tests when explicitly requested by the user.

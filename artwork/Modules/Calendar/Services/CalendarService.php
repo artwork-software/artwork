@@ -152,13 +152,14 @@ class CalendarService
     }
 
     /**
-     * @return array<int, MinimalCalendarEventResource>
+     * Returns events grouped by room, then by date - same structure as BaseCalendar.
+     * Structure: [ { roomId, roomName, "dd.mm.YYYY": { events: [...] }, ... }, ... ]
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function getEventsAtAGlance($startDate, $endDate, ?Project $project = null): array
     {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $actualEvents = $eventsForRoom = [];
-
 
         $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
             ->with(
@@ -179,27 +180,60 @@ class CalendarService
                     'timelines'
                 ]
             )->orderBy('start_time');
+
+        // Group events by room and date
+        $eventsByRoomAndDate = [];
+        $roomsData = [];
+
         foreach ($eventsQuery->get()->all() as $event) {
+            $roomId = $event->room_id;
+            $room = $event->room;
+
+            if (!$roomId || !$room) {
+                continue;
+            }
+
+            // Initialize room data if not exists
+            if (!isset($roomsData[$roomId])) {
+                $roomsData[$roomId] = [
+                    'roomId' => $roomId,
+                    'roomName' => $room->getAttribute('name'),
+                ];
+                // Initialize all dates in period with empty events
+                foreach ($calendarPeriod as $date) {
+                    $dateKey = $date->format('d.m.Y');
+                    $roomsData[$roomId][$dateKey] = ['events' => []];
+                }
+            }
+
+            // Determine which dates this event spans
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                 $calendarPeriod->start :
                 $event->start_time;
-            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ?
+                $calendarPeriod->end :
+                $event->end_time;
             $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
             foreach ($eventPeriod as $date) {
                 $dateKey = $date->format('d.m.Y');
-                $actualEvents[$dateKey][] = $event;
+                if (!isset($eventsByRoomAndDate[$roomId][$dateKey])) {
+                    $eventsByRoomAndDate[$roomId][$dateKey] = [];
+                }
+                $eventsByRoomAndDate[$roomId][$dateKey][] = $event;
             }
         }
 
-        foreach ($actualEvents as $key => $value) {
-            $eventsForRoom[$key] = [
-                //immediately resolve resource to free used memory
-                'events' => MinimalCalendarEventResource::collection($value)->resolve()
-            ];
+        // Convert events to resources
+        foreach ($eventsByRoomAndDate as $roomId => $dates) {
+            foreach ($dates as $dateKey => $events) {
+                $roomsData[$roomId][$dateKey] = [
+                    'events' => MinimalCalendarEventResource::collection($events)->resolve()
+                ];
+            }
         }
 
-        return $eventsForRoom;
+        return array_values($roomsData);
     }
 
     public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
@@ -222,7 +256,7 @@ class CalendarService
         ?Project $project
     ): Builder|HasMany {
         $user = Auth::user();
-        $calendarFilter = $user->userFilters()->shiftCalendar()->first();
+        $calendarFilter = $user->userFilters()->calendarFilter()->first();
 
         $isLoud = $calendarFilter->is_loud ?? false;
         $isNotLoud = $calendarFilter->is_not_loud ?? false;

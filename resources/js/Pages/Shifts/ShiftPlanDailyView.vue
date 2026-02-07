@@ -151,9 +151,21 @@
                         v-for="room in (roomsForDayMap.get(day.fullDay) || [])"
                         :key="room.roomId ?? room.id ?? room.roomName"
                     >
-                        <div class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed">
-                            <div class="text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4">
-                                {{ room.roomName }}
+                        <div
+                            :ref="el => setRoomContainerRef(roomDayKey(day.fullDay, room), el)"
+                            class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed"
+                        >
+                            <div class="relative group text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4 overflow-visible">
+                                <span
+                                    :ref="el => setRoomNameRef(roomDayKey(day.fullDay, room), el)"
+                                    class="inline-block flex-none truncate"
+                                    :style="{ maxWidth: getRoomNameMaxWidth(roomDayKey(day.fullDay, room)) }"
+                                >{{ room.roomName }}</span>
+                                <div v-if="isRoomNameTruncated(roomDayKey(day.fullDay, room))" class="absolute hidden group-hover:block top-40 ml-22 z-9999 rotate-90">
+                                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                        {{ room.roomName }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-stretch px-4 py-2">
@@ -467,6 +479,84 @@ const showEventComponent = ref(false)
 const isPlanning = ref(false)
 const roomCollisions = ref<any[]>([])
 const dailyViewMode = ref<boolean>(page.props.auth.user.daily_view ?? false)
+
+// Key pro Tag+Raum (wichtig!)
+const roomDayKey = (dayLabel: string, room: any) => {
+    const roomId = room?.roomId ?? room?.id
+    const dayIso = extractDate(dayLabel) ?? String(dayLabel)
+    return `${dayIso}__${roomId}`
+}
+
+// Refs/State jetzt pro roomDayKey
+const roomNameRefs = new Map<string, HTMLElement | null>()
+const roomContainerRefs = new Map<string, HTMLElement | null>()
+const roomNameTruncated = ref(new Map<string, boolean>())
+const roomContainerHeights = ref(new Map<string, number>())
+
+// ResizeObserver pro Zeile (damit Höhe mitwächst, wenn Timelines sich ändern)
+const roomResizeObservers = new Map<string, ResizeObserver>()
+
+const setRoomNameRef = (key: string, el: HTMLElement | null) => {
+    if (el) {
+        roomNameRefs.set(key, el)
+        nextTick(() => checkRoomNameTruncation(key))
+    } else {
+        roomNameRefs.delete(key)
+    }
+}
+
+const setRoomContainerRef = (key: string, el: HTMLElement | null) => {
+    // alten Observer weg
+    const old = roomResizeObservers.get(key)
+    if (old) old.disconnect()
+    roomResizeObservers.delete(key)
+
+    if (el) {
+        roomContainerRefs.set(key, el)
+
+        // direkt messen
+        nextTick(() => updateRoomContainerHeight(key))
+
+        // bei jeder Größenänderung neu messen
+        if ("ResizeObserver" in window) {
+            const ro = new ResizeObserver(() => updateRoomContainerHeight(key))
+            ro.observe(el)
+            roomResizeObservers.set(key, ro)
+        }
+    } else {
+        roomContainerRefs.delete(key)
+    }
+}
+
+const updateRoomContainerHeight = (key: string) => {
+    const el = roomContainerRefs.get(key)
+    if (!el) return
+    roomContainerHeights.value.set(key, el.clientHeight)
+    checkRoomNameTruncation(key)
+}
+
+const getRoomNameMaxWidth = (key: string): string => {
+    const height = roomContainerHeights.value.get(key)
+    if (height && height > 48) return `${Math.max(height - 32, 0)}px` // py-4 abziehen
+    return "4rem"
+}
+
+const checkRoomNameTruncation = (key: string) => {
+    const el = roomNameRefs.get(key)
+    if (!el) {
+        roomNameTruncated.value.set(key, false)
+        return
+    }
+    const truncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight
+    roomNameTruncated.value.set(key, truncated)
+}
+
+const checkAllRoomNameTruncations = () => {
+    roomContainerRefs.forEach((_, key) => updateRoomContainerHeight(key))
+    roomNameRefs.forEach((_, key) => checkRoomNameTruncation(key))
+}
+
+const isRoomNameTruncated = (key: string) => roomNameTruncated.value.get(key) ?? false
 
 /**
  * helper: extractDate
@@ -879,7 +969,12 @@ const topBarContainerClass = computed(() => {
     return "card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
 })
 
-const topBarStyle = computed(() => ({ top: `${props.stickyOffsetTopPx}px` }))
+const topBarStyle = computed(() => {
+    if (props.isInProjectView) {
+        return { top: 'var(--project-header-height, 130px)' }
+    }
+    return { top: `${props.stickyOffsetTopPx}px` }
+})
 
 const topBarEl = ref<HTMLElement | null>(null)
 const topBarHeightPx = ref<number>(72)
@@ -916,6 +1011,7 @@ onMounted(async () => {
 
     await nextTick()
     measureTopBarHeight()
+    checkAllRoomNameTruncations()
 
     if (topBarEl.value && "ResizeObserver" in window) {
         ro = new ResizeObserver(() => measureTopBarHeight())
@@ -923,19 +1019,26 @@ onMounted(async () => {
     } else {
         window.addEventListener("resize", measureTopBarHeight)
     }
+    window.addEventListener("resize", checkAllRoomNameTruncations)
 })
 
 onUnmounted(() => {
     if (ro && topBarEl.value) ro.unobserve(topBarEl.value)
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)
+    window.removeEventListener("resize", checkAllRoomNameTruncations)
+    roomResizeObservers.forEach(ro => ro.disconnect())
+    roomResizeObservers.clear()
 })
 
 
 
-const dayHeaderStyle = computed(() => ({
-    top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px`,
-}))
+const dayHeaderStyle = computed(() => {
+    if (props.isInProjectView) {
+        return { top: `calc(var(--project-header-height, 130px) + ${topBarHeightPx.value}px)` }
+    }
+    return { top: `${props.stickyOffsetTopPx + topBarHeightPx.value}px` }
+})
 </script>
 
 <style scoped>

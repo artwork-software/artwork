@@ -61,7 +61,7 @@ const isSelectedDay = computed(() => !!props.selectedDays[props.dayDate]);
 const entryCardClass = (entry) => {
     let base = entry.has_changes_after_commit ? 'border border-red-300 bg-red-50/70 shadow-none hover:border-red-400' : 'bg-white shadow-sm hover:ring-1 hover:ring-indigo-200';
 
-    if (entry.workflow_rejection_reason) {
+    if (entry.is_rejected || entry.workflow_rejection_reason) {
         base = 'border border-red-500 bg-red-50/30 shadow-none hover:border-red-600';
     }
 

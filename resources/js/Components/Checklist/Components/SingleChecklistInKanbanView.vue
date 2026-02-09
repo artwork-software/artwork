@@ -13,7 +13,7 @@
                     </div>
                     <div class="flex items-center gap-x-2 print:hidden shrink-0">
                         <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
-                            {{ checklist.tasks.length }}
+                            {{ orderTasksByDeadline.filter(t => checkIfUserIsInTaskIfInOwnTaskManagement(t)).length }}
                         </span>
                         <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
                         <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
@@ -202,17 +202,22 @@ const templateForm = useForm({
 });
 
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
-    // if isInOwnTaskManagement is true, check if the current user is in the task or checklist
     if (props.isInOwnTaskManagement && !props.checklist.private) {
         const userId = usePage().props.auth.user.id;
-        // User is assigned to the task directly
-        const isInTask = task?.users?.map(user => user.id)?.includes(userId);
-        // User is assigned to the checklist itself → show all tasks
-        const isInChecklist = props.checklist?.users?.some(user => user.id === userId);
-        return isInTask || isInChecklist;
-    } else {
-        return true;
+
+        const taskUserIds = Array.isArray(task?.users) ? task.users.map(u => u.id) : [];
+        const isInTask = taskUserIds.includes(userId);
+
+        // Fallback: wenn task.user_id existiert (legacy)
+        const isLegacyDirect = task?.user_id === userId;
+
+        const isInChecklist = Array.isArray(props.checklist?.users)
+            ? props.checklist.users.some(u => u.id === userId)
+            : false;
+
+        return isInTask || isLegacyDirect || isInChecklist;
     }
+    return true;
 };
 
 const doneOrUndoneAllTasks = (bool) => {

@@ -190,7 +190,6 @@
                 </button>
             </div>
         </div>
-
         <!-- Empty state -->
         <div v-if="finalChecklists.length === 0 && !isLoadingChecklists" class="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
             <p class="text-sm text-gray-600">{{ $t('No fitting checklists found') }}</p>

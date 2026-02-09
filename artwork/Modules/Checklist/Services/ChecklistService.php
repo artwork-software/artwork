@@ -104,10 +104,12 @@ readonly class ChecklistService
             if ($checklist->users->contains('id', $userId)) {
                 return true;
             }
-            // Keep if checklist has at least one task assigned to the user
-            return $checklist->tasks->contains(function ($task) use ($userId) {
-                return $task->task_users->pluck('id')->contains($userId);
-            });
+            // Keep if any task is assigned to the user
+            if ($checklist->tasks->contains(function ($task) use ($userId) {
+                return $task->task_users->contains('id', $userId);
+            })) {
+                return true;
+            }
         });
 
         // Apply sorting

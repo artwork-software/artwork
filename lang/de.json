@@ -3953,5 +3953,8 @@
     "Display Text": "Anzeigetext",
     "Add Entry": "Eintrag hinzufügen",
     "Document component": "Dokumentenkomponente",
-    "Remove person from team": "Person aus Team entfernen"
+    "Remove person from team": "Person aus Team entfernen",
+    "Loading data...": "Daten werden geladen...",
+    "Kanban": "Kanban",
+    "You only see checklists that have at least one task assigned to you, or that are assigned to you": "Du siehst hier nur Checklisten, die mindestens eine Aufgabe dir zugewiesen haben, oder dir zugewiesen wurden"
 }

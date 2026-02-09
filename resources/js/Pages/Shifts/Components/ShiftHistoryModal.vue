@@ -177,16 +177,6 @@
                                 :key="entry.id"
                                 class="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:bg-gray-50/40 transition"
                             >
-                                <!-- Icon-Badge -->
-                                <div class="pt-0.5">
-                                    <span
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-full text-[12px] font-semibold"
-                                        :class="bubbleClass(entry)"
-                                    >
-                                        {{ entry.iconLetter }}
-                                    </span>
-                                </div>
-
                                 <!-- Content -->
                                 <div class="flex-1 space-y-2">
                                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -204,15 +194,6 @@
                                         <span v-if="entry.shiftId" class="inline-flex items-center">
                                             <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] text-gray-700">
                                                 {{ shiftLabelById(entry.shiftId) }}
-                                            </span>
-                                        </span>
-
-                                        <span v-if="entry.contextLabel" class="inline-flex items-center">
-                                            <span
-                                                class="inline-flex items-center rounded-full border px-2 py-1 text-[11px]"
-                                                :class="contextBadgeClass(entry)"
-                                            >
-                                                {{ entry.contextLabel }}
                                             </span>
                                         </span>
 

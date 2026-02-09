@@ -1679,10 +1679,25 @@ readonly class EventService
      * @param string|null $endTime
      * @return array{Carbon, Carbon, bool}
      */
+    /**
+     * Check if a time string is valid (not empty and parseable by Carbon).
+     */
+    private function isValidTimeString(?string $time): bool
+    {
+        if ($time === null || $time === '') {
+            return false;
+        }
+        // Reject strings that start with ':' (e.g., ':00' - missing hour)
+        if (str_starts_with($time, ':')) {
+            return false;
+        }
+        return true;
+    }
+
     public function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
     {
         $endDay = clone $day;
-        $allDay = !$startTime || !$endTime;
+        $allDay = !$this->isValidTimeString($startTime) || !$this->isValidTimeString($endTime);
 
         if (!$allDay) {
             $startTime = Carbon::parse($startTime);

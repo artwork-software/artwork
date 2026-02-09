@@ -202,9 +202,14 @@ const templateForm = useForm({
 });
 
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
-    // if isInOwnTaskManagement is true, check if the current user ist in the task
+    // if isInOwnTaskManagement is true, check if the current user is in the task or checklist
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task?.users.map(user => user.id).includes(usePage().props.auth.user.id);
+        const userId = usePage().props.auth.user.id;
+        // User is assigned to the task directly
+        const isInTask = task?.users?.map(user => user.id)?.includes(userId);
+        // User is assigned to the checklist itself → show all tasks
+        const isInChecklist = props.checklist?.users?.some(user => user.id === userId);
+        return isInTask || isInChecklist;
     } else {
         return true;
     }

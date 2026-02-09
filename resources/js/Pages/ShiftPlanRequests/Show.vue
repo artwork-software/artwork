@@ -242,7 +242,7 @@ const rejectedMap = computed(() => {
     const list = props.request.rejected_shifts ?? [];
     const map = {};
     for (const item of list) {
-        if (item?.unique_key) map[item.unique_key] = item.reason;
+        if (item?.unique_key) map[item.unique_key] = { reason: item.reason ?? null, rejected: true };
     }
     return map;
 });
@@ -280,7 +280,8 @@ const rows = computed(() => {
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
-            workflow_rejection_reason: rejectedMap.value[uniqueKey] ?? meta.workflow_rejection_reason ?? shift.workflow_rejection_reason ?? null,
+            is_rejected: !!rejectedMap.value[uniqueKey]?.rejected || !!meta.workflow_rejection_reason,
+            workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false
         });

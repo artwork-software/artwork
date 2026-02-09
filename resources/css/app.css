@@ -1224,6 +1224,7 @@
     /* Tunable via CSS var if needed per scope */
     --aw-tooltip-min-width: 12ch;   /* ensures ~10–14 chars fit per line */
     --aw-tooltip-max-width: 24rem;  /* ≈ Tailwind max-w-sm */
+    z-index: 9999 !important;       /* ensure tooltip renders above HeadlessUI Float portals */
 }
 .aw-tooltip .p-tooltip-text {
     display: inline-block;

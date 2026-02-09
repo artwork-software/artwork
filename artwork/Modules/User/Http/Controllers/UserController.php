@@ -867,13 +867,13 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function updateChecklistStatus(Request $request): RedirectResponse
+    public function updateChecklistStatus(Request $request): JsonResponse
     {
         Auth::user()->update([
             'opened_checklists' => $request->opened_checklists
         ]);
 
-        return Redirect::back();
+        return response()->json(['success' => true]);
     }
 
     public function updateAreaStatus(Request $request): RedirectResponse

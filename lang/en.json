@@ -3913,5 +3913,8 @@
     "Display Text": "Display Text",
     "Add Entry": "Add Entry",
     "Document component": "Document component",
-    "Remove person from team": "Remove person from team"
+    "Remove person from team": "Remove person from team",
+    "Loading data...": "Loading data...",
+    "Kanban": "Kanban",
+    "You only see checklists that have at least one task assigned to you, or that are assigned to you": "You only see checklists that have at least one task assigned to you, or that are assigned to you"
 }

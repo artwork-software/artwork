@@ -6,7 +6,6 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Events\ChecklistUpdated;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\MoneySource\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -48,31 +47,22 @@ class TaskController extends Controller
         ProjectTabService $projectTabService,
         FilterOwnTasksRequest $request
     ): Response|ResponseFactory {
+        $userId = $this->authManager->id();
+        $sort = $request->integer('filter');
 
-        $checklists = $this->checklistService->getChecklistsWithMyTask(
-            $this->authManager->id(),
-            $projectTabService,
-            $request->integer('filter'),
-        );
+        $checklistPayload = $this->checklistService->buildOwnTasksChecklistPayload($userId, $sort);
 
-
-        $privateChecklists = $this->checklistService->getPrivateChecklists(
-            $this->authManager->id(),
-            $request->integer('filter')
-        );
-
-        $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks(
-            $this->authManager->id(),
-            $request->integer('filter')
-        );
+        $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks($userId, $sort);
 
         return inertia('Tasks/OwnTasksManagement', [
-            'checklists' => $checklists,
+            'opened_checklists' => $checklistPayload['opened_checklists'],
+            'checklist_templates' => $checklistPayload['checklist_templates'],
+            'public_checklists' => $checklistPayload['public_checklists'],
+            'private_checklists' => $checklistPayload['private_checklists'],
             'money_source_task' => $moneySourceTasks,
             'first_project_tasks_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                 ProjectTabComponentEnum::CHECKLIST
             ),
-            'checklist_templates' => ChecklistTemplate::all()
         ]);
     }
 

@@ -520,8 +520,16 @@ const getAssignablePeople = (shiftQualificationId) => {
     }
 
     const shiftCraftId = props.shift.craft.id;
-    const shiftCraft = Object.values(props.crafts || {}).find(c => c.id === shiftCraftId);
-    const isShiftCraftUniversallyApplicable = shiftCraft?.universally_applicable === true;
+
+    // IDs aller universell einsetzbaren Crafts sammeln
+    const universalCraftIds = new Set(
+        Object.values(props.crafts || {})
+            .filter(c => c.universally_applicable)
+            .map(c => c.id)
+    );
+
+    // Relevante Craft-IDs: Craft der Schicht + alle universell einsetzbaren
+    const relevantCraftIds = new Set([shiftCraftId, ...universalCraftIds]);
 
     // IDs aller bereits zugewiesenen Personen pro Typ sammeln
     const assigned = {
@@ -534,15 +542,7 @@ const getAssignablePeople = (shiftQualificationId) => {
 
     Object.values(props.crafts).forEach(craft => {
         // Nur Crafts verarbeiten, die zur Schicht passen (shift.craft.id oder universally_applicable)
-        const craftIds = [
-            shiftCraftId,
-            ...Object.values(props.crafts || {})
-                .filter(c => c.universally_applicable)
-                .map(c => c.id)
-        ];
-
-        const isCraftRelevant = craftIds.includes(craft.id);
-        if (!isCraftRelevant) {
+        if (!relevantCraftIds.has(craft.id)) {
             return;
         }
 
@@ -562,36 +562,56 @@ const getAssignablePeople = (shiftQualificationId) => {
                 const key = `${type}-${person.id}`;
                 const alreadyAdded = peopleWithCraft.some(p => p.key === key);
 
-                // WICHTIG: Prüfe ob die Person die Qualifikation für das CRAFT DER SCHICHT hat
-                // Die Qualifikation muss craft-spezifisch sein und zum Craft der Schicht passen
-                // pivot.craft_id muss mit shiftCraftId übereinstimmen (nicht mit craft.id!)
-                const hasQualificationForShiftCraft = person.shift_qualifications?.some(q =>
+                // Prüfe ob die Person die passende Qualifikation hat.
+                // Bevorzuge immer die direkte Qualifikation über das Craft der Schicht.
+                // Nur wenn keine direkte Qualifikation vorhanden ist, falle auf universelle Crafts zurück.
+                const directQualification = person.shift_qualifications?.find(q =>
                     q.id === shiftQualificationId &&
                     q.pivot?.craft_id === shiftCraftId
                 );
+                const universalQualification = !directQualification
+                    ? person.shift_qualifications?.find(q =>
+                        q.id === shiftQualificationId &&
+                        universalCraftIds.has(q.pivot?.craft_id)
+                    )
+                    : null;
+                const matchingQualification = directQualification || universalQualification;
 
                 // Prüfen, ob Person bereits in der Schicht ist
                 const alreadyAssigned = assigned[type]?.includes(person.id);
 
-                // Zeige nur Personen an, die:
-                // 1. Die Qualifikation für das Craft der Schicht haben (nicht für ein anderes Craft)
-                // 2. Noch nicht in der Liste sind
-                if (!alreadyAdded && hasQualificationForShiftCraft) {
+                if (!alreadyAdded && matchingQualification) {
+                    // Bestimme, ob die Zuweisung über ein universelles Gewerk erfolgt
+                    const qualCraftId = matchingQualification.pivot?.craft_id;
+                    const isViaUniversalCraft = qualCraftId !== shiftCraftId
+                        && universalCraftIds.has(qualCraftId);
+
+                    // originCraft muss das Craft sein, über das die Qualifikation kommt (pivot.craft_id),
+                    // nicht das Craft aus der äußeren Schleife (craft), da eine Person z.B. dem Schicht-Craft
+                    // zugeordnet sein kann, aber die Qualifikation über ein universelles Craft hat.
+                    let resolvedOriginCraft = craft;
+                    if (isViaUniversalCraft && qualCraftId) {
+                        const universalCraft = Object.values(props.crafts || {}).find(c => c.id === qualCraftId);
+                        if (universalCraft) {
+                            resolvedOriginCraft = universalCraft;
+                        }
+                    }
+
                     peopleWithCraft.push({
                         ...person,
                         type,
                         key,
-                        alreadyAssigned, // Flag, ob die Person bereits in dieser Schicht ist
-                        qualification: person.shift_qualifications.find(q =>
-                            q.id === shiftQualificationId &&
-                            q.pivot?.craft_id === shiftCraftId
-                        )?.name || 'Unbekannt',
+                        alreadyAssigned,
+                        qualification: matchingQualification.name || 'Unbekannt',
                         originCraft: {
-                            id: craft.id,
-                            name: craft.name,
-                            abbreviation: craft.abbreviation,
-                            color: craft.color
-                        }
+                            id: resolvedOriginCraft.id,
+                            name: resolvedOriginCraft.name,
+                            abbreviation: resolvedOriginCraft.abbreviation,
+                            color: resolvedOriginCraft.color,
+                            universally_applicable: resolvedOriginCraft.universally_applicable
+                        },
+                        // Pivot-Info für Anzeige der Craft-Abbreviation bei universellen Gewerken
+                        pivot: isViaUniversalCraft ? { craft_id: qualCraftId } : null
                     });
                 }
             });

@@ -41,7 +41,6 @@
                     <SingleTaskInListView
                         v-for="element in orderTasksByDeadline"
                         :key="`task-${element.id}`"
-                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
                         :can-edit-component="canEditComponent"
                         :project-manager-ids="projectManagerIds"
                         :project-can-write-ids="projectCanWriteIds"

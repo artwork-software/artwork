@@ -700,7 +700,7 @@ readonly class EventService
 
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
-                    'project' => null,
+                    'project' => $shift->project,
                     'event' => null,
                     'id' => $shift->id,
                     'name' => $shift->name ?? '',
@@ -866,8 +866,8 @@ readonly class EventService
                 $startDate,
                 $endDate
             )
-            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate) {
-                $query->whereHas('events', function ($eventQuery) use ($startDate, $endDate) {
+            ->when($userCalendarSettings?->hide_unoccupied_rooms, function ($query) use ($startDate, $endDate, $userCalendarSettings) {
+                $query->whereHas('events', function ($eventQuery) use ($startDate, $endDate, $userCalendarSettings) {
                     $eventQuery->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween('start_time', [$startDate, $endDate])
                             ->orWhereBetween('end_time', [$startDate, $endDate])
@@ -875,10 +875,19 @@ readonly class EventService
                                 $subQuery->where('start_time', '<', $startDate)
                                     ->where('end_time', '>', $endDate);
                             });
+                    })
+                    // Only consider non-deleted events (explicit table name for whereHas context)
+                    ->whereNull('events.deleted_at')
+                    // Filter planning events based on user settings
+                    ->where(function ($q) use ($userCalendarSettings) {
+                        $q->where('is_planning', false);
+                        if ($userCalendarSettings?->show_planned_events) {
+                            $q->orWhere('is_planning', true);
+                        }
                     });
                 });
             })
-            ->orderBy('order')
+            ->orderBy('position')
             ->get();
 
     }

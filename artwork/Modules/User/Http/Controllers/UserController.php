@@ -1309,6 +1309,15 @@ class UserController extends Controller
         $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
+        // Update workerShiftPlanFilter when month is changed (from availability calendar)
+        if ($request->has('month')) {
+            $monthDate = Carbon::parse($request->get('month'));
+            $user->workerShiftPlanFilter()->update([
+                'start_date' => $monthDate->copy()->startOfMonth()->format('Y-m-d'),
+                'end_date' => $monthDate->copy()->endOfMonth()->format('Y-m-d')
+            ]);
+        }
+
         return Inertia::render(
             'Shifts/UserOperationPlan',
             $userService->getUserShiftPlanPageDto(

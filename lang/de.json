@@ -3956,5 +3956,11 @@
     "Remove person from team": "Person aus Team entfernen",
     "Loading data...": "Daten werden geladen...",
     "Kanban": "Kanban",
-    "You only see checklists that have at least one task assigned to you, or that are assigned to you": "Du siehst hier nur Checklisten, die mindestens eine Aufgabe dir zugewiesen haben, oder dir zugewiesen wurden"
+    "You only see checklists that have at least one task assigned to you, or that are assigned to you": "Du siehst hier nur Checklisten, die mindestens eine Aufgabe dir zugewiesen haben, oder dir zugewiesen wurden",
+    "Edit individual time": "Individuelle Zeit bearbeiten",
+    "Start time": "Startzeit",
+    "End time": "Endzeit",
+    "Break (minutes)": "Pause (Minuten)",
+    "Saving...": "Speichern...",
+    "Edit the details of this individual time entry.": "Bearbeite die Details dieses individuellen Zeiteintrags."
 }

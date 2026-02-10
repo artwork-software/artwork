@@ -182,9 +182,9 @@ class UserService
             $this->getAuthUser()
         );
 
-        if ($month === null) {
-            $month = $requestedStartDate->format('Y-m-d');
-        }
+        // Synchronize month with workerShiftPlanFilter dates for bidirectional sync
+        // Always derive month from workerShiftPlanFilter to keep both components in sync
+        $month = $requestedStartDate->format('Y-m-d');
 
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(

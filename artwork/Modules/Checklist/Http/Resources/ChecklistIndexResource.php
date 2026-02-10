@@ -30,7 +30,8 @@ class ChecklistIndexResource extends JsonResource
                 'name' => $this->project->name,
             ] : null,
             'checklist_tab_id' => $this->tab_id,
-            'tasks' => $this->tasks()->orderBy('order')->get()->map(function (Task $task) {
+            'tasks' => $this->tasks()->with('task_users')->orderBy('order')->get()
+            ->map(function (Task $task) {
                 return [
                     'id' => $task->id,
                     'name' => $task->name,

@@ -74,7 +74,7 @@
                     :items="sortedEventTypes"
                     :search-keys="['name','id']"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onTypeChange"
                     :show-color-indicator="true"
                     color-property="hex_code"
                 />
@@ -105,7 +105,7 @@
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onRoomChange"
                 />
                 <!--<BaseCombobox
                     v-model="event.room"
@@ -479,21 +479,41 @@ const removeTime = () => {
     updateEventInDatabase();
 };
 
-const onStartDateFocusOut = () => {
+const onStartDateFocusOut = async () => {
     // Commit draft to actual event object only on focusout
     const oldStart = props.event.day;
     const newStart = draftStartDate.value;
     const deltaDays = diffDaysISO(oldStart, newStart);
 
-    props.event.day = newStart;
-
     // Keep the existing duration by shifting end_day by the same delta.
     // If end_day is missing, treat it as equal to the old start day.
     const oldEnd = props.event.end_day || oldStart;
-    props.event.end_day = addDaysISO(oldEnd, deltaDays);
+    const newEndDay = addDaysISO(oldEnd, deltaDays);
 
+    // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.day = newStart;
+        payload.end_day = newEndDay;
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        // Send API request before reactive update
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                // Update snapshot after successful patch
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, day: newStart, end_day: newEndDay });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+
+    // Now apply reactive changes (may trigger re-sort and component re-render)
+    props.event.day = newStart;
+    props.event.end_day = newEndDay;
     dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
-    updateEventInDatabase();
 };
 
 const onStartTimeFocusOut = () => {
@@ -506,6 +526,44 @@ const onEndTimeFocusOut = () => {
     // Commit draft end time to actual event object only on focusout
     props.event.end_time = draftEndTime.value;
     updateEventInDatabase();
+};
+
+const onRoomChange = (newRoom) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by room
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.room = newRoom ? { id: newRoom.id } : null;
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
+};
+
+const onTypeChange = (newType) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by type
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.type = newType ? { id: newType.id } : null;
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
 };
 
 // Keep draft in sync when event is updated externally (e.g. broadcast refresh)

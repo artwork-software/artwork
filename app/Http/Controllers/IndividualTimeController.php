@@ -142,6 +142,31 @@ class IndividualTimeController extends Controller
     }
 
     /**
+     * Update a single individual time for the current user from shift plan.
+     */
+    public function updateSingle(Request $request, IndividualTime $individualTime): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'break_minutes' => 'nullable|integer|min:0',
+        ]);
+
+        $individualTime->update([
+            'title' => $validated['title'] ?? $individualTime->title,
+            'start_time' => $validated['start_time'] ?? $individualTime->start_time,
+            'end_time' => $validated['end_time'] ?? $individualTime->end_time,
+            'break_minutes' => $validated['break_minutes'] ?? $individualTime->break_minutes,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'individual_time' => $individualTime->fresh(),
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(IndividualTime $individualTime): void

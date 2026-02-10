@@ -91,6 +91,16 @@
                                     <span class="truncate text-sm font-semibold">
                                         {{ $t('Individual time') }}: {{ i.title ?? '' }}
                                     </span>
+                                    <button
+                                        type="button"
+                                        @click="openEditIndividualTimeModal(i)"
+                                        class="p-1 rounded hover:bg-zinc-200 transition"
+                                        :title="$t('Edit')"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
                                 </div>
 
                                 <div class="px-3 py-3">
@@ -119,6 +129,13 @@
         {{ shiftsInRange }}
     </pre>
     -->
+
+    <!-- Edit Individual Time Modal -->
+    <EditIndividualTimeModal
+        v-if="showEditIndividualTimeModal && selectedIndividualTime"
+        :individual-time="selectedIndividualTime"
+        @closed="closeEditIndividualTimeModal"
+    />
 </template>
 
 <script setup>
@@ -133,8 +150,22 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserEventShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
+import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+const showEditIndividualTimeModal = ref(false)
+const selectedIndividualTime = ref(null)
+
+function openEditIndividualTimeModal(individualTime) {
+    selectedIndividualTime.value = individualTime
+    showEditIndividualTimeModal.value = true
+}
+
+function closeEditIndividualTimeModal() {
+    showEditIndividualTimeModal.value = false
+    selectedIndividualTime.value = null
+}
 
 const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props

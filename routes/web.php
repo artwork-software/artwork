@@ -1792,6 +1792,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/individual-times/{individualTime}/delete', [IndividualTimeController::class, 'destroy'])
         ->name('delete.individualTimes');
 
+    Route::patch('/individual-times/{individualTime}/update-single', [IndividualTimeController::class, 'updateSingle'])
+        ->name('individual-times.update-single');
+
     Route::patch('/freelancer/{freelancer}/check/vacation', [VacationController::class, 'checkVacationFreelancer'])
         ->name('freelancer.check.vacation');
 

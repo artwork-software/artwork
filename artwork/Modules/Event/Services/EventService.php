@@ -878,7 +878,7 @@ readonly class EventService
                     });
                 });
             })
-            ->orderBy('order')
+            ->orderBy('position')
             ->get();
 
     }

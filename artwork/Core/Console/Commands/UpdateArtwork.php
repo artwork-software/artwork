@@ -320,6 +320,11 @@ class UpdateArtwork extends Command
             return;
         }
 
+        // Nur erstellen, wenn noch nicht vorhanden
+        if ($user->userFilters()->where('filter_type', $filterType)->exists()) {
+            return;
+        }
+
         $data = collect($fields)->mapWithKeys(fn($field) => [
             $this->convertFieldName($field) =>
                 $filter->$field ?? (
@@ -329,7 +334,7 @@ class UpdateArtwork extends Command
                 ),
         ])->merge($extra)->toArray();
 
-        $user->userFilters()->updateOrCreate(['filter_type' => $filterType], $data);
+        $user->userFilters()->create(array_merge(['filter_type' => $filterType], $data));
     }
 
     /**
@@ -338,7 +343,7 @@ class UpdateArtwork extends Command
     private function setFallbackFilter(User $user, array $types): void
     {
         foreach ($types as $type) {
-            $user->userFilters()->updateOrCreate(
+            $user->userFilters()->firstOrCreate(
                 ['filter_type' => $type],
                 [
                     'start_date' => now(),

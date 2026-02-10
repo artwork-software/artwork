@@ -1094,25 +1094,31 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
-    {
+    private function createSeriesEvent(
+        $startDate,
+        $endDate,
+        $request,
+        $series,
+        $projectId,
+        ?Event $sourceEvent = null
+    ): void {
         $event = Event::create([
-            'name' => $request->title,
-            'eventName' => $request->eventName,
-            'description' => $request->description,
+            'name' => $sourceEvent?->name ?? $request->title,
+            'eventName' => $sourceEvent?->eventName ?? $request->eventName,
+            'description' => $sourceEvent?->description ?? $request->description,
             'start_time' => $startDate,
             'end_time' => $endDate,
-            'occupancy_option' => $request->isOption,
-            'audience' => $request->audience,
-            'is_loud' => $request->isLoud,
-            'event_type_id' => $request->eventTypeId,
-            'event_status_id' => $request->eventStatusId,
-            'room_id' => $request->roomId,
+            'occupancy_option' => $sourceEvent?->occupancy_option ?? $request->isOption,
+            'audience' => $sourceEvent?->audience ?? $request->audience,
+            'is_loud' => $sourceEvent?->is_loud ?? $request->isLoud,
+            'event_type_id' => $sourceEvent?->event_type_id ?? $request->eventTypeId,
+            'event_status_id' => $sourceEvent?->event_status_id ?? $request->eventStatusId,
+            'room_id' => $sourceEvent?->room_id ?? $request->roomId,
             'user_id' => Auth::id(),
             'project_id' => $projectId ?: null,
             'is_series' => true,
             'series_id' => $series->id,
-            'allDay' => $request->allDay
+            'allDay' => $sourceEvent?->allDay ?? $request->allDay
         ]);
         $event->eventProperties()
             ->sync($request->get('event_properties', []));
@@ -2470,7 +2476,7 @@ class EventController extends Controller
             [$nextStart, $nextEnd] = $this->generateNextOccurrence($cursorStart, $cursorEnd, (int) $newFrequency);
 
             while ($nextEnd < $endSeriesDateExclusive) {
-                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id, $event);
                 [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, (int) $newFrequency);
             }
 
@@ -2529,7 +2535,7 @@ class EventController extends Controller
             [$nextStart, $nextEnd] = $this->generateNextOccurrence($eventStart->copy(), $eventEnd->copy(), $freq);
 
             while ($nextEnd < $newEndExclusive) {
-                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id);
+                $this->createSeriesEvent($nextStart->copy(), $nextEnd->copy(), $request, $series, $event->project_id, $event);
                 [$nextStart, $nextEnd] = $this->generateNextOccurrence($nextStart, $nextEnd, $freq);
             }
 

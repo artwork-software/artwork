@@ -233,8 +233,9 @@ Examples:
 ### Frontend Permission Check
 ```javascript
 import { usePermission } from "@/Composeables/Permission.js";
+import { usePage } from "@inertiajs/vue3";
 
-const { can, hasAdminRole } = usePermission();
+const { can, hasAdminRole } = usePermission(usePage().props);
 
 // ALWAYS include hasAdminRole() - admins can do everything!
 if (can('can edit document requests') || hasAdminRole()) {

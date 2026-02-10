@@ -234,6 +234,7 @@ const workItemsInRange = computed(() => {
                     _day: day.date,
                     _startAt: startAt,
                     _endAt: endAt,
+                    _project: s.project,
                     _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
                     _key: `${s.id}-${day.date}-${s.start}-${s.end}`
                 })

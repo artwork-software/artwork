@@ -700,7 +700,7 @@ readonly class EventService
 
                 $daysWithData[$shiftDate]['shifts'][] = [
                     'room' => $shift->room,
-                    'project' => null,
+                    'project' => $shift->project,
                     'event' => null,
                     'id' => $shift->id,
                     'name' => $shift->name ?? '',

@@ -144,7 +144,7 @@ class IndividualTimeController extends Controller
     /**
      * Update a single individual time for the current user from shift plan.
      */
-    public function updateSingle(Request $request, IndividualTime $individualTime): \Illuminate\Http\JsonResponse
+    public function updateSingle(Request $request, IndividualTime $individualTime): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
@@ -160,10 +160,7 @@ class IndividualTimeController extends Controller
             'break_minutes' => $validated['break_minutes'] ?? $individualTime->break_minutes,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'individual_time' => $individualTime->fresh(),
-        ]);
+        return redirect()->back()->with('success', 'Individual time updated successfully.');
     }
 
     /**

@@ -265,19 +265,38 @@ if (can('can edit document requests') || hasAdminRole()) {
 ```
 Reference: https://tabler.io/icons
 
-### Modal (always use as base)
+### Modal (ArtworkBaseModal)
+**Import:**
+```javascript
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+```
+**Usage:** Use `:title` and `:description` props (NOT slots). Emits `close` event (NOT `closed`).
 ```vue
-<ArtworkBaseModal @closed="closeModal">
-  <template #header>
-    {{ $t('Modal Title') }}
-  </template>
-  <!-- Modal content -->
+<ArtworkBaseModal
+    :title="$t('Modal Title')"
+    :description="$t('Modal description text.')"
+    @close="closeModal"
+>
+  <!-- Modal content in default slot -->
 </ArtworkBaseModal>
 ```
 
-### Input
+### Input (BaseInput)
+**Import:**
+```javascript
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+```
+**Basic usage:**
 ```vue
-<BaseInput v-model="value" :label="$t('Label')" />
+<BaseInput v-model="value" :label="$t('Label')" id="field_id" />
+```
+**Time input:**
+```vue
+<BaseInput type="time" id="start_time" v-model="startTime" :label="$t('Start time')" />
+```
+**Number input (e.g. for minutes):**
+```vue
+<BaseInput type="number" id="break_minutes" v-model.number="breakMinutes" :label="$t('Break (minutes)')" :min="0" :step="1" />
 ```
 
 ### Tooltip

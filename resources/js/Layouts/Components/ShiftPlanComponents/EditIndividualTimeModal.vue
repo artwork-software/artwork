@@ -1,8 +1,9 @@
 <template>
-    <ArtworkBaseModal @closed="$emit('closed')">
-        <template #header>
-            {{ $t('Edit individual time') }}
-        </template>
+    <ArtworkBaseModal
+        :title="$t('Edit individual time')"
+        :description="$t('Edit the details of this individual time entry.')"
+        @close="$emit('closed')"
+    >
 
         <div class="p-4 space-y-4">
             <!-- Datum (nur Anzeige) -->
@@ -11,67 +12,44 @@
                     {{ $t('Date') }}
                 </label>
                 <div class="text-sm text-zinc-900 bg-zinc-100 rounded-lg px-3 py-2">
-                    {{ formatDate(individualTime.start_date) }}
+                    {{ formatDate(individualTime._day || individualTime.start_date) }}
                 </div>
             </div>
 
             <!-- Titel -->
-            <div>
+            <BaseInput
+                id="title"
+                v-model="form.title"
+                :label="$t('Title')"
+            />
+
+            <!-- Zeiten -->
+            <div class="flex items-center gap-1">
                 <BaseInput
-                    v-model="form.title"
-                    :label="$t('Title')"
+                    type="time"
+                    id="start_time"
+                    classes="rounded-r-none"
+                    v-model="form.start_time"
+                    :label="$t('Start time')"
                 />
-            </div>
-
-            <!-- Ganztägig Checkbox -->
-            <div class="flex items-center gap-2">
-                <input
-                    type="checkbox"
-                    id="full_day"
-                    v-model="form.full_day"
-                    class="rounded border-zinc-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                <BaseInput
+                    type="time"
+                    id="end_time"
+                    v-model="form.end_time"
+                    classes="border-l-0 rounded-l-none"
+                    :label="$t('End time')"
                 />
-                <label for="full_day" class="text-sm text-zinc-700">
-                    {{ $t('All day') }}
-                </label>
-            </div>
-
-            <!-- Zeiten (nur wenn nicht ganztägig) -->
-            <div v-if="!form.full_day" class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">
-                        {{ $t('Start time') }}
-                    </label>
-                    <input
-                        type="time"
-                        v-model="form.start_time"
-                        class="w-full rounded-lg border-zinc-300 shadow-sm focus:border-artwork-buttons-create focus:ring-artwork-buttons-create"
-                    />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-zinc-700 mb-1">
-                        {{ $t('End time') }}
-                    </label>
-                    <input
-                        type="time"
-                        v-model="form.end_time"
-                        class="w-full rounded-lg border-zinc-300 shadow-sm focus:border-artwork-buttons-create focus:ring-artwork-buttons-create"
-                    />
-                </div>
             </div>
 
             <!-- Pause -->
-            <div v-if="!form.full_day">
-                <label class="block text-sm font-medium text-zinc-700 mb-1">
-                    {{ $t('Break (minutes)') }}
-                </label>
-                <input
-                    type="number"
-                    v-model.number="form.break_minutes"
-                    min="0"
-                    class="w-full rounded-lg border-zinc-300 shadow-sm focus:border-artwork-buttons-create focus:ring-artwork-buttons-create"
-                />
-            </div>
+            <BaseInput
+                type="number"
+                id="break_minutes"
+                v-model.number="form.break_minutes"
+                :label="$t('Break (minutes)')"
+                :min="0"
+                :step="1"
+            />
         </div>
 
         <div class="flex justify-end gap-3 p-4 border-t border-zinc-200">
@@ -113,11 +91,15 @@ const form = reactive({
     start_time: props.individualTime.start_time ? String(props.individualTime.start_time).slice(0, 5) : '',
     end_time: props.individualTime.end_time ? String(props.individualTime.end_time).slice(0, 5) : '',
     break_minutes: props.individualTime.break_minutes ?? 0,
-    full_day: props.individualTime.full_day ?? false,
 })
 
 function formatDate(dateStr) {
     if (!dateStr) return ''
+    // Handle YYYY-MM-DD format directly to avoid timezone issues
+    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [yyyy, mm, dd] = dateStr.split('-')
+        return `${dd}.${mm}.${yyyy}`
+    }
     const d = new Date(dateStr)
     const dd = String(d.getDate()).padStart(2, '0')
     const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -130,9 +112,9 @@ async function save() {
 
     const data = {
         title: form.title,
-        start_time: form.full_day ? null : form.start_time,
-        end_time: form.full_day ? null : form.end_time,
-        break_minutes: form.full_day ? 0 : form.break_minutes,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        break_minutes: form.break_minutes,
     }
 
     router.patch(

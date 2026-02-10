@@ -74,7 +74,7 @@
                     :items="sortedEventTypes"
                     :search-keys="['name','id']"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onTypeChange"
                     :show-color-indicator="true"
                     color-property="hex_code"
                 />
@@ -105,7 +105,7 @@
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onRoomChange"
                 />
                 <!--<BaseCombobox
                     v-model="event.room"
@@ -526,6 +526,44 @@ const onEndTimeFocusOut = () => {
     // Commit draft end time to actual event object only on focusout
     props.event.end_time = draftEndTime.value;
     updateEventInDatabase();
+};
+
+const onRoomChange = (newRoom) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by room
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.room = newRoom ? { id: newRoom.id } : null;
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
+};
+
+const onTypeChange = (newType) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by type
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.type = newType ? { id: newType.id } : null;
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
 };
 
 // Keep draft in sync when event is updated externally (e.g. broadcast refresh)

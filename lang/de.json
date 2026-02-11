@@ -3962,5 +3962,10 @@
     "End time": "Endzeit",
     "Break (minutes)": "Pause (Minuten)",
     "Saving...": "Speichern...",
-    "Edit the details of this individual time entry.": "Bearbeite die Details dieses individuellen Zeiteintrags."
+    "Edit the details of this individual time entry.": "Bearbeite die Details dieses individuellen Zeiteintrags.",
+    "City": "Stadt",
+    "Country": "Land",
+    "View the document request details.": "Sieh dir die Details der Dokumentenanfrage an.",
+    "Contract status": "Stand Vertrag",
+    "Contract status comment": "Kommentar Stand Vertrag"
 }

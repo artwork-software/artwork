@@ -16,6 +16,8 @@
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.foreign_tax', [], $language) }}</th>
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.foreign_tax_amount', [], $language) }}</th>
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.foreign_tax_reason', [], $language) }}</th>
+            <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.foreign_tax_city', [], $language) }}</th>
+            <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.foreign_tax_country', [], $language) }}</th>
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.reverse_charge_amount', [], $language) }}</th>
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.deadline_date', [], $language) }}</th>
             <th style="background-color: #cccccc; font-weight: bold;">{{ __('export.creator', [], $language) }}</th>
@@ -40,6 +42,8 @@
             <td>{{ $contract->foreign_tax ? __('export.yes', [], $language) : __('export.no', [], $language) }}</td>
             <td data-format="0.00">{{ $contract->foreign_tax_amount }}</td>
             <td>{{ $contract->foreign_tax_reason }}</td>
+            <td>{{ $contract->foreign_tax_city }}</td>
+            <td>{{ $contract->foreign_tax_country }}</td>
             <td data-format="0.00">{{ $contract->reverse_charge_amount }}</td>
             <td>{{ $contract->deadline_date?->format('d.m.Y') }}</td>
             <td>{{ $contract->creator?->full_name }}</td>

@@ -24,8 +24,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $ksk_reason
  * @property bool $foreign_tax
  * @property float|null $foreign_tax_amount
+ * @property string|null $foreign_tax_city
+ * @property string|null $foreign_tax_country
  * @property string|null $foreign_tax_reason
  * @property float|null $reverse_charge_amount
+ * @property string|null $contract_state
+ * @property string|null $contract_state_comment
  * @property string|null $deadline_date
  * @property int|null $contract_type_id
  * @property int|null $company_type_id
@@ -56,12 +60,16 @@ class DocumentRequest extends Model
         'ksk_reason',
         'foreign_tax',
         'foreign_tax_amount',
+        'foreign_tax_city',
+        'foreign_tax_country',
         'foreign_tax_reason',
         'reverse_charge_amount',
         'deadline_date',
         'contract_type_id',
         'company_type_id',
         'comment',
+        'contract_state',
+        'contract_state_comment',
     ];
 
     protected $guarded = [

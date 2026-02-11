@@ -3922,5 +3922,10 @@
     "End time": "End time",
     "Break (minutes)": "Break (minutes)",
     "Saving...": "Saving...",
-    "Edit the details of this individual time entry.": "Edit the details of this individual time entry."
+    "Edit the details of this individual time entry.": "Edit the details of this individual time entry.",
+    "City": "City",
+    "Country": "Country",
+    "View the document request details.": "View the document request details.",
+    "Contract status": "Contract status",
+    "Contract status comment": "Contract status comment"
 }

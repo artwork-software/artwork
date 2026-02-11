@@ -71,12 +71,16 @@ class DocumentRequestController extends Controller
             'ksk_reason' => 'nullable|string',
             'foreign_tax' => 'boolean',
             'foreign_tax_amount' => 'nullable|numeric',
+            'foreign_tax_city' => 'nullable|string|max:255',
+            'foreign_tax_country' => 'nullable|string|max:255',
             'foreign_tax_reason' => 'nullable|string',
             'reverse_charge_amount' => 'nullable|numeric',
             'deadline_date' => 'nullable|date',
             'contract_type_id' => 'nullable|exists:contract_types,id',
             'company_type_id' => 'nullable|exists:company_types,id',
             'comment' => 'nullable|string',
+            'contract_state' => 'nullable|string|max:255',
+            'contract_state_comment' => 'nullable|string',
         ]);
 
         $documentRequest = DocumentRequest::create([
@@ -91,12 +95,16 @@ class DocumentRequestController extends Controller
             'ksk_reason' => $validated['ksk_reason'] ?? null,
             'foreign_tax' => $validated['foreign_tax'] ?? false,
             'foreign_tax_amount' => $validated['foreign_tax_amount'] ?? null,
+            'foreign_tax_city' => $validated['foreign_tax_city'] ?? null,
+            'foreign_tax_country' => $validated['foreign_tax_country'] ?? null,
             'foreign_tax_reason' => $validated['foreign_tax_reason'] ?? null,
             'reverse_charge_amount' => $validated['reverse_charge_amount'] ?? null,
             'deadline_date' => $validated['deadline_date'] ?? null,
             'contract_type_id' => $validated['contract_type_id'] ?? null,
             'company_type_id' => $validated['company_type_id'] ?? null,
             'comment' => $validated['comment'] ?? null,
+            'contract_state' => $validated['contract_state'] ?? null,
+            'contract_state_comment' => $validated['contract_state_comment'] ?? null,
         ]);
 
         // Send notification to requested user
@@ -121,12 +129,16 @@ class DocumentRequestController extends Controller
             'ksk_reason' => 'nullable|string',
             'foreign_tax' => 'boolean',
             'foreign_tax_amount' => 'nullable|numeric',
+            'foreign_tax_city' => 'nullable|string|max:255',
+            'foreign_tax_country' => 'nullable|string|max:255',
             'foreign_tax_reason' => 'nullable|string',
             'reverse_charge_amount' => 'nullable|numeric',
             'deadline_date' => 'nullable|date',
             'contract_type_id' => 'nullable|exists:contract_types,id',
             'company_type_id' => 'nullable|exists:company_types,id',
             'comment' => 'nullable|string',
+            'contract_state' => 'nullable|string|max:255',
+            'contract_state_comment' => 'nullable|string',
             'contract_id' => 'nullable|exists:contracts,id',
         ]);
 

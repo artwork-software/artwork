@@ -152,6 +152,7 @@
                             :label="$t('KSK Amount')"
                         />
                         <BaseTextarea
+                            v-if="!form.ksk_liable"
                             :label="$t('KSK Reason')"
                             id="kskReason"
                             v-model="form.ksk_reason"
@@ -168,15 +169,27 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="grid grid-cols-1 gap-4 mb-4" >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="form.foreign_tax">
                         <BaseInput
                             type="number"
                             step="0.01"
-                            v-if="form.foreign_tax"
                             id="foreignTaxAmount"
                             v-model="form.foreign_tax_amount"
                             :label="$t('Foreign tax amount')"
                         />
+                        <div></div>
+                        <BaseInput
+                            id="foreignTaxCity"
+                            v-model="form.foreign_tax_city"
+                            :label="$t('City')"
+                        />
+                        <BaseInput
+                            id="foreignTaxCountry"
+                            v-model="form.foreign_tax_country"
+                            :label="$t('Country')"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 mb-4" v-if="!form.foreign_tax">
                         <BaseTextarea
                             :label="$t('Foreign tax reason')"
                             id="foreignTaxReason"
@@ -213,6 +226,23 @@
                         :label="$t('Comment / Note')"
                         id="comment"
                         v-model="form.comment"
+                        rows="3"
+                    />
+                </div>
+
+                <!-- Contract State -->
+                <div class="">
+                    <BaseInput
+                        id="contractState"
+                        v-model="form.contract_state"
+                        :label="$t('Contract status')"
+                    />
+                </div>
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Contract status comment')"
+                        id="contractStateComment"
+                        v-model="form.contract_state_comment"
                         rows="3"
                     />
                 </div>
@@ -291,12 +321,16 @@ export default {
                 ksk_reason: '',
                 foreign_tax: false,
                 foreign_tax_amount: null,
+                foreign_tax_city: '',
+                foreign_tax_country: '',
                 foreign_tax_reason: '',
                 reverse_charge_amount: null,
                 deadline_date: null,
                 contract_type_id: null,
                 company_type_id: null,
                 comment: '',
+                contract_state: '',
+                contract_state_comment: '',
             }),
         }
     },

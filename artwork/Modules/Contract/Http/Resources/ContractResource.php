@@ -52,6 +52,8 @@ class ContractResource extends JsonResource
             'resident_abroad' => $this->resident_abroad,
             'foreign_tax' => $this->foreign_tax,
             'foreign_tax_amount' => $this->foreign_tax_amount,
+            'foreign_tax_city' => $this->foreign_tax_city,
+            'foreign_tax_country' => $this->foreign_tax_country,
             'foreign_tax_reason' => $this->foreign_tax_reason,
             'reverse_charge_amount' => $this->reverse_charge_amount,
             'deadline_date' => $this->deadline_date,
@@ -59,6 +61,8 @@ class ContractResource extends JsonResource
             'currency' => $this->currency,
             'is_freed' => $this->is_freed,
             'description' => $this->description,
+            'contract_state' => $this->contract_state,
+            'contract_state_comment' => $this->contract_state_comment,
             'accessibleUsers' => $this->getAccessibleUsers()->map(fn ($user) => [
                 'resource' => class_basename($user),
                 'id' => $user->id,

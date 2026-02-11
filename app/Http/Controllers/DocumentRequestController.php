@@ -44,9 +44,15 @@ class DocumentRequestController extends Controller
             ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
             ->get();
 
+        // Get requests that are not assigned to any user
+        $unassignedRequests = DocumentRequest::whereNull('requested_id')
+            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->get();
+
         return inertia('DocumentRequests/Index', [
             'createdRequests' => DocumentRequestResource::collection($createdRequests)->resolve(),
             'assignedRequests' => DocumentRequestResource::collection($assignedRequests)->resolve(),
+            'unassignedRequests' => DocumentRequestResource::collection($unassignedRequests)->resolve(),
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
@@ -62,7 +68,7 @@ class DocumentRequestController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'requested_id' => 'required|exists:users,id',
+            'requested_id' => 'nullable|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
             'contract_partner' => 'nullable|string|max:255',
             'contract_value' => 'nullable|numeric',
@@ -85,7 +91,7 @@ class DocumentRequestController extends Controller
 
         $documentRequest = DocumentRequest::create([
             'requester_id' => Auth::id(),
-            'requested_id' => $validated['requested_id'],
+            'requested_id' => $validated['requested_id'] ?? null,
             'project_id' => $validated['project_id'] ?? null,
             'status' => DocumentRequest::STATUS_OPEN,
             'contract_partner' => $validated['contract_partner'] ?? null,
@@ -107,8 +113,10 @@ class DocumentRequestController extends Controller
             'contract_state_comment' => $validated['contract_state_comment'] ?? null,
         ]);
 
-        // Send notification to requested user
-        $this->sendDocumentRequestNotification($documentRequest);
+        // Send notification to requested user (only if a user was assigned)
+        if ($documentRequest->requested_id) {
+            $this->sendDocumentRequestNotification($documentRequest);
+        }
 
         return Redirect::back();
     }
@@ -145,7 +153,8 @@ class DocumentRequestController extends Controller
         $documentRequest->update($validated);
 
         // If contract was uploaded and status changed to completed, notify requester
-        if (isset($validated['contract_id']) && $validated['status'] === DocumentRequest::STATUS_COMPLETED) {
+        // Only send notification if a user was assigned
+        if (isset($validated['contract_id']) && $validated['status'] === DocumentRequest::STATUS_COMPLETED && $documentRequest->requested_id) {
             $this->sendDocumentRequestCompletedNotification($documentRequest);
         }
 
@@ -181,8 +190,10 @@ class DocumentRequestController extends Controller
             'status' => DocumentRequest::STATUS_COMPLETED,
         ]);
 
-        // Notify requester that the document has been uploaded
-        $this->sendDocumentRequestCompletedNotification($documentRequest);
+        // Notify requester that the document has been uploaded (only if a user was assigned)
+        if ($documentRequest->requested_id) {
+            $this->sendDocumentRequestCompletedNotification($documentRequest);
+        }
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {

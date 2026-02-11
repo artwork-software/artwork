@@ -3967,5 +3967,9 @@
     "Country": "Land",
     "View the document request details.": "Sieh dir die Details der Dokumentenanfrage an.",
     "Contract status": "Stand Vertrag",
-    "Contract status comment": "Kommentar Stand Vertrag"
+    "Contract status comment": "Kommentar Stand Vertrag",
+    "Unassigned": "Nicht zugewiesen",
+    "No unassigned document requests.": "Keine nicht zugewiesenen Dokumentenanfragen.",
+    "Create a new document request.": "Erstelle eine neue Dokumentenanfrage.",
+    "Assign to user": "Nutzer zuweisen"
 }

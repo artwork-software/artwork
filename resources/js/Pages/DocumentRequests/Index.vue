@@ -47,6 +47,20 @@
                         </span>
                     </button>
                     <button
+                        @click="activeTab = 'unassigned'"
+                        :class="[
+                            activeTab === 'unassigned'
+                                ? 'border-orange-500 text-orange-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                            'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium'
+                        ]"
+                    >
+                        {{ $t('Unassigned') }}
+                        <span class="ml-2 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-600">
+                            {{ openUnassignedRequests.length }}
+                        </span>
+                    </button>
+                    <button
                         @click="activeTab = 'completed'"
                         :class="[
                             activeTab === 'completed'
@@ -91,18 +105,19 @@
 
                     <template #cell-status="{ row }">
                         <span :class="getStatusClass(row.status)" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                            {{ getStatusLabel(row.status) }}
+                            {{ $t(getStatusLabel(row.status)) }}
                         </span>
                     </template>
 
                     <template #cell-deadline="{ row }">
-                        <span v-if="row.deadline_date" class="text-sm text-gray-900">{{ row.deadline_date }}</span>
+                        <span v-if="row.deadline_date" class="text-sm text-gray-900">{{ formatDate(row.deadline_date) }}</span>
                         <span v-else class="text-sm text-gray-400">-</span>
                     </template>
 
                     <template #row-actions="{ row }">
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconUpload" :title="$t('Upload document')" white-menu-background @click="openUploadModal(row)" />
+                            <BaseMenuItem :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
                             <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
                         </BaseMenu>
                     </template>
@@ -138,7 +153,7 @@
 
                     <template #cell-status="{ row }">
                         <span :class="getStatusClass(row.status)" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                            {{ getStatusLabel(row.status) }}
+                            {{ $t(getStatusLabel(row.status)) }}
                         </span>
                     </template>
 
@@ -153,6 +168,54 @@
                         <BaseMenu has-no-offset white-menu-background>
                             <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
                             <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
+                        </BaseMenu>
+                    </template>
+                </BaseTable>
+            </div>
+
+            <!-- Unassigned Requests Table -->
+            <div v-if="activeTab === 'unassigned'">
+                <BaseTable
+                    :rows="openUnassignedRequests"
+                    :columns="colsUnassigned"
+                    row-key="id"
+                    v-model:page="page"
+                    :empty-title="$t('No document requests')"
+                    :empty-message="$t('No unassigned document requests.')"
+                >
+                    <template #cell-requester="{ row }">
+                        <div v-if="row.requester" class="flex items-center">
+                            <img :src="row.requester.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ row.requester.first_name }} {{ row.requester.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template #cell-project="{ row }">
+                        <span v-if="row.project" class="text-sm text-gray-900">{{ row.project.name }}</span>
+                        <span v-else class="text-sm text-gray-400">-</span>
+                    </template>
+
+                    <template #cell-status="{ row }">
+                        <span :class="getStatusClass(row.status)" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                            {{ $t(getStatusLabel(row.status)) }}
+                        </span>
+                    </template>
+
+                    <template #cell-deadline="{ row }">
+                        <span v-if="row.deadline_date" class="text-sm text-gray-900">{{ formatDate(row.deadline_date) }}</span>
+                        <span v-else class="text-sm text-gray-400">-</span>
+                    </template>
+
+                    <template #row-actions="{ row }">
+                        <BaseMenu has-no-offset white-menu-background>
+                            <BaseMenuItem :icon="IconUpload" :title="$t('Upload document')" white-menu-background @click="openUploadModal(row)" />
+                            <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconEdit" :title="$t('Edit')" white-menu-background @click="openEditModal(row)" />
+                            <BaseMenuItem :icon="IconEye" :title="$t('View details')" white-menu-background @click="openDetailModal(row)" />
                             <BaseMenuItem v-if="can('can edit document requests') || hasAdminRole()" :icon="IconTrash" :title="$t('Delete')" white-menu-background @click="openDeleteModal(row)" />
                         </BaseMenu>
                     </template>
@@ -301,6 +364,10 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    unassignedRequests: {
+        type: Array,
+        default: () => []
+    },
     contract_types: {
         type: Array,
         default: () => []
@@ -330,6 +397,8 @@ onMounted(() => {
         activeTab.value = 'completed'
     } else if (tabParam === 'created') {
         activeTab.value = 'created'
+    } else if (tabParam === 'unassigned') {
+        activeTab.value = 'unassigned'
     }
 })
 const showCreateModal = ref(false)
@@ -347,6 +416,11 @@ const openAssignedRequests = computed(() =>
 
 const openCreatedRequests = computed(() =>
     props.createdRequests.filter(r => r.status !== 'completed')
+)
+
+// Filter for open/in_progress unassigned requests (not completed)
+const openUnassignedRequests = computed(() =>
+    props.unassignedRequests.filter(r => r.status !== 'completed')
 )
 
 // Completed requests from both created and assigned
@@ -380,6 +454,13 @@ const colsCompleted = ref([
     { key: 'requested', label: 'Assigned to', sortable: false },
     { key: 'project', label: 'Project', sortable: false },
     { key: 'file', label: 'File', sortable: false },
+])
+
+const colsUnassigned = ref([
+    { key: 'requester', label: 'Requested by', sortable: false },
+    { key: 'project', label: 'Project', sortable: false },
+    { key: 'status', label: 'Status', sortable: false },
+    { key: 'deadline', label: 'Deadline', sortable: false },
 ])
 
 const getStatusClass = (status) => {
@@ -451,5 +532,14 @@ const deleteRequest = () => {
             onSuccess: () => closeDeleteModal()
         })
     }
+}
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}.${month}.${year}`
 }
 </script>

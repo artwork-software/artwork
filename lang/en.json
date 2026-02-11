@@ -3927,5 +3927,9 @@
     "Country": "Country",
     "View the document request details.": "View the document request details.",
     "Contract status": "Contract status",
-    "Contract status comment": "Contract status comment"
+    "Contract status comment": "Contract status comment",
+    "Unassigned": "Unassigned",
+    "No unassigned document requests.": "No unassigned document requests.",
+    "Create a new document request.": "Create a new document request.",
+    "Assign to user": "Assign to user"
 }

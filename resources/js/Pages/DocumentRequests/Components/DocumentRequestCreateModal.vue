@@ -1,10 +1,10 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Create document request')" :description="$t('Create a new document request and assign it to a user.')">
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Create document request')" :description="$t('Create a new document request.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Assign to user -->
                 <div class="col-span-full relative">
-                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user*')" />
+                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user')" />
                     <div v-if="selectedUser" class="mt-2 flex items-center">
                         <img class="h-8 w-8 rounded-full object-cover" :src="selectedUser.profile_photo_url" alt="" />
                         <span class="ml-3 text-sm font-medium text-gray-900">
@@ -252,7 +252,6 @@
                 <BaseUIButton
                     :label="$t('Create document request')"
                     is-add-button
-                    :disabled="!selectedUser"
                     @click="storeRequest"
                 />
             </div>

@@ -1988,7 +1988,8 @@ export default {
                     }),
                     {
                         preserveState: true,
-                        preserveScroll: true
+                        preserveScroll: true,
+                        onSuccess: () => this.$emit('budget-updated')
                     }
                 )
             }

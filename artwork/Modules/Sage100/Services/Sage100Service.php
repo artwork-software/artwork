@@ -186,11 +186,18 @@ class Sage100Service
             $sageColumn = $this->createSageColumnForTable($project->table);
         }
 
-        $subPositionRowsSageColumnCellId = $sageColumn
+        $subPositionRowsSageColumnCell = $sageColumn
             ->cells
             ->where('sub_position_row_id', $subPositionRows->first()->id)
-            ->first()
-            ->id;
+            ->first();
+        if (!$subPositionRowsSageColumnCell) {
+            $this->createSageCellsForSageColumn($project->table, $sageColumn);
+            $subPositionRowsSageColumnCell = $sageColumn
+                ->cells
+                ->where('sub_position_row_id', $subPositionRows->first()->id)
+                ->first();
+        }
+        $subPositionRowsSageColumnCellId = $subPositionRowsSageColumnCell->id;
 
         if ($sageNotAssignedData) {
             $sageData = $this->sageAssignedDataService->createFromSageNotAssignedData(
@@ -724,19 +731,8 @@ class Sage100Service
         return $query;
     }
 
-    private function createSageColumnForTable(Table $table): Column
+    private function createSageCellsForSageColumn(Table $table, Column $sageColumn): void
     {
-        $sageColumn = $this->columnService->createColumnInTable(
-            $table,
-            'Sage Abgleich',
-            '-',
-            'sage',
-            //position starts counting at 0 so current column count is desired position for new column
-            $table->columns()->count()
-        );
-
-        $this->columnService->setColumnSubName($table->id);
-
         $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
             $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
                 $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
@@ -754,6 +750,22 @@ class Sage100Service
 
             $sageColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
         });
+    }
+
+    private function createSageColumnForTable(Table $table): Column
+    {
+        $sageColumn = $this->columnService->createColumnInTable(
+            $table,
+            'Sage Abgleich',
+            '-',
+            'sage',
+            //position starts counting at 0 so current column count is desired position for new column
+            $table->columns()->count()
+        );
+
+        $this->columnService->setColumnSubName($table->id);
+
+        $this->createSageCellsForSageColumn($table, $sageColumn);
 
         $sageColumn->budgetSumDetails()->create([
             'type' => 'COST',

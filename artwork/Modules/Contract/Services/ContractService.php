@@ -437,7 +437,7 @@ class ContractService
 
                 $notificationTitle = __(
                     'notification.document_request.completed',
-                    ['title' => $documentRequest->title, 'user' => $uploaderName],
+                    ['user' => $uploaderName],
                     $requester->language
                 );
 
@@ -451,7 +451,6 @@ class ContractService
                     1 => [
                         'type' => 'string',
                         'title' => __('notification.document_request.completed_description', [
-                            'title' => $documentRequest->title,
                             'user' => $uploaderName
                         ], $requester->language),
                         'href' => null

@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Document request details')" :description="documentRequest?.title">
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Document request details')" :description="$t('View the document request details.')">
         <div class="space-y-6">
             <!-- Status Badge -->
             <div class="flex items-center justify-between">
@@ -35,12 +35,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Description -->
-            <div v-if="documentRequest?.description">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Description') }}</span>
-                <p class="mt-1 text-sm text-gray-900">{{ documentRequest.description }}</p>
             </div>
 
             <!-- Project -->

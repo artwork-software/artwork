@@ -16,8 +16,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $requested_id
  * @property int|null $project_id
  * @property int|null $contract_id
- * @property string $title
- * @property string|null $description
  * @property string $status
  * @property string|null $contract_partner
  * @property float|null $contract_value
@@ -50,8 +48,6 @@ class DocumentRequest extends Model
         'requested_id',
         'project_id',
         'contract_id',
-        'title',
-        'description',
         'status',
         'contract_partner',
         'contract_value',

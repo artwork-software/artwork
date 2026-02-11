@@ -73,11 +73,6 @@
                     :empty-title="$t('No document requests')"
                     :empty-message="$t('No document requests assigned to you.')"
                 >
-                    <template #cell-title="{ row }">
-                        <div class="font-medium text-gray-900">{{ row.title }}</div>
-                        <div class="text-sm text-gray-500">{{ row.description }}</div>
-                    </template>
-
                     <template #cell-requester="{ row }">
                         <div v-if="row.requester" class="flex items-center">
                             <img :src="row.requester.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
@@ -124,10 +119,6 @@
                     :empty-title="$t('No document requests')"
                     :empty-message="$t('You have not created any document requests yet.')"
                 >
-                    <template #cell-title="{ row }">
-                        <div class="font-medium text-gray-900">{{ row.title }}</div>
-                        <div class="text-sm text-gray-500">{{ row.description }}</div>
-                    </template>
 
                     <template #cell-requested="{ row }">
                         <div v-if="row.requested" class="flex items-center">
@@ -178,11 +169,6 @@
                     :empty-title="$t('No document requests')"
                     :empty-message="$t('No completed document requests yet.')"
                 >
-                    <template #cell-title="{ row }">
-                        <div class="font-medium text-gray-900">{{ row.title }}</div>
-                        <div class="text-sm text-gray-500">{{ row.description }}</div>
-                    </template>
-
                     <template #cell-requester="{ row }">
                         <div v-if="row.requester" class="flex items-center">
                             <img :src="row.requester.profile_photo_url" alt="" class="size-8 rounded-full object-cover" />
@@ -376,7 +362,6 @@ const completedRequests = computed(() => {
 })
 
 const cols = ref([
-    { key: 'title', label: 'Title', sortable: false },
     { key: 'requester', label: 'Requested by', sortable: false },
     { key: 'project', label: 'Project', sortable: false },
     { key: 'status', label: 'Status', sortable: false },
@@ -384,7 +369,6 @@ const cols = ref([
 ])
 
 const colsCreated = ref([
-    { key: 'title', label: 'Title', sortable: false },
     { key: 'requested', label: 'Assigned to', sortable: false },
     { key: 'project', label: 'Project', sortable: false },
     { key: 'status', label: 'Status', sortable: false },
@@ -392,7 +376,6 @@ const colsCreated = ref([
 ])
 
 const colsCompleted = ref([
-    { key: 'title', label: 'Title', sortable: false },
     { key: 'requester', label: 'Requested by', sortable: false },
     { key: 'requested', label: 'Assigned to', sortable: false },
     { key: 'project', label: 'Project', sortable: false },

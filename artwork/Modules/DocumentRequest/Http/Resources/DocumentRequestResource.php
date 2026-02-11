@@ -37,8 +37,6 @@ class DocumentRequestResource extends JsonResource
                 'name' => $this->contract->name,
                 'basename' => $this->contract->basename,
             ] : null,
-            'title' => $this->title,
-            'description' => $this->description,
             'status' => $this->status,
             'contract_partner' => $this->contract_partner,
             'contract_value' => $this->contract_value,

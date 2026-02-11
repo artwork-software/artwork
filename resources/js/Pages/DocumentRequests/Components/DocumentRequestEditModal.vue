@@ -2,25 +2,6 @@
     <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document request')" :description="$t('Edit the document request details.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Title -->
-                <div class="col-span-full">
-                    <BaseInput
-                        v-model="form.title"
-                        id="title"
-                        :label="$t('Title*')"
-                    />
-                </div>
-
-                <!-- Description -->
-                <div class="col-span-full">
-                    <BaseTextarea
-                        :label="$t('Description')"
-                        id="description"
-                        v-model="form.description"
-                        rows="3"
-                    />
-                </div>
-
                 <!-- Status -->
                 <div class="col-span-full">
                     <Listbox as="div" class="flex relative" v-model="selectedStatus">
@@ -209,7 +190,7 @@
                 <BaseUIButton
                     :label="$t('Save changes')"
                     is-add-button
-                    :disabled="!form.title"
+                    :disabled="false"
                     @click="updateRequest"
                 />
             </div>
@@ -263,8 +244,6 @@ export default {
                 { value: 'completed', label: this.$t('Completed') },
             ],
             form: useForm({
-                title: this.documentRequest?.title || '',
-                description: this.documentRequest?.description || '',
                 status: this.documentRequest?.status || 'open',
                 contract_partner: this.documentRequest?.contract_partner || '',
                 contract_value: this.documentRequest?.contract_value || null,

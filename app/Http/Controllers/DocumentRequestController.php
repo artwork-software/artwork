@@ -64,8 +64,6 @@ class DocumentRequestController extends Controller
         $validated = $request->validate([
             'requested_id' => 'required|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'contract_partner' => 'nullable|string|max:255',
             'contract_value' => 'nullable|numeric',
             'ksk_liable' => 'boolean',
@@ -85,8 +83,6 @@ class DocumentRequestController extends Controller
             'requester_id' => Auth::id(),
             'requested_id' => $validated['requested_id'],
             'project_id' => $validated['project_id'] ?? null,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
             'status' => DocumentRequest::STATUS_OPEN,
             'contract_partner' => $validated['contract_partner'] ?? null,
             'contract_value' => $validated['contract_value'] ?? null,
@@ -117,8 +113,6 @@ class DocumentRequestController extends Controller
         $validated = $request->validate([
             'requested_id' => 'sometimes|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
             'status' => 'sometimes|in:open,in_progress,completed',
             'contract_partner' => 'nullable|string|max:255',
             'contract_value' => 'nullable|numeric',
@@ -219,11 +213,6 @@ class DocumentRequestController extends Controller
 
         $notificationDescription = [
             1 => [
-                'type' => 'string',
-                'title' => $documentRequest->title,
-                'href' => null
-            ],
-            2 => [
                 'type' => 'link',
                 'title' => __('View document requests'),
                 'href' => route('document-requests.index'),
@@ -259,7 +248,6 @@ class DocumentRequestController extends Controller
         $notificationTitle = __(
             'notification.document_request.completed',
             [
-                'title' => $documentRequest->title,
                 'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name
             ],
             $requesterUser->language
@@ -273,11 +261,6 @@ class DocumentRequestController extends Controller
 
         $notificationDescription = [
             1 => [
-                'type' => 'string',
-                'title' => $documentRequest->title,
-                'href' => null
-            ],
-            2 => [
                 'type' => 'link',
                 'title' => __('View document requests'),
                 'href' => route('document-requests.index'),

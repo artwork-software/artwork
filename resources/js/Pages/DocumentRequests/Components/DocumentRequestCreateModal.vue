@@ -2,25 +2,6 @@
     <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Create document request')" :description="$t('Create a new document request and assign it to a user.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Title -->
-                <div class="col-span-full">
-                    <BaseInput
-                        v-model="form.title"
-                        id="title"
-                        :label="$t('Title*')"
-                    />
-                </div>
-
-                <!-- Description -->
-                <div class="col-span-full">
-                    <BaseTextarea
-                        :label="$t('Description')"
-                        id="description"
-                        v-model="form.description"
-                        rows="3"
-                    />
-                </div>
-
                 <!-- Assign to user -->
                 <div class="col-span-full relative">
                     <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user*')" />
@@ -241,7 +222,7 @@
                 <BaseUIButton
                     :label="$t('Create document request')"
                     is-add-button
-                    :disabled="!form.title || !selectedUser"
+                    :disabled="!selectedUser"
                     @click="storeRequest"
                 />
             </div>
@@ -303,8 +284,6 @@ export default {
             form: useForm({
                 requested_id: null,
                 project_id: null,
-                title: '',
-                description: '',
                 contract_partner: '',
                 contract_value: null,
                 ksk_liable: false,

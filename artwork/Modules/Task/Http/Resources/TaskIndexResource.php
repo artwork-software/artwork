@@ -31,7 +31,8 @@ class TaskIndexResource extends JsonResource
             'done_by_user' => $this->user_who_done,
             'done_at' => Carbon::parse($this->done_at)->format('d.m.Y, H:i'),
             'done_at_dt_local' => Carbon::parse($this->done_at)->toDateTimeLocalString(),
-            'users' => $this->task_users()->get()
+            'users' => $this->task_users()->get(),
+            'user_id' => $this->user_id
         ];
     }
 }

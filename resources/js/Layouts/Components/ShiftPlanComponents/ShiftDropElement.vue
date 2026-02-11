@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref, watch, getCurrentInstance, provide} from 'vue'
+import {computed, reactive, ref, watch, getCurrentInstance, provide, inject} from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
@@ -287,7 +287,11 @@ const checkIfUserIsInCraft = computed(() => {
     if (isUniversallyApplicablePerson(u)) return true
 
     const assigned = new Set((u.assigned_craft_ids ?? u.craft_ids ?? []).map(Number))
-    return assigned.has(Number(craftId)) || Number(u.craftId) === Number(craftId)
+    if (assigned.has(Number(craftId)) || Number(u.craftId) === Number(craftId)) return true
+
+    // Prüfe ob Person über ein universelles Craft eine passende Qualifikation für diese Schicht hat
+    const userQualis = Array.isArray(u?.shift_qualifications) ? u.shift_qualifications : Object.values(u?.shift_qualifications || {})
+    return userQualis.some((uq: any) => universalCraftIds.value.has(Number(uq?.pivot?.craft_id)))
 })
 
 /* ---------------- Watcher ---------------- */
@@ -349,13 +353,18 @@ function getPersonCraftId(person: any): number | null {
     return id == null ? null : Number(id)
 }
 
+// Injected crafts from parent ShiftPlan (provide/inject)
+const injectedCrafts = inject<any>('shiftPlanCrafts', ref([]))
+
 const craftsById = computed<Record<number, any>>(() => {
-    // falls du crafts irgendwo in page props hast (optional)
-    const raw =
-        (page?.props as any)?.crafts ??
-        (page?.props as any)?.allCrafts ??
-        (page?.props as any)?.craftList ??
-        []
+    // Bevorzuge injected crafts (von ShiftPlan.vue), dann page props als Fallback
+    const injected = injectedCrafts?.value ?? injectedCrafts ?? []
+    const raw = (Array.isArray(injected) && injected.length > 0)
+        ? injected
+        : ((page?.props as any)?.crafts ??
+           (page?.props as any)?.allCrafts ??
+           (page?.props as any)?.craftList ??
+           [])
     const arr = Array.isArray(raw) ? raw : Object.values(raw || {})
     const map: Record<number, any> = {}
     arr.forEach((c: any) => {
@@ -395,7 +404,13 @@ function personCanWorkOnCraft(person: any, targetCraftId: number): boolean {
     ].map(Number).filter((n) => Number.isFinite(n)))
 
     const primary = getPersonCraftId(person)
-    return ids.has(Number(targetCraftId)) || (primary != null && primary === Number(targetCraftId))
+    if (ids.has(Number(targetCraftId)) || (primary != null && primary === Number(targetCraftId))) return true
+
+    // Prüfe ob Person über ein universelles Craft eine passende Qualifikation hat
+    const userQualis = Array.isArray(person?.shift_qualifications)
+        ? person.shift_qualifications
+        : Object.values(person?.shift_qualifications || {})
+    return userQualis.some((uq: any) => universalCraftIds.value.has(Number(uq?.pivot?.craft_id)))
 }
 
 function requiredQualificationIdsForShift(): number[] {
@@ -410,23 +425,40 @@ function requiredQualificationIdsForShift(): number[] {
         .filter((n: any) => Number.isFinite(n))
 }
 
+// IDs aller universell einsetzbaren Crafts
+const universalCraftIds = computed<Set<number>>(() => {
+    const arr = Object.values(craftsById.value)
+    const ids = new Set<number>()
+    arr.forEach((c: any) => {
+        if (c?.universally_applicable) ids.add(Number(c.id))
+    })
+    return ids
+})
+
 function matchingUserQualisForShift(person: any, targetCraftId: number): any[] {
     const requiredIds = new Set(requiredQualificationIdsForShift())
     const userQualis = Array.isArray(person?.shift_qualifications)
         ? person.shift_qualifications
         : Object.values(person?.shift_qualifications || {})
 
-    const universal = isUniversallyApplicablePerson(person)
-
-    return userQualis.filter((uq: any) => {
+    // Bevorzuge direkte Qualifikationen (pivot.craft_id === targetCraftId)
+    const directMatches = userQualis.filter((uq: any) => {
         const uqId = Number(uq?.id)
         if (!requiredIds.has(uqId)) return false
-
-        if (universal) return true // <- KEY FIX: universal ignoriert pivot.craft_id
-
         const uqCraftId = uq?.pivot?.craft_id
         if (uqCraftId == null) return true
         return Number(uqCraftId) === Number(targetCraftId)
+    })
+
+    if (directMatches.length > 0) return directMatches
+
+    // Fallback: Qualifikationen über universell einsetzbare Crafts
+    return userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
+        const uqCraftId = uq?.pivot?.craft_id
+        if (uqCraftId == null) return false
+        return universalCraftIds.value.has(Number(uqCraftId))
     })
 }
 
@@ -614,7 +646,34 @@ function saveUser() {
 }
 
 
+function resolveCraftAbbreviationForAssignment(user: any, shiftQualificationId: number): string {
+    const targetCraftId = getTargetCraftIdFromShift()
+    const userQualis = Array.isArray(user?.shift_qualifications)
+        ? user.shift_qualifications
+        : Object.values(user?.shift_qualifications || {})
+
+    // Prüfe ob die Qualifikation direkt zum Schicht-Craft gehört
+    const directMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        Number(uq?.pivot?.craft_id) === Number(targetCraftId)
+    )
+    if (directMatch) return user.craft_abbreviation ?? ''
+
+    // Sonst: Qualifikation kommt über ein universelles Craft
+    const universalMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        universalCraftIds.value.has(Number(uq?.pivot?.craft_id))
+    )
+    if (universalMatch) {
+        const uCraft = craftsById.value[Number(universalMatch.pivot.craft_id)]
+        return uCraft?.abbreviation ?? user.craft_abbreviation ?? ''
+    }
+
+    return user.craft_abbreviation ?? ''
+}
+
 function assignUser(user: any, shiftQualificationId: number) {
+    const craftAbbr = resolveCraftAbbreviationForAssignment(user, shiftQualificationId)
     axios.post(
         route('shift.assignUserByType', { shift: props.shift.id }),
         {
@@ -622,7 +681,7 @@ function assignUser(user: any, shiftQualificationId: number) {
             userType: user.type,
             shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            craft_abbreviation: user.craft_abbreviation
+            craft_abbreviation: craftAbbr
         }
     ).then(() => {
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)

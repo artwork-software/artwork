@@ -3913,5 +3913,14 @@
     "Display Text": "Display Text",
     "Add Entry": "Add Entry",
     "Document component": "Document component",
-    "Remove person from team": "Remove person from team"
+    "Remove person from team": "Remove person from team",
+    "Loading data...": "Loading data...",
+    "Kanban": "Kanban",
+    "You only see checklists that have at least one task assigned to you, or that are assigned to you": "You only see checklists that have at least one task assigned to you, or that are assigned to you",
+    "Edit individual time": "Edit individual time",
+    "Start time": "Start time",
+    "End time": "End time",
+    "Break (minutes)": "Break (minutes)",
+    "Saving...": "Saving...",
+    "Edit the details of this individual time entry.": "Edit the details of this individual time entry."
 }

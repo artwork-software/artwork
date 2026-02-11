@@ -9,16 +9,26 @@
       }"
         >
             <a
-                v-if="project && eventType"
+                v-if="project && eventType && canAccessProject"
                 :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
                 class="inline-flex items-center max-w-[70%] truncate text-sm font-semibold hover:opacity-90 transition"
             >
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </a>
+            <span v-else-if="project && eventType" class="truncate text-sm font-semibold">
+                {{ eventType?.abbreviation }}: {{ project?.name }}
+            </span>
 
             <span v-else class="truncate text-sm font-semibold">
-        {{ getCraftAndFunctionLabel() }}
-      </span>
+                {{ getCraftAndFunctionLabel() }} - <span>
+                    <a
+                        v-if="canAccessProject"
+                        :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
+                        class="inline-flex items-center max-w-[70%] truncate text-sm font-semibold hover:opacity-90 transition"
+                    >{{ project?.name }}</a>
+                    <span v-else>{{ project?.name }}</span>
+                </span>
+            </span>
 
             <div class="ml-auto flex items-center gap-2">
                 <PropertyIcon name="IconLock" v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
@@ -164,7 +174,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { IconCalendarMonth, IconClockEdit, IconLock } from '@tabler/icons-vue'
 import ShiftNoteComponent from '@/Layouts/Components/ShiftNoteComponent.vue'
@@ -172,9 +182,11 @@ import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
 import RequestWorkTimeChangeModal from '@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue'
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { usePermission } from "@/Composeables/Permission.js";
 
 const percentage = usePage().props.high_contrast_percent
 const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper()
+const { can, hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({
     type: { type: String, required: true, default: null },
@@ -188,6 +200,16 @@ const props = defineProps({
 
 const showRequestWorkTimeChangeModal = ref(false)
 const hasIndivTime = ref(false)
+
+const canAccessProject = computed(() => {
+    if (hasAdminRole()) return true
+    if (can('can view projects')) return true
+    // Check if user is part of project team
+    const currentUserId = usePage().props.auth.user.id
+    if (props.project?.users?.some(u => u.id === currentUserId)) return true
+    if (props.project?.managers?.some(m => m.id === currentUserId)) return true
+    return false
+})
 
 const formatDateDMYForModal = (dateStr) => {
     if (!dateStr) return null

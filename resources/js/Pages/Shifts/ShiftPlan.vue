@@ -790,7 +790,7 @@ import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
 import {
     computed,
     defineAsyncComponent,
-    getCurrentInstance, inject,
+    getCurrentInstance, inject, provide,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -988,6 +988,9 @@ const craftsLoaded = ref<any[]>([])
 const craftsResolved = computed(() =>
     (craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]
 )
+
+// Provide crafts for child components (e.g. ShiftDropElement)
+provide('shiftPlanCrafts', craftsResolved)
 
 // Workers loaded asynchronously from API (craft-first)
 const workersLoaded = ref<{
@@ -2572,7 +2575,8 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 }
             }
 
-            await persistAssign(shift.id, qualificationId)
+            const shiftCraftId = shift.craft_id ?? shift.craftId ?? shift.craft?.id ?? null
+            await persistAssign(shift.id, qualificationId, shiftCraftId)
             showNotice('success', 'Assigned', 'The user was successfully added to the shift.')
         })
             .catch((err) => {
@@ -2605,6 +2609,15 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
     }
 }
 
+// IDs aller universell einsetzbaren Crafts (für multi-edit)
+const multiEditUniversalCraftIds = computed<Set<number>>(() => {
+    const ids = new Set<number>()
+    for (const c of craftsResolved.value) {
+        if (c?.universally_applicable) ids.add(Number(c.id))
+    }
+    return ids
+})
+
 async function resolveQualificationFor(desiredShift: any) {
     const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
     const requiredIds = new Set(requiredQualificationIdsForShift(desiredShift))
@@ -2616,23 +2629,26 @@ async function resolveQualificationFor(desiredShift: any) {
         desiredShift.craft?.id ??
         null
 
-    const isUniversal = isUniversallyApplicablePerson(userForMultiEdit.value)
-
-    const available = userQualis.filter((uq: any) => {
+    // Schritt 1: Direkte Qualifikationen (pivot.craft_id === shiftCraftId)
+    const directMatches = userQualis.filter((uq: any) => {
         const uqId = Number(uq?.id)
         if (!requiredIds.has(uqId)) return false
-
-        // 🔥 KEY FIX:
-        // Universal -> craft-unabhängig matchen (pivot.craft_id egal)
-        if (isUniversal) return true
-
-        // Nicht-universal: wenn shiftCraftId unbekannt -> ok, sonst pivot prüfen
         if (!shiftCraftId) return true
-
         const uqCraftId = uq.pivot?.craft_id ?? null
         if (uqCraftId === null) return true
         return Number(uqCraftId) === Number(shiftCraftId)
     })
+
+    // Schritt 2: Fallback auf universelle Crafts
+    const available = directMatches.length > 0
+        ? directMatches
+        : userQualis.filter((uq: any) => {
+            const uqId = Number(uq?.id)
+            if (!requiredIds.has(uqId)) return false
+            const uqCraftId = uq.pivot?.craft_id ?? null
+            if (uqCraftId === null) return false
+            return multiEditUniversalCraftIds.value.has(Number(uqCraftId))
+        })
 
     if (available.length === 0) return null
     if (available.length === 1) return available[0].id
@@ -2659,11 +2675,37 @@ function openQualificationPicker(desiredShift: any, options: any[]) {
     })
 }
 
-async function persistAssign(shiftId: number, shiftQualificationId: number | null) {
+function resolveMultiEditCraftAbbreviation(shiftCraftId: number | null, shiftQualificationId: number | null): string {
+    if (shiftQualificationId == null || shiftCraftId == null) return userForMultiEdit.value.craft_abbreviation ?? ''
+
+    const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
+
+    // Direkte Qualifikation?
+    const directMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        Number(uq?.pivot?.craft_id) === Number(shiftCraftId)
+    )
+    if (directMatch) return userForMultiEdit.value.craft_abbreviation ?? ''
+
+    // Universelle Qualifikation?
+    const universalMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        multiEditUniversalCraftIds.value.has(Number(uq?.pivot?.craft_id))
+    )
+    if (universalMatch) {
+        const uCraft = craftsResolved.value.find((c: any) => c.id === Number(universalMatch.pivot.craft_id))
+        return uCraft?.abbreviation ?? userForMultiEdit.value.craft_abbreviation ?? ''
+    }
+
+    return userForMultiEdit.value.craft_abbreviation ?? ''
+}
+
+async function persistAssign(shiftId: number, shiftQualificationId: number | null, shiftCraftId: number | null = null) {
+    const craftAbbr = resolveMultiEditCraftAbbreviation(shiftCraftId, shiftQualificationId)
     const payload = {
         userType: userForMultiEdit.value.type,
         userTypeId: userForMultiEdit.value.id,
-        craft_abbreviation: userForMultiEdit.value.craft_abbreviation,
+        craft_abbreviation: craftAbbr,
         shiftsToHandle: {
             assignToShift: [
                 ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId}] : [{shiftId}]),

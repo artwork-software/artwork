@@ -175,13 +175,20 @@ readonly class CalendarDataService
                 ->where($endCol, '>=', $startDate);
         };
 
-        $eventOccupancySubquery = function ($eventQuery) use ($filter, $project, $overlap): void {
+        $eventOccupancySubquery = function ($eventQuery) use ($filter, $project, $overlap, $userCalendarSettings): void {
             $eventQuery->selectRaw('1')
                 ->from('events')
                 ->whereColumn('events.room_id', 'rooms.id')
+                ->whereNull('events.deleted_at')
                 ->when($project !== null, fn ($q) => $q->where('events.project_id', $project->id))
                 ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
-                ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'));
+                ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
+                ->where(function ($q) use ($userCalendarSettings): void {
+                    $q->where('events.is_planning', false);
+                    if ($userCalendarSettings?->show_planned_events) {
+                        $q->orWhere('events.is_planning', true);
+                    }
+                });
 
             if (!empty($filter?->event_property_ids)) {
                 $ids = $filter->event_property_ids;

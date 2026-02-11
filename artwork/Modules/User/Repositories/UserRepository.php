@@ -125,10 +125,9 @@ class UserRepository extends BaseRepository
         if (!$user instanceof User) {
             $user = $this->findUser($user);
         }
-
         return $user
             ->shifts()
-            ->with(['event', 'event.project', 'event.room'])
+            ->with('project')
             ->orderedByStart()
             ->get();
     }

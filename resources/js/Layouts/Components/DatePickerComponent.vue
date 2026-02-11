@@ -209,8 +209,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 7);
+            end.setDate(end.getDate() + 6);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -221,8 +220,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 14);
+            end.setDate(end.getDate() + 13);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -233,8 +231,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 30);
+            end.setDate(end.getDate() + 29);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -245,8 +242,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 90);
+            end.setDate(end.getDate() + 89);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -257,7 +253,6 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
             end.setFullYear(end.getFullYear() + 1);
             end.setDate(end.getDate() - 1);
             start.setHours(12, 0, 0, 0);

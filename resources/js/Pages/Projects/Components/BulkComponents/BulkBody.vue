@@ -173,7 +173,7 @@
 
                             <!-- Events in this group -->
                             <div v-for="(event, eventIndex) in group.events"
-                                 :key="event.id ?? `tmp-${event.index || eventIndex}`" class="mb-2">
+                                 :key="`event-${event.id}`" class="mb-2">
                                 <div :id="eventIndex" class="mx-1">
                                     <BulkSingleEvent
                                         :can-edit-component="canEditComponent && hasCreateEventsPermission"

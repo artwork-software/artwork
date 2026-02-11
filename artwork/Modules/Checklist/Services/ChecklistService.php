@@ -63,6 +63,97 @@ readonly class ChecklistService
         return $this->checklistRepository->getChecklistsForUserWithFilteredTasks($userId, $doneTask, $filter);
     }
 
+    /**
+     * Build the checklist payload for OwnTasksManagement using ChecklistIndexResource.
+     * Returns public and private checklists in the same format as the project checklist endpoint.
+     */
+    public function buildOwnTasksChecklistPayload(int $userId, int $sort): array
+    {
+        $checklists = Checklist::with(['users', 'tasks.task_users', 'project'])
+            ->where(function ($query) use ($userId): void {
+                $query->where(function ($q) use ($userId): void {
+                    // Public checklists where user is assigned, has tasks, or is a project member
+                    $q->where('private', false)
+                        ->where(function ($inner) use ($userId): void {
+                            $inner->whereHas('users', function ($uq) use ($userId): void {
+                                $uq->where('user_id', $userId);
+                            })
+                            ->orWhereHas('tasks.task_users', function ($tq) use ($userId): void {
+                                $tq->where('user_id', $userId);
+                            })
+                            ->orWhereHas('project.users', function ($pq) use ($userId): void {
+                                $pq->where('users.id', $userId);
+                            });
+                        });
+                })
+                ->orWhere(function ($q) use ($userId): void {
+                    // Private checklists owned by the user
+                    $q->where('private', true)
+                        ->where('user_id', $userId);
+                });
+            })
+            ->get();
+
+        // Filter out checklists that have no tasks assigned to the user AND are not assigned to the user
+        $checklists = $checklists->filter(function ($checklist) use ($userId) {
+            // Private checklists owned by user - always keep
+            if ($checklist->private && $checklist->user_id === $userId) {
+                return true;
+            }
+            // Keep if checklist is assigned to the user
+            if ($checklist->users->contains('id', $userId)) {
+                return true;
+            }
+            // Keep if any task is assigned to the user
+            if ($checklist->tasks->contains(function ($task) use ($userId) {
+                return $task->task_users->contains('id', $userId);
+            })) {
+                return true;
+            }
+        });
+
+        // Apply sorting
+        $checklists = $this->applySorting($checklists, $sort);
+
+        $publicChecklists = $checklists->where('private', false)->values();
+        $privateChecklists = $checklists->where('private', true)->values();
+
+        $openedChecklists = User::where('id', $userId)->first()?->opened_checklists ?? [];
+
+        return [
+            'opened_checklists' => $openedChecklists,
+            'checklist_templates' => ChecklistTemplateIndexResource::collection(
+                ChecklistTemplate::all()
+            )->resolve(),
+            'public_checklists' => ChecklistIndexResource::collection($publicChecklists)->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection($privateChecklists)->resolve(),
+        ];
+    }
+
+    private function applySorting(\Illuminate\Support\Collection $checklists, int $sort): \Illuminate\Support\Collection
+    {
+        switch ($sort) {
+            case 1:
+                return $checklists->sort(function ($a, $b) {
+                    $aStart = $a->project?->events()->orderBy('start_time', 'ASC')->first();
+                    $bStart = $b->project?->events()->orderBy('start_time', 'ASC')->first();
+                    $aTime = $aStart ? strtotime($aStart->start_time) : PHP_INT_MAX;
+                    $bTime = $bStart ? strtotime($bStart->start_time) : PHP_INT_MAX;
+                    return $aTime - $bTime;
+                })->values();
+            case 2:
+                return $checklists->sort(function ($a, $b) {
+                    $aStart = $a->project?->events()->orderBy('start_time', 'ASC')->first();
+                    $bStart = $b->project?->events()->orderBy('start_time', 'ASC')->first();
+                    $aTime = $aStart ? strtotime($aStart->start_time) : PHP_INT_MAX;
+                    $bTime = $bStart ? strtotime($bStart->start_time) : PHP_INT_MAX;
+                    return $bTime - $aTime;
+                })->values();
+            default:
+                return $checklists;
+        }
+    }
+
     public function assignUsersById(Checklist $checklist, array $ids): void
     {
         $checklist->users()->sync($ids);

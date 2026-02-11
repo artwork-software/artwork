@@ -867,13 +867,13 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function updateChecklistStatus(Request $request): RedirectResponse
+    public function updateChecklistStatus(Request $request): JsonResponse
     {
         Auth::user()->update([
             'opened_checklists' => $request->opened_checklists
         ]);
 
-        return Redirect::back();
+        return response()->json(['success' => true]);
     }
 
     public function updateAreaStatus(Request $request): RedirectResponse
@@ -1308,6 +1308,15 @@ class UserController extends Controller
             Carbon::today();
         $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
+
+        // Update workerShiftPlanFilter when month is changed (from availability calendar)
+        if ($request->has('month')) {
+            $monthDate = Carbon::parse($request->get('month'));
+            $user->workerShiftPlanFilter()->update([
+                'start_date' => $monthDate->copy()->startOfMonth()->format('Y-m-d'),
+                'end_date' => $monthDate->copy()->endOfMonth()->format('Y-m-d')
+            ]);
+        }
 
         return Inertia::render(
             'Shifts/UserOperationPlan',

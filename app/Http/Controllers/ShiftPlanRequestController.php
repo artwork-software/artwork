@@ -398,7 +398,7 @@ class ShiftPlanRequestController extends Controller
                 $rowType = $entry['row_type'] ?? null;
                 $rowId = isset($entry['row_id']) ? (int)$entry['row_id'] : null;
 
-                $entryReason = $this->cleanReason($entry['reason'] ?? null) ?? $dayReason ?? $globalReason;
+                $entryReason = $this->cleanReason($entry['reason'] ?? null);
 
                 // unassigned → bleibt am Shift (weil es kein Assignment gibt)
                 if ($rowType === 'unassigned' || empty($rowId)) {

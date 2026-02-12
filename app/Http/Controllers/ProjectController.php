@@ -1822,6 +1822,10 @@ class ProjectController extends Controller
             ->where('sub_position_row_id', $request->sub_position_row_id)
             ->first();
 
+        if ($cell === null) {
+            return;
+        }
+
         if ($request->is_verified) {
             $this->changeService->saveFromBuilder(
                 $this->changeService

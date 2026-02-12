@@ -1,29 +1,10 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Create document request')" :description="$t('Create a new document request and assign it to a user.')">
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Create document request')" :description="$t('Create a new document request.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Title -->
-                <div class="col-span-full">
-                    <BaseInput
-                        v-model="form.title"
-                        id="title"
-                        :label="$t('Title*')"
-                    />
-                </div>
-
-                <!-- Description -->
-                <div class="col-span-full">
-                    <BaseTextarea
-                        :label="$t('Description')"
-                        id="description"
-                        v-model="form.description"
-                        rows="3"
-                    />
-                </div>
-
                 <!-- Assign to user -->
                 <div class="col-span-full relative">
-                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user*')" />
+                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user')" />
                     <div v-if="selectedUser" class="mt-2 flex items-center">
                         <img class="h-8 w-8 rounded-full object-cover" :src="selectedUser.profile_photo_url" alt="" />
                         <span class="ml-3 text-sm font-medium text-gray-900">
@@ -171,6 +152,7 @@
                             :label="$t('KSK Amount')"
                         />
                         <BaseTextarea
+                            v-if="!form.ksk_liable"
                             :label="$t('KSK Reason')"
                             id="kskReason"
                             v-model="form.ksk_reason"
@@ -187,15 +169,27 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="grid grid-cols-1 gap-4 mb-4" >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="form.foreign_tax">
                         <BaseInput
                             type="number"
                             step="0.01"
-                            v-if="form.foreign_tax"
                             id="foreignTaxAmount"
                             v-model="form.foreign_tax_amount"
                             :label="$t('Foreign tax amount')"
                         />
+                        <div></div>
+                        <BaseInput
+                            id="foreignTaxCity"
+                            v-model="form.foreign_tax_city"
+                            :label="$t('City')"
+                        />
+                        <BaseInput
+                            id="foreignTaxCountry"
+                            v-model="form.foreign_tax_country"
+                            :label="$t('Country')"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 mb-4" v-if="!form.foreign_tax">
                         <BaseTextarea
                             :label="$t('Foreign tax reason')"
                             id="foreignTaxReason"
@@ -235,13 +229,29 @@
                         rows="3"
                     />
                 </div>
+
+                <!-- Contract State -->
+                <div class="">
+                    <BaseInput
+                        id="contractState"
+                        v-model="form.contract_state"
+                        :label="$t('Contract status')"
+                    />
+                </div>
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Contract status comment')"
+                        id="contractStateComment"
+                        v-model="form.contract_state_comment"
+                        rows="3"
+                    />
+                </div>
             </div>
 
             <div class="justify-end flex w-full my-6">
                 <BaseUIButton
                     :label="$t('Create document request')"
                     is-add-button
-                    :disabled="!form.title || !selectedUser"
                     @click="storeRequest"
                 />
             </div>
@@ -303,8 +313,6 @@ export default {
             form: useForm({
                 requested_id: null,
                 project_id: null,
-                title: '',
-                description: '',
                 contract_partner: '',
                 contract_value: null,
                 ksk_liable: false,
@@ -312,12 +320,16 @@ export default {
                 ksk_reason: '',
                 foreign_tax: false,
                 foreign_tax_amount: null,
+                foreign_tax_city: '',
+                foreign_tax_country: '',
                 foreign_tax_reason: '',
                 reverse_charge_amount: null,
                 deadline_date: null,
                 contract_type_id: null,
                 company_type_id: null,
                 comment: '',
+                contract_state: '',
+                contract_state_comment: '',
             }),
         }
     },

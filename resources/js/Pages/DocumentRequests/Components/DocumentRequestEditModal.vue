@@ -2,25 +2,6 @@
     <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document request')" :description="$t('Edit the document request details.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Title -->
-                <div class="col-span-full">
-                    <BaseInput
-                        v-model="form.title"
-                        id="title"
-                        :label="$t('Title*')"
-                    />
-                </div>
-
-                <!-- Description -->
-                <div class="col-span-full">
-                    <BaseTextarea
-                        :label="$t('Description')"
-                        id="description"
-                        v-model="form.description"
-                        rows="3"
-                    />
-                </div>
-
                 <!-- Status -->
                 <div class="col-span-full">
                     <Listbox as="div" class="flex relative" v-model="selectedStatus">
@@ -139,6 +120,7 @@
                             :label="$t('KSK Amount')"
                         />
                         <BaseTextarea
+                            v-if="!form.ksk_liable"
                             :label="$t('KSK Reason')"
                             id="kskReasonEdit"
                             v-model="form.ksk_reason"
@@ -155,15 +137,27 @@
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>
-                    <div class="grid grid-cols-1 gap-4 my-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-2" v-if="form.foreign_tax">
                         <BaseInput
-                            v-if="form.foreign_tax"
                             type="number"
                             step="0.01"
                             id="foreignTaxAmountEdit"
                             v-model="form.foreign_tax_amount"
                             :label="$t('Foreign tax amount')"
                         />
+                        <div></div>
+                        <BaseInput
+                            id="foreignTaxCityEdit"
+                            v-model="form.foreign_tax_city"
+                            :label="$t('City')"
+                        />
+                        <BaseInput
+                            id="foreignTaxCountryEdit"
+                            v-model="form.foreign_tax_country"
+                            :label="$t('Country')"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 my-2" v-if="!form.foreign_tax">
                         <BaseTextarea
                             :label="$t('Foreign tax reason')"
                             id="foreignTaxReasonEdit"
@@ -203,13 +197,30 @@
                         rows="3"
                     />
                 </div>
+
+                <!-- Contract State -->
+                <div class="">
+                    <BaseInput
+                        id="contractStateEdit"
+                        v-model="form.contract_state"
+                        :label="$t('Contract status')"
+                    />
+                </div>
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Contract status comment')"
+                        id="contractStateCommentEdit"
+                        v-model="form.contract_state_comment"
+                        rows="3"
+                    />
+                </div>
             </div>
 
             <div class="justify-end flex w-full my-6">
                 <BaseUIButton
                     :label="$t('Save changes')"
                     is-add-button
-                    :disabled="!form.title"
+                    :disabled="false"
                     @click="updateRequest"
                 />
             </div>
@@ -263,8 +274,6 @@ export default {
                 { value: 'completed', label: this.$t('Completed') },
             ],
             form: useForm({
-                title: this.documentRequest?.title || '',
-                description: this.documentRequest?.description || '',
                 status: this.documentRequest?.status || 'open',
                 contract_partner: this.documentRequest?.contract_partner || '',
                 contract_value: this.documentRequest?.contract_value || null,
@@ -273,12 +282,16 @@ export default {
                 ksk_reason: this.documentRequest?.ksk_reason || '',
                 foreign_tax: this.documentRequest?.foreign_tax || false,
                 foreign_tax_amount: this.documentRequest?.foreign_tax_amount || null,
+                foreign_tax_city: this.documentRequest?.foreign_tax_city || '',
+                foreign_tax_country: this.documentRequest?.foreign_tax_country || '',
                 foreign_tax_reason: this.documentRequest?.foreign_tax_reason || '',
                 reverse_charge_amount: this.documentRequest?.reverse_charge_amount || null,
                 deadline_date: this.documentRequest?.deadline_date || null,
                 contract_type_id: this.documentRequest?.contract_type?.id || null,
                 company_type_id: this.documentRequest?.company_type?.id || null,
                 comment: this.documentRequest?.comment || '',
+                contract_state: this.documentRequest?.contract_state || '',
+                contract_state_comment: this.documentRequest?.contract_state_comment || '',
             }),
         }
     },

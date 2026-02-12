@@ -92,6 +92,8 @@ return [
     'foreign_tax' => 'Auslandssteuer',
     'foreign_tax_amount' => 'Auslandssteuer-Betrag',
     'foreign_tax_reason' => 'Auslandssteuer-Begründung',
+    'foreign_tax_city' => 'Auslandssteuer-Stadt',
+    'foreign_tax_country' => 'Auslandssteuer-Land',
     'reverse_charge_amount' => 'Reverse-Charge-Betrag',
     'deadline_date' => 'Stichtag',
     'is_freed' => 'Freigegeben',

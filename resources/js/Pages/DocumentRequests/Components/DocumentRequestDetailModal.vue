@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Document request details')" :description="documentRequest?.title">
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Document request details')" :description="$t('View the document request details.')">
         <div class="space-y-6">
             <!-- Status Badge -->
             <div class="flex items-center justify-between">
@@ -35,12 +35,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Description -->
-            <div v-if="documentRequest?.description">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Description') }}</span>
-                <p class="mt-1 text-sm text-gray-900">{{ documentRequest.description }}</p>
             </div>
 
             <!-- Project -->
@@ -119,6 +113,14 @@
                         <span class="text-gray-500">{{ $t('Amount') }}:</span>
                         <span class="ml-1 text-gray-900">{{ formatCurrency(documentRequest.foreign_tax_amount) }}</span>
                     </div>
+                    <div v-if="documentRequest?.foreign_tax_city">
+                        <span class="text-gray-500">{{ $t('City') }}:</span>
+                        <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_city }}</span>
+                    </div>
+                    <div v-if="documentRequest?.foreign_tax_country">
+                        <span class="text-gray-500">{{ $t('Country') }}:</span>
+                        <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_country }}</span>
+                    </div>
                     <div v-if="documentRequest?.foreign_tax_reason">
                         <span class="text-gray-500">{{ $t('Reason') }}:</span>
                         <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_reason }}</span>
@@ -136,6 +138,21 @@
             <div v-if="documentRequest?.comment">
                 <span class="text-sm font-medium text-gray-500">{{ $t('Comment') }}</span>
                 <p class="mt-1 text-sm text-gray-900">{{ documentRequest.comment }}</p>
+            </div>
+
+            <!-- Contract State -->
+            <div v-if="documentRequest?.contract_state || documentRequest?.contract_state_comment" class="bg-gray-50 rounded-lg p-4">
+                <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Contract status') }}</div>
+                <div class="grid grid-cols-1 gap-2 text-sm">
+                    <div v-if="documentRequest?.contract_state">
+                        <span class="text-gray-500">{{ $t('Status') }}:</span>
+                        <span class="ml-1 text-gray-900">{{ documentRequest.contract_state }}</span>
+                    </div>
+                    <div v-if="documentRequest?.contract_state_comment">
+                        <span class="text-gray-500">{{ $t('Comment') }}:</span>
+                        <span class="ml-1 text-gray-900">{{ documentRequest.contract_state_comment }}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Timestamps -->

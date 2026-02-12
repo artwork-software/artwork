@@ -203,7 +203,7 @@
                                 :label="$t('KSK Amount')"
                             />
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-4" v-if="!kskLiable">
                             <BaseTextarea
                                 :label="$t('KSK Reason')"
                                 id="kskReasonEdit"
@@ -239,7 +239,7 @@
                                 {{ $t('Foreign tax')}}
                             </label>
                         </div>
-                        <div class="grid grid-cols-1 gap-4 mb-4" v-if="foreignTax">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="foreignTax">
                             <BaseInput
                                 type="number"
                                 step="0.01"
@@ -247,8 +247,19 @@
                                 v-model="foreignTaxAmount"
                                 :label="$t('Foreign tax amount')"
                             />
+                            <div></div>
+                            <BaseInput
+                                id="foreignTaxCityEdit"
+                                v-model="foreignTaxCity"
+                                :label="$t('City')"
+                            />
+                            <BaseInput
+                                id="foreignTaxCountryEdit"
+                                v-model="foreignTaxCountry"
+                                :label="$t('Country')"
+                            />
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-4" v-if="!foreignTax">
                             <BaseTextarea
                                 :label="$t('Foreign tax reason')"
                                 id="foreignTaxReasonEdit"
@@ -280,6 +291,22 @@
                             id="description"
                             v-model="description"
                             rows="5"
+                        />
+                    </div>
+
+                    <div class="">
+                        <BaseInput
+                            id="contractStateEdit"
+                            v-model="contractState"
+                            :label="$t('Contract status')"
+                        />
+                    </div>
+                    <div class="col-span-full">
+                        <BaseTextarea
+                            :label="$t('Contract status comment')"
+                            id="contractStateCommentEdit"
+                            v-model="contractStateComment"
+                            rows="3"
                         />
                     </div>
 
@@ -549,7 +576,11 @@ export default {
             isAbroad: this.contract?.resident_abroad || false,
             foreignTax: this.contract?.foreign_tax || false,
             foreignTaxAmount: this.contract?.foreign_tax_amount || null,
+            foreignTaxCity: this.contract?.foreign_tax_city || '',
+            foreignTaxCountry: this.contract?.foreign_tax_country || '',
             foreignTaxReason: this.contract?.foreign_tax_reason || '',
+            contractState: this.contract?.contract_state || '',
+            contractStateComment: this.contract?.contract_state_comment || '',
             reverseChargeAmount: this.contract?.reverse_charge_amount || null,
             deadlineDate: formattedDeadlineDate,
             hasPowerOfAttorney: this.contract?.has_power_of_attorney || false,
@@ -570,7 +601,11 @@ export default {
                 resident_abroad: this.contract?.resident_abroad || false,
                 foreign_tax: this.contract?.foreign_tax || false,
                 foreign_tax_amount: this.contract?.foreign_tax_amount || null,
+                foreign_tax_city: this.contract?.foreign_tax_city || '',
+                foreign_tax_country: this.contract?.foreign_tax_country || '',
                 foreign_tax_reason: this.contract?.foreign_tax_reason || '',
+                contract_state: this.contract?.contract_state || '',
+                contract_state_comment: this.contract?.contract_state_comment || '',
                 reverse_charge_amount: this.contract?.reverse_charge_amount || null,
                 deadline_date: this.contract?.deadline_date || null,
                 has_power_of_attorney: this.contract?.has_power_of_attorney || false,
@@ -645,7 +680,11 @@ export default {
             this.contractForm.resident_abroad = this.isAbroad;
             this.contractForm.foreign_tax = this.foreignTax;
             this.contractForm.foreign_tax_amount = this.foreignTaxAmount;
+            this.contractForm.foreign_tax_city = this.foreignTaxCity;
+            this.contractForm.foreign_tax_country = this.foreignTaxCountry;
             this.contractForm.foreign_tax_reason = this.foreignTaxReason;
+            this.contractForm.contract_state = this.contractState;
+            this.contractForm.contract_state_comment = this.contractStateComment;
             this.contractForm.reverse_charge_amount = this.reverseChargeAmount;
             this.contractForm.deadline_date = this.deadlineDate;
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;

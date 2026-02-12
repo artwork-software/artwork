@@ -67,7 +67,11 @@ class ContractService
             'resident_abroad' => $data['resident_abroad'] ?? false,
             'foreign_tax' => $data['foreign_tax'] ?? false,
             'foreign_tax_amount' => $data['foreign_tax_amount'] ?? null,
+            'foreign_tax_city' => $data['foreign_tax_city'] ?? null,
+            'foreign_tax_country' => $data['foreign_tax_country'] ?? null,
             'foreign_tax_reason' => $data['foreign_tax_reason'] ?? null,
+            'contract_state' => $data['contract_state'] ?? null,
+            'contract_state_comment' => $data['contract_state_comment'] ?? null,
             'reverse_charge_amount' => $data['reverse_charge_amount'] ?? null,
             'deadline_date' => $data['deadline_date'] ?? null,
             'is_freed' => $data['is_freed'] ?? false,
@@ -437,7 +441,7 @@ class ContractService
 
                 $notificationTitle = __(
                     'notification.document_request.completed',
-                    ['title' => $documentRequest->title, 'user' => $uploaderName],
+                    ['user' => $uploaderName],
                     $requester->language
                 );
 
@@ -451,7 +455,6 @@ class ContractService
                     1 => [
                         'type' => 'string',
                         'title' => __('notification.document_request.completed_description', [
-                            'title' => $documentRequest->title,
                             'user' => $uploaderName
                         ], $requester->language),
                         'href' => null

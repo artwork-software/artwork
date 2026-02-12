@@ -44,9 +44,15 @@ class DocumentRequestController extends Controller
             ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
             ->get();
 
+        // Get requests that are not assigned to any user
+        $unassignedRequests = DocumentRequest::whereNull('requested_id')
+            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->get();
+
         return inertia('DocumentRequests/Index', [
             'createdRequests' => DocumentRequestResource::collection($createdRequests)->resolve(),
             'assignedRequests' => DocumentRequestResource::collection($assignedRequests)->resolve(),
+            'unassignedRequests' => DocumentRequestResource::collection($unassignedRequests)->resolve(),
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
@@ -62,10 +68,8 @@ class DocumentRequestController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'requested_id' => 'required|exists:users,id',
+            'requested_id' => 'nullable|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'contract_partner' => 'nullable|string|max:255',
             'contract_value' => 'nullable|numeric',
             'ksk_liable' => 'boolean',
@@ -73,20 +77,22 @@ class DocumentRequestController extends Controller
             'ksk_reason' => 'nullable|string',
             'foreign_tax' => 'boolean',
             'foreign_tax_amount' => 'nullable|numeric',
+            'foreign_tax_city' => 'nullable|string|max:255',
+            'foreign_tax_country' => 'nullable|string|max:255',
             'foreign_tax_reason' => 'nullable|string',
             'reverse_charge_amount' => 'nullable|numeric',
             'deadline_date' => 'nullable|date',
             'contract_type_id' => 'nullable|exists:contract_types,id',
             'company_type_id' => 'nullable|exists:company_types,id',
             'comment' => 'nullable|string',
+            'contract_state' => 'nullable|string|max:255',
+            'contract_state_comment' => 'nullable|string',
         ]);
 
         $documentRequest = DocumentRequest::create([
             'requester_id' => Auth::id(),
-            'requested_id' => $validated['requested_id'],
+            'requested_id' => $validated['requested_id'] ?? null,
             'project_id' => $validated['project_id'] ?? null,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
             'status' => DocumentRequest::STATUS_OPEN,
             'contract_partner' => $validated['contract_partner'] ?? null,
             'contract_value' => $validated['contract_value'] ?? null,
@@ -95,16 +101,22 @@ class DocumentRequestController extends Controller
             'ksk_reason' => $validated['ksk_reason'] ?? null,
             'foreign_tax' => $validated['foreign_tax'] ?? false,
             'foreign_tax_amount' => $validated['foreign_tax_amount'] ?? null,
+            'foreign_tax_city' => $validated['foreign_tax_city'] ?? null,
+            'foreign_tax_country' => $validated['foreign_tax_country'] ?? null,
             'foreign_tax_reason' => $validated['foreign_tax_reason'] ?? null,
             'reverse_charge_amount' => $validated['reverse_charge_amount'] ?? null,
             'deadline_date' => $validated['deadline_date'] ?? null,
             'contract_type_id' => $validated['contract_type_id'] ?? null,
             'company_type_id' => $validated['company_type_id'] ?? null,
             'comment' => $validated['comment'] ?? null,
+            'contract_state' => $validated['contract_state'] ?? null,
+            'contract_state_comment' => $validated['contract_state_comment'] ?? null,
         ]);
 
-        // Send notification to requested user
-        $this->sendDocumentRequestNotification($documentRequest);
+        // Send notification to requested user (only if a user was assigned)
+        if ($documentRequest->requested_id) {
+            $this->sendDocumentRequestNotification($documentRequest);
+        }
 
         return Redirect::back();
     }
@@ -117,8 +129,6 @@ class DocumentRequestController extends Controller
         $validated = $request->validate([
             'requested_id' => 'sometimes|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
             'status' => 'sometimes|in:open,in_progress,completed',
             'contract_partner' => 'nullable|string|max:255',
             'contract_value' => 'nullable|numeric',
@@ -127,19 +137,24 @@ class DocumentRequestController extends Controller
             'ksk_reason' => 'nullable|string',
             'foreign_tax' => 'boolean',
             'foreign_tax_amount' => 'nullable|numeric',
+            'foreign_tax_city' => 'nullable|string|max:255',
+            'foreign_tax_country' => 'nullable|string|max:255',
             'foreign_tax_reason' => 'nullable|string',
             'reverse_charge_amount' => 'nullable|numeric',
             'deadline_date' => 'nullable|date',
             'contract_type_id' => 'nullable|exists:contract_types,id',
             'company_type_id' => 'nullable|exists:company_types,id',
             'comment' => 'nullable|string',
+            'contract_state' => 'nullable|string|max:255',
+            'contract_state_comment' => 'nullable|string',
             'contract_id' => 'nullable|exists:contracts,id',
         ]);
 
         $documentRequest->update($validated);
 
         // If contract was uploaded and status changed to completed, notify requester
-        if (isset($validated['contract_id']) && $validated['status'] === DocumentRequest::STATUS_COMPLETED) {
+        // Only send notification if a user was assigned
+        if (isset($validated['contract_id']) && $validated['status'] === DocumentRequest::STATUS_COMPLETED && $documentRequest->requested_id) {
             $this->sendDocumentRequestCompletedNotification($documentRequest);
         }
 
@@ -175,8 +190,10 @@ class DocumentRequestController extends Controller
             'status' => DocumentRequest::STATUS_COMPLETED,
         ]);
 
-        // Notify requester that the document has been uploaded
-        $this->sendDocumentRequestCompletedNotification($documentRequest);
+        // Notify requester that the document has been uploaded (only if a user was assigned)
+        if ($documentRequest->requested_id) {
+            $this->sendDocumentRequestCompletedNotification($documentRequest);
+        }
 
         // Broadcast update for project contracts/documents component
         if ($documentRequest->project_id) {
@@ -219,11 +236,6 @@ class DocumentRequestController extends Controller
 
         $notificationDescription = [
             1 => [
-                'type' => 'string',
-                'title' => $documentRequest->title,
-                'href' => null
-            ],
-            2 => [
                 'type' => 'link',
                 'title' => __('View document requests'),
                 'href' => route('document-requests.index'),
@@ -259,7 +271,6 @@ class DocumentRequestController extends Controller
         $notificationTitle = __(
             'notification.document_request.completed',
             [
-                'title' => $documentRequest->title,
                 'user' => $requestedUser->first_name . ' ' . $requestedUser->last_name
             ],
             $requesterUser->language
@@ -273,11 +284,6 @@ class DocumentRequestController extends Controller
 
         $notificationDescription = [
             1 => [
-                'type' => 'string',
-                'title' => $documentRequest->title,
-                'href' => null
-            ],
-            2 => [
                 'type' => 'link',
                 'title' => __('View document requests'),
                 'href' => route('document-requests.index'),

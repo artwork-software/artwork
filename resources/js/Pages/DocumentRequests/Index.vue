@@ -47,6 +47,7 @@
                         </span>
                     </button>
                     <button
+                        v-if="can('can create document requests') || can('can edit document requests') || hasAdminRole()"
                         @click="activeTab = 'unassigned'"
                         :class="[
                             activeTab === 'unassigned'

@@ -35,8 +35,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $resident_abroad
  * @property bool $foreign_tax
  * @property float|null $foreign_tax_amount
+ * @property string|null $foreign_tax_city
+ * @property string|null $foreign_tax_country
  * @property string|null $foreign_tax_reason
  * @property float|null $reverse_charge_amount
+ * @property string|null $contract_state
+ * @property string|null $contract_state_comment
  * @property string|null $deadline_date
  * @property bool $is_freed
  * @property bool $has_power_of_attorney
@@ -67,7 +71,11 @@ class Contract extends Model
         'resident_abroad',
         'foreign_tax',
         'foreign_tax_amount',
+        'foreign_tax_city',
+        'foreign_tax_country',
         'foreign_tax_reason',
+        'contract_state',
+        'contract_state_comment',
         'reverse_charge_amount',
         'deadline_date',
     ];

@@ -92,6 +92,8 @@ return [
     'foreign_tax' => 'Foreign Tax',
     'foreign_tax_amount' => 'Foreign Tax Amount',
     'foreign_tax_reason' => 'Foreign Tax Reason',
+    'foreign_tax_city' => 'Foreign Tax City',
+    'foreign_tax_country' => 'Foreign Tax Country',
     'reverse_charge_amount' => 'Reverse Charge Amount',
     'deadline_date' => 'Deadline',
     'is_freed' => 'Released',

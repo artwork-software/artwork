@@ -202,7 +202,7 @@
                                 :label="$t('KSK Amount')"
                             />
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-4" v-if="!contractForm.ksk_liable">
                             <BaseTextarea
                                 :label="$t('KSK Reason')"
                                 id="kskReason"
@@ -238,7 +238,7 @@
                                 {{ $t('Foreign tax')}}
                             </label>
                         </div>
-                        <div class="grid grid-cols-1 gap-4 mb-4" v-if="contractForm.foreign_tax">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" v-if="contractForm.foreign_tax">
                             <BaseInput
                                 type="number"
                                 step="0.01"
@@ -246,8 +246,19 @@
                                 v-model="contractForm.foreign_tax_amount"
                                 :label="$t('Foreign tax amount')"
                             />
+                            <div></div>
+                            <BaseInput
+                                id="foreignTaxCity"
+                                v-model="contractForm.foreign_tax_city"
+                                :label="$t('City')"
+                            />
+                            <BaseInput
+                                id="foreignTaxCountry"
+                                v-model="contractForm.foreign_tax_country"
+                                :label="$t('Country')"
+                            />
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-4" v-if="!contractForm.foreign_tax">
                             <BaseTextarea
                                 :label="$t('Foreign tax reason')"
                                 id="foreignTaxReason"
@@ -279,6 +290,22 @@
                             id="description"
                             v-model="description"
                             rows="5"
+                        />
+                    </div>
+
+                    <div class="">
+                        <BaseInput
+                            id="contractState"
+                            v-model="contractForm.contract_state"
+                            :label="$t('Contract status')"
+                        />
+                    </div>
+                    <div class="col-span-full">
+                        <BaseTextarea
+                            :label="$t('Contract status comment')"
+                            id="contractStateComment"
+                            v-model="contractForm.contract_state_comment"
+                            rows="3"
                         />
                     </div>
 
@@ -527,7 +554,7 @@ export default {
             tasks: [],
             uploadDocumentFeedback: "",
             file: null,
-            description: this.documentRequest?.description || "",
+            description: this.documentRequest?.comment || "",
             contractPartner: this.documentRequest?.contract_partner || '',
             selectedLegalForm: this.documentRequest?.company_type_id ? this.companyTypes?.find(ct => ct.id === this.documentRequest.company_type_id) : null,
             selectedContractType: this.documentRequest?.contract_type_id ? this.contractTypes?.find(ct => ct.id === this.documentRequest.contract_type_id) : null,
@@ -552,12 +579,16 @@ export default {
                 resident_abroad: this.documentRequest?.resident_abroad || false,
                 foreign_tax: this.documentRequest?.foreign_tax || false,
                 foreign_tax_amount: this.documentRequest?.foreign_tax_amount || null,
+                foreign_tax_city: this.documentRequest?.foreign_tax_city || '',
+                foreign_tax_country: this.documentRequest?.foreign_tax_country || '',
                 foreign_tax_reason: this.documentRequest?.foreign_tax_reason || '',
                 reverse_charge_amount: this.documentRequest?.reverse_charge_amount || null,
                 deadline_date: this.documentRequest?.deadline_date || null,
                 has_power_of_attorney: this.documentRequest?.has_power_of_attorney || false,
                 is_freed: this.documentRequest?.is_freed || false,
-                description: this.documentRequest?.description || '',
+                description: this.documentRequest?.comment || '',
+                contract_state: this.documentRequest?.contract_state || '',
+                contract_state_comment: this.documentRequest?.contract_state_comment || '',
                 accessibleUsers: [],
                 accessibleDepartments: [],
                 tasks: [],

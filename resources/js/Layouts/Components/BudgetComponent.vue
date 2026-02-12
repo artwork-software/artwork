@@ -1086,8 +1086,7 @@ export default {
         tableIsEmpty: function () {
             return this.table.main_positions.length === 2 &&
                 this.table.main_positions[0].sub_positions.length === 1 &&
-                this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1 &&
-                this.table.columns?.length === 4;
+                this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1
         },
         projectMembers: function () {
             let projectMemberArray = [];

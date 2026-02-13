@@ -1954,6 +1954,48 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function reorderMainPositions(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'table_id' => ['required', 'integer', 'exists:tables,id'],
+            'type' => ['required', 'string'],
+            'main_position_ids' => ['required', 'array', 'min:1'],
+            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id'],
+        ]);
+
+        DB::transaction(function () use ($validated): void {
+            foreach ($validated['main_position_ids'] as $index => $mainPositionId) {
+                MainPosition::query()
+                    ->whereKey($mainPositionId)
+                    ->update(['position' => $index + 1]);
+            }
+        });
+
+        return Redirect::back();
+    }
+
+    public function reorderSubPositions(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'main_position_id' => ['required', 'integer', 'exists:main_positions,id'],
+            'sub_position_ids' => ['required', 'array', 'min:1'],
+            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id'],
+        ]);
+
+        DB::transaction(function () use ($validated): void {
+            foreach ($validated['sub_position_ids'] as $index => $subPositionId) {
+                SubPosition::query()
+                    ->whereKey($subPositionId)
+                    ->update([
+                        'main_position_id' => $validated['main_position_id'],
+                        'position' => $index + 1,
+                    ]);
+            }
+        });
+
+        return Redirect::back();
+    }
+
     public function dropSageData(
         Request $request,
     ): void {
@@ -4109,7 +4151,7 @@ class ProjectController extends Controller
 
         broadcast(new UpdateBudget($mainPosition->table->project_id));
 
-        //return Redirect::back();
+        return Redirect::back();
     }
 
     public function deleteSubPosition(
@@ -4147,7 +4189,7 @@ class ProjectController extends Controller
 
         broadcast(new UpdateBudget($projectId));
 
-        //return Redirect::back();
+        return Redirect::back();
     }
 
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): void

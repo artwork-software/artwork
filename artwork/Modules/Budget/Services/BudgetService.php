@@ -469,7 +469,9 @@ class BudgetService
                             $query->orderBy('position');
                             $query->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
                         },
-                        'mainPositions',
+                        'mainPositions' => function ($query) {
+                            return $query->orderBy('position');
+                        },
                         'mainPositions.verified',
                         'mainPositions.subPositions' => function ($query) {
                             return $query->orderBy('position');

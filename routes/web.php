@@ -1169,6 +1169,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::patch('/sub-position-row/reorder', [ProjectController::class, 'reorderSubPositionRows'])
                 ->name('project.budget.sub-position-row.reorder');
+            Route::patch('/main-position/reorder', [ProjectController::class, 'reorderMainPositions'])
+                ->name('project.budget.main-position.reorder');
+            Route::patch('/sub-position/reorder', [ProjectController::class, 'reorderSubPositions'])
+                ->name('project.budget.sub-position.reorder');
 
             // drop sage data
             Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])

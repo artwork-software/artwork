@@ -3940,5 +3940,7 @@
     "Default event duration": "Default event duration",
     "The default event duration specified here will be preselected when you create an event in artwork.": "The default event duration specified here will be preselected when you create an event in artwork.",
     "Default start time": "Default start time",
-    "The default start time determines which time should be prefilled when you create a new event in artwork.": "The default start time determines which time should be prefilled when you create a new event in artwork."
+    "The default start time determines which time should be prefilled when you create a new event in artwork.": "The default start time determines which time should be prefilled when you create a new event in artwork.",
+    "Drop main position here": "Drop main position here",
+    "Drop sub position here": "Drop sub position here"
 }

@@ -3980,5 +3980,7 @@
     "Default event duration": "Standard-Terminlänge",
     "The default event duration specified here will be preselected when you create an event in artwork.": "Die hier angegebene Standard-Terminlänge wird als default vorausgewählt wenn du in artwork einen Termin erstellen willst.",
     "Default start time": "Standard-Startuhrzeit",
-    "The default start time determines which time should be prefilled when you create a new event in artwork.": "Die Standard-Startuhrzeit legt fest welche Uhrzeit vorausgefüllt sein soll, wenn du einen neuen Termin in artwork erstellen willst."
+    "The default start time determines which time should be prefilled when you create a new event in artwork.": "Die Standard-Startuhrzeit legt fest welche Uhrzeit vorausgefüllt sein soll, wenn du einen neuen Termin in artwork erstellen willst.",
+    "Drop main position here": "Hier Hauptposition ablegen",
+    "Drop sub position here": "Hier Unterposition ablegen"
 }

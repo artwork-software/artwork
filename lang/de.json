@@ -3971,5 +3971,16 @@
     "Unassigned": "Nicht zugewiesen",
     "No unassigned document requests.": "Keine nicht zugewiesenen Dokumentenanfragen.",
     "Create a new document request.": "Erstelle eine neue Dokumentenanfrage.",
-    "Assign to user": "Nutzer zuweisen"
+    "Assign to user": "Nutzer zuweisen",
+    "Delete all series events": "Alle Termine der Serie löschen",
+    "Edit all series events": "Alle Termine der Serie bearbeiten",
+    "Do you really want to delete all events of this series?": "Möchten Sie wirklich alle Termine dieser Serie löschen?",
+    "Would you like to move all events of this series to another room or by a certain period of time?": "Möchten Sie alle Termine dieser Serie in einen anderen Raum verschieben oder um einen bestimmten Zeitraum verschieben?",
+    "Recurring event": "Wiederholungstermin",
+    "Default event duration": "Standard-Terminlänge",
+    "The default event duration specified here will be preselected when you create an event in artwork.": "Die hier angegebene Standard-Terminlänge wird als default vorausgewählt wenn du in artwork einen Termin erstellen willst.",
+    "Default start time": "Standard-Startuhrzeit",
+    "The default start time determines which time should be prefilled when you create a new event in artwork.": "Die Standard-Startuhrzeit legt fest welche Uhrzeit vorausgefüllt sein soll, wenn du einen neuen Termin in artwork erstellen willst.",
+    "Drop main position here": "Hier Hauptposition ablegen",
+    "Drop sub position here": "Hier Unterposition ablegen"
 }

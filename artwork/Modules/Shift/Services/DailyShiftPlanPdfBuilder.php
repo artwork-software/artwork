@@ -98,6 +98,9 @@ class DailyShiftPlanPdfBuilder
             ];
         }
 
+        // Filter out qualifications where both assigned (sum) and needed are 0
+        $lines = array_values(array_filter($lines, fn($line) => $line['sum'] > 0 || $line['needed'] > 0));
+
         return $lines;
     }
 
@@ -136,6 +139,10 @@ class DailyShiftPlanPdfBuilder
         $ids = [];
 
         foreach ($project->shifts as $s) {
+            foreach (($s->shiftsQualifications ?? []) as $sq) {
+                $qid = (int)($sq->shift_qualification_id ?? 0);
+                if ($qid > 0) $ids[] = $qid;
+            }
             foreach (($s->users ?? []) as $u) {
                 if (!empty($u->pivot?->shift_qualification_id)) $ids[] = (int)$u->pivot->shift_qualification_id;
             }

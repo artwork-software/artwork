@@ -3701,6 +3701,7 @@ class EventController extends Controller
     public function saveStandardEventValues(Request $request): void
     {
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
+        $this->generalSettingsService->updateEventStartTimeFromRequest($request);
     }
 
 

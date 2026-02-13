@@ -140,6 +140,7 @@ class HandleInertiaRequests extends Middleware
                 'projectNameOfCalendarProject' => $projectName,
                 'businessName' => $generalSettings->business_name,
                 'event_time_length_minutes' => $generalSettings->event_time_length_minutes,
+                'event_start_time' => $generalSettings->event_start_time,
                 'warn_multiple_assignments' => $generalSettings->warn_multiple_assignments,
                 'page_title' => $generalSettings->page_title ?? config('app.name'),
                 'impressumLink' => $generalSettings->impressum_link,

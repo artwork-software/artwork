@@ -49,6 +49,8 @@ class ProjectDTO extends Data
 
     public static function fromModelForCalendar(Project $project): self
     {
+        $groups = $project->relationLoaded('groups') ? $project->groups : collect();
+
         return new self(
             id: $project->id,
             name: $project->name,
@@ -58,8 +60,8 @@ class ProjectDTO extends Data
             color: $project->color,
             icon: $project->icon,
             isGroup: $project->is_group,
-            isInGroup: false,
-            group: null,
+            isInGroup: $groups->isNotEmpty(),
+            group: $groups->isNotEmpty() ? $groups->map(fn(Project $group) => self::fromModelForCalendar($group)) : null,
             userIds: null,
         );
     }

@@ -730,7 +730,7 @@ watch(
 onMounted(() => {
     if (props.wantedDate) {
         startDate.value = props.wantedDate
-        startTime.value = '09:00'
+        startTime.value = page.props.event_start_time || '09:00'
         setEndFromDuration()
     }
     if (props.wantedRoomId) {
@@ -769,7 +769,7 @@ function openModal() {
         // Direkt vorbelegen: Datum/Zeit und Raum, falls gewünscht
         if (props.wantedDate) {
             startDate.value = props.wantedDate
-            startTime.value = '09:00'
+            startTime.value = page.props.event_start_time || '09:00'
             setEndFromDuration()
         }
         if (props.wantedRoomId && !selectedRoom.value) {

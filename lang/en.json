@@ -3936,5 +3936,9 @@
     "Edit all series events": "Edit all series events",
     "Do you really want to delete all events of this series?": "Do you really want to delete all events of this series?",
     "Would you like to move all events of this series to another room or by a certain period of time?": "Would you like to move all events of this series to another room or by a certain period of time?",
-    "Recurring event": "Recurring event"
+    "Recurring event": "Recurring event",
+    "Default event duration": "Default event duration",
+    "The default event duration specified here will be preselected when you create an event in artwork.": "The default event duration specified here will be preselected when you create an event in artwork.",
+    "Default start time": "Default start time",
+    "The default start time determines which time should be prefilled when you create a new event in artwork.": "The default start time determines which time should be prefilled when you create a new event in artwork."
 }

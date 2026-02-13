@@ -742,6 +742,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::put('/event/requests/{event}/accept', [EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}/decline', [EventController::class, 'declineEvent'])->name('events.decline');
     Route::delete('/events/{event}/series', [EventController::class, 'destroySeriesEvents'])->name('events.series.delete');
+    Route::patch('/events/{event}/series', [EventController::class, 'updateSeriesEvents'])->name('events.series.update');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
     Route::get('/events/{event}/timelines', [EventController::class, 'getTimelines'])->name('events.timelines');
 

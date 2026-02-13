@@ -3971,5 +3971,10 @@
     "Unassigned": "Nicht zugewiesen",
     "No unassigned document requests.": "Keine nicht zugewiesenen Dokumentenanfragen.",
     "Create a new document request.": "Erstelle eine neue Dokumentenanfrage.",
-    "Assign to user": "Nutzer zuweisen"
+    "Assign to user": "Nutzer zuweisen",
+    "Delete all series events": "Alle Termine der Serie löschen",
+    "Edit all series events": "Alle Termine der Serie bearbeiten",
+    "Do you really want to delete all events of this series?": "Möchten Sie wirklich alle Termine dieser Serie löschen?",
+    "Would you like to move all events of this series to another room or by a certain period of time?": "Möchten Sie alle Termine dieser Serie in einen anderen Raum verschieben oder um einen bestimmten Zeitraum verschieben?",
+    "Recurring event": "Wiederholungstermin"
 }

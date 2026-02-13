@@ -373,8 +373,9 @@
                             title="Add Sub-Event"
                         />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Alle Termine der Serie löschen" />
-                        <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
+                        <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
@@ -778,10 +779,18 @@
         <!-- Delete Series Events Modal -->
         <ConfirmDeleteModal
             v-if="showDeleteSeriesModal"
-            :title="$t('Alle Termine der Serie löschen')"
-            :description="$t('Möchten Sie wirklich alle Termine dieser Serie löschen?')"
+            :title="$t('Delete all series events')"
+            :description="$t('Do you really want to delete all events of this series?')"
             @closed="closeDeleteSeriesModal"
             @delete="confirmDeleteSeriesEvents"
+        />
+
+        <!-- Edit Series Events Modal -->
+        <EditSeriesEventsModal
+            v-if="showEditSeriesModal"
+            :event="event"
+            :rooms="rooms"
+            @close="showEditSeriesModal = false"
         />
 
         <!-- Timeline Modal -->
@@ -829,6 +838,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
@@ -836,6 +846,7 @@ const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
 const showConvertToPlanningModal = ref(false);
 const showDeleteSeriesModal = ref(false);
+const showEditSeriesModal = ref(false);
 const showTimelineModal = ref(false);
 const timelineData = ref([]);
 

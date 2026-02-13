@@ -3710,6 +3710,7 @@ class ProjectController extends Controller
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
             'state' => $project->state,
+            'is_group' => $project->is_group,
         ]);
 
         $this->budgetService->generateBasicBudgetValues(

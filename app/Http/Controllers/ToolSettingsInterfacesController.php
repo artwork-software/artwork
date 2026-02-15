@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Api\Models\ApiLog;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Modules\Budget\Services\SageBookingDataDeleteService;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
@@ -22,6 +23,7 @@ class ToolSettingsInterfacesController extends Controller
 {
     public function __construct(
         private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly SageBookingDataDeleteService $sageBookingDataDeleteService,
         private readonly TableColumnOrderService $tableColumnOrderService
     ) {
     }
@@ -147,5 +149,28 @@ class ToolSettingsInterfacesController extends Controller
         }
 
         return Redirect::back()->with('error', 'Es ist ein unerwarteter Fehler aufgetreten.');
+    }
+
+    public function deleteSageBookingDays(Request $request): RedirectResponse
+    {
+        $dateFrom = $request->get('dateFrom');
+        $dateTo = $request->get('dateTo') ?? $dateFrom;
+        $deleteAssignedData = (bool) $request->get('deleteAssignedData', false);
+
+        if (!$dateFrom) {
+            return Redirect::back()->with('error', __('flash-messages.interfaces.date_range_required'));
+        }
+
+        try {
+            $this->sageBookingDataDeleteService->deleteByBookingDateRange(
+                $dateFrom,
+                $dateTo,
+                $deleteAssignedData
+            );
+
+            return Redirect::back()->with('success', __('flash-messages.interfaces.booking_days_deleted_successfully'));
+        } catch (Throwable $t) {
+            return Redirect::back()->with('error', $t->getMessage());
+        }
     }
 }

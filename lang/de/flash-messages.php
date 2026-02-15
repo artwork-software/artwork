@@ -25,7 +25,9 @@ return [
         'connection_test_failed' => 'Sage-Schnittstelleneinstellungen wurden erfolgreich aktualisiert, aber der Verbindungstest ist fehlgeschlagen. Bitte überprüfe die Schnittstelleneinstellungen und stelle sicher, dass die Schnittstelle erreichbar ist.',
         'saved_successfully' => 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.',
         'import_executed_successfully' => 'Sage-Import wurde erfolgreich ausgeführt.',
-        'import_executed_unsuccessfully' => 'Sage-Import konnte nicht ausgeführt werden, bitte erneut versuchen.'
+        'import_executed_unsuccessfully' => 'Sage-Import konnte nicht ausgeführt werden, bitte erneut versuchen.',
+        'date_range_required' => 'Bitte gib einen Zeitraum (Von-Datum) an.',
+        'booking_days_deleted_successfully' => 'Buchungsdaten wurden erfolgreich gelöscht.',
     ],
     'shift-qualification' => [
         'success' => [

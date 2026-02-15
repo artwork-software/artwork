@@ -118,6 +118,42 @@
 
         <hr class="my-5"/>
 
+        <h2 class="headline2">{{ $t('Delete booking days') }}</h2>
+        <div class="xsLight col-span-9 mb-2">
+            {{ $t('Delete Sage booking data within a date range. Unassigned data is always deleted, optionally also assigned data can be removed.') }}
+        </div>
+        <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('From') }}</span>
+                <div class="w-48">
+                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateFrom"
+                               v-model="deleteBookingDaysDateFrom"
+                               :class="'cursor-pointer'"/>
+                </div>
+            </div>
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('Until') }}</span>
+                <div class="w-48">
+                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateTo"
+                               v-model="deleteBookingDaysDateTo"
+                               :class="'cursor-pointer'"/>
+                </div>
+            </div>
+            <div class="flex flex-row items-center gap-x-2">
+                <label for="deleteAssignedData" class="xsLight">{{ $t('Also delete already assigned records') }}</label>
+                <input type="checkbox" id="deleteAssignedData" class="input-checklist" v-model="deleteAssignedData"/>
+            </div>
+            <TrashIcon :class="[
+                importProcessing ||
+                deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === ''
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-artwork-buttons-create cursor-pointer',
+                'w-10 h-10 rounded-full text-white p-2'
+            ]" @click="showDeleteBookingDaysConfirmation = true" />
+        </div>
+
+        <hr class="my-5"/>
+
         <div class="flex flex-col">
             <div class="headline2">
                 {{ $t('Column Order') }}
@@ -148,6 +184,10 @@
                                 :confirm="$t('Apply changes')"
                                 :description="$t('Are you sure you want to change the interface settings')"
                                 @closed="saveSageInterface" />
+        <confirmation-component v-if="showDeleteBookingDaysConfirmation"
+                                :titel="$t('Delete booking days')"
+                                :description="$t('Are you sure you want to delete the booking data in this date range?')"
+                                @closed="onDeleteBookingDaysConfirmationClosed" />
         <success-modal v-if="$page.props.flash.success"
                        :title="$t('Sage interface')"
                        :description="$page.props.flash.success"
@@ -206,6 +246,10 @@ export default defineComponent({
             importProcessing: false,
             specificDayImportDateFrom: null,
             specificDayImportDateTo: null,
+            deleteBookingDaysDateFrom: null,
+            deleteBookingDaysDateTo: null,
+            deleteAssignedData: false,
+            showDeleteBookingDaysConfirmation: false,
             dragging: false
         }
     },
@@ -261,6 +305,23 @@ export default defineComponent({
             router.delete(route('tool.interfaces.sage.delete'), {
                 preserveState: true,
                 preserveScroll: true
+            });
+        },
+        onDeleteBookingDaysConfirmationClosed(confirmed) {
+            this.showDeleteBookingDaysConfirmation = false;
+            if (!confirmed) return;
+
+            if (!this.deleteBookingDaysDateFrom) return;
+            this.importProcessing = true;
+            const dateTo = this.deleteBookingDaysDateTo || this.deleteBookingDaysDateFrom;
+            router.post(route('tool.interfaces.sage.deleteBookingDays'), {
+                dateFrom: this.deleteBookingDaysDateFrom,
+                dateTo: dateTo,
+                deleteAssignedData: this.deleteAssignedData
+            }, {
+                preserveScroll: true,
+                preserveState: false,
+                onFinish: () => this.importProcessing = false
             });
         },
         updateTableColumnOrders() {

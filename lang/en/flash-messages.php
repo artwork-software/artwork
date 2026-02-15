@@ -25,7 +25,9 @@ return [
         'connection_test_failed' => 'Sage interface settings have been successfully updated, but the connection test has failed. Please check the interface settings and make sure that the interface is accessible.',
         'saved_successfully' => 'Sage interface settings successfully updated.',
         'import_executed_successfully' => 'Sage import was executed successfully.',
-        'import_executed_unsuccessfully' => 'Sage import could not be executed, please try again.'
+        'import_executed_unsuccessfully' => 'Sage import could not be executed, please try again.',
+        'date_range_required' => 'Please specify a date range (From date).',
+        'booking_days_deleted_successfully' => 'Booking data was successfully deleted.',
     ],
     'shift-qualification' => [
         'success' => [

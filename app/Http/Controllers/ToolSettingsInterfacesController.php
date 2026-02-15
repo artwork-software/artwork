@@ -153,18 +153,21 @@ class ToolSettingsInterfacesController extends Controller
 
     public function deleteSageBookingDays(Request $request): RedirectResponse
     {
+        $ktr = $request->get('ktr');
+        $ktr = is_string($ktr) ? trim($ktr) : null;
         $dateFrom = $request->get('dateFrom');
         $dateTo = $request->get('dateTo') ?? $dateFrom;
         $deleteAssignedData = (bool) $request->get('deleteAssignedData', false);
 
-        if (!$dateFrom) {
-            return Redirect::back()->with('error', __('flash-messages.interfaces.date_range_required'));
+        if (!$ktr && !$dateFrom) {
+            return Redirect::back()->with('error', __('flash-messages.interfaces.date_or_ktr_required'));
         }
 
         try {
-            $this->sageBookingDataDeleteService->deleteByBookingDateRange(
-                $dateFrom,
-                $dateTo,
+            $this->sageBookingDataDeleteService->deleteByBookingCriteria(
+                $ktr,
+                $dateFrom ?: null,
+                $dateTo ?: null,
                 $deleteAssignedData
             );
 

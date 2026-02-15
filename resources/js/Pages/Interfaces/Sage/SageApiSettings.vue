@@ -118,11 +118,20 @@
 
         <hr class="my-5"/>
 
-        <h2 class="headline2">{{ $t('Delete booking days') }}</h2>
+        <h2 class="headline2">{{ $t('Delete bookings') }}</h2>
         <div class="xsLight col-span-9 mb-2">
-            {{ $t('Delete Sage booking data within a date range. Unassigned data is always deleted, optionally also assigned data can be removed.') }}
+            {{ $t('Delete Sage booking data by KTR (cost center), date range, or both. Unassigned data is always deleted, optionally also assigned data can be removed.') }}
         </div>
         <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('KTR') }}</span>
+                <div class="w-48">
+                    <BaseInput type="text" :label="$t('KTR')" id="deleteBookingDaysKtr"
+                               v-model="deleteBookingDaysKtr"
+                               :class="'cursor-pointer'"
+                               :placeholder="$t('e.g. R12364')"/>
+                </div>
+            </div>
             <div class="flex flex-row items-center gap-x-2">
                 <span class="xsLight">{{ $t('From') }}</span>
                 <div class="w-48">
@@ -145,7 +154,8 @@
             </div>
             <TrashIcon :class="[
                 importProcessing ||
-                deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === ''
+                ((deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === '') &&
+                (!deleteBookingDaysKtr || deleteBookingDaysKtr.trim() === ''))
                     ? 'bg-gray-600 cursor-not-allowed'
                     : 'bg-artwork-buttons-create cursor-pointer',
                 'w-10 h-10 rounded-full text-white p-2'
@@ -185,8 +195,8 @@
                                 :description="$t('Are you sure you want to change the interface settings')"
                                 @closed="saveSageInterface" />
         <confirmation-component v-if="showDeleteBookingDaysConfirmation"
-                                :titel="$t('Delete booking days')"
-                                :description="$t('Are you sure you want to delete the booking data in this date range?')"
+                                :titel="$t('Delete bookings')"
+                                :description="$t('Are you sure you want to delete the selected booking data?')"
                                 @closed="onDeleteBookingDaysConfirmationClosed" />
         <success-modal v-if="$page.props.flash.success"
                        :title="$t('Sage interface')"
@@ -248,6 +258,7 @@ export default defineComponent({
             specificDayImportDateTo: null,
             deleteBookingDaysDateFrom: null,
             deleteBookingDaysDateTo: null,
+            deleteBookingDaysKtr: null,
             deleteAssignedData: false,
             showDeleteBookingDaysConfirmation: false,
             dragging: false
@@ -311,12 +322,15 @@ export default defineComponent({
             this.showDeleteBookingDaysConfirmation = false;
             if (!confirmed) return;
 
-            if (!this.deleteBookingDaysDateFrom) return;
+            const hasKtr = this.deleteBookingDaysKtr && this.deleteBookingDaysKtr.trim() !== '';
+            const hasDate = this.deleteBookingDaysDateFrom && this.deleteBookingDaysDateFrom !== '';
+            if (!hasKtr && !hasDate) return;
             this.importProcessing = true;
             const dateTo = this.deleteBookingDaysDateTo || this.deleteBookingDaysDateFrom;
             router.post(route('tool.interfaces.sage.deleteBookingDays'), {
-                dateFrom: this.deleteBookingDaysDateFrom,
-                dateTo: dateTo,
+                ktr: hasKtr ? this.deleteBookingDaysKtr.trim() : null,
+                dateFrom: this.deleteBookingDaysDateFrom || null,
+                dateTo: dateTo || null,
                 deleteAssignedData: this.deleteAssignedData
             }, {
                 preserveScroll: true,

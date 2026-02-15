@@ -27,6 +27,7 @@ return [
         'import_executed_successfully' => 'Sage import was executed successfully.',
         'import_executed_unsuccessfully' => 'Sage import could not be executed, please try again.',
         'date_range_required' => 'Please specify a date range (From date).',
+        'date_or_ktr_required' => 'Please specify at least a KTR or a date range.',
         'booking_days_deleted_successfully' => 'Booking data was successfully deleted.',
     ],
     'shift-qualification' => [

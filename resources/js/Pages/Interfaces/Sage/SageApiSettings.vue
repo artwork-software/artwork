@@ -86,17 +86,29 @@
             <div v-if="!sageInterfaceIsConfigured()" class="errorText">
                 {{ $t('Please configure the Sage interface first.') }}
             </div>
-            <div class="flex flex-row items-center space-x-4">
-                <div class="w-96">
-                    <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDate"
-                               v-model="specificDayImportDate"
-                               :disabled="!sageInterfaceIsConfigured()"
-                               :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+            <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+                <div class="flex flex-row items-center gap-x-2">
+                    <span class="xsLight">{{ $t('From') }}</span>
+                    <div class="w-48">
+                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateFrom"
+                                   v-model="specificDayImportDateFrom"
+                                   :disabled="!sageInterfaceIsConfigured()"
+                                   :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+                    </div>
+                </div>
+                <div class="flex flex-row items-center gap-x-2">
+                    <span class="xsLight">{{ $t('Until') }}</span>
+                    <div class="w-48">
+                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateTo"
+                                   v-model="specificDayImportDateTo"
+                                   :disabled="!sageInterfaceIsConfigured()"
+                                   :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+                    </div>
                 </div>
                 <RefreshIcon :class="[
                     !sageInterfaceIsConfigured() ||
                     importProcessing ||
-                    specificDayImportDate === null || specificDayImportDate === ''
+                    specificDayImportDateFrom === null || specificDayImportDateFrom === ''
                         ? 'bg-gray-600 cursor-not-allowed'
                         : 'bg-artwork-buttons-create cursor-pointer',
                     'w-10 h-10 rounded-full text-white p-2'
@@ -192,7 +204,8 @@ export default defineComponent({
                 enabled: this.sageSettings?.enabled ?? false
             }),
             importProcessing: false,
-            specificDayImportDate: null,
+            specificDayImportDateFrom: null,
+            specificDayImportDateTo: null,
             dragging: false
         }
     },
@@ -214,10 +227,12 @@ export default defineComponent({
             });
         },
         initializeSageImportForSpecificDay() {
-            if (!this.sageInterfaceIsConfigured() || this.importProcessing || !this.specificDayImportDate) return;
+            if (!this.sageInterfaceIsConfigured() || this.importProcessing || !this.specificDayImportDateFrom) return;
             this.importProcessing = true;
+            const specificDayTo = this.specificDayImportDateTo || this.specificDayImportDateFrom;
             this.$inertia.post(route('tool.interfaces.sage.initializeSpecificDay'), {
-                specificDay: this.specificDayImportDate
+                specificDayFrom: this.specificDayImportDateFrom,
+                specificDayTo: specificDayTo
             }, {
                 preserveScroll: true,
                 preserveState: false,

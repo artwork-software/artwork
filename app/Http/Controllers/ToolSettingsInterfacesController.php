@@ -117,11 +117,15 @@ class ToolSettingsInterfacesController extends Controller
 
     public function initializeSageSpecificDay(Request $request): RedirectResponse
     {
+        $specificDayFrom = $request->get('specificDayFrom');
+        $specificDayTo = $request->get('specificDayTo') ?? $specificDayFrom;
+
         if (
             Artisan::call(
                 ImportSage100ApiDataCommand::class,
                 [
-                    'specificDay' => $request->get('specificDay')
+                    'specificDayFrom' => $specificDayFrom,
+                    'specificDayTo' => $specificDayTo,
                 ]
             ) === 0
         ) {

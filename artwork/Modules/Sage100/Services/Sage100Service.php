@@ -33,7 +33,7 @@ use Throwable;
 
 class Sage100Service
 {
-    private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
+    private const string FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
     private SageClient $sage100Client;
 
@@ -53,12 +53,13 @@ class Sage100Service
 
     public function importDataToBudget(
         ?int $count,
-        ?string $specificDay,
+        ?string $specificDayFrom,
+        ?string $specificDayTo = null,
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $data = $this->getData($count, $specificDay);
+        $data = $this->getDataForDateRange($count, $specificDayFrom, $specificDayTo);
         [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
             ->splitDataIntoRegularAndCollectiveBookings($data);
 
@@ -66,6 +67,33 @@ class Sage100Service
         $this->importCollectiveBookings($collectiveBookings);
 
         return 0;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function getDataForDateRange(
+        ?int $count,
+        ?string $specificDayFrom,
+        ?string $specificDayTo,
+    ): array {
+        if ($specificDayFrom === null) {
+            return $this->getData($count, null);
+        }
+
+        $start = Carbon::parse($specificDayFrom);
+        $end = Carbon::parse($specificDayTo ?? $specificDayFrom);
+        $period = $start->isBefore($end)
+            ? $start->daysUntil($end)
+            : $end->daysUntil($start);
+
+        $allData = [];
+        foreach ($period as $date) {
+            $dayData = $this->getData($count, $date->format('Y-m-d'));
+            $allData = array_merge($allData, $dayData);
+        }
+
+        return $allData;
     }
 
     private function importCollectiveBookings(
@@ -142,7 +170,7 @@ class Sage100Service
 
     private function importBooking(
         array $item,
-        CollectiveBooking $parentBooking = null
+        CollectiveBooking|null $parentBooking = null
     ): SageAssignedData|SageNotAssignedData|null {
 
         $sageNotAssignedData = null;
@@ -653,7 +681,7 @@ class Sage100Service
     private function createSageNotAssignedData(
         array $item,
         ?int $projectId = null,
-        CollectiveBooking $collectiveBooking = null
+        CollectiveBooking|null $collectiveBooking = null
     ): SageNotAssignedData {
 
         //if we have a parent the children have been purged before, so it's okay to always create a new one

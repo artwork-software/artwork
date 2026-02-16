@@ -49,6 +49,7 @@ class WorkTimeChangeRequest extends Model
         'requested_by',
         'approved_by',
         'declined_by',
+        'request_end_date',
     ];
 
     protected $casts = [

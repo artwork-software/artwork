@@ -23,7 +23,7 @@ class StoreWorkTimeChangeRequestRequest extends FormRequest
     {
         return [
             'request_start_time' => 'required|string|date_format:H:i',
-            'request_end_time' => 'required|string|date_format:H:i|after:request_start_time',
+            'request_end_time' => 'required|string|date_format:H:i',
             'shift_id' => 'required|exists:shifts,id',
             'craft_id' => 'required|exists:crafts,id',
             'request_comment' => 'required|string|max:255',

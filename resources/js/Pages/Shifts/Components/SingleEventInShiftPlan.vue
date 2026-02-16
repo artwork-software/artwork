@@ -34,10 +34,10 @@
                         @mouseenter="showProjectNameTooltipHandler"
                         @mouseleave="hideProjectNameTooltip"
                     >
-                        <a :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})"
+                        <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})"
                            class="relative flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200">
                             <span ref="projectNameSpan" class="block w-full truncate font-semibold text-xs">
-                                {{ event.project.name }}
+                                {{ event.project?.name }}
                             </span>
                         </a>
                         <Teleport to="body">
@@ -47,7 +47,7 @@
                                 :style="{ top: projectNameTooltipPosition.top + 'px', left: projectNameTooltipPosition.left + 'px' }"
                             >
                                 <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                    {{ event.project.name }}
+                                    {{ event.project?.name }}
                                 </div>
                             </div>
                         </Teleport>
@@ -65,9 +65,9 @@
                             @mouseleave="hideEventNameTooltip"
                         >
                             <div v-if="event?.project?.id">
-                                <a :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                                <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
                                     <span ref="eventNameSpan" class="block w-40 max-w-40 truncate text-xs/4 font-semibold">
-                                        {{ event.eventType.abbreviation }}: {{ event.eventName }}
+                                        {{ event.eventType?.abbreviation }}: {{ event.eventName }}
                                     </span>
                                 </a>
                             </div>
@@ -94,7 +94,7 @@
                                 <span>{{ event?.formattedDates?.startTime }} - {{ event?.formattedDates?.endTime }}</span>
                             </div>
                             <div v-else>
-                                {{ event.formattedDates.start }} - {{ event.formattedDates.end }}
+                                {{ event.formattedDates?.start }} - {{ event.formattedDates?.end }}
                             </div>
                         </div>
                     </div>

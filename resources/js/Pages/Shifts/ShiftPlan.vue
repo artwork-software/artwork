@@ -1613,7 +1613,7 @@ function getAllProjectGroupsInEventsByDay(events: any[]) {
 
 function checkIfUserIsAdminOrInGroup(group: any) {
     if ((getCurrentInstance()?.proxy as any)?.hasAdminRole?.()) return false
-    return !group.userIds.includes(usePage().props.auth.user.id)
+    return !group.userIds?.includes(usePage().props.auth.user.id)
 }
 
 function initializeCalendarMultiEditSave() {

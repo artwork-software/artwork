@@ -121,25 +121,44 @@
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
             </div>
         </div>
-        <table v-if="!mainPosition.closed" class="w-full">
+        <div v-if="!mainPosition.closed" class="w-full">
+            <draggable
+                v-model="localSubPositions"
+                item-key="id"
+                handle=".sub-position-drag-handle"
+                ghost-class="opacity-50"
+                :group="{ name: 'sub-positions-' + type, pull: true, put: true }"
+                :disabled="!canReorderSubPositions"
+                @change="persistSubPositionOrder($event)"
+            >
+                <template #item="{ element: subPosition }">
+                    <div class="mb-1">
+                        <div class="relative">
+                            <div v-if="canReorderSubPositions"
+                                 class="sub-position-drag-handle absolute left-[-16px] top-3 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
+                            </div>
+                            <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                  @openVerifiedModal="openVerifiedModal"
+                                                  @openCellDetailModal="openCellDetailModal"
+                                                  @open-error-modal="openErrorModal"
+                                                  @openDeleteModal="openDeleteModal"
+                                                  @openSageAssignedDataModal="openSageAssignedDataModal"
+                                                  :main-position="mainPosition"
+                                                  :all-main-positions="table.main_positions"
+                                                  :sub-position="subPosition"
+                                                  :columns="table.columns"
+                                                  :project="project"
+                                                  :table="table"
+                                                  :project-managers="projectManagers"
+                                                  :hasBudgetAccess="this.hasBudgetAccess"
+                            />
+                        </div>
+                    </div>
+                </template>
+            </draggable>
+            <table class="w-full">
             <thead class="">
-            <tr class="" v-for="(subPosition) in mainPosition.sub_positions">
-                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
-                                      @openVerifiedModal="openVerifiedModal"
-                                      @openCellDetailModal="openCellDetailModal"
-                                      @open-error-modal="openErrorModal"
-                                      @openDeleteModal="openDeleteModal"
-                                      @openSageAssignedDataModal="openSageAssignedDataModal"
-                                      :main-position="mainPosition"
-                                      :all-main-positions="table.main_positions"
-                                      :sub-position="subPosition"
-                                      :columns="table.columns"
-                                      :project="project"
-                                      :table="table"
-                                      :project-managers="projectManagers"
-                                      :hasBudgetAccess="this.hasBudgetAccess"
-                />
-            </tr>
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
@@ -168,13 +187,14 @@
                 </td>
             </tr>
             </thead>
+            </table>
             <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     {{ $t('Main position') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
                 </div>
             </div>
-        </table>
+        </div>
     </th>
     <sage-assigned-data-modal v-if="this.showSageAssignedDataModal"
                               :show="this.showSageAssignedDataModal"
@@ -198,12 +218,15 @@ import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormat
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import draggable from 'vuedraggable';
+import {nextTick} from 'vue';
 
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
+        draggable,
         BaseMenuItem,
         PropertyIcon,
         BaseMenu,
@@ -230,7 +253,7 @@ export default {
         'project',
         'projectManagers',
         'type',
-        'hasBudgetAccess'
+        'hasBudgetAccess',
     ],
     emits:[
         'openDeleteModal',
@@ -239,7 +262,7 @@ export default {
         'openMainPositionSumDetailModal',
         'openCellDetailModal',
         'openVerifiedModal',
-        'budget-updated'
+        'budget-updated',
     ],
     data(){
         return{
@@ -280,7 +303,18 @@ export default {
               redColumn: 'redColumn',
               lightGreenColumn: 'lightGreenColumn'
             },
+            localSubPositions: [],
         }
+    },
+    watch: {
+        'mainPosition.sub_positions': {
+            handler(positions) {
+                if (!positions) return;
+                this.localSubPositions = [...positions];
+            },
+            immediate: true,
+            deep: true
+        },
     },
     mounted() {
         // check if main Position in localStorage in "closedMainPositions"
@@ -313,10 +347,37 @@ export default {
                     }, 0) ?? 0;
                 }, 0) ?? 0;
             }, 0) ?? 0;
-        }
-
+        },
+        canReorderSubPositions() {
+            return (this.hasBudgetAccess || this.$can('edit budget templates'))
+                && (!this.table?.is_template || this.$can('edit budget templates'));
+        },
     },
     methods: {
+        persistSubPositionOrder(evt = null) {
+            if (!this.canReorderSubPositions) return;
+
+            // For cross-mainposition drag: ignore pure 'removed' events,
+            // only persist on 'added' (target) or 'moved' (same list).
+            if (evt?.removed && !evt?.added && !evt?.moved) return;
+
+            window.clearTimeout(this._subPositionReorderTimeout);
+            this._subPositionReorderTimeout = window.setTimeout(() => {
+                nextTick(() => {
+                    this.$inertia.patch(
+                        route('project.budget.sub-position.reorder'),
+                        {
+                            main_position_id: this.mainPosition.id,
+                            sub_position_ids: this.localSubPositions.map(sp => sp.id),
+                        },
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                        }
+                    );
+                });
+            }, 150);
+        },
         calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);

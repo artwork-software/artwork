@@ -90,6 +90,13 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
 
+    /* Update $event_start_time in GeneralSettings from Request */
+    public function updateEventStartTimeFromRequest(Request $request): void
+    {
+        $this->generalSettings->event_start_time = $request->get('event_start_time') ?? '09:00';
+        $this->generalSettings->save();
+    }
+
     function updateWarningMultipleAssignmentsFromRequest(Request $request): void
     {
         $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');

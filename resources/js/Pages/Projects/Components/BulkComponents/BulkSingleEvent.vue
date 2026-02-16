@@ -124,7 +124,7 @@
 
             <!-- Start Day -->
             <div class="print:col-span-2" :style="getColumnSize(5)">
-                <div class="relative">
+                <div class="relative flex items-center gap-1">
                     <BaseInput
                         v-model="draftStartDate"
                         type="date"
@@ -133,19 +133,30 @@
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="onStartDateFocusOut"
+                        class="min-w-0 flex-1"
                     />
+
                 </div>
             </div>
 
             <!-- Start time -->
             <div class="col-span-1" :style="getColumnSize(6)">
-                <div class="flex items-center" v-if="timeArray">
+                <div class="flex items-center gap-1" >
+                    <ToolTipComponent
+                        v-if="event.is_series || event.series_id"
+                        :icon="IconRepeat"
+                        icon-size="size-4"
+                        :tooltip-text="$t('Recurring event')"
+                        direction="bottom"
+                        class="shrink-0"
+                    />
                     <BaseInput
                         v-model="draftStartTime"
+                        v-if="timeArray"
                         type="time"
                         :id="'start-time-' + index"
                         :label="$t('Start time')"
-                        class="print:border-0"
+                        class="print:border-0 min-w-0 flex-1"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('start-time-' + index)"
                         @focusout="onStartTimeFocusOut"
@@ -263,6 +274,20 @@
                             title="Put in the trash"
                             @click="openDeleteEventConfirmModal"
                         />
+                        <BaseMenuItem
+                            v-if="(event.is_series || event.series_id) && hasAdminRole()"
+                            white-menu-background
+                            :icon="IconTrash"
+                            title="Delete all series events"
+                            @click="showDeleteSeriesModal = true"
+                        />
+                        <BaseMenuItem
+                            v-if="(event.is_series || event.series_id) && hasAdminRole()"
+                            white-menu-background
+                            :icon="IconEdit"
+                            title="Edit all series events"
+                            @click="showEditSeriesModal = true"
+                        />
                     </BaseMenu>
                 </div>
             </div>
@@ -279,6 +304,23 @@
 
         <!-- Notes Modal -->
         <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false" />
+
+        <!-- Delete Series Events Modal -->
+        <ConfirmDeleteModal
+            v-if="showDeleteSeriesModal"
+            :title="$t('Delete all series events')"
+            :description="$t('Do you really want to delete all events of this series?')"
+            @closed="showDeleteSeriesModal = false"
+            @delete="confirmDeleteSeriesEvents"
+        />
+
+        <!-- Edit Series Events Modal -->
+        <EditSeriesEventsModal
+            v-if="showEditSeriesModal"
+            :event="event"
+            :rooms="rooms"
+            @close="showEditSeriesModal = false"
+        />
     </div>
 </template>
 
@@ -288,7 +330,7 @@ import {
     IconCheck,
     IconChevronDown,
     IconCircleCheckFilled, IconCopy, IconEdit, IconNote,
-    IconPlus, IconTrash,
+    IconPlus, IconRepeat, IconTrash,
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -296,7 +338,7 @@ import {
     ListboxOption,
     ListboxOptions,
 } from "@headlessui/vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {computed, nextTick, onMounted, ref, watch} from "vue";
@@ -310,9 +352,13 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
+import {usePermission} from "@/Composeables/Permission.js";
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
+const {hasAdminRole} = usePermission(usePage().props);
 
 const props = defineProps({
     event: { type: Object, required: true },
@@ -338,6 +384,8 @@ const dayString = ref(null);
 const openNoteModal = ref(false);
 const event_properties = inject('event_properties');
 const showDeleteEventConfirmModal = ref(false);
+const showDeleteSeriesModal = ref(false);
+const showEditSeriesModal = ref(false);
 
 // Local draft state for start date to prevent immediate re-sorting while typing
 const draftStartDate = ref(props.event.day);
@@ -390,6 +438,17 @@ const getColumnTextSize = (column) => ({
 const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
 const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;
 const onCloseDeleteEventConfirmModal = (closedOnPurpose) => { if (closedOnPurpose) emit('deleteCurrentEvent', props.event); showDeleteEventConfirmModal.value = false; };
+
+const confirmDeleteSeriesEvents = () => {
+    router.delete(route('events.series.delete', props.event.id), {
+        preserveScroll: true,
+        preserveState: false,
+        onFinish: () => {
+            showDeleteSeriesModal.value = false;
+            window.location.reload();
+        }
+    });
+};
 
 // helpers for snapshot comparison
 const getComparableEvent = (ev) => ({

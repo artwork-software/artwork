@@ -179,8 +179,26 @@
                             </div>
 
                             <!-- Eventname -->
-                            <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
-                                {{ event.eventName }}
+                            <div
+                                v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName"
+                                class="relative truncate text-xs/4 font-semibold"
+                                @mouseenter="showEventNameTooltipHandler"
+                                @mouseleave="hideEventNameTooltip"
+                            >
+                                <span ref="eventNameSpan" class="block w-full truncate">
+                                    {{ event.eventName }}
+                                </span>
+                                <Teleport to="body">
+                                    <div
+                                        v-if="isEventNameTruncated && showEventNameTooltipFlag"
+                                        class="fixed z-[9999] pointer-events-none"
+                                        :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
+                                    >
+                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                            {{ event.eventName }}
+                                        </div>
+                                    </div>
+                                </Teleport>
                             </div>
 
                             <!-- Eventtyp + Projekt-State-Indicator rechts -->
@@ -373,8 +391,9 @@
                             title="Add Sub-Event"
                         />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Alle Termine der Serie löschen" />
-                        <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="In geplanten Termin umwandeln" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
+                        <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                     </BaseMenu>
                 </div>
@@ -778,10 +797,18 @@
         <!-- Delete Series Events Modal -->
         <ConfirmDeleteModal
             v-if="showDeleteSeriesModal"
-            :title="$t('Alle Termine der Serie löschen')"
-            :description="$t('Möchten Sie wirklich alle Termine dieser Serie löschen?')"
+            :title="$t('Delete all series events')"
+            :description="$t('Do you really want to delete all events of this series?')"
             @closed="closeDeleteSeriesModal"
             @delete="confirmDeleteSeriesEvents"
+        />
+
+        <!-- Edit Series Events Modal -->
+        <EditSeriesEventsModal
+            v-if="showEditSeriesModal"
+            :event="event"
+            :rooms="rooms"
+            @close="showEditSeriesModal = false"
         />
 
         <!-- Timeline Modal -->
@@ -829,6 +856,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
@@ -836,6 +864,7 @@ const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
 const showConvertToPlanningModal = ref(false);
 const showDeleteSeriesModal = ref(false);
+const showEditSeriesModal = ref(false);
 const showTimelineModal = ref(false);
 const timelineData = ref([]);
 
@@ -894,11 +923,23 @@ const isNameTruncated = ref(false);
 const showProjectNameTooltip = ref(false);
 const tooltipPosition = ref({ top: 0, left: 0 });
 
+// Event name tooltip
+const eventNameSpan = ref(null);
+const isEventNameTruncated = ref(false);
+const showEventNameTooltipFlag = ref(false);
+const eventNameTooltipPosition = ref({ top: 0, left: 0 });
+
 const checkTruncation = () => {
     const el = projectNameSpan.value;
     if (!el) { isNameTruncated.value = false; return; }
     const truncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
     isNameTruncated.value = truncated;
+};
+
+const checkEventNameTruncation = () => {
+    const el = eventNameSpan.value;
+    if (!el) { isEventNameTruncated.value = false; return; }
+    isEventNameTruncated.value = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
 };
 
 const showTooltip = (e) => {
@@ -910,6 +951,18 @@ const showTooltip = (e) => {
 
 const hideTooltip = () => {
     showProjectNameTooltip.value = false;
+};
+
+const showEventNameTooltipHandler = (e) => {
+    checkEventNameTruncation();
+    if (!isEventNameTruncated.value) return;
+    const rect = e.target.getBoundingClientRect();
+    eventNameTooltipPosition.value = { top: rect.bottom + 4, left: rect.left };
+    showEventNameTooltipFlag.value = true;
+};
+
+const hideEventNameTooltip = () => {
+    showEventNameTooltipFlag.value = false;
 };
 
 // Small zoom tooltip state
@@ -947,17 +1000,21 @@ const handleClickOutside = (e) => {
 
 onMounted(() => {
     nextTick(checkTruncation);
+    nextTick(checkEventNameTruncation);
     window.addEventListener('resize', checkTruncation);
+    window.addEventListener('resize', checkEventNameTruncation);
     document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', checkTruncation);
+    window.removeEventListener('resize', checkEventNameTruncation);
     document.removeEventListener('click', handleClickOutside);
 });
 
 // Re-check when name or width/zoom changes
 watch(() => [props.event?.project?.name, props.width, zoom_factor.value], () => nextTick(checkTruncation));
+watch(() => [props.event?.eventName, props.width, zoom_factor.value], () => nextTick(checkEventNameTruncation));
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {

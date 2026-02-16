@@ -421,25 +421,42 @@
                                     class="h-6 w-6 ml-12 text-secondaryHover bg-artwork-buttons-create rounded-full" />
                             </div>
                         </div>
+                        <draggable
+                            v-model="localCostMainPositions"
+                            item-key="id"
+                            handle=".main-position-drag-handle"
+                            ghost-class="opacity-50"
+                            :disabled="!canReorderPositions"
+                            @end="persistMainPositionOrder('BUDGET_TYPE_COST')"
+                        >
+                            <template #item="{ element: mainPosition }">
+                                <div class="mb-1">
+                                    <div class="relative">
+                                        <div v-if="canReorderPositions"
+                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                            <PropertyIcon name="IconGripVertical" class="h-5 w-5" aria-hidden="true" />
+                                        </div>
+                                        <MainPositionComponent @openVerifiedModal="openVerifiedModal"
+                                                               @openCellDetailModal="openCellDetailModal"
+                                                               @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                               @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
+                                                               @openDeleteModal="openDeleteModal"
+                                                               @open-error-modal="openErrorModal"
+                                                               @budget-updated="handleBudgetUpdated"
+                                                               :table="table"
+                                                               :project="project"
+                                                               :main-position="mainPosition"
+                                                               :project-managers="projectManager"
+                                                               :hasBudgetAccess="this.hasBudgetAccess()"
+                                                               type="BUDGET_TYPE_COST"
+                                        />
+                                    </div>
+                                </div>
+                            </template>
+                        </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
-                                                       @openCellDetailModal="openCellDetailModal"
-                                                       @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
-                                                       @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
-                                                       @openDeleteModal="openDeleteModal"
-                                                       @open-error-modal="openErrorModal"
-                                                       @budget-updated="handleBudgetUpdated"
-                                                       :table="table"
-                                                       :project="project"
-                                                       :main-position="mainPosition"
-                                                       :project-managers="projectManager"
-                                                       :hasBudgetAccess="this.hasBudgetAccess()"
-                                                       type="BUDGET_TYPE_COST"
-                                />
-                            </tr>
-                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right te">
+                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">SUM</td>
@@ -532,24 +549,41 @@
                                 <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
+        <draggable
+                            v-model="localEarningMainPositions"
+                            item-key="id"
+                            handle=".main-position-drag-handle"
+                            ghost-class="opacity-50"
+                            :disabled="!canReorderPositions"
+                            @end="persistMainPositionOrder('BUDGET_TYPE_EARNING')"
+                        >
+                            <template #item="{ element: mainPosition }">
+                                <div class="mb-1">
+                                    <div class="relative">
+                                        <div v-if="canReorderPositions"
+                                             class="main-position-drag-handle absolute left-[-20px] top-4 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                            <PropertyIcon name="IconGripVertical" class="h-5 w-5" aria-hidden="true" />
+                                        </div>
+                                        <MainPositionComponent @openVerifiedModal="openVerifiedModal"
+                                                               @openCellDetailModal="openCellDetailModal"
+                                                               @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                               @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
+                                                               @openDeleteModal="openDeleteModal"
+                                                               @open-error-modal="openErrorModal"
+                                                               @budget-updated="handleBudgetUpdated"
+                                                               :table="table"
+                                                               :project="project"
+                                                               :main-position="mainPosition"
+                                                               :project-managers="projectManager"
+                                                               :hasBudgetAccess="this.hasBudgetAccess()"
+                                                               type="BUDGET_TYPE_EARNING"
+                                        />
+                                    </div>
+                                </div>
+                            </template>
+                        </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition) in tablesToShow[1]">
-                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
-                                                       @openCellDetailModal="openCellDetailModal"
-                                                       @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
-                                                       @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
-                                                       @openDeleteModal="openDeleteModal"
-                                                       @open-error-modal="openErrorModal"
-                                                       @budget-updated="handleBudgetUpdated"
-                                                       :table="table"
-                                                       :project="project"
-                                                       :main-position="mainPosition"
-                                                       :project-managers="projectManager"
-                                                       :hasBudgetAccess="this.hasBudgetAccess()"
-                                                       type="BUDGET_TYPE_EARNING"
-                                />
-                            </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
@@ -907,11 +941,13 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import draggable from 'vuedraggable';
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        draggable,
         BaseMenuItem,
         PropertyIcon,
         ArtworkBaseModal,
@@ -1045,7 +1081,9 @@ export default {
                 this.$page.props.auth.user.commented_budget_items_setting.exclude === 1 :
                 false,
             showDeleteSageNotAssignedDataConfirmationModal: false,
-            sageNotAssignedDataToDelete: null
+            sageNotAssignedDataToDelete: null,
+            localCostMainPositions: [],
+            localEarningMainPositions: []
         }
     },
     props: [
@@ -1088,6 +1126,9 @@ export default {
                 this.table.main_positions[0].sub_positions.length === 1 &&
                 this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1
         },
+        canReorderPositions() {
+            return this.hasBudgetAccess() || this.$can('edit budget templates');
+        },
         projectMembers: function () {
             let projectMemberArray = [];
             this.project.users?.forEach(member => {
@@ -1098,6 +1139,15 @@ export default {
         }
     },
     watch: {
+        'table.main_positions': {
+            handler(positions) {
+                if (!positions) return;
+                this.localCostMainPositions = positions.filter(mp => mp.type === 'BUDGET_TYPE_COST');
+                this.localEarningMainPositions = positions.filter(mp => mp.type === 'BUDGET_TYPE_EARNING');
+            },
+            immediate: true,
+            deep: true
+        },
         // Watcher für selectedSumDetail - öffnet Modal automatisch wenn vom Backend populated
         selectedSumDetail: {
             handler(newVal) {
@@ -1163,6 +1213,22 @@ export default {
         },
     },
     methods: {
+        persistMainPositionOrder(type) {
+            const list = type === 'BUDGET_TYPE_COST' ? this.localCostMainPositions : this.localEarningMainPositions;
+            if (!list || list.length === 0) return;
+            this.$inertia.patch(
+                route('project.budget.main-position.reorder'),
+                {
+                    table_id: this.table.id,
+                    type: type,
+                    main_position_ids: list.map(mp => mp.id),
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                }
+            );
+        },
         IconEyeX,
         IconCalendarCog,
         IconFlagUp,
@@ -1289,12 +1355,11 @@ export default {
         },
         calculateSageColumnWithCellSageDataCommented(tableType) {
             if (tableType === 0) {
-                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the cost table (main_position.type === 'BUDGET_TYPE_COST')
-                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
-                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
-                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
-                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
+                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
+                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
+                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
                                     return accumulator + sageAssignedData.buchungsbetrag;
                                 }, 0);
                             }, 0);
@@ -1302,12 +1367,11 @@ export default {
                     }, 0);
                 }, 0);
             } else {
-                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the earning table (main_position.type === 'BUDGET_TYPE_EARNING')
-                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
-                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
-                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
-                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
+                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
+                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
+                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
                                     return accumulator + sageAssignedData.buchungsbetrag;
                                 }, 0);
                             }, 0);
@@ -1318,12 +1382,11 @@ export default {
         },
         calculateSageColumnWithCellSageDataValue(tableType) {
             if (tableType === 0) {
-                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the cost table (main_position.type === 'BUDGET_TYPE_COST')
-                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
-                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
-                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
-                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
+                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
+                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
+                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
                                     return accumulator + sageAssignedData.buchungsbetrag;
                                 }, 0);
                             }, 0);
@@ -1331,12 +1394,11 @@ export default {
                     }, 0);
                 }, 0);
             } else {
-                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the earning table (main_position.type === 'BUDGET_TYPE_EARNING')
-                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
-                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
-                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
-                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
+                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
+                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
+                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
                                     return accumulator + sageAssignedData.buchungsbetrag;
                                 }, 0);
                             }, 0);

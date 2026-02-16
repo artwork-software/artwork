@@ -62,7 +62,9 @@ class ProjectDTO extends Data
             isGroup: $project->is_group,
             isInGroup: $groups->isNotEmpty(),
             group: $groups->isNotEmpty() ? $groups->map(fn(Project $group) => self::fromModelForCalendar($group)) : null,
-            userIds: null,
+            userIds: $project->relationLoaded('users')
+                ? $project->users->pluck('id')->toArray()
+                : [],
         );
     }
 }

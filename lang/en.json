@@ -3951,5 +3951,6 @@
     "Default start time": "Default start time",
     "The default start time determines which time should be prefilled when you create a new event in artwork.": "The default start time determines which time should be prefilled when you create a new event in artwork.",
     "Drop main position here": "Drop main position here",
-    "Drop sub position here": "Drop sub position here"
+    "Drop sub position here": "Drop sub position here",
+    "Are you sure you want to permanently delete all items in the recycle bin for this category?": "Are you sure you want to permanently delete all items in the recycle bin for this category?"
 }

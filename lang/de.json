@@ -3991,5 +3991,6 @@
     "Default start time": "Standard-Startuhrzeit",
     "The default start time determines which time should be prefilled when you create a new event in artwork.": "Die Standard-Startuhrzeit legt fest welche Uhrzeit vorausgefüllt sein soll, wenn du einen neuen Termin in artwork erstellen willst.",
     "Drop main position here": "Hier Hauptposition ablegen",
-    "Drop sub position here": "Hier Unterposition ablegen"
+    "Drop sub position here": "Hier Unterposition ablegen",
+    "Are you sure you want to permanently delete all items in the recycle bin for this category?": "Bist du sicher, dass du alle Einträge im Papierkorb für diese Kategorie endgültig löschen möchtest?"
 }

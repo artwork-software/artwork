@@ -2996,6 +2996,15 @@ class EventController extends Controller
         return Redirect::route('events.trashed');
     }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        Event::onlyTrashed()->each(function ($event) {
+            $event->subEvents()->forceDelete();
+            $event->forceDelete();
+        });
+        return Redirect::route('events.trashed');
+    }
+
     public function restore(int $id): RedirectResponse
     {
         /** @var Event $event */

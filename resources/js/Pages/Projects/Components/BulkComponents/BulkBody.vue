@@ -866,6 +866,8 @@ const createCopyByEventWithData = (event) => {
             description: event.description,
             isNew: true,
             is_planning: isPlanningEvent.value,
+            is_series: false,
+            series_id: null,
         };
         createdEvents.push(clone);
     }

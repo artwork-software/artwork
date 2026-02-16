@@ -7,6 +7,7 @@ use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\MinimalEventDTO;
+use Artwork\Modules\Calendar\DTO\PdfEventDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -66,6 +67,57 @@ readonly class EventCalendarService
         }
 
         return $rooms;
+    }
+
+    public function filterRoomsEventsForPdf(
+        SupportCollection $rooms,
+        UserFilter $filter,
+                   $startDate,
+                   $endDate,
+        ?UserCalendarSettings $userCalendarSettings = null,
+    ): SupportCollection {
+        $events = $this->filter(
+            $this->getEventQueryForPdf(),
+            $rooms,
+            $filter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings,
+        );
+
+        // Bulk-Lookup nur für benötigte Daten
+        $eventTypeIds = $events->pluck('event_type_id')->unique()->filter();
+        $projectIds   = $events->pluck('project_id')->unique()->filter();
+
+        $projects   = $projectIds->isEmpty() ? collect() :
+            Project::whereIn('id', $projectIds)->select(['id', 'name'])->get()->keyBy('id');
+        $eventTypes = $eventTypeIds->isEmpty() ? collect() :
+            EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
+
+        $eventDTOs = $events->map(fn($event) => new PdfEventDTO(
+            id: $event->id,
+            startTime: $event->start_time,
+            endTime: $event->end_time,
+            eventName: $event->eventName,
+            allDay: (bool) $event->allDay,
+            roomId: $event->room_id,
+            eventType: $eventTypes[$event->event_type_id] ?? null,
+            project: $projects[$event->project_id] ?? null,
+        ))->groupBy('roomId');
+
+        foreach ($rooms as $room) {
+            $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+
+        return $rooms;
+    }
+
+    private function getEventQueryForPdf(): Builder
+    {
+        return Event::query()
+            ->select(['id', 'start_time', 'end_time', 'eventName', 'allDay', 'room_id',
+                       'event_type_id', 'project_id', 'is_planning'])
+            ->without([]);
     }
 
     public function filterRoomsEventsWithMinimalData(

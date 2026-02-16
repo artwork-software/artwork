@@ -8,6 +8,10 @@
              class="cursor-pointer inset-y-0 mr-3">
             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
         </div>
+        <button v-if="trashed_areas.length > 0" @click="showConfirmDeleteAll = true"
+                class="cursor-pointer text-red-500 hover:text-red-700 mr-3">
+            <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+        </button>
         <div v-else class="flex items-center w-64 mr-2">
             <div>
                 <input type="text"
@@ -121,6 +125,14 @@
             </div>
         </div>
     </div>
+
+    <ConfirmDeleteModal
+        v-if="showConfirmDeleteAll"
+        :title="$t('Delete all')"
+        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
+        @closed="showConfirmDeleteAll = false"
+        @delete="forceDeleteAll"
+    />
 </template>
 
 <script>
@@ -132,6 +144,7 @@ import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     name: "Projects",
@@ -139,6 +152,7 @@ export default {
     props: ['trashed_areas'],
     components: {
         BaseMenu,
+        ConfirmDeleteModal,
         Input, XIcon, SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,
@@ -150,6 +164,7 @@ export default {
           showTemporaryRooms: [],
           showSearchbar: false,
           searchText: '',
+          showConfirmDeleteAll: false,
       }
     },
     computed: {
@@ -179,6 +194,13 @@ export default {
             this.$nextTick(() => {
                 if (this.showSearchbar) {
                     this.$refs.searchBarInput.focus();
+                }
+            });
+        },
+        forceDeleteAll() {
+            this.$inertia.delete(route('areas.force.all'), {
+                onSuccess: () => {
+                    this.showConfirmDeleteAll = false;
                 }
             });
         },

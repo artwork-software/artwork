@@ -109,7 +109,7 @@ class ExportPDFController extends Controller
 
         // Calendar DTO (rooms[]= ['roomId'=>..,'content'=>['29.10.2025'=>['events'=>[...]]]])
         $calendar = $this->eventCalendarService->mapRoomsToContentForCalendar(
-            $this->eventCalendarService->filterRoomsEvents(
+            $this->eventCalendarService->filterRoomsEventsForPdf(
                 $rooms,
                 $userCalendarFilter,
                 $startDate,
@@ -119,6 +119,16 @@ class ExportPDFController extends Controller
             $startDate,
             $endDate
         );
+
+        // Lookup: roomId -> content (O(1) statt O(n) im Blade)
+        $calendarLookup = [];
+        foreach (($calendar->rooms ?? []) as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? ($roomBlock->roomId ?? null);
+            $content = $roomBlock['content'] ?? ($roomBlock->content ?? []);
+            if ($rid !== null) {
+                $calendarLookup[$rid] = $content;
+            }
+        }
 
         // Liste der Tage bauen
         $days = [];
@@ -157,18 +167,6 @@ class ExportPDFController extends Controller
                 // Liste der Tag-Strings (Format wie im View: d.m.Y)
                 $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 
-                // Kalender-Räume-Struktur aus DTO
-                $calendarRooms = $calendar->rooms ?? [];
-
-                // Hilfs-Lookup: roomId -> calendar room block
-                $calendarRoomLookup = [];
-                foreach ($calendarRooms as $roomBlock) {
-                    $rid = $roomBlock['roomId'] ?? null;
-                    if ($rid !== null) {
-                        $calendarRoomLookup[$rid] = $roomBlock;
-                    }
-                }
-
                 foreach ($rooms as $room) {
                     $rid = $room->id;
                     $maxPerSlot = [
@@ -177,9 +175,8 @@ class ExportPDFController extends Controller
                         'evening' => 0,
                     ];
 
-                    $roomBlock = $calendarRoomLookup[$rid] ?? null;
-                    if (!$roomBlock) {
-                        // Falls keine Inhalte vorhanden sind, auf Basis-Mindesthöhe setzen
+                    $roomContent = $calendarLookup[$rid] ?? null;
+                    if (!$roomContent) {
                         $rowHeights[$rid] = [
                             'morning' => $baseMinHeight,
                             'noon'    => $baseMinHeight,
@@ -189,7 +186,7 @@ class ExportPDFController extends Controller
                     }
 
                     foreach ($allDayStrings as $dayDisplay) {
-                        $events = $roomBlock['content'][$dayDisplay]['events'] ?? [];
+                        $events = $roomContent[$dayDisplay]['events'] ?? [];
                         if (empty($events)) {
                             // Keine Events für diesen Tag
                             continue;
@@ -245,6 +242,7 @@ class ExportPDFController extends Controller
                 'user_filters'   => $userCalendarFilter,
                 'created_by'     => $user->full_name,
                 'calendar'       => $calendar,     // CalendarFrontendDataDTO
+                'calendarLookup' => $calendarLookup, // roomId -> content (O(1) Lookup)
                 'roomChunks'     => $roomChunks,   // Collection pro vertikaler Seite
                 'dayChunks'      => $dayChunks,    // Array pro horizontaler Seite
                 'activeFilter'  => [
@@ -287,7 +285,6 @@ class ExportPDFController extends Controller
 
     public static function eventOverlapsSlot($event, string $dayDisplay, string $slot): bool
     {
-        // Ganztägig -> in allen Slots anzeigen
         if (!empty($event->allDay)) {
             return true;
         }
@@ -296,31 +293,20 @@ class ExportPDFController extends Controller
             return false;
         }
 
-        $eventStart = \Carbon\Carbon::parse($event->start);
-        $eventEnd   = \Carbon\Carbon::parse($event->end);
+        // Slot-Grenzen als Stunden
+        $slotBounds = ['morning' => [0, 12], 'noon' => [12, 18], 'evening' => [18, 24]];
+        [$slotStartH, $slotEndH] = $slotBounds[$slot] ?? [0, 24];
 
-        $day = \Carbon\Carbon::createFromFormat('d.m.Y', $dayDisplay);
+        $day = \Carbon\Carbon::createFromFormat('d.m.Y', $dayDisplay)->startOfDay();
+        $slotStartTs = $day->copy()->addHours($slotStartH)->getTimestamp();
+        $slotEndTs   = $slot === 'evening'
+            ? $day->copy()->setTime(23, 59, 59)->getTimestamp()
+            : $day->copy()->addHours($slotEndH)->getTimestamp();
 
-        switch ($slot) {
-            case 'morning': // 00:00 - 12:00
-                $slotStart = $day->copy()->startOfDay();           // 00:00
-                $slotEnd   = $day->copy()->setTime(12, 0, 0);      // 12:00
-                break;
+        $eventStartTs = \Carbon\Carbon::parse($event->start)->getTimestamp();
+        $eventEndTs   = \Carbon\Carbon::parse($event->end)->getTimestamp();
 
-            case 'noon': // 12:00 - 18:00
-                $slotStart = $day->copy()->setTime(12, 0, 0);      // 12:00
-                $slotEnd   = $day->copy()->setTime(18, 0, 0);      // 18:00
-                break;
-
-            case 'evening': // 18:00 - 24:00
-            default:
-                $slotStart = $day->copy()->setTime(18, 0, 0);      // 18:00
-                $slotEnd   = $day->copy()->endOfDay()->setTime(23, 59, 59); // 23:59
-                break;
-        }
-
-        // Overlap wenn: Start < SlotEnd && Ende > SlotStart
-        return $eventStart < $slotEnd && $eventEnd > $slotStart;
+        return $eventStartTs < $slotEndTs && $eventEndTs > $slotStartTs;
     }
 
 

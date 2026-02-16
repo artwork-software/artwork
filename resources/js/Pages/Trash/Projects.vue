@@ -8,6 +8,10 @@
                  class="cursor-pointer inset-y-0 mr-3">
                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
             </div>
+            <button v-if="trashed_projects.length > 0" @click="showConfirmDeleteAll = true"
+                    class="cursor-pointer text-red-500 hover:text-red-700 mr-3">
+                <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+            </button>
             <div v-else class="flex items-center w-64 mr-2">
                 <div>
                     <input type="text"
@@ -171,6 +175,13 @@
 
     </div>
 
+    <ConfirmDeleteModal
+        v-if="showConfirmDeleteAll"
+        :title="$t('Delete all')"
+        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
+        @closed="showConfirmDeleteAll = false"
+        @delete="forceDeleteAll"
+    />
 </template>
 
 <script>
@@ -195,6 +206,7 @@ import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponen
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     props: ['trashed_projects'],
@@ -206,6 +218,7 @@ export default {
             selectedProjectId: null,
             showSearchbar: false,
             searchText: '',
+            showConfirmDeleteAll: false,
         }
     },
     computed: {
@@ -239,9 +252,17 @@ export default {
                 }
             });
         },
+        forceDeleteAll() {
+            this.$inertia.delete(route('projects.force.all'), {
+                onSuccess: () => {
+                    this.showConfirmDeleteAll = false;
+                }
+            });
+        },
     },
     components: {
         BaseMenu,
+        ConfirmDeleteModal,
         UserPopoverTooltip,
         Input, SearchIcon,
         ProjectHistoryComponent,

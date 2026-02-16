@@ -64,6 +64,14 @@ class SageNotAssignedDataController extends Controller
         return Redirect::back();
     }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        SageNotAssignedData::onlyTrashed()->each(function ($item) {
+            $this->sageNotAssignedDataService->forceDelete($item);
+        });
+        return Redirect::route('sageNotAssignedData.trashed');
+    }
+
     public function moveSageData(
         SageNotAssignedData $sageNotAssignedData,
         ColumnCell $columnCell

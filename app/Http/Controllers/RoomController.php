@@ -259,7 +259,14 @@ class RoomController extends Controller
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
+        return Redirect::route('rooms.trashed');
+    }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        Room::onlyTrashed()->each(function ($room) {
+            $room->forceDelete();
+        });
         return Redirect::route('rooms.trashed');
     }
 

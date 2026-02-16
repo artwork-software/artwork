@@ -112,6 +112,16 @@ class BudgetManagementCostUnitController extends Controller
         return Redirect::back();
     }
 
+    public function forceDeleteAll(
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        BudgetManagementCostUnit::onlyTrashed()->each(function ($costUnit) use ($projectService, $columnCellService) {
+            $this->budgetManagementCostUnitService->forceDelete($costUnit, $projectService, $columnCellService);
+        });
+        return Redirect::route('budget-settings.account-management.trash-cost-units');
+    }
+
     public function search(Request $request): Collection
     {
         return $this->budgetManagementCostUnitService->searchByRequest($request);

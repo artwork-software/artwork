@@ -3891,6 +3891,59 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed');
     }
 
+    public function forceDeleteAll(
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        EventService $eventService,
+        ProjectFileService $projectFileService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        TaskService $taskService
+    ): RedirectResponse {
+        $projects = Project::onlyTrashed()->get();
+        foreach ($projects as $project) {
+            $events = Event::onlyTrashed()->where('project_id', $project->id)->get();
+            $eventService->forceDeleteAll(
+                $events,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService
+            );
+            $this->projectService->forceDelete(
+                $project,
+                $commentService,
+                $checklistService,
+                $eventService,
+                $projectFileService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService,
+                $taskService
+            );
+        }
+        return Redirect::route('projects.trashed');
+    }
+
+    public function forceDeleteAllSettings(): RedirectResponse
+    {
+        Genre::onlyTrashed()->forceDelete();
+        Category::onlyTrashed()->forceDelete();
+        Sector::onlyTrashed()->forceDelete();
+        ProjectState::onlyTrashed()->forceDelete();
+        ContractType::onlyTrashed()->forceDelete();
+        CompanyType::onlyTrashed()->forceDelete();
+        CollectingSociety::onlyTrashed()->forceDelete();
+        Currency::onlyTrashed()->forceDelete();
+        return Redirect::route('projects.settings.trashed');
+    }
+
     public function restore(
         int $id,
         ShiftsQualificationsService $shiftsQualificationsService,

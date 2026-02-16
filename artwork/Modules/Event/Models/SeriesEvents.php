@@ -49,7 +49,8 @@ class SeriesEvents extends Model
     {
         // Before deleting the series, permanently delete all related events
         // Events use SoftDeletes, so we need to use forceDelete() to actually remove them
-        $events = $this->events()->get();
+        // Use withTrashed() to include soft-deleted events that still hold the FK reference
+        $events = $this->events()->withTrashed()->get();
         foreach ($events as $event) {
             $event->forceDelete();
         }

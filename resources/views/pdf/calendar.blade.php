@@ -221,14 +221,8 @@
     $EVENING_START_MIN  = 18 * 60;
     $EVENING_END_MIN    = 24 * 60;
 
-    function __getEventsForRoomAndDay($calendar, $roomId, $dayDisplay) {
-        if (empty($calendar) || empty($calendar->rooms)) return [];
-        foreach ($calendar->rooms as $roomBlock) {
-            if (($roomBlock['roomId'] ?? null) === $roomId) {
-                return $roomBlock['content'][$dayDisplay]['events'] ?? [];
-            }
-        }
-        return [];
+    function __getEventsForRoomAndDay($calendarLookup, $roomId, $dayDisplay) {
+        return $calendarLookup[$roomId][$dayDisplay]['events'] ?? [];
     }
 
     function __parseDayStart(string $dayDisplay): \Illuminate\Support\Carbon {
@@ -669,16 +663,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
-                            >
-                                <div class="day-wrap" style="height: {{ $hDay }}px;">
-                                    @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;">
+                                </td>
+                            @else
+                                <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
+                                >
+                                    <div class="day-wrap" style="height: {{ $hDay }}px;">
+                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
                 @endforeach

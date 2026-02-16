@@ -12,6 +12,7 @@ class WorkTimeChangeRequestService
             'user_id' => $data['user_id'],
             'request_start_time' => $data['request_start_time'],
             'request_end_time' => $data['request_end_time'],
+            'request_end_date' => $data['request_end_date'] ?? null,
             'shift_id' => $data['shift_id'],
             'craft_id' => $data['craft_id'],
             'status' => 'pending',

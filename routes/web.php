@@ -454,6 +454,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_attributes');
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])
         ->name('projects.update_description');
+    Route::delete('/projects/force-all', [ProjectController::class, 'forceDeleteAll'])->name('projects.force.all');
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
@@ -648,11 +649,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
-    Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
 
-    //Trash
+    //Trash - muss vor /areas/{area} stehen!
+    Route::delete('/areas/force-all', [AreaController::class, 'forceDeleteAll'])->name('areas.force.all');
     Route::delete('/areas/{id}/force', [AreaController::class, 'forceDelete'])->name('areas.force');
     Route::patch('/areas/{id}/restore', [AreaController::class, 'restore'])->name('areas.restore');
+
+    Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
 
     Route::get('/rooms/move', [RoomController::class, 'getMoveRooms'])->name('rooms.move');
     Route::post('/rooms/order/new', [RoomController::class, 'updateOrderNew'])->name('rooms.order.new');
@@ -667,11 +670,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::patch('/rooms/{room}/users', [RoomController::class, 'updateRoomUsers'])->name('room.users.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
-    Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
-
-    //Trash
+    //Trash - muss vor /rooms/{room} DELETE stehen!
+    Route::delete('/rooms/force-all', [RoomController::class, 'forceDeleteAll'])->name('rooms.force.all');
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
     Route::patch('/rooms/{id}/restore', [RoomController::class, 'restore'])->name('rooms.restore');
+
+    Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
 
     //RoomFiles
     Route::post('/rooms/{room}/files', [RoomFileController::class, 'store'])->name('room_files.store');
@@ -737,6 +741,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])
         ->name('event.bulk.multi-edit.delete');
 
+    //Trash - muss vor /events/{event} stehen!
+    Route::delete('/events/force-all', [EventController::class, 'forceDeleteAll'])->name('events.force.all');
+    Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
+    Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
+
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
@@ -749,10 +758,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/events/{event}/series', [EventController::class, 'updateSeriesEvents'])->name('events.series.update');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
     Route::get('/events/{event}/timelines', [EventController::class, 'getTimelines'])->name('events.timelines');
-
-    //Trash
-    Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
-    Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
     //Shifts
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])
@@ -1315,6 +1320,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             )
                 ->name('sageNotAssignedData.forceDelete')
                 ->withTrashed();
+            Route::delete(
+                '/sageNotAssignedData/force-all',
+                [SageNotAssignedDataController::class, 'forceDeleteAll']
+            )->name('sageNotAssignedData.forceDeleteAll');
             Route::patch(
                 '/sageNotAssignedData/{sageNotAssignedData}/restore',
                 [
@@ -1419,6 +1428,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'forceDelete'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-accounts.forceDelete');
+        Route::delete(
+            '/account-management/accounts/force-all',
+            [BudgetManagementAccountController::class, 'forceDeleteAll']
+        )->name('budget-settings.account-management.trash-accounts.forceDeleteAll');
         Route::get(
             '/account-management/cost-units/trashed',
             [
@@ -1440,6 +1453,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'forceDelete'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-cost-units.forceDelete');
+        Route::delete(
+            '/account-management/cost-units/force-all',
+            [BudgetManagementCostUnitController::class, 'forceDeleteAll']
+        )->name('budget-settings.account-management.trash-cost-units.forceDeleteAll');
         Route::get(
             '/account-management/accounts/search',
             [
@@ -1532,6 +1549,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Project Settings
     Route::get('/trashedProjects/settings', [ProjectController::class, 'getTrashedSettings'])
         ->name('projects.settings.trashed');
+    Route::delete('/trashedProjects/settings/force-all', [ProjectController::class, 'forceDeleteAllSettings'])
+        ->name('projects.settings.force.all');
 
     // Sub Event
     Route::post('/sub-event/add', [SubEventsController::class, 'store'])->name('subEvent.add');
@@ -2104,6 +2123,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory.articles.trash');
 
         // delete articles.forceDelete
+        Route::delete('/articles/force-all', [InventoryArticleController::class, 'forceDeleteAll'])
+            ->name('articles.forceDeleteAll');
         Route::delete('/articles/{inventoryArticle}/forceDelete', [InventoryArticleController::class, 'forceDelete'])
             ->name('articles.forceDelete');
 

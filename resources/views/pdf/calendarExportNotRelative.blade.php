@@ -221,16 +221,8 @@
     /**
      * Holt alle Events eines Raums an einem Tag.
      */
-    function __getEventsForRoomAndDay($calendar, $roomId, $dayDisplay) {
-        if (empty($calendar) || empty($calendar->rooms)) {
-            return [];
-        }
-        foreach ($calendar->rooms as $roomBlock) {
-            if (($roomBlock['roomId'] ?? null) === $roomId) {
-                return $roomBlock['content'][$dayDisplay]['events'] ?? [];
-            }
-        }
-        return [];
+    function __getEventsForRoomAndDay($calendarLookup, $roomId, $dayDisplay) {
+        return $calendarLookup[$roomId][$dayDisplay]['events'] ?? [];
     }
 
     /**
@@ -417,16 +409,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hMorning }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'morning'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hMorning }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'morning'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
 
@@ -457,16 +455,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hNoon }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'noon'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hNoon }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'noon'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
 
@@ -493,16 +497,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hEvening }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'evening'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hEvening }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'evening'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
                 @endforeach

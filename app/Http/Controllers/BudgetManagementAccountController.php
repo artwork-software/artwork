@@ -115,6 +115,16 @@ class BudgetManagementAccountController extends Controller
         return Redirect::back();
     }
 
+    public function forceDeleteAll(
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        BudgetManagementAccount::onlyTrashed()->each(function ($account) use ($projectService, $columnCellService) {
+            $this->budgetManagementAccountService->forceDelete($account, $projectService, $columnCellService);
+        });
+        return Redirect::route('budget-settings.account-management.trash-accounts');
+    }
+
     public function search(Request $request): Collection
     {
         return $this->budgetManagementAccountService->searchByRequest($request);

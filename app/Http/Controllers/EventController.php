@@ -2996,6 +2996,15 @@ class EventController extends Controller
         return Redirect::route('events.trashed');
     }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        Event::onlyTrashed()->each(function ($event) {
+            $event->subEvents()->forceDelete();
+            $event->forceDelete();
+        });
+        return Redirect::route('events.trashed');
+    }
+
     public function restore(int $id): RedirectResponse
     {
         /** @var Event $event */
@@ -3412,6 +3421,8 @@ class EventController extends Controller
             }
 
             $duplicatedEvent = $originalEvent->replicate();
+            $duplicatedEvent->series_id = null;
+            $duplicatedEvent->is_series = false;
             $duplicatedEvent->save();
 
             $shifts = $originalEvent->shifts;

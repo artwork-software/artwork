@@ -47,6 +47,7 @@
                     <div class="font-semibold text-blue-700 mt-2">Angefragte Zeitänderung:</div>
                     <div class="">
                         {{ request.request_start_time }} – {{ request.request_end_time }}
+                        <span v-if="request.request_end_date" class="text-xs text-gray-500">(+{{ $t('1 day') }})</span>
                     </div>
                 </div>
             </div>

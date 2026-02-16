@@ -113,6 +113,13 @@ class InventoryArticleController extends Controller
         $this->inventoryArticleService->forceDelete($article);
     }
 
+    public function forceDeleteAll(): void
+    {
+        InventoryArticle::onlyTrashed()->each(function ($article) {
+            $this->inventoryArticleService->forceDelete($article);
+        });
+    }
+
     public function restore(int $inventoryArticle): void
     {
         /** @var InventoryArticle $article */

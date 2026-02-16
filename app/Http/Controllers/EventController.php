@@ -3421,6 +3421,8 @@ class EventController extends Controller
             }
 
             $duplicatedEvent = $originalEvent->replicate();
+            $duplicatedEvent->series_id = null;
+            $duplicatedEvent->is_series = false;
             $duplicatedEvent->save();
 
             $shifts = $originalEvent->shifts;

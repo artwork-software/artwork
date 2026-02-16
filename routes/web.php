@@ -258,6 +258,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('tool.interfaces.sage.initializeSpecificDay');
         Route::delete('/interfaces/sage/delete', [ToolSettingsInterfacesController::class, 'deleteSageData'])
             ->name('tool.interfaces.sage.delete');
+        Route::post(
+            '/interfaces/sage/deleteBookingDays',
+            [ToolSettingsInterfacesController::class, 'deleteSageBookingDays']
+        )->name('tool.interfaces.sage.deleteBookingDays');
         Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])

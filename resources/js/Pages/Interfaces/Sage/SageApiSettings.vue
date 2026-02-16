@@ -86,22 +86,80 @@
             <div v-if="!sageInterfaceIsConfigured()" class="errorText">
                 {{ $t('Please configure the Sage interface first.') }}
             </div>
-            <div class="flex flex-row items-center space-x-4">
-                <div class="w-96">
-                    <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDate"
-                               v-model="specificDayImportDate"
-                               :disabled="!sageInterfaceIsConfigured()"
-                               :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+            <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+                <div class="flex flex-row items-center gap-x-2">
+                    <span class="xsLight">{{ $t('From') }}</span>
+                    <div class="w-48">
+                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateFrom"
+                                   v-model="specificDayImportDateFrom"
+                                   :disabled="!sageInterfaceIsConfigured()"
+                                   :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+                    </div>
+                </div>
+                <div class="flex flex-row items-center gap-x-2">
+                    <span class="xsLight">{{ $t('Until') }}</span>
+                    <div class="w-48">
+                        <BaseInput type="date" label="tt.mm.yyyy" id="specificDayImportDateTo"
+                                   v-model="specificDayImportDateTo"
+                                   :disabled="!sageInterfaceIsConfigured()"
+                                   :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"/>
+                    </div>
                 </div>
                 <RefreshIcon :class="[
                     !sageInterfaceIsConfigured() ||
                     importProcessing ||
-                    specificDayImportDate === null || specificDayImportDate === ''
+                    specificDayImportDateFrom === null || specificDayImportDateFrom === ''
                         ? 'bg-gray-600 cursor-not-allowed'
                         : 'bg-artwork-buttons-create cursor-pointer',
                     'w-10 h-10 rounded-full text-white p-2'
                 ]" @click="initializeSageImportForSpecificDay()" />
             </div>
+        </div>
+
+        <hr class="my-5"/>
+
+        <h2 class="headline2">{{ $t('Delete bookings') }}</h2>
+        <div class="xsLight col-span-9 mb-2">
+            {{ $t('Delete Sage booking data by KTR (cost center), date range, or both. Unassigned data is always deleted, optionally also assigned data can be removed.') }}
+        </div>
+        <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('KTR') }}</span>
+                <div class="w-48">
+                    <BaseInput type="text" :label="$t('KTR')" id="deleteBookingDaysKtr"
+                               v-model="deleteBookingDaysKtr"
+                               :class="'cursor-pointer'"
+                               :placeholder="$t('e.g. R12364')"/>
+                </div>
+            </div>
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('From') }}</span>
+                <div class="w-48">
+                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateFrom"
+                               v-model="deleteBookingDaysDateFrom"
+                               :class="'cursor-pointer'"/>
+                </div>
+            </div>
+            <div class="flex flex-row items-center gap-x-2">
+                <span class="xsLight">{{ $t('Until') }}</span>
+                <div class="w-48">
+                    <BaseInput type="date" label="tt.mm.yyyy" id="deleteBookingDaysDateTo"
+                               v-model="deleteBookingDaysDateTo"
+                               :class="'cursor-pointer'"/>
+                </div>
+            </div>
+            <div class="flex flex-row items-center gap-x-2">
+                <label for="deleteAssignedData" class="xsLight">{{ $t('Also delete already assigned records') }}</label>
+                <input type="checkbox" id="deleteAssignedData" class="input-checklist" v-model="deleteAssignedData"/>
+            </div>
+            <TrashIcon :class="[
+                importProcessing ||
+                ((deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === '') &&
+                (!deleteBookingDaysKtr || deleteBookingDaysKtr.trim() === ''))
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-artwork-buttons-create cursor-pointer',
+                'w-10 h-10 rounded-full text-white p-2'
+            ]" @click="showDeleteBookingDaysConfirmation = true" />
         </div>
 
         <hr class="my-5"/>
@@ -136,6 +194,10 @@
                                 :confirm="$t('Apply changes')"
                                 :description="$t('Are you sure you want to change the interface settings')"
                                 @closed="saveSageInterface" />
+        <confirmation-component v-if="showDeleteBookingDaysConfirmation"
+                                :titel="$t('Delete bookings')"
+                                :description="$t('Are you sure you want to delete the selected booking data?')"
+                                @closed="onDeleteBookingDaysConfirmationClosed" />
         <success-modal v-if="$page.props.flash.success"
                        :title="$t('Sage interface')"
                        :description="$page.props.flash.success"
@@ -192,7 +254,13 @@ export default defineComponent({
                 enabled: this.sageSettings?.enabled ?? false
             }),
             importProcessing: false,
-            specificDayImportDate: null,
+            specificDayImportDateFrom: null,
+            specificDayImportDateTo: null,
+            deleteBookingDaysDateFrom: null,
+            deleteBookingDaysDateTo: null,
+            deleteBookingDaysKtr: null,
+            deleteAssignedData: false,
+            showDeleteBookingDaysConfirmation: false,
             dragging: false
         }
     },
@@ -214,10 +282,12 @@ export default defineComponent({
             });
         },
         initializeSageImportForSpecificDay() {
-            if (!this.sageInterfaceIsConfigured() || this.importProcessing || !this.specificDayImportDate) return;
+            if (!this.sageInterfaceIsConfigured() || this.importProcessing || !this.specificDayImportDateFrom) return;
             this.importProcessing = true;
+            const specificDayTo = this.specificDayImportDateTo || this.specificDayImportDateFrom;
             this.$inertia.post(route('tool.interfaces.sage.initializeSpecificDay'), {
-                specificDay: this.specificDayImportDate
+                specificDayFrom: this.specificDayImportDateFrom,
+                specificDayTo: specificDayTo
             }, {
                 preserveScroll: true,
                 preserveState: false,
@@ -246,6 +316,26 @@ export default defineComponent({
             router.delete(route('tool.interfaces.sage.delete'), {
                 preserveState: true,
                 preserveScroll: true
+            });
+        },
+        onDeleteBookingDaysConfirmationClosed(confirmed) {
+            this.showDeleteBookingDaysConfirmation = false;
+            if (!confirmed) return;
+
+            const hasKtr = this.deleteBookingDaysKtr && this.deleteBookingDaysKtr.trim() !== '';
+            const hasDate = this.deleteBookingDaysDateFrom && this.deleteBookingDaysDateFrom !== '';
+            if (!hasKtr && !hasDate) return;
+            this.importProcessing = true;
+            const dateTo = this.deleteBookingDaysDateTo || this.deleteBookingDaysDateFrom;
+            router.post(route('tool.interfaces.sage.deleteBookingDays'), {
+                ktr: hasKtr ? this.deleteBookingDaysKtr.trim() : null,
+                dateFrom: this.deleteBookingDaysDateFrom || null,
+                dateTo: dateTo || null,
+                deleteAssignedData: this.deleteAssignedData
+            }, {
+                preserveScroll: true,
+                preserveState: false,
+                onFinish: () => this.importProcessing = false
             });
         },
         updateTableColumnOrders() {

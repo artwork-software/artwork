@@ -2,9 +2,11 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Repositories\UserCalendarAboRepository;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Enums\EventStatus;
 
@@ -42,71 +44,107 @@ readonly class UserCalendarAboService
         $this->userCalendarAboRepository->save($calendarAbo);
     }
 
-    public function getFilteredEvents($calendarAbo, $events)
+    public function getFilteredEventsQuery(UserCalendarAbo $calendarAbo): Builder
     {
+        $q = Event::query()
+            ->with(['room', 'project', 'creator'])
+            ->orderBy('start_time');
+
         if ($calendarAbo->date_range) {
-            $events = $events->whereBetween('start_time', [$calendarAbo->start_date, $calendarAbo->end_date])
-                ->whereBetween('end_time', [$calendarAbo->start_date, $calendarAbo->end_date]);
+            $start = Carbon::parse($calendarAbo->start_date)->startOfDay();
+            $end = Carbon::parse($calendarAbo->end_date)->endOfDay();
+
+            $q->where(function ($qq) use ($start, $end) {
+                $qq->whereBetween('start_time', [$start, $end])
+                    ->orWhereBetween('end_time', [$start, $end])
+                    ->orWhere(function ($qqq) use ($start, $end) {
+                        $qqq->where('start_time', '<=', $start)
+                            ->where('end_time', '>=', $end);
+                    });
+            });
         }
+
         if ($calendarAbo->specific_event_types) {
-            $events = $events->whereIn('event_type_id', $calendarAbo->event_types);
+            $q->whereIn('event_type_id', $calendarAbo->event_types ?? []);
         }
 
         if ($calendarAbo->specific_rooms) {
-            $events = $events->whereIn('room_id', $calendarAbo->selected_rooms);
+            $q->whereIn('room_id', $calendarAbo->selected_rooms ?? []);
         }
 
-        return $events->sortBy('start_time');
+        if ($calendarAbo->specific_areas) {
+            $q->whereHas('room', fn ($r) => $r->whereIn('area_id', $calendarAbo->selected_areas ?? []));
+        }
+
+        return $q;
+    }
+
+    private function icsTitleFor($item): string
+    {
+        $candidates = [
+            data_get($item, 'title'),
+            data_get($item, 'name'),
+            data_get($item, 'eventName'),
+            data_get($item, 'event.title'),
+            data_get($item, 'event.name'),
+            data_get($item, 'project.name'),
+            data_get($item, 'eventType.name'),
+        ];
+
+        foreach ($candidates as $c) {
+            if (is_string($c) && trim($c) !== '') {
+                return trim($c);
+            }
+        }
+
+        return 'Termin (ohne Titel)';
     }
 
     public function addEventToCalendar($calendar, $event): void
     {
-        if (!$name = $event->name) {
-            if ($event->project) {
-                $name = $event->eventName . ' - ' . $event->project->name;
-            } else {
-                $name = $event->eventName;
-            }
+        try {
+            $title = $this->icsTitleFor($event);
+
+            $calendar->event(function ($calendarEvent) use ($event, $title): void {
+                $calendarEvent
+                    ->name($title)
+                    ->description($event->description ?? '')
+                    ->uniqueIdentifier($event->id)
+                    ->createdAt(Carbon::parse($event->created_at))
+                    ->startsAt(Carbon::parse($event->start_time))
+                    ->endsAt(Carbon::parse($event->end_time));
+
+                if ($event->room && $event->project) {
+                    $calendarEvent->address('Raum: ' . $event->room->name . ' | Projekt: ' . $event->project->name);
+                } elseif ($event->room) {
+                    $calendarEvent->address('Raum: ' . $event->room->name);
+                } elseif ($event->project) {
+                    $calendarEvent->address('Projekt: ' . $event->project->name);
+                }
+
+                if ($event->room === null) {
+                    $calendarEvent->status(EventStatus::cancelled());
+                }
+
+                if ($event->creator) {
+                    $calendarEvent->organizer($event->creator->email, $event->creator->full_name);
+                }
+
+                if ($event->project) {
+                    $calendarEvent->url(
+                        route(
+                            'projects.tab',
+                            [
+                                'project' => $event->project->id,
+                                'projectTab' => 1
+                            ]
+                        ),
+                        'Im Projekt anzeigen'
+                    );
+                }
+            });
+        } catch (\Throwable $e) {
+            // Skip invalid events silently
         }
-
-        $calendar->event(function ($calendarEvent) use ($event, $name): void {
-            $calendarEvent
-                ->name($name)
-                ->description($event->description ?? '')
-                ->uniqueIdentifier($event->id)
-                ->createdAt(Carbon::parse($event->created_at))
-                ->startsAt(Carbon::parse($event->start_time))
-                ->endsAt(Carbon::parse($event->end_time));
-
-
-            if ($event->room && $event->project) {
-                $calendarEvent->address('Raum: ' . $event->room->name . ' | Projekt: ' . $event->project->name);
-            } elseif ($event->room) {
-                $calendarEvent->address('Raum: ' . $event->room->name);
-            } elseif ($event->project) {
-                $calendarEvent->address('Projekt: ' . $event->project->name);
-            }
-
-            if ($event->room === null) {
-                $calendarEvent->status(EventStatus::cancelled());
-            }
-
-            if ($event->creator) {
-                $calendarEvent->organizer($event->creator->email, $event->creator->full_name);
-            }
-
-            if ($event->project) {
-                $calendarEvent->url(
-                    route(
-                        'projects.tab',
-                        [
-                            'project' => $event->project->id,
-                            'projectTab' => 1
-                        ]
-                    ),
-                    'Im Projekt anzeigen'
-                );
-            }
-        });
     }
 }

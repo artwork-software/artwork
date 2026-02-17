@@ -13,7 +13,7 @@ export default {
         'daysWithEvents',
         'totalPlannedWorkingHours',
         'projects',
-        'eventTypes',
+        'crafts',
         'rooms',
         'vacations',
         'calendarData',
@@ -40,7 +40,7 @@ export default {
                            :date-value="this.dateValue"
                            :days-with-events="this.daysWithEvents"
                            :projects="this.projects"
-                           :event-types="this.eventTypes"
+                           :crafts="this.crafts"
                            :rooms="this.rooms"
                            :vacations="this.vacations"
                            :shift-qualifications="this.shiftQualifications"

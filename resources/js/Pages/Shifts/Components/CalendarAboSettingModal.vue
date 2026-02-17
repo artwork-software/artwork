@@ -11,7 +11,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props & Emits
 const props = defineProps({
-    eventTypes: { type: Array, required: true }
+    crafts: { type: Array, required: false, default: () => [] }
 })
 const emit = defineEmits(['close'])
 
@@ -28,16 +28,16 @@ const aboForm = useForm({
     date_range: abo ? !!abo.date_range : false,
     start_date: abo ? abo.start_date : null,
     end_date: abo ? abo.end_date : null,
-    specific_event_types: abo ? !!abo.specific_event_types : false,
-    event_types: [],
+    specific_crafts: abo ? !!abo.specific_crafts : false,
+    craft_ids: [],
     enable_notification: abo ? !!abo.enable_notification : false,
     notification_time: abo ? (abo.notification_time ?? 0) : 0,
     notification_time_unit: abo ? (abo.notification_time_unit ?? 'minutes') : 'minutes',
 })
 
-// Mehrfachauswahl der Typen als Objekte (für Listbox)
-const selectedEventTypes = ref(
-    abo ? props.eventTypes.filter(et => (abo.event_types ?? []).includes(et.id)) : []
+// Mehrfachauswahl der Gewerke als Objekte (für Listbox)
+const selectedCrafts = ref(
+    abo ? (props.crafts ?? []).filter(c => (abo.craft_ids ?? []).includes(c.id)) : []
 )
 
 const showCalendarAboInfoModal = ref(false)
@@ -48,8 +48,8 @@ function closeModal(success = false) {
 }
 
 function create() {
-    // Mappe selektierte Typen auf IDs für das Backend
-    aboForm.event_types = (selectedEventTypes.value ?? []).map(et => et.id)
+    // Mappe selektierte Gewerke auf IDs für das Backend
+    aboForm.craft_ids = (selectedCrafts.value ?? []).map(c => c.id)
 
     if (aboForm.id) {
         aboForm.patch(route('user.shift.calendar.abo.update', aboForm.id), {
@@ -65,19 +65,14 @@ function create() {
         })
     }
 }
-
-// UI-Text als computed, falls Übersetzungen erst später kommen
-const selectedEventTypesLabel = computed(() =>
-    (selectedEventTypes.value ?? []).map(et => et?.name).join(', ') || page.props.ziggy?.locale ? '' : ''
-)
 </script>
 
 <template>
     <ArtworkBaseModal
         v-if="true"
         @close="closeModal(false)"
-        title="Shift Calendar subscription settings"
-        description="Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized."
+        :title="$t('Shift Calendar subscription settings')"
+        :description="$t('Customize your shift calendar subscription to suit your individual needs. Select a specific time period, certain crafts and activate notifications to stay optimally informed and make your planning easier.')"
     >
 
         <!-- Abschnitt: Zeitraum -->
@@ -109,29 +104,28 @@ const selectedEventTypesLabel = computed(() =>
             </div>
         </div>
 
-        <!-- Abschnitt: Event-Typen -->
+        <!-- Abschnitt: Gewerke -->
         <div class="my-5 border-b border-dotted border-gray-200 pb-5">
             <ArtworkBaseToggle
-                label="Select event types for calendar subscription"
-                description="Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning."
-                v-model="aboForm.specific_event_types"
-                id="specific_event_types"
-                name="specific_event_types"
+                label="Select crafts for calendar subscription"
+                description="Select specific crafts for your shift calendar subscription. This allows you to specify which crafts should be displayed in your subscribed calendar to optimize your planning."
+                v-model="aboForm.specific_crafts"
+                id="specific_crafts"
+                name="specific_crafts"
                 use-translation
             />
 
-
-            <div v-if="aboForm.specific_event_types" class="mt-4 ml-0 md:ml-7">
+            <div v-if="aboForm.specific_crafts" class="mt-4 ml-0 md:ml-7">
                 <ArtworkBaseListbox
-                    v-model="selectedEventTypes"
-                    :items="props.eventTypes"
+                    v-model="selectedCrafts"
+                    :items="props.crafts"
                     by="id"
                     multiple
                     option-label="name"
                     option-key="id"
                     :use-translations="false"
-                    :label="$t('Select event types')"
-                    :placeholder="$t('Select event types')"
+                    :label="$t('Select crafts')"
+                    :placeholder="$t('Select crafts')"
                 />
             </div>
         </div>
@@ -164,7 +158,6 @@ const selectedEventTypesLabel = computed(() =>
                     </div>
 
                     <div class="sm:col-span-2">
-                        <!-- Native Select (bewusst kein BaseInput, klar getrennte Kontrolle) -->
                         <div class="relative">
                             <select
                                 v-model="aboForm.notification_time_unit"
@@ -216,7 +209,7 @@ const selectedEventTypesLabel = computed(() =>
             <div class="text-xs text-artwork-buttons-create w-fit">
                 {{
                     $t(
-                        'As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.'
+                        'As soon as you click on "Save", your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.'
                     )
                 }}
             </div>

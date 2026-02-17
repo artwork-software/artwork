@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
@@ -224,7 +225,7 @@ class UserService
                         ]
                     )
             )
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setCrafts(Craft::all())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)

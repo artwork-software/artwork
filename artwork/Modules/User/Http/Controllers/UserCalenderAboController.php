@@ -46,12 +46,6 @@ class UserCalenderAboController extends Controller
     public function show(string $calendar_abo_id): \Illuminate\Contracts\Routing\ResponseFactory|
     \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
-        \Log::info('ICS calendar feed hit', [
-            'ua' => request()->userAgent(),
-            'ip' => request()->ip(),
-            'accept' => request()->header('Accept'),
-        ]);
-
         $calendarAbo = UserCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
 
         // Create Calendar
@@ -63,8 +57,6 @@ class UserCalenderAboController extends Controller
         $events = $this->userCalendarAboService
             ->getFilteredEventsQuery($calendarAbo)
             ->get();
-
-        \Log::info('ICS calendar events count', ['count' => $events->count()]);
 
         // Process each event and add events to the calendar
         foreach ($events as $event) {

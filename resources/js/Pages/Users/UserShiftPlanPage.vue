@@ -7,7 +7,7 @@
                        :whole-week-date-period="wholeWeekDatePeriod"
                        :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
                        :projects="projects"
-                       :event-types="eventTypes"
+                       :crafts="crafts"
                        :rooms="rooms"
                        :vacations="vacations"
                        :shift-qualifications="shiftQualifications"
@@ -57,7 +57,7 @@ export default {
         'eventsWithTotalPlannedWorkingHours',
         'totalPlannedWorkingHours',
         'projects',
-        'eventTypes',
+        'crafts',
         'rooms',
         'vacations',
         'calendarData',

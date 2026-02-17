@@ -718,6 +718,7 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
+            'crafts' => Craft::all(),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),

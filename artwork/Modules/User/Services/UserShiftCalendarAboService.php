@@ -136,10 +136,7 @@ readonly class UserShiftCalendarAboService
                 $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $shift->start, $shift);
             });
         } catch (\Throwable $e) {
-            \Log::error('ICS: Skipping invalid shift', [
-                'id' => $shift->id ?? null,
-                'error' => $e->getMessage(),
-            ]);
+            // Skip invalid shifts silently
         }
     }
 

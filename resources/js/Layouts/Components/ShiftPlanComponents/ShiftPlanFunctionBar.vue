@@ -250,7 +250,7 @@
         in-shift-plan
     />
 
-    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
+    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :crafts="crafts"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
 </template>

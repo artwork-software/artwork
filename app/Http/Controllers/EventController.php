@@ -3722,11 +3722,10 @@ class EventController extends Controller
         $event->update(['is_planning' => true]);
 
         // Broadcast the event update
-        $freshEvent = $event->fresh();
+        $freshEvent = $event->fresh()->load(['event_type', 'project']);
         broadcast(new EventUpdated(
-            $freshEvent->room_id,
-            $freshEvent->start_time,
-            $freshEvent->is_series ? $freshEvent->series->end_date : $freshEvent->end_time
+            $freshEvent,
+            $freshEvent->room_id
         ));
 
         return Redirect::back();

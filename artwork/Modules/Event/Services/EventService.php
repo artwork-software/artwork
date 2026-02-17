@@ -20,7 +20,6 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
-use Artwork\Modules\Event\Events\EventCreated;
 use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Events\RemoveEvent;
@@ -1644,26 +1643,18 @@ readonly class EventService
 
         $event = $this->eventRepository->save($event);
 
-        /*if ($originalStartTime && $originalEndTime) {
-            broadcast(
-                new EventUpdated(
-                    $event->getAttribute('room_id') ?? $originalRoomId,
-                    $originalStartTime,
-                    $originalEndTime
-                )
-            )->toOthers();
+        $event->load(['event_type', 'project']);
+
+        // Broadcast to the old room if room changed
+        if ($originalRoomId && $originalRoomId !== $event->room_id) {
+            broadcast(new EventUpdated(
+                $event,
+                $originalRoomId
+            ));
         }
 
         broadcast(new EventUpdated(
-            $event->getAttribute('room_id') ?? $originalRoomId,
-            $event->start_time,
-            $event->is_series ?
-                $event->series->end_date :
-            $event->end_time
-        ))->toOthers();*/
-
-        broadcast(new EventCreated(
-            $event->load(['event_type', 'project']),
+            $event,
             $event->room_id
         ));
         return $event;

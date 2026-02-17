@@ -58,15 +58,10 @@ class UserShiftCalendarAboController extends Controller
         // Get all shifts for the user
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
-        // Process each shift and add events to the calendar
+        // Process each shift and add to the calendar
         foreach ($shifts as $shift) {
-            $shiftEvent = $shift->event()->first();
-            // Skip if the related event is missing (e.g., deleted)
-            if (!$shiftEvent) {
-                continue;
-            }
-            if ($this->userShiftCalendarAboService->shouldAddShiftEvent($calendarAbo, $shiftEvent)) {
-                $this->userShiftCalendarAboService->addEventToCalendar($calendar, $calendarAbo, $shift, $shiftEvent);
+            if ($this->userShiftCalendarAboService->shouldAddShift($calendarAbo, $shift)) {
+                $this->userShiftCalendarAboService->addShiftToCalendar($calendar, $calendarAbo, $shift);
             }
         }
 

@@ -3,7 +3,6 @@
 namespace Artwork\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Services\UserCalendarAboService;
 use Illuminate\Http\Request;
@@ -47,38 +46,36 @@ class UserCalenderAboController extends Controller
     public function show(string $calendar_abo_id): \Illuminate\Contracts\Routing\ResponseFactory|
     \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
+        \Log::info('ICS calendar feed hit', [
+            'ua' => request()->userAgent(),
+            'ip' => request()->ip(),
+            'accept' => request()->header('Accept'),
+        ]);
+
         $calendarAbo = UserCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
-        $user = $calendarAbo->user;
 
         // Create Calendar
         $calendar = Calendar::create('Alle Termine')
             ->refreshInterval(5)
             ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
 
+        // Get filtered events via DB query (eager loaded, no N+1)
+        $events = $this->userCalendarAboService
+            ->getFilteredEventsQuery($calendarAbo)
+            ->get();
 
-        // get all Events
-        $events = $this->userCalendarAboService->getFilteredEvents($calendarAbo, Event::all());
-
-        // filter event room on selected areas
-        $events = $events->filter(function ($event) use ($calendarAbo) {
-            if ($calendarAbo->specific_areas) {
-                return in_array($event->room->area_id, $calendarAbo->selected_areas, true);
-            }
-            return true;
-        });
+        \Log::info('ICS calendar events count', ['count' => $events->count()]);
 
         // Process each event and add events to the calendar
         foreach ($events as $event) {
             $this->userCalendarAboService->addEventToCalendar($calendar, $event);
         }
 
-
-        // Generate filename and response
-        $filename = $user->full_name . '-Termine.ics';
-        return response($calendar->get(), 200, [
-            'Content-Type' => 'text/calendar; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return response($calendar->get(), 200)
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Content-Disposition', 'inline; filename="termine.ics"')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     /**

@@ -373,7 +373,7 @@ function saveCraft() {
         craft.patch(route('craft.update', props.craftToEdit.id), {
             preserveState: true,
             preserveScroll: true,
-            onFinish: () => {
+            onSuccess: () => {
                 craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
                 closeModal(true)
             },
@@ -382,7 +382,7 @@ function saveCraft() {
         craft.post(route('craft.store'), {
             preserveState: true,
             preserveScroll: true,
-            onFinish: () => {
+            onSuccess: () => {
                 craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
                 closeModal(true)
             },

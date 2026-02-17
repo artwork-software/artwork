@@ -80,51 +80,64 @@ readonly class UserShiftCalendarAboService
      */
     public function addShiftToCalendar($calendar, $calendarAbo, $shift): void
     {
-        $shiftStart = Carbon::parse($shift->start_date)->format('Y-m-d');
-        $shiftEnd = Carbon::parse($shift->end_date)->format('Y-m-d');
-        $shiftEvent = method_exists($shift, 'event') ? $shift->event()->first() : null;
-        $eventCreator = $shiftEvent?->creator()->first();
-        $craft = $shift->craft()->first();
-        $craftName = $craft->name ?? 'Unbekannte Tätigkeit';
-        $projectName = optional($shiftEvent?->project()->first())->name ?? '';
-        $eventName = $shiftEvent?->eventName ?? '';
-        $roomName = optional($shiftEvent?->room()->first())->name ?? '';
+        try {
+            $shiftStart = Carbon::parse($shift->start_date)->format('Y-m-d');
+            $shiftEnd = Carbon::parse($shift->end_date)->format('Y-m-d');
+            $shiftEvent = method_exists($shift, 'event') ? $shift->event()->first() : null;
+            $eventCreator = $shiftEvent?->creator()->first();
+            $craft = $shift->craft()->first();
+            $craftName = $craft->name ?? 'Unbekannte Tätigkeit';
+            $projectName = optional($shiftEvent?->project()->first())->name ?? '';
+            $eventName = $shiftEvent?->eventName ?? '';
+            $roomName = optional($shiftEvent?->room()->first())->name ?? '';
 
-        $calendar->event(function ($event) use (
-            $shiftEvent,
-            $calendarAbo,
-            $shift,
-            $shiftStart,
-            $shiftEnd,
-            $eventCreator,
-            $craftName,
-            $projectName,
-            $eventName,
-            $roomName
-        ): void {
-            $event->name('Schicht: ' . $craftName . ' - ' . $shift->start . ' - ' . $shift->end)
-                ->description(
-                    'Schicht: ' . $craftName . ' - ' . $shift->start . ' - ' . $shift->end .
-                    ($projectName !== '' ? ' Projekt: ' . $projectName : '') .
-                    ($eventName !== '' ? ' Event: ' . $eventName : '') .
-                    ($roomName !== '' ? ' Raum: ' . $roomName : '')
-                )
-                ->address(
-                    ($roomName !== '' ? 'Raum: ' . $roomName : '') .
-                    ($eventName !== '' ? ' | Event: ' . $eventName : '')
-                )
-                ->startsAt(Carbon::parse($shiftStart . ' ' . $shift->start))
-                ->endsAt(Carbon::parse($shiftEnd . ' ' . $shift->end))
-                ->uniqueIdentifier('shift-' . $shift->id)
-                ->createdAt(Carbon::parse($shiftEvent->created_at ?? $shift->created_at));
-
-            if ($eventCreator) {
-                $event->organizer($eventCreator->email, $eventCreator->full_name);
+            $title = 'Schicht: ' . $craftName;
+            if (!empty($shift->start) && !empty($shift->end)) {
+                $title .= ' - ' . $shift->start . ' - ' . $shift->end;
+            }
+            if (trim($title) === '') {
+                $title = 'Schicht (ohne Titel)';
             }
 
-            $this->addAttendeesToEvent($event, $shift, $eventCreator);
-            $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $shift->start, $shift);
-        });
+            $calendar->event(function ($event) use (
+                $shiftEvent,
+                $calendarAbo,
+                $shift,
+                $shiftStart,
+                $shiftEnd,
+                $eventCreator,
+                $title,
+                $craftName,
+                $projectName,
+                $eventName,
+                $roomName
+            ): void {
+                $event->name($title)
+                    ->description(
+                        $title .
+                        ($projectName !== '' ? ' Projekt: ' . $projectName : '') .
+                        ($eventName !== '' ? ' Event: ' . $eventName : '') .
+                        ($roomName !== '' ? ' Raum: ' . $roomName : '')
+                    )
+                    ->address(
+                        ($roomName !== '' ? 'Raum: ' . $roomName : '') .
+                        ($eventName !== '' ? ' | Event: ' . $eventName : '')
+                    )
+                    ->startsAt(Carbon::parse($shiftStart . ' ' . $shift->start))
+                    ->endsAt(Carbon::parse($shiftEnd . ' ' . $shift->end))
+                    ->uniqueIdentifier('shift-' . $shift->id)
+                    ->createdAt(Carbon::parse($shiftEvent->created_at ?? $shift->created_at));
+
+                if ($eventCreator) {
+                    $event->organizer($eventCreator->email, $eventCreator->full_name);
+                }
+
+                $this->addAttendeesToEvent($event, $shift, $eventCreator);
+                $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $shift->start, $shift);
+            });
+        } catch (\Throwable $e) {
+            // Skip invalid shifts silently
+        }
     }
 
     /**

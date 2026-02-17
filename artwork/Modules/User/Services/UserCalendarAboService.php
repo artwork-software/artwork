@@ -7,7 +7,6 @@ use Artwork\Modules\User\Models\UserCalendarAbo;
 use Artwork\Modules\User\Repositories\UserCalendarAboRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Enums\EventStatus;
 
@@ -98,11 +97,6 @@ readonly class UserCalendarAboService
             }
         }
 
-        Log::warning('ICS: Event without title - using fallback', [
-            'class' => is_object($item) ? get_class($item) : gettype($item),
-            'id'    => data_get($item, 'id'),
-        ]);
-
         return 'Termin (ohne Titel)';
     }
 
@@ -150,11 +144,7 @@ readonly class UserCalendarAboService
                 }
             });
         } catch (\Throwable $e) {
-            Log::error('ICS: Skipping invalid event', [
-                'id' => data_get($event, 'id'),
-                'class' => is_object($event) ? get_class($event) : gettype($event),
-                'error' => $e->getMessage(),
-            ]);
+            // Skip invalid events silently
         }
     }
 }

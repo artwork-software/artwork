@@ -11,7 +11,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props & Emits
 const props = defineProps({
-    crafts: { type: Array, required: true }
+    crafts: { type: Array, required: false, default: () => [] }
 })
 const emit = defineEmits(['close'])
 
@@ -37,7 +37,7 @@ const aboForm = useForm({
 
 // Mehrfachauswahl der Gewerke als Objekte (für Listbox)
 const selectedCrafts = ref(
-    abo ? props.crafts.filter(c => (abo.craft_ids ?? []).includes(c.id)) : []
+    abo ? (props.crafts ?? []).filter(c => (abo.craft_ids ?? []).includes(c.id)) : []
 )
 
 const showCalendarAboInfoModal = ref(false)

@@ -49,6 +49,12 @@ class UserShiftCalendarAboController extends Controller
      */
     public function show(string $calendar_abo_id)
     {
+        \Log::info('ICS shift feed hit', [
+            'ua' => request()->userAgent(),
+            'ip' => request()->ip(),
+            'accept' => request()->header('Accept'),
+        ]);
+
         // Retrieve Calendar Abo and related user
         $calendarAbo = UserShiftCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
         $user = $calendarAbo->user;
@@ -60,6 +66,8 @@ class UserShiftCalendarAboController extends Controller
         // Get all shifts for the user
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
+        \Log::info('ICS shift events count', ['count' => $shifts->count()]);
+
         // Process each shift and add to the calendar
         foreach ($shifts as $shift) {
             if ($this->userShiftCalendarAboService->shouldAddShift($calendarAbo, $shift)) {
@@ -67,12 +75,11 @@ class UserShiftCalendarAboController extends Controller
             }
         }
 
-        // Generate filename and response
-        $filename = $user->full_name . '-Schichtplan.ics';
-        return response($calendar->get(), 200, [
-            'Content-Type' => 'text/calendar; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return response($calendar->get(), 200)
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Content-Disposition', 'inline; filename="schichtplan.ics"')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     /**

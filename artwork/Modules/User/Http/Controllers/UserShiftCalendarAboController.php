@@ -49,6 +49,12 @@ class UserShiftCalendarAboController extends Controller
      */
     public function show(string $calendar_abo_id)
     {
+        \Log::info('ICS shift feed hit', [
+            'ua' => request()->userAgent(),
+            'ip' => request()->ip(),
+            'accept' => request()->header('Accept'),
+        ]);
+
         // Retrieve Calendar Abo and related user
         $calendarAbo = UserShiftCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
         $user = $calendarAbo->user;
@@ -59,6 +65,8 @@ class UserShiftCalendarAboController extends Controller
             ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
         // Get all shifts for the user
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
+
+        \Log::info('ICS shift events count', ['count' => $shifts->count()]);
 
         // Process each shift and add to the calendar
         foreach ($shifts as $shift) {

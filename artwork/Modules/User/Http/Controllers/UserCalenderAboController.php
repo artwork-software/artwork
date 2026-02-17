@@ -9,6 +9,7 @@ use Artwork\Modules\User\Services\UserCalendarAboService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\IcalendarGenerator\Components\Calendar;
+use Spatie\IcalendarGenerator\Properties\TextProperty;
 
 class UserCalenderAboController extends Controller
 {
@@ -50,7 +51,9 @@ class UserCalenderAboController extends Controller
         $user = $calendarAbo->user;
 
         // Create Calendar
-        $calendar = Calendar::create('Alle Termine')->refreshInterval(5);
+        $calendar = Calendar::create('Alle Termine')
+            ->refreshInterval(5)
+            ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
 
 
         // get all Events

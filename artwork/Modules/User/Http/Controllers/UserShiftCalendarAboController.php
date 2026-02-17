@@ -54,7 +54,9 @@ class UserShiftCalendarAboController extends Controller
         $user = $calendarAbo->user;
 
         // Create Calendar
-        $calendar = Calendar::create('Schichtplan ' . $user->full_name)->refreshInterval(5);
+        $calendar = Calendar::create('Schichtplan ' . $user->full_name)
+            ->refreshInterval(5)
+            ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
         // Get all shifts for the user
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 

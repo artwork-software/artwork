@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property bool $date_range
  * @property string $start_date
  * @property string $end_date
- * @property bool $specific_event_types
- * @property array $event_types
+ * @property bool $specific_crafts
+ * @property array $craft_ids
  * @property bool $enable_notification
  * @property int $notification_time
  * @property string $notification_time_unit
@@ -35,8 +35,8 @@ class UserShiftCalendarAbo extends Model
         'date_range',
         'start_date',
         'end_date',
-        'specific_event_types',
-        'event_types',
+        'specific_crafts',
+        'craft_ids',
         'enable_notification',
         'notification_time',
         'notification_time_unit',
@@ -44,8 +44,8 @@ class UserShiftCalendarAbo extends Model
 
     protected $casts = [
         'date_range' => 'boolean',
-        'specific_event_types' => 'boolean',
-        'event_types' => 'array',
+        'specific_crafts' => 'boolean',
+        'craft_ids' => 'array',
         'enable_notification' => 'boolean',
         'notification_time' => 'integer',
     ];

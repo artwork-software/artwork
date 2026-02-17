@@ -7,7 +7,7 @@
                 :totalPlannedWorkingHours="totalPlannedWorkingHours"
                 :weeklyWorkingHours="weeklyWorkingHours"
                 :dateValue="dateValue"
-                :eventTypes="eventTypes"
+                :crafts="crafts"
                 @previousTimeRange="goToPrevAssignedDay"
                 @nextTimeRange="goToNextAssignedDay"
                 :user_to_edit_id="userToEditId"
@@ -72,13 +72,11 @@
                                 </div>
                             </div>
 
-                            <SingleUserEventShift
+                            <SingleUserShift
                                 v-if="i._type === 'shift'"
                                 :user-to-edit-id="userToEditId"
                                 :first-project-shift-tab-id="firstProjectShiftTabId"
-                                :event-type="eventTypes.find(et => et.id === (i?.event?.event_type_id ?? i.event?.event_type_id)) ?? null"
                                 :shift="i"
-                                :event="i?.event ?? null"
                                 :type="type"
                                 :project="i?.project ?? i.event?.project ?? null"
                             />
@@ -149,7 +147,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
-import SingleUserEventShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
+import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
 import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -169,7 +167,7 @@ function closeEditIndividualTimeModal() {
 
 const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props
-    eventTypes: { type: Array, required: true },
+    crafts: { type: Array, required: true },
     type: { type: String, required: true },
     weeklyWorkingHours: { type: [Number, String], required: false, default: null },
     totalPlannedWorkingHours: { type: String, required: false, default: null },

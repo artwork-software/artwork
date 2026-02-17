@@ -190,10 +190,9 @@ const { can, hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({
     type: { type: String, required: true, default: null },
-    event: { type: [Object, null], required: true, default: [] },
     shift: { type: Object, required: true },
-    project: { type: [Object, null], required: false, default: [] },
-    eventType: { type: [Object, null], required: true, default: [] },
+    project: { type: [Object, null], required: false, default: null },
+    eventType: { type: [Object, null], required: false, default: null },
     firstProjectShiftTabId: { type: Number, required: true },
     userToEditId: { type: Number, required: true }
 })

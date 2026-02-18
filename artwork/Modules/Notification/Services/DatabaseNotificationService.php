@@ -47,11 +47,22 @@ class DatabaseNotificationService
         return $this->databaseNotificationRepository->deleteByKey($notificationKey);
     }
 
-    public function removeNotificationsOlderThanSevenDays(): void
+    public function removeArchivedNotificationsOlderThanThirtyDays(): void
     {
         foreach (
-            $this->databaseNotificationRepository->findOlderThan(
-                $this->carbonService->getNow()->subDays(7)
+            $this->databaseNotificationRepository->findArchivedOlderThan(
+                $this->carbonService->getNow()->subDays(30)
+            ) as $notification
+        ) {
+            $this->databaseNotificationRepository->forceDelete($notification);
+        }
+    }
+
+    public function removeUnreadNotificationsOlderThanOneYear(): void
+    {
+        foreach (
+            $this->databaseNotificationRepository->findUnreadOlderThan(
+                $this->carbonService->getNow()->subYear()
             ) as $notification
         ) {
             $this->databaseNotificationRepository->forceDelete($notification);

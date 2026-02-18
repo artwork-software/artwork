@@ -61,9 +61,7 @@
                         <!-- Name (Avatar + Name) -->
                         <template #cell-name="{ row }">
                             <div class="flex items-center">
-                                <div class="size-11 shrink-0">
-                                    <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
-                                </div>
+                                <UserPopoverTooltip :id="row.id" :user="row" height="11" width="11" />
                                 <div class="ml-4">
                                     <div class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</div>
                                 </div>
@@ -186,9 +184,7 @@
                         <span v-for="(user,index) in teamForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full object-cover"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
+                                <UserPopoverTooltip :id="user.id" :user="user" height="11" width="11" />
                                 <span class="flex ml-4 sDark">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>

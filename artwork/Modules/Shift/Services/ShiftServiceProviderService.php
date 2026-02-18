@@ -287,6 +287,25 @@ readonly class ShiftServiceProviderService
         );
 
         if (! $pivot instanceof ShiftServiceProvider) {
+            // Check in shift_workers table as well
+            $shiftWorker = $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
+                ServiceProvider::class,
+                $freelancerId,
+                $shiftId
+            );
+            if ($shiftWorker instanceof ShiftWorker) {
+                if (!$shiftWorker->relationLoaded('shift')) {
+                    $shiftWorker->load('shift');
+                }
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorker,
+                    true,
+                    null,
+                    null,
+                    null,
+                    $changeService
+                );
+            }
             return;
         }
 

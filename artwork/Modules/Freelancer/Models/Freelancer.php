@@ -22,6 +22,7 @@ use Laravel\Scout\Searchable;
 /**
  * @property int $id
  * @property string $position
+ * @property string $business
  * @property string $profile_image
  * @property string $first_name
  * @property string $last_name
@@ -68,6 +69,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
     //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $fillable = [
         'position',
+        'business',
         'profile_image',
         'first_name',
         'last_name',

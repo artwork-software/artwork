@@ -203,11 +203,8 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             }
         }
 
-        if (updated) {
-            router.reload({
-                only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-                preserveScroll: true,
-            });
+        if (updated && onWorkersNeedReload) {
+            onWorkersNeedReload();
         }
     }
 
@@ -265,19 +262,15 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 })
                 .listen('.shift-assign-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
-                    // GlobalQualifications und User-Daten neu laden
-                    router.reload({
-                        only: ['globalQualifications', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-                        preserveScroll: true,
-                    });
+                    if (onWorkersNeedReload) {
+                        onWorkersNeedReload();
+                    }
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);
-                    // GlobalQualifications und User-Daten neu laden
-                    router.reload({
-                        only: ['globalQualifications', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-                        preserveScroll: true,
-                    });
+                    if (onWorkersNeedReload) {
+                        onWorkersNeedReload();
+                    }
                 })
                 .listen('.shift-updated', (data) => {
                     updateShiftInRoomAndEvents(data.daysOfShift, data, data.roomId);

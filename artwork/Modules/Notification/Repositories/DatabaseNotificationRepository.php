@@ -42,11 +42,19 @@ class DatabaseNotificationRepository extends BaseRepository
         return $this->deleteOrFail($databaseNotification);
     }
 
-    public function findOlderThan(Carbon $carbon): Collection
+    public function findArchivedOlderThan(Carbon $carbon): Collection
     {
         return $this->getNewModelQuery()
             ->whereNotNull('read_at')
             ->where('read_at', '<', $carbon)
+            ->get();
+    }
+
+    public function findUnreadOlderThan(Carbon $carbon): Collection
+    {
+        return $this->getNewModelQuery()
+            ->whereNull('read_at')
+            ->where('created_at', '<', $carbon)
             ->get();
     }
 }

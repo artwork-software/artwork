@@ -201,6 +201,7 @@ class User extends Model implements
         'phone_number',
         'password',
         'position',
+        'business',
         'pronouns',
         'description',
         'toggle_hints',

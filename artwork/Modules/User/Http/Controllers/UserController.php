@@ -789,6 +789,7 @@ class UserController extends Controller
                 'last_name',
                 'phone_number',
                 'position',
+                'business',
                 'pronouns',
                 'description',
                 'email',

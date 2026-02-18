@@ -35,8 +35,8 @@
                         <h1 class="mt-1 text-2xl font-semibold leading-tight">
                             {{ user_to_edit.first_name }} {{ user_to_edit.last_name }}
                         </h1>
-                        <p class="mt-1 text-sm text-white/80">
-                            {{ $page.props.businessName }}
+                        <p v-if="user_to_edit.business" class="mt-1 text-sm text-white/80">
+                            {{ user_to_edit.business }}
                         </p>
                     </div>
                 </div>
@@ -95,6 +95,16 @@
                         :label="$t('Pronouns')"
                         @focusout="editUser"
                         id="pronouns"
+                    />
+
+                    <BaseInput
+                        :disabled="!(isSignedInUser() || can('can manage workers'))"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        type="text"
+                        v-model="userForm.business"
+                        :label="$t('Company')"
+                        @focusout="editUser"
+                        id="business"
                     />
 
                     <BaseInput
@@ -503,6 +513,7 @@ const userForm = useForm({
     email: props.user_to_edit.email,
     photo: props.user_to_edit.profile_photo_path,
     position: props.user_to_edit.position,
+    business: props.user_to_edit.business,
     pronouns: props.user_to_edit.pronouns,
     departments: props.user_to_edit.departments || [],
     phone_number: props.user_to_edit.phone_number,

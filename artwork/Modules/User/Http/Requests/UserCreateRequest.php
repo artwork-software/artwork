@@ -22,7 +22,7 @@ class UserCreateRequest extends FormRequest
             'password' => $this->passwordRules(),
             'phone_number' => ['nullable', 'string', 'max:30'],
             'position' => ['required', 'string', 'max:255'],
-            'business' => ['required', 'string', 'max:255'],
+            'business' => ['nullable', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
         ];
     }

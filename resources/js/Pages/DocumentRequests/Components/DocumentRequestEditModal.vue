@@ -2,6 +2,20 @@
     <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document request')" :description="$t('Edit the document request details.')">
         <div class="">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Assign to user -->
+                <div class="col-span-full relative">
+                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user')" />
+                    <div v-if="selectedUser" class="mt-2 flex items-center">
+                        <img class="h-8 w-8 rounded-full object-cover" :src="selectedUser.profile_photo_url" alt="" />
+                        <span class="ml-3 text-sm font-medium text-gray-900">
+                            {{ selectedUser.first_name }} {{ selectedUser.last_name }}
+                        </span>
+                        <button type="button" @click="selectedUser = null" class="ml-2">
+                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4 text-gray-400 hover:text-red-500" />
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Status -->
                 <div class="col-span-full">
                     <Listbox as="div" class="flex relative" v-model="selectedStatus">
@@ -236,6 +250,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default {
     name: "DocumentRequestEditModal",
@@ -254,6 +269,7 @@ export default {
     },
     components: {
         PropertyIcon,
+        UserSearch,
         BaseUIButton,
         ArtworkBaseModal,
         BaseTextarea,
@@ -265,6 +281,8 @@ export default {
     },
     data() {
         return {
+            selectedUser: this.documentRequest?.requested || null,
+            user_query: '',
             selectedStatus: this.documentRequest?.status || 'open',
             selectedLegalForm: this.documentRequest?.company_type || null,
             selectedContractType: this.documentRequest?.contract_type || null,
@@ -274,6 +292,7 @@ export default {
                 { value: 'completed', label: this.$t('Completed') },
             ],
             form: useForm({
+                requested_id: this.documentRequest?.requested_id || null,
                 status: this.documentRequest?.status || 'open',
                 contract_partner: this.documentRequest?.contract_partner || '',
                 contract_value: this.documentRequest?.contract_value || null,
@@ -296,6 +315,10 @@ export default {
         }
     },
     methods: {
+        selectUser(user) {
+            this.selectedUser = user;
+            this.user_query = '';
+        },
         getStatusLabel(status) {
             const found = this.statuses.find(s => s.value === status);
             return found ? found.label : status;
@@ -305,6 +328,7 @@ export default {
         },
         updateRequest() {
             this.form.status = this.selectedStatus;
+            this.form.requested_id = this.selectedUser?.id || null;
             this.form.company_type_id = this.selectedLegalForm?.id;
             this.form.contract_type_id = this.selectedContractType?.id;
 

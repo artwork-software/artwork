@@ -787,11 +787,13 @@ class ShiftUserService
             );
 
             if ($shiftWorker instanceof ShiftWorker) {
-                $this->removeFromShift(
-                    $shiftWorker->id,
+                if (!$shiftWorker->relationLoaded('shift')) {
+                    $shiftWorker->load('shift');
+                }
+                $this->shiftWorkerService->removeFromShift(
+                    $shiftWorker,
                     true,
                     $notificationService,
-                    $shiftCountService,
                     $vacationConflictService,
                     $availabilityConflictService,
                     $changeService

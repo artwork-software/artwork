@@ -117,6 +117,7 @@ class FreelancerController extends Controller
     {
         $freelancer->update($request->only([
                 'position',
+                'business',
                 'first_name',
                 'last_name',
                 'email',

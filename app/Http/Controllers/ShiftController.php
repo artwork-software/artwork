@@ -822,7 +822,7 @@ class ShiftController extends Controller
             $shift = $shiftService->getById($shiftIdToRemove);
 
             broadcast(new RemoveEntityFormShiftEvent(
-                $shift->load([
+                $shift->refresh()->load([
                     'craft',
                     'users',
                     'freelancer',

@@ -19,7 +19,7 @@ class CraftUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:1|max:255',
-            'abbreviation' => 'required|string|min:1|max:3',
+            'abbreviation' => 'required|string|min:1|max:4',
             'users' => 'array',
             'users_for_inventory' => 'array',
             'assignable_by_all' => 'required|boolean',

@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-1">
-        <div v-if="label" class="text-sm font-bold text-gray-900">{{ label }}</div>
+        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900">{{ component.data.label }}</div>
         <div v-if="links.length > 0" class="space-y-0.5">
             <div v-for="(link, index) in links" :key="index">
                 <a
@@ -16,10 +16,8 @@
         <div v-else class="text-sm text-secondary">-</div>
     </div>
 </template>
-
 <script setup>
 import { computed } from 'vue'
-
 const props = defineProps({
     project: {
         type: Object,
@@ -30,11 +28,8 @@ const props = defineProps({
         required: true,
     },
 })
-
 const componentData = computed(() => props.project['LinkList']?.[props.component.id]?.data || {})
-const label = computed(() => componentData.value?.label || '')
 const links = computed(() => componentData.value?.links || [])
 </script>
-
 <style scoped>
 </style>

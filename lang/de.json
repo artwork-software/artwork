@@ -3956,5 +3956,9 @@
     "Select crafts for calendar subscription": "Gewerke für Kalenderabonnement auswählen",
     "Select specific crafts for your shift calendar subscription. This allows you to specify which crafts should be displayed in your subscribed calendar to optimize your planning.": "Wähle bestimmte Gewerke für dein Schichtkalender-Abonnement aus. So kannst du festlegen, welche Gewerke in deinem abonnierten Kalender angezeigt werden sollen, um deine Planung zu optimieren.",
     "Customize your shift calendar subscription to suit your individual needs. Select a specific time period, certain crafts and activate notifications to stay optimally informed and make your planning easier.": "Passe dein Schichtkalender-Abonnement an deine individuellen Bedürfnisse an. Wähle einen bestimmten Zeitraum, bestimmte Gewerke und aktiviere Benachrichtigungen, um optimal informiert zu bleiben und deine Planung zu erleichtern.",
-    "Search for Users": "Nach Nutzer*innen suchen"
+    "Search for Users": "Nach Nutzer*innen suchen",
+    "Filter by type": "Filter nach Art",
+    "Filter by time": "Filter nach Zeit",
+    "Other filters": "Sonstige Filter",
+    "Only projects where you are in the project team": "Nur Projekte in denen du im Projektteam bist"
 }

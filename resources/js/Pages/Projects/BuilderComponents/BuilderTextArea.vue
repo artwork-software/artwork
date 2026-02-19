@@ -3,7 +3,7 @@
 
     <div class="">
         <p class="line-clamp-2 text-xs print:line-clamp-none ">
-            {{ project['TextArea']?.[component.component_id ?? component.id]?.data?.text }}
+            {{ project['TextArea']?.[component.id]?.data?.text }}
         </p>
     </div>
 

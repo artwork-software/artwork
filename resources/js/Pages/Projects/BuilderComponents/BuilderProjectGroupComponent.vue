@@ -23,18 +23,15 @@
 </template>
 
 <script setup>
-
-import {Link} from "@inertiajs/vue3";
-
 const props = defineProps({
     project: {
         type: Object,
         required: true,
     },
-    first_project_tab_id: {
-        type: Number,
-        required: true,
-    }
+    component: {
+        type: Object,
+        required: false,
+    },
 })
 
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div class="xxsLight">
-        <p class="line-clamp-3" v-html="project['DropDown'][component.component_id]?.data?.selected"></p>
+        <p class="line-clamp-3" v-html="project['DropDown'][component.id]?.data?.selected"></p>
     </div>
 
 </template>

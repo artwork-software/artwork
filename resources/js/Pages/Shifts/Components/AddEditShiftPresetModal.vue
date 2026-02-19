@@ -69,7 +69,7 @@
                     <SelectComponent id="addShiftCraftSelectComponent"
                                      :label="$t('Craft') + '*'"
                                      v-model="this.selectedCraft"
-                                     :options="this.crafts"
+                                     :options="this.sortedCrafts"
                                      selected-property-to-display="name"
                                      :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                     />
@@ -236,6 +236,9 @@ export default defineComponent({
     },
     emits: ['closed'],
     computed: {
+        sortedCrafts() {
+            return [...(this.crafts || [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+        },
         computedShiftQualifications() {
             let computedShiftQualifications = [];
 

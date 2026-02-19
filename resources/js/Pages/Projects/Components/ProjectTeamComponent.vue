@@ -4,7 +4,7 @@
             <BasePageTitle title="Project team" :white-text="inSidebar" />
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
-                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator())"
+                      v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"
             />
         </div>
         <div v-if="loadError" class="text-xs text-rose-600 mt-2">

@@ -1,11 +1,14 @@
 <template>
-    <div class="xxsLight">
-        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900 mb-0.5">{{ component.data.label }}</div>
-        <div>
-            {{ project['Checkbox'][component.id]?.data?.checked ? $t('Yes') : $t('No') }}
+    <div class="space-y-2">
+        <div class="font-lexend font-black tracking-wide text-primaryText text-md">
+            {{ $t('cost unit') }}
+        </div>
+        <div class="text-sm text-primaryText">
+            {{ project.cost_center?.name || '-' }}
         </div>
     </div>
 </template>
+
 <script setup>
 const props = defineProps({
     project: {
@@ -18,5 +21,6 @@ const props = defineProps({
     },
 })
 </script>
+
 <style scoped>
 </style>

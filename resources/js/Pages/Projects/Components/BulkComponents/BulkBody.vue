@@ -75,32 +75,31 @@
                     classes-button="ui-button"
                 />
 
-                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button"
-                          :disabled="!hasCreateEventsPermission">
+                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button">
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(1)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by room') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(2)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by appointment type') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(3)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by day') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(0)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Reset sorting') }}
                         </div>
                     </MenuItem>
@@ -109,7 +108,7 @@
 
         </div>
         <!-- Header + Events (horizontal scroll container) -->
-        <div class="overflow-x-auto w-full">
+        <div ref="bulkScrollContainer" class="overflow-x-auto w-full" @scroll="onMainScroll">
             <div class="min-w-max">
                 <!-- Function bar (sticky unter ProjectHeader) -->
                 <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
@@ -228,6 +227,17 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Sticky horizontal scrollbar proxy -->
+        <div
+            v-if="!isInModal && showStickyScrollbar"
+            ref="stickyScrollbarEl"
+            class="sticky bottom-0 z-20 overflow-x-auto overflow-y-hidden print:hidden"
+            style="height: 14px; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border-top: 1px solid rgba(0,0,0,0.06);"
+            @scroll="onStickyScroll"
+        >
+            <div :style="{ width: scrollContentWidth + 'px', height: '1px' }"></div>
         </div>
 
         <!-- Bottom actions -->
@@ -420,6 +430,11 @@ const isLoadingBulkData = ref(false);
 const loadBulkDataError = ref('');
 
 const bulkFunctionBarEl = ref(null);
+const bulkScrollContainer = ref(null);
+const stickyScrollbarEl = ref(null);
+const showStickyScrollbar = ref(false);
+const scrollContentWidth = ref(0);
+let isSyncingScroll = false;
 const bulkFunctionBarHeight = ref(0);
 let bulkFunctionBarResizeObserver = null;
 
@@ -1073,6 +1088,8 @@ onMounted(async () => {
     }
 
     window.addEventListener('resize', updateBulkFunctionBarHeight, {passive: true});
+    window.addEventListener('scroll', onScrollOrResize, {passive: true});
+    window.addEventListener('resize', onScrollOrResize, {passive: true});
 
     // persist showEndDate changes
     watch(showEndDate, (v) => {
@@ -1131,10 +1148,16 @@ onMounted(async () => {
     }
 
     isLoading.value = false;
+
+    // Initial sticky scrollbar check
+    requestAnimationFrame(updateStickyScrollbar);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', updateBulkFunctionBarHeight);
+    window.removeEventListener('scroll', onScrollOrResize);
+    window.removeEventListener('resize', onScrollOrResize);
+    if (stickyScrollRAF) cancelAnimationFrame(stickyScrollRAF);
     if (bulkFunctionBarResizeObserver) {
         try {
             bulkFunctionBarResizeObserver.disconnect();
@@ -1156,4 +1179,54 @@ watch(() => events.value, (newEvents) => {
 watch(isPlanningEvent, (newValue) => {
     localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
 });
+
+// --- Sticky scrollbar logic ---
+const onMainScroll = () => {
+    if (isSyncingScroll) return;
+    isSyncingScroll = true;
+    if (stickyScrollbarEl.value && bulkScrollContainer.value) {
+        stickyScrollbarEl.value.scrollLeft = bulkScrollContainer.value.scrollLeft;
+    }
+    isSyncingScroll = false;
+    updateStickyScrollbar();
+};
+
+const onStickyScroll = () => {
+    if (isSyncingScroll) return;
+    isSyncingScroll = true;
+    if (bulkScrollContainer.value && stickyScrollbarEl.value) {
+        bulkScrollContainer.value.scrollLeft = stickyScrollbarEl.value.scrollLeft;
+    }
+    isSyncingScroll = false;
+};
+
+const updateStickyScrollbar = () => {
+    const container = bulkScrollContainer.value;
+    if (!container || props.isInModal) {
+        showStickyScrollbar.value = false;
+        return;
+    }
+    const contentWidth = container.scrollWidth;
+    const viewportWidth = container.clientWidth;
+    const hasOverflow = contentWidth > viewportWidth;
+
+    if (!hasOverflow) {
+        showStickyScrollbar.value = false;
+        return;
+    }
+
+    scrollContentWidth.value = contentWidth;
+
+    // Show sticky scrollbar only when the native scrollbar is not visible in viewport
+    const rect = container.getBoundingClientRect();
+    const containerBottom = rect.bottom;
+    const viewportHeight = window.innerHeight;
+    showStickyScrollbar.value = containerBottom > viewportHeight;
+};
+
+let stickyScrollRAF = null;
+const onScrollOrResize = () => {
+    if (stickyScrollRAF) cancelAnimationFrame(stickyScrollRAF);
+    stickyScrollRAF = requestAnimationFrame(updateStickyScrollbar);
+};
 </script>

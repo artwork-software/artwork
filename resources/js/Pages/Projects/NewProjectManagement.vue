@@ -14,18 +14,8 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button
-                        type="button"
-                        @click="toggleMyProjects()"
-                        :aria-pressed="!!showOnlyMyProjects"
-                        class="ui-button flex items-center gap-2"
-                        :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 '">
-                        <span class="size-2 rounded-full my-2" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 '"></span>
-                        {{ $t('Only mine') }}
-                    </button>
-
                     <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true">
+                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="text-sm font-medium text-zinc-700 ">{{ $t('Filters') }}</div>
@@ -35,31 +25,46 @@
                             </div>
 
                             <div class="space-y-3">
-                                <!-- Toggles -->
+                                <!-- Filter nach Art -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">{{ $t('Filter by type') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 0 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Project groups') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
-                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Show expired projects') }}</span>
-                                    </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
+                                </div>
+
+                                <!-- Filter nach Zeit -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Filter by time') }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Show future projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
+                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show expired projects') }}</span>
+                                    </label>
+                                </div>
+
+                                <!-- Sonstige Filter -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Other filters') }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Show projects without events') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Show only projects without group') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyMyProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Only projects where you are in the project team') }}</span>
                                     </label>
                                 </div>
 
@@ -386,6 +391,17 @@ const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : 
 
 const showProjectStateFilter = ref(true);
 
+const hasActiveFilters = computed(() => {
+    return !!showOnlyMyProjects.value
+        || !!showProjectGroups.value
+        || !!showProjects.value
+        || !!showExpiredProjects.value
+        || !!showFutureProjects.value
+        || !!showProjectsWithoutEvents.value
+        || !!showOnlyProjectsWithoutGroup.value
+        || props.states.some((s) => s.clicked);
+});
+
 // Grid wird 1x berechnet und an Zeilen weitergegeben → weniger Recalcs
 const gridTemplateColumns = computed(() =>
     props.components
@@ -407,10 +423,6 @@ const openCreateProjectModal = () => (createProject.value = true);
 const closeCreateProjectModal = (showSuccessModalFlag) => {
     createProject.value = false;
     if (showSuccessModalFlag) showAddBulkEventModal.value = true;
-};
-const toggleMyProjects = () => {
-    showOnlyMyProjects.value = !showOnlyMyProjects.value;
-    applyFiltersAndSort();
 };
 const closeEditProjectModal = () => {
     editingProject.value = false;

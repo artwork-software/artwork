@@ -3,7 +3,7 @@
                       :description="$t('Select a print layout to print the project')">
 
 
-        <div v-if="printLayouts.length > 0">
+        <div v-if="activePrintLayouts.length > 0">
             <Listbox as="div" v-model="selectedLayout">
                 <ListboxLabel class="block text-sm/6 font-medium text-gray-900">{{ $t('Select print layout')}}</ListboxLabel>
                 <div class="relative mt-2">
@@ -14,7 +14,7 @@
 
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                            <ListboxOption as="template" v-for="layout in printLayouts" :key="layout.id" :value="layout" v-slot="{ active, selected }">
+                            <ListboxOption as="template" v-for="layout in activePrintLayouts" :key="layout.id" :value="layout" v-slot="{ active, selected }">
                                 <li :class="[active ? 'bg-artwork-buttons-create text-white outline-none' : 'text-gray-900', 'relative select-none py-2 pl-3 pr-9 cursor-pointer']">
                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ layout.name }}</span>
 
@@ -58,7 +58,7 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {ref} from "vue";
+import {ref, computed} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {IconCheck, IconChevronDown, IconExclamationCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -75,7 +75,8 @@ const props = defineProps({
     },
 })
 
-const selectedLayout = ref(props.printLayouts[0]);
+const activePrintLayouts = computed(() => props.printLayouts.filter(layout => layout.is_active));
+const selectedLayout = ref(activePrintLayouts.value[0]);
 
 const emit = defineEmits(['close']);
 

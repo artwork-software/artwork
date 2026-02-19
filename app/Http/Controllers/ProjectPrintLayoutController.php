@@ -176,6 +176,8 @@ class ProjectPrintLayoutController extends Controller
                         $projectData->cost_center = $project->costCenter;
                         $projectData->own_copyright = $project->own_copyright;
                         $projectData->cost_center_description = $project->cost_center_description;
+                        $projectData->law_size = $project->law_size;
+                        $projectData->live_music = $project->live_music;
                         break;
                     case ProjectTabComponentEnum::BULK_EDIT->value:
                         $eventsUnSorted = $project->events()->without([
@@ -218,14 +220,8 @@ class ProjectPrintLayoutController extends Controller
                         $projectData->event_statuses = EventStatus::all();
                         break;
                     case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
-                        Inertia::share([
-                            'roomTypes' => TypOfRoom::cases(),
-                            'serviceProviders' => ServiceProvider
-                                ::where('type_of_provider', ServiceProviderTypes::HOUSING->value)
-                                ->without(['contacts'])->get(),
-                            'artist_residencies' => $project->artistResidencies()
-                                ->with(['accommodation'])->get(),
-                        ]);
+                        $projectData->artist_residencies = $project->artistResidencies()
+                            ->with(['accommodation'])->get();
                         break;
                     case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
                         $projectData->project_files_all = $project->project_files;
@@ -268,6 +264,34 @@ class ProjectPrintLayoutController extends Controller
                                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                                 })
                         )->resolve();
+                        break;
+                    case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
+                        $projectData->artists = $project->artists;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY->value:
+                        $projectData->basic_data = [
+                            'name' => $project->name,
+                            'artists' => $project->artists,
+                            'description' => $project->description,
+                            'number_of_participants' => $project->number_of_participants,
+                            'state' => ProjectState::find($project->state),
+                            'categories' => $project->categories,
+                            'genres' => $project->genres,
+                            'sectors' => $project->sectors,
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_COST_CENTER_DISPLAY->value:
+                        $projectData->cost_center = $project->costCenter;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT->value:
+                        $projectData->material_issues = [
+                            'internal' => $project->contracts()
+                                ->where('is_material_issue', true)
+                                ->get(),
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
+                        $projectData->contracts_documents = $project->contracts;
                         break;
                 }
 

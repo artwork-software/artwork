@@ -101,9 +101,9 @@ import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.
 import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
 import BuilderTitle from "@/Pages/Projects/BuilderComponents/BuilderTitle.vue";
 import EventTable from "@/Pages/Projects/PrintComponents/EventTable.vue";
-import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
-import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
-import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
+import BuilderArtistResidenciesComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistResidenciesComponent.vue";
+import BuilderProjectAllDocumentsComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAllDocumentsComponent.vue";
+import BuilderCommentAllTabComponent from "@/Pages/Projects/BuilderComponents/BuilderCommentAllTabComponent.vue";
 import ChecklistTable from "@/Pages/Projects/PrintComponents/ChecklistTable.vue";
 
 const props = defineProps({
@@ -124,6 +124,13 @@ const props = defineProps({
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/BuilderSeparatorComponent.vue";
 import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
+import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
+import BuilderProjectBasicDataDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBasicDataDisplayComponent.vue";
+import BuilderProjectCostCenterDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectCostCenterDisplayComponent.vue";
+import BuilderProjectMaterialIssueComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectMaterialIssueComponent.vue";
+import BuilderProjectContractsDocumentsComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectContractsDocumentsComponent.vue";
+import BuilderLinkComponent from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
+import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/BuilderLinkListComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);
@@ -210,10 +217,17 @@ const componentMapping = {
     BuilderProjectGroupComponent,
     BuilderSeparatorComponent,
     BuilderBulkBody: EventTable,
-    BuilderArtistResidenciesComponent: ArtistResidenciesComponent,
-    BuilderProjectAllDocumentsComponent: ProjectAllDocumentsComponent,
-    BuilderCommentAllTab: CommentAllTab,
-    BuilderChecklistAllComponent: ChecklistTable
+    BuilderArtistResidenciesComponent,
+    BuilderProjectAllDocumentsComponent,
+    BuilderCommentAllTab: BuilderCommentAllTabComponent,
+    BuilderChecklistAllComponent: ChecklistTable,
+    BuilderArtistNameDisplayComponent,
+    BuilderProjectBasicDataDisplayComponent,
+    BuilderProjectCostCenterDisplayComponent,
+    BuilderProjectMaterialIssueComponent,
+    BuilderProjectContractsDocumentsComponent,
+    BuilderLink: BuilderLinkComponent,
+    BuilderLinkList: BuilderLinkListComponent
 };
 
 const getComponent = (layout, section, row, col) => {

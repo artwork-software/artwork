@@ -98,11 +98,21 @@ class SchedulingService
 
                 $totalCount = 0;
                 $checklistNames = [];
+                $projectLinks = [];
                 foreach ($userSchedulings as $scheduling) {
                     $totalCount += $scheduling->count;
                     $checklist = Checklist::query()->find($scheduling->model_id);
                     if ($checklist instanceof Checklist) {
                         $checklistNames[] = $checklist->name;
+                        if ($checklist->project_id) {
+                            $project = $checklist->project;
+                            if ($project && !isset($projectLinks[$project->id])) {
+                                $projectLinks[$project->id] = [
+                                    'name' => $project->name,
+                                    'id' => $project->id,
+                                ];
+                            }
+                        }
                     }
                 }
 
@@ -115,6 +125,32 @@ class SchedulingService
                     ['count' => $totalCount, 'checklists' => $checklistsString],
                     $user->language
                 );
+
+                // Build description with project links and timestamp
+                $notificationDescription = [];
+                $descIndex = 0;
+                $now = Carbon::now();
+                $notificationDescription[$descIndex++] = [
+                    'type' => 'string',
+                    'title' => $now->translatedFormat('d.m.Y H:i'),
+                    'href' => null,
+                ];
+                foreach ($projectLinks as $projectData) {
+                    $notificationDescription[$descIndex++] = [
+                        'type' => 'link',
+                        'title' => $projectData['name'],
+                        'href' => route(
+                            'projects.tab',
+                            [
+                                $projectData['id'],
+                                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CHECKLIST
+                                ),
+                            ]
+                        ),
+                    ];
+                }
+
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -125,6 +161,8 @@ class SchedulingService
                 $notificationService->setPriority(3);
                 $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
                 $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setDescription($notificationDescription);
+                $notificationService->setButtons(['show_project']);
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();
 

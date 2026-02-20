@@ -254,10 +254,10 @@ if (can('can edit document requests') || hasAdminRole()) {
 4. **Add to Command**: Update `artwork:add-new-components` command
 5. **Add Translations**: Human-readable display text in `de.json` and `en.json` (NOT the enum name!)
 6. **Add Icon**: Use `PropertyIcon.vue` with tabler.io icon
-7. **Print Layout Support**: Damit die Komponente auch im Drucklayout (PDF) angezeigt wird, müssen drei Stellen angepasst werden:
+7. **Print Layout Support**: Damit die Komponente auch im Drucklayout (PDF) angezeigt wird, müssen drei Stellen angepasst werden. **Wichtig:** Die Builder-Komponenten für die Projektübersicht (`BuilderYourComponent.vue`) und die PrintLayout-Komponenten für das Drucklayout (`PrintLayoutBuilderYourComponent.vue`) sind vollständig getrennt, damit Änderungen an der Projektübersicht das Drucklayout nicht beeinflussen.
    - **Backend**: Neuen `case` im `switch`-Block in `ProjectPrintLayoutController::show()` (`app/Http/Controllers/ProjectPrintLayoutController.php`) hinzufügen, der die benötigten Daten aus dem Projekt lädt.
-   - **Builder-Komponente erstellen**: Eine Vue-Komponente `BuilderYourComponent.vue` in `resources/js/Pages/Projects/BuilderComponents/` anlegen, die die Daten im Druckformat rendert.
-   - **componentMapping registrieren**: Die Builder-Komponente in `ProjectPrintLayoutWindow.vue` importieren und im `componentMapping`-Objekt registrieren. Der Key muss `"Builder" + EnumValue` sein (z.B. `BuilderArtistNameDisplayComponent` für den Enum-Wert `ArtistNameDisplayComponent`).
+   - **PrintLayout-Komponente erstellen**: Eine Vue-Komponente `PrintLayoutBuilderYourComponent.vue` in `resources/js/Pages/Projects/BuilderComponents/` anlegen, die die Daten im Druckformat rendert. Diese Datei ist unabhängig von der gleichnamigen `BuilderYourComponent.vue` (Projektübersicht) und kann ein eigenes Layout/Styling haben.
+   - **componentMapping registrieren**: Die **PrintLayout**-Komponente in `ProjectPrintLayoutWindow.vue` importieren und im `componentMapping`-Objekt registrieren. Der Key muss `"Builder" + EnumValue` sein (z.B. `BuilderArtistNameDisplayComponent` für den Enum-Wert `ArtistNameDisplayComponent`), aber der Import zeigt auf die `PrintLayoutBuilder...`-Datei.
 
 ---
 

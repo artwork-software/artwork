@@ -24,7 +24,7 @@
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="text-center text-[11px] text-gray-500 py-1">~{{ block.gapAfter.human }} Abstand</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} {{ $t('Abstand') }}</div>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="text-center text-[11px] text-gray-500 py-1">~{{ block.gapAfter.human }} Abstand</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} Abstand</div>
             </div>
           </div>
         </div>
@@ -496,10 +496,10 @@ const shiftItems = computed<Item[]>(() => {
     }
 
     return items.sort((a, b) => {
-        if (a.startMin !== b.startMin) return a.startMin - b.startMin
         const aPos = getCraftPos(a)
         const bPos = getCraftPos(b)
         if (aPos !== bPos) return aPos - bPos
+        if (a.startMin !== b.startMin) return a.startMin - b.startMin
         return (a.id ?? 0) - (b.id ?? 0)
     })
 })
@@ -614,17 +614,17 @@ function assignLanes(items: Item[]) {
     if (aIsAllDay && !bIsAllDay) return -1
     if (!aIsAllDay && bIsAllDay) return 1
 
-    // Sort by earliest start time
-    if (a.startMin !== b.startMin) {
-      return a.startMin - b.startMin
-    }
-
-    // For same start time, sort by craft position from settings
+    // Sort by craft position first
     const aPos = getCraftPosForLane(a)
     const bPos = getCraftPosForLane(b)
     if (aPos !== bPos) return aPos - bPos
 
-    // For same start time and craft, sort by longest duration first
+    // Within same craft, sort by earliest start time
+    if (a.startMin !== b.startMin) {
+      return a.startMin - b.startMin
+    }
+
+    // For same craft and start time, sort by longest duration first
     const aDuration = a.endMin - a.startMin
     const bDuration = b.endMin - b.startMin
     return bDuration - aDuration
@@ -911,11 +911,11 @@ const layoutBlocks = computed(() => {
 
     const assignVisualLanesByRect = (arr: any[]) => {
       const items = (arr || []).slice().sort((a, b) => {
-        const topDiff = (a._vTop ?? 0) - (b._vTop ?? 0)
-        if (topDiff !== 0) return topDiff
         const aCraftPos = getCraftPosForVisualLane(a)
         const bCraftPos = getCraftPosForVisualLane(b)
         if (aCraftPos !== bCraftPos) return aCraftPos - bCraftPos
+        const topDiff = (a._vTop ?? 0) - (b._vTop ?? 0)
+        if (topDiff !== 0) return topDiff
         return (a.id ?? 0) - (b.id ?? 0)
       })
       const laneBottoms: number[] = []

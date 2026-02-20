@@ -23,7 +23,7 @@
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
-                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center min-w-0 pr-1">
+                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center shrink-0 pr-1">
                     <div class="flex transition-opacity duration-150">
                         <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
@@ -87,7 +87,7 @@
 
         <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
+                <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
                         :person="person"
                         :shift="shift"

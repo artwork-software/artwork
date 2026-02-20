@@ -164,6 +164,9 @@
                           {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
                         </span>
                     </div>
+                    <div v-if="issue.notes" class="mt-1 text-sm text-zinc-600 whitespace-pre-line">
+                        {{ issue.notes }}
+                    </div>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2">
@@ -536,6 +539,7 @@ type InternalIssue = {
     project?: Project | null;
     start_date:string; start_time:string; end_date:string; end_time:string;
     start_date_time:string; end_date_time:string;
+    notes?:string|null;
     special_items_done:boolean; articles:Article[]; special_items:SpecialItem[]; files:FileItem[];
 }
 type Project = {

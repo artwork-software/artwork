@@ -233,8 +233,6 @@
                                                 :label="$t('Comment')"
                                                 v-model="vacation.comment"
                                                 type="text"
-                                                :disabled="!!vacation?.id"
-                                                :class="{ '!bg-zinc-100': !!vacation?.id }"
                                             />
                                             <div v-show="helpText.comment" class="mt-1 text-red-600 text-xs">
                                                 {{ helpText.comment }}

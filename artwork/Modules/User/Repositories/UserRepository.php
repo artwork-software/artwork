@@ -108,6 +108,18 @@ class UserRepository extends BaseRepository
             ->get();
     }
 
+    public function getUserVacationsByMonthOrderedByDateAsc(User|int $user, Carbon $monthDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->vacations()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
+            ->orderedByDate()
+            ->get();
+    }
+
     public function getUserAvailabilitiesByDateOrderedByDateAsc(User|int $user, Carbon $selectedDate): Collection
     {
         if (!$user instanceof User) {
@@ -116,6 +128,18 @@ class UserRepository extends BaseRepository
 
         return $user->availabilities()
             ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getUserAvailabilitiesByMonthOrderedByDateAsc(User|int $user, Carbon $monthDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->availabilities()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
             ->orderedByDate()
             ->get();
     }

@@ -134,6 +134,7 @@ class VacationController extends Controller
                     $vacation->update([
                         'type' => $checked['type'],
                         'comment' => $checked['type'],
+                        'created_by' => auth()->id(),
                     ]);
                 }
             }
@@ -185,6 +186,7 @@ class VacationController extends Controller
                     $vacation->update([
                         'type' => $checked['type'],
                         'comment' => $checked['type'],
+                        'created_by' => auth()->id(),
                     ]);
                 }
             }
@@ -236,6 +238,7 @@ class VacationController extends Controller
                     $vacation->update([
                         'type' => $checked['type'],
                         'comment' => $checked['type'],
+                        'created_by' => auth()->id(),
                     ]);
                 }
             }

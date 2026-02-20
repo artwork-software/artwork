@@ -80,6 +80,21 @@ class FreelancerRepository extends BaseRepository
             ->get();
     }
 
+    public function getVacationsByMonthOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $monthDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->vacations()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
+            ->orderedByDate()
+            ->get();
+    }
+
     public function getAvailabilitiesByDateOrderedByDateAscending(
         int|Freelancer $freelancer,
         Carbon $selectedDate
@@ -91,6 +106,21 @@ class FreelancerRepository extends BaseRepository
         return $freelancer
             ->availabilities()
             ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getAvailabilitiesByMonthOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $monthDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->availabilities()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
             ->orderedByDate()
             ->get();
     }

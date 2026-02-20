@@ -212,7 +212,7 @@
                                 class="day-container relative h-full w-full align-top px-[1px] border-gray-400"
                                 :class="[
         day.isWeekend ? 'bg-backgroundGray' : 'bg-white',
-        usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-full',
+        expandDays ? '' : 'h-full',
       ]"
                             >
                                 <!-- MultiEditCalendar Overlay -->
@@ -235,10 +235,10 @@
                                 <div
                                     v-else
                                     class="cell group relative"
-                                    :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
+                                    :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
                                 >
                                     <!-- Project Groups in Events -->
-                                    <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && getRoomDayEvents(room, day.fullDay)?.length">
+                                    <template v-if="displayProjectGroups && getRoomDayEvents(room, day.fullDay)?.length">
                                         <template
                                             v-for="group in getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, day.fullDay))"
                                             :key="group.id"
@@ -514,23 +514,23 @@
                                             <template
                                                 v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
                                                 v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
 
@@ -541,7 +541,7 @@
                                                 }}
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
@@ -549,7 +549,7 @@
                                                 {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                         </div>
@@ -589,7 +589,7 @@
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             class="h-4 w-4 transition-transform duration-200"
-                                            :class="usePage().props.auth.user.opened_crafts?.includes(row.craft.id) ? 'rotate-180' : ''"
+                                            :class="openedCrafts?.includes(row.craft.id) ? 'rotate-180' : ''"
                                         />
                                     </div>
                                 </div>
@@ -1036,12 +1036,12 @@ async function loadShiftPlanWorkers() {
     }
 }
 
-// closed crafts filter bei usePage().props.auth.user.opened_crafts
+// closed crafts filter
 const closedCrafts = computed(() => {
-    const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
+    const opened: number[] = openedCrafts.value || []
     return craftsResolved.value
         .map((c: any) => c.id)
-        .filter((craftId: number) => !openedCrafts.includes(craftId))
+        .filter((craftId: number) => !opened.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -1118,6 +1118,14 @@ const showUserOverview = ref(true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
+// Cached computeds for usePage().props – avoid redundant reactive access in hot paths
+const authUser = computed(() => usePage().props.auth.user)
+const calendarSettings = computed(() => authUser.value.calendar_settings)
+const expandDays = computed(() => calendarSettings.value.expand_days)
+const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
+const compactMode = computed(() => authUser.value.compact_mode)
+const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
     topGap: 0,
@@ -1127,7 +1135,7 @@ const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOve
 })
 
 const rowHeight = computed(() => {
-    return usePage().props.auth.user.compact_mode ? 32 : 48 // px
+    return compactMode.value ? 32 : 48 // px
 })
 
 const userOverviewGridRef = shallowRef<InstanceType<typeof Virtual2DGrid> | null>(null)
@@ -1182,7 +1190,7 @@ const shiftColWidth = 202
 const shiftLeftWidth = 191.5
 
 const shiftRowHeight = computed(() =>
-    usePage().props.auth.user.calendar_settings.expand_days ? 360 : 112
+    expandDays.value ? 360 : 112
 )
 
 // Reactive metrics for cell height estimation – defaults until measured from DOM
@@ -1268,7 +1276,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
 
     const events = getRoomDayEvents(room, dayKey)
     const shifts = getRoomDayShifts(room, dayKey)
-    const showProjectGroups = usePage().props.auth.user.calendar_settings.display_project_groups
+    const showProjectGroups = displayProjectGroups.value
 
     let pgGroupCount = 0
     let eventRenderedCount = 0
@@ -1342,7 +1350,7 @@ function recomputeRowHeights() {
     _recomputeTimer = setTimeout(() => {
         if (_recomputeRaf) cancelAnimationFrame(_recomputeRaf)
         _recomputeRaf = requestAnimationFrame(() => {
-            if (!usePage().props.auth.user.calendar_settings.expand_days) {
+            if (!expandDays.value) {
                 shiftRowHeights.value = []
                 return
             }
@@ -1370,14 +1378,14 @@ function recomputeRowHeights() {
 // Trigger recompute + measurement on relevant changes
 watch(
     () => [
-        usePage().props.auth.user.calendar_settings.expand_days,
-        usePage().props.auth.user.calendar_settings.display_project_groups,
+        expandDays.value,
+        displayProjectGroups.value,
         shiftPlanArrayRef.value,
         days.value,
     ],
     () => {
         cellSummaryCache.clear()
-        if (usePage().props.auth.user.calendar_settings.expand_days) {
+        if (expandDays.value) {
             measureBaselineMetrics()
         } else {
             shiftRowHeights.value = []
@@ -1390,7 +1398,7 @@ watch(
 watch(
     () => ({ ...cellMetrics }),
     () => {
-        if (usePage().props.auth.user.calendar_settings.expand_days) {
+        if (expandDays.value) {
             recomputeRowHeights()
         }
     },
@@ -1697,7 +1705,7 @@ onMounted(async () => {
     await initializeShiftPlan()
 
     // Trigger baseline measurement after data is loaded (if expand_days active)
-    if (usePage().props.auth.user.calendar_settings.expand_days) {
+    if (expandDays.value) {
         measureBaselineMetrics()
     }
 
@@ -1712,7 +1720,7 @@ onMounted(async () => {
     await loadShiftPlanWorkers()
 
     // Dev-only: overflow debug check for visible cells
-    if (import.meta.env.DEV && usePage().props.auth.user.calendar_settings.expand_days) {
+    if (import.meta.env.DEV && expandDays.value) {
         setTimeout(async () => {
             await nextTick()
             const root = shiftGridRef.value?.getViewportEl?.() ?? null
@@ -1875,7 +1883,7 @@ function getDayServicesForCell(worker: any, day: any) {
 
 function changeDailyViewMode() {
     router.patch(
-        route('user.update.daily_view', usePage().props.auth.user.id),
+        route('user.update.daily_view', authUser.value.id),
         {daily_view: dailyViewMode.value},
         {preserveScroll: false, preserveState: false},
     )
@@ -1904,7 +1912,7 @@ function getAllProjectGroupsInEventsByDay(events: any[]) {
 
 function checkIfUserIsAdminOrInGroup(group: any) {
     if ((getCurrentInstance()?.proxy as any)?.hasAdminRole?.()) return false
-    return !group.userIds?.includes(usePage().props.auth.user.id)
+    return !group.userIds?.includes(authUser.value.id)
 }
 
 function initializeCalendarMultiEditSave() {
@@ -2401,7 +2409,7 @@ function calculateTopPositionOfUserOverView() {
 }
 
 function checkIfEventHasShiftsToDisplay(event: any) {
-    const showCrafts = usePage().props.auth.user?.show_crafts
+    const showCrafts = authUser.value?.show_crafts
     if (!showCrafts || showCrafts.length === 0) return event.shifts?.length > 0
     return event.shifts?.length > 0 && event.shifts.some((s: any) => showCrafts.includes(s.craft.id))
 }
@@ -2458,7 +2466,7 @@ function calculateDateDifference() {
 
 function updateTimes() {
     router.patch(
-        route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+        route('update.user.shift.calendar.filter.dates', authUser.value.id),
         {start_date: props.dateValue[0], end_date: props.dateValue[1]},
         {preserveScroll: true, preserveState: false},
     )
@@ -2473,7 +2481,7 @@ function showCloseUserOverview() {
 }
 
 function selectGoToMode(direction: 'next' | 'previous') {
-    const gotoMode = usePage().props.auth.user.goto_mode
+    const gotoMode = authUser.value.goto_mode
     scrollToPeriod(gotoMode, direction)
 }
 
@@ -2609,8 +2617,8 @@ function toggleDayServiceMode() {
 
 function toggleCompactMode() {
     router.post(
-        route('user.compact.mode.toggle', {user: usePage().props.auth.user.id}),
-        {compact_mode: usePage().props.auth.user.compact_mode},
+        route('user.compact.mode.toggle', {user: authUser.value.id}),
+        {compact_mode: compactMode.value},
         {preserveScroll: true, preserveState: true},
     )
 }
@@ -2808,25 +2816,25 @@ function changeCraftVisibility(id: number) {
     }
 
     router.patch(
-        route('user.update.open.crafts', {user: usePage().props.auth.user.id}),
+        route('user.update.open.crafts', {user: authUser.value.id}),
         {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
         {preserveState: true, preserveScroll: true},
     )
 }
 
 function applySort(shiftPlanWorkerSortEnumName: string) {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
+    authUser.value.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: shiftPlanWorkerSortEnumName},
         {preserveState: true, preserveScroll: true},
     )
 }
 
 function resetSort() {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = null
+    authUser.value.shift_plan_user_sort_by_id = null
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: null},
         {preserveState: false, preserveScroll: true},
     )
@@ -3090,7 +3098,7 @@ function saveShiftQualificationFilter(event: any) {
     }
 
     router.patch(
-        route('user.update.show_shift-qualifications', {user: usePage().props.auth.user.id}),
+        route('user.update.show_shift-qualifications', {user: authUser.value.id}),
         {show_qualifications: list},
         {preserveScroll: true, preserveState: true},
     )

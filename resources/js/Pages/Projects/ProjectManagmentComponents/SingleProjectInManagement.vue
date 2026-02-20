@@ -23,7 +23,7 @@
                     <div
                         v-for="component in components"
                         :key="component.name"
-                        class="px-3 py-6 min-h-11 flex items-center"
+                        class="px-3 py-3 min-h-11 max-h-16 flex items-center"
                         :class="component.type === 'ActionsComponent' ? 'justify-end' : 'justify-start'"
                         @click="openProject(component, project)"
                     >

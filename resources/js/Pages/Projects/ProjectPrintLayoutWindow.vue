@@ -86,24 +86,24 @@
 </template>
 
 <script setup>
-import BuilderProjectTitleComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectTitleComponent.vue";
-import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectTeamComponent.vue";
-import BuilderTextArea from "@/Pages/Projects/BuilderComponents/BuilderTextArea.vue";
-import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectStateComponent.vue";
-import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/BuilderShiftContactPersonsComponent.vue";
-import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
-import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
-import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBudgetDeadlineComponent.vue";
-import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
-import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
-import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
-import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
-import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
-import BuilderTitle from "@/Pages/Projects/BuilderComponents/BuilderTitle.vue";
+import BuilderProjectTitleComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectTitleComponent.vue";
+import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectTeamComponent.vue";
+import BuilderTextArea from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTextArea.vue";
+import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectStateComponent.vue";
+import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderShiftContactPersonsComponent.vue";
+import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderRelevantDatesForShiftPlanningComponent.vue";
+import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderGeneralShiftInformationComponent.vue";
+import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectBudgetDeadlineComponent.vue";
+import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectAttributesComponent.vue";
+import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBudgetInformation.vue";
+import BuilderTextField from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTextField.vue";
+import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCheckbox.vue";
+import BuilderDropDown from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderDropDown.vue";
+import BuilderTitle from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTitle.vue";
 import EventTable from "@/Pages/Projects/PrintComponents/EventTable.vue";
-import BuilderArtistResidenciesComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistResidenciesComponent.vue";
-import BuilderProjectAllDocumentsComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAllDocumentsComponent.vue";
-import BuilderCommentAllTabComponent from "@/Pages/Projects/BuilderComponents/BuilderCommentAllTabComponent.vue";
+import BuilderArtistResidenciesComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistResidenciesComponent.vue";
+import BuilderProjectAllDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectAllDocumentsComponent.vue";
+import BuilderCommentAllTabComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCommentAllTabComponent.vue";
 import ChecklistTable from "@/Pages/Projects/PrintComponents/ChecklistTable.vue";
 
 const props = defineProps({
@@ -122,15 +122,15 @@ const props = defineProps({
 });
 
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/BuilderSeparatorComponent.vue";
-import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
-import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
-import BuilderProjectBasicDataDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBasicDataDisplayComponent.vue";
-import BuilderProjectCostCenterDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectCostCenterDisplayComponent.vue";
-import BuilderProjectMaterialIssueComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectMaterialIssueComponent.vue";
-import BuilderProjectContractsDocumentsComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectContractsDocumentsComponent.vue";
-import BuilderLinkComponent from "@/Pages/Projects/BuilderComponents/BuilderLinkComponent.vue";
-import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/BuilderLinkListComponent.vue";
+import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderSeparatorComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectGroupComponent.vue";
+import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistNameDisplayComponent.vue";
+import BuilderProjectBasicDataDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectBasicDataDisplayComponent.vue";
+import BuilderProjectCostCenterDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectCostCenterDisplayComponent.vue";
+import BuilderProjectMaterialIssueComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectMaterialIssueComponent.vue";
+import BuilderProjectContractsDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectContractsDocumentsComponent.vue";
+import BuilderLinkComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkComponent.vue";
+import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkListComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);

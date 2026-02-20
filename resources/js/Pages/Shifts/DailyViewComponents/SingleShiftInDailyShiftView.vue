@@ -82,6 +82,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shift Description -->
+            <div class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+                <template v-if="shift.description">
+                    <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
+                    <component
+                        :is="IconEdit"
+                        class="size-4 shrink-0 text-gray-500 hover:text-gray-700 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+                <template v-else>
+                    <component
+                        :is="IconNote"
+                        class="size-4 shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+            </div>
         </div>
     </div>
 
@@ -215,6 +234,31 @@
         @close="showAddFunctionModal = false"
     />
 
+    <!-- Shift Description Modal -->
+    <ArtworkBaseModal
+        v-if="showDescriptionModal"
+        :title="$t('Shift description')"
+        :description="$t('Add or edit a description for this shift.')"
+        @close="showDescriptionModal = false"
+    >
+        <div class="flex flex-col gap-y-3 mt-2">
+            <textarea
+                v-model="descriptionDraft"
+                class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-gray-500 focus:ring-0"
+                rows="4"
+                :placeholder="$t('Description')"
+            />
+            <div class="flex justify-end">
+                <BaseUIButton
+                    :label="$t('Save')"
+                    :icon="IconDeviceFloppy"
+                    icon-size="size-4"
+                    @click="saveDescription"
+                />
+            </div>
+        </div>
+    </ArtworkBaseModal>
+
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
@@ -247,11 +291,15 @@ import {
     IconClock, IconEdit, IconTrash,
     IconId,
     IconInfoTriangle,
-    IconPlus
+    IconPlus,
+    IconNote,
+    IconDeviceFloppy
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
     delay: 200,
@@ -319,6 +367,26 @@ const lastRequestTime = ref(
         return acc;
     }, {})
 );
+
+const showDescriptionModal = ref(false);
+const descriptionDraft = ref('');
+
+const openDescriptionModal = () => {
+    descriptionDraft.value = props.shift.description || '';
+    showDescriptionModal.value = true;
+};
+
+const saveDescription = async () => {
+    try {
+        await axios.patch(route('event.shift.update.updateDescription', props.shift.id), {
+            description: descriptionDraft.value
+        });
+        props.shift.description = descriptionDraft.value;
+        showDescriptionModal.value = false;
+    } catch (error) {
+        console.error('Error saving shift description:', error);
+    }
+};
 
 const emit = defineEmits(['toggle']);
 const toggleShiftDetails = () => {

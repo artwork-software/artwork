@@ -3962,5 +3962,7 @@
     "Filter by time": "Filter nach Zeit",
     "Other filters": "Sonstige Filter",
     "Only projects where you are in the project team": "Nur Projekte in denen du im Projektteam bist",
-    "Distance": "Abstand"
+    "Distance": "Abstand",
+    "Shift description": "Schichtbeschreibung",
+    "Add or edit a description for this shift.": "Beschreibung für diese Schicht hinzufügen oder bearbeiten."
 }

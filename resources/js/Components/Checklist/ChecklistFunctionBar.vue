@@ -26,7 +26,7 @@
             <slot name="sort">
 
             </slot>
-            <div class="ml-5" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
+            <div class="ml-5" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists')">
                 <BaseUIButton label="New checklist" use-translation is-add-button @click="openAddChecklistModal = true" />
             </div>
         </div>

@@ -435,7 +435,7 @@ const selectableCrafts = computed(() => {
         })
         if (!selectedCraftIncluded) crafts.push(selectedCraft.value)
     }
-    return crafts.concat(props.currentUserCrafts || [])
+    return crafts.concat(props.currentUserCrafts || []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
 })
 
 const filteredShiftTimePresets = computed(() => {

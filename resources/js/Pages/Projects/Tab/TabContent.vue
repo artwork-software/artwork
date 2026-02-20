@@ -238,7 +238,8 @@ const removeML = (componentType) => {
         componentType === 'ShiftTab' ||
         componentType === 'BudgetTab' ||
         componentType === 'ChecklistComponent' ||
-        componentType === 'ChecklistAllComponent'
+        componentType === 'ChecklistAllComponent' ||
+        componentType === 'BulkBody'
     ) {
         return '';
     } else {

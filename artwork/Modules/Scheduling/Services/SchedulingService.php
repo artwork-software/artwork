@@ -12,6 +12,7 @@ use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Scheduling\Models\Scheduling;
 use Artwork\Modules\Scheduling\Repositories\SchedulingRepository;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -72,7 +73,111 @@ class SchedulingService
             $this->carbonService->getNow()->addMinutes(30)->setTimezone(config('app.timezone'))
         );
 
-        foreach ($schedulingsToNotify as $schedulings) {
+        // Aggregate TASK_ADDED schedulings per user before processing
+        $taskAddedByUser = [];
+        $otherSchedulings = [];
+        foreach ($schedulingsToNotify as $scheduling) {
+            if ($scheduling->type === 'TASK_ADDED') {
+                $taskAddedByUser[$scheduling->user_id][] = $scheduling;
+            } else {
+                $otherSchedulings[] = $scheduling;
+            }
+        }
+
+        // Process aggregated TASK_ADDED notifications
+        foreach ($taskAddedByUser as $userId => $userSchedulings) {
+            try {
+                $user = User::query()->find($userId);
+                if (!$user instanceof User) {
+                    $this->logger->error('User with id: ' . $userId . ' not found.');
+                    foreach ($userSchedulings as $scheduling) {
+                        $scheduling->delete();
+                    }
+                    continue;
+                }
+
+                $totalCount = 0;
+                $checklistNames = [];
+                $projectLinks = [];
+                foreach ($userSchedulings as $scheduling) {
+                    $totalCount += $scheduling->count;
+                    $checklist = Checklist::query()->find($scheduling->model_id);
+                    if ($checklist instanceof Checklist) {
+                        $checklistNames[] = $checklist->name;
+                        if ($checklist->project_id) {
+                            $project = $checklist->project;
+                            if ($project && !isset($projectLinks[$project->id])) {
+                                $projectLinks[$project->id] = [
+                                    'name' => $project->name,
+                                    'id' => $project->id,
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                $checklistsString = !empty($checklistNames)
+                    ? implode(', ', array_unique($checklistNames))
+                    : '';
+
+                $notificationTitle = __(
+                    'notification.scheduling.new_tasks',
+                    ['count' => $totalCount, 'checklists' => $checklistsString],
+                    $user->language
+                );
+
+                // Build description with project links and timestamp
+                $notificationDescription = [];
+                $descIndex = 0;
+                $now = Carbon::now();
+                $notificationDescription[$descIndex++] = [
+                    'type' => 'string',
+                    'title' => $now->translatedFormat('d.m.Y H:i'),
+                    'href' => null,
+                ];
+                foreach ($projectLinks as $projectData) {
+                    $notificationDescription[$descIndex++] = [
+                        'type' => 'link',
+                        'title' => $projectData['name'],
+                        'href' => route(
+                            'projects.tab',
+                            [
+                                $projectData['id'],
+                                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CHECKLIST
+                                ),
+                            ]
+                        ),
+                    ];
+                }
+
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setIcon('green');
+                $notificationService->setPriority(3);
+                $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setDescription($notificationDescription);
+                $notificationService->setButtons(['show_project']);
+                $notificationService->setNotificationTo($user);
+                $notificationService->createNotification();
+
+                foreach ($userSchedulings as $scheduling) {
+                    $scheduling->delete();
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error('Error sending TASK_ADDED notification for user ' . $userId, [
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                ]);
+            }
+        }
+
+        foreach ($otherSchedulings as $schedulings) {
             try {
                 $user = User::query()->find($schedulings->user_id);
                 if (!$user instanceof User) {
@@ -84,25 +189,6 @@ class SchedulingService
 
                 $this->logger->debug('Attempt to send scheduling type: ' . $schedulings->type);
                 switch ($schedulings->type) {
-                case 'TASK_ADDED':
-                    $notificationTitle = __(
-                        'notification.scheduling.new_tasks',
-                        ['count' => $schedulings->count],
-                        $user->language
-                    );
-                    $broadcastMessage = [
-                        'id' => rand(1, 1000000),
-                        'type' => 'success',
-                        'message' => $notificationTitle
-                    ];
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setIcon('green');
-                    $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
-                    $notificationService->setBroadcastMessage($broadcastMessage);
-                    $notificationService->setNotificationTo($user);
-                    $notificationService->createNotification();
-                    break;
                 case 'PROJECT_CHANGES':
                     $project = Project::query()->find($schedulings->model_id);
                     if (!$project instanceof Project) {

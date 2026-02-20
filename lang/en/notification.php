@@ -90,7 +90,7 @@ return [
     'scheduling' => [
         'deadline_tomorrow' => 'Deadline of :checklist is reached tomorrow',
         'deadline_over' => ':checklist has exceeded its deadline',
-        'new_tasks' => ':count new tasks for you',
+        'new_tasks' => ':count new tasks for you in: :checklists',
         'changes_project' => 'There have been changes to :project',
         'changes_task' => 'Changes to :task',
         'changes_room' => 'Changes to :room',

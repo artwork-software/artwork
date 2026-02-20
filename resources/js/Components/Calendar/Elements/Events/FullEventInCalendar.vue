@@ -57,9 +57,24 @@
             <div class="flex items-center gap-1.5 min-w-0">
                 <a
                     :href="getEditHref(event.project.group[0].id)"
-                    class="block w-full truncate font-semibold text-xs text-black hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                    class="block w-full min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                    @mouseenter="showProjectGroupTooltipHandler"
+                    @mouseleave="hideProjectGroupTooltip"
                 >
-                    {{ event.project.group[0].name }}
+                    <span ref="projectGroupNameSpan" class="block w-full truncate font-semibold text-xs text-black">
+                        {{ event.project.group[0].name }}
+                    </span>
+                    <Teleport to="body">
+                        <div
+                            v-if="isProjectGroupNameTruncated && showProjectGroupNameTooltip"
+                            class="fixed z-[9999] pointer-events-none"
+                            :style="{ top: projectGroupTooltipPosition.top + 'px', left: projectGroupTooltipPosition.left + 'px' }"
+                        >
+                            <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                {{ event.project.group[0].name }}
+                            </div>
+                        </div>
+                    </Teleport>
                 </a>
             </div>
         </div>
@@ -203,8 +218,25 @@
 
                             <!-- Eventtyp + Projekt-State-Indicator rechts -->
                             <div class="flex items-center justify-between">
-                                <div class="truncate text-xs/5 opacity-90">
-                                    {{ event?.eventType?.name }}
+                                <div
+                                    class="truncate text-xs/5 opacity-90 min-w-0 flex-1"
+                                    @mouseenter="showEventTypeTooltipHandler"
+                                    @mouseleave="hideEventTypeTooltip"
+                                >
+                                    <span ref="eventTypeSpan" class="block w-full truncate">
+                                        {{ event?.eventType?.name }}
+                                    </span>
+                                    <Teleport to="body">
+                                        <div
+                                            v-if="isEventTypeTruncated && showEventTypeTooltipFlag"
+                                            class="fixed z-[9999] pointer-events-none"
+                                            :style="{ top: eventTypeTooltipPosition.top + 'px', left: eventTypeTooltipPosition.left + 'px' }"
+                                        >
+                                            <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                                {{ event?.eventType?.name }}
+                                            </div>
+                                        </div>
+                                    </Teleport>
                                 </div>
                                 <div v-if="usePage().props.auth.user.calendar_settings.project_status && event.projectStateColor" class="ml-2">
                                     <div :class="[event.projectStateColor, zoom_factor <= 0.8 ? 'border-2' : 'border-4']" class="rounded-full"></div>
@@ -507,9 +539,13 @@
                             >
                                 <a
                                     :href="getEditHref(event.project.group[0].id)"
-                                    class="block w-full truncate font-semibold text-xs text-black hover:text-artwork-buttons-hover hover:underline underline-offset-2"
+                                    class="block w-full min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2"
+                                    @mouseenter="showProjectGroupTooltipHandler"
+                                    @mouseleave="hideProjectGroupTooltip"
                                 >
-                                    {{ event.project.group[0].name }}
+                                    <span ref="projectGroupNameSpan" class="block w-full truncate font-semibold text-xs text-black">
+                                        {{ event.project.group[0].name }}
+                                    </span>
                                 </a>
                             </div>
 
@@ -558,7 +594,15 @@
                                                 </div>
                                                 <!-- Eventtyp -->
                                                 <div class="flex items-center justify-between">
-                                                    <div class="truncate text-xs/5 opacity-90">{{ event?.eventType?.name }}</div>
+                                                    <div
+                                                        class="truncate text-xs/5 opacity-90 min-w-0 flex-1"
+                                                        @mouseenter="showEventTypeTooltipHandler"
+                                                        @mouseleave="hideEventTypeTooltip"
+                                                    >
+                                                        <span ref="eventTypeSpan" class="block w-full truncate">
+                                                            {{ event?.eventType?.name }}
+                                                        </span>
+                                                    </div>
                                                     <div v-if="usePage().props.auth.user.calendar_settings.project_status && event.projectStateColor" class="ml-2">
                                                         <div :class="[event.projectStateColor, 'border-2']" class="rounded-full"></div>
                                                     </div>
@@ -923,6 +967,18 @@ const isNameTruncated = ref(false);
 const showProjectNameTooltip = ref(false);
 const tooltipPosition = ref({ top: 0, left: 0 });
 
+// Project group name tooltip
+const projectGroupNameSpan = ref(null);
+const isProjectGroupNameTruncated = ref(false);
+const showProjectGroupNameTooltip = ref(false);
+const projectGroupTooltipPosition = ref({ top: 0, left: 0 });
+
+// Event type tooltip
+const eventTypeSpan = ref(null);
+const isEventTypeTruncated = ref(false);
+const showEventTypeTooltipFlag = ref(false);
+const eventTypeTooltipPosition = ref({ top: 0, left: 0 });
+
 // Event name tooltip
 const eventNameSpan = ref(null);
 const isEventNameTruncated = ref(false);
@@ -934,6 +990,24 @@ const checkTruncation = () => {
     if (!el) { isNameTruncated.value = false; return; }
     const truncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
     isNameTruncated.value = truncated;
+};
+
+const checkProjectGroupNameTruncation = () => {
+    const el = projectGroupNameSpan.value;
+    if (!el) { isProjectGroupNameTruncated.value = false; return; }
+    isProjectGroupNameTruncated.value = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+};
+
+const showProjectGroupTooltipHandler = (e) => {
+    checkProjectGroupNameTruncation();
+    if (!isProjectGroupNameTruncated.value) return;
+    const rect = e.target.getBoundingClientRect();
+    projectGroupTooltipPosition.value = { top: rect.bottom + 4, left: rect.left };
+    showProjectGroupNameTooltip.value = true;
+};
+
+const hideProjectGroupTooltip = () => {
+    showProjectGroupNameTooltip.value = false;
 };
 
 const checkEventNameTruncation = () => {
@@ -963,6 +1037,24 @@ const showEventNameTooltipHandler = (e) => {
 
 const hideEventNameTooltip = () => {
     showEventNameTooltipFlag.value = false;
+};
+
+const checkEventTypeTruncation = () => {
+    const el = eventTypeSpan.value;
+    if (!el) { isEventTypeTruncated.value = false; return; }
+    isEventTypeTruncated.value = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+};
+
+const showEventTypeTooltipHandler = (e) => {
+    checkEventTypeTruncation();
+    if (!isEventTypeTruncated.value) return;
+    const rect = e.target.getBoundingClientRect();
+    eventTypeTooltipPosition.value = { top: rect.bottom + 4, left: rect.left };
+    showEventTypeTooltipFlag.value = true;
+};
+
+const hideEventTypeTooltip = () => {
+    showEventTypeTooltipFlag.value = false;
 };
 
 // Small zoom tooltip state
@@ -1001,20 +1093,28 @@ const handleClickOutside = (e) => {
 onMounted(() => {
     nextTick(checkTruncation);
     nextTick(checkEventNameTruncation);
+    nextTick(checkProjectGroupNameTruncation);
     window.addEventListener('resize', checkTruncation);
     window.addEventListener('resize', checkEventNameTruncation);
+    window.addEventListener('resize', checkProjectGroupNameTruncation);
+    nextTick(checkEventTypeTruncation);
+    window.addEventListener('resize', checkEventTypeTruncation);
     document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', checkTruncation);
     window.removeEventListener('resize', checkEventNameTruncation);
+    window.removeEventListener('resize', checkProjectGroupNameTruncation);
+    window.removeEventListener('resize', checkEventTypeTruncation);
     document.removeEventListener('click', handleClickOutside);
 });
 
 // Re-check when name or width/zoom changes
 watch(() => [props.event?.project?.name, props.width, zoom_factor.value], () => nextTick(checkTruncation));
 watch(() => [props.event?.eventName, props.width, zoom_factor.value], () => nextTick(checkEventNameTruncation));
+watch(() => [props.event?.project?.group, props.width, zoom_factor.value], () => nextTick(checkProjectGroupNameTruncation));
+watch(() => [props.event?.eventType?.name, props.width, zoom_factor.value], () => nextTick(checkEventTypeTruncation));
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {

@@ -18,7 +18,8 @@
             </MenuButton>
 
             <!-- Button: Nur Icon mit Tooltip -->
-            <MenuButton v-else>
+            <MenuButton v-else class="relative">
+                <span v-if="hasActiveFilters" class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-blue-600 ring-2 ring-white z-10"></span>
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
@@ -75,5 +76,6 @@ const props = defineProps({
     classes: { type: [String, Array, Object], default: 'relative flex items-center text-left' },
     whiteBackground: { type: Boolean, default: false },
     useFullButton: { type: Boolean, default: false },
+    hasActiveFilters: { type: Boolean, default: false },
 })
 </script>

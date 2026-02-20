@@ -1,12 +1,10 @@
 <template>
-    <div class="xxsLight max-w-44">
-        <p class="line-clamp-2" v-html="project['TextField'][component.component_id]?.data?.text"></p>
+    <div class="xxsLight">
+        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900 mb-0.5">{{ component.data.label }}</div>
+        <p class="line-clamp-2" v-html="project['TextField'][component.id]?.data?.text"></p>
     </div>
-
 </template>
-
 <script setup>
-
 const props = defineProps({
     project: {
         type: Object,
@@ -17,9 +15,6 @@ const props = defineProps({
         required: true,
     },
 })
-
 </script>
-
 <style scoped>
-
 </style>

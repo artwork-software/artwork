@@ -986,7 +986,7 @@ const singleShiftPresetsResolved = computed(() =>
 // Crafts loaded asynchronously from API
 const craftsLoaded = ref<any[]>([])
 const craftsResolved = computed(() =>
-    (craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]
+    ((craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]).slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
 )
 
 // Provide crafts for child components (e.g. ShiftDropElement)

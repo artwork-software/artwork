@@ -42,7 +42,8 @@ class Vacation extends Model
         'series_id',
         'vacationer_type',
         'vacationer_id',
-        'type'
+        'type',
+        'created_by'
     ];
 
     protected $casts = [
@@ -84,6 +85,11 @@ class Vacation extends Model
     public function getHasConflictsAttribute(): bool
     {
         return $this->conflicts()->exists();
+    }
+
+    public function scopeBetweenDates(Builder $builder, Carbon $startDate, Carbon $endDate): Builder
+    {
+        return $builder->whereBetween('date', [$startDate, $endDate]);
     }
 
     public function scopeByDate(Builder $builder, Carbon $date): Builder

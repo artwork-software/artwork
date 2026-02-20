@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
     cols: Array<{ key: string | number; data: any }>
 
     rowHeight: number
+    rowHeights?: number[]
     colWidth: number
 
     stickyColWidth: number
@@ -17,6 +18,10 @@ const props = withDefaults(defineProps<{
     overscanRows: 6,
     overscanCols: 3,
 })
+
+function getRowHeight(r: number): number {
+    return props.rowHeights?.[r] ?? props.rowHeight
+}
 
 const viewportEl = ref<HTMLElement | null>(null)
 
@@ -67,19 +72,46 @@ defineExpose({
 const topPadding = computed(() => props.headerHeight)
 
 const totalW = computed(() => props.stickyColWidth + props.cols.length * props.colWidth)
-const totalH = computed(() => topPadding.value + props.rows.length * props.rowHeight)
+
+// Precompute cumulative row tops for variable row heights
+const rowTops = computed(() => {
+    const tops: number[] = []
+    let y = 0
+    for (let r = 0; r < props.rows.length; r++) {
+        tops.push(y)
+        y += getRowHeight(r)
+    }
+    tops.push(y) // sentinel: total height of all rows
+    return tops
+})
+
+const totalH = computed(() => topPadding.value + (rowTops.value[props.rows.length] ?? 0))
 
 const scrollY = computed(() => Math.max(0, st.value - topPadding.value))
 
+// Binary search for first row visible
+function findFirstRow(scrollTop: number): number {
+    const tops = rowTops.value
+    let lo = 0, hi = props.rows.length - 1
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1
+        if (tops[mid] <= scrollTop) lo = mid
+        else hi = mid - 1
+    }
+    return lo
+}
+
 const r0 = computed(() =>
-    Math.max(0, Math.floor(scrollY.value / props.rowHeight) - props.overscanRows)
+    Math.max(0, findFirstRow(scrollY.value) - props.overscanRows)
 )
-const r1 = computed(() =>
-    Math.min(
-        props.rows.length - 1,
-        Math.ceil((scrollY.value + vh.value) / props.rowHeight) + props.overscanRows
-    )
-)
+const r1 = computed(() => {
+    const bottomY = scrollY.value + vh.value
+    const tops = rowTops.value
+    let r = findFirstRow(bottomY)
+    // include rows that are partially visible
+    while (r < props.rows.length - 1 && tops[r] < bottomY) r++
+    return Math.min(props.rows.length - 1, r + props.overscanRows)
+})
 
 const c0 = computed(() =>
     Math.max(0, Math.floor(sl.value / props.colWidth) - props.overscanCols)
@@ -92,12 +124,14 @@ const c1 = computed(() =>
 )
 
 const visibleRows = computed(() => {
-    const out: Array<{ r: number; row: any; top: number }> = []
+    const out: Array<{ r: number; row: any; top: number; height: number }> = []
+    const tops = rowTops.value
     for (let r = r0.value; r <= r1.value; r++) {
         out.push({
             r,
             row: props.rows[r],
-            top: topPadding.value + r * props.rowHeight,
+            top: topPadding.value + tops[r],
+            height: getRowHeight(r),
         })
     }
     return out
@@ -151,8 +185,10 @@ const colsLeft = computed(() => props.stickyColWidth + c0.value * props.colWidth
                 v-for="vr in visibleRows"
                 :key="vr.row.key"
                 class="absolute left-0"
-                :style="{ top: vr.top + 'px', height: rowHeight + 'px', width: totalW + 'px' }"
+                :style="{ top: vr.top + 'px', height: vr.height + 'px', width: totalW + 'px' }"
             >
+                <!-- Durchgehende gestrichelte Trennlinie zwischen Räumen -->
+                <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-gray-400 z-40 pointer-events-none"></div>
                 <div class="relative h-full w-full">
                     <!-- Sticky left column -->
                     <div
@@ -168,7 +204,7 @@ const colsLeft = computed(() => props.stickyColWidth + c0.value * props.colWidth
                             v-for="vc in visibleCols"
                             :key="vc.col.key"
                             class="flex-none"
-                            :style="{ width: colWidth + 'px', height: rowHeight + 'px' }"
+                            :style="{ width: colWidth + 'px', height: vr.height + 'px' }"
                         >
                             <slot
                                 name="cell"

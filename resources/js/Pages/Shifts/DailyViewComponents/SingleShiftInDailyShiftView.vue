@@ -23,7 +23,7 @@
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
-                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center min-w-0 pr-1">
+                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center shrink-0 pr-1">
                     <div class="flex transition-opacity duration-150">
                         <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
@@ -82,12 +82,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shift Description -->
+            <div class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+                <template v-if="shift.description">
+                    <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
+                    <component
+                        :is="IconEdit"
+                        class="size-4 shrink-0 text-gray-500 hover:text-gray-700 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+                <template v-else>
+                    <component
+                        :is="IconNote"
+                        class="size-4 shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+            </div>
         </div>
     </div>
 
         <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
+                <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
                         :person="person"
                         :shift="shift"
@@ -215,6 +234,31 @@
         @close="showAddFunctionModal = false"
     />
 
+    <!-- Shift Description Modal -->
+    <ArtworkBaseModal
+        v-if="showDescriptionModal"
+        :title="$t('Shift description')"
+        :description="$t('Add or edit a description for this shift.')"
+        @close="showDescriptionModal = false"
+    >
+        <div class="flex flex-col gap-y-3 mt-2">
+            <textarea
+                v-model="descriptionDraft"
+                class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-gray-500 focus:ring-0"
+                rows="4"
+                :placeholder="$t('Description')"
+            />
+            <div class="flex justify-end">
+                <BaseUIButton
+                    :label="$t('Save')"
+                    :icon="IconDeviceFloppy"
+                    icon-size="size-4"
+                    @click="saveDescription"
+                />
+            </div>
+        </div>
+    </ArtworkBaseModal>
+
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
@@ -247,11 +291,15 @@ import {
     IconClock, IconEdit, IconTrash,
     IconId,
     IconInfoTriangle,
-    IconPlus
+    IconPlus,
+    IconNote,
+    IconDeviceFloppy
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
     delay: 200,
@@ -319,6 +367,26 @@ const lastRequestTime = ref(
         return acc;
     }, {})
 );
+
+const showDescriptionModal = ref(false);
+const descriptionDraft = ref('');
+
+const openDescriptionModal = () => {
+    descriptionDraft.value = props.shift.description || '';
+    showDescriptionModal.value = true;
+};
+
+const saveDescription = async () => {
+    try {
+        await axios.patch(route('event.shift.update.updateDescription', props.shift.id), {
+            description: descriptionDraft.value
+        });
+        props.shift.description = descriptionDraft.value;
+        showDescriptionModal.value = false;
+    } catch (error) {
+        console.error('Error saving shift description:', error);
+    }
+};
 
 const emit = defineEmits(['toggle']);
 const toggleShiftDetails = () => {

@@ -6,21 +6,19 @@
     ]"
     >
         <div :class="classes">
-            <!-- Urlaub -->
+            <!-- Urlaub zuerst anzeigen, dann restliche Teile -->
             <span
                 v-if="isOnVacation"
-                class="flex h-full items-center justify-center text-[#f08b32]"
+                :class="vacationIsItalic ? 'italic' : ''"
+                class="text-[#f08b32]"
             >
-        {{ vacationLabel }}
-      </span>
+                {{ vacationLabel }}<template v-if="cellParts.length">, </template>
+            </span>
 
-            <!-- Normal -->
-            <template v-else>
-                <template v-for="part in cellParts" :key="part.key">
-          <span :class="part.class">
-            {{ part.text }}
-          </span>
-                </template>
+            <template v-for="part in cellParts" :key="part.key">
+                <span :class="part.class">
+                    {{ part.text }}
+                </span>
             </template>
         </div>
     </div>
@@ -40,7 +38,6 @@ const page = usePage()
 
 /**
  * Vacation types: als Konstante statt ref (keine Reaktivität nötig)
- * (Wenn du das aus i18n/config ziehen willst: perfekt – dann hier ersetzen.)
  */
 const vacationTypes = [
     { name: 'Verfügbar', type: 'AVAILABLE' },
@@ -68,6 +65,19 @@ const vacationLabel = computed(() => {
     if (!v) return 'On Vacation'
     return vacationTypeMap.value?.[v.type] || 'On Vacation'
 })
+
+/** Prüft ob die Vacation vom User der Zelle selbst eingetragen wurde */
+const vacationIsItalic = computed(() => {
+    const v = vacationToday.value
+    if (!v) return false
+    const cellUserId = props.user?.element?.id
+    // type 0 = User, bei Freelancern/ServiceProvidern ist created_by nie gleich element.id
+    return v.created_by != null && cellUserId != null && v.created_by == cellUserId && props.user?.type === 0
+})
+
+/** ID des Users der Zelle (für italic-Prüfung) */
+const cellUserId = computed(() => props.user?.element?.id)
+const cellUserType = computed(() => props.user?.type)
 
 /** Robust: ShiftGroup-ID aus allen gängigen Varianten */
 function getShiftGroupId(shift) {
@@ -110,7 +120,7 @@ const individualTimesToday = computed(() => {
 
 /** Kommentar am Tag (nur 1x sauber lesen) */
 const shiftCommentToday = computed(() => {
-    return props.user?.shift_comments?.[props.day.withoutFormat]?.[0]?.comment ?? ''
+    return props.user?.shift_comments?.[props.day.withoutFormat]?.[0] ?? null
 })
 
 /** Availabilities am Tag (nur 1x) */
@@ -118,7 +128,13 @@ const availabilitiesToday = computed(() => {
     return props.user?.availabilities?.[props.day.fullDay] ?? []
 })
 
-/** Render-Parts: ein Array, das das Template nur noch “abspult” */
+/** Prüft ob ein Eintrag vom User der Zelle selbst erstellt wurde (italic) */
+function isSelfCreated(createdBy) {
+    // == statt === um Typ-Mismatches (String vs Number) zu vermeiden
+    return createdBy != null && cellUserId.value != null && createdBy == cellUserId.value && cellUserType.value === 0
+}
+
+/** Render-Parts: ein Array, das das Template nur noch "abspult" */
 const cellParts = computed(() => {
     const parts = []
 
@@ -189,21 +205,23 @@ const cellParts = computed(() => {
     }
 
     // Comment
-    if (shiftCommentToday.value) {
+    const comment = shiftCommentToday.value
+    if (comment?.comment) {
         parts.push({
             key: 'comment',
-            text: shiftCommentToday.value,
-            class: '',
+            text: comment.comment,
+            class: isSelfCreated(comment.created_by) ? 'italic' : '',
         })
     }
 
     // Availabilities (nur Comments anzeigen, wie vorher)
     for (const a of availabilitiesToday.value) {
         if (!a?.comment) continue
+        // Availabilities werden immer vom User selbst eingetragen → immer italic
         parts.push({
             key: `av:${a.id}`,
-            text: `„${a.comment}” `,
-            class: 'text-green-500',
+            text: `„${a.comment}" `,
+            class: 'text-green-500 italic',
         })
     }
 

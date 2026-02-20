@@ -9,7 +9,7 @@ class ShiftPlanComment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['comment', 'date'];
+    protected $fillable = ['comment', 'date', 'created_by'];
 
     // Polymorphe Beziehung
     public function commentable()

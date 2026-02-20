@@ -1188,11 +1188,16 @@ class ShiftController extends Controller
         return $this->redirector->back();
     }
 
-    public function updateDescription(Request $request, Shift $shift): RedirectResponse
+    public function updateDescription(Request $request, Shift $shift): \Illuminate\Http\JsonResponse
     {
         $shift->update($request->only(['description']));
 
-        return $this->redirector->back();
+        $roomId = $shift->event?->room_id ?? $shift->room_id;
+        if ($roomId) {
+            broadcast(new UpdateShiftInShiftPlan($shift->fresh(), $roomId));
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function updateUserCell(Request $request): void

@@ -50,16 +50,36 @@
             <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
-    <div class="flex w-full gap-x-2 group relative pr-5 sm:pr-6 overflow-visible" ref="rowRef">
-        <div class="text-xs truncate col-span-1 flex items-center gap-x-3">
-            <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation">
+    <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
+        <!-- LINKS: Name (darf schrumpfen) -->
+        <div class="flex min-w-0 flex-1 items-center gap-x-2">
+            <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
                 [{{ person.pivot?.craft_abbreviation }}]
             </span>
-            {{ person.name || person.full_name }}
 
+            <span
+                ref="personNameSpan"
+                class="min-w-0 truncate text-xs"
+                @mouseenter="showPersonNameTooltipHandler"
+                @mouseleave="hidePersonNameTooltip"
+            >
+                {{ person.name || person.full_name }}
+            </span>
+            <Teleport to="body">
+                <div
+                    v-if="isPersonNameTruncated && showPersonNameTooltipFlag"
+                    class="fixed z-[9999] pointer-events-none"
+                    :style="{ top: personNameTooltipPosition.top + 'px', left: personNameTooltipPosition.left + 'px' }"
+                >
+                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                        {{ person.name || person.full_name }}
+                    </div>
+                </div>
+            </Teleport>
         </div>
 
-        <div class="flex items-center min-w-0">
+        <!-- RECHTS: Icons (dürfen NICHT rausgedrückt werden) -->
+        <div class="flex shrink-0 items-center gap-x-2">
             <ToolTipComponent
                 :icon="findShiftQualification(person.pivot?.shift_qualification_id)?.icon"
                 :tooltip-text="findShiftQualification(person.pivot?.shift_qualification_id)?.name || ''"
@@ -68,9 +88,9 @@
                 black-icon
                 classes-button=""
             />
-            <!-- Globale Qualifikationen der Person (nur wenn in dieser Schicht gefordert > 0) -->
-            <div class="flex items-center gap-x-1 ml-1 min-w-0">
-                <!-- Normale Anzeige: einzelne GQ-Icons, solange genug Platz -->
+
+            <!-- GQ-Icons -->
+            <div class="flex shrink-0 items-center gap-x-1">
                 <template v-if="!collapseGQIcons">
                     <ToolTipComponent
                         v-for="gq in personGlobalQualificationsInDemand"
@@ -83,12 +103,14 @@
                         classes-button=""
                     />
                 </template>
-                <!-- Kompakte Anzeige: Chevron + Hover-Tooltip mit allen GQ-Icons -->
+
                 <template v-else>
                     <div class="relative" @mouseenter="showGQTooltip = true" @mouseleave="showGQTooltip = false">
                         <component :is="IconChevronDown" class="size-4 text-gray-600 hover:text-gray-800" />
-                        <div v-show="showGQTooltip"
-                             class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                        <div
+                            v-show="showGQTooltip"
+                            class="gq-tooltip absolute z-50 top-full mt-1 right-0 bg-white border border-gray-200 rounded-md shadow-lg p-2"
+                        >
                             <div class="flex items-center gap-1">
                                 <ToolTipComponent
                                     v-for="gq in personGlobalQualificationsInDemand"
@@ -105,70 +127,63 @@
                     </div>
                 </template>
             </div>
-        </div>
-        <div v-if="$page.props.auth.user.calendar_settings.shift_notes" class=" items-center flex col-span-2 min-w-0 flex-1">
-            <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
-                <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                    <PopoverButton class="font-lexend rounded-lg flex items-center gap-x-1 truncate w-full !ring-0 border-none">
-                        <component
-                            :is="IconNote"
-                            class="size-4 min-h-4 min-w-4 transition-all duration-150 ease-in-out cursor-pointer"
-                            :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700'"
-                            v-tooltip.bottom="descriptionTooltip"
-                        />
-                        <span
-                            v-if="!hasCollision"
 
-                            class="hidden xl:block truncate max-w-56 xsDark"
-                            v-tooltip.bottom="descriptionTooltip"
-                        >
-                            {{ person.pivot?.short_description}}
-                        </span>
-                    </PopoverButton>
+            <!-- Notes: begrenzen, damit sie nie den Rest killen -->
+            <div v-if="$page.props.auth.user.calendar_settings.shift_notes" class="flex min-w-0 items-center max-w-56">
+                <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
+                    <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
+                        <PopoverButton class="flex items-center gap-x-1 min-w-0 w-full !ring-0 border-none">
+                            <component
+                                :is="IconNote"
+                                class="size-4 min-h-4 min-w-4 shrink-0 transition-all duration-150 ease-in-out cursor-pointer"
+                                :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-gray-100 w-5 h-5' : 'text-gray-500 hover:text-gray-700'"
+                                v-tooltip.bottom="descriptionTooltip"
+                            />
+                            <span v-if="!hasCollision" class="truncate min-w-0 hidden xl:block xsDark" v-tooltip.bottom="descriptionTooltip">
+                                {{ person.pivot?.short_description }}
+                            </span>
+                        </PopoverButton>
 
-                    <transition enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                        <PopoverPanel class="z-50 w-96 focus:outline-none  card glassy">
-                            <div class="px-4 py-2">
-                                <div>
-                                    <p class="text-xs text-gray-700 mb-2 font-lexend font-bold">
-                                        Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
-                                    </p>
+                        <transition enter-active-class="transition ease-out duration-100"
+                                    enter-from-class="transform opacity-0 scale-95"
+                                    enter-to-class="transform opacity-100 scale-100"
+                                    leave-active-class="transition ease-in duration-75"
+                                    leave-from-class="transform opacity-100 scale-100"
+                                    leave-to-class="transform opacity-0 scale-95">
+                            <PopoverPanel class="z-50 w-96 focus:outline-none card glassy">
+                                <div class="px-4 py-2">
+                                    <div>
+                                        <p class="text-xs text-gray-700 mb-2 font-lexend font-bold">
+                                            Schichtbeschreibung für {{ person.name || person.full_name }} anpassen
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-x-2">
+                                        <BaseInput
+                                            id="start" label="Short Description" type="text" class="max-w-56 text-xs"
+                                            v-model="person.pivot.short_description"
+                                        />
+                                        <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-x-2">
-                                    <BaseInput
-                                        id="start" label="Short Description" type="text" class="max-w-56 text-xs"
-                                        v-model="person.pivot.short_description"
-                                    />
-                                    <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveShortDescription(close)"/>
-                                </div>
-                            </div>
-                        </PopoverPanel>
-                    </transition>
-                </Float>
-            </Popover>
+                            </PopoverPanel>
+                        </transition>
+                    </Float>
+                </Popover>
+            </div>
 
-        </div>
-        <!-- Immer sichtbares 3‑Punkt‑Menü für Benutzeraktionen (analog zum Menü in der Schicht-Ecke) -->
-        <div
-            v-if="can('can plan shifts') || is('artwork admin')"
-            class="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-auto"
-        >
-            <BaseMenu has-no-offset white-menu-background dots-size="size-4"
-                      :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''"
-                      menu-width="w-fit"
-            >
-                <BaseMenuItem
-                    white-menu-background
-                    :icon="IconTrash"
-                    title="User von Schicht entfernen"
-                    @click="deleteUserFromShift(person)"
-                />
-            </BaseMenu>
+            <!-- Menü: NICHT absolut, sondern im Flow => immer rechts am Rand -->
+            <div v-if="can('can plan shifts') || is('artwork admin')" class="shrink-0">
+                <BaseMenu has-no-offset white-menu-background dots-size="size-4"
+                          :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''"
+                          menu-width="w-fit">
+                    <BaseMenuItem
+                        white-menu-background
+                        :icon="IconTrash"
+                        title="User von Schicht entfernen"
+                        @click="deleteUserFromShift(person)"
+                    />
+                </BaseMenu>
+            </div>
         </div>
     </div>
 
@@ -193,7 +208,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
-import {computed, ref, onMounted, onBeforeUnmount, watch} from "vue";
+import {computed, ref, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
 import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash} from "@tabler/icons-vue";
 import {can, is} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -239,6 +254,30 @@ const findShiftQualification = (id) =>
     shiftQualificationsArray.value.find(q => q.id === id);
 
 const showRequestWorkTimeChangeModal = ref(false);
+
+// Person name tooltip (like project name in FullEventInCalendar)
+const personNameSpan = ref(null);
+const isPersonNameTruncated = ref(false);
+const showPersonNameTooltipFlag = ref(false);
+const personNameTooltipPosition = ref({ top: 0, left: 0 });
+
+const checkPersonNameTruncation = () => {
+    const el = personNameSpan.value;
+    if (!el) { isPersonNameTruncated.value = false; return; }
+    isPersonNameTruncated.value = el.scrollWidth > el.clientWidth;
+};
+
+const showPersonNameTooltipHandler = (e) => {
+    checkPersonNameTruncation();
+    if (!isPersonNameTruncated.value) return;
+    const rect = e.target.getBoundingClientRect();
+    personNameTooltipPosition.value = { top: rect.bottom + 4, left: rect.left };
+    showPersonNameTooltipFlag.value = true;
+};
+
+const hidePersonNameTooltip = () => {
+    showPersonNameTooltipFlag.value = false;
+};
 
 // UI: Platzmangel-Erkennung für GQ-Icons → auf Chevron zusammenfalten
 const rowRef = ref(null)

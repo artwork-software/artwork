@@ -1284,11 +1284,27 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     const groups = Array.from(groupsMap.values())
 
     // 2) Schichten innerhalb der Gruppe zeitlich sortieren
+    // Craft-Position-Lookup aus craftsResolved für sekundäre Sortierung
+    const craftPositionMap = new Map<number, number>()
+    for (const c of craftsResolved.value ?? []) {
+        if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
+    }
+    const getCraftPosition = (shift: any): number => {
+        const craftId = shift?.craft?.id ?? shift?.craft_id
+        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
+        return shift?.craft?.position ?? 9999
+    }
+
     for (const g of groups) {
         g.shifts.sort((a: any, b: any) => {
             const aStart = getShiftStartMs(a)
             const bStart = getShiftStartMs(b)
             if (aStart !== bStart) return aStart - bStart
+
+            // Bei gleicher Startzeit: Craft-Position aus Settings
+            const aPos = getCraftPosition(a)
+            const bPos = getCraftPosition(b)
+            if (aPos !== bPos) return aPos - bPos
 
             const aEnd = getShiftEndMs(a)
             const bEnd = getShiftEndMs(b)

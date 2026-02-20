@@ -330,12 +330,19 @@ const shiftQualificationsResolved = computed(() => {
 // Crafts loaded asynchronously from API
 const craftsLoaded = ref<any[]>([])
 const craftsResolved = computed(() => {
-    if (craftsLoaded.value?.length) return craftsLoaded.value
-    const v: any = props.crafts
-    if (Array.isArray(v)) return v
-    if (v && Object.keys(v).length) return Object.values(v)
-    const fromPage: any = page.props.crafts ?? {}
-    return Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
+    let result: any[]
+    if (craftsLoaded.value?.length) {
+        result = craftsLoaded.value
+    } else {
+        const v: any = props.crafts
+        if (Array.isArray(v)) result = v
+        else if (v && Object.keys(v).length) result = Object.values(v)
+        else {
+            const fromPage: any = page.props.crafts ?? {}
+            result = Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
+        }
+    }
+    return result.slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
 })
 
 // Workers loaded asynchronously from API (craft-first), für spätere Nutzung vorbereitet
@@ -707,8 +714,30 @@ const craftIdSet = computed<Set<any>>(() => {
 function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
     const shiftsRaw: any[] = getRoomDayShifts(room, dayLabel)
     const set = craftIdSet.value
-    if (set.size === 0) return shiftsRaw
-    return shiftsRaw.filter(s => set.has(s?.craft?.id))
+    const filtered = set.size === 0 ? shiftsRaw : shiftsRaw.filter(s => set.has(s?.craft?.id))
+
+    // Sortierung: primär nach Startzeit, sekundär nach Craft-Position aus Settings
+    const craftPositionMap = new Map<number, number>()
+    for (const c of craftsResolved.value ?? []) {
+        if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
+    }
+    const getCraftPos = (s: any): number => {
+        const craftId = s?.craft?.id ?? s?.craft_id
+        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
+        return s?.craft?.position ?? 9999
+    }
+
+    return filtered.slice().sort((a: any, b: any) => {
+        const aStart = (a.start ?? '').toString()
+        const bStart = (b.start ?? '').toString()
+        if (aStart !== bStart) return aStart.localeCompare(bStart)
+
+        const aPos = getCraftPos(a)
+        const bPos = getCraftPos(b)
+        if (aPos !== bPos) return aPos - bPos
+
+        return (a.id ?? 0) - (b.id ?? 0)
+    })
 }
 
 /**

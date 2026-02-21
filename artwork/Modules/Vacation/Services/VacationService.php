@@ -46,7 +46,8 @@ readonly class VacationService
             'full_day' =>  $request->full_day,
             'comment' => $request->comment,
             'is_series' => $request->is_series,
-            'type' => $vacationTypeEnum
+            'type' => $vacationTypeEnum,
+            'created_by' => auth()->id(),
         ]);
 
         $vacationConflictService->checkVacationConflictsOnDay(
@@ -111,7 +112,8 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum
+                    'type' => $vacationTypeEnum,
+                    'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $newVacation->date,
@@ -133,7 +135,8 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum
+                    'type' => $vacationTypeEnum,
+                    'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $weekly->date,

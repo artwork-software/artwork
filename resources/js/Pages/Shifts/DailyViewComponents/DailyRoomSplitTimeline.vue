@@ -24,7 +24,7 @@
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="text-center text-[11px] text-gray-500 py-1">~{{ block.gapAfter.human }} Abstand</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} {{ $t('Abstand') }}</div>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="text-center text-[11px] text-gray-500 py-1">~{{ block.gapAfter.human }} Abstand</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} Abstand</div>
             </div>
           </div>
         </div>
@@ -483,7 +483,25 @@ const shiftItems = computed<Item[]>(() => {
         })
     }
 
-    return items.sort((a, b) => a.startMin - b.startMin)
+    // Craft-Position-Lookup für sekundäre Sortierung bei gleicher Startzeit
+    const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    const craftPositionMap = new Map<number, number>()
+    for (const c of craftsArray) {
+        if ((c as any)?.id != null) craftPositionMap.set((c as any).id, (c as any).position ?? 0)
+    }
+    const getCraftPos = (item: any): number => {
+        const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
+        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
+        return item?.payload?.craft?.position ?? 9999
+    }
+
+    return items.sort((a, b) => {
+        const aPos = getCraftPos(a)
+        const bPos = getCraftPos(b)
+        if (aPos !== bPos) return aPos - bPos
+        if (a.startMin !== b.startMin) return a.startMin - b.startMin
+        return (a.id ?? 0) - (b.id ?? 0)
+    })
 })
 
 const visibleLen = computed(() => {
@@ -577,6 +595,18 @@ function assignLanes(items: Item[]) {
   // Greedy interval partitioning for overlapping items
   const laneEnds: number[] = []
   // Sort items: all-day events first (leftmost), then by earliest start time, then by longest duration
+  // Build craft position lookup for secondary sorting
+  const craftsArr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+  const craftPosMap = new Map<number, number>()
+  for (const c of craftsArr) {
+    if ((c as any)?.id != null) craftPosMap.set((c as any).id, (c as any).position ?? 0)
+  }
+  const getCraftPosForLane = (it: any): number => {
+    const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
+    if (craftId != null && craftPosMap.has(craftId)) return craftPosMap.get(craftId)!
+    return it?.payload?.craft?.position ?? 9999
+  }
+
   items.sort((a, b) => {
     // All-day events always come first (leftmost lanes)
     const aIsAllDay = a.payload?.allDay === true
@@ -584,12 +614,17 @@ function assignLanes(items: Item[]) {
     if (aIsAllDay && !bIsAllDay) return -1
     if (!aIsAllDay && bIsAllDay) return 1
 
-    // Sort by earliest start time
+    // Sort by craft position first
+    const aPos = getCraftPosForLane(a)
+    const bPos = getCraftPosForLane(b)
+    if (aPos !== bPos) return aPos - bPos
+
+    // Within same craft, sort by earliest start time
     if (a.startMin !== b.startMin) {
       return a.startMin - b.startMin
     }
 
-    // For same start time, sort by longest duration first
+    // For same craft and start time, sort by longest duration first
     const aDuration = a.endMin - a.startMin
     const bDuration = b.endMin - b.startMin
     return bDuration - aDuration
@@ -863,8 +898,26 @@ const layoutBlocks = computed(() => {
 
 
       // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
+    const craftsArrForLanes = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    const craftPosMapForLanes = new Map<number, number>()
+    for (const c of craftsArrForLanes) {
+      if ((c as any)?.id != null) craftPosMapForLanes.set((c as any).id, (c as any).position ?? 0)
+    }
+    const getCraftPosForVisualLane = (it: any): number => {
+      const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
+      if (craftId != null && craftPosMapForLanes.has(craftId)) return craftPosMapForLanes.get(craftId)!
+      return it?.payload?.craft?.position ?? 9999
+    }
+
     const assignVisualLanesByRect = (arr: any[]) => {
-      const items = (arr || []).slice().sort((a, b) => (a._vTop ?? 0) - (b._vTop ?? 0) || (a.id ?? 0) - (b.id ?? 0))
+      const items = (arr || []).slice().sort((a, b) => {
+        const aCraftPos = getCraftPosForVisualLane(a)
+        const bCraftPos = getCraftPosForVisualLane(b)
+        if (aCraftPos !== bCraftPos) return aCraftPos - bCraftPos
+        const topDiff = (a._vTop ?? 0) - (b._vTop ?? 0)
+        if (topDiff !== 0) return topDiff
+        return (a.id ?? 0) - (b.id ?? 0)
+      })
       const laneBottoms: number[] = []
       for (const it of items) {
         let placed = false

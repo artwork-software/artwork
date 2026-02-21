@@ -116,6 +116,7 @@
                         :rows="shiftRows"
                         :cols="shiftCols"
                         :row-height="shiftRowHeight"
+                        :row-heights="shiftRowHeights"
                         :col-width="shiftColWidth"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
@@ -211,7 +212,7 @@
                                 class="day-container relative h-full w-full align-top px-[1px] border-gray-400"
                                 :class="[
         day.isWeekend ? 'bg-backgroundGray' : 'bg-white',
-        usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-full',
+        expandDays ? '' : 'h-full',
       ]"
                             >
                                 <!-- MultiEditCalendar Overlay -->
@@ -234,15 +235,16 @@
                                 <div
                                     v-else
                                     class="cell group relative"
-                                    :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12 h-full' : 'h-full overflow-y-auto'"
+                                    :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
                                 >
                                     <!-- Project Groups in Events -->
-                                    <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && getRoomDayEvents(room, day.fullDay)?.length">
+                                    <template v-if="displayProjectGroups && getRoomDayEvents(room, day.fullDay)?.length">
                                         <template
                                             v-for="group in getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, day.fullDay))"
                                             :key="group.id"
                                         >
                                             <Link
+                                                data-sp-pgbar
                                                 :disabled="checkIfUserIsAdminOrInGroup(group)"
                                                 :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
                                                 class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
@@ -255,7 +257,7 @@
 
                                     <!-- Events -->
                                     <template v-if="getRoomDayEvents(room, day.fullDay)?.length">
-                                        <div v-for="event in getRoomDayEvents(room, day.fullDay)" :key="event.id || event.uuid || event.name" class="mb-1">
+                                        <div v-for="event in getRoomDayEvents(room, day.fullDay)" :key="event.id || event.uuid || event.name" class="mb-1" data-sp-eventwrap>
                                             <SingleEventInShiftPlan
                                                 v-if="!checkIfEventHasShiftsToDisplay(event)"
                                                 :event="event"
@@ -278,6 +280,7 @@
                                                 >
                                                     <div
                                                         v-if="group.project"
+                                                        data-sp-shiftgroupheader
                                                         class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800"
                                                     >
                                                         <span>{{ group.project.name }}</span>
@@ -291,6 +294,7 @@
                                                         <div
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
+                                                            data-sp-shiftrow
                                                             class="rounded-lg duration-200 ease-in-out"
                                                             :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'"
                                                         >
@@ -510,23 +514,23 @@
                                             <template
                                                 v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
                                                 v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
 
@@ -537,7 +541,7 @@
                                                 }}
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
@@ -545,7 +549,7 @@
                                                 {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                         </div>
@@ -585,7 +589,7 @@
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             class="h-4 w-4 transition-transform duration-200"
-                                            :class="usePage().props.auth.user.opened_crafts?.includes(row.craft.id) ? 'rotate-180' : ''"
+                                            :class="openedCrafts?.includes(row.craft.id) ? 'rotate-180' : ''"
                                         />
                                     </div>
                                 </div>
@@ -791,6 +795,7 @@ import {
     computed,
     defineAsyncComponent,
     getCurrentInstance, inject, provide,
+    nextTick,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -1031,12 +1036,12 @@ async function loadShiftPlanWorkers() {
     }
 }
 
-// closed crafts filter bei usePage().props.auth.user.opened_crafts
+// closed crafts filter
 const closedCrafts = computed(() => {
-    const openedCrafts: number[] = usePage().props.auth.user.opened_crafts || []
+    const opened: number[] = openedCrafts.value || []
     return craftsResolved.value
         .map((c: any) => c.id)
-        .filter((craftId: number) => !openedCrafts.includes(craftId))
+        .filter((craftId: number) => !opened.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -1113,6 +1118,14 @@ const showUserOverview = ref(true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
+// Cached computeds for usePage().props – avoid redundant reactive access in hot paths
+const authUser = computed(() => usePage().props.auth.user)
+const calendarSettings = computed(() => authUser.value.calendar_settings)
+const expandDays = computed(() => calendarSettings.value.expand_days)
+const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
+const compactMode = computed(() => authUser.value.compact_mode)
+const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
     topGap: 0,
@@ -1122,7 +1135,7 @@ const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOve
 })
 
 const rowHeight = computed(() => {
-    return usePage().props.auth.user.compact_mode ? 32 : 48 // px
+    return compactMode.value ? 32 : 48 // px
 })
 
 const userOverviewGridRef = shallowRef<InstanceType<typeof Virtual2DGrid> | null>(null)
@@ -1177,7 +1190,218 @@ const shiftColWidth = 202
 const shiftLeftWidth = 191.5
 
 const shiftRowHeight = computed(() =>
-    usePage().props.auth.user.calendar_settings.expand_days ? 360 : 112
+    expandDays.value ? 360 : 112
+)
+
+// Reactive metrics for cell height estimation – defaults until measured from DOM
+const cellMetrics = reactive({
+    pgBarWithMb: 26,          // Link + mb-0.5
+    eventWithMb: 36,          // SingleEvent + mb-1
+    eventOnlyMb: 4,           // Event wrapper when event has shifts (only mb-1)
+    shiftRow: 28,             // SingleShift row
+    shiftRowGap: 2,           // space-y-0.5
+    shiftDivider: 1,          // divide-y border
+    shiftGroupBorder: 2,      // 1px top + 1px bottom
+    shiftGroupGap: 2,         // space-y-0.5 between groups
+    shiftGroupHeader: 18,     // project header
+    basePadding: 12,          // breathing room top/bottom
+    safetyPadding: 4,         // extra safety margin
+})
+
+function outerHeightWithMargin(el: HTMLElement): number {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    const mt = parseFloat(cs.marginTop || '0')
+    const mb = parseFloat(cs.marginBottom || '0')
+    return r.height + mt + mb
+}
+
+/** Measure real DOM heights for baseline metrics – samples up to 10 elements per selector */
+async function measureBaselineMetrics() {
+    await nextTick()
+    const root =
+        shiftGridRef.value?.getViewportEl?.() ??
+        shiftGridRef.value?.viewportEl?.value ??
+        null
+    if (!root) return
+
+    const measureMax = (selector: string, measurer: (el: HTMLElement) => number, count = 10): number | null => {
+        const els = root.querySelectorAll(selector) as NodeListOf<HTMLElement>
+        if (!els.length) return null
+        let max = 0
+        const limit = Math.min(els.length, count)
+        for (let i = 0; i < limit; i++) {
+            const v = measurer(els[i])
+            if (v > max) max = v
+        }
+        return max
+    }
+
+    const pg = measureMax('[data-sp-pgbar]', outerHeightWithMargin)
+    if (pg !== null) cellMetrics.pgBarWithMb = pg
+
+    const evWrap = measureMax('[data-sp-eventwrap]', outerHeightWithMargin)
+    if (evWrap !== null) {
+        cellMetrics.eventWithMb = evWrap
+        cellMetrics.eventOnlyMb = 4 // mb-1 (Tailwind)
+    }
+
+    const sr = measureMax('[data-sp-shiftrow]', el => el.getBoundingClientRect().height)
+    if (sr !== null) cellMetrics.shiftRow = sr
+
+    const gh = measureMax('[data-sp-shiftgroupheader]', el => el.getBoundingClientRect().height)
+    if (gh !== null) cellMetrics.shiftGroupHeader = gh
+
+    // After measuring, recompute row heights
+    recomputeRowHeights()
+}
+
+// --- CellSummary cache ---
+type CellSummary = {
+    pgGroupCount: number
+    eventRenderedCount: number
+    eventPlaceholderCount: number
+    shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
+}
+
+const cellSummaryCache = new Map<string, CellSummary>()
+
+function summarizeCell(room: any, dayKey: string): CellSummary {
+    const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
+    const roomVersion = room.__v ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
+
+    const cached = cellSummaryCache.get(cacheKey)
+    if (cached) return cached
+
+    const events = getRoomDayEvents(room, dayKey)
+    const shifts = getRoomDayShifts(room, dayKey)
+    const showProjectGroups = displayProjectGroups.value
+
+    let pgGroupCount = 0
+    let eventRenderedCount = 0
+    let eventPlaceholderCount = 0
+
+    if (showProjectGroups && events.length) {
+        const groups = getAllProjectGroupsInEventsByDay(events)
+        pgGroupCount = groups.length
+    }
+
+    for (const event of events) {
+        if (!checkIfEventHasShiftsToDisplay(event)) {
+            eventRenderedCount++
+        } else {
+            eventPlaceholderCount++
+        }
+    }
+
+    const shiftGroupsRaw = groupShiftsByProject(shifts, dayKey)
+    const shiftGroups = shiftGroupsRaw.map(g => ({
+        hasProject: !!g.project,
+        shiftCount: g.shifts.length,
+    }))
+
+    const summary: CellSummary = { pgGroupCount, eventRenderedCount, eventPlaceholderCount, shiftGroups }
+    cellSummaryCache.set(cacheKey, summary)
+    return summary
+}
+
+/** Compute pixel height from a CellSummary + current metrics */
+function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetrics): number {
+    let h = metrics.basePadding
+
+    // Projektgruppenbars
+    h += summary.pgGroupCount * metrics.pgBarWithMb
+
+    // Events
+    h += summary.eventRenderedCount * metrics.eventWithMb
+    h += summary.eventPlaceholderCount * metrics.eventOnlyMb
+
+    // Shiftgruppen
+    const groups = summary.shiftGroups
+    groups.forEach((group, gi) => {
+        if (gi > 0) h += metrics.shiftGroupGap
+
+        h += metrics.shiftGroupBorder
+
+        if (group.hasProject) h += metrics.shiftGroupHeader
+
+        const n = group.shiftCount
+        if (n > 0) {
+            h += n * metrics.shiftRow
+            if (n > 1) {
+                h += (n - 1) * (metrics.shiftRowGap + metrics.shiftDivider)
+            }
+        }
+    })
+
+    const minHeight = 112
+    return Math.max(minHeight, Math.ceil(h + metrics.safetyPadding))
+}
+
+// --- Row heights with debounce ---
+const shiftRowHeights = ref<number[]>([])
+
+let _recomputeRaf: number | null = null
+let _recomputeTimer: ReturnType<typeof setTimeout> | null = null
+
+function recomputeRowHeights() {
+    if (_recomputeTimer) clearTimeout(_recomputeTimer)
+    _recomputeTimer = setTimeout(() => {
+        if (_recomputeRaf) cancelAnimationFrame(_recomputeRaf)
+        _recomputeRaf = requestAnimationFrame(() => {
+            if (!expandDays.value) {
+                shiftRowHeights.value = []
+                return
+            }
+
+            const rooms = shiftPlanArrayRef.value
+            const dayList = days.value ?? []
+            const result: number[] = []
+
+            for (const room of rooms) {
+                let maxH = 0
+                for (const day of dayList) {
+                    if (day.isExtraRow) continue
+                    const summary = summarizeCell(room, day.fullDay)
+                    const h = computeHeightFromSummary(summary, cellMetrics)
+                    if (h > maxH) maxH = h
+                }
+                result.push(maxH)
+            }
+
+            shiftRowHeights.value = result
+        })
+    }, 80)
+}
+
+// Trigger recompute + measurement on relevant changes
+watch(
+    () => [
+        expandDays.value,
+        displayProjectGroups.value,
+        shiftPlanArrayRef.value,
+        days.value,
+    ],
+    () => {
+        cellSummaryCache.clear()
+        if (expandDays.value) {
+            measureBaselineMetrics()
+        } else {
+            shiftRowHeights.value = []
+        }
+    },
+    { immediate: true, deep: false },
+)
+
+// Also measure after cellMetrics change (reactive trigger from measurement itself)
+watch(
+    () => ({ ...cellMetrics }),
+    () => {
+        if (expandDays.value) {
+            recomputeRowHeights()
+        }
+    },
 )
 
 
@@ -1202,16 +1426,49 @@ type ShiftGroup = {
     shifts: any[]
 }
 
-/** Resolve events for a room+day from eventsById + content[day].eventIds (Option B deduplication) */
+/** Resolve events for a room+day – handles both embedded arrays and ID-based lookup */
 function getRoomDayEvents(room: any, day: string): any[] {
-    if (!room?.eventsById || !room?.content?.[day]?.eventIds) return []
-    return room.content[day].eventIds.map((id: number) => room.eventsById[id]).filter(Boolean)
+    const cell = room?.content?.[day]
+    if (!cell) return []
+
+    // Option A: direkt eingebettet
+    if (Array.isArray(cell.events)) return cell.events.filter(Boolean)
+    if (Array.isArray(cell.event_items)) return cell.event_items.filter(Boolean)
+
+    // Option B: IDs + eventsById
+    const ids =
+        cell.eventIds ??
+        cell.event_ids ??
+        cell.eventIDs ??
+        []
+
+    if (Array.isArray(ids) && room?.eventsById) {
+        return ids.map((id: number) => room.eventsById[id]).filter(Boolean)
+    }
+
+    return []
 }
 
-/** Resolve shifts for a room+day from shiftsById + content[day].shiftIds (Option B deduplication) */
+/** Resolve shifts for a room+day – handles both embedded arrays and ID-based lookup */
 function getRoomDayShifts(room: any, day: string): any[] {
-    if (!room?.shiftsById || !room?.content?.[day]?.shiftIds) return []
-    return room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
+    const cell = room?.content?.[day]
+    if (!cell) return []
+
+    // Option A: direkt eingebettet
+    if (Array.isArray(cell.shifts)) return cell.shifts.filter(Boolean)
+
+    // Option B: IDs + shiftsById
+    const ids =
+        cell.shiftIds ??
+        cell.shift_ids ??
+        cell.shiftIDs ??
+        []
+
+    if (Array.isArray(ids) && room?.shiftsById) {
+        return ids.map((id: number) => room.shiftsById[id]).filter(Boolean)
+    }
+
+    return []
 }
 
 function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
@@ -1284,11 +1541,27 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     const groups = Array.from(groupsMap.values())
 
     // 2) Schichten innerhalb der Gruppe zeitlich sortieren
+    // Craft-Position-Lookup aus craftsResolved für sekundäre Sortierung
+    const craftPositionMap = new Map<number, number>()
+    for (const c of craftsResolved.value ?? []) {
+        if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
+    }
+    const getCraftPosition = (shift: any): number => {
+        const craftId = shift?.craft?.id ?? shift?.craft_id
+        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
+        return shift?.craft?.position ?? 9999
+    }
+
     for (const g of groups) {
         g.shifts.sort((a: any, b: any) => {
             const aStart = getShiftStartMs(a)
             const bStart = getShiftStartMs(b)
             if (aStart !== bStart) return aStart - bStart
+
+            // Bei gleicher Startzeit: Craft-Position aus Settings
+            const aPos = getCraftPosition(a)
+            const bPos = getCraftPosition(b)
+            if (aPos !== bPos) return aPos - bPos
 
             const aEnd = getShiftEndMs(a)
             const bEnd = getShiftEndMs(b)
@@ -1431,6 +1704,11 @@ async function initializeShiftPlan() {
 onMounted(async () => {
     await initializeShiftPlan()
 
+    // Trigger baseline measurement after data is loaded (if expand_days active)
+    if (expandDays.value) {
+        measureBaselineMetrics()
+    }
+
     // Load crafts asynchronously for shift plan
     try {
         const { data } = await axios.get(route('shifts.crafts'))
@@ -1440,6 +1718,27 @@ onMounted(async () => {
     }
 
     await loadShiftPlanWorkers()
+
+    // Dev-only: overflow debug check for visible cells
+    if (import.meta.env.DEV && expandDays.value) {
+        setTimeout(async () => {
+            await nextTick()
+            const root = shiftGridRef.value?.getViewportEl?.() ?? null
+            if (!root) return
+            const cells = root.querySelectorAll('.cell') as NodeListOf<HTMLElement>
+            const limit = Math.min(cells.length, 20)
+            for (let i = 0; i < limit; i++) {
+                const el = cells[i]
+                if (el.scrollHeight > el.clientHeight + 1) {
+                    console.warn('[ShiftPlan] Overflow detected:', {
+                        scrollHeight: el.scrollHeight,
+                        clientHeight: el.clientHeight,
+                        diff: el.scrollHeight - el.clientHeight,
+                    })
+                }
+            }
+        }, 500)
+    }
 
     document.addEventListener('fullscreenchange', () => {
         isFullscreen.value = !!document.fullscreenElement
@@ -1584,7 +1883,7 @@ function getDayServicesForCell(worker: any, day: any) {
 
 function changeDailyViewMode() {
     router.patch(
-        route('user.update.daily_view', usePage().props.auth.user.id),
+        route('user.update.daily_view', authUser.value.id),
         {daily_view: dailyViewMode.value},
         {preserveScroll: false, preserveState: false},
     )
@@ -1613,7 +1912,7 @@ function getAllProjectGroupsInEventsByDay(events: any[]) {
 
 function checkIfUserIsAdminOrInGroup(group: any) {
     if ((getCurrentInstance()?.proxy as any)?.hasAdminRole?.()) return false
-    return !group.userIds?.includes(usePage().props.auth.user.id)
+    return !group.userIds?.includes(authUser.value.id)
 }
 
 function initializeCalendarMultiEditSave() {
@@ -2110,7 +2409,7 @@ function calculateTopPositionOfUserOverView() {
 }
 
 function checkIfEventHasShiftsToDisplay(event: any) {
-    const showCrafts = usePage().props.auth.user?.show_crafts
+    const showCrafts = authUser.value?.show_crafts
     if (!showCrafts || showCrafts.length === 0) return event.shifts?.length > 0
     return event.shifts?.length > 0 && event.shifts.some((s: any) => showCrafts.includes(s.craft.id))
 }
@@ -2167,7 +2466,7 @@ function calculateDateDifference() {
 
 function updateTimes() {
     router.patch(
-        route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
+        route('update.user.shift.calendar.filter.dates', authUser.value.id),
         {start_date: props.dateValue[0], end_date: props.dateValue[1]},
         {preserveScroll: true, preserveState: false},
     )
@@ -2182,7 +2481,7 @@ function showCloseUserOverview() {
 }
 
 function selectGoToMode(direction: 'next' | 'previous') {
-    const gotoMode = usePage().props.auth.user.goto_mode
+    const gotoMode = authUser.value.goto_mode
     scrollToPeriod(gotoMode, direction)
 }
 
@@ -2318,8 +2617,8 @@ function toggleDayServiceMode() {
 
 function toggleCompactMode() {
     router.post(
-        route('user.compact.mode.toggle', {user: usePage().props.auth.user.id}),
-        {compact_mode: usePage().props.auth.user.compact_mode},
+        route('user.compact.mode.toggle', {user: authUser.value.id}),
+        {compact_mode: compactMode.value},
         {preserveScroll: true, preserveState: true},
     )
 }
@@ -2517,25 +2816,25 @@ function changeCraftVisibility(id: number) {
     }
 
     router.patch(
-        route('user.update.open.crafts', {user: usePage().props.auth.user.id}),
+        route('user.update.open.crafts', {user: authUser.value.id}),
         {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
         {preserveState: true, preserveScroll: true},
     )
 }
 
 function applySort(shiftPlanWorkerSortEnumName: string) {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
+    authUser.value.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: shiftPlanWorkerSortEnumName},
         {preserveState: true, preserveScroll: true},
     )
 }
 
 function resetSort() {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = null
+    authUser.value.shift_plan_user_sort_by_id = null
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: null},
         {preserveState: false, preserveScroll: true},
     )
@@ -2799,7 +3098,7 @@ function saveShiftQualificationFilter(event: any) {
     }
 
     router.patch(
-        route('user.update.show_shift-qualifications', {user: usePage().props.auth.user.id}),
+        route('user.update.show_shift-qualifications', {user: authUser.value.id}),
         {show_qualifications: list},
         {preserveScroll: true, preserveState: true},
     )
@@ -2824,9 +3123,14 @@ function clearHighlightSelection() {
 
 
 <style scoped>
+/* cell scrollbar styling – only applied when NOT expand_days (overflow-y-auto) */
 .cell {
-    overflow: auto;
+    scrollbar-color: #d4d4d4 #f3f3f3;
+    scrollbar-width: thin;
 }
+.cell::-webkit-scrollbar { width: 2px !important; height: 2px !important; }
+.cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
+.cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
 
 .stickyHeader {
     position: sticky;

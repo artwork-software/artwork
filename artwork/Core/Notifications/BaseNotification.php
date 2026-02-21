@@ -61,6 +61,16 @@ class BaseNotification extends Notification implements ShouldBroadcast
         return $channels;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function viaQueues(): array
+    {
+        return [
+            'mail' => 'sync',
+        ];
+    }
+
     public function toArray(): stdClass
     {
         return $this->notificationData;

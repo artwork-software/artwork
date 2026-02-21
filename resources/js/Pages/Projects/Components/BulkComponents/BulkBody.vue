@@ -23,7 +23,7 @@
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/80 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80"
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/80 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80 w-fit mx-auto"
         >
             <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch
@@ -109,7 +109,7 @@
         </div>
         <!-- Header + Events (horizontal scroll container) -->
         <div ref="bulkScrollContainer" class="overflow-x-auto w-full" @scroll="onMainScroll">
-            <div class="min-w-max">
+            <div class="w-fit mx-auto">
                 <!-- Function bar (sticky unter ProjectHeader) -->
                 <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
                             :multi-edit="multiEdit"/>

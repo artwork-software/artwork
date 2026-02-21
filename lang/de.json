@@ -458,6 +458,7 @@
     "Absences": "Abwesenheiten",
     "Registered availability": "Eingetragene Verfügbarkeit",
     "No entry has yet been made for this day.": "Für diesen Tag wurde noch keine Eintragung hinterlegt.",
+    "No entry has yet been made for this month.": "Für diesen Monat wurde noch keine Eintragung hinterlegt.",
     "Edit availability & absence": "Verfügbarkeit & Abwesenheit bearbeiten",
     "Planned/target": "Geplant/Soll",
     "Planned": "Geplant",
@@ -3960,5 +3961,8 @@
     "Filter by type": "Filter nach Art",
     "Filter by time": "Filter nach Zeit",
     "Other filters": "Sonstige Filter",
-    "Only projects where you are in the project team": "Nur Projekte in denen du im Projektteam bist"
+    "Only projects where you are in the project team": "Nur Projekte in denen du im Projektteam bist",
+    "Distance": "Abstand",
+    "Shift description": "Schichtbeschreibung",
+    "Add or edit a description for this shift.": "Beschreibung für diese Schicht hinzufügen oder bearbeiten."
 }

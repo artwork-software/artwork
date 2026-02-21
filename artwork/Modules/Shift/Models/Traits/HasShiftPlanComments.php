@@ -26,7 +26,7 @@ trait HasShiftPlanComments
             });
         } else {
             $comments = $this->shiftPlanComments()
-                ->select(['id', 'comment', 'date'])
+                ->select(['id', 'comment', 'date', 'created_by', 'commentable_type', 'commentable_id'])
                 ->whereBetween('date', [$start, $end])
                 ->get();
         }
@@ -38,6 +38,7 @@ trait HasShiftPlanComments
                 'id' => $comment->id,
                 'comment' => $comment->comment,
                 'date' => $comment->date,
+                'created_by' => $comment->created_by,
             ];
         }
 

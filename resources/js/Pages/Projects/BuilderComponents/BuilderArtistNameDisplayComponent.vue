@@ -1,11 +1,7 @@
 <template>
-    <div class="space-y-1">
-        <div class="text-[11px] font-semibold uppercase tracking-wide text-secondary">
-            {{ $t('Artists') }}
-        </div>
-        <div class="font-lexend font-black tracking-wide text-sm text-primary">
-            <span v-if="artistText">{{ artistText }}</span>
-            <span v-else class="text-secondary text-xs font-normal">{{ $t('No entries') }}</span>
+    <div>
+        <div v-if="artistText" class="font-lexend font-black tracking-wide text-sm text-primary truncate">
+            {{ artistText }}
         </div>
     </div>
 </template>
@@ -24,7 +20,7 @@ const props = defineProps({
     },
 })
 
-const artistText = computed(() => props.project?.artists || '')
+const artistText = computed(() => props.project?.artist_name || '')
 </script>
 
 <style scoped>

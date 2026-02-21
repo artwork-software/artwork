@@ -61,6 +61,18 @@
             </tr>
             </tbody>
         </table>
+
+        <!-- Legende -->
+        <div class="flex items-center gap-4 mt-2 px-2 text-xs text-zinc-500">
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block w-4 h-4 rounded-full ring-2 ring-zinc-700"></span>
+                <span>{{ $t('Availability') }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block w-4 h-4 rounded-none ring-2 ring-zinc-700"></span>
+                <span>{{ $t('Absence') }}</span>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -143,10 +155,15 @@ const dayButtonClasses = (day) => {
     // Optional bekannte Flags (falls vorhanden)
     if (day.notInMonth) {
         classes.push('text-zinc-400')
+    } else if (day.onVacation && day.hasAvailability) {
+        // Both present: square border (vacation takes priority) with thicker ring
+        classes.push('text-zinc-700 ring-[3px] ring-zinc-700 !rounded-none')
     } else if (day.onVacation) {
-        classes.push('text-rose-600')
+        // Square border for vacation/absence
+        classes.push('text-zinc-700 ring-2 ring-zinc-700 !rounded-none')
     } else if (day.hasAvailability) {
-        classes.push('text-blue-600')
+        // Round border for availability
+        classes.push('text-zinc-700 ring-2 ring-zinc-700 !rounded-full')
     } else {
         classes.push('text-zinc-700')
     }

@@ -1,25 +1,46 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Project properties') }}</h3>
-        <div v-for="(category, index) in project.attributes" :key="index">
-            <div v-if="category.length > 0" class="mb-2">
-                <h4 class="xsDark mb-1">{{ $t(index) }}</h4>
-                <div class="flex items-center flex-wrap gap-2">
-                    <div v-for="(attribute, attrIndex) in category" :key="attrIndex" class="inline-flex items-center bg-white rounded-full border border-gray-100 pr-3">
-                        <div class="inline-block size-7 rounded-full" :style="{ backgroundColor: attribute.color}" />
-                        <div class="mx-2">
-                            <p class="xsDark">{{ attribute.name }}</p>
+        <div v-if="allAttributes.length > 0" class="flex items-center flex-wrap gap-1">
+            <div
+                v-for="(attribute, index) in visibleAttributes"
+                :key="index"
+                class="inline-flex items-center rounded-full border border-gray-100 pr-2"
+            >
+                <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attribute.color }" />
+                <span class="ml-1 text-xs text-secondary truncate max-w-[6rem]">{{ attribute.name }}</span>
+            </div>
+            <div v-if="overflowAttributes.length > 0" class="relative" @click.stop>
+                <button
+                    type="button"
+                    class="inline-flex items-center justify-center size-6 rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 transition"
+                    @click="showOverflow = !showOverflow"
+                >
+                    +{{ overflowAttributes.length }}
+                </button>
+                <div
+                    v-if="showOverflow"
+                    class="absolute z-50 mt-1 left-0 bg-white border border-zinc-200 rounded-lg shadow-lg p-3 min-w-[14rem] max-w-[20rem]"
+                >
+                    <div class="flex flex-wrap gap-1.5">
+                        <div
+                            v-for="(attr, i) in overflowAttributes"
+                            :key="i"
+                            class="inline-flex items-center rounded-full border border-gray-100 pr-2"
+                        >
+                            <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attr.color }" />
+                            <span class="ml-1 text-xs text-secondary">{{ attr.name }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-if="!project.attributes || Object.keys(project.attributes).length === 0" class="text-sm text-secondary">
-            {{ $t('No entries') }}
-        </div>
     </div>
 </template>
 <script setup>
+import { computed, ref } from "vue";
+
+const MAX_VISIBLE = 3;
+
 const props = defineProps({
     project: {
         type: Object,
@@ -29,7 +50,21 @@ const props = defineProps({
         type: Object,
         required: false,
     },
-})
+});
+
+const showOverflow = ref(false);
+
+const allAttributes = computed(() => {
+    if (!props.project.attributes) return [];
+    const attrs = [];
+    for (const category of Object.values(props.project.attributes)) {
+        if (Array.isArray(category)) {
+            attrs.push(...category);
+        }
+    }
+    return attrs;
+});
+
+const visibleAttributes = computed(() => allAttributes.value.slice(0, MAX_VISIBLE));
+const overflowAttributes = computed(() => allAttributes.value.slice(MAX_VISIBLE));
 </script>
-<style scoped>
-</style>

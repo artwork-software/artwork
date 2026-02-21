@@ -138,6 +138,12 @@ readonly class FreelancerService
         [$startDate, $endDate] = $userService->getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(
             $userService->getAuthUser()
         );
+
+        // Derive the displayed calendar month from the filter start date (always in sync with the calendar)
+        $calendarMonth = $startDate->copy()->startOfMonth();
+        // Override $month so getAvailabilityData uses the same month
+        $month = $startDate->format('Y-m-d');
+
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($startDate, $endDate)->map(
                 function (Carbon $date) {
@@ -180,8 +186,8 @@ readonly class FreelancerService
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
             ->setCreateShowDate(
                 [
-                    $selectedPeriodDate->isoFormat('MMMM YYYY'),
-                    $selectedPeriodDate->copy()->startOfMonth()->toDate()
+                    $calendarMonth->copy()->locale($selectedPeriodDate->locale)->isoFormat('MMMM YYYY'),
+                    $calendarMonth->copy()->startOfMonth()->toDate()
                 ]
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
@@ -214,9 +220,9 @@ readonly class FreelancerService
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setProjects($projectService->getAll())
-            ->setVacations($this->getVacationsByDateOrderedByDateAscending($freelancer, $selectedDate))
+            ->setVacations($this->getVacationsByMonthOrderedByDateAscending($freelancer, $calendarMonth))
             ->setShifts($this->getShiftsWithEventsOrderedByStart($freelancer))
-            ->setAvailabilities($this->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $selectedDate))
+            ->setAvailabilities($this->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $calendarMonth))
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setFirstProjectShiftTabId(
                 $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
@@ -230,9 +236,19 @@ readonly class FreelancerService
         return $this->freelancerRepository->getVacationsByDateOrderedByDateAscending($freelancer, $date);
     }
 
+    public function getVacationsByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
+    {
+        return $this->freelancerRepository->getVacationsByMonthOrderedByDateAscending($freelancer, $monthDate);
+    }
+
     public function getAvailabilitiesByDateOrderedByDateAscending(int|Freelancer $freelancer, Carbon $date): Collection
     {
         return $this->freelancerRepository->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $date);
+    }
+
+    public function getAvailabilitiesByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
+    {
+        return $this->freelancerRepository->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $monthDate);
     }
 
     public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection

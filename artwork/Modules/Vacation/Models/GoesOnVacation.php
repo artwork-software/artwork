@@ -17,6 +17,7 @@ trait GoesOnVacation
         return $this->vacations->map(fn(Vacation $vacation) => [
             'date' => Carbon::parse($vacation->date)->toDateString(),
             'type' => $vacation->type,
+            'created_by' => $vacation->created_by,
         ])->toArray();
     }
 }

@@ -77,10 +77,11 @@ export default {
     props: ['user', 'id', 'height', 'width','type'],
     setup() {
         const { hasAdminRole } = usePermission(usePage().props);
+        return { hasAdminRole };
     },
     computed: {
         canViewUserInfo() {
-            return hasAdminRole() ||
+            return this.hasAdminRole() ||
                 can('can manage workers') ||
                 can('can view private user info');
         }

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
@@ -106,68 +107,76 @@ class WorkingHourService
     private function precomputeShiftMinutesForDays(User|Freelancer|ServiceProvider $user, Carbon $startDate, Carbon $endDate): array
     {
         $shiftMinutesPerDay = [];
-        $startTimestamp = $startDate->copy()->startOfDay()->timestamp;
-        $endTimestamp = $endDate->copy()->endOfDay()->timestamp;
+        $rangeStartTimestamp = strtotime($startDate->toDateString() . ' 00:00:00');
+        $rangeEndTimestamp = strtotime($endDate->toDateString() . ' 23:59:59');
 
-        // Initialisiere alle Tage mit 0
-        $current = $startDate->copy()->startOfDay();
-        while ($current->lte($endDate)) {
-            $shiftMinutesPerDay[$current->toDateString()] = 0;
-            $current->addDay();
+        // Precompute day timestamps for the entire range
+        $dayTimestamps = [];
+        $ts = $rangeStartTimestamp;
+        while ($ts <= $rangeEndTimestamp) {
+            $dateStr = date('Y-m-d', $ts);
+            $shiftMinutesPerDay[$dateStr] = 0;
+            $dayTimestamps[$dateStr] = [
+                'start' => $ts,
+                'end' => strtotime($dateStr . ' 23:59:59'),
+            ];
+            $ts += 86400;
         }
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
-            // 1) Datum/Zeit aus Pivot ODER aus Shift-Model
-            $startDateStr = $pivot->start_date ?? $shift->start_date ?? null;
-            $endDateStr   = $pivot->end_date   ?? $shift->end_date   ?? null;
+            $sDateStr = $pivot->start_date ?? $shift->start_date ?? null;
+            $eDateStr = $pivot->end_date   ?? $shift->end_date   ?? null;
+            $sTimeStr = $pivot->start_time ?? $shift->start ?? null;
+            $eTimeStr = $pivot->end_time   ?? $shift->end   ?? null;
 
-            // Achtung: im Shift-Model heißen sie start/end, im Pivot start_time/end_time
-            $startTimeStr = $pivot->start_time ?? $shift->start ?? null;
-            $endTimeStr   = $pivot->end_time   ?? $shift->end   ?? null;
-
-            if (!$startDateStr || !$startTimeStr || !$endDateStr || !$endTimeStr) {
+            if (!$sDateStr || !$sTimeStr || !$eDateStr || !$eTimeStr) {
                 continue;
             }
 
-            $shiftStart = Carbon::parse($startDateStr)->setTimeFromTimeString(Carbon::parse($startTimeStr)->toTimeString());
-            $shiftEnd   = Carbon::parse($endDateStr)->setTimeFromTimeString(Carbon::parse($endTimeStr)->toTimeString());
+            // Extract time portion — handle both "H:i:s" and Carbon-castable formats
+            $sTime = (is_string($sTimeStr) && preg_match('/\d{2}:\d{2}/', $sTimeStr))
+                ? substr($sTimeStr, 0, 8)
+                : date('H:i:s', strtotime((string) $sTimeStr));
+            $eTime = (is_string($eTimeStr) && preg_match('/\d{2}:\d{2}/', $eTimeStr))
+                ? substr($eTimeStr, 0, 8)
+                : date('H:i:s', strtotime((string) $eTimeStr));
 
+            $shiftStartTs = strtotime("{$sDateStr} {$sTime}");
+            $shiftEndTs   = strtotime("{$eDateStr} {$eTime}");
 
-            if ($shiftEnd->timestamp < $startTimestamp || $shiftStart->timestamp > $endTimestamp) {
+            if ($shiftEndTs < $rangeStartTimestamp || $shiftStartTs > $rangeEndTimestamp) {
                 continue;
             }
 
-            $breakMinutes = (int)($shift->break_minutes ?? 0);
+            $breakMinutes = (int) ($shift->break_minutes ?? 0);
 
-            $shiftStartDay = $shiftStart->copy()->startOfDay();
-            $shiftEndDay = $shiftEnd->copy()->startOfDay();
+            // Determine affected day range
+            $firstDayStr = date('Y-m-d', max($shiftStartTs, $rangeStartTimestamp));
+            $lastDayStr  = date('Y-m-d', min($shiftEndTs, $rangeEndTimestamp));
 
-            $dayStart = max($shiftStartDay, $startDate->copy()->startOfDay());
-            $dayEnd = min($shiftEndDay, $endDate->copy()->startOfDay());
-
-            // Iteriere nur über betroffene Tage
-            $currentDay = $dayStart->copy();
+            $dayTs = strtotime($firstDayStr);
+            $lastDayTs = strtotime($lastDayStr);
             $breakAlreadyDeducted = false;
-            while ($currentDay->lte($dayEnd)) {
-                $dateStr = $currentDay->toDateString();
-                $dayStartTimestamp = $currentDay->timestamp;
-                $dayEndTimestamp = $currentDay->copy()->endOfDay()->timestamp;
 
-                $workStartTimestamp = max($shiftStart->timestamp, $dayStartTimestamp);
-                $workEndTimestamp = min($shiftEnd->timestamp, $dayEndTimestamp);
+            while ($dayTs <= $lastDayTs) {
+                $dateStr = date('Y-m-d', $dayTs);
+                $dayStartTimestamp = $dayTimestamps[$dateStr]['start'] ?? $dayTs;
+                $dayEndTimestamp   = $dayTimestamps[$dateStr]['end'] ?? ($dayTs + 86399);
+
+                $workStartTimestamp = max($shiftStartTs, $dayStartTimestamp);
+                $workEndTimestamp   = min($shiftEndTs, $dayEndTimestamp);
 
                 if ($workStartTimestamp < $workEndTimestamp) {
-                    $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60);
-                    // Bei mehrtägigen Schichten: Pause nur einmal (am ersten Tag) abziehen
+                    $duration = (int) (($workEndTimestamp - $workStartTimestamp) / 60);
                     if (!$breakAlreadyDeducted) {
                         $duration -= $breakMinutes;
                         $breakAlreadyDeducted = true;
                     }
-                    $shiftMinutesPerDay[$dateStr] += max(0, $duration);
+                    $shiftMinutesPerDay[$dateStr] = ($shiftMinutesPerDay[$dateStr] ?? 0) + max(0, $duration);
                 }
 
-                $currentDay->addDay();
+                $dayTs += 86400;
             }
         }
 
@@ -289,6 +298,19 @@ class WorkingHourService
 
         $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
 
+        // Batch-load all availabilities in one query instead of N+1
+        $availabilitiesByUser = collect();
+        if ($addVacationsAndAvailabilities) {
+            $workerIds = $workers->pluck('id')->all();
+            $availabilitiesByUser = Availability::query()
+                ->where('available_type', User::class)
+                ->whereIn('available_id', $workerIds)
+                ->betweenDates($startDate, $endDate)
+                ->get()
+                ->groupBy('available_id')
+                ->map(fn ($availabilities) => $availabilities->groupBy('formatted_date'));
+        }
+
         $usersWithPlannedWorkingHours = [];
 
         /** @var User $user */
@@ -312,12 +334,7 @@ class WorkingHourService
             );
 
             if ($addVacationsAndAvailabilities) {
-                $userData['availabilities'] = $this->userRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $user,
-                        $startDate,
-                        $endDate
-                    );
+                $userData['availabilities'] = $availabilitiesByUser->get($user->id, collect());
             }
 
             $usersWithPlannedWorkingHours[] = $userData;
@@ -425,24 +442,15 @@ class WorkingHourService
             ];
         }
 
-        // Precompute shift minutes for all days for all users
-        $allShiftMinutes = [];
-        foreach ($users as $user) {
-            $allShiftMinutes[$user->id] = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
-        }
-
-        // Precompute workTime patterns for all User instances
-        $allWorkTimePatterns = [];
-        foreach ($users as $user) {
-            if ($user instanceof User) {
-                $allWorkTimePatterns[$user->id] = $this->precomputeWorkTimePatterns($user, $startDate, $endDate);
-            }
-        }
-
-        // Process each user
+        // Process each user — precompute shift minutes, workTime patterns, and weekly hours in one loop
         foreach ($users as $user) {
             $userId = $user->id;
             $weeklyWorkingHoursCache[$userId] = [];
+
+            $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
+            $workTimePatterns = ($user instanceof User)
+                ? $this->precomputeWorkTimePatterns($user, $startDate, $endDate)
+                : null;
 
             // Create a map of vacations per day to identify OFF_WORK days
             $offWorkDays = collect();
@@ -478,12 +486,6 @@ class WorkingHourService
                 }
                 $bookingsPerDay[$bookingDay] += $booking->worked_hours;
             }
-
-            // Get shift minutes for this user
-            $shiftMinutesPerDay = $allShiftMinutes[$userId];
-
-            // Get workTime patterns for this user (if User instance)
-            $workTimePatterns = $allWorkTimePatterns[$userId] ?? null;
 
             // Process each week
             foreach ($weekPeriods as $weekPeriod) {

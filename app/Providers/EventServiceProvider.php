@@ -52,7 +52,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Budget model observers for automatic cache invalidation
         $budgetObserver = BudgetModelObserver::class;
         ColumnCell::observe($budgetObserver);
         SubPositionRow::observe($budgetObserver);
@@ -63,7 +62,6 @@ class EventServiceProvider extends ServiceProvider
         SageAssignedData::observe($budgetObserver);
         SageNotAssignedData::observe($budgetObserver);
 
-        // Static lookup observers
         $staticObserver = StaticLookupObserver::class;
         ContractType::observe($staticObserver);
         CompanyType::observe($staticObserver);

@@ -93,11 +93,9 @@ class BudgetGeneralController extends Controller
     {
         $column->update(['relevant_for_project_groups' => !$column->relevant_for_project_groups]);
 
-        // set relevant_for_project_groups in other columns to false
         if ($column->relevant_for_project_groups) {
             $column->table->columns()->where('id', '!=', $column->id)->update(['relevant_for_project_groups' => false]);
 
-            // Mass update bypasses model observers, so manually invalidate cache
             $projectId = $column->table->project_id;
             if ($projectId) {
                 BudgetUpdated::dispatch($projectId);

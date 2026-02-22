@@ -144,6 +144,7 @@
                                                   @open-error-modal="openErrorModal"
                                                   @openDeleteModal="openDeleteModal"
                                                   @openSageAssignedDataModal="openSageAssignedDataModal"
+                                                  @budget-updated="handleBudgetUpdated"
                                                   :main-position="mainPosition"
                                                   :all-main-positions="table.main_positions"
                                                   :sub-position="subPosition"

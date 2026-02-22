@@ -36,14 +36,7 @@ class Table extends Model
         'is_template' => 'boolean'
     ];
 
-    protected $appends = [
-        'costSums',
-        'earningSums',
-        'commentedCostSums',
-        'commentedEarningSums',
-        'costSumDetails',
-        'earningSumDetails'
-    ];
+    protected $appends = [];
 
     public function columns(): HasMany
     {
@@ -125,32 +118,47 @@ class Table extends Model
             ]);
     }
 
-    public function getCostSumDetailsAttribute(): Collection
+    public function getCostSumDetailsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         return $this->sumDetails("COST");
     }
 
-    public function getEarningSumDetailsAttribute(): Collection
+    public function getEarningSumDetailsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         return $this->sumDetails("EARNING");
     }
 
-    public function getCostSumsAttribute(): Collection
+    public function getCostSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_COST')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getEarningSumsAttribute(): Collection
+    public function getEarningSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_EARNING')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getCommentedCostSumsAttribute(): Collection
+    public function getCommentedCostSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this
             ->mainPositions()
             ->where('type', 'BUDGET_TYPE_COST')
@@ -159,8 +167,11 @@ class Table extends Model
         return $this->calculateCommentedSums($mainPositionIds);
     }
 
-    public function getCommentedEarningSumsAttribute(): Collection
+    public function getCommentedEarningSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this
             ->mainPositions()
             ->where('type', 'BUDGET_TYPE_EARNING')

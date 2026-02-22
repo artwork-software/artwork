@@ -6,6 +6,7 @@ export default {
     name: "SageDataDropElement",
     components: {SageDropMultipleDataSelectModal},
     props: ['row', 'tableId', 'subPositionId'],
+    emits: ['budget-updated'],
     data(){
         return {
             isDragOver: false,
@@ -36,6 +37,7 @@ export default {
                 }, {
                     preserveScroll: true,
                     preserveState: true,
+                    onSuccess: () => this.$emit('budget-updated'),
                 });
             }
 
@@ -57,6 +59,7 @@ export default {
                     }, {
                         preserveState: true,
                         preserveScroll: true,
+                        onSuccess: () => this.$emit('budget-updated'),
                     });
                 }
             }
@@ -67,5 +70,5 @@ export default {
 
 <template>
     <div class="w-full h-1" @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave"></div>
-    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" type="dropOnRow" :cellData="DataSelect" :cell="cell" @close="showMultipleDataSelectModal = false"  />
+    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" type="dropOnRow" :cellData="DataSelect" :cell="cell" @close="showMultipleDataSelectModal = false" @budget-updated="$emit('budget-updated')" />
 </template>

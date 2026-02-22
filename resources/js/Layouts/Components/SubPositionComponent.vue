@@ -68,7 +68,7 @@
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondary-hover w-full">
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
-                                 :sub-position-id="subPosition.id"/>
+                                 :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <draggable
                 v-if="subPosition.sub_position_rows?.length > 0"
                 v-model="subPosition.sub_position_rows"
@@ -252,7 +252,7 @@
                                         <!-- Text / Content (clamped) -->
                                         <div class="min-w-0 flex-1">
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center min-w-0">
-                                                <SageDropCellElement :cell="cell" :value="toCurrencyString(cell.sage_value)" />
+                                                <SageDropCellElement :cell="cell" :value="toCurrencyString(cell.sage_value)" @budget-updated="$emit('budget-updated')" />
                                                 <SageDragCellElement
                                                     v-if="cell.sage_assigned_data.length >= 1"
                                                     :cell="cell"
@@ -373,7 +373,7 @@
 
                         </tr>
                         <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
-                                             :sub-position-id="subPosition.id"/>
+                                             :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
                         <div @click="addRowToSubPosition(subPosition, row)"
                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
                              class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
@@ -397,7 +397,7 @@
                 </div>
             </div>
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
-                                 :sub-position-id="subPosition.id"/>
+                                 :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
@@ -519,7 +519,8 @@ export default {
         'openErrorModal',
         'openCellDetailModal',
         'openSubPositionSumDetailModal',
-        'openSageAssignedDataModal'
+        'openSageAssignedDataModal',
+        'budget-updated'
     ],
     data() {
         return {

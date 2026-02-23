@@ -999,7 +999,8 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
+                            :processing="articleForm.processing"
+                            :disabled="!checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
                             (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
                             (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
                 />

@@ -140,14 +140,12 @@ class InventoryArticle extends Model
         return $this->getRelationValue('subCategory');
     }
 
-    public function getRoomAttribute(): array
+    public function getRoomAttribute(): ?array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
 
         if (!$roomProperty || !$roomProperty->pivot->value) {
-            return [
-                'name' => 'Room not found',
-            ];
+            return null;
         }
 
         // Optimierung: Verwende Relation oder eager loading statt einzelner Query
@@ -162,11 +160,7 @@ class InventoryArticle extends Model
         $room = $roomCache[$roomId];
 
         if (!$room) {
-            return [
-                'id' => $roomId,
-                'name' => 'Room not found',
-                'property_id' => $roomProperty->id,
-            ];
+            return null;
         }
 
         return [
@@ -176,14 +170,12 @@ class InventoryArticle extends Model
         ];
     }
 
-    public function getManufacturerAttribute(): array
+    public function getManufacturerAttribute(): ?array
     {
         $manufacturerProperty = $this->properties->firstWhere('type', 'manufacturer');
 
         if (!$manufacturerProperty || !$manufacturerProperty->pivot->value) {
-            return [
-                'name' => 'Manufacturer not found',
-            ];
+            return null;
         }
 
         // Optimierung: Verwende Relation oder eager loading statt einzelner Query
@@ -198,11 +190,7 @@ class InventoryArticle extends Model
         $manufacturer = $manufacturerCache[$manufacturerId];
 
         if (!$manufacturer) {
-            return [
-                'id' => $manufacturerId,
-                'name' => 'Manufacturer not found',
-                'property_id' => $manufacturerProperty->id,
-            ];
+            return null;
         }
 
         return [

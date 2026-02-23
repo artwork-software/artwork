@@ -259,6 +259,22 @@ if (can('can edit document requests') || hasAdminRole()) {
    - **PrintLayout-Komponente erstellen**: Eine Vue-Komponente `PrintLayoutBuilderYourComponent.vue` in `resources/js/Pages/Projects/BuilderComponents/` anlegen, die die Daten im Druckformat rendert. Diese Datei ist unabhängig von der gleichnamigen `BuilderYourComponent.vue` (Projektübersicht) und kann ein eigenes Layout/Styling haben.
    - **componentMapping registrieren**: Die **PrintLayout**-Komponente in `ProjectPrintLayoutWindow.vue` importieren und im `componentMapping`-Objekt registrieren. Der Key muss `"Builder" + EnumValue` sein (z.B. `BuilderArtistNameDisplayComponent` für den Enum-Wert `ArtistNameDisplayComponent`), aber der Import zeigt auf die `PrintLayoutBuilder...`-Datei.
 
+### ⚠️ Wichtig: component.id vs component.component_id in Builder-Komponenten
+
+In nicht-speziellen (custom) Builder-Komponenten wie `BuilderTextArea`, `BuilderTextField`, `BuilderCheckbox`, `BuilderDropDown`, `BuilderLinkComponent`, `BuilderLinkListComponent` muss im Frontend **immer `component.component_id`** verwendet werden, um auf Projektdaten zuzugreifen – **NICHT `component.id`**.
+
+**Hintergrund:** Die `components`-Prop enthält `ProjectManagementBuilder`-Einträge. `component.id` ist die Builder-ID, aber das Backend (`ProjectController::mapProjectsToComponents`) speichert die Werte unter `Component.id` (= `component_id` des Builders). Daher:
+
+```js
+// ✅ Richtig:
+project['TextArea']?.[component.component_id]?.data?.text
+
+// ❌ Falsch:
+project['TextArea']?.[component.id]?.data?.text
+```
+
+Dies gilt für alle Builder- **und** PrintLayoutBuilder-Dateien gleichermaßen.
+
 ---
 
 ## UI Component Snippets

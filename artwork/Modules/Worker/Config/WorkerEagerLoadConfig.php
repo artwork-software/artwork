@@ -26,6 +26,7 @@ class WorkerEagerLoadConfig
                     'shifts.end_date',
                     'shifts.start',
                     'shifts.end',
+                    'shifts.break_minutes',
                     'shifts.description',
                     'shifts.is_committed',
                     'shifts.event_start_day',

@@ -28,7 +28,7 @@ const props = defineProps({
         required: true,
     },
 })
-const componentData = computed(() => props.project['LinkList']?.[props.component.id]?.data || {})
+const componentData = computed(() => props.project['LinkList']?.[props.component.component_id]?.data || {})
 const links = computed(() => componentData.value?.links || [])
 </script>
 <style scoped>

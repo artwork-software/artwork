@@ -3924,5 +3924,6 @@
     "Only projects where you are in the project team": "Only projects where you are in the project team",
     "Distance": "Distance",
     "Shift description": "Shift description",
-    "Add or edit a description for this shift.": "Add or edit a description for this shift."
+    "Add or edit a description for this shift.": "Add or edit a description for this shift.",
+    "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.": "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar."
 }

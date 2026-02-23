@@ -24,7 +24,7 @@ const props = defineProps({
     },
 });
 const linkText = computed(() => {
-    return props.project['Link']?.[props.component.id]?.data?.text || '';
+    return props.project['Link']?.[props.component.component_id]?.data?.text || '';
 });
 </script>
 <style scoped>

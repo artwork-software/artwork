@@ -402,6 +402,7 @@ import { useTranslation } from '@/Composeables/Translation.js'
 import { ref, computed } from 'vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
+import { usePermission } from '@/Composeables/Permission.js'
 import Galleria from 'primevue/galleria'
 import {
     IconAlertSquareRoundedFilled,
@@ -568,6 +569,7 @@ const onMaskClick = (e) => {
  * 🔹 Tag-Anzeige & -Berechtigungen
  */
 const page = usePage()
+const { hasAdminRole } = usePermission(page.props)
 
 const currentUser = computed(() => page.props.auth?.user ?? null)
 
@@ -610,6 +612,8 @@ const userHasPermissionForTag = (tag) => {
 
 // Für Artikel: wenn es eingeschränkte Tags gibt, muss der User für alle diese Tags berechtigt sein
 const canAccessByTags = computed(() => {
+    if (hasAdminRole()) return true
+
     const tags = props.article.tags || []
     if (!tags.length) return true
 

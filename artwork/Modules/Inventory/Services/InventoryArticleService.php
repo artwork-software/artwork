@@ -46,7 +46,8 @@ class InventoryArticleService
         ?InventorySubCategory $subCategory = null,
         ?string $search = '',
         ?array $resolvedFilters = null,
-        ?array $resolvedTagIds = null
+        ?array $resolvedTagIds = null,
+        ?int $statusId = null
     ): LengthAwarePaginator {
         $query = $this->buildArticleQuery($category, $subCategory, $search);
 
@@ -73,6 +74,20 @@ class InventoryArticleService
         if (!empty($tagIds)) {
             $query->whereHas('tags', function ($q) use ($tagIds): void {
                 $q->whereIn('inventory_tags.id', $tagIds);
+            });
+        }
+
+        // Status-Filter: nur Artikel mit mindestens Menge 1 bei diesem Status
+        if ($statusId !== null) {
+            $query->where(function (Builder $q) use ($statusId): void {
+                $q->whereHas('statusValues', function ($sq) use ($statusId): void {
+                    $sq->where('inventory_article_status_id', $statusId)
+                       ->where('inventory_article_status_values.value', '>=', 1);
+                })
+                ->orWhereHas('detailedArticleQuantities', function ($sq) use ($statusId): void {
+                    $sq->where('inventory_article_status_id', $statusId)
+                       ->where('quantity', '>=', 1);
+                });
             });
         }
 
@@ -203,6 +218,77 @@ class InventoryArticleService
                 $merged[$id] = ['name' => $row['name'], 'count' => 0];
             }
             $merged[$id]['count'] += $row['count'];
+        }
+
+        ksort($merged, SORT_NUMERIC);
+        return $merged;
+    }
+
+    /**
+     * Performante SQL-Aggregation der Status-Zähler über ALLE gefilterten Artikel.
+     */
+    public function getCountsByStatusAggregated(
+        ?InventoryCategory $category = null,
+        ?InventorySubCategory $subCategory = null,
+        ?string $search = '',
+        ?array $resolvedFilters = null,
+        ?array $resolvedTagIds = null,
+    ): array {
+        $query = $this->buildArticleQuery($category, $subCategory, $search);
+
+        $filters = $resolvedFilters ?? [];
+        $query = $this->articleRepository->applyFilters($query, $filters);
+
+        $tagIds = $resolvedTagIds ?? [];
+        if (!empty($tagIds)) {
+            $query->whereHas('tags', fn($q) => $q->whereIn('inventory_tags.id', $tagIds));
+        }
+
+        $articleIds = $query->select('inventory_articles.id');
+
+        // 1) Haupt-Artikel: Pivot-Tabelle summieren
+        $main = DB::table('inventory_article_status_values as sv')
+            ->join('inventory_article_statuses as s', 's.id', '=', 'sv.inventory_article_status_id')
+            ->whereIn('sv.inventory_article_id', $articleIds)
+            ->groupBy('s.id', 's.name', 's.color')
+            ->select([
+                's.id',
+                's.name',
+                's.color',
+                DB::raw('COALESCE(SUM(sv.value), 0) as total'),
+            ])
+            ->get()
+            ->keyBy('id');
+
+        // 2) Detail-Artikel: detailed_quantity summieren
+        $detail = DB::table('inventory_detailed_quantity_articles as dq')
+            ->join('inventory_article_statuses as s', 's.id', '=', 'dq.inventory_article_status_id')
+            ->whereIn('dq.inventory_article_id', $articleIds)
+            ->whereNotNull('dq.inventory_article_status_id')
+            ->groupBy('s.id', 's.name', 's.color')
+            ->select([
+                's.id',
+                's.name',
+                's.color',
+                DB::raw('COALESCE(SUM(dq.quantity), 0) as total'),
+            ])
+            ->get()
+            ->keyBy('id');
+
+        // 3) Mergen
+        $merged = [];
+        foreach ($main as $id => $row) {
+            $merged[$id] = [
+                'name'  => $row->name,
+                'color' => $row->color ?? '#ccc',
+                'count' => (int) $row->total,
+            ];
+        }
+        foreach ($detail as $id => $row) {
+            if (!isset($merged[$id])) {
+                $merged[$id] = ['name' => $row->name, 'color' => $row->color ?? '#ccc', 'count' => 0];
+            }
+            $merged[$id]['count'] += (int) $row->total;
         }
 
         ksort($merged, SORT_NUMERIC);
@@ -695,6 +781,14 @@ class InventoryArticleService
         $userDepartmentIds = method_exists($user, 'departments')
             ? $user->departments()->pluck('departments.id')->all()
             : [];
+
+        // Admins dürfen immer alle Tags verwenden
+        if ($user->hasRole('artwork admin')) {
+            if (method_exists($article, 'tags')) {
+                $article->tags()->sync($tags->pluck('id')->all());
+            }
+            return;
+        }
 
         $unauthorized = [];
 

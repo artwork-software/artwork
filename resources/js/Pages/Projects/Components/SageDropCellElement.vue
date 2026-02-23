@@ -8,6 +8,7 @@ export default {
     components: {SageDropMultipleDataSelectModal},
     mixins: [IconLib],
     props: ['value', 'cell'],
+    emits: ['budget-updated'],
     data(){
         return {
             isDragOver: false,
@@ -36,7 +37,8 @@ export default {
                     multiple: false
                 }, {
                     preserveState: true,
-                    preserveScroll: true
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated'),
                 });
             }
 
@@ -53,6 +55,7 @@ export default {
                     }, {
                         preserveState: true,
                         preserveScroll: true,
+                        onSuccess: () => this.$emit('budget-updated'),
                     });
                 }
             }
@@ -65,7 +68,7 @@ export default {
     <div  @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave">
         {{ value }}
     </div>
-    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" :cell-data="DataSelect" :cell="cell" type="dropOnValue"/>
+    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" @budget-updated="$emit('budget-updated')" :cell-data="DataSelect" :cell="cell" type="dropOnValue"/>
 </template>
 
 <style scoped>

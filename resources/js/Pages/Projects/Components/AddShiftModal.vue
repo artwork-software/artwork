@@ -239,7 +239,7 @@ const checkIfMultiEditEnabled = computed(() => {
     // if props.multiAddMode is true and props.roomsAndDatesForMultiEdit is an array with more than one item return true
     // if props.multiAddMode is false check if selectedRoom is not null
     if (props.multiAddMode) {
-        return Array.isArray(props.roomsAndDatesForMultiEdit) && props.roomsAndDatesForMultiEdit.length > 1
+        return Array.isArray(props.roomsAndDatesForMultiEdit) && props.roomsAndDatesForMultiEdit.length > 0
     } else {
         return selectedRoom.value !== null
     }

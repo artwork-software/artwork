@@ -3964,5 +3964,6 @@
     "Only projects where you are in the project team": "Nur Projekte in denen du im Projektteam bist",
     "Distance": "Abstand",
     "Shift description": "Schichtbeschreibung",
-    "Add or edit a description for this shift.": "Beschreibung für diese Schicht hinzufügen oder bearbeiten."
+    "Add or edit a description for this shift.": "Beschreibung für diese Schicht hinzufügen oder bearbeiten.",
+    "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.": "Wichtig: Du findest hier nur die Finanzierungsquellen, die das aktuelle Projekt in der Sidebar als \"Finanziertes Projekt\" angegeben haben."
 }

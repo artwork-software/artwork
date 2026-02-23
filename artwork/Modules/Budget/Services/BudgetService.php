@@ -16,11 +16,6 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetColumnSettingService;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
-use Artwork\Modules\CompanyType\Models\CompanyType;
-use Artwork\Modules\Contract\Models\ContractType;
-use Artwork\Modules\Currency\Models\Currency;
-use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -28,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class BudgetService
 {
@@ -39,13 +33,16 @@ class BudgetService
         private readonly TableService $tableService,
         private readonly SageAssignedDataCommentService $sageAssignedDataCommentService,
         private readonly SageApiSettingsService $sageApiSettingsService,
-        private readonly SageNotAssignedDataService $sageNotAssignedDataService
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService,
+        private readonly BudgetCacheService $budgetCacheService,
+        private readonly BudgetSumCalculator $budgetSumCalculator
     )
     {
     }
 
     public function generateBasicBudgetValues(
         Project $project,
+
     ): void {
         DB::transaction(function () use (
             $project,
@@ -207,7 +204,6 @@ class BudgetService
     /**
      * @return array<string, mixed>
      */
-    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getBudgetForProjectTab(
         Project $project,
@@ -215,31 +211,24 @@ class BudgetService
     ): array {
         $table = $project->table()->first();
 
-        //Failsave for projects without table
+        //Failsafe for projects without table
         if (!$table) {
-            //Reporting so we know if this happens
             report(new \RuntimeException('Project has no table'));
             $this->generateBasicBudgetValues($project);
-            $project->table()->first();
+            $table = $project->table()->first();
         }
 
-        $columns = $table->columns()->get();
+        // Try loading from Redis cache
+        $cachedPayload = $this->budgetCacheService->getBudgetPayload($project->id);
 
-        $calculateNames = [];
-        foreach ($columns as $column) {
-            $calculateName = '';
-            if ($column->type === 'difference' || $column->type === 'sum') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                if ($column->type === 'difference') {
-                    $calculateName = $firstName . ' - ' . $secondName;
-                } else {
-                    $calculateName = $firstName . ' + ' . $secondName;
-                }
-            }
-            $calculateNames[$column->id] = $calculateName;
+        if ($cachedPayload === null) {
+            $cachedPayload = $this->buildBudgetPayload($project, $table);
+            $this->budgetCacheService->setBudgetPayload($project->id, $cachedPayload);
         }
 
+        $table = $cachedPayload['table'];
+
+        // Request-specific data (always fresh)
         $selectedCell = request('selectedCell')
             ? ColumnCell::find(request('selectedCell'))
             : null;
@@ -250,270 +239,19 @@ class BudgetService
 
         $templates = Table::where('is_template', true)->get();
 
-        $selectedSumDetail = null;
-
-
-        if (request('selectedSubPosition') && request('selectedColumn')) {
-            $sumDetail = SubPositionSumDetail::firstOrCreate([
-                'sub_position_id' => request('selectedSubPosition'),
-                'column_id' => request('selectedColumn'),
-            ]);
-            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
-            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => SubPositionSumDetail::class]);
-        }
-
-        if (request('selectedMainPosition') && request('selectedColumn')) {
-            $sumDetail = MainPositionDetails::firstOrCreate([
-                'main_position_id' => request('selectedMainPosition'),
-                'column_id' => request('selectedColumn'),
-            ]);
-            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
-            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => MainPositionDetails::class]);
-        }
-
-        if (request('selectedBudgetType') && request('selectedColumn')) {
-            $sumDetail = BudgetSumDetails::firstOrCreate([
-                'type' => request('selectedBudgetType'),
-                'column_id' => request('selectedColumn'),
-            ]);
-            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
-            $selectedSumDetail = array_merge($sumDetail->toArray(), ['class' => BudgetSumDetails::class]);
-        }
+        $selectedSumDetail = $this->resolveSelectedSumDetail();
 
         //load commented budget items setting for given user
         Auth::user()->load(['commentedBudgetItemsSetting']);
-        $projectsGroup = collect();
-        $globalGroup = collect();
 
-        if ($this->sageApiSettingsService->getFirst()?->enabled) {
-            $user = Auth::user();
-            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value) ||
-                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
-            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value) ||
-                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value); // Legacy support
+        $sageNotAssigned = $this->resolveSageNotAssigned($project);
 
-            if ($canViewProjectSageData || $canViewGlobalSageData) {
-                $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
-
-                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
-                    if ($item->project_id === null && $canViewGlobalSageData) {
-                        $globalGroup->push($item);
-                    } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
-                        $projectsGroup->push($item);
-                    }
-                });
-            }
-        }
-
-        $groupedProjectData = [];
-        $existingEntries = [];
-        if ($project->is_group) {
-            // Check if the project group has the "Unterprojekte" column, and add it if it doesn't
-            $hasSubprojectsColumn = $columns->contains(function ($column) {
-                return $column->type === 'subprojects_column_for_group';
-            });
-
-            if (!$hasSubprojectsColumn) {
-                $this->columnService->createColumnInTable(
-                    table: $table,
-                    name: 'Unterprojekte',
-                    subName: '-',
-                    type: 'subprojects_column_for_group',
-                    position: 100
-                );
-
-                // Refresh columns after adding the new one
-                $columns = $table->columns()->get();
-            }
-
-            $groupProjects = $project->projectsOfGroup;
-            $groupColumns = $project->table()->first()?->columns()->get() ?? collect();
-            $firstTwoGroupColumns = $groupColumns->sortBy('position')->take(2);
-
-
-            if ($firstTwoGroupColumns->count() < 2) {
-                return $loadedProjectInformation;
-            }
-
-            [$firstGroupColumn, $secondGroupColumn] = [$firstTwoGroupColumns->first(), $firstTwoGroupColumns->last()];
-
-            foreach ($project->table()->first()?->mainPositions ?? [] as $groupMainPosition) {
-                foreach ($groupMainPosition->subPositions ?? [] as $groupSubPosition) {
-                    foreach ($groupSubPosition->subPositionRows ?? [] as $groupRow) {
-                        $groupFirstValue = trim((string) ($groupRow->cells()->where('column_id', $firstGroupColumn->id)->first()?->value ?? ''));
-                        $groupSecondValue = trim((string) ($groupRow->cells()->where('column_id', $secondGroupColumn->id)->first()?->value ?? ''));
-
-                        if ($groupFirstValue === '' || $groupSecondValue === '') {
-                            continue;
-                        }
-
-                        foreach ($groupProjects as $subProject) {
-                            $subProjectColumns = $subProject->table()->first()?->columns()->get() ?? collect();
-                            $firstTwoSubColumns = $subProjectColumns->sortBy('position')->take(2);
-
-
-                            if ($firstTwoSubColumns->count() < 2) {
-                                continue;
-                            }
-
-                            [$firstSubColumn, $secondSubColumn] = [$firstTwoSubColumns->first(), $firstTwoSubColumns->last()];
-                            $relevantColumns = $subProjectColumns->where('relevant_for_project_groups', true);
-                            $sageColumn = $subProjectColumns->firstWhere('type', 'sage');
-
-                            foreach ($subProject->table()->first()?->mainPositions ?? [] as $subMainPosition) {
-                                foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
-                                    foreach ($subPosition->subPositionRows ?? [] as $subRow) {
-                                        $subFirstValue = trim((string) ($subRow->cells()->where('column_id', $firstSubColumn->id)->first()?->value ?? ''));
-                                        $subSecondValue = trim((string) ($subRow->cells()->where('column_id', $secondSubColumn->id)->first()?->value ?? ''));
-
-                                        if ($groupFirstValue === $subFirstValue && $groupSecondValue === $subSecondValue) {
-                                            if ($groupMainPosition->type !== $subMainPosition->type) {
-                                                continue;
-                                            }
-
-                                            foreach ($relevantColumns as $relevantColumn) {
-                                                $relevantValue = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->value ?? 0;
-                                                $cellId = $subRow->cells()->where('column_id', $relevantColumn->id)->first()?->id;
-
-                                                if (!$cellId) {
-                                                    continue;
-                                                }
-
-                                                $uniqueKey = $cellId . '-' . $relevantColumn->id;
-
-                                                if (!isset($existingEntries[$uniqueKey])) {
-                                                    $dtoObject = new MatchRelevantProjectGroupDTO(
-                                                        $subProject->id,
-                                                        $subProject->name,
-                                                        $groupRow->id,
-                                                        $groupRow->name,
-                                                        $groupSubPosition->id,
-                                                        $groupMainPosition->id,
-                                                        $relevantColumn->id,
-                                                        $relevantColumn->name,
-                                                        $relevantValue,
-                                                        $cellId,
-                                                        $subMainPosition->type,
-                                                        $groupRow->commented,
-                                                        $subFirstValue,
-                                                        $subSecondValue
-                                                    );
-
-                                                    if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
-                                                        $groupedProjectData['BUDGET_TYPE_EARNING'][] = $dtoObject;
-                                                    } else {
-                                                        $groupedProjectData['BUDGET_TYPE_COST'][] = $dtoObject;
-                                                    }
-
-                                                    $existingEntries[$uniqueKey] = true;
-                                                }
-                                            }
-
-                                            if ($sageColumn) {
-                                                $sageCell = $subRow->cells()->where('column_id', $sageColumn->id)->first();
-                                                if ($sageCell) {
-                                                    if (!$sageCell->relationLoaded('sageAssignedData')) {
-                                                        $sageCell->load('sageAssignedData');
-                                                    }
-
-                                                    if ($sageCell->sageAssignedData && $sageCell->sageAssignedData->isNotEmpty()) {
-                                                        $sageValue = (string) $sageCell->sageAssignedData->sum('buchungsbetrag');
-                                                        $sageCellId = $sageCell->id;
-                                                        $uniqueSageKey = $sageCellId . '-sage';
-
-                                                        if (!isset($existingEntries[$uniqueSageKey])) {
-                                                            $sageDtoObject = new MatchRelevantProjectGroupDTO(
-                                                                $subProject->id,
-                                                                $subProject->name,
-                                                                $groupRow->id,
-                                                                $groupRow->name,
-                                                                $groupSubPosition->id,
-                                                                $groupMainPosition->id,
-                                                                $sageColumn->id,
-                                                                $sageColumn->name,
-                                                                $sageValue,
-                                                                $sageCellId,
-                                                                $subMainPosition->type,
-                                                                $groupRow->commented,
-                                                                $subFirstValue,
-                                                                $subSecondValue
-                                                            );
-
-                                                            if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
-                                                                $groupedProjectData['BUDGET_TYPE_EARNING'][] = $sageDtoObject;
-                                                            } else {
-                                                                $groupedProjectData['BUDGET_TYPE_COST'][] = $sageDtoObject;
-                                                            }
-
-                                                            $existingEntries[$uniqueSageKey] = true;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        $staticLookups = $this->budgetCacheService->getStaticLookups();
 
         $loadedProjectInformation['BudgetTab'] = [
-            'moneySources' => MoneySource::all(),
+            'moneySources' => $staticLookups['moneySources'],
             'budget' => [
-                'table' => ($table = $project->table()
-                    ->with([
-                        'columns' => function (HasMany $query): void {
-                            $query->orderBy('position');
-                            $query->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
-                        },
-                        'mainPositions' => function ($query) {
-                            return $query->orderBy('position');
-                        },
-                        'mainPositions.verified',
-                        'mainPositions.subPositions' => function ($query) {
-                            return $query->orderBy('position');
-                        },
-                        'mainPositions.subPositions.verified',
-                        'mainPositions.subPositions.subPositionRows' => function ($query) {
-                            return $query->orderBy('order')->orderBy('id');
-                        },
-                        'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
-                            $query
-                                ->with([
-                                    'sageAssignedData',
-                                    'sageAssignedData.findChildren',
-                                    'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
-                                        return $hasMany->orderBy('created_at', 'desc');
-                                    },
-                                    'sageAssignedData.comments.user',
-                                    'calculations' => function ($calculations): void {
-                                        $calculations->orderBy('position', 'asc');
-                                    },
-                                    'comments.user',
-                                    'comments' => function ($query): void {
-                                        $query->orderBy('created_at', 'desc');
-                                    },
-                                    'linkedMoneySource'
-                                ])
-                                // sage cells should be at the end
-                                ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
-                                // Order of sorts is important!
-                                ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END')
-                                ->orderBy('position')
-                                ->orderBy('id')
-                                ->select('column_sub_position_row.*')
-                                ->withCount('comments')
-                                ->withCount(['calculations' => function ($query) {
-                                    // count if value is not 0
-                                    return $query->where('value', '!=', 0);
-                                }]);
-                        },
-                        'mainPositions.subPositions.subPositionRows.cells.column',
-                    ])
-                    ->first()),
+                'table' => $table,
                 'selectedCell' => $selectedCell?->load([
                     'calculations' => function ($calculations): void {
                         $calculations->orderBy('position', 'asc');
@@ -529,25 +267,395 @@ class BudgetService
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
-                'columnCalculatedNames' => $calculateNames,
+                'columnCalculatedNames' => $cachedPayload['columnCalculatedNames'],
             ],
             'projectMoneySources' => $project->moneySources()->get(),
-            'contractTypes' => ContractType::all()->toArray(),
-            'companyTypes' => CompanyType::all()->toArray(),
-            'currencies' => Currency::all()->toArray(),
-            'collectingSocieties' => CollectingSociety::all()->toArray(),
-            'sageNotAssigned' => [
-                'projectsGroup' => $projectsGroup,
-                'globalGroup' => $globalGroup
-            ],
+            'contractTypes' => $staticLookups['contractTypes'],
+            'companyTypes' => $staticLookups['companyTypes'],
+            'currencies' => $staticLookups['currencies'],
+            'collectingSocieties' => $staticLookups['collectingSocieties'],
+            'sageNotAssigned' => $sageNotAssigned,
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(),
-            'projectGroupRelevantBudgetData' => $groupedProjectData
+            'projectGroupRelevantBudgetData' => $cachedPayload['projectGroupRelevantBudgetData'],
         ];
 
+        return $loadedProjectInformation;
+    }
+
+    private function buildBudgetPayload(Project $project, Table $table): array
+    {
+        $columns = $table->columns()->get();
+
+        // Ensure subprojects column exists for group projects
+        if ($project->is_group) {
+            $hasSubprojectsColumn = $columns->contains(function ($column) {
+                return $column->type === 'subprojects_column_for_group';
+            });
+
+            if (!$hasSubprojectsColumn) {
+                $this->columnService->createColumnInTable(
+                    table: $table,
+                    name: 'Unterprojekte',
+                    subName: '-',
+                    type: 'subprojects_column_for_group',
+                    position: 100
+                );
+            }
+        }
+
+        // Calculate column names for difference/sum columns
+        $calculateNames = $this->buildColumnCalculatedNames($columns);
+
+        // Main eager-load query
+        $table = $project->table()
+            ->with([
+                'columns' => function (HasMany $query): void {
+                    $query->orderBy('position');
+                    $query->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
+                },
+                'mainPositions' => function ($query) {
+                    return $query->orderBy('position');
+                },
+                'mainPositions.verified',
+                'mainPositions.subPositions' => function ($query) {
+                    return $query->orderBy('position');
+                },
+                'mainPositions.subPositions.verified',
+                'mainPositions.subPositions.subPositionRows' => function ($query) {
+                    return $query->orderBy('order')->orderBy('id');
+                },
+                'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
+                    $query
+                        ->with([
+                            'sageAssignedData',
+                            'sageAssignedData.findChildren',
+                            'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
+                                return $hasMany->orderBy('created_at', 'desc');
+                            },
+                            'sageAssignedData.comments.user',
+                            'calculations' => function ($calculations): void {
+                                $calculations->orderBy('position', 'asc');
+                            },
+                            'comments.user',
+                            'comments' => function ($query): void {
+                                $query->orderBy('created_at', 'desc');
+                            },
+                            'linkedMoneySource'
+                        ])
+                        ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
+                        ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END')
+                        ->orderBy('position')
+                        ->orderBy('id')
+                        ->select('column_sub_position_row.*')
+                        ->withCount('comments')
+                        ->withCount(['calculations' => function ($query) {
+                            return $query->where('value', '!=', 0);
+                        }]);
+                },
+                'mainPositions.subPositions.subPositionRows.cells.column',
+            ])
+            ->first();
+
+        // Compute sums from loaded relations (replaces $appends)
+        $this->budgetSumCalculator->computeAndAttachSums($table);
+
+        // Enrich display values
         $this->enrichAccountManagementDisplayValues($table);
+
+        // Project group data (optimized)
+        $groupedProjectData = $project->is_group
+            ? $this->computeProjectGroupData($project, $table)
+            : [];
+
         $this->enrichProjectGroupSubprojectsColumnValues($table, $groupedProjectData);
 
-        return $loadedProjectInformation;
+        return [
+            'table' => $table,
+            'columnCalculatedNames' => $calculateNames,
+            'projectGroupRelevantBudgetData' => $groupedProjectData,
+        ];
+    }
+
+    private function buildColumnCalculatedNames(Collection $columns): array
+    {
+        $columnsById = $columns->keyBy('id');
+        $calculateNames = [];
+
+        foreach ($columns as $column) {
+            $calculateName = '';
+            if ($column->type === 'difference' || $column->type === 'sum') {
+                $firstName = $columnsById->get($column->linked_first_column)?->subName;
+                $secondName = $columnsById->get($column->linked_second_column)?->subName;
+                if ($column->type === 'difference') {
+                    $calculateName = $firstName . ' - ' . $secondName;
+                } else {
+                    $calculateName = $firstName . ' + ' . $secondName;
+                }
+            }
+            $calculateNames[$column->id] = $calculateName;
+        }
+
+        return $calculateNames;
+    }
+
+    private function resolveSelectedSumDetail(): ?array
+    {
+        if (request('selectedSubPosition') && request('selectedColumn')) {
+            $sumDetail = SubPositionSumDetail::firstOrCreate([
+                'sub_position_id' => request('selectedSubPosition'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            return array_merge($sumDetail->toArray(), ['class' => SubPositionSumDetail::class]);
+        }
+
+        if (request('selectedMainPosition') && request('selectedColumn')) {
+            $sumDetail = MainPositionDetails::firstOrCreate([
+                'main_position_id' => request('selectedMainPosition'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            return array_merge($sumDetail->toArray(), ['class' => MainPositionDetails::class]);
+        }
+
+        if (request('selectedBudgetType') && request('selectedColumn')) {
+            $sumDetail = BudgetSumDetails::firstOrCreate([
+                'type' => request('selectedBudgetType'),
+                'column_id' => request('selectedColumn'),
+            ]);
+            $sumDetail->load(['comments.user', 'sumMoneySource.moneySource']);
+            return array_merge($sumDetail->toArray(), ['class' => BudgetSumDetails::class]);
+        }
+
+        return null;
+    }
+
+    private function resolveSageNotAssigned(Project $project): array
+    {
+        $projectsGroup = collect();
+        $globalGroup = collect();
+
+        if ($this->sageApiSettingsService->getFirst()?->enabled) {
+            $user = Auth::user();
+            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value) ||
+                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+
+            if ($canViewProjectSageData || $canViewGlobalSageData) {
+                $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);
+
+                $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project, $canViewProjectSageData, $canViewGlobalSageData): void {
+                    if ($item->project_id === null && $canViewGlobalSageData) {
+                        $globalGroup->push($item);
+                    } elseif ($item->project_id === $project->id && $canViewProjectSageData) {
+                        $projectsGroup->push($item);
+                    }
+                });
+            }
+        }
+
+        return [
+            'projectsGroup' => $projectsGroup,
+            'globalGroup' => $globalGroup,
+        ];
+    }
+
+    /**
+     * Optimized project group data computation.
+     * Bulk-loads all sub-project tables with relations instead of N+1 queries per row.
+     *
+     * @return array<string, array<int, MatchRelevantProjectGroupDTO>>
+     */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    private function computeProjectGroupData(Project $project, Table $table): array
+    {
+        $groupProjects = $project->projectsOfGroup;
+
+        if ($groupProjects->isEmpty()) {
+            return [];
+        }
+
+        $groupColumns = $table->columns ?? collect();
+        $firstTwoGroupColumns = $groupColumns->sortBy('position')->take(2);
+
+        if ($firstTwoGroupColumns->count() < 2) {
+            return [];
+        }
+
+        [$firstGroupColumn, $secondGroupColumn] = [$firstTwoGroupColumns->first(), $firstTwoGroupColumns->last()];
+
+        // Build cell index for group table rows (O(1) lookups)
+        $groupCellsByRowId = [];
+        foreach ($table->mainPositions ?? [] as $mp) {
+            foreach ($mp->subPositions ?? [] as $sp) {
+                foreach ($sp->subPositionRows ?? [] as $row) {
+                    $groupCellsByRowId[$row->id] = $row->cells ? $row->cells->keyBy('column_id') : collect();
+                }
+            }
+        }
+
+        // Bulk-load all sub-project tables with their relations
+        $subProjectIds = $groupProjects->pluck('id');
+        $subProjectTables = Table::whereIn('project_id', $subProjectIds)
+            ->with([
+                'columns',
+                'mainPositions.subPositions.subPositionRows.cells' => function ($query): void {
+                    $query->with('sageAssignedData');
+                },
+            ])
+            ->get()
+            ->keyBy('project_id');
+
+        // Build cell index for sub-project rows
+        $subCellsByRowId = [];
+        $subProjectTableData = [];
+        foreach ($subProjectTables as $projectId => $subTable) {
+            $subColumns = $subTable->columns ?? collect();
+            $firstTwoSubColumns = $subColumns->sortBy('position')->take(2);
+            if ($firstTwoSubColumns->count() < 2) {
+                continue;
+            }
+
+            $subProjectTableData[$projectId] = [
+                'columns' => $subColumns,
+                'firstColumn' => $firstTwoSubColumns->first(),
+                'secondColumn' => $firstTwoSubColumns->last(),
+                'relevantColumns' => $subColumns->where('relevant_for_project_groups', true),
+                'sageColumn' => $subColumns->firstWhere('type', 'sage'),
+            ];
+
+            foreach ($subTable->mainPositions ?? [] as $mp) {
+                foreach ($mp->subPositions ?? [] as $sp) {
+                    foreach ($sp->subPositionRows ?? [] as $row) {
+                        $subCellsByRowId[$row->id] = $row->cells ? $row->cells->keyBy('column_id') : collect();
+                    }
+                }
+            }
+        }
+
+        $groupedProjectData = [];
+        $existingEntries = [];
+
+        foreach ($table->mainPositions ?? [] as $groupMainPosition) {
+            foreach ($groupMainPosition->subPositions ?? [] as $groupSubPosition) {
+                foreach ($groupSubPosition->subPositionRows ?? [] as $groupRow) {
+                    $groupRowCells = $groupCellsByRowId[$groupRow->id] ?? collect();
+                    $groupFirstValue = trim((string) ($groupRowCells->get($firstGroupColumn->id)?->value ?? ''));
+                    $groupSecondValue = trim((string) ($groupRowCells->get($secondGroupColumn->id)?->value ?? ''));
+
+                    if ($groupFirstValue === '' || $groupSecondValue === '') {
+                        continue;
+                    }
+
+                    foreach ($groupProjects as $subProject) {
+                        $subTable = $subProjectTables->get($subProject->id);
+                        if (!$subTable || !isset($subProjectTableData[$subProject->id])) {
+                            continue;
+                        }
+
+                        $tableData = $subProjectTableData[$subProject->id];
+
+                        foreach ($subTable->mainPositions ?? [] as $subMainPosition) {
+                            if ($groupMainPosition->type !== $subMainPosition->type) {
+                                continue;
+                            }
+
+                            foreach ($subMainPosition->subPositions ?? [] as $subPosition) {
+                                foreach ($subPosition->subPositionRows ?? [] as $subRow) {
+                                    $subRowCells = $subCellsByRowId[$subRow->id] ?? collect();
+                                    $subFirstValue = trim((string) ($subRowCells->get($tableData['firstColumn']->id)?->value ?? ''));
+                                    $subSecondValue = trim((string) ($subRowCells->get($tableData['secondColumn']->id)?->value ?? ''));
+
+                                    if ($groupFirstValue !== $subFirstValue || $groupSecondValue !== $subSecondValue) {
+                                        continue;
+                                    }
+
+                                    foreach ($tableData['relevantColumns'] as $relevantColumn) {
+                                        $relevantCell = $subRowCells->get($relevantColumn->id);
+                                        $relevantValue = $relevantCell?->value ?? 0;
+                                        $cellId = $relevantCell?->id;
+
+                                        if (!$cellId) {
+                                            continue;
+                                        }
+
+                                        $uniqueKey = $cellId . '-' . $relevantColumn->id;
+
+                                        if (!isset($existingEntries[$uniqueKey])) {
+                                            $dtoObject = new MatchRelevantProjectGroupDTO(
+                                                $subProject->id,
+                                                $subProject->name,
+                                                $groupRow->id,
+                                                $groupRow->name,
+                                                $groupSubPosition->id,
+                                                $groupMainPosition->id,
+                                                $relevantColumn->id,
+                                                $relevantColumn->name,
+                                                $relevantValue,
+                                                $cellId,
+                                                $subMainPosition->type,
+                                                $groupRow->commented,
+                                                $subFirstValue,
+                                                $subSecondValue
+                                            );
+
+                                            if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
+                                                $groupedProjectData['BUDGET_TYPE_EARNING'][] = $dtoObject;
+                                            } else {
+                                                $groupedProjectData['BUDGET_TYPE_COST'][] = $dtoObject;
+                                            }
+
+                                            $existingEntries[$uniqueKey] = true;
+                                        }
+                                    }
+
+                                    $sageColumn = $tableData['sageColumn'];
+                                    if ($sageColumn) {
+                                        $sageCell = $subRowCells->get($sageColumn->id);
+                                        if ($sageCell && $sageCell->relationLoaded('sageAssignedData')
+                                            && $sageCell->sageAssignedData->isNotEmpty()) {
+                                            $sageValue = (string) $sageCell->sageAssignedData->sum('buchungsbetrag');
+                                            $sageCellId = $sageCell->id;
+                                            $uniqueSageKey = $sageCellId . '-sage';
+
+                                            if (!isset($existingEntries[$uniqueSageKey])) {
+                                                $sageDtoObject = new MatchRelevantProjectGroupDTO(
+                                                    $subProject->id,
+                                                    $subProject->name,
+                                                    $groupRow->id,
+                                                    $groupRow->name,
+                                                    $groupSubPosition->id,
+                                                    $groupMainPosition->id,
+                                                    $sageColumn->id,
+                                                    $sageColumn->name,
+                                                    $sageValue,
+                                                    $sageCellId,
+                                                    $subMainPosition->type,
+                                                    $groupRow->commented,
+                                                    $subFirstValue,
+                                                    $subSecondValue
+                                                );
+
+                                                if ($subMainPosition->type === 'BUDGET_TYPE_EARNING') {
+                                                    $groupedProjectData['BUDGET_TYPE_EARNING'][] = $sageDtoObject;
+                                                } else {
+                                                    $groupedProjectData['BUDGET_TYPE_COST'][] = $sageDtoObject;
+                                                }
+
+                                                $existingEntries[$uniqueSageKey] = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $groupedProjectData;
     }
 
     /**
@@ -745,8 +853,6 @@ class BudgetService
                     if ($cell) {
                         $cell->value = $sumForFrontend;
                     } else {
-                        // Falls die Zelle nicht existiert (z.B. frisch hinzugefügte Spalte), fügen wir sie nur
-                        // für die Response hinzu.
                         $virtualCell = new ColumnCell([
                             'column_id' => $subprojectsColumnId,
                             'sub_position_row_id' => $row->id,
@@ -763,8 +869,6 @@ class BudgetService
 
     private function determineRecentlyCreatedSageAssignedDataComment(
     ): SageAssignedDataComment|null {
-        //if there's a recently created comment for any SageAssignedData-Models retrieve corresponding model by id
-        //to display it right after the request finished without reopening the SageAssignedDataModal
         $recentlyCreatedSageAssignedDataComment = null;
 
         if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {
@@ -774,7 +878,6 @@ class BudgetService
         }
 
         if ($recentlyCreatedSageAssignedDataComment instanceof SageAssignedDataComment) {
-            //load corresponding user for UserPopoverTooltip
             $recentlyCreatedSageAssignedDataComment->load('user');
         }
 

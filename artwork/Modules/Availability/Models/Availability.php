@@ -79,7 +79,9 @@ class Availability extends Model
 
     public function getHasConflictsAttribute(): bool
     {
-        return $this->conflicts()->exists();
+        return $this->relationLoaded('conflicts')
+            ? $this->conflicts->isNotEmpty()
+            : $this->conflicts()->exists();
     }
 
     public function series(): HasOne

@@ -290,8 +290,12 @@ class Sage100Service
         /** @var SubPosition $subPosition */
         $subPosition = SubPosition::find($request->sub_position_id);
         $project = $table->project;
-        /** @var SageNotAssignedData $sageNotAssignedData */
+        /** @var SageNotAssignedData|null $sageNotAssignedData */
         $sageNotAssignedData = SageNotAssignedData::find($request->sage_data_id);
+
+        if (!$sageNotAssignedData) {
+            return;
+        }
 
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();

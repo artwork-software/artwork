@@ -18,6 +18,7 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\CellCalculationService;
@@ -1913,7 +1914,7 @@ class ProjectController extends Controller
         broadcast(new UpdateBudget($table->project_id))->toOthers();
     }
 
-    public function reorderSubPositionRows(Request $request): RedirectResponse
+    public function reorderSubPositionRows(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
     {
         $validated = $request->validate([
             'updates' => ['required', 'array', 'min:1'],
@@ -1949,12 +1950,30 @@ class ProjectController extends Controller
             }
         });
 
+        // Cache invalidieren
+        $firstSubPositionId = $updates[0]['sub_position_id'] ?? null;
+        if ($firstSubPositionId) {
+            $subPosition = SubPosition::find($firstSubPositionId);
+            if ($subPosition) {
+                $mainPosition = MainPosition::find($subPosition->main_position_id);
+                if ($mainPosition) {
+                    $table = Table::find($mainPosition->table_id);
+                    if ($table && $table->project_id) {
+                        $project = Project::find($table->project_id);
+                        if ($project) {
+                            $budgetCacheService->forgetForProjectGroup($project);
+                        }
+                    }
+                }
+            }
+        }
+
         // Inertia expects a redirect (or a valid Inertia response). Without this,
         // the client will not treat the request as successful.
         return Redirect::back();
     }
 
-    public function reorderMainPositions(Request $request): RedirectResponse
+    public function reorderMainPositions(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
     {
         $validated = $request->validate([
             'table_id' => ['required', 'integer', 'exists:tables,id'],
@@ -1971,10 +1990,18 @@ class ProjectController extends Controller
             }
         });
 
+        $table = Table::find($validated['table_id']);
+        if ($table && $table->project_id) {
+            $project = Project::find($table->project_id);
+            if ($project) {
+                $budgetCacheService->forgetForProjectGroup($project);
+            }
+        }
+
         return Redirect::back();
     }
 
-    public function reorderSubPositions(Request $request): RedirectResponse
+    public function reorderSubPositions(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
     {
         $validated = $request->validate([
             'main_position_id' => ['required', 'integer', 'exists:main_positions,id'],
@@ -1992,6 +2019,17 @@ class ProjectController extends Controller
                     ]);
             }
         });
+
+        $mainPosition = MainPosition::find($validated['main_position_id']);
+        if ($mainPosition) {
+            $table = Table::find($mainPosition->table_id);
+            if ($table && $table->project_id) {
+                $project = Project::find($table->project_id);
+                if ($project) {
+                    $budgetCacheService->forgetForProjectGroup($project);
+                }
+            }
+        }
 
         return Redirect::back();
     }

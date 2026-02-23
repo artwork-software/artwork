@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Events\BudgetUpdated;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPosition;
@@ -92,9 +93,13 @@ class BudgetGeneralController extends Controller
     {
         $column->update(['relevant_for_project_groups' => !$column->relevant_for_project_groups]);
 
-        // set relevant_for_project_groups in other columns to false
         if ($column->relevant_for_project_groups) {
             $column->table->columns()->where('id', '!=', $column->id)->update(['relevant_for_project_groups' => false]);
+
+            $projectId = $column->table->project_id;
+            if ($projectId) {
+                BudgetUpdated::dispatch($projectId);
+            }
         }
     }
 

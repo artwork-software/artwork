@@ -723,75 +723,14 @@
             </div>
         </div>
     </ArtworkBaseModal>
-    <ArtworkBaseModal @close="closeVerifiedModal" v-if="showVerifiedModal" :title="verifiedTexts.title" :description="verifiedTexts.description">
-        <div class="mx-4">
-            <ModalHeader
-                :title="verifiedTexts.title"
-                :sub-title="verifiedTexts.positionTitle"
-                :description="verifiedTexts.description"
-            />
-            <div class="mb-2">
-                <div class="relative w-full">
-                    <div class="w-full" v-if="showUserAdd">
-                        <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                               :placeholder="$t('Who should verify your calculation?')"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                    </div>
-                    <transition leave-active-class="transition ease-in duration-100"
-                                leave-from-class="opacity-100"
-                                leave-to-class="opacity-0">
-                        <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                            <div class="border-gray-200">
-                                <div v-for="(user, index) in user_search_results" :key="index"
-                                     class="flex items-center cursor-pointer">
-                                    <div class="flex-1 text-sm py-4" v-if="budgetAccess?.includes(user.id)">
-                                        <p @click="addUserToVerifiedUserArray(user)"
-                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                        </p>
-                                    </div>
-                                    <!-- Project Members -->
-                                    <div class="flex-1 text-sm py-4"
-                                         v-if="projectMembers?.includes(user.id) && !budgetAccess?.includes(user.id)">
-                                        <p @click="addUserToVerifiedUserArray(user)"
-                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </transition>
-                </div>
-                <div v-if="submitVerifiedModalData.user !== ''" class="mt-2 mb-4 flex items-center">
-                        <span class="flex mr-5 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full object-cover"
-                                     :src="usersToAdd.profile_photo_url" alt=""/>
-                                <span class="flex ml-4 sDark">
-                                    {{ usersToAdd.first_name }} {{ usersToAdd.last_name }}
-                                </span>
-                                <button type="button" @click="deleteUserFromVerifiedUserArray">
-                                    <span class="sr-only">{{ $t('Remove user from money source') }}</span>
-                                    <PropertyIcon name="IconX" stroke-width="1.5"
-                                           class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
-                                </button>
-                            </div>
-                        </span>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-center">
-                <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
-                        @click="submitVerifiedModal">
-                    {{ $t('Request verification') }}
-                </button>
-            </div>
-        </div>
-    </ArtworkBaseModal>
+    <VerifiedRequestModal
+        :show="showVerifiedModal"
+        :verified-texts="verifiedTexts"
+        :budget-access="budgetAccess"
+        :project-members="projectMembers"
+        @close="closeVerifiedModal"
+        @submit="handleVerifiedUserSubmit"
+    />
     <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" :title="$t('Grant budget access')" :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')">
         <div class="mx-4">
             <ModalHeader
@@ -941,6 +880,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import VerifiedRequestModal from "@/Layouts/Components/VerifiedRequestModal.vue";
 import draggable from 'vuedraggable';
 
 export default {
@@ -995,7 +935,8 @@ export default {
         RenameTableComponent,
         ErrorComponent,
         DocumentReportIcon,
-        IconFlagUp
+        IconFlagUp,
+        VerifiedRequestModal
     },
     data() {
         return {
@@ -1059,10 +1000,6 @@ export default {
                 description: this.$t('Have all figures been calculated correctly? Is the calculation plausible? Have your main item verified by a user.')
             },
             showVerifiedModal: false,
-            user_search_results: [],
-            user_query: '',
-            usersToAdd: '',
-            showUserAdd: true,
             submitVerifiedModalData: useForm({
                 is_main: false,
                 is_sub: false,
@@ -1198,18 +1135,6 @@ export default {
                     }
                 );
             }
-        },
-        user_query: {
-            handler() {
-                if (this.user_query.length > 0) {
-                    axios.get('/users/search', {
-                        params: {query: this.user_query}
-                    }).then(response => {
-                        this.user_search_results = response.data
-                    })
-                }
-            },
-            deep: true
         },
     },
     methods: {
@@ -1407,16 +1332,10 @@ export default {
                 }, 0);
             }
         },
-        addUserToVerifiedUserArray(user) {
+        handleVerifiedUserSubmit(user) {
             this.submitVerifiedModalData.user = user.id;
-            this.usersToAdd = user
-            this.user_query = '';
-            this.showUserAdd = false;
-        },
-        deleteUserFromVerifiedUserArray() {
-            this.submitVerifiedModalData.user = '';
-            this.usersToAdd = ''
-            this.showUserAdd = true
+            this.usersToAdd = user;
+            this.submitVerifiedModal();
         },
         changeColumnColor(color, columnId) {
             router.patch(route('project.budget.column-color.change'), {
@@ -1893,8 +1812,6 @@ export default {
         closeVerifiedModal(deleteAll = false) {
             this.showVerifiedModal = false;
             if (deleteAll) {
-                this.user_query = '';
-                this.showUserAdd = true;
                 this.submitVerifiedModalData.user = '';
                 this.submitVerifiedModalData.id = null;
                 this.submitVerifiedModalData.is_main = false;
@@ -1904,8 +1821,6 @@ export default {
         },
         closeBudgetAccessModal() {
             this.showBudgetAccessModal = false;
-            this.user_query = '';
-            this.showUserAdd = true;
             this.submitVerifiedModalData.user = '';
             this.submitVerifiedModalData.id = null;
             this.submitVerifiedModalData.is_main = false;
@@ -1917,7 +1832,8 @@ export default {
             this.submitVerifiedModal();
         },
         submitVerifiedModal() {
-            if (this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess) {
+            const budgetAccessIds = this.budgetAccess?.map(u => u.id ?? u) ?? [];
+            if (budgetAccessIds.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess) {
                 if (this.submitVerifiedModalData.is_main) {
                     this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'), {
                         preserveState: true,

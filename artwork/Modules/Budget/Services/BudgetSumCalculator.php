@@ -164,7 +164,7 @@ class BudgetSumCalculator
                     foreach ($subPosition->subPositionRows as $row) {
                         if ($row->relationLoaded('cells')) {
                             foreach ($row->cells as $cell) {
-                                if ($cell->verified_value !== '' && $cell->verified_value !== $cell->value) {
+                                if ($cell->verified_value !== null && $cell->verified_value !== '' && $cell->verified_value !== $cell->value) {
                                     $hasVerifiedChanges = true;
                                     break 2;
                                 }

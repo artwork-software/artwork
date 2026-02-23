@@ -30,7 +30,7 @@
                     <p class="xsWhiteBold mr-1">{{ $t('verified') }}</p>
                     <PropertyIcon name="IconLock" class="w-5 h-5" stroke-width="1.5"/>
                 </div>
-                <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.columnVerifiedChanges">
+                <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.columnVerifiedChanges">
                     <PropertyIcon name="IconLockExclamation"  class="w-5 h-5" stroke-width="1.5" />
                 </div>
                 <div class="flex flex-wrap w-8">

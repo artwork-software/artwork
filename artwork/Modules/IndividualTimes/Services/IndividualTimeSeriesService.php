@@ -54,13 +54,18 @@ class IndividualTimeSeriesService
 
         $dates = [];
 
+        // Use the ISO week start (Monday) of the start date as reference
+        // so that all days within the same week share the same week number.
+        $weekReference = $start->copy()->startOfWeek(Carbon::MONDAY);
+
         foreach ($period as $date) {
             if (! in_array($date->isoWeekday(), $weekdays, true)) {
                 continue;
             }
 
             // Intervalle z. B. alle 2 Wochen
-            $weeksDiff = (int) floor($start->diffInWeeks($date));
+            $cursorWeekStart = $date->copy()->startOfWeek(Carbon::MONDAY);
+            $weeksDiff = (int) round($weekReference->floatDiffInWeeks($cursorWeekStart));
 
             if ($weeksDiff % $interval === 0) {
                 $dates[] = $date->copy();

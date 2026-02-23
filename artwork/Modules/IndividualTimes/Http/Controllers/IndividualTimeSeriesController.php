@@ -319,6 +319,9 @@ class IndividualTimeSeriesController extends Controller
         $weekdays = array_values(array_unique($weekdays));
         sort($weekdays);
 
+        // Use the ISO week start (Monday) of the start date as reference
+        // so that all days within the same week share the same week number.
+        $weekReference = $start->copy()->startOfWeek(Carbon::MONDAY);
         $cursor = $start->copy();
 
         while ($cursor->lessThanOrEqualTo($end)) {
@@ -326,8 +329,9 @@ class IndividualTimeSeriesController extends Controller
 
             if (in_array($weekday, $weekdays, true)) {
                 if ($frequency === 'weekly') {
-                    $weeksDiff = (int) floor($start->diffInWeeks($cursor) / $interval);
-                    if ($start->diffInWeeks($cursor) % $interval === 0) {
+                    $cursorWeekStart = $cursor->copy()->startOfWeek(Carbon::MONDAY);
+                    $weeksDiff = (int) round($weekReference->floatDiffInWeeks($cursorWeekStart));
+                    if ($weeksDiff % $interval === 0) {
                         $results[] = $cursor->copy();
                     }
                 }

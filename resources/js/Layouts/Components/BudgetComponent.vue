@@ -1104,7 +1104,7 @@ export default {
         'isInTrash',
         'canEditComponent'
     ],
-    emits: ['changeProjectHeaderVisualisation', 'budget-updated'],
+    emits: ['changeProjectHeaderVisualisation', 'budget-updated', 'sumDetailLoaded'],
     computed: {
         computedSortedColumns: function () {
             return this.sortColumns();

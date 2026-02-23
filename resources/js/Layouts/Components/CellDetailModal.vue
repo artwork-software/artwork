@@ -299,6 +299,11 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     {{ $t('Funding source') }}
                                 </label>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                    <p class="text-xs text-yellow-800">
+                                        {{ $t('Important: You will only find funding sources here that have specified the current project as a "Funded Project" in the sidebar.') }}
+                                    </p>
+                                </div>
                                 <div class="relative">
                                     <input
                                         v-model="moneySourceQuery"

@@ -227,6 +227,9 @@ class BudgetSumCalculator
             foreach ($skipped as $columnId => $cells) {
                 $sum = $cells->reduce(function ($carry, $cell) {
                     $decimalValue = str_replace(',', '.', $cell->value ?: '0');
+                    if (!is_numeric($decimalValue)) {
+                        $decimalValue = '0';
+                    }
                     return bcadd($carry ?: '0', $decimalValue, 2);
                 }, '0');
 

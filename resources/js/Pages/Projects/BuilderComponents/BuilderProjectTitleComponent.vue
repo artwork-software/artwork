@@ -1,7 +1,7 @@
 <template>
-    <div class="flex items-center font-lexend font-black tracking-wide text-sm text-primary">
+    <div class="flex items-start font-lexend font-black tracking-wide text-sm text-primary min-w-0">
         <!-- Avatar / Key Visual / Icon -->
-        <div class="relative mr-2">
+        <div class="relative mr-2 shrink-0">
             <!-- Gruppen-Badge -->
             <span
                 v-if="isGroup"
@@ -59,7 +59,10 @@
         </div>
 
         <!-- Titel -->
-        <div class="flex items-center gap-x-1 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-artwork-buttons-create">
+        <div
+            v-tooltip.top="{ value: project.title, appendTo: 'body', class: 'aw-tooltip' }"
+            class="min-w-0 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-artwork-buttons-create line-clamp-3"
+        >
             {{ project.title }}
         </div>
     </div>

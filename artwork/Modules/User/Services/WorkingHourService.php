@@ -134,16 +134,36 @@ class WorkingHourService
                 continue;
             }
 
-            // Extract time portion — handle both "H:i:s" and Carbon-castable formats
-            $sTime = (is_string($sTimeStr) && preg_match('/\d{2}:\d{2}/', $sTimeStr))
-                ? substr($sTimeStr, 0, 8)
-                : date('H:i:s', strtotime((string) $sTimeStr));
-            $eTime = (is_string($eTimeStr) && preg_match('/\d{2}:\d{2}/', $eTimeStr))
-                ? substr($eTimeStr, 0, 8)
-                : date('H:i:s', strtotime((string) $eTimeStr));
+            // FIX: Carbon objects from pivot casts must be converted to pure date/time strings
+            $sDateOnly = ($sDateStr instanceof Carbon) ? $sDateStr->toDateString() : (string) $sDateStr;
+            $eDateOnly = ($eDateStr instanceof Carbon) ? $eDateStr->toDateString() : (string) $eDateStr;
 
-            $shiftStartTs = strtotime("{$sDateStr} {$sTime}");
-            $shiftEndTs   = strtotime("{$eDateStr} {$eTime}");
+            // If date strings contain time portions (e.g. "2024-01-15 00:00:00"), extract date only
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $sDateOnly, $m)) {
+                $sDateOnly = $m[1];
+            }
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $eDateOnly, $m)) {
+                $eDateOnly = $m[1];
+            }
+
+            // Extract time portion — handle Carbon objects, "H:i:s" and "H:i" strings
+            $sTime = ($sTimeStr instanceof Carbon)
+                ? $sTimeStr->format('H:i:s')
+                : ((is_string($sTimeStr) && preg_match('/\d{2}:\d{2}/', $sTimeStr))
+                    ? substr($sTimeStr, 0, 8)
+                    : date('H:i:s', strtotime((string) $sTimeStr)));
+            $eTime = ($eTimeStr instanceof Carbon)
+                ? $eTimeStr->format('H:i:s')
+                : ((is_string($eTimeStr) && preg_match('/\d{2}:\d{2}/', $eTimeStr))
+                    ? substr($eTimeStr, 0, 8)
+                    : date('H:i:s', strtotime((string) $eTimeStr)));
+
+            $shiftStartTs = strtotime("{$sDateOnly} {$sTime}");
+            $shiftEndTs   = strtotime("{$eDateOnly} {$eTime}");
+
+            if ($shiftStartTs === false || $shiftEndTs === false) {
+                continue;
+            }
 
             if ($shiftEndTs < $rangeStartTimestamp || $shiftStartTs > $rangeEndTimestamp) {
                 continue;

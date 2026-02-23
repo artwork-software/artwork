@@ -144,9 +144,9 @@
                 </div>
             </section>
             <!-- Artikel: Suche & Auswahl -->
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
                 <!-- Linke Spalte: Suche/Filter/Liste -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1 flex flex-col lg:max-h-[calc(80vh-12rem)] lg:sticky lg:top-0">
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
@@ -171,7 +171,7 @@
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="h-full overflow-y-auto px-5 pb-5">
+                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
                         <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
                             <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                 <div class="flex items-start gap-3">

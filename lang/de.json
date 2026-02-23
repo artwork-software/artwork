@@ -2466,7 +2466,7 @@
     "Select a type": "Wähle einen Typ",
     "Create Property": "Eigenschaft erstellen",
     "Sub-Categories": "Unterkategorien",
-    "All Products": "Alle Produkte",
+    "All Products": "Alle Artikel",
     "Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.": "Willkommen im {0}-Inventar! Hier findest du einen vollständigen Überblick über alle verfügbaren Produkte. Du kannst durch die verschiedenen Artikel stöbern, Details anzeigen und verwalten, welche Produkte derzeit auf Lager sind.",
     "Add article property": "Artikel-Eigenschaft hinzufügen",
     "Delete property": "Eigenschaft löschen",
@@ -3965,5 +3965,6 @@
     "Distance": "Abstand",
     "Shift description": "Schichtbeschreibung",
     "Add or edit a description for this shift.": "Beschreibung für diese Schicht hinzufügen oder bearbeiten.",
-    "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.": "Wichtig: Du findest hier nur die Finanzierungsquellen, die das aktuelle Projekt in der Sidebar als \"Finanziertes Projekt\" angegeben haben."
+    "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.": "Wichtig: Du findest hier nur die Finanzierungsquellen, die das aktuelle Projekt in der Sidebar als \"Finanziertes Projekt\" angegeben haben.",
+    "Only articles with at least 1x": "Nur Artikel mit mindestens 1x"
 }

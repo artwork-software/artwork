@@ -90,19 +90,22 @@ class InventoryCategoryController extends Controller
         }
 
         $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
+        $statusId = request()->integer('status_id') ?: null;
 
         $articles = $this->articleService->getArticleList(
             $inventoryCategory,
             $inventorySubCategory,
             request('search'),
             $resolved['filters'],
-            $resolved['tag_ids']
+            $resolved['tag_ids'],
+            $statusId,
         );
 
         $articles->appends([
             'filters' => json_encode($resolved['filters']),
             'tag_ids' => $resolved['tag_ids'],
             'filter_preset_id' => $resolved['filter_preset_id'],
+            'status_id' => $statusId,
         ]);
 
         return Inertia::render('Inventory/Index', [
@@ -116,7 +119,14 @@ class InventoryCategoryController extends Controller
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
             'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
             'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
-            'countsByStatus' => $this->articleService->getCountsByStatus($articles),
+            'countsByStatus' => $this->articleService->getCountsByStatusAggregated(
+                $inventoryCategory,
+                $inventorySubCategory,
+                request('search'),
+                $resolved['filters'],
+                $resolved['tag_ids'],
+            ),
+            'activeStatusId' => $statusId,
             'productBaskets' => $this->productBasketService->getUserBasket(),
             'tagGroups' => InventoryTagGroup::with([
                 'tags' => function ($query): void {

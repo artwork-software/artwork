@@ -22,7 +22,7 @@
 
 
                 <div class="mt-5">
-                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || is('artwork admin')"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
+                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || hasAdminRole()"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
                 </div>
 
             </div>
@@ -60,7 +60,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <StatusOverview :counts-by-status="props.countsByStatus" />
+                        <StatusOverview :counts-by-status="props.countsByStatus" :active-status-id="props.activeStatusId" />
                     </div>
                     <div class="mb-3" v-if="filterableProperties?.length > 0">
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
@@ -202,7 +202,8 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {can, is} from "laravel-permission-to-vuejs";
+import {can} from "laravel-permission-to-vuejs";
+import {usePermission} from "@/Composeables/Permission.js";
 import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -212,6 +213,7 @@ import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.v
 import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation()
+const { hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({
     categories: {
@@ -259,6 +261,11 @@ const props = defineProps({
     countsByStatus: {
         type: Object,
         required: true
+    },
+    activeStatusId: {
+        type: Number,
+        required: false,
+        default: null
     },
     productBaskets: {
         type: Object,

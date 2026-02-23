@@ -254,7 +254,7 @@
                                         </div>
                                         <div
                                             v-if="a.description"
-                                            class="mt-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200"
+                                            class="mt-1 text-[11px] text-zinc-500"
                                         >
                                             {{ a.description }}
                                         </div>

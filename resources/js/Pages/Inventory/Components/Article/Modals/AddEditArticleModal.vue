@@ -999,7 +999,8 @@
             </div>
             <div class="flex items-center justify-center my-10">
                 <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
+                            :processing="articleForm.processing"
+                            :disabled="!checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
                             (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
                             (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
                 />
@@ -1031,6 +1032,7 @@
 <script setup>
 
 import {useForm, usePage} from '@inertiajs/vue3'
+import {usePermission} from '@/Composeables/Permission.js'
 import {computed, inject, onMounted, ref, watch, nextTick} from 'vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -1861,6 +1863,7 @@ const bulkDeleteSelected = () => {
 
 
 const page = usePage()
+const { hasAdminRole } = usePermission(page.props)
 const currentUser = computed(() => page.props.auth?.user || null)
 const currentUserDepartmentIds = computed(() =>
     (page.props.auth?.user?.department_ids || [])
@@ -1925,6 +1928,9 @@ const tagGroupsForSelection = computed(() => {
 // 🔹 Berechtigungsprüfung je Tag
 const userCanUseTag = (tag) => {
     if (!tag?.has_restricted_permissions) return true
+
+    // Admins dürfen immer alle Tags verwenden
+    if (hasAdminRole()) return true
 
     const user = currentUser.value
     if (!user) return false

@@ -25,9 +25,6 @@ readonly class WorkerShiftPlanService
                     ->with(['series:uuid,title'])
                     ->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
             },
-            'dayServices',
-            'shiftQualifications',
-            'vacations',
             'shiftPlanComments' => function ($query) use ($startDate, $endDate): void {
                 $query->select(['id', 'comment', 'date', 'created_by', 'commentable_type', 'commentable_id'])
                     ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);

@@ -43,7 +43,7 @@ class MainPosition extends Model
         'is_fixed' => 'boolean',
     ];
 
-    protected $appends = ['columnSums', 'columnVerifiedChanges'];
+    protected $appends = [];
 
     public function subPositions(): HasMany
     {
@@ -60,8 +60,12 @@ class MainPosition extends Model
         return $this->hasMany(MainPositionDetails::class);
     }
 
-    public function getColumnSumsAttribute()
+    public function getColumnSumsAttribute($value = null)
     {
+        if ($value !== null) {
+            return $value;
+        }
+
         $subPositionIds = $this->subPositions()->pluck('id');
 
         $subPositionRowIds = SubPositionRow::query()
@@ -92,8 +96,12 @@ class MainPosition extends Model
                 ]);
     }
 
-    public function getColumnVerifiedChangesAttribute()
+    public function getColumnVerifiedChangesAttribute($value = null)
     {
+        if ($value !== null) {
+            return $value;
+        }
+
         return ColumnCell::whereIn(
             'sub_position_row_id',
             SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id')

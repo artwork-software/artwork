@@ -1,6 +1,10 @@
 <template>
-    <div>
-        <div v-if="artistText" class="font-lexend font-black tracking-wide text-sm text-primary truncate">
+    <div class="min-w-0">
+        <div
+            v-if="artistText"
+            v-tooltip.top="{ value: artistText, appendTo: 'body', class: 'aw-tooltip' }"
+            class="font-lexend font-black tracking-wide text-sm text-primary truncate"
+        >
             {{ artistText }}
         </div>
     </div>

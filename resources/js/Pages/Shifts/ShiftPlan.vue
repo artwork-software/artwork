@@ -2793,6 +2793,7 @@ async function saveMultiEdit() {
         shiftsToHandle: shiftsToHandleOnMultiEdit,
     })
     resetMultiEditMode(false)
+    loadShiftPlanWorkers()
 }
 
 function resetMultiEditMode(closeMultiEdit = true) {
@@ -2887,6 +2888,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
+                loadShiftPlanWorkers()
             })
     } else {
         const optimistic = new Set(oldIds)
@@ -2904,6 +2906,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
+                loadShiftPlanWorkers()
             })
     }
 }

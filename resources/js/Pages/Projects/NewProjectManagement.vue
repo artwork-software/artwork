@@ -55,8 +55,8 @@
                                 <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Other filters') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
-                                        <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 ">{{ $t('Show projects without events') }}</span>
+                                        <input v-model="hideProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Hide projects without events') }}</span>
                                     </label>
                                     <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
@@ -385,7 +385,7 @@ const showProjectGroups = ref(userProjectManagementSetting?.project_filters.show
 const showProjects = ref(userProjectManagementSetting?.project_filters.showProjects);
 const showExpiredProjects = ref(userProjectManagementSetting?.project_filters.showExpiredProjects);
 const showFutureProjects = ref(userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
-const showProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
+const hideProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.hideProjectsWithoutEvents);
 const showOnlyProjectsWithoutGroup = ref(userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
 const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : userProjectManagementSetting?.sort_by);
 
@@ -397,7 +397,7 @@ const hasActiveFilters = computed(() => {
         || !!showProjects.value
         || !!showExpiredProjects.value
         || !!showFutureProjects.value
-        || !!showProjectsWithoutEvents.value
+        || !!hideProjectsWithoutEvents.value
         || !!showOnlyProjectsWithoutGroup.value
         || props.states.some((s) => s.clicked);
 });
@@ -461,7 +461,7 @@ const applyFiltersAndSort = (resetPage = true) => {
                 showProjects: getTruthyOrUndefined(showProjects.value),
                 showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
                 showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
-                showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
+                hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
                 showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
             },
             sort: sortBy.value,
@@ -481,7 +481,7 @@ const resetFilter = () => {
     showProjects.value = false;
     showExpiredProjects.value = false;
     showFutureProjects.value = false;
-    showProjectsWithoutEvents.value = false;
+    hideProjectsWithoutEvents.value = false;
     showOnlyProjectsWithoutGroup.value = false;
 
     props.states.forEach((s) => (s.clicked = false));

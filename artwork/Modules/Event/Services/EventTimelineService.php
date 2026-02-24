@@ -5,7 +5,7 @@ namespace Artwork\Modules\Event\Services;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
-use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Illuminate\Support\Facades\DB;
 
 readonly class EventTimelineService

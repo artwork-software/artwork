@@ -120,61 +120,6 @@
             </div>
         </section>
 
-        <!-- Inventory planning permissions ------------------------------>
-        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <BasePageTitle
-                :title="$t('Inventory settings')"
-                :description="$t('Specify who is allowed to plan inventory for this craft. Only users with the inventory planning permission can be selected.')"
-            />
-
-            <div class="mt-4 flex items-center gap-3">
-                <span class="text-sm" :class="!inventoryPlannedByAll ? 'text-zinc-900 font-medium' : 'text-zinc-400'">{{$t('Explicitly selected persons')}}</span>
-                <Switch v-model="inventoryPlannedByAll" :class="[inventoryPlannedByAll ? 'bg-artwork-buttons-create' : 'bg-zinc-200', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                    <span aria-hidden="true" :class="[inventoryPlannedByAll ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                </Switch>
-                <span class="text-sm" :class="inventoryPlannedByAll ? 'text-zinc-900 font-medium' : 'text-zinc-400'">{{$t('From all planners')}}</span>
-            </div>
-
-            <div v-if="!inventoryPlannedByAll" class="mt-4">
-                <div class="sm:w-96">
-                    <Listbox as="div">
-                        <div class="relative">
-                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition">
-                                <span class="block truncate text-left">{{$t('Select users')}}</span>
-                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                  <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                </span>
-                            </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-zinc-200 ring-opacity-5 focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active }">
-                                        <li @click="togglePlanner(user, 'inventory')" :class="[active ? 'bg-zinc-50' : '', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                            <span>{{ user.full_name }}</span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </div>
-                    </Listbox>
-                </div>
-
-                <div class="mt-4">
-                    <div v-if="craftInventoryPlaner.length === 0" class="rounded-xl border border-dashed p-4 text-sm text-zinc-500">{{$t('No inventory planners selected yet.')}}</div>
-                    <ul class="mt-2 grid gap-3 sm:grid-cols-2">
-                        <li v-for="user in craftInventoryPlaner" :key="'inv-' + user.id" class="flex items-center justify-between rounded-xl border bg-zinc-50 p-3">
-                            <div class="flex items-center gap-3">
-                                <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
-                                <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
-                            </div>
-                            <button type="button" @click="togglePlanner(user, 'inventory')" class="p-1" aria-label="{{$t('Remove')}}">
-                                <IconCircleX stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
         <!-- Managers ----------------------------------------------------->
         <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <div class="mb-2">

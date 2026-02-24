@@ -44,6 +44,10 @@ readonly class WorkerShiftPlanService
                     $q->whereNull('valid_until')->orWhere('valid_until', '>=', $startDate);
                 });
             };
+            // Eager load permissions to avoid N+1 queries when checking user permissions
+            $eagerLoads['permissions'] = function ($query): void {
+                $query->select(['permissions.id', 'permissions.name', 'permissions.guard_name']);
+            };
         }
 
         return $workers->load($eagerLoads);

@@ -127,6 +127,32 @@
                         </div>
                     </div>
 
+                    <!-- Show only not fully staffed shifts (nur Schichtplan) -->
+                    <div class="flex gap-3" v-if="inShiftPlan">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_only_not_fully_staffed_shifts"
+                                    id="show_only_not_fully_staffed_shifts"
+                                    aria-describedby="show_only_not_fully_staffed_shifts-description"
+                                    name="show_only_not_fully_staffed_shifts"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_only_not_fully_staffed_shifts" class="font-medium text-gray-900">{{ $t('Only show shifts that are not fully staffed') }}</label>
+                            <p id="show_only_not_fully_staffed_shifts-description" class="text-gray-500 text-xs">
+                                {{ $t('Only displays shifts where at least one position still has capacity for additional staff.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Hide unoccupied days (nur Schichtplan) -->
                     <div class="flex gap-3" v-if="inShiftPlan">
                         <div class="flex h-6 shrink-0 items-center">
@@ -603,6 +629,7 @@ const userCalendarSettings = useForm({
     shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
     show_shift_group_tag: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_shift_group_tag : false,
     show_timeline: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_timeline : false,
+    show_only_not_fully_staffed_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_only_not_fully_staffed_shifts : false,
 });
 
 const saveUserCalendarSettings = () => {

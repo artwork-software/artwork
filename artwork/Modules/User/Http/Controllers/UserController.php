@@ -1230,7 +1230,8 @@ class UserController extends Controller
             'show_planned_events',
             'hide_unoccupied_days',
             'show_shift_group_tag',
-            'show_timeline'
+            'show_timeline',
+            'show_only_not_fully_staffed_shifts'
         ]));
     }
 

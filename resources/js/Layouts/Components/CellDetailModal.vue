@@ -751,11 +751,15 @@ export default {
                     if (this.newComment && this.newComment.trim() !== '') {
                         await this.saveCommentOnly();
                     }
+                    // Emit budget-updated to refresh the table (for comment icons)
+                    this.$emit('budget-updated');
                     // Close modal nach erfolgreichem Speichern
                     this.$emit('closed', true);
                 } else if (this.activeTab === 'linking') {
                     // Linking Tab: Speichere Verlinkungen
                     await this.saveLinking();
+                    // Emit budget-updated to refresh the table (for money source icons)
+                    this.$emit('budget-updated');
                     // Close modal nach erfolgreichem Speichern
                     this.$emit('closed', true);
                 }

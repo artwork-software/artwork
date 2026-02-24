@@ -1454,21 +1454,47 @@ function getRoomDayShifts(room: any, day: string): any[] {
     const cell = room?.content?.[day]
     if (!cell) return []
 
+    let shifts: any[] = []
+
     // Option A: direkt eingebettet
-    if (Array.isArray(cell.shifts)) return cell.shifts.filter(Boolean)
+    if (Array.isArray(cell.shifts)) {
+        shifts = cell.shifts.filter(Boolean)
+    } else {
+        // Option B: IDs + shiftsById
+        const ids =
+            cell.shiftIds ??
+            cell.shift_ids ??
+            cell.shiftIDs ??
+            []
 
-    // Option B: IDs + shiftsById
-    const ids =
-        cell.shiftIds ??
-        cell.shift_ids ??
-        cell.shiftIDs ??
-        []
-
-    if (Array.isArray(ids) && room?.shiftsById) {
-        return ids.map((id: number) => room.shiftsById[id]).filter(Boolean)
+        if (Array.isArray(ids) && room?.shiftsById) {
+            shifts = ids.map((id: number) => room.shiftsById[id]).filter(Boolean)
+        }
     }
 
-    return []
+    // Filter: nur nicht voll besetzte Schichten anzeigen
+    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+    if (showOnlyNotFullyStaffed) {
+        shifts = shifts.filter((shift: any) => {
+            const qualifications = Array.isArray(shift?.shifts_qualifications)
+                ? shift.shifts_qualifications
+                : Object.values(shift?.shifts_qualifications || {})
+
+            return qualifications.some((q: any) => {
+                const capacity = q?.value ?? 0
+                const qualificationId = q?.shift_qualification_id
+
+                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
+                    const items = shift[group] || []
+                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
+                }, 0)
+
+                return capacity > assignedCount
+            })
+        })
+    }
+
+    return shifts
 }
 
 function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
@@ -2410,8 +2436,40 @@ function calculateTopPositionOfUserOverView() {
 
 function checkIfEventHasShiftsToDisplay(event: any) {
     const showCrafts = authUser.value?.show_crafts
-    if (!showCrafts || showCrafts.length === 0) return event.shifts?.length > 0
-    return event.shifts?.length > 0 && event.shifts.some((s: any) => showCrafts.includes(s.craft.id))
+    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+
+    let shifts = event.shifts || []
+
+    // Filter by crafts if set
+    if (showCrafts && showCrafts.length > 0) {
+        shifts = shifts.filter((s: any) => showCrafts.includes(s.craft.id))
+    }
+
+    // Filter by not fully staffed if enabled
+    if (showOnlyNotFullyStaffed) {
+        shifts = shifts.filter((shift: any) => {
+            const qualifications = Array.isArray(shift?.shifts_qualifications)
+                ? shift.shifts_qualifications
+                : Object.values(shift?.shifts_qualifications || {})
+
+            // Check if at least one qualification has capacity (more slots than assigned users)
+            // Users are stored in shift.users, shift.freelancer, shift.serviceProviders with pivot.shift_qualification_id
+            return qualifications.some((q: any) => {
+                const capacity = q?.value ?? 0
+                const qualificationId = q?.shift_qualification_id
+
+                // Count assigned people for this qualification
+                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
+                    const items = shift[group] || []
+                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
+                }, 0)
+
+                return capacity > assignedCount
+            })
+        })
+    }
+
+    return shifts.length > 0
 }
 
 function showDropFeedback(feedback: string) {

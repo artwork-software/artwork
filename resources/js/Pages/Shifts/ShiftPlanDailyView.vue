@@ -592,7 +592,31 @@ function getRoomDayEvents(room: any, day: string): any[] {
 /** Resolve shifts for a room+day from shiftsById + content[day].shiftIds (Option B deduplication) */
 function getRoomDayShifts(room: any, day: string): any[] {
     if (!room?.shiftsById || !room?.content?.[day]?.shiftIds) return []
-    return room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
+    let shifts = room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
+
+    // Filter: nur nicht voll besetzte Schichten anzeigen
+    const showOnlyNotFullyStaffed = page.props.auth?.user?.calendar_settings?.show_only_not_fully_staffed_shifts
+    if (showOnlyNotFullyStaffed) {
+        shifts = shifts.filter((shift: any) => {
+            const qualifications = Array.isArray(shift?.shifts_qualifications)
+                ? shift.shifts_qualifications
+                : Object.values(shift?.shifts_qualifications || {})
+
+            return qualifications.some((q: any) => {
+                const capacity = q?.value ?? 0
+                const qualificationId = q?.shift_qualification_id
+
+                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
+                    const items = shift[group] || []
+                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
+                }, 0)
+
+                return capacity > assignedCount
+            })
+        })
+    }
+
+    return shifts
 }
 
 function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEvent[]>> {

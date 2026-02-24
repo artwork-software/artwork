@@ -180,10 +180,10 @@
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
-                        <span v-if="getUserProjectFilterSetting('showProjectsWithoutEvents')"
+                        <span v-if="getUserProjectFilterSetting('hideProjectsWithoutEvents')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                {{ $t('Show projects without events') }}
-                            <button type="button" @click="this.disableUserProjectFilterSetting('showProjectsWithoutEvents');">
+                                {{ $t('Hide projects without events') }}
+                            <button type="button" @click="this.disableUserProjectFilterSetting('hideProjectsWithoutEvents');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
@@ -455,7 +455,7 @@ export default defineComponent({
             showProjects: this.userProjectManagementSetting?.project_filters.showProjects,
             showExpiredProjects: this.userProjectManagementSetting?.project_filters.showExpiredProjects,
             showFutureProjects: this.userProjectManagementSetting?.project_filters.showFutureProjects,
-            showProjectsWithoutEvents: this.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents,
+            hideProjectsWithoutEvents: this.userProjectManagementSetting?.project_filters.hideProjectsWithoutEvents,
             sortBy: this.userProjectManagementSetting?.sort_by === null ? undefined : this.userProjectManagementSetting?.sort_by,
             showProjectStateFilter: true,
             openedMenu: false,
@@ -592,7 +592,7 @@ export default defineComponent({
                         showProjects: this.getTruthyOrUndefined(this.showProjects),
                         showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
                         showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
-                        showProjectsWithoutEvents: this.getTruthyOrUndefined(this.showProjectsWithoutEvents)
+                        hideProjectsWithoutEvents: this.getTruthyOrUndefined(this.hideProjectsWithoutEvents)
                     },
                     sort: this.sortBy,
                     saveFilterAndSort: 1

@@ -3933,5 +3933,7 @@
     "Only articles with at least 1x": "Only articles with at least 1x",
     "Add timeline point": "Add timeline point",
     "Manage your timeline presets. You can edit or delete existing presets.": "Manage your timeline presets. You can edit or delete existing presets.",
-    "Do you really want to delete this timeline preset? This action cannot be undone.": "Do you really want to delete this timeline preset? This action cannot be undone."
+    "Do you really want to delete this timeline preset? This action cannot be undone.": "Do you really want to delete this timeline preset? This action cannot be undone.",
+    "Only show shifts that are not fully staffed": "Only show shifts that are not fully staffed",
+    "Only displays shifts where at least one position still has capacity for additional staff.": "Only displays shifts where at least one position still has capacity for additional staff."
 }

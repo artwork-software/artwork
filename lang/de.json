@@ -3973,5 +3973,7 @@
     "Only articles with at least 1x": "Nur Artikel mit mindestens 1x",
     "Add timeline point": "Zeitstrahl-Punkt hinzufügen",
     "Manage your timeline presets. You can edit or delete existing presets.": "Verwalte deine Timeline-Vorlagen. Du kannst bestehende Vorlagen bearbeiten oder löschen.",
-    "Do you really want to delete this timeline preset? This action cannot be undone.": "Möchtest du diese Timeline-Vorlage wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    "Do you really want to delete this timeline preset? This action cannot be undone.": "Möchtest du diese Timeline-Vorlage wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "Only show shifts that are not fully staffed": "Nur Schichten anzeigen, die nicht voll besetzt sind",
+    "Only displays shifts where at least one position still has capacity for additional staff.": "Zeigt nur Schichten an, bei denen mindestens eine Funktion noch Kapazität für weitere Mitarbeiter hat."
 }

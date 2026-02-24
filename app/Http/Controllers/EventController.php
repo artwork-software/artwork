@@ -845,7 +845,7 @@ class EventController extends Controller
             ->whereDate(
                 'shifts.start_date',
                 $today
-            )->with(['event','event.project','event.room', 'event.event_type', 'room'])->get();
+            )->with(['event','event.project','event.room', 'event.event_type', 'room', 'project'])->get();
 
         $individualTimesOfDay = $user
             ->individualTimes()

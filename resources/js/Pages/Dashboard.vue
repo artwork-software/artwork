@@ -179,7 +179,6 @@
                                 <PropertyIcon name="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
                             </a>
                         </div>
-
                         <div v-if="workTimesTodaySorted.length" class="px-5 pb-5">
                             <div v-for="item in workTimesTodaySorted" :key="item.id" class="mb-3 last:mb-0">
                                 <SingleUserEventShift
@@ -191,7 +190,7 @@
                                         start_of_shift: item.shift.start_of_shift ?? formatDateDMYFromISO(todayDate),
                                         room: item.shift.room ?? item.shift.event?.room
                                     }"
-                                    :project="findProjectById(item.shift.event?.project_id)"
+                                    :project="item.shift.project ?? item.shift.event?.project"
                                     :event-type="item.shift.event ? findEventTypeById(item.shift.event?.event_type_id) : null"
                                     :user-to-edit-id="user.id"
                                     :first-project-shift-tab-id="first_project_shift_tab_id"

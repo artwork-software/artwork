@@ -39,7 +39,7 @@
 <script setup>
 import { computed, ref } from "vue";
 
-const MAX_VISIBLE = 3;
+const MAX_VISIBLE = 2;
 
 const props = defineProps({
     project: {

@@ -1,70 +1,72 @@
 <template>
-    <BaseModal @closed="$emit('close')">
-        <div>
-            <ModalHeader
-                :title="$t('Search timeline preset')"
-                :description="$t('Search for a timeline preset to import.')"
+    <ArtworkBaseModal
+        :title="$t('Import timeline preset')"
+        :description="$t('Select a timeline preset to import into the event.')"
+        @close="$emit('close')"
+    >
+        <!-- Search -->
+        <div class="mb-4">
+            <BaseInput
+                id="timelinePresetSearch"
+                v-model="searchQuery"
+                :label="$t('Search for timeline preset')"
+                class="w-full"
             />
         </div>
 
-        <div class="relative">
-            <div class="my-auto w-full relative">
-                <BaseInput
-                    id="userSearch"
-                    v-model="searchTimeline"
-                    label="Search for timeline preset"
-                    class="w-full"
-                    @focus="searchTimeline = ''"/>
-            </div>
-            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                <div v-if="timelinePresets.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                    <div class="border-gray-200">
-                        <div v-for="(timeline, index) in timelinePresets" :key="index" class="flex items-center cursor-pointer">
-                            <div >
-                                <div class="flex-1 text-sm py-4" @click="selectTimeline(timeline)">
-                                    <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
-                                        <span class="ml-2 truncate">{{ timeline.name }}</span>
-                                    </p>
-                                </div>
+        <!-- Presets Grid -->
+        <div v-if="filteredPresets.length > 0" class="max-h-[350px] overflow-y-auto p-1">
+            <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+                <button
+                    v-for="preset in filteredPresets"
+                    :key="preset.id"
+                    type="button"
+                    @click="selectPreset(preset)"
+                    class="text-left"
+                >
+                    <div
+                        class="rounded-xl bg-white ring-1 ring-gray-200 p-3 hover:shadow-md transition-all duration-200"
+                        :class="[selectedPreset?.id === preset.id ? 'ring-2 !ring-blue-500 shadow-md' : '']"
+                    >
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0 truncate text-[13px] font-semibold text-gray-900">
+                                {{ preset.name }}
                             </div>
+                            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">
+                                {{ preset.times_count }} {{ $t('Points') }}
+                            </span>
                         </div>
                     </div>
-                </div>
-            </transition>
-        </div>
-
-        <div v-if="selectedTimeline">
-            <div class="flex items-center justify-between mt-4">
-                <div>
-                    {{ selectedTimeline.name }}
-                </div>
-                <div>
-                    <IconX class="h-5 w-5 cursor-pointer" @click="selectedTimeline = null"/>
-                </div>
+                </button>
             </div>
         </div>
 
-        <div class="flex items-center justify-center">
+        <div v-else-if="!isLoading" class="text-sm text-gray-500 text-center py-6">
+            {{ $t('No timeline presets found.') }}
+        </div>
+
+        <div v-if="isLoading" class="text-sm text-gray-500 text-center py-6">
+            {{ $t('Loading...') }}
+        </div>
+
+        <!-- Import Button -->
+        <div class="flex items-center justify-center mt-4">
             <FormButton
                 :text="$t('Import timeline preset')"
                 @click="importTimelinePreset"
-                class="mt-4"
+                :disabled="!selectedPreset"
             />
         </div>
-
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup>
-
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import {ref, watch} from "vue";
-import {IconX} from "@tabler/icons-vue";
-import {router, useForm} from "@inertiajs/vue3";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {computed, onMounted, ref} from "vue";
+import {router} from "@inertiajs/vue3";
+import axios from "axios";
 
 const props = defineProps({
     event: {
@@ -73,23 +75,27 @@ const props = defineProps({
     }
 })
 
+const emit = defineEmits(['close'])
 
-const emit = defineEmits([
-    'close'
-])
+const searchQuery = ref('')
+const allPresets = ref([])
+const selectedPreset = ref(null)
+const isLoading = ref(true)
 
-const searchTimeline = ref('')
-const timelinePresets = ref([])
-const selectedTimeline = ref(null)
+const filteredPresets = computed(() => {
+    const q = (searchQuery.value || '').toLowerCase().trim()
+    if (!q) return allPresets.value
+    return allPresets.value.filter(p => p.name.toLowerCase().includes(q))
+})
 
-const selectTimeline = (timeline) => {
-    selectedTimeline.value = timeline
-    searchTimeline.value = ''
+const selectPreset = (preset) => {
+    selectedPreset.value = selectedPreset.value?.id === preset.id ? null : preset
 }
 
 const importTimelinePreset = () => {
+    if (!selectedPreset.value) return
     router.post(route('timeline-preset.import', {
-        shiftPresetTimeline: selectedTimeline.value.id,
+        shiftPresetTimeline: selectedPreset.value.id,
         event: props.event.id
     }), {}, {
         preserveScroll: true,
@@ -100,18 +106,14 @@ const importTimelinePreset = () => {
     })
 }
 
-// watch for searchTimeline changes
-watch(searchTimeline, async (value) => {
-    if (value.length > 0) {
-        const response = await axios.get(route('timeline-preset.search', {search: value}))
-        timelinePresets.value = response.data
-    } else {
-        timelinePresets.value = []
+onMounted(async () => {
+    try {
+        const response = await axios.get(route('timeline-presets.all'))
+        allPresets.value = response.data
+    } catch (error) {
+        console.error('Error loading timeline presets:', error)
+    } finally {
+        isLoading.value = false
     }
 })
-
 </script>
-
-<style scoped>
-
-</style>

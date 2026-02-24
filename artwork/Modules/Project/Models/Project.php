@@ -113,7 +113,6 @@ class Project extends Model
     ];
 
     protected $appends = [
-        'first_and_last_event_date',
     ];
 
     protected $with = [

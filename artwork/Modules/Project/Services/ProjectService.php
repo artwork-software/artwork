@@ -204,7 +204,7 @@ class ProjectService
                                     $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
                                         $query->where('start_time', '<', $todayMidnight);
                                     });
-                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
+                                    if (!$projectFilters->contains('hideProjectsWithoutEvents')) {
                                         $builder->orWhereDoesntHave('events');
                                     }
                                 } elseif ($hasFutureFilter) {
@@ -215,19 +215,18 @@ class ProjectService
                                               ->orWhere('end_time', '>=', $todayMidnight);
                                         });
                                     });
-                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
+                                    if (!$projectFilters->contains('hideProjectsWithoutEvents')) {
                                         $builder->orWhereDoesntHave('events');
                                     }
                                 }
                             });
                         }
 
-                        // Handle showProjectsWithoutEvents filter - only apply when checked
-                        if ($projectFilters->contains('showProjectsWithoutEvents')) {
-                            // Already handled above in time filter logic (orWhereDoesntHave)
-                            // If no time filter is active, show projects without events too
+                        // Handle hideProjectsWithoutEvents filter - when checked, exclude projects without events
+                        if ($projectFilters->contains('hideProjectsWithoutEvents')) {
+                            // Only show projects that have at least one event
                             if (!$hasExpiredFilter && !$hasFutureFilter) {
-                                // No additional constraint needed - projects without events are included by default
+                                $builder->whereHas('events');
                             }
                         }
 

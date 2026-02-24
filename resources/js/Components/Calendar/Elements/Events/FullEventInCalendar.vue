@@ -427,6 +427,8 @@
                         <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
                         <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
+                        <BaseMenuItem white-menu-background v-if="event.hasTimelines" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" title="Save timeline as preset" />
+                        <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" title="Import timeline preset" />
                     </BaseMenu>
                 </div>
 
@@ -862,6 +864,19 @@
             :timelineToEdit="timelineData"
             @close="closeTimelineModal"
         />
+
+        <!-- Timeline Preset Modals -->
+        <CreateTimelinePresetFormEvent
+            v-if="showCreateTimelinePresetModal"
+            :event="event"
+            @close="showCreateTimelinePresetModal = false"
+        />
+
+        <SearchTimelinePresetModal
+            v-if="showSearchTimelinePresetModal"
+            :event="event"
+            @close="showSearchTimelinePresetModal = false"
+        />
     </div>
 </template>
 
@@ -875,7 +890,9 @@ import {
     IconCirclePlus,
     IconCircleX,
     IconClock,
+    IconDeviceFloppy,
     IconEdit,
+    IconFileImport,
     IconInfoCircle,
     IconLock,
     IconLockOpen,
@@ -911,6 +928,8 @@ const showDeleteSeriesModal = ref(false);
 const showEditSeriesModal = ref(false);
 const showTimelineModal = ref(false);
 const timelineData = ref([]);
+const showCreateTimelinePresetModal = ref(false);
+const showSearchTimelinePresetModal = ref(false);
 
 const emits = defineEmits([
     "editEvent",
@@ -929,6 +948,18 @@ const RejectEventVerificationRequestModal = defineAsyncComponent({
 
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import("@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
+const CreateTimelinePresetFormEvent = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
+const SearchTimelinePresetModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue"),
     delay: 200,
     timeout: 3000,
 });

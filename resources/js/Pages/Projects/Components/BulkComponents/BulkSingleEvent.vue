@@ -288,6 +288,20 @@
                             title="Edit all series events"
                             @click="showEditSeriesModal = true"
                         />
+                        <BaseMenuItem
+                            v-if="event.id"
+                            white-menu-background
+                            :icon="IconDeviceFloppy"
+                            title="Save timeline as preset"
+                            @click="openSaveTimelinePresetModal"
+                        />
+                        <BaseMenuItem
+                            v-if="event.id"
+                            white-menu-background
+                            :icon="IconFileImport"
+                            title="Import timeline preset"
+                            @click="showSearchTimelinePresetModal = true"
+                        />
                     </BaseMenu>
                 </div>
             </div>
@@ -321,6 +335,18 @@
             :rooms="rooms"
             @close="showEditSeriesModal = false"
         />
+
+        <CreateTimelinePresetFormEvent
+            v-if="showCreateTimelinePresetModal"
+            :event="event"
+            @close="showCreateTimelinePresetModal = false"
+        />
+
+        <SearchTimelinePresetModal
+            v-if="showSearchTimelinePresetModal"
+            :event="event"
+            @close="showSearchTimelinePresetModal = false"
+        />
     </div>
 </template>
 
@@ -329,7 +355,7 @@
 import {
     IconCheck,
     IconChevronDown,
-    IconCircleCheckFilled, IconCopy, IconEdit, IconNote,
+    IconCircleCheckFilled, IconCopy, IconDeviceFloppy, IconEdit, IconFileImport, IconNote,
     IconPlus, IconRepeat, IconTrash,
 } from "@tabler/icons-vue";
 import {
@@ -341,7 +367,7 @@ import {
 import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed, nextTick, onMounted, ref, watch} from "vue";
+import {computed, defineAsyncComponent, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
 import {inject} from "vue";
@@ -355,6 +381,18 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+
+const CreateTimelinePresetFormEvent = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
+    delay: 200,
+    timeout: 5000
+})
+
+const SearchTimelinePresetModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
+    delay: 200,
+    timeout: 5000
+})
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
@@ -386,6 +424,20 @@ const event_properties = inject('event_properties');
 const showDeleteEventConfirmModal = ref(false);
 const showDeleteSeriesModal = ref(false);
 const showEditSeriesModal = ref(false);
+const showCreateTimelinePresetModal = ref(false);
+const showSearchTimelinePresetModal = ref(false);
+
+const openSaveTimelinePresetModal = async () => {
+    try {
+        const response = await axios.get(route('events.timelines', {event: props.event.id}));
+        const timelines = response.data.timelines || [];
+        if (timelines.length > 0) {
+            showCreateTimelinePresetModal.value = true;
+        }
+    } catch (error) {
+        console.error('Error checking timelines:', error);
+    }
+};
 
 // Local draft state for start date to prevent immediate re-sorting while typing
 const draftStartDate = ref(props.event.day);

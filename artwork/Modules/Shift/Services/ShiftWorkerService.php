@@ -110,9 +110,6 @@ class ShiftWorkerService
         string $affectedUserType,
         ?ShiftWorker $pivot = null
     ): void {
-        if (! $shift->is_committed) {
-            return;
-        }
 
         $fieldChanges = [
             'assignment' => [
@@ -186,9 +183,6 @@ class ShiftWorkerService
         string $logMessage,
         callable $getNameCallback
     ): void {
-        if (! $shift->is_committed && ! $shift->in_workflow) {
-            return;
-        }
 
         activity('shift')
             ->performedOn($shift)

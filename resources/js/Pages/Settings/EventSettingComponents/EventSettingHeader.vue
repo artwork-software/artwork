@@ -70,6 +70,12 @@ export default defineComponent({
                     href: route('event_settings.event_properties.index'),
                     current: route().current('event_settings.event_properties.index'),
                     permission: true
+                },
+                {
+                    name: this.$t('Timeline Presets'),
+                    href: route('shifts.timeline-presets.index'),
+                    current: route().current('shifts.timeline-presets.index'),
+                    permission: true
                 }
             ]
         }

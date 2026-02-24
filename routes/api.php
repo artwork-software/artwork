@@ -31,6 +31,11 @@ Route::get('/timeline-preset/search', [
     'search'
 ])->name('timeline-preset.search');
 
+// get all timeline presets with times count
+Route::get('/timeline-presets', function () {
+    return \Artwork\Modules\Shift\Models\ShiftPresetTimeline::withCount('times')->get();
+})->name('timeline-presets.all');
+
 
 Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
 Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');

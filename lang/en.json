@@ -2290,6 +2290,10 @@
     "Search for a timeline preset to import.": "Search for a timeline preset to import.",
     "Search for timeline preset": "Search for timeline preset",
     "Import timeline preset": "Import timeline preset",
+    "Select a timeline preset to import into the event.": "Select a timeline preset to import into the event.",
+    "No timeline presets found.": "No timeline presets found.",
+    "Points": "Points",
+    "Save timeline as preset": "Save timeline as preset",
     "Read from template": "Read from template",
     "Create timeline preset form Event": "Create timeline preset form Event",
     "Create a new timeline preset for the event": "Create a new timeline preset for the event",
@@ -3926,5 +3930,8 @@
     "Shift description": "Shift description",
     "Add or edit a description for this shift.": "Add or edit a description for this shift.",
     "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.": "Important: You will only find funding sources here that have specified the current project as a \"Funded Project\" in the sidebar.",
-    "Only articles with at least 1x": "Only articles with at least 1x"
+    "Only articles with at least 1x": "Only articles with at least 1x",
+    "Add timeline point": "Add timeline point",
+    "Manage your timeline presets. You can edit or delete existing presets.": "Manage your timeline presets. You can edit or delete existing presets.",
+    "Do you really want to delete this timeline preset? This action cannot be undone.": "Do you really want to delete this timeline preset? This action cannot be undone."
 }

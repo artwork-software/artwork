@@ -38,8 +38,8 @@ class InventoryArticleDTO
         $dto->is_detailed_quantity = $article->is_detailed_quantity;
         $dto->properties = $article->properties->toArray();
         $dto->images = InventoryArticleImageDTO::fromCollection($article->images);
-        $dto->room = $article->room;
-        $dto->manufacturer = $article->manufacturer;
+        $dto->room = $article->room ?? [];
+        $dto->manufacturer = $article->manufacturer ?? [];
         $dto->created_at = $article->getRawOriginal('created_at');
         $dto->updated_at = $article->getRawOriginal('updated_at');
 

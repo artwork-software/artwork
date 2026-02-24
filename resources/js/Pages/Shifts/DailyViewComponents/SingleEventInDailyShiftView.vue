@@ -32,6 +32,8 @@
                     <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showEventComponent = true" :icon="IconEdit" title="edit" />
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete event')" />
+                        <BaseMenuItem white-menu-background v-if="event.timelines?.length > 0" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" :title="$t('Save timeline as preset')" />
+                        <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" :title="$t('Import timeline preset')" />
                     </BaseMenu>
                 </div>
             </div>
@@ -99,6 +101,18 @@
         :timelineToEdit="event.timelines"
         @close="showAddTimeLineModal = false"/>
 
+    <CreateTimelinePresetFormEvent
+        v-if="showCreateTimelinePresetModal"
+        :event="event"
+        @close="showCreateTimelinePresetModal = false"
+    />
+
+    <SearchTimelinePresetModal
+        v-if="showSearchTimelinePresetModal"
+        :event="event"
+        @close="showSearchTimelinePresetModal = false"
+    />
+
     <!-- Bestätigungsmodal: Termin löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
@@ -115,7 +129,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {IconEdit, IconTrash, IconWand} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { router } from '@inertiajs/vue3'
@@ -153,6 +167,8 @@ const props = defineProps({
 // damit der Button „Create new timeline“ direkt sichtbar ist.
 const showEventDetails = ref(true);
 const showAddTimeLineModal = ref(false);
+const showCreateTimelinePresetModal = ref(false);
+const showSearchTimelinePresetModal = ref(false);
 const showEventComponent = ref(false);
 const showConfirmDeleteModal = ref(false);
 const hexColor = computed(() => props.event.eventType.hex_code || '#cccccc');
@@ -167,6 +183,18 @@ const hasAdminRole = () => is('artwork admin')
 
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue'),
+    delay: 200,
+    timeout: 5000
+})
+
+const CreateTimelinePresetFormEvent = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
+    delay: 200,
+    timeout: 5000
+})
+
+const SearchTimelinePresetModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
     delay: 200,
     timeout: 5000
 })

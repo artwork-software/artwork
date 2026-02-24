@@ -762,6 +762,7 @@
         @comment-saved="handleCommentSaved"
         @comment-deleted="handleCommentDeleted"
         @calculations-saved="handleCalculationsSaved"
+        @budget-updated="handleBudgetUpdated"
     />
     <sum-detail-component
         :selectedSumDetail="tempSumDetailData"

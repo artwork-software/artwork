@@ -51,6 +51,13 @@ class GeneralSettings extends Settings
 
     public bool $shift_commit_workflow_enabled = false;
     public bool $warn_multiple_assignments = false;
+    public float $breakfast_deduction_per_day = 5.60;
+
+    public string $letterhead_name = '';
+    public string $letterhead_street = '';
+    public string $letterhead_zip_code = '';
+    public string $letterhead_city = '';
+    public string $letterhead_email = '';
 
     public static function group(): string
     {

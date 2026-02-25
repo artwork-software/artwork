@@ -8,8 +8,10 @@ use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\DomPDF\PDF;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Filesystem\FilesystemManager;
@@ -192,7 +194,7 @@ readonly class ArtistResidencyService
                 'user' => $this->authManager->user(),
                 'language' => $language,
             ]
-        )->setPaper('a4', 'portrait')
+        )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
                 'defaultFont' => 'sans-serif',
@@ -235,6 +237,63 @@ readonly class ArtistResidencyService
         ))
             ->download($filename)
             ->deleteFileAfterSend();
+    }
+
+    /**
+     * Exports standalone Per Diem PDF.
+     */
+    public function exportPerDiemPdf(Project $project, string $language): Response
+    {
+        $artistResidencies = $this->getArtistResidenciesByProjectId($project->id);
+        $generalSettings = app(GeneralSettings::class);
+
+        $bigLogoBase64 = null;
+        if ($generalSettings->big_logo_path && Storage::disk('public')->exists($generalSettings->big_logo_path)) {
+            $logoPath = Storage::disk('public')->path($generalSettings->big_logo_path);
+            $logoContent = file_get_contents($logoPath);
+            if ($logoContent !== false) {
+                $mimeType = mime_content_type($logoPath) ?: 'image/png';
+                $bigLogoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
+            }
+        }
+
+        $letterhead = [
+            'name' => $generalSettings->letterhead_name ?? '',
+            'street' => $generalSettings->letterhead_street ?? '',
+            'zip_code' => $generalSettings->letterhead_zip_code ?? '',
+            'city' => $generalSettings->letterhead_city ?? '',
+            'email' => $generalSettings->letterhead_email ?? '',
+        ];
+
+        $pdfContent = $this->pdf->loadView(
+            'pdf.artist-residency-per-diem-standalone',
+            [
+                'artistResidencies' => $artistResidencies,
+                'project' => $project->load(['costCenter']),
+                'language' => $language,
+                'bigLogoBase64' => $bigLogoBase64,
+                'letterhead' => $letterhead,
+            ]
+        )->setPaper('a4', 'landscape')
+            ->setOptions([
+                'dpi' => 72,
+                'defaultFont' => 'sans-serif',
+                'isRemoteEnabled' => true,
+            ]);
+
+        $filename = $this->createFilename(now(), $project->name . '_per_diem', '72');
+        $filePath = $this->createStoragePath($filename);
+
+        $directory = dirname($filePath);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $pdfContent->save($filePath);
+
+        return $this->inertiaResponseFactory->location(
+            route('artist-residency.export.pdf.download', ['filename' => $filename])
+        );
     }
 
     /**

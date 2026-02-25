@@ -233,6 +233,25 @@
                                     :step="1"
                                     :max="50000"
                                 />
+
+                                <BaseInput
+                                    type="number"
+                                    v-model.number="artistResidency.breakfast_count"
+                                    :label="$t('Number of breakfasts')"
+                                    id="breakfast_count"
+                                    :step="1"
+                                    :min="0"
+                                    :max="50000"
+                                />
+                                <BaseInput
+                                    type="number"
+                                    v-model.number="artistResidency.breakfast_deduction_per_day"
+                                    :label="$t('Deduction per breakfast')"
+                                    id="breakfast_deduction_per_day"
+                                    :step="0.01"
+                                    :min="0"
+                                    :max="50000"
+                                />
                             </div>
 
                             <!-- KPIs (mobile only) -->
@@ -291,53 +310,125 @@
                                 {{ $t('Summary') }}
                             </h4>
 
-                            <dl class="mt-3 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <dt class="text-sm text-zinc-600">{{ $t('No. of overnight stays') }}</dt>
-                                    <dd>
-                                        <CountUp
-                                            :value="Number(calculateTotalNights())"
-                                            :decimals="0"
-                                            class="tabular-nums text-sm font-semibold text-zinc-900"
-                                        />
-                                    </dd>
-                                </div>
+                            <!-- Übernachtungen -->
+                            <div class="mt-3">
+                                <h5 class="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">{{ $t('Overnight stays') }}</h5>
+                                <dl class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('No. of overnight stays') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculateTotalNights())"
+                                                :decimals="0"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('Cost per night') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(artistResidency.cost_per_night)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between border-t border-zinc-100 pt-2">
+                                        <dt class="text-sm font-semibold text-zinc-900">{{ $t('Total costs for overnight stays') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculateTotalCost)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
 
-                                <div class="flex items-center justify-between">
-                                    <dt class="text-sm text-zinc-600">{{ $t('Costs for overnight stays') }}</dt>
-                                    <dd>
-                                        <CountUp
-                                            :value="Number(calculateTotalCost)"
-                                            :decimals="2"
-                                            suffix=" €"
-                                            locale="de-DE"
-                                            class="tabular-nums text-sm font-semibold text-zinc-900"
-                                        />
-                                    </dd>
-                                </div>
+                            <!-- Tagegeld -->
+                            <div class="mt-4">
+                                <h5 class="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">{{ $t('Daily allowance') }}</h5>
+                                <dl class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance entitlement') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance))"
+                                                :decimals="0"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance per day') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(artistResidency.daily_allowance)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance costs before deduction') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculateTotalDailyAllowance)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <dt class="text-sm text-zinc-600">{{ $t('Breakfast deduction') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculateBreakfastDeduction)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-red-600"
+                                            />
+                                        </dd>
+                                    </div>
+                                    <div class="flex items-center justify-between border-t border-zinc-100 pt-2">
+                                        <dt class="text-sm font-semibold text-zinc-900">{{ $t('Payout per diem') }}</dt>
+                                        <dd>
+                                            <CountUp
+                                                :value="Number(calculatePayoutPerDiem)"
+                                                :decimals="2"
+                                                suffix=" €"
+                                                locale="de-DE"
+                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                            />
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
 
-                                <div class="flex items-center justify-between">
-                                    <dt class="text-sm text-zinc-600">{{ $t('Daily allowance entitlement') }}</dt>
-                                    <dd>
-                                        <CountUp
-                                            :value="Number(calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance))"
-                                            :decimals="0"
-                                            class="tabular-nums text-sm font-semibold text-zinc-900"
-                                        />
-                                    </dd>
-                                </div>
-
-                                <div class="flex items-center justify-between">
-                                    <dt class="text-sm text-zinc-600">{{ $t('Daily allowance') }}</dt>
+                            <!-- Gesamtkosten -->
+                            <div class="flex items-center justify-between border-t-2 border-zinc-300 mt-4 pt-3">
+                                <dt class="text-sm font-bold text-zinc-900">{{ $t('Total cost') }}</dt>
+                                <dd>
                                     <CountUp
-                                        :value="Number(calculateTotalDailyAllowance)"
+                                        :value="Number(calculateTotalCost) + Number(calculatePayoutPerDiem)"
                                         :decimals="2"
                                         suffix=" €"
                                         locale="de-DE"
-                                        class="tabular-nums text-sm font-semibold text-zinc-900"
+                                        class="tabular-nums text-sm font-bold text-zinc-900"
                                     />
-                                </div>
-                            </dl>
+                                </dd>
+                            </div>
 
                             <p class="mt-3 text-[11px] text-zinc-500">
                                 {{ $t('Values update automatically when dates or rates change.') }}
@@ -414,6 +505,11 @@ const props = defineProps({
         type: Array,
         required: true,
         default: () => []
+    },
+    defaultBreakfastDeduction: {
+        type: Number,
+        required: false,
+        default: 5.60
     }
 })
 
@@ -453,6 +549,8 @@ const artistResidency = useForm({
     cost_per_night: props.artist_residency ? props.artist_residency.cost_per_night : 0.00,
     daily_allowance: props.artist_residency ? props.artist_residency.daily_allowance : 0.00,
     additional_daily_allowance: props.artist_residency ? props.artist_residency.additional_daily_allowance : 0.00,
+    breakfast_count: props.artist_residency ? (props.artist_residency.breakfast_count ?? 0) : 0,
+    breakfast_deduction_per_day: props.artist_residency ? (props.artist_residency.breakfast_deduction_per_day ?? props.defaultBreakfastDeduction) : props.defaultBreakfastDeduction,
     description: props.artist_residency ? props.artist_residency.description : '',
     days: 0,
 })
@@ -476,8 +574,15 @@ const calculateTotalCost = computed(() => {
 })
 
 const calculateTotalDailyAllowance = computed(() => {
-
     return (artistResidency.daily_allowance * (calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)))
+})
+
+const calculateBreakfastDeduction = computed(() => {
+    return (artistResidency.breakfast_count || 0) * (artistResidency.breakfast_deduction_per_day || 0)
+})
+
+const calculatePayoutPerDiem = computed(() => {
+    return Number(calculateTotalDailyAllowance.value) - Number(calculateBreakfastDeduction.value)
 })
 
 

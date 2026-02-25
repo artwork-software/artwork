@@ -1210,7 +1210,7 @@ class UserController extends Controller
 
     public function updateCalendarSettings(User $user, Request $request): void
     {
-        $user->calendar_settings()->update($request->only([
+        $settingsFields = $request->only([
             'project_status',
             'project_artists',
             'options',
@@ -1232,7 +1232,18 @@ class UserController extends Controller
             'show_shift_group_tag',
             'show_timeline',
             'show_only_not_fully_staffed_shifts'
-        ]));
+        ]);
+
+        if ($request->boolean('is_daily_view')) {
+            $dailySettings = $user->daily_view_calendar_settings;
+            if ($dailySettings === null) {
+                $dailySettings = $user->daily_view_calendar_settings()->create($settingsFields);
+            } else {
+                $dailySettings->update($settingsFields);
+            }
+        } else {
+            $user->calendar_settings()->update($settingsFields);
+        }
     }
 
     public function toggleUserShiftTimePreset(Request $request): void

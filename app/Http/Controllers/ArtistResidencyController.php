@@ -94,6 +94,11 @@ class ArtistResidencyController extends Controller
         return $this->artistResidencyService->exportService($project, ExportType::EXCEL->value, $language);
     }
 
+    public function exportPerDiemPdf(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
+    {
+        return $this->artistResidencyService->exportPerDiemPdf($project, $language);
+    }
+
     public function exportPdfDownload(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         return $this->artistResidencyService->downloadPdf($filename);

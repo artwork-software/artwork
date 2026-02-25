@@ -133,6 +133,10 @@ const props = defineProps({
     is_work_times: {
         type: Boolean,
         default: false
+    },
+    is_daily_view: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -391,6 +395,7 @@ function updateTimes() {
             router.patch(route('update.user.shift.calendar.filter.dates', userId), {
                 start_date: startDateObj,
                 end_date: endDateObj,
+                isDailyView: props.is_daily_view,
             }, {
                 preserveState: false,
                 preserveScroll: true,
@@ -416,6 +421,7 @@ function updateTimes() {
                 start_date: startDateObj,
                 end_date: endDateObj,
                 isPlanning: props.is_planning,
+                isDailyView: props.is_daily_view,
             }, {
                 preserveState: false,
                 preserveScroll: true,

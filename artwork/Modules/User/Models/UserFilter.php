@@ -30,6 +30,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|UserFilter calendarFilter()
  * @method static Builder|UserFilter planningCalendarFilter()
  * @method static Builder|UserFilter projectShiftFilter()
+ * @method static Builder|UserFilter shiftDailyFilter()
+ * @method static Builder|UserFilter calendarDailyFilter()
+ * @method static Builder|UserFilter planningDailyFilter()
  */
 
 class UserFilter extends CalendarFilter
@@ -85,5 +88,20 @@ class UserFilter extends CalendarFilter
     public function scopeProjectShiftFilter(Builder $query): Builder
     {
         return $query->where('filter_type', UserFilterTypes::PROJECT_SHIFT_FILTER->value);
+    }
+
+    public function scopeShiftDailyFilter(Builder $query): Builder
+    {
+        return $query->where('filter_type', UserFilterTypes::SHIFT_DAILY_FILTER->value);
+    }
+
+    public function scopeCalendarDailyFilter(Builder $query): Builder
+    {
+        return $query->where('filter_type', UserFilterTypes::CALENDAR_DAILY_FILTER->value);
+    }
+
+    public function scopePlanningDailyFilter(Builder $query): Builder
+    {
+        return $query->where('filter_type', UserFilterTypes::PLANNING_DAILY_FILTER->value);
     }
 }

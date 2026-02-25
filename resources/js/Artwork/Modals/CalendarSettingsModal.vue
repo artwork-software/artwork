@@ -604,32 +604,38 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const props = defineProps({
     isPlanning: { type: Boolean, default: false },
     inShiftPlan: { type: Boolean, default: false },
+    isDailyView: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["close"]);
 
+const activeSettings = props.isDailyView
+    ? (usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)
+    : usePage().props.auth.user.calendar_settings;
+
 const userCalendarSettings = useForm({
-    project_status: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_status : false,
-    project_artists: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_artists : false,
-    options: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.options : false,
-    project_management: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_management : false,
-    repeating_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.repeating_events : false,
-    work_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.work_shifts : false,
-    description: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.description : false,
-    event_name: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.event_name : false,
-    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
-    use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
-    hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
-    hide_unoccupied_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_days : false,
-    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
-    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
-    show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,
-    show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
-    shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
-    show_shift_group_tag: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_shift_group_tag : false,
-    show_timeline: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_timeline : false,
-    show_only_not_fully_staffed_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_only_not_fully_staffed_shifts : false,
+    is_daily_view: props.isDailyView,
+    project_status: activeSettings ? activeSettings.project_status : false,
+    project_artists: activeSettings ? activeSettings.project_artists : false,
+    options: activeSettings ? activeSettings.options : false,
+    project_management: activeSettings ? activeSettings.project_management : false,
+    repeating_events: activeSettings ? activeSettings.repeating_events : false,
+    work_shifts: activeSettings ? activeSettings.work_shifts : false,
+    description: activeSettings ? activeSettings.description : false,
+    event_name: activeSettings ? activeSettings.event_name : false,
+    high_contrast: activeSettings ? activeSettings.high_contrast : false,
+    expand_days: activeSettings ? activeSettings.expand_days : false,
+    use_event_status_color: activeSettings ? activeSettings.use_event_status_color : false,
+    hide_unoccupied_rooms: activeSettings ? activeSettings.hide_unoccupied_rooms : false,
+    hide_unoccupied_days: activeSettings ? activeSettings.hide_unoccupied_days : false,
+    display_project_groups: activeSettings ? activeSettings.display_project_groups : false,
+    show_unplanned_events: activeSettings ? activeSettings.show_unplanned_events : false,
+    show_planned_events: activeSettings ? activeSettings.show_planned_events : false,
+    show_qualifications: activeSettings ? activeSettings.show_qualifications : false,
+    shift_notes: activeSettings ? activeSettings.shift_notes : false,
+    show_shift_group_tag: activeSettings ? activeSettings.show_shift_group_tag : false,
+    show_timeline: activeSettings ? activeSettings.show_timeline : false,
+    show_only_not_fully_staffed_shifts: activeSettings ? activeSettings.show_only_not_fully_staffed_shifts : false,
 });
 
 const saveUserCalendarSettings = () => {

@@ -88,16 +88,29 @@ class ShiftPlanService
         /** @var User $currentUser */
         $currentUser = $request->user();
 
-        $userCalendarSettings = $currentUser->getAttribute('calendar_settings');
-        if ($userCalendarSettings === null) {
-            $userCalendarSettings = $currentUser->calendar_settings()->create();
+        $isDailyView = !$isProjectView && (bool) $currentUser->getAttribute('daily_view');
+
+        if ($isDailyView) {
+            $userCalendarSettings = $currentUser->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $currentUser->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $userCalendarSettings = $currentUser->getAttribute('calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $currentUser->calendar_settings()->create();
+            }
         }
+
+        $shiftFilterType = $isProjectView
+            ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+            : ($isDailyView
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value);
 
         $userCalendarFilter = $currentUser->userFilters()->firstOrCreate(
             [
-                'filter_type' => $isProjectView
-                    ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
-                    : UserFilterTypes::SHIFT_FILTER->value,
+                'filter_type' => $shiftFilterType,
             ],
             [
                 'start_date' => null,

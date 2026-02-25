@@ -31,6 +31,8 @@ class ArtistResidencyUpdateRequest extends FormRequest
             'daily_allowance' => 'required|numeric|min:0',
             'additional_daily_allowance' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'breakfast_count' => 'nullable|integer|min:0',
+            'breakfast_deduction_per_day' => 'nullable|numeric|min:0',
             'days' => 'required|integer|min:0',
         ];
     }

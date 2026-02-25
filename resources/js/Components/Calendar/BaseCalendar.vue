@@ -13,6 +13,7 @@
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
                 :is-planning="isPlanning"
+                :daily-view="isDaily"
             />
             <div
                 v-if="eventsWithoutRoomLen > 0"

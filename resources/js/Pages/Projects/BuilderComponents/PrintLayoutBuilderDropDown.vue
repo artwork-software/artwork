@@ -1,7 +1,7 @@
 <template>
     <div class="xxsLight">
         <div v-if="component.data?.label" class="text-sm font-bold text-gray-900 mb-0.5">{{ component.data.label }}</div>
-        <p class="line-clamp-3" v-html="project['DropDown'][component.component_id]?.data?.selected"></p>
+        <p class="line-clamp-3" v-html="project['DropDown'][component.id]?.data?.selected"></p>
     </div>
 </template>
 <script setup>

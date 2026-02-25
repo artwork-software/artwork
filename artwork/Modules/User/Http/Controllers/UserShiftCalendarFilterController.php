@@ -21,8 +21,14 @@ class UserShiftCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
+        $isDailyView = $request->get('isDailyView', false);
+
+        $filterType = $isDailyView
+            ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+            : UserFilterTypes::SHIFT_FILTER->value;
+
         $user->userFilters()->updateOrCreate(
-            ['filter_type' => UserFilterTypes::SHIFT_FILTER->value],
+            ['filter_type' => $filterType],
             [
                 'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
                 'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')

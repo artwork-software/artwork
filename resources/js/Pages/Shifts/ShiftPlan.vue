@@ -77,7 +77,8 @@
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     @select-go-to-next-mode="selectGoToNextMode"
                     @select-go-to-previous-mode="selectGoToPreviousMode"
-                    :event-types="eventTypes">
+                    :event-types="eventTypes"
+                    :is-daily-view="false">
                     <template #multiEditCalendar>
                         <div v-if="multiEditModeCalendar">
                             <div class="flex items-center justify-center gap-x-4">

@@ -78,7 +78,7 @@
                             :personal-filters="personalFiltersResolved"
                             :filter-options="filterOptionsResolved"
                             :crafts="craftsResolved"
-                            :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_filter'"
+                            :filter-type="props.isInProjectView ? 'project_shift_filter' : 'shift_daily_filter'"
                         />
 
                         <ToolTipComponent
@@ -101,7 +101,7 @@
                             classesButton="ui-button"
                         />
 
-                        <FunctionBarSetting :is-planning="false" is-in-shift-plan />
+                        <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="true" />
                     </div>
                 </div>
             </div>
@@ -229,7 +229,7 @@
                 :showHints="pageProps.show_hints"
                 :eventTypes="eventTypesResolved"
                 :rooms="roomsArray"
-                :calendarProjectPeriod="pageProps.auth.user.calendar_settings.use_project_time_period"
+                :calendarProjectPeriod="(pageProps.daily_view_calendar_settings ?? pageProps.auth.user.calendar_settings)?.use_project_time_period"
                 :project="props.project"
                 :event="eventToEdit"
                 :wantedRoomId="wantedRoom"
@@ -595,7 +595,7 @@ function getRoomDayShifts(room: any, day: string): any[] {
     let shifts = room.content[day].shiftIds.map((id: number) => room.shiftsById[id]).filter(Boolean)
 
     // Filter: nur nicht voll besetzte Schichten anzeigen
-    const showOnlyNotFullyStaffed = page.props.auth?.user?.calendar_settings?.show_only_not_fully_staffed_shifts
+    const showOnlyNotFullyStaffed = (page.props.daily_view_calendar_settings ?? page.props.auth?.user?.calendar_settings)?.show_only_not_fully_staffed_shifts
     if (showOnlyNotFullyStaffed) {
         shifts = shifts.filter((shift: any) => {
             const qualifications = Array.isArray(shift?.shifts_qualifications)
@@ -768,7 +768,7 @@ function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
  * Hide empty rooms
  */
 const hideUnoccupiedRooms = computed<boolean>(() => {
-    return page.props.auth?.user?.calendar_settings?.hide_unoccupied_rooms === true
+    return (page.props.daily_view_calendar_settings ?? page.props.auth?.user?.calendar_settings)?.hide_unoccupied_rooms === true
 })
 
 /**

@@ -12,7 +12,7 @@
             }">
                 <!-- HEADER (dynamic height, visible on every page) -->
                 <header ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
-                    <div class="header-content p-6">
+                    <div class="header-content p-2">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
                             <div v-for="index in layout['columns_header']" :key="index">
                                 <p class="xsDark" v-html="breakLine(layout.notes.header[index - 1])" />
@@ -33,7 +33,7 @@
                 </header>
 
                 <!-- BODY (takes up remaining space) -->
-                <main class="print-body p-6 " ref="bodyRef" :style="{marginTop: `${headerHeight}px`, paddingTop: `${headerHeight}px`}">
+                <main class="print-body p-2 " ref="bodyRef" :style="{marginTop: `${headerHeight}px`, paddingTop: `${headerHeight}px`}">
                     <div class="grid gap-4">
                         <template v-for="row in getRowCount(layout, 'body')" :key="row">
                             <div class="grid grid-cols-1 gap-4 component-wrapper" :class="'grid-cols-' + layout['columns_body']"  ref="componentRefs">
@@ -59,7 +59,7 @@
 
 
                 <!-- FOOTER (dynamic height, visible on every page) -->
-                <footer ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-6">
+                <footer ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-2">
                     <div class="footer-content">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
                             <div v-for="index in layout['columns_footer']" :key="index">
@@ -279,7 +279,7 @@ const breakLine = (text) => {
         margin: 0;
         padding: 0;
         width: 210mm;
-        height: 297mm;
+        height: auto;
     }
 
     .print-container {

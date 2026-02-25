@@ -71,6 +71,7 @@ const languageMethods = [
 const exportMethods = [
     { id: 'pdf', title: 'PDF-Export' },
     { id: 'excel', title: 'Excel-Export' },
+    { id: 'per-diem-pdf', title: 'Per Diem Export' },
 ]
 
 const selectedLanguage = ref(languageMethods[0])
@@ -79,6 +80,13 @@ const selectedExportMode = ref(exportMethods[0])
 const exportArtistResidencies = () => {
     if(selectedExportMode.value.id === 'pdf') {
         router.post(route('artist-residencies.export-pdf', {
+            project: props.project.id,
+            language: selectedLanguage.value.id
+        }), {}, {
+           preserveScroll: true
+        })
+    } else if(selectedExportMode.value.id === 'per-diem-pdf') {
+        router.post(route('artist-residencies.export-per-diem-pdf', {
             project: props.project.id,
             language: selectedLanguage.value.id
         }), {}, {

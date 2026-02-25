@@ -54,10 +54,21 @@ class UserCalendarFilterController extends Controller
     public function updateDates(Request $request, User $user): void
     {
         $isPlanning = $request->get('isPlanning', false);
+        $isDailyView = $request->get('isDailyView', false);
+
+        if ($isPlanning) {
+            $filterType = $isDailyView
+                ? UserFilterTypes::PLANNING_DAILY_FILTER->value
+                : UserFilterTypes::PLANNING_FILTER->value;
+        } else {
+            $filterType = $isDailyView
+                ? UserFilterTypes::CALENDAR_DAILY_FILTER->value
+                : UserFilterTypes::CALENDAR_FILTER->value;
+        }
+
         $user->userFilters()->updateOrCreate(
             [
-                'filter_type' =>
-                    $isPlanning ? UserFilterTypes::PLANNING_FILTER->value : UserFilterTypes::CALENDAR_FILTER->value
+                'filter_type' => $filterType
             ],
             [
                 'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Calendar\DTO;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
@@ -28,7 +29,7 @@ class ProjectDTO extends Data
     }
 
 
-    public static function fromModel(Project $project, UserCalendarSettings $userCalendarSettings = null): self
+    public static function fromModel(Project $project, null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null): self
     {
         return new self(
             $project->id,

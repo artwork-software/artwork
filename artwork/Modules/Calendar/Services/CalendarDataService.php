@@ -19,6 +19,7 @@ use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -163,7 +164,7 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(
         ?UserFilter $filter,
-        ?UserCalendarSettings $userCalendarSettings,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $considerShiftsForOccupancy = false,
@@ -250,13 +251,16 @@ readonly class CalendarDataService
 
 
     public function getCalendarDateRange(
-        UserCalendarSettings $userCalendarSettings,
-        UserFilter $userCalendarFilter,
+        UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
+        ?UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
 
         if (!$userCalendarSettings->getAttribute('use_project_time_period')) {
+            if ($userCalendarFilter === null) {
+                return [$today->copy()->startOfDay(), $today->copy()->addWeeks(1)->endOfDay()];
+            }
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
 

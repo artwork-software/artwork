@@ -618,6 +618,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
     Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
         ->name('project_settings.update');
+    Route::patch('/project/artist-residency-settings', [ProjectController::class, 'updateArtistResidencySettings'])
+        ->name('project_settings.artist_residency.update');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
@@ -1090,6 +1092,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //artist-residencies.export-excel
             Route::get('/{project}/{language}/export-excel', [ArtistResidencyController::class, 'exportExcel'])
                 ->name('artist-residencies.export-excel');
+
+            //artist-residencies.export-per-diem-pdf
+            Route::post('/{project}/{language}/export-per-diem-pdf', [ArtistResidencyController::class, 'exportPerDiemPdf'])
+                ->name('artist-residencies.export-per-diem-pdf');
 
             //artist-residency.export.pdf.download
             Route::get('/export-pdf/download/{filename}', [ArtistResidencyController::class, 'exportPdfDownload'])

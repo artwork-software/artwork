@@ -71,7 +71,8 @@ class CategoryController extends Controller
                 'color' => $state->color,
                 'is_planning' => $state->is_planning
             ]),
-            'createSettings' => app(ProjectCreateSettings::class)
+            'createSettings' => app(ProjectCreateSettings::class),
+            'breakfastDeductionPerDay' => app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class)->breakfast_deduction_per_day
         ]);
     }
 

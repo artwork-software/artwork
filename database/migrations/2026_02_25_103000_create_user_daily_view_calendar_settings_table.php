@@ -43,8 +43,8 @@ return new class extends Migration
                 ->onDelete('cascade');
         });
 
-        // Copy existing calendar_settings to daily_view for all users
-        DB::statement('
+        try {
+            DB::statement('
             INSERT INTO user_daily_view_calendar_settings
                 (user_id, project_status, options, project_management, repeating_events,
                  work_shifts, description, use_project_time_period, time_period_project_id,
@@ -63,6 +63,10 @@ return new class extends Migration
                 show_timeline, show_only_not_fully_staffed_shifts
             FROM user_calendar_settings
         ');
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
     }
 
     public function down(): void

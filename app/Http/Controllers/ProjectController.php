@@ -399,6 +399,19 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function updateArtistResidencySettings(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'breakfast_deduction_per_day' => 'required|numeric|min:0',
+        ]);
+
+        $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $settings->breakfast_deduction_per_day = (float) $request->input('breakfast_deduction_per_day');
+        $settings->save();
+
+        return Redirect::back();
+    }
+
     /**
      * @return array<string, mixed>
      */

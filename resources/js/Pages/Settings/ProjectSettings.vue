@@ -194,6 +194,48 @@
                 </div>
             </div>
 
+            <div class="card white p-5 mt-10">
+                <BasePageTitle
+                    :title="$t('Artist residencies')"
+                    :description="$t('Settings for artist residencies such as default values for breakfast deductions.')"
+                />
+                <transition
+                    enter-active-class="duration-300 ease-out"
+                    enter-from-class="transform opacity-0"
+                    enter-to-class="opacity-100"
+                    leave-active-class="duration-200 ease-in"
+                    leave-from-class="opacity-100"
+                    leave-to-class="transform opacity-0"
+                >
+                    <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showArtistResidencySaveSuccess">
+                        {{ $t('Saved. The changes have been successfully applied.') }}
+                    </div>
+                </transition>
+                <div class="mt-4 max-w-md">
+                    <label for="breakfast_deduction" class="block text-sm font-medium text-gray-700">
+                        {{ $t('Deduction per breakfast') }} (€)
+                    </label>
+                    <div class="mt-1 flex items-center gap-x-3">
+                        <input
+                            type="number"
+                            id="breakfast_deduction"
+                            v-model.number="artistResidencySettingsForm.breakfast_deduction_per_day"
+                            step="0.01"
+                            min="0"
+                            class="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        />
+                        <button
+                            type="button"
+                            class="ui-button-add"
+                            @click="updateArtistResidencySettings"
+                            :disabled="artistResidencySettingsForm.processing"
+                        >
+                            {{ $t('Save') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         <ProjectSettingsDeleteModal
             :show="deletingGenre"
             :title="$t('Delete Genre')"
@@ -321,7 +363,8 @@ export default {
         'collectingSocieties',
         'currencies',
         'states',
-        'createSettings'
+        'createSettings',
+        'breakfastDeductionPerDay'
     ],
     data() {
         return {
@@ -351,6 +394,10 @@ export default {
                 budget_deadline: this.createSettings.budget_deadline,
                 show_artists: this.createSettings.show_artists
             }),
+            artistResidencySettingsForm: useForm({
+                breakfast_deduction_per_day: this.breakfastDeductionPerDay ?? 5.60,
+            }),
+            showArtistResidencySaveSuccess: false,
             showSaveSuccess: false
         }
     },
@@ -575,6 +622,17 @@ export default {
                     }
                 })
             }
+        },
+        updateArtistResidencySettings(){
+            this.artistResidencySettingsForm.patch(route('project_settings.artist_residency.update'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showArtistResidencySaveSuccess = true
+                    setTimeout(() => {
+                        this.showArtistResidencySaveSuccess = false
+                    }, 2500)
+                }
+            })
         }
     },
     setup() {

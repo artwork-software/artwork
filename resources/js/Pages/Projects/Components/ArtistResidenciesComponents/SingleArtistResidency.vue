@@ -80,8 +80,10 @@ const sendDelete = () => {
 
 const calculateTotalCost = (artist_residency) => {
     const accommodationCost = artist_residency.cost_per_night * artist_residency.days;
-    const allowanceCost = (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
-    const totalCost = accommodationCost + allowanceCost;
+    const dailyAllowanceTotal = artist_residency.daily_allowance * (artist_residency.days + Math.floor(artist_residency.additional_daily_allowance));
+    const breakfastDeduction = (artist_residency.breakfast_count || 0) * (artist_residency.breakfast_deduction_per_day || 0);
+    const payoutPerDiem = dailyAllowanceTotal - breakfastDeduction;
+    const totalCost = accommodationCost + payoutPerDiem;
     return totalCost.toFixed(2);
 }
 </script>

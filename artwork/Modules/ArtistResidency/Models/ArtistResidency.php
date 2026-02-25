@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Date;
  * @property float cost_per_night
  * @property float daily_allowance
  * @property float additional_daily_allowance
+ * @property int breakfast_count
+ * @property float breakfast_deduction_per_day
  * @property string description
  * @property ServiceProvider serviceProvider
  */
@@ -46,6 +48,8 @@ class ArtistResidency extends Model
         'cost_per_night',
         'daily_allowance',
         'additional_daily_allowance',
+        'breakfast_count',
+        'breakfast_deduction_per_day',
         'description',
     ];
 

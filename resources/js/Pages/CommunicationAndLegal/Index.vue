@@ -86,6 +86,33 @@
                 </div>
 
             </div>
+
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Letterhead') }}</h3>
+            </div>
+            <div class="">
+                <div class="sm:col-span-3">
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.letterheadName" id="letterheadName" :label="$t('Name in letterhead')"/>
+                </div>
+            </div>
+            <div class="">
+                <div class="sm:col-span-3">
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.letterheadStreet" id="letterheadStreet" :label="$t('Street for letterhead + house number')"/>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="">
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.letterheadZipCode" id="letterheadZipCode" :label="$t('Zip code for letterhead')"/>
+                </div>
+                <div class="">
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.letterheadCity" id="letterheadCity" :label="$t('City for letterhead')"/>
+                </div>
+            </div>
+            <div class="">
+                <div class="sm:col-span-3">
+                    <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.letterheadEmail" id="letterheadEmail" :label="$t('Email for letterhead')"/>
+                </div>
+            </div>
         </div>
     </ToolSettingsHeader>
 </template>
@@ -121,6 +148,11 @@ export default defineComponent({
                 businessEmail: this.$page.props.businessEmail,
                 playingTimeWindowStart: this.$page.props.playingTimeWindowStart,
                 playingTimeWindowEnd: this.$page.props.playingTimeWindowEnd,
+                letterheadName: this.$page.props.letterheadName,
+                letterheadStreet: this.$page.props.letterheadStreet,
+                letterheadZipCode: this.$page.props.letterheadZipCode,
+                letterheadCity: this.$page.props.letterheadCity,
+                letterheadEmail: this.$page.props.letterheadEmail,
             }),
             showInvalidInvitationEmailAdressErrorText: false,
             showInvalidBusinessEmailAddressErrorText: false,

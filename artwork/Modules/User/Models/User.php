@@ -116,6 +116,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserShiftCalendarFilter $shift_calendar_filter
  * @property UserCalendarFilter $calendar_filter
  * @property UserCalendarSettings $calendar_settings
+ * @property UserDailyViewCalendarSettings $daily_view_calendar_settings
  * @property Collection<Shift> $shifts
  * @property Collection<Permission> $permission
  * @property Collection<Role> $allRoles
@@ -348,6 +349,13 @@ class User extends Model implements
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to dailyViewCalendarSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function daily_view_calendar_settings(): HasOne
+    {
+        return $this->hasOne(UserDailyViewCalendarSettings::class);
     }
 
     /**

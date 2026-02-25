@@ -38,7 +38,11 @@ class ToolSettingsCommunicationAndLegalController extends Controller
         $generalSettings->business_email = $request->get('businessEmail') ?? '';
         $generalSettings->playing_time_window_start = $request->get('playingTimeWindowStart') ?? '';
         $generalSettings->playing_time_window_end = $request->get('playingTimeWindowEnd') ?? '';
-
+        $generalSettings->letterhead_name = $request->get('letterheadName') ?? '';
+        $generalSettings->letterhead_street = $request->get('letterheadStreet') ?? '';
+        $generalSettings->letterhead_zip_code = $request->get('letterheadZipCode') ?? '';
+        $generalSettings->letterhead_city = $request->get('letterheadCity') ?? '';
+        $generalSettings->letterhead_email = $request->get('letterheadEmail') ?? '';
         $generalSettings->save();
 
         return Redirect::back()->with('success', __('flash-messages.communication_and_legal.update'));

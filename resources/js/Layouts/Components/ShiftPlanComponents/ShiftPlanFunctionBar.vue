@@ -5,7 +5,7 @@
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
                     <!-- Date Shortcuts - 3 vertical icons -->
                     <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true"></DatePickerComponent>
+                                           :is_shift_plan="true" :is_daily_view="isDailyView"></DatePickerComponent>
                     <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
                             direction="right"
@@ -185,7 +185,7 @@
                     <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
                                       @click="showCalendarSettingsModal = true"/>-->
 
-                    <FunctionBarSetting :is-planning="false" is-in-shift-plan />
+                    <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="isDailyView" />
 
                     <!--<ToolTipComponent  direction="bottom"
                                        :tooltip-text="$t('Filter')"
@@ -198,7 +198,7 @@
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
                         :crafts="crafts"
-                        filter-type="shift_filter"
+                        :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
@@ -301,7 +301,11 @@ const props = defineProps({
     crafts: Array,
     projectNameUsedForProjectTimePeriod: String,
     firstProjectShiftTabId: [Number, String],
-    eventTypes: Array
+    eventTypes: Array,
+    isDailyView: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
@@ -314,12 +318,20 @@ const showCalendarAboInfoModal = ref(false);
 const showCalendarAboSettingModal = ref(false);
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
+const activeSettings = computed(() => {
+    if (props.isDailyView) {
+        return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
+    }
+    return usePage().props.auth.user.calendar_settings;
+});
+
 const userCalendarSettings = useForm({
-    show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
-    shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
-    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
-    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
+    is_daily_view: props.isDailyView,
+    show_qualifications: activeSettings.value ? activeSettings.value.show_qualifications : false,
+    shift_notes: activeSettings.value ? activeSettings.value.shift_notes : false,
+    high_contrast: activeSettings.value ? activeSettings.value.high_contrast : false,
+    expand_days: activeSettings.value ? activeSettings.value.expand_days : false,
+    display_project_groups: activeSettings.value ? activeSettings.value.display_project_groups : false,
 });
 
 const CalendarSettingsModal = defineAsyncComponent({
@@ -346,7 +358,7 @@ const activeFilters = computed(() => {
 });
 
 const isCalendarUsingProjectTimePeriod = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_project_time_period;
+    return activeSettings.value?.use_project_time_period;
 });
 
 const userGotoMode = computed(() => {
@@ -378,7 +390,7 @@ const saveUserCalendarSettings = () => {
 };
 
 const getTimePeriodProjectId = () => {
-    return usePage().props.auth.user.calendar_settings.time_period_project_id;
+    return activeSettings.value?.time_period_project_id;
 };
 
 const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
@@ -487,6 +499,7 @@ const jumpToToday = () => {
             router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
                 start_date: today,
                 end_date: today,
+                isDailyView: true,
             }, {
                 preserveScroll: true,
                 preserveState: false
@@ -497,6 +510,7 @@ const jumpToToday = () => {
         router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
             start_date: today,
             end_date: today,
+            isDailyView: props.isDailyView,
         }, {
             preserveScroll: true,
             preserveState: false
@@ -521,6 +535,7 @@ const jumpToCurrentWeek = () => {
     router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: currentWeekStart.toISOString().slice(0, 10),
         end_date: currentWeekEnd.toISOString().slice(0, 10),
+        isDailyView: props.isDailyView,
     }, {
         preserveScroll: true,
         preserveState: false
@@ -540,6 +555,7 @@ const jumpToCurrentMonth = () => {
             router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
                 start_date: monthStart.toISOString().slice(0, 10),
                 end_date: monthEnd.toISOString().slice(0, 10),
+                isDailyView: false,
             }, {
                 preserveScroll: true,
                 preserveState: false
@@ -550,6 +566,7 @@ const jumpToCurrentMonth = () => {
         router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
             start_date: monthStart.toISOString().slice(0, 10),
             end_date: monthEnd.toISOString().slice(0, 10),
+            isDailyView: props.isDailyView,
         }, {
             preserveScroll: true,
             preserveState: false
@@ -603,7 +620,7 @@ watch(projectSearch, (searchValue) => {
     );
 });
 
-watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period, (newValue) => {
+watch(() => activeSettings.value?.use_project_time_period, (newValue) => {
     if (newValue) {
         nextTick(() => {
             document.getElementById('shiftPlanProjectSearch')?.focus();

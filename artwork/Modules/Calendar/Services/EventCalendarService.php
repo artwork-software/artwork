@@ -16,6 +16,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -31,7 +32,7 @@ readonly class EventCalendarService
         UserFilter $filter,
                    $startDate,
                    $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection {
         $events = $this->filter(
             $this->getEventQueryWithData(),
@@ -74,7 +75,7 @@ readonly class EventCalendarService
         UserFilter $filter,
                    $startDate,
                    $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection {
         $events = $this->filter(
             $this->getEventQueryForPdf(),
@@ -125,7 +126,7 @@ readonly class EventCalendarService
         UserFilter $filter,
                    $startDate,
                    $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection
     {
         $events = $this->filter(
@@ -190,7 +191,7 @@ readonly class EventCalendarService
         UserFilter            $filter,
                               $startDate,
                               $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection
     {
         $endDateEndOfDay = $endDate instanceof Carbon ? $endDate->copy()->endOfDay() : Carbon::parse($endDate)->endOfDay();

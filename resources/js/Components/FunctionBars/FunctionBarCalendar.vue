@@ -24,7 +24,7 @@
                             classesButton="ui-button"
                         />
                     </div>
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
+                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning" :is_daily_view="dailyView"/>
                     <div class="flex items-center">
                         <ToolTipComponent
                             v-if="!dailyView"
@@ -208,10 +208,10 @@
                         :user_filters="user_filters"
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
-                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
+                        :filter-type="isPlanning ? (dailyView ? 'planning_daily_filter' : 'planning_filter') : (dailyView ? 'calendar_daily_filter' : 'calendar_filter')"
                     />
 
-                    <FunctionBarSetting :is-planning="isPlanning" />
+                    <FunctionBarSetting :is-planning="isPlanning" :is-daily-view="dailyView" />
 
                     <!--<ToolTipComponent
                         direction="bottom"
@@ -259,10 +259,10 @@
                         :user_filters="user_filters"
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
-                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
+                        :filter-type="isPlanning ? (dailyView ? 'planning_daily_filter' : 'planning_filter') : (dailyView ? 'calendar_daily_filter' : 'calendar_filter')"
                     />
 
-                    <FunctionBarSetting :is-planning="isPlanning" />
+                    <FunctionBarSetting :is-planning="isPlanning" :is-daily-view="dailyView" />
 
                     <ToolTipComponent
                         direction="bottom"
@@ -493,8 +493,15 @@ const props = defineProps({
 
 const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
 const enableVerification = ref(false);
+const activeCalSettings = computed(() => {
+    if (props.dailyView) {
+        return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
+    }
+    return usePage().props.auth.user.calendar_settings;
+});
+
 const isCalendarUsingProjectTimePeriod = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_project_time_period;
+    return activeCalSettings.value?.use_project_time_period;
 });
 
 const startAndEndDateInDifferentMonths = computed(() => {
@@ -507,7 +514,7 @@ const startAndEndDateInDifferentMonths = computed(() => {
 });
 
 const getTimePeriodProjectId = () => {
-    return usePage().props.auth.user.calendar_settings.time_period_project_id;
+    return activeCalSettings.value?.time_period_project_id;
 }
 
 const formatDateStringToGermanFormat = (dateString) => {
@@ -596,11 +603,25 @@ const getNextDay = (dateString) => {
 }
 
 const previousDay = () => {
-    emits('previousDay')
+    const dayDifference = calculateDateDifference();
+    const newStart = new Date(dateValueCopy.value[0]);
+    newStart.setDate(newStart.getDate() - (dayDifference + 1));
+    const newEnd = new Date(dateValueCopy.value[0]);
+    newEnd.setDate(newEnd.getDate() - 1);
+    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
+    updateTimes();
 }
 
 const nextDay = () => {
-    emits('nextDay')
+    const dayDifference = calculateDateDifference();
+    const newStart = new Date(dateValueCopy.value[1]);
+    newStart.setDate(newStart.getDate() + 1);
+    const newEnd = new Date(dateValueCopy.value[1]);
+    newEnd.setDate(newEnd.getDate() + dayDifference + 1);
+    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
+    updateTimes();
 }
 
 const getPreviousDay = (dateString) => {
@@ -615,7 +636,8 @@ const updateTimes = () => {
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
-        isPlanning: props.isPlanning
+        isPlanning: props.isPlanning,
+        isDailyView: props.dailyView
     }, {
         preserveScroll: false,
         preserveState: false

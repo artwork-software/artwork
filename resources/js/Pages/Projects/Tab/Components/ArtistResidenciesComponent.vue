@@ -59,6 +59,9 @@
                 <component :is="IconMoneybag" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
+            <div class="flex items-center gap-x-1 font-semibold">
+                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostAll }} €</span></span>
+            </div>
         </div>
     </div>
 
@@ -69,6 +72,7 @@
         :artist_residency="artistResidencyToEdit"
         :accommodations="localAccommodations"
         :artists="localArtists"
+        :default-breakfast-deduction="defaultBreakfastDeduction"
     />
 
     <ExportArtistResidenciesModal
@@ -127,6 +131,7 @@ const loadResidenciesError = ref('');
 const localArtistResidencies = ref([]);
 const localArtists = ref([]);
 const localAccommodations = ref([]);
+const defaultBreakfastDeduction = ref(5.60);
 
 watch(
     () => props.project?.id,
@@ -153,6 +158,7 @@ async function fetchArtistResidencies() {
         localArtistResidencies.value = data?.artist_residencies ?? [];
         localArtists.value = data?.artists ?? [];
         localAccommodations.value = data?.accommodations ?? [];
+        defaultBreakfastDeduction.value = data?.default_breakfast_deduction ?? 5.60;
     } catch (error) {
         console.error(error);
         loadResidenciesError.value = 'Unable to load artist residencies.';
@@ -190,12 +196,17 @@ const totalCostOfArtistResidencies = computed(() => {
 })
 
 const totalAllowanceOfArtistResidencies = computed(() => {
-    // foreach artist_residency in artist_residencies calculate allowance_per_night * days
     let totalAllowance = 0;
     localArtistResidencies.value.forEach((artist_residency) => {
-        totalAllowance += (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
+        const dailyAllowanceTotal = artist_residency.daily_allowance * (artist_residency.days + Math.floor(artist_residency.additional_daily_allowance));
+        const breakfastDeduction = (artist_residency.breakfast_count || 0) * (artist_residency.breakfast_deduction_per_day || 0);
+        totalAllowance += dailyAllowanceTotal - breakfastDeduction;
     });
     return totalAllowance.toFixed(2);
+})
+
+const totalCostAll = computed(() => {
+    return (parseFloat(totalCostOfArtistResidencies.value) + parseFloat(totalAllowanceOfArtistResidencies.value)).toFixed(2);
 })
 </script>
 

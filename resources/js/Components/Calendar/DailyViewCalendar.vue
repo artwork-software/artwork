@@ -37,7 +37,7 @@
                     </HolidayToolTip>
                 </div>
                 <div class="ml-10 flex items-center h-full truncate">
-                    <div class="flex items-center h-full gap-x-2" v-if="usePage().props.auth.user.calendar_settings.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
+                    <div class="flex items-center h-full gap-x-2" v-if="(usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)?.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
                         <Link :disabled="checkIfUserIsAdminOrInGroup(group)" :href="route('projects.tab', { project: group.id, projectTab: firstProjectTabId })" class=" text-xs font-bold px-2 py-1 rounded-lg mb-0.5 flex items-center gap-x-1 border" :style="{ backgroundColor: group.color + '22' ?? '#ccc', color: group.color, borderColor: group.color }">
                             <component :is="group.icon" class="size-4" aria-hidden="true"/>
                             <span>{{ group.name }}</span>
@@ -72,7 +72,8 @@
                                             <div v-if="event && shouldRenderEvent(event, day, hour)"
                                                  class="py-0.5 rounded-lg relative"
                                                  :id="'event_scroll-' + index + '-day-' + day.withoutFormat"
-                                                 :style="getEventStyle(event, day, hour, zoom_factor)">
+                                                 :style="getEventStyle(event, day, hour, zoom_factor)"
+                                                 @click="onEventClick(event, $event)">
                                                 <SingleEventInCalendar
                                                     :event="event"
                                                     :project="project"
@@ -649,5 +650,12 @@ const openDeclineEventModal = (event) => {
 
 const handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits('changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd)
+};
+
+const onEventClick = (evt, e) => {
+    if (!props.multiEdit) return;
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    const nextState = !(evt?.considerOnMultiEdit === true);
+    handleMultiEditEventCheckboxChange(evt.id, nextState, (evt?.room_id ?? evt?.roomId ?? null), evt?.start, evt?.end);
 };
 </script>

@@ -9,6 +9,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
@@ -51,7 +52,7 @@ class EventDTOWithVerifications extends Data
 
     public static function fromModel(
         Event $event,
-        UserCalendarSettings $userCalendarSettings,
+        UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
         Collection $projects,
         Collection $eventTypes,
         Collection $users,

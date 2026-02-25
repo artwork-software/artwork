@@ -250,9 +250,27 @@ class EventController extends Controller
 
         /** @var User $user */
         $user = $this->authManager->user();
+        $isDailyView = (bool) $user->getAttribute('daily_view');
 
-        $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        if ($isDailyView) {
+            $calendarFilterType = UserFilterTypes::CALENDAR_DAILY_FILTER->value;
+            $userCalendarFilter   = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $calendarFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $calendarFilterType = UserFilterTypes::CALENDAR_FILTER->value;
+            $userCalendarFilter   = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $calendarFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+        }
+
         $isPlanning           = $request->boolean('isPlanning', false);
 
         // Abo/Shared Daten (leichtgewichtig lassen)
@@ -270,12 +288,12 @@ class EventController extends Controller
 
         // Sicherheitskappen für View-Spannen
         $calendarWarningText = '';
-        if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
 
             $user->userFilters()->updateOrCreate(
-                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['filter_type' => $calendarFilterType],
                 ['end_date' => $endDate->format('Y-m-d')]
             );
         }
@@ -285,7 +303,7 @@ class EventController extends Controller
             $calendarWarningText = __('calendar.calendar_limit_two_years');
 
             $user->userFilters()->updateOrCreate(
-                ['filter_type' => UserFilterTypes::CALENDAR_FILTER->value],
+                ['filter_type' => $calendarFilterType],
                 ['end_date' => $endDate->format('Y-m-d')]
             );
         }
@@ -332,7 +350,7 @@ class EventController extends Controller
             'user_filters'           => $userCalendarFilter,
             'calendarWarningText'    => $calendarWarningText,
             'personalFilters' => fn () =>
-            $this->filterService->getPersonalFilter($user, UserFilterTypes::CALENDAR_FILTER->value),
+            $this->filterService->getPersonalFilter($user, $calendarFilterType),
             'filterOptions'   => fn () => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => fn () =>
              Event::query()->hasNoRoom()->get()->map(fn($event) =>
@@ -357,6 +375,8 @@ class EventController extends Controller
                     $userCalendarSettings->getAttribute('time_period_project_id')
                 )->name
                 : null,
+            'filterType' => $calendarFilterType,
+            'isDailyView' => $isDailyView,
         ]);
     }
 
@@ -364,16 +384,32 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
+        $isDailyView = (bool) $user->getAttribute('daily_view');
 
+        if ($isDailyView) {
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+        }
 
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
         $isPlanning           = $request->boolean('isPlanning', false);
 
         if ($isPlanning) {
-            $userCalendarFilter   = $user->userFilters()->planningCalendarFilter()->first();
+            $filterType = $isDailyView
+                ? UserFilterTypes::PLANNING_DAILY_FILTER->value
+                : UserFilterTypes::PLANNING_FILTER->value;
         } else {
-            $userCalendarFilter   = $user->userFilters()->calendarFilter()->first();
+            $filterType = $isDailyView
+                ? UserFilterTypes::CALENDAR_DAILY_FILTER->value
+                : UserFilterTypes::CALENDAR_FILTER->value;
         }
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $filterType],
+            ['start_date' => null, 'end_date' => null]
+        );
 
         $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
         $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
@@ -411,8 +447,26 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->userFilters()->planningCalendarFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isDailyView = (bool) $user->getAttribute('daily_view');
+
+        if ($isDailyView) {
+            $planningFilterType = UserFilterTypes::PLANNING_DAILY_FILTER->value;
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $planningFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $planningFilterType = UserFilterTypes::PLANNING_FILTER->value;
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $planningFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+        }
 
         $this->userService->shareCalendarAbo('calendar');
 
@@ -421,11 +475,11 @@ class EventController extends Controller
 
         $calendarWarningText = '';
 
-        if ($user->daily_view && $startDate->diffInDays($endDate) > 7) {
+        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::PLANNING_FILTER->value
+                'filter_type' => $planningFilterType
             ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
@@ -436,7 +490,7 @@ class EventController extends Controller
             $endDate = $startDate->copy()->addYears(2);
             $calendarWarningText = __('calendar.calendar_limit_two_years');
             $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::PLANNING_FILTER->value
+                'filter_type' => $planningFilterType
             ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
@@ -511,7 +565,7 @@ class EventController extends Controller
             'rooms' => $roomDTOs,
             'calendar' => Inertia::always(fn() => $calendarData->rooms),
             'personalFilters' => Inertia::always(fn() => $this->filterService
-                ->getPersonalFilter($user, UserFilterTypes::PLANNING_FILTER->value)),
+                ->getPersonalFilter($user, $planningFilterType)),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'eventsWithoutRoom' => Event::query()->hasNoRoom()->get()->map(fn($event) =>
                 EventWithoutRoomDTO::formModel($event, $userCalendarSettings, $eventTypes)),
@@ -533,7 +587,8 @@ class EventController extends Controller
             'calendarWarningText' => $calendarWarningText,
             'months' => $months,
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
-
+            'filterType' => $planningFilterType,
+            'isDailyView' => $isDailyView,
         ]);
     }
 
@@ -551,16 +606,28 @@ class EventController extends Controller
 
         /** @var User $user */
         $user = $this->authManager->user();
+        $isDailyView = !$isInProjectView && (bool) $user->getAttribute('daily_view');
 
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
-        if ($userCalendarSettings === null) {
-            $userCalendarSettings = $user->calendar_settings()->create();
+        if ($isDailyView) {
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->calendar_settings()->create();
+            }
         }
 
+        $shiftFilterType = $isInProjectView
+            ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+            : ($isDailyView
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value);
+
         $userCalendarFilter = $user->userFilters()->firstOrCreate(
-            ['filter_type' => $isInProjectView
-                ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
-                : UserFilterTypes::SHIFT_FILTER->value
+            ['filter_type' => $shiftFilterType
             ],
             [
                 'start_date' => null,
@@ -675,8 +742,27 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $userCalendarFilter = $user->userFilters()->shiftFilter()->first();
-        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $isDailyView = (bool) $user->getAttribute('daily_view');
+
+        if ($isDailyView) {
+            $shiftFilterType = UserFilterTypes::SHIFT_DAILY_FILTER->value;
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $shiftFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+            }
+        } else {
+            $shiftFilterType = UserFilterTypes::SHIFT_FILTER->value;
+            $userCalendarFilter = $user->userFilters()->firstOrCreate(
+                ['filter_type' => $shiftFilterType],
+                ['start_date' => null, 'end_date' => null]
+            );
+            $userCalendarSettings = $user->getAttribute('calendar_settings');
+        }
+
         $renderViewName = 'Shifts/ShiftPlan';
         $this->userService->shareCalendarAbo('shiftCalendar');
         $this->singleShiftPresetService->shareSingleShiftPresets();
@@ -685,11 +771,11 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         $calendarWarningText = '';
-        if ($user->getAttribute('daily_view') && $startDate->diffInDays($endDate) > 7) {
+        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::SHIFT_FILTER->value
+                'filter_type' => $shiftFilterType
             ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
@@ -700,7 +786,7 @@ class EventController extends Controller
             $endDate = $startDate->copy()->addDays(30);
             $calendarWarningText = __('calendar.calendar_limit_one_month');
             $user->userFilters()->updateOrCreate([
-                'filter_type' => UserFilterTypes::SHIFT_FILTER->value
+                'filter_type' => $shiftFilterType
             ], [
                 'end_date' => $endDate->format('Y-m-d')
             ]);
@@ -712,7 +798,7 @@ class EventController extends Controller
             $endDate ? $endDate->format('Y-m-d') : null
         ];
 
-        if ($user->getAttribute('daily_view')) {
+        if ($isDailyView) {
             $renderViewName = 'Shifts/ShiftPlanDailyView';
         }
 
@@ -724,7 +810,7 @@ class EventController extends Controller
             'event_properties' => EventProperty::all(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'personalFilters' => $this->filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'user_filters' => $userCalendarFilter,
@@ -771,6 +857,8 @@ class EventController extends Controller
             'calendarWarningText' => $calendarWarningText,
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
+            'filterType' => $shiftFilterType,
+            'isDailyView' => $isDailyView,
         ]);
     }
 

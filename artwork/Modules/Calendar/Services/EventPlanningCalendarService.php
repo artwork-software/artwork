@@ -13,6 +13,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
@@ -34,7 +35,7 @@ class EventPlanningCalendarService
         UserFilter $filter,
         $startDate,
         $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): Collection {
         $roomIds = $rooms->pluck('id');
         $events = Event::select([

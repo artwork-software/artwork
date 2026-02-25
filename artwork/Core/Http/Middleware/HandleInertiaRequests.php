@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
 
         $user = Auth::user();
         $calendarSettings = $user?->calendar_settings;
+        $dailyViewCalendarSettings = $user?->daily_view_calendar_settings;
 
         $projectName = null;
         if ($calendarSettings?->use_project_time_period) {
@@ -165,6 +166,7 @@ class HandleInertiaRequests extends Middleware
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
                 'calendar_settings' => $calendarSettings,
+                'daily_view_calendar_settings' => $dailyViewCalendarSettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',

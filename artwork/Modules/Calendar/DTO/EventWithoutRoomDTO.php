@@ -9,6 +9,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
@@ -49,7 +50,7 @@ class EventWithoutRoomDTO extends Data
 
     public static function formModel(
         Event $event,
-        UserCalendarSettings $userCalendarSettings,
+        UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
         Collection $eventTypes,
     ): EventWithoutRoomDTO {
         return new self(

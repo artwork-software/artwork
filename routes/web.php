@@ -1086,6 +1086,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::delete('/{artistResidency}', [ArtistResidencyController::class, 'destroy'])
                 ->name('artist-residency.destroy');
 
+            // artist-residencies.update-name (inline name edit for non-DB artists)
+            Route::patch('/{artistResidency}/update-name', [ArtistResidencyController::class, 'updateName'])
+                ->name('artist-residencies.update-name');
+
             //artist-residencies.export-pdf
             Route::post('/{project}/{language}/export-pdf', [ArtistResidencyController::class, 'exportPdf'])
                 ->name('artist-residencies.export-pdf');

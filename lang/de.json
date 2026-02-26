@@ -3994,5 +3994,7 @@
     "Email for letterhead": "E-Mail für Adresskopf",
     "Cost unit & GEMA": "Kostenträger & GEMA",
     "Define a cost unit and GEMA status for your project.": "Lege einen Kostenträger und den GEMA-Status für dein Projekt fest.",
-    "GEMA": "GEMA"
+    "GEMA": "GEMA",
+    "Do not save artist in database": "Künstler*in nicht in Datenbank speichern",
+    "Artist was not automatically saved in the database": "Künstler*in wurde nicht automatisch in Datenbank angelegt"
 }

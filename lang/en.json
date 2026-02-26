@@ -3954,5 +3954,7 @@
     "Email for letterhead": "Email for letterhead",
     "Cost unit & GEMA": "Cost unit & GEMA",
     "Define a cost unit and GEMA status for your project.": "Define a cost unit and GEMA status for your project.",
-    "GEMA": "GEMA"
+    "GEMA": "GEMA",
+    "Do not save artist in database": "Do not save artist in database",
+    "Artist was not automatically saved in the database": "Artist was not automatically saved in the database"
 }

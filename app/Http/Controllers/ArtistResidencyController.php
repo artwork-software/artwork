@@ -79,6 +79,19 @@ class ArtistResidencyController extends Controller
         $artistResidency->delete();
     }
 
+    public function updateName(ArtistResidency $artistResidency): void
+    {
+        if (!$artistResidency->do_not_save_artist) {
+            abort(403);
+        }
+
+        $data = request()->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $artistResidency->update(['name' => $data['name']]);
+    }
+
     public function duplicate(ArtistResidency $artistResidency): void
     {
         $artistResidency->replicate()->save();

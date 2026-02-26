@@ -170,7 +170,7 @@ class NotificationController extends Controller
             return;
         }
 
-        if (count(array_diff($wantedNotification->getAttribute('data')['buttons'], ['showInTasks', 'show_project'])) > 0) {
+        if (count(array_diff($wantedNotification->getAttribute('data')['buttons'], ['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift'])) > 0) {
             return;
         }
 
@@ -188,7 +188,7 @@ class NotificationController extends Controller
 
         $notifications = $user->notifications()->whereIn('id', $request->notificationIds)->get();
         foreach ($notifications as $notification) {
-            if (count(array_diff($notification->data['buttons'], ['showInTasks', 'show_project'])) > 0) {
+            if (count(array_diff($notification->data['buttons'], ['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift'])) > 0) {
                 continue;
             }
 

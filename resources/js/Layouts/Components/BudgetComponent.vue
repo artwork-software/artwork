@@ -466,15 +466,15 @@
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
-                                             v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
+                                             v-if="table.costSumDetails?.[column.id]?.hasComments && table.costSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
-                                             v-else-if="table.costSumDetails[column.id]?.hasComments"
+                                             v-else-if="table.costSumDetails?.[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
                                              class="h-5 w-5 mr-1 cursor-pointer"/>
                                         <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')"
-                                             v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
+                                             v-else-if="table.costSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
@@ -508,7 +508,7 @@
                                     <div class="w-48 my-2 p-1">
                                         <span
                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                            {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
+                                            {{ this.toCurrencyString(table.commentedCostSums?.[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
                                                 {{
@@ -594,15 +594,15 @@
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
-                                             v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
+                                             v-if="table.earningSumDetails?.[column.id]?.hasComments && table.earningSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
-                                             v-else-if="table.earningSumDetails[column.id]?.hasComments"
+                                             v-else-if="table.earningSumDetails?.[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
                                              class="h-5 w-5 mr-1 cursor-pointer"/>
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')"
-                                             v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
+                                             v-else-if="table.earningSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
@@ -637,7 +637,7 @@
                                     <div class="w-48 my-2 p-1">
                                          <span
                                              v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                            {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
+                                            {{ this.toCurrencyString(table.commentedEarningSums?.[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
                                                 {{
@@ -1069,7 +1069,7 @@ export default {
         },
         projectMembers: function () {
             let projectMemberArray = [];
-            this.project.users?.forEach(member => {
+            this.project?.users?.forEach(member => {
                     projectMemberArray.push(member.id)
                 }
             )
@@ -1270,7 +1270,7 @@ export default {
         getSumOfTable(tableType, columnId) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += mainPosition.columnSums[columnId]?.sum;
+                sum += mainPosition.columnSums?.[columnId]?.sum ?? 0;
             })
             if (isNaN(sum)) {
                 return 0;

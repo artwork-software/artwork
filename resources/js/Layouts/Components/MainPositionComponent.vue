@@ -166,14 +166,14 @@
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
-                        mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : '',
+                        mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : '',
                         column.color !== 'whiteColumn' ? column.color : ''
                     ]">
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums?.[column.id]?.hasComments && mainPosition.columnSums?.[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums?.[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums?.[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                            {{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}
+                            {{ this.toCurrencyString(mainPosition.columnSums?.[column.id]?.sum) }}
                         </span>
                         <span v-if="column.type === 'sage'">
                             {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}

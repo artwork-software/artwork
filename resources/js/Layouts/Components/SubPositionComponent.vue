@@ -233,16 +233,16 @@
                                             />
 
                                             <PropertyIcon
-                                                v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"
+                                                v-if="cell.sage_assigned_data?.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"
                                                 name="IconAbacus"
                                             />
 
                                             <PropertyIcon
-                                                v-if="cell.sage_assigned_data.length >= 1"
+                                                v-if="cell.sage_assigned_data?.length >= 1"
                                                 name="IconAdjustmentsAlt"
                                                 @click="handleCellClick(cell, 'sageAssignedData', index, row)"
                                                 class="h-5 w-5 cursor-pointer border-2 rounded-md"
-                                                :class="cell.sage_assigned_data.length === 1
+                                                :class="cell.sage_assigned_data?.length === 1
         ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color'
         : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
                                                 stroke-width="1.5"
@@ -254,7 +254,7 @@
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center min-w-0">
                                                 <SageDropCellElement :cell="cell" :value="toCurrencyString(cell.sage_value)" @budget-updated="$emit('budget-updated')" />
                                                 <SageDragCellElement
-                                                    v-if="cell.sage_assigned_data.length >= 1"
+                                                    v-if="cell.sage_assigned_data?.length >= 1"
                                                     :cell="cell"
                                                     class="hidden group-hover:block shrink-0"
                                                 />
@@ -402,24 +402,24 @@
                 <td class="w-48"></td>
                 <td class="w-48"></td>
                 <td class="w-72 my-2">SUM</td>
-                <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48"
+                <td v-if="subPosition.sub_position_rows?.length > 0" class="flex items-center w-48"
                     v-for="column in columns.slice(3)"
                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
-                         :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
-                                 v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource"
+                                 v-if="subPosition.columnSums?.[column.id]?.hasComments && subPosition.columnSums?.[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                  class="h-6 w-6 mr-1 cursor-pointer"/>
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
-                                 v-else-if="subPosition.columnSums[column.id]?.hasComments"
+                                 v-else-if="subPosition.columnSums?.[column.id]?.hasComments"
                                  src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
-                                 v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
+                                 v-else-if="subPosition.columnSums?.[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
+                                {{ this.toCurrencyString(subPosition.columnSums?.[column.id]?.sum) }}
                             </span>
                             <span v-if="column.type === 'sage'">
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
@@ -996,7 +996,7 @@ export default {
             }
         },
         checkIfRowHasSageData(row) {
-            return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
+            return row.cells?.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data?.length > 0) ?? false;
         },
         async handleCellClick(cell, type = '', index = null, row = null) {
             if (!this.hasBudgetAccess) {

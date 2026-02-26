@@ -7,16 +7,10 @@
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
-                :collecting-societies="effectiveBudgetInformation?.collecting_societies ?? project.collecting_societies"
             />
         </div>
-        <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
-        <div class="text-secondary text-sm mt-2" v-if="project.own_copyright">
-            {{ project?.collecting_society?.name }},
-            {{ project.law_size === "SMALL" ? $t('Small law') : $t('Big law') }},
-            {{ project.live_music ? $t('with live music') : $t('without live music') }}
-        </div>
-        <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
+        <div class="text-secondary text-md">{{$t('GEMA')}}: {{ project.gema ? $t('Yes') : $t('No') }}</div>
+        <div class="text-secondary text-sm mt-2" v-if="project.cost_center_description">{{ project.cost_center_description }}</div>
         <hr class="my-10 border-darkGray">
         <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.effectiveBudgetInformation?.project_manager_ids?.includes(this.$page.props.auth.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
@@ -220,9 +214,6 @@ export default {
                     route('projects.tabs.budget-informations', { project: projectId })
                 );
                 this.localBudgetInformation = data?.BudgetInformation || null;
-                if (data?.collectingSociety) {
-                    this.project.collecting_society = data.collectingSociety;
-                }
             } catch (error) {
                 console.error(error);
                 this.loadBudgetInfoError = 'Unable to load budget information.';

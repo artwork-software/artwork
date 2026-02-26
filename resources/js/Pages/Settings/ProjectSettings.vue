@@ -75,16 +75,6 @@
                 />
 
                 <ProjectSettingsItem
-                    :title="$t('Collecting Societies')"
-                    :description="$t('Define collecting societies that can be assigned to projects later.')"
-                    :input-label="$t('Enter Collecting Society')"
-                    :items="collectingSocieties"
-                    @add="addCollectingSociety"
-                    @openDeleteModal="openDeleteCollectingSocietyModal"
-                    @openEditModal="openEditCollectingSocietyModal"
-                />
-
-                <ProjectSettingsItem
                     :title="$t('Currencies')"
                     :description="$t('Define currencies that can be assigned to contracts later.')"
                     :input-label="$t('Enter Currency')"
@@ -285,14 +275,6 @@
         />
 
         <ProjectSettingsDeleteModal
-            :show="deletingCollectingSociety"
-            :title="$t('Delete collecting society')"
-            :description="$t('Are you sure you want to delete the collecting society {collectingSociety} from the system?',{ collectingSociety: collectingSocietyToDelete?.name})"
-            @delete="deleteCollectingSociety"
-            @closeModal="closeDeleteCollectingSocietyModal"
-        />
-
-        <ProjectSettingsDeleteModal
             :show="deletingCurrency"
             :title="$t('Delete Currency')"
             :description="$t('Are you sure you want to delete the currency {currency} from the system?',{ currency: currencyToDelete?.name})"
@@ -360,7 +342,6 @@ export default {
         'sectors',
         'contractTypes',
         'companyTypes',
-        'collectingSocieties',
         'currencies',
         'states',
         'createSettings',
@@ -378,8 +359,6 @@ export default {
             contractTypeToDelete: null,
             deletingCompanyType: false,
             companyTypeToDelete: null,
-            deletingCollectingSociety: false,
-            collectingSocietyToDelete: null,
             deletingCurrency: false,
             currencyToDelete: null,
             deletingState: false,
@@ -417,9 +396,6 @@ export default {
         },
         openEditCompanyTypeModal(companyType) {
             this.$inertia.patch(route('company_types.update', companyType.id), {name: companyType.name, color: companyType.color}, { preserveScroll: true});
-        },
-        openEditCollectingSocietyModal(collectingSociety) {
-            this.$inertia.patch(route('collecting_societies.update', collectingSociety.id), {name: collectingSociety.name, color: collectingSociety.color}, { preserveScroll: true});
         },
         openEditCurrencyModal(currency) {
             this.$inertia.patch(route('currencies.update', currency.id), {name: currency.name, color: currency.color}, { preserveScroll: true});
@@ -567,23 +543,6 @@ export default {
             this.companyTypeToDelete = null
         },
 
-        addCollectingSociety(collectingSocietyInput, color) {
-            if (collectingSocietyInput !== '') {
-                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput, color: color}, { preserveScroll: true});
-            }
-        },
-        deleteCollectingSociety() {
-            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`, { preserveScroll: true});
-            this.closeDeleteCollectingSocietyModal();
-        },
-        openDeleteCollectingSocietyModal(collectingSociety) {
-            this.collectingSocietyToDelete = collectingSociety;
-            this.deletingCollectingSociety = true
-        },
-        closeDeleteCollectingSocietyModal() {
-            this.deletingCollectingSociety = false
-            this.collectingSocietyToDelete = null
-        },
         addCurrency(currencyInput, color){
           if(currencyInput !== ''){
               this.$inertia.post(route('currencies.store'), {name: currencyInput, color: color}, { preserveScroll: true});

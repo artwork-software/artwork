@@ -172,12 +172,9 @@ class ProjectPrintLayoutController extends Controller
                             Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
                         break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
                         $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->gema = $project->gema;
                         $projectData->cost_center_description = $project->cost_center_description;
-                        $projectData->law_size = $project->law_size;
-                        $projectData->live_music = $project->live_music;
                         break;
                     case ProjectTabComponentEnum::BULK_EDIT->value:
                         $eventsUnSorted = $project->events()->without([

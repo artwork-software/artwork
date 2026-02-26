@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Category\Models\Category;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
@@ -54,11 +53,6 @@ class CategoryController extends Controller
                 'id' => $companyType->id,
                 'name' => $companyType->name,
                 'color' => $companyType->color,
-            ]),
-            'collectingSocieties' => CollectingSociety::all()->map(fn($collectingSociety) => [
-                'id' => $collectingSociety->id,
-                'name' => $collectingSociety->name,
-                'color' => $collectingSociety->color,
             ]),
             'currencies' => Currency::all()->map(fn($currency) => [
                 'id' => $currency->id,

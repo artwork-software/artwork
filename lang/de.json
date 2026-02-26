@@ -3991,5 +3991,8 @@
     "Street for letterhead + house number": "Straße für Adresskopf + Hausnummer",
     "Zip code for letterhead": "Postleitzahl für Adresskopf",
     "City for letterhead": "Stadt für Adresskopf",
-    "Email for letterhead": "E-Mail für Adresskopf"
+    "Email for letterhead": "E-Mail für Adresskopf",
+    "Cost unit & GEMA": "Kostenträger & GEMA",
+    "Define a cost unit and GEMA status for your project.": "Lege einen Kostenträger und den GEMA-Status für dein Projekt fest.",
+    "GEMA": "GEMA"
 }

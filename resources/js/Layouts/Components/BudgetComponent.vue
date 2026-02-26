@@ -81,6 +81,35 @@
                         {{ $t('Excluded items hidden') }}
                     </span>
             </div>
+
+            <div class="flex items-center gap-x-2" v-if="!table.is_template && this.$page.props.budgetAccountManagementGlobal">
+                <SwitchGroup as="div" class="flex items-center">
+                    <SwitchLabel as="span" class="mr-2 text-sm" :class="userShowAccountNumber ? 'font-bold' : 'xsLight'">
+                        {{ $t('Show number') }}
+                    </SwitchLabel>
+                    <Switch v-model="userShowAccountName"
+                            :class="[
+                                userShowAccountName ? 'bg-indigo-600' : 'bg-gray-200',
+                                'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]"
+                    >
+                        <span aria-hidden="true"
+                              :class="[
+                                  userShowAccountName ? 'translate-x-5' : 'translate-x-0',
+                                  'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                              ]"
+                        />
+                    </Switch>
+                    <SwitchLabel as="span" class="ml-2 text-sm" :class="userShowAccountName ? 'font-bold' : 'xsLight'">
+                        {{ $t('Show name') }}
+                    </SwitchLabel>
+                </SwitchGroup>
+                <ToolTipComponent
+                    icon="IconInfoCircle"
+                    icon-size="w-5 h-5"
+                    :tooltip-text="$t('Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.')"
+                />
+            </div>
         </div>
 
 
@@ -448,6 +477,7 @@
                                                                :main-position="mainPosition"
                                                                :project-managers="projectManager"
                                                                :hasBudgetAccess="this.hasBudgetAccess()"
+                                                               :user-show-account-name="userShowAccountName"
                                                                type="BUDGET_TYPE_COST"
                                         />
                                     </div>
@@ -576,6 +606,7 @@
                                                                :main-position="mainPosition"
                                                                :project-managers="projectManager"
                                                                :hasBudgetAccess="this.hasBudgetAccess()"
+                                                               :user-show-account-name="userShowAccountName"
                                                                type="BUDGET_TYPE_EARNING"
                                         />
                                     </div>
@@ -1018,6 +1049,9 @@ export default {
             userExcludeCommentedBudgetItems: this.$page.props.auth.user.commented_budget_items_setting ?
                 this.$page.props.auth.user.commented_budget_items_setting.exclude === 1 :
                 false,
+            userShowAccountName: this.$page.props.auth.user.budget_account_display_setting ?
+                !this.$page.props.auth.user.budget_account_display_setting.show_number :
+                false,
             showDeleteSageNotAssignedDataConfirmationModal: false,
             sageNotAssignedDataToDelete: null,
             localCostMainPositions: [],
@@ -1044,6 +1078,9 @@ export default {
     ],
     emits: ['changeProjectHeaderVisualisation', 'budget-updated', 'sumDetailLoaded'],
     computed: {
+        userShowAccountNumber() {
+            return !this.userShowAccountName;
+        },
         computedSortedColumns: function () {
             return this.sortColumns();
         },
@@ -1129,6 +1166,46 @@ export default {
                     ),
                     {
                         exclude: excludeHiddenItems
+                    },
+                    {
+                        preserveScroll: true,
+                        preserveState: true
+                    }
+                );
+            }
+        },
+        userShowAccountName: {
+            handler(showName) {
+                const showNumber = !showName;
+                if (!this.$page.props.auth.user.budget_account_display_setting) {
+                    router.post(
+                        route(
+                            'user.budgetAccountDisplaySettings.store',
+                            {
+                                user: this.$page.props.auth.user.id
+                            }
+                        ),
+                        {
+                            show_number: showNumber
+                        },
+                        {
+                            preserveState: true,
+                            preserveScroll: true
+                        }
+                    );
+                    return;
+                }
+
+                router.patch(
+                    route(
+                        'user.budgetAccountDisplaySettings.update',
+                        {
+                            user: this.$page.props.auth.user.id,
+                            budgetAccountDisplaySetting: this.$page.props.auth.user.budget_account_display_setting.id
+                        }
+                    ),
+                    {
+                        show_number: showNumber
                     },
                     {
                         preserveScroll: true,

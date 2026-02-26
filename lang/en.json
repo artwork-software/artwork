@@ -3956,5 +3956,8 @@
     "Define a cost unit and GEMA status for your project.": "Define a cost unit and GEMA status for your project.",
     "GEMA": "GEMA",
     "Do not save artist in database": "Do not save artist in database",
-    "Artist was not automatically saved in the database": "Artist was not automatically saved in the database"
+    "Artist was not automatically saved in the database": "Artist was not automatically saved in the database",
+    "Show number": "Show number",
+    "Show name": "Show name",
+    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active."
 }

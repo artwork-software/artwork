@@ -108,11 +108,11 @@
                                         >
                                             <span
                                                 :ref="el => setTruncEl(cell.id, el)"
-                                                :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
+                                                :class="(userShowAccountName ? (cell.display_value ?? cell.value) : cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
                                                 @mousedown="storeFocus(cell.id)"
                                                 @click="this.handleCellClick(cell, '', index, row)"
                                             >
-                                                {{ cell.display_value ?? cell.value }}
+                                                {{ userShowAccountName ? (cell.display_value ?? cell.value) : cell.value }}
                                             </span>
                                             <span
                                                 v-if="isTruncated[cell.id]"
@@ -126,7 +126,7 @@
                                                     class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
                                                            border-l border-t border-gray-200"
                                                 />
-                                                {{ String(cell.display_value ?? cell.value ?? '') }}
+                                                {{ String(userShowAccountName ? (cell.display_value ?? cell.value) : (cell.value ?? '')) }}
                                             </span>
                                         </span>
                                     </div>
@@ -136,7 +136,7 @@
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
-                                               :placeholder="cell.display_value ?? cell.value"
+                                               :placeholder="userShowAccountName ? (cell.display_value ?? cell.value) : cell.value"
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
@@ -512,7 +512,7 @@ export default {
         ConfirmationComponent,
         Link
     },
-    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
+    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess', 'userShowAccountName'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',

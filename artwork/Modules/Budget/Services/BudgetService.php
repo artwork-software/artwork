@@ -242,7 +242,7 @@ class BudgetService
         $selectedSumDetail = $this->resolveSelectedSumDetail();
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commentedBudgetItemsSetting']);
+        Auth::user()->load(['commentedBudgetItemsSetting', 'budgetAccountDisplaySetting']);
 
         $sageNotAssigned = $this->resolveSageNotAssigned($project);
 

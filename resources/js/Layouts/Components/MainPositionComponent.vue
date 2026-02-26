@@ -153,6 +153,7 @@
                                                   :table="table"
                                                   :project-managers="projectManagers"
                                                   :hasBudgetAccess="this.hasBudgetAccess"
+                                                  :user-show-account-name="userShowAccountName"
                             />
                         </div>
                     </div>
@@ -255,6 +256,7 @@ export default {
         'projectManagers',
         'type',
         'hasBudgetAccess',
+        'userShowAccountName',
     ],
     emits:[
         'openDeleteModal',

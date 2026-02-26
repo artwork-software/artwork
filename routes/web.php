@@ -151,6 +151,7 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
+use Artwork\Modules\User\Http\Controllers\UserBudgetAccountDisplaySettingController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
@@ -1031,6 +1032,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
+    )->only(['store', 'update']);
+
+    Route::resource(
+        'user.budgetAccountDisplaySettings',
+        UserBudgetAccountDisplaySettingController::class
     )->only(['store', 'update']);
 
     Route::group(['prefix' => 'timeline-preset'], function (): void {

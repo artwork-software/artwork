@@ -4608,6 +4608,7 @@ class ProjectController extends Controller
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
                         'marked_as_done' => $project->getAttribute('marked_as_done'),
+                        'first_and_last_event_date' => $project->first_and_last_event_date,
                     ];
 
                     $addEventsToReturnProject = [];

@@ -3999,5 +3999,7 @@
     "Artist was not automatically saved in the database": "Künstler*in wurde nicht automatisch in Datenbank angelegt",
     "Show number": "Nummer anzeigen",
     "Show name": "Name anzeigen",
-    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Lege mit dem Slider fest ob du in den ersten beiden Spalten bei aktiver Kontoverknüpfung den Namen oder die Nummer angezeigt bekommen willst."
+    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Lege mit dem Slider fest ob du in den ersten beiden Spalten bei aktiver Kontoverknüpfung den Namen oder die Nummer angezeigt bekommen willst.",
+    "Shift is outside the project period": "Schicht liegt außerhalb des Projektzeitraumes",
+    "The project period is determined by the first and last event of the project.": "Der Projektzeitraum ergibt sich aus dem ersten Termin und dem letzten Termin des Projektes."
 }

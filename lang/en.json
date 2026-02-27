@@ -3959,5 +3959,7 @@
     "Artist was not automatically saved in the database": "Artist was not automatically saved in the database",
     "Show number": "Show number",
     "Show name": "Show name",
-    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active."
+    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.",
+    "Shift is outside the project period": "Shift is outside the project period",
+    "The project period is determined by the first and last event of the project.": "The project period is determined by the first and last event of the project."
 }

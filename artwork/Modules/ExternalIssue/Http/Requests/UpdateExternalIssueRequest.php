@@ -33,7 +33,7 @@ class UpdateExternalIssueRequest extends FormRequest
             'external_address' => 'nullable|string|max:255',
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
-            'files.*' => 'file|max:10240',
+            'files.*' => 'file|max:20480',
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',

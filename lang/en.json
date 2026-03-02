@@ -3967,5 +3967,13 @@
     "Main genre": "Main genre",
     "Main sector": "Main sector",
     "Event colour by main category": "Event colour by main category",
-    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey."
+    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.",
+    "PDF_MONTHLY_CALENDAR_EXPORT": "PDF Monthly Overview Calendar Export",
+    "Monthly overview": "Monthly overview",
+    "Start month": "Start month",
+    "End month": "End month",
+    "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.": "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.",
+    "Event color": "Event color",
+    "Color by event type": "Color by event type",
+    "Color by main category of project": "Color by main category of project"
 }

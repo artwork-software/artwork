@@ -4007,5 +4007,13 @@
     "Main genre": "Hauptgenre",
     "Main sector": "Hauptbereich",
     "Event colour by main category": "Terminfarbe nach Hauptkategorie der Projekte",
-    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Färbt Kalendereinträge nach der Hauptkategorie des Projekts. Termine ohne Hauptkategorie werden in Anthrazit angezeigt, Termine ohne Projekt in Grau."
+    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Färbt Kalendereinträge nach der Hauptkategorie des Projekts. Termine ohne Hauptkategorie werden in Anthrazit angezeigt, Termine ohne Projekt in Grau.",
+    "PDF_MONTHLY_CALENDAR_EXPORT": "PDF Monatsübersicht Kalender Export",
+    "Monthly overview": "Monatsübersicht",
+    "Start month": "Startmonat",
+    "End month": "Endmonat",
+    "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.": "Wenn ein Projekt angegeben wird, werden die Monate, in denen das Projekt stattfindet, automatisch ermittelt und pro Monat eine Seite erstellt. Wenn kein Projekt angegeben wird, können Sie Start- und Endmonat selbst auswählen.",
+    "Event color": "Terminfarbe",
+    "Color by event type": "Terminfarbe nach Terminart",
+    "Color by main category of project": "Terminfarbe nach Hauptkategorie des Projektes"
 }

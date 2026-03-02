@@ -58,7 +58,7 @@ Make sure you install the following software
 
 An example config for the services can be found in the ``dockerfiles`` folder
 
-### Installation
+### Installation 
 
 Copy the `.env.example into` into a ``.env`` file and adjust the values for the services.
 

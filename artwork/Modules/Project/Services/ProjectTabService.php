@@ -4,7 +4,6 @@ namespace Artwork\Modules\Project\Services;
 
 use Artwork\Core\Cache\ServiceWithArrayCache;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -174,8 +173,7 @@ class ProjectTabService implements ServiceWithArrayCache
         Project $project,
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
-        CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService
+        CurrencyService $currencyService
     ): BudgetInformationDto {
         return BudgetInformationDto::newInstance()
             ->setAccessBudget($project->access_budget)
@@ -186,7 +184,6 @@ class ProjectTabService implements ServiceWithArrayCache
             ->setContractTypes($contractTypeService->getAll())
             ->setCompanyTypes($companyTypeService->getAll())
             ->setCurrencies($currencyService->getAll())
-            ->setCollectingSocieties($collectingSocietyService->getAll())
             ->setCostCenter($project->costCenter);
     }
 

@@ -151,6 +151,7 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
+use Artwork\Modules\User\Http\Controllers\UserBudgetAccountDisplaySettingController;
 use Artwork\Modules\User\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use Artwork\Modules\User\Http\Controllers\UserContractController;
 use Artwork\Modules\User\Http\Controllers\UserController;
@@ -1033,6 +1034,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         UserCommentedBudgetItemsSettingController::class
     )->only(['store', 'update']);
 
+    Route::resource(
+        'user.budgetAccountDisplaySettings',
+        UserBudgetAccountDisplaySettingController::class
+    )->only(['store', 'update']);
+
     Route::group(['prefix' => 'timeline-preset'], function (): void {
         //shifts.timeline-presets.index
         Route::get('/', [TimelinePresetController::class, 'index'])
@@ -1085,6 +1091,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //artist_residencies.destroy
             Route::delete('/{artistResidency}', [ArtistResidencyController::class, 'destroy'])
                 ->name('artist-residency.destroy');
+
+            // artist-residencies.update-name (inline name edit for non-DB artists)
+            Route::patch('/{artistResidency}/update-name', [ArtistResidencyController::class, 'updateName'])
+                ->name('artist-residencies.update-name');
 
             //artist-residencies.export-pdf
             Route::post('/{project}/{language}/export-pdf', [ArtistResidencyController::class, 'exportPdf'])

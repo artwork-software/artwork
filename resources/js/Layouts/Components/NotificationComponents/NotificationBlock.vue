@@ -58,7 +58,7 @@
         </div>
         <img @click="setReadAt"
              v-show="notification.hovered"
-             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification'].includes(button)).length === 0"
+             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift'].includes(button)).length === 0"
              src="/Svgs/IconSvgs/icon_archive_white.svg"
              class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
              aria-hidden="true"

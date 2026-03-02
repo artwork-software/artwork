@@ -8,7 +8,6 @@ use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Department\Models\Department;
@@ -36,7 +35,8 @@ use Laravel\Scout\Searchable;
 /**
  * @property int $id
  * @property string $name
- * @property string $own_copyright
+ * @property bool $gema
+ * @property string $cost_center_description
  * @property string $artists
  * @property string $description
  * @property string $shift_description
@@ -67,7 +67,6 @@ use Laravel\Scout\Searchable;
  * @property Collection<Genre> $genres
  * @property Collection<Room> $rooms
  * @property CostCenter $costCenter
- * @property CollectingSociety $collectingSociety
  * @property Collection<Project> $groups
  * @property Collection<Project> $projectsOfGroup
  * @property Collection<Comment> $comments
@@ -92,10 +91,7 @@ class Project extends Model
         'state',
         'budget_deadline',
         'pinned_by_users',
-        'own_copyright',
-        'live_music',
-        'collecting_society_id',
-        'law_size',
+        'gema',
         'cost_center_description',
         'is_group',
         'user_id',
@@ -106,8 +102,7 @@ class Project extends Model
 
     protected $casts = [
         'pinned_by_users' => 'array',
-        'live_music' => 'boolean',
-        'own_copyright' => 'boolean',
+        'gema' => 'boolean',
         'is_group' => 'boolean',
         'marked_as_done' => 'boolean',
     ];
@@ -150,10 +145,6 @@ class Project extends Model
         return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');
     }
 
-    public function collectingSociety(): BelongsTo
-    {
-        return $this->belongsTo(CollectingSociety::class, 'collecting_society_id', 'id', 'collecting_society');
-    }
 
     public function shiftRelevantEventTypes(): BelongsToMany
     {

@@ -45,7 +45,7 @@
                                     {{ t('Project name is a required field.')}}
                                 </div>
                             </div>
-                            <div class="px-6 pt-4" v-if="createSettings.attributes">
+                            <div class="px-6 pt-4" v-if="createSettings.attributes && hasProperties">
                                 <Menu as="div" class="inline-block text-left w-full relative">
                                     <div>
                                         <MenuButton class="menu-button">
@@ -63,7 +63,7 @@
                                         leave-to-class="transform scale-95 opacity-0">
                                         <MenuItems class="absolute overflow-y-auto h-48 w-full origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black text-white opacity-100 z-50 rounded-lg">
                                             <div class="mx-auto w-full p-3 bg-primary border-none mt-2">
-                                                <Disclosure v-slot="{ open }">
+                                                <Disclosure v-if="categories.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
@@ -96,8 +96,8 @@
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
+                                                <hr v-if="categories.length > 0 && genres.length > 0" class="border-gray-500 mt-2 mb-2">
+                                                <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
@@ -130,8 +130,8 @@
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
+                                                <hr v-if="genres.length > 0 && sectors.length > 0" class="border-gray-500 mt-2 mb-2">
+                                                <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
@@ -145,8 +145,7 @@
                                                         />
                                                     </DisclosureButton>
                                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                        <div v-if="sectors.length > 0"
-                                                             v-for="sector in sectors"
+                                                        <div v-for="sector in sectors"
                                                              :key="sector.id"
                                                              class="flex w-full mb-2">
                                                             <input type="checkbox"
@@ -158,9 +157,6 @@
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ sector.name }}
                                                             </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">
-                                                            {{ t('No areas created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -403,7 +399,7 @@
 
                             </div>
                         </div>
-                        <div class="mb-2 mt-5" v-if="createSettings.attributes">
+                        <div class="mb-2 mt-5" v-if="createSettings.attributes && hasProperties">
                             <Menu as="div" class="inline-block text-left w-full relative">
                                 <div>
                                     <MenuButton class="menu-button">
@@ -422,7 +418,7 @@
                                     leave-to-class="transform scale-95 opacity-0">
                                     <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-full origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                                         <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                            <Disclosure v-slot="{ open }">
+                                            <Disclosure v-if="categories.length > 0" v-slot="{ open }">
                                                 <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                                                     <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Category') }}</span>
                                                     <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
@@ -447,8 +443,8 @@
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <Disclosure v-slot="{ open }">
+                                            <hr v-if="categories.length > 0 && genres.length > 0" class="border-gray-500 mt-2 mb-2">
+                                            <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
@@ -479,8 +475,8 @@
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <Disclosure v-slot="{ open }">
+                                            <hr v-if="genres.length > 0 && sectors.length > 0" class="border-gray-500 mt-2 mb-2">
+                                            <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
@@ -703,6 +699,9 @@ const keyVisualForm = useForm({
 const uploadKeyVisualFeedback = ref("");
 const createProjectGroup = ref(false);
 const showInvalidProjectNameHelpText = ref(false);
+const hasProperties = computed(() => {
+    return (props.genres?.length > 0 || props.categories?.length > 0 || props.sectors?.length > 0);
+});
 
 // Computed properties
 const tabs = computed(() => {

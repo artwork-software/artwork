@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Budget\Services;
 
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
@@ -60,9 +59,6 @@ class BudgetCacheService
             'currencies' => Cache::remember('budget:static:currencies', self::TTL_STATIC, function () {
                 return Currency::all()->toArray();
             }),
-            'collectingSocieties' => Cache::remember('budget:static:collecting_societies', self::TTL_STATIC, function () {
-                return CollectingSociety::all()->toArray();
-            }),
         ];
     }
 
@@ -72,7 +68,6 @@ class BudgetCacheService
         Cache::forget('budget:static:contract_types');
         Cache::forget('budget:static:company_types');
         Cache::forget('budget:static:currencies');
-        Cache::forget('budget:static:collecting_societies');
     }
 
     private function budgetKey(int $projectId): string

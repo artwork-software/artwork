@@ -3991,5 +3991,15 @@
     "Street for letterhead + house number": "Straße für Adresskopf + Hausnummer",
     "Zip code for letterhead": "Postleitzahl für Adresskopf",
     "City for letterhead": "Stadt für Adresskopf",
-    "Email for letterhead": "E-Mail für Adresskopf"
+    "Email for letterhead": "E-Mail für Adresskopf",
+    "Cost unit & GEMA": "Kostenträger & GEMA",
+    "Define a cost unit and GEMA status for your project.": "Lege einen Kostenträger und den GEMA-Status für dein Projekt fest.",
+    "GEMA": "GEMA",
+    "Do not save artist in database": "Künstler*in nicht in Datenbank speichern",
+    "Artist was not automatically saved in the database": "Künstler*in wurde nicht automatisch in Datenbank angelegt",
+    "Show number": "Nummer anzeigen",
+    "Show name": "Name anzeigen",
+    "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Lege mit dem Slider fest ob du in den ersten beiden Spalten bei aktiver Kontoverknüpfung den Namen oder die Nummer angezeigt bekommen willst.",
+    "Shift is outside the project period": "Schicht liegt außerhalb des Projektzeitraumes",
+    "The project period is determined by the first and last event of the project.": "Der Projektzeitraum ergibt sich aus dem ersten Termin und dem letzten Termin des Projektes."
 }

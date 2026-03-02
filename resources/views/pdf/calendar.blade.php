@@ -38,9 +38,10 @@
         /* TABLE ------------------------------------------------------*/
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             table-layout: fixed;
-            border: 1px solid #404040;
+            border: 2px solid #404040;
             font-size: 6px;
             font-weight: 500;
         }
@@ -48,8 +49,8 @@
         th, td { word-wrap: break-word; }
 
         thead th {
-            border-bottom: 1px solid #404040;
-            border-right: 1px solid #404040;
+            border-bottom: 2px solid #404040;
+            border-right: 2px solid #404040;
             background: #f9fafb;
             vertical-align: top;
             font-size: 6px;
@@ -63,13 +64,13 @@
             text-align: left;
             padding: 4px;
             color: #111827;
-            border-right: 1px solid #404040;
+            border-right: 2px solid #404040;
         }
 
         .th-daygroup {
             text-align: center;
             color: #111827;
-            border-right: 1px solid #404040;
+            border-right: 2px solid #404040;
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
@@ -82,10 +83,10 @@
         .time-col-bg { background-color: #f4f4f5; }
 
         tbody td {
-            border-bottom: 1px solid #404040;
-            border-right: 1px solid #404040;
+            border-bottom: 2px solid #404040;
+            border-right: 2px solid #404040;
             vertical-align: top;
-            padding: 0; /* wichtig: Linien fluchten exakt */
+            padding: 0;
         }
 
         /* Raumspalte */
@@ -121,7 +122,7 @@
         }
 
         /* Day cell */
-        .day-wrap { position: relative; width: 100%; overflow: hidden; background: #fff; }
+        .day-wrap { position: relative; width: 100%; background: #fff; }
 
         /* Segment Lines */
         .seg-line {
@@ -162,9 +163,8 @@
             border-radius: 3px;
             border: 1px solid rgba(0,0,0,0.40);
             border-left-width: 3px;
-            background-clip: padding-box;
             overflow: hidden;
-            z-index: 3;
+            z-index: 10;
         }
 
         .event-inner { padding: 2px 3px; overflow: hidden; }
@@ -522,16 +522,18 @@
 
         $hDay = $hMorning + $hNoon + $hEvening;
 
-        // Slot-Grenzlinien (12 und 18)
-        echo '<div class="seg-line" style="top: '.$hMorning.'px;"></div>';
-        echo '<div class="seg-line" style="top: '.($hMorning + $hNoon).'px;"></div>';
-
         echo '<div class="lanes" style="height: '.$hDay.'px;">';
 
         $laneWidth = 100 / $laneCount;
+        $segBorder = '1px solid rgba(64,64,64,0.35)';
 
         foreach ($byLane as $laneIndex => $laneSegments) {
+            // Lane mit Slot-Trennlinien als border-bottom auf Block-Divs
             echo '<div class="lane" style="width: '.$laneWidth.'%; height: '.$hDay.'px;">';
+            echo '<div style="position:absolute;top:0;left:0;right:0;height:'.$hDay.'px;z-index:0;pointer-events:none;">';
+            echo '<div style="height:'.$hMorning.'px;border-bottom:'.$segBorder.';"></div>';
+            echo '<div style="height:'.$hNoon.'px;border-bottom:'.$segBorder.';"></div>';
+            echo '</div>';
 
             foreach ($laneSegments as $seg) {
                 $cls = 'event';
@@ -649,11 +651,8 @@
                         {{-- Zeitspalte (Linien exakt wie Day-Cells) --}}
                         <td class="td-time time-col-bg" style="height: {{ $hDay }}px; background-color:#f4f4f5;">
                             <div class="time-wrap" style="height: {{ $hDay }}px;">
-                                <div class="seg-line" style="top: {{ $hMorning }}px;"></div>
-                                <div class="seg-line" style="top: {{ $hMorning + $hNoon }}px;"></div>
-
-                                <div class="time-block" style="height: {{ $hMorning }}px;">Morgens</div>
-                                <div class="time-block" style="height: {{ $hNoon }}px;">Mittags</div>
+                                <div class="time-block" style="height: {{ $hMorning }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Morgens</div>
+                                <div class="time-block" style="height: {{ $hNoon }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Mittags</div>
                                 <div class="time-block" style="height: {{ $hEvening }}px;">Abends</div>
                             </div>
                         </td>
@@ -669,6 +668,8 @@
                             @if(empty($eventsForDay))
                                 <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
                                     style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;">
+                                    <div style="height:{{ $hMorning }}px;border-bottom:1px solid rgba(64,64,64,0.35);"></div>
+                                    <div style="height:{{ $hNoon }}px;border-bottom:1px solid rgba(64,64,64,0.35);"></div>
                                 </td>
                             @else
                                 <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"

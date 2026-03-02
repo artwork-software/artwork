@@ -49,8 +49,6 @@ use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
-use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\Contract\Models\ContractType;
@@ -371,9 +369,8 @@ class ProjectController extends Controller
                             : null;
                         break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
                         $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->gema = $project->gema;
                         $projectData->cost_center_description = $project->cost_center_description;
                         break;
                 }
@@ -2385,7 +2382,6 @@ class ProjectController extends Controller
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
         CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService,
         ProjectService $projectService,
         UserService $userService,
         FreelancerService $freelancerService,
@@ -3990,7 +3986,6 @@ class ProjectController extends Controller
         ProjectState::onlyTrashed()->forceDelete();
         ContractType::onlyTrashed()->forceDelete();
         CompanyType::onlyTrashed()->forceDelete();
-        CollectingSociety::onlyTrashed()->forceDelete();
         Currency::onlyTrashed()->forceDelete();
         return Redirect::route('projects.settings.trashed');
     }
@@ -4046,7 +4041,6 @@ class ProjectController extends Controller
             'trashed_project_states' => ProjectState::onlyTrashed()->get(),
             'trashed_contract_types' => ContractType::onlyTrashed()->get(),
             'trashed_company_types' => CompanyType::onlyTrashed()->get(),
-            'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),
             'trashed_currencies' => Currency::onlyTrashed()->get(),
         ]);
     }
@@ -4539,10 +4533,7 @@ class ProjectController extends Controller
         }
         $project->update([
             'cost_center_id' => $costCenter->id ?? null,
-            'own_copyright' => $request->own_copyright,
-            'live_music' => $request->live_music,
-            'collecting_society_id' => $request->collecting_society_id,
-            'law_size' => $request->law_size,
+            'gema' => $request->boolean('gema'),
             'cost_center_description' => $request->description,
         ]);
 
@@ -4617,6 +4608,7 @@ class ProjectController extends Controller
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
                         'marked_as_done' => $project->getAttribute('marked_as_done'),
+                        'first_and_last_event_date' => $project->first_and_last_event_date,
                     ];
 
                     $addEventsToReturnProject = [];

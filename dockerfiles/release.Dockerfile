@@ -42,7 +42,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     dpkgi -i /tmp/wkhtmltox.deb && \
     apt-get update -y && \
     apt-get install -y -f && \
-    dpkgi -i /tmp/wkhtmltox.deb \
+    dpkgi -i /tmp/wkhtmltox.deb &&\
     rm /tmp/wkhtmltox.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

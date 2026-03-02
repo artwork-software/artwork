@@ -499,6 +499,11 @@ class User extends Model implements
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
+    public function budgetAccountDisplaySetting(): HasOne
+    {
+        return $this->hasOne(UserBudgetAccountDisplaySetting::class);
+    }
+
     public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');

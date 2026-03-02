@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\Contract\Services\ContractTypeService;
 use Artwork\Modules\Currency\Services\CurrencyService;
@@ -15,7 +14,6 @@ class ProjectTabBudgetInformationService
         private readonly ContractTypeService $contractTypeService,
         private readonly CompanyTypeService $companyTypeService,
         private readonly CurrencyService $currencyService,
-        private readonly CollectingSocietyService $collectingSocietyService,
     ) {
     }
 
@@ -30,12 +28,10 @@ class ProjectTabBudgetInformationService
             ->setContractTypes($this->contractTypeService->getAll())
             ->setCompanyTypes($this->companyTypeService->getAll())
             ->setCurrencies($this->currencyService->getAll())
-            ->setCollectingSocieties($this->collectingSocietyService->getAll())
             ->setCostCenter($project->costCenter);
 
         return [
             'BudgetInformation' => $dto->toArray(),
-            'collectingSociety' => $project->collectingSociety,
         ];
     }
 }

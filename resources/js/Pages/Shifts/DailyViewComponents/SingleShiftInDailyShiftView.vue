@@ -145,8 +145,20 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white">
-                                <MenuItem as="div" v-slot="{ active }" v-for="user in getAssignablePeopleWithCollision(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white max-h-72 flex flex-col">
+                                <div class="px-3 py-2 border-b border-gray-200 shrink-0">
+                                    <input
+                                        type="text"
+                                        :value="dropSearchQueries[drop.shift_qualification_id] || ''"
+                                        @input="dropSearchQueries[drop.shift_qualification_id] = $event.target.value"
+                                        @click.stop
+                                        @keydown.stop
+                                        :placeholder="$t('Search')"
+                                        class="w-full text-xs border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:border-gray-500 focus:ring-0"
+                                    />
+                                </div>
+                                <div class="overflow-y-auto">
+                                <MenuItem as="div" v-slot="{ active }" v-for="user in filteredAssignablePeople(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                                     <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id) ">
                                         <span class="text-xs truncate w-36">{{ user.name || user.full_name }}</span>
                                         <div class="text-xs text-gray-500 flex items-center gap-x-1">
@@ -189,6 +201,7 @@
                                         </div>
                                     </div>
                                 </MenuItem>
+                                </div>
                             </MenuItems>
                         </transition>
                     </Float>
@@ -276,7 +289,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, nextTick} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -336,6 +349,7 @@ const { t } = useI18n();
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
 const showAddFunctionModal = ref(false);
+const dropSearchQueries = reactive({});
 const showConfirmDeleteModal = ref(false);
 
 const toastVisible = ref(false);
@@ -689,6 +703,16 @@ const getAssignablePeople = (shiftQualificationId) => {
     return peopleWithCraft;
 };
 
+const filteredAssignablePeople = (shiftQualificationId) => {
+    const people = getAssignablePeopleWithCollision(shiftQualificationId);
+    const query = (dropSearchQueries[shiftQualificationId] || '').trim().toLowerCase();
+    if (!query) return people;
+    return people.filter(user => {
+        const name = (user.name || user.full_name || '').toLowerCase();
+        return name.includes(query);
+    });
+};
+
 // Angepasste Methode für das Menü, die bereits zugewiesene Personen anzeigt
 // Diese Funktion sollte KEINE Requests auslösen, da sie bei jedem Rendering aufgerufen wird
 const getAssignablePeopleWithCollision = (shiftQualificationId) => {
@@ -738,7 +762,7 @@ const getCollisionTooltip = (user) => {
     return tooltip + '<br>' + collisionDetails.join('<br>');
 };
 
-const createOnDropElementAndSave = async (user, craft, shiftQualificationId) => {
+const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
 
     let userType = 0;
     if (user.type === 'freelancer') {
@@ -758,7 +782,6 @@ const createOnDropElementAndSave = async (user, craft, shiftQualificationId) => 
         craft_universally_applicable: craft?.universally_applicable ?? false,
         craft_abbreviation: craft.abbreviation ?? '',
     };
-    await nextTick();
 
     if(!canPlanShifts.value) {
         toastTitle.value = t('You do not have permission to assign users to shifts.');

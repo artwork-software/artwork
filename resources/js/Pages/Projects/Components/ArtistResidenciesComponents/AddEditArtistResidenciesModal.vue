@@ -56,6 +56,25 @@
                                     <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
                                     <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
                                     <BaseInput v-model="artistResidency.position" label="Position" id="position" />
+                                    <!-- Checkbox: nur beim Erstellen sichtbar -->
+                                    <div v-if="!artistResidency.id" class="md:col-span-2 flex items-center gap-2 mt-2">
+                                        <input
+                                            type="checkbox"
+                                            id="do_not_save_artist"
+                                            v-model="artistResidency.do_not_save_artist"
+                                            class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                        />
+                                        <label for="do_not_save_artist" class="text-sm text-zinc-700">
+                                            {{ $t('Do not save artist in database') }}
+                                        </label>
+                                    </div>
+                                    <!-- Info-Text: beim Bearbeiten, wenn do_not_save_artist aktiv -->
+                                    <div v-if="artistResidency.id && artistResidency.do_not_save_artist" class="md:col-span-2 flex items-center gap-2 mt-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+                                        <component :is="IconInfoCircle" class="h-4 w-4 text-blue-500 shrink-0" />
+                                        <span class="text-sm text-blue-700">
+                                            {{ $t('Artist was not automatically saved in the database') }}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div v-else>
@@ -534,11 +553,12 @@ const showValidationErrors = ref(false)
 
 const artistResidency = useForm({
     id: props.artist_residency ? props.artist_residency.id : null,
-    name: '',
-    civil_name: '',
-    phone_number: '',
-    position: '',
+    name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.name ?? '') : '',
+    civil_name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.civil_name ?? '') : '',
+    phone_number: props.artist_residency?.do_not_save_artist ? (props.artist_residency.phone_number ?? '') : '',
+    position: props.artist_residency?.do_not_save_artist ? (props.artist_residency.position ?? '') : '',
     artist_id: props.artist_residency?.artist ? props.artist_residency.artist.id : null,
+    do_not_save_artist: props.artist_residency?.do_not_save_artist ?? false,
     accommodation_id: null,
     project_id: props.project.id,
     arrival_date: props.artist_residency ? formatDate(props.artist_residency.arrival_date) : '',
@@ -836,6 +856,25 @@ watch(dateValuePicker, (newValue) => {
         artistResidency.departure_date = newValue[1] ? newValue[1].toISOString().slice(0, 10) : '';
     }
 }, { immediate: true });
+
+// When arrival_date is a valid complete date (YYYY-MM-DD) and departure_date is empty, set departure_date to one day later
+watch(() => artistResidency.arrival_date, (newValue) => {
+    if (newValue && /^\d{4}-\d{2}-\d{2}$/.test(newValue) && !artistResidency.departure_date) {
+        const parsed = new Date(newValue + 'T12:00:00');
+        if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 1900) {
+            const nextDay = new Date(parsed);
+            nextDay.setDate(nextDay.getDate() + 1);
+            artistResidency.departure_date = nextDay.toISOString().slice(0, 10);
+        }
+    }
+});
+
+// When arrival_time is a valid complete time (HH:MM) and departure_time is empty, set departure_time to the same time
+watch(() => artistResidency.arrival_time, (newValue) => {
+    if (newValue && /^\d{2}:\d{2}$/.test(newValue) && !artistResidency.departure_time) {
+        artistResidency.departure_time = newValue;
+    }
+});
 </script>
 
 <style scoped>

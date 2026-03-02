@@ -13,7 +13,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -147,7 +147,7 @@ class ExternalIssueController extends Controller
     {
         $externalIssue->load(['articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory', 'files', 'issuedBy', 'receivedBy']);
 
-        $pdf = Pdf::loadView('pdf.external_issue', ['issue' => $externalIssue]);
+        $pdf = SnappyPdf::loadView('pdf.external_issue', ['issue' => $externalIssue]);
         return $pdf->download('leihschein_' . $externalIssue->id . '.pdf');
     }
 

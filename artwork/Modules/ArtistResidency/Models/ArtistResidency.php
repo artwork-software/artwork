@@ -51,6 +51,11 @@ class ArtistResidency extends Model
         'breakfast_count',
         'breakfast_deduction_per_day',
         'description',
+        'do_not_save_artist',
+        'name',
+        'civil_name',
+        'phone_number',
+        'position',
     ];
 
     protected $casts = [
@@ -60,7 +65,19 @@ class ArtistResidency extends Model
         'departure_time' => TimeWithoutSeconds::class,
     ];
 
-    protected $appends = ['formatted_dates'];
+    protected $appends = ['formatted_dates', 'display_name'];
+
+    /**
+     * Returns the artist name – either from the linked Artist or from the local fields.
+     */
+    public function getDisplayNameAttribute(): ?string
+    {
+        if ($this->do_not_save_artist) {
+            return $this->name;
+        }
+
+        return $this->artist?->name ?? $this->name;
+    }
 
     public function accommodation(): BelongsTo
     {

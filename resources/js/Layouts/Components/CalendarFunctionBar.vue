@@ -155,6 +155,7 @@
                   @close="showExportModal = false"
                   :enums="[
                       exportTabEnums.PDF_CALENDAR_EXPORT,
+                      exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT
                   ]"
@@ -383,6 +384,10 @@ export default {
             const cfg = {};
 
             cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
+                project: props.project
+            };
+
+            cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
                 project: props.project
             };
 

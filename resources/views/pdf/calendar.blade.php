@@ -38,9 +38,10 @@
         /* TABLE ------------------------------------------------------*/
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             table-layout: fixed;
-            border: 1px solid #404040;
+            border: 2px solid #404040;
             font-size: 6px;
             font-weight: 500;
         }
@@ -48,8 +49,8 @@
         th, td { word-wrap: break-word; }
 
         thead th {
-            border-bottom: 1px solid #404040;
-            border-right: 1px solid #404040;
+            border-bottom: 2px solid #404040;
+            border-right: 2px solid #404040;
             background: #f9fafb;
             vertical-align: top;
             font-size: 6px;
@@ -63,13 +64,13 @@
             text-align: left;
             padding: 4px;
             color: #111827;
-            border-right: 1px solid #404040;
+            border-right: 2px solid #404040;
         }
 
         .th-daygroup {
             text-align: center;
             color: #111827;
-            border-right: 1px solid #404040;
+            border-right: 2px solid #404040;
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
@@ -82,10 +83,10 @@
         .time-col-bg { background-color: #f4f4f5; }
 
         tbody td {
-            border-bottom: 1px solid #404040;
-            border-right: 1px solid #404040;
+            border-bottom: 2px solid #404040;
+            border-right: 2px solid #404040;
             vertical-align: top;
-            padding: 0; /* wichtig: Linien fluchten exakt */
+            padding: 0;
         }
 
         /* Raumspalte */
@@ -121,7 +122,7 @@
         }
 
         /* Day cell */
-        .day-wrap { position: relative; width: 100%; overflow: hidden; background: #fff; }
+        .day-wrap { position: relative; width: 100%; background: #fff; }
 
         /* Segment Lines */
         .seg-line {
@@ -162,9 +163,8 @@
             border-radius: 3px;
             border: 1px solid rgba(0,0,0,0.40);
             border-left-width: 3px;
-            background-clip: padding-box;
             overflow: hidden;
-            z-index: 3;
+            z-index: 10;
         }
 
         .event-inner { padding: 2px 3px; overflow: hidden; }
@@ -288,7 +288,8 @@
     function __buildSegmentForDay(
         $event,
         string $dayDisplay,
-        int $hMorning, int $hNoon, int $hEvening
+        int $hMorning, int $hNoon, int $hEvening,
+        string $colorSource = 'eventType'
     ) {
         $tz = config('app.timezone');
 
@@ -440,7 +441,18 @@
         if ($qStart < 18*60 && $qEnd > 18*60) $slotSpan++;
 
         $abbr      = $event->eventType?->abbreviation ?? '';
-        $hexColor  = $event->eventType?->hex_code ?? '#111111';
+        // Color based on colorSource setting
+        if (($colorSource ?? 'eventType') === 'mainCategory') {
+            if (!$event->project) {
+                $hexColor = '#9E9E9E';
+            } elseif ($event->mainCategoryColor ?? null) {
+                $hexColor = $event->mainCategoryColor;
+            } else {
+                $hexColor = '#3A3A3A';
+            }
+        } else {
+            $hexColor = $event->eventType?->hex_code ?? '#111111';
+        }
         $name      = $event->eventName ?? '';
         $projectNm = $event->project->name ?? null;
 
@@ -450,12 +462,16 @@
 
         // Hintergrund opak (nicht transparent), damit Linien nicht durchscheinen
         // Mische die Event-Farbe mit Weiß für einen hellen, aber undurchsichtigen Hintergrund
-        $bgR = (int)round($r * 0.14 + 255 * 0.86);
-        $bgG = (int)round($g * 0.14 + 255 * 0.86);
-        $bgB = (int)round($b * 0.14 + 255 * 0.86);
-        $bgRGBA     = "rgb($bgR,$bgG,$bgB)";
-        $borderRGBA = "rgba($r,$g,$b,0.95)";
-        $leftRGBA   = "rgba($r,$g,$b,1)";
+        // mixWithWhite: Mische Farbe mit Weiß, t=0 -> original, t=1 -> weiß
+        $mixWithWhite = function(int $r, int $g, int $b, float $t): string {
+            $r2 = (int) round($r + (255 - $r) * $t);
+            $g2 = (int) round($g + (255 - $g) * $t);
+            $b2 = (int) round($b + (255 - $b) * $t);
+            return sprintf('#%02X%02X%02X', $r2, $g2, $b2);
+        };
+        $bgHex      = $mixWithWhite($r, $g, $b, 0.85);
+        $borderHex  = $mixWithWhite($r, $g, $b, 0.05);
+        $leftHex    = sprintf('#%02X%02X%02X', $r, $g, $b);
 
         return [
             'topPx'     => $topPx,
@@ -467,9 +483,9 @@
             'project'   => $projectNm,
             'time'      => $timeString,
             'isMulti'   => $isMultiDay,
-            'bg'        => $bgRGBA,
-            'border'    => $borderRGBA,
-            'left'      => $leftRGBA,
+            'bg'        => $bgHex,
+            'border'    => $borderHex,
+            'left'      => $leftHex,
             'rgb'       => [$r,$g,$b],
         ];
     }
@@ -511,10 +527,10 @@
         return [$byLane, $laneCount];
     }
 
-    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening) {
+    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening, string $colorSource = 'eventType') {
         $segments = [];
         foreach ($eventsForDay as $event) {
-            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening);
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource);
             if ($seg) $segments[] = $seg;
         }
 
@@ -522,16 +538,18 @@
 
         $hDay = $hMorning + $hNoon + $hEvening;
 
-        // Slot-Grenzlinien (12 und 18)
-        echo '<div class="seg-line" style="top: '.$hMorning.'px;"></div>';
-        echo '<div class="seg-line" style="top: '.($hMorning + $hNoon).'px;"></div>';
-
         echo '<div class="lanes" style="height: '.$hDay.'px;">';
 
         $laneWidth = 100 / $laneCount;
+        $segBorder = '1px solid rgba(64,64,64,0.35)';
 
         foreach ($byLane as $laneIndex => $laneSegments) {
+            // Lane mit Slot-Trennlinien als border-bottom auf Block-Divs
             echo '<div class="lane" style="width: '.$laneWidth.'%; height: '.$hDay.'px;">';
+            echo '<div style="position:absolute;top:0;left:0;right:0;height:'.$hDay.'px;z-index:0;pointer-events:none;">';
+            echo '<div style="height:'.$hMorning.'px;border-bottom:'.$segBorder.';"></div>';
+            echo '<div style="height:'.$hNoon.'px;border-bottom:'.$segBorder.';"></div>';
+            echo '</div>';
 
             foreach ($laneSegments as $seg) {
                 $cls = 'event';
@@ -553,14 +571,14 @@
                 echo '<div class="event-title">';
                 if (!empty($seg['abbr'])) {
                     $rgb = $seg['rgb'];
-                    echo '<span class="abbr" style="color: rgba('.$rgb[0].','.$rgb[1].','.$rgb[2].',1);">'.e($seg['abbr']).'</span>';
+                    echo '<span class="abbr" style="color: '.sprintf('#%02X%02X%02X', $rgb[0], $rgb[1], $rgb[2]).';">'.e($seg['abbr']).'</span>';
                     echo '<span style="font-weight:900;">:</span> ';
                 }
                 echo e($seg['name']);
                 echo '</div>';
 
                 if ($showSubLine) {
-                    echo '<div class="event-sub">'.e($seg['project']).'</div>';
+                    echo e($seg['project']);
                 }
 
                 echo '<div class="event-time">';
@@ -649,11 +667,8 @@
                         {{-- Zeitspalte (Linien exakt wie Day-Cells) --}}
                         <td class="td-time time-col-bg" style="height: {{ $hDay }}px; background-color:#f4f4f5;">
                             <div class="time-wrap" style="height: {{ $hDay }}px;">
-                                <div class="seg-line" style="top: {{ $hMorning }}px;"></div>
-                                <div class="seg-line" style="top: {{ $hMorning + $hNoon }}px;"></div>
-
-                                <div class="time-block" style="height: {{ $hMorning }}px;">Morgens</div>
-                                <div class="time-block" style="height: {{ $hNoon }}px;">Mittags</div>
+                                <div class="time-block" style="height: {{ $hMorning }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Morgens</div>
+                                <div class="time-block" style="height: {{ $hNoon }}px; border-bottom: 1px solid rgba(64,64,64,0.35);">Mittags</div>
                                 <div class="time-block" style="height: {{ $hEvening }}px;">Abends</div>
                             </div>
                         </td>
@@ -669,13 +684,15 @@
                             @if(empty($eventsForDay))
                                 <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
                                     style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;">
+                                    <div style="height:{{ $hMorning }}px;border-bottom:1px solid rgba(64,64,64,0.35);"></div>
+                                    <div style="height:{{ $hNoon }}px;border-bottom:1px solid rgba(64,64,64,0.35);"></div>
                                 </td>
                             @else
                                 <td class="{{ $isWeekend ? 'weekend-bg-cell' : '' }}"
                                     style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
                                 >
                                     <div class="day-wrap" style="height: {{ $hDay }}px;">
-                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening); @endphp
+                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening, $colorSource ?? 'eventType'); @endphp
                                     </div>
                                 </td>
                             @endif

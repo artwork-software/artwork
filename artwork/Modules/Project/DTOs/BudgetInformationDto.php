@@ -27,7 +27,6 @@ class BudgetInformationDto extends BaseDto
 
     public ?EloquentCollection $currencies = null;
 
-    public ?EloquentCollection $collectingSocieties = null;
 
     public function setProjectManagerIds(?Collection $projectManagerIds): self
     {
@@ -85,12 +84,6 @@ class BudgetInformationDto extends BaseDto
         return $this;
     }
 
-    public function setCollectingSocieties(?EloquentCollection $collectingSocieties): self
-    {
-        $this->collectingSocieties = $collectingSocieties;
-
-        return $this;
-    }
 
     public function getCostCenter(): ?CostCenter
     {
@@ -143,8 +136,4 @@ class BudgetInformationDto extends BaseDto
         return $this->currencies;
     }
 
-    public function getCollectingSocieties(): ?EloquentCollection
-    {
-        return $this->collectingSocieties;
-    }
 }

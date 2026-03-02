@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { useI18n } from 'vue-i18n'
 import { useLegalBreak} from "@/Composeables/useLegalBreak";
 // Artwork / UI
@@ -16,6 +17,7 @@ import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
 
 const { t: $t } = useI18n()
 
@@ -115,6 +117,32 @@ const selectedProject = ref(
         : (props.project ?? (props.event?.project ?? null))
 );
 
+// Warnung: Schicht liegt außerhalb des Projektzeitraumes
+const shiftOutsideProjectPeriod = computed(() => {
+    if (!selectedProject.value || !shiftForm.start_date) return false
+    const dates = selectedProject.value.first_and_last_event_date
+    if (!dates?.first_event_date || !dates?.last_event_date) return false
+
+    // Daten im Format "dd.mm.YYYY HH:ii" parsen
+    function parseDMY(str: string): Date | null {
+        const m = str.match(/(\d{2})\.(\d{2})\.(\d{4})/)
+        if (!m) return null
+        return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
+    }
+
+    const projectStart = parseDMY(dates.first_event_date)
+    const projectEnd = parseDMY(dates.last_event_date)
+    if (!projectStart || !projectEnd) return false
+
+    const shiftDate = new Date(shiftForm.start_date)
+    // Nur Datum vergleichen (ohne Uhrzeit)
+    shiftDate.setHours(0, 0, 0, 0)
+    projectStart.setHours(0, 0, 0, 0)
+    projectEnd.setHours(0, 0, 0, 0)
+
+    return shiftDate < projectStart || shiftDate > projectEnd
+})
+
 function normalizeToArray(val: any): any[] {
     if (Array.isArray(val)) return val
     if (val && typeof val === 'object') return Object.values(val)
@@ -193,6 +221,22 @@ const shiftForm = useForm({
             ? props.event.project.id
             : (props.project ? props.project.id : null)),
     shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
+})
+
+// Wenn ein Projekt ohne Zeitraumdaten ausgewählt wird (z.B. aus LastedProjects), Daten nachladen
+watch(selectedProject, async (p) => {
+    if (p && p.id && !p.first_and_last_event_date) {
+        try {
+            const { data } = await axios.post(route('project.scoutSearch'), {
+                project_search: p.name,
+                wantsJson: true,
+            })
+            const match = (Array.isArray(data) ? data : []).find((r: any) => r.id === p.id)
+            if (match?.first_and_last_event_date) {
+                selectedProject.value = { ...p, first_and_last_event_date: match.first_and_last_event_date }
+            }
+        } catch { /* ignore */ }
+    }
 })
 
 // Falls das Projekt-Prop später gesetzt wird (asynchron), synchronisiere Auswahl und Formular
@@ -1324,11 +1368,25 @@ const lockOrUnlockShift = (commit = false) => {
                                             <div class="text-sm font-medium text-gray-900 truncate">
                                                 {{ selectedProject.name }}
                                             </div>
+                                            <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-gray-500 mt-0.5">
+                                                {{ $t('Project period') }}: {{ selectedProject.first_and_last_event_date.first_event_date?.split(' ')[0] }} - {{ selectedProject.first_and_last_event_date.last_event_date?.split(' ')[0] }}
+                                            </div>
                                         </div>
                                     </div>
                                     <button type="button" class="ui-button !text-xs" @click="selectedProject = null">
                                         {{ $t('Change') }}
                                     </button>
+                                </div>
+                                <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
+                                    <p class="text-xs text-amber-800 inline-flex items-center gap-0.5 flex-wrap">
+                                        <span>{{ $t('Shift is outside the project period') }}</span>
+                                        <ToolTipComponent
+                                            icon="IconInfoCircle"
+                                            icon-size="w-3.5 h-3.5"
+                                            :tooltip-text="$t('The project period is determined by the first and last event of the project.')"
+                                            classes-button="mt-0"
+                                        />
+                                    </p>
                                 </div>
                             </div>
                         </div>

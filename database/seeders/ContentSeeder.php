@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Http\Controllers\ProjectController;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\CostCenter\Models\CostCenter;
@@ -35,7 +34,6 @@ class ContentSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->seedCollectingSocieties();
         $this->seedContractTypes();
         $this->seedCompanyTypes();
         $this->seedGenreAndCategoriesAndAreas();
@@ -49,24 +47,6 @@ class ContentSeeder extends Seeder
         $this->seedCurrencies();
     }
 
-    private function seedCollectingSocieties(): void
-    {
-        $faker = \Faker\Factory::create();
-        CollectingSociety::create([
-            'name' => 'GEMA',
-            'color' => $faker->hexColor
-        ]);
-
-        CollectingSociety::create([
-            'name' => 'PETA',
-            'color' => $faker->hexColor
-        ]);
-
-        CollectingSociety::create([
-            'name' => 'KENA',
-            'color' => $faker->hexColor
-        ]);
-    }
 
     private function seedCurrencies(): void
     {

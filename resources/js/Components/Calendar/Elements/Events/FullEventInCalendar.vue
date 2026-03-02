@@ -1185,7 +1185,20 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_event_status_color ? props.event?.eventStatus?.color : props.event.eventType.hex_code;
+    const settings = usePage().props.auth.user.calendar_settings;
+    if (settings.use_main_category_color) {
+        if (!props.event?.project) {
+            return '#9E9E9E'; // grey for events without project
+        }
+        if (props.event.project.mainCategoryColor) {
+            return props.event.project.mainCategoryColor;
+        }
+        return '#3A3A3A'; // anthracite for project without main category
+    }
+    if (settings.use_event_status_color) {
+        return props.event?.eventStatus?.color ?? props.event.eventType.hex_code;
+    }
+    return props.event.eventType.hex_code;
 });
 
 const totalHeight = computed(() => {

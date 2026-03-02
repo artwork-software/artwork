@@ -204,7 +204,7 @@
             font-size: 6px;
             line-height: 1.3;
         }
-        .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; }
+        .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; color: #000000 !important; }
         .event-abbr { font-weight: 600; }
         .event-time {
             flex: 0 0 auto;
@@ -230,14 +230,25 @@
      * Wenn ein Event über Zeitfenster geht, taucht es in mehreren Slots auf,
      * weil eventOverlapsSlot() für mehrere Slots true sein kann.
      */
-    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) {
+    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) use ($colorSource) {
         foreach ($events as $event) {
             if (!\App\Http\Controllers\ExportPDFController::eventOverlapsSlot($event, $dayDisplay, $slot)) {
                 continue;
             }
 
             $abbr      = $event->eventType?->abbreviation ?? '';
-            $hexColor  = $event->eventType?->hex_code ?? '#000000';
+            // Color based on colorSource setting
+            if (($colorSource ?? 'eventType') === 'mainCategory') {
+                if (!$event->project) {
+                    $hexColor = '#9E9E9E';
+                } elseif ($event->mainCategoryColor ?? null) {
+                    $hexColor = $event->mainCategoryColor;
+                } else {
+                    $hexColor = '#3A3A3A';
+                }
+            } else {
+                $hexColor = $event->eventType?->hex_code ?? '#000000';
+            }
             $name      = $event->eventName ?? '';
             $projectNm = $event->project->name ?? null;
             $allDay    = $event->allDay ?? false;
@@ -255,15 +266,21 @@
                 $timeString = $startCarbon->format('H:i') . '–' . $endCarbon->format('H:i');
             }
 
-            // Farben aus Hex auf rgba runterbrechen
-            $r = hexdec(substr($hexColor, 1, 2));
-            $g = hexdec(substr($hexColor, 3, 2));
-            $b = hexdec(substr($hexColor, 5, 2));
-            $bgRGBA     = "rgba($r,$g,$b,0.15)";
-            $borderRGBA = "rgba($r,$g,$b,0.3)";
-            $textRGBA   = "rgba($r,$g,$b,1)";
+            // Farben: aufgehellte HEX-Farben statt rgba (vermeidet DomPDF-Rendering-Artefakte)
+            $mixWithWhite = function(string $hex, float $t): string {
+                $hex = ltrim($hex, '#');
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+                $r2 = (int) round($r + (255 - $r) * $t);
+                $g2 = (int) round($g + (255 - $g) * $t);
+                $b2 = (int) round($b + (255 - $b) * $t);
+                return sprintf('#%02X%02X%02X', $r2, $g2, $b2);
+            };
+            $bgHex     = $mixWithWhite($hexColor, 0.85);
+            $borderHex = $mixWithWhite($hexColor, 0.70);
 
-            echo '<div class="event" style="background-color:'.$bgRGBA.';border-color:'.$borderRGBA.';color:'.$textRGBA.';">';
+            echo '<div class="event" style="background-color:'.$bgHex.';border-color:'.$borderHex.';color:#000;">';
             echo    '<div class="event-headerline">';
 
             // Linker Block (Name, Projekt)

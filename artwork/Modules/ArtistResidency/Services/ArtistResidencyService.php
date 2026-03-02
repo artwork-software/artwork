@@ -10,7 +10,7 @@ use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
-use Barryvdh\DomPDF\PDF;
+use Barryvdh\Snappy\PdfWrapper;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,7 +28,7 @@ readonly class ArtistResidencyService
 {
     public function __construct(
         private ArtistResidencyRepository $artistResidencyRepository,
-        private PDF $pdf,
+        private PdfWrapper $pdf,
         private FilesystemManager $filesystemManager,
         private InertiaResponseFactory $inertiaResponseFactory,
         private ResponseFactory $responseFactory,
@@ -44,6 +44,18 @@ readonly class ArtistResidencyService
     {
         return DB::transaction(function () use ($payload) {
             [$artistInput, $resData] = $this->splitPayload($payload);
+
+            // Wenn Checkbox aktiv: Daten direkt auf Residency speichern, keinen Artist anlegen
+            if (!empty($payload['do_not_save_artist'])) {
+                $resData['name'] = $artistInput['name'] ?? null;
+                $resData['civil_name'] = $artistInput['civil_name'] ?? null;
+                $resData['phone_number'] = $artistInput['phone_number'] ?? null;
+                $resData['position'] = $artistInput['position'] ?? null;
+                $resData['do_not_save_artist'] = true;
+                $resData['artist_id'] = null;
+
+                return $this->residencies->create($resData);
+            }
 
             $residency = $this->residencies->create($resData);
 
@@ -62,6 +74,19 @@ readonly class ArtistResidencyService
     {
         return DB::transaction(function () use ($residency, $payload) {
             [$artistInput, $resData] = $this->splitPayload($payload);
+
+            // Wenn do_not_save_artist aktiv: Daten lokal auf Residency speichern, keinen Artist anlegen
+            if ($residency->do_not_save_artist) {
+                $resData['name'] = $artistInput['name'] ?? $residency->name;
+                $resData['civil_name'] = $artistInput['civil_name'] ?? $residency->civil_name;
+                $resData['phone_number'] = $artistInput['phone_number'] ?? $residency->phone_number;
+                $resData['position'] = $artistInput['position'] ?? $residency->position;
+                $resData['do_not_save_artist'] = true;
+                $resData['artist_id'] = null;
+
+                $this->residencies->update($residency, $resData);
+                return $residency->refresh();
+            }
 
             if (!empty($resData)) {
                 $this->residencies->update($residency, $resData);
@@ -88,7 +113,7 @@ readonly class ArtistResidencyService
     {
         $artistKeys = ['artist_id', 'name', 'civil_name', 'phone_number', 'position'];
         $artistInput = Arr::only($payload, $artistKeys);
-        $residencyData = Arr::except($payload, $artistKeys);
+        $residencyData = Arr::except($payload, array_merge($artistKeys, ['do_not_save_artist']));
 
         return [$artistInput, $residencyData];
     }
@@ -194,11 +219,16 @@ readonly class ArtistResidencyService
                 'user' => $this->authManager->user(),
                 'language' => $language,
             ]
+<<<<<<< artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
+        )->setPaper('a4', 'portrait')
+            ->setOption('dpi', 72);
+=======
         )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
                 'defaultFont' => 'sans-serif',
             ]);
+>>>>>>> artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
 
         $filename = $this->createFilename(now(), $project->name, '72');
         $filePath = $this->createStoragePath($filename);

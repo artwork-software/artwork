@@ -242,7 +242,7 @@ class BudgetService
         $selectedSumDetail = $this->resolveSelectedSumDetail();
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commentedBudgetItemsSetting']);
+        Auth::user()->load(['commentedBudgetItemsSetting', 'budgetAccountDisplaySetting']);
 
         $sageNotAssigned = $this->resolveSageNotAssigned($project);
 
@@ -273,7 +273,6 @@ class BudgetService
             'contractTypes' => $staticLookups['contractTypes'],
             'companyTypes' => $staticLookups['companyTypes'],
             'currencies' => $staticLookups['currencies'],
-            'collectingSocieties' => $staticLookups['collectingSocieties'],
             'sageNotAssigned' => $sageNotAssigned,
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(),
             'projectGroupRelevantBudgetData' => $cachedPayload['projectGroupRelevantBudgetData'],

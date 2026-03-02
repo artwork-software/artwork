@@ -14,7 +14,6 @@
     <TrashItems :items="props.trashed_project_states" :type="$t('Project category - Project status')" model="state" />
     <TrashItems :items="props.trashed_contract_types" :type="$t('Project category - Contract type')" model="contract_types" />
     <TrashItems :items="props.trashed_company_types" :type="$t('Project contracts - corporate form')" model="company_types" />
-    <TrashItems :items="props.trashed_collecting_societies" :type="$t('Project contracts - collecting society')" model="collecting_societies" />
     <TrashItems :items="props.trashed_currencies" :type="$t('Project contracts - Currency')" model="currencies" />
 
     <ConfirmDeleteModal
@@ -49,7 +48,6 @@ const props = defineProps({
     trashed_project_states: Array,
     trashed_contract_types: Array,
     trashed_company_types: Array,
-    trashed_collecting_societies: Array,
     trashed_currencies: Array,
     //trashed_project_headlines: Array
 })
@@ -63,7 +61,6 @@ const hasAnyTrashedItems = computed(() => {
         (props.trashed_project_states?.length > 0) ||
         (props.trashed_contract_types?.length > 0) ||
         (props.trashed_company_types?.length > 0) ||
-        (props.trashed_collecting_societies?.length > 0) ||
         (props.trashed_currencies?.length > 0);
 });
 

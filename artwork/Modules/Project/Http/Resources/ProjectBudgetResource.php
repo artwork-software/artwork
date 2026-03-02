@@ -54,10 +54,7 @@ class ProjectBudgetResource extends JsonResource
             'delete_permission_users' => $this->delete_permission_users,
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-            'own_copyright' => $this->own_copyright,
-            'live_music' => $this->live_music,
-            'collecting_society' => $this->collectingSociety,
-            'law_size' => $this->law_size,
+            'gema' => $this->gema,
             'cost_center_description' => $this->cost_center_description,
         ];
     }

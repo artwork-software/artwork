@@ -25,7 +25,7 @@
                     :label="data.data.placeholder"
                     ref="descriptionRef"
                     :rows="5"
-                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : ''"
+                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : 'bg-white'"
                     class="w-full"
                     :class="inSidebar ? '!w-80' : 'w-full'"
                     :id="'component-' + data.id"

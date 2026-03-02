@@ -169,6 +169,7 @@ class CalendarService
                     'project',
                     'project.managerUsers',
                     'project.state',
+                    'project.categories',
                     'shifts',
                     'shifts.craft',
                     'shifts.users',

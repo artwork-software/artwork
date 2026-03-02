@@ -165,18 +165,39 @@
                                     </transition>
                                 </Menu>
                                 <div :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
-                                    <TagComponent v-for="categoryId in createProjectForm.assignedCategoryIds" hide-x="true"
-                                                  :displayed-text="categories?.find(category => category.id === categoryId)?.name ?? ''"
-                                                  :property="categories?.find(category => category.id === categoryId)"
-                                    />
-                                    <TagComponent v-for="genreId in createProjectForm.assignedGenreIds" hide-x="true"
-                                                  :displayed-text="genres?.find(genre => genre.id === genreId)?.name ?? ''"
-                                                  :property="genres?.find(genre => genre.id === genreId)"
-                                    />
-                                    <TagComponent hide-x="true" v-for="sectorId in createProjectForm.assignedSectorIds"
+                                    <div v-for="categoryId in sortedCategoryIds" :key="'cat-'+categoryId" class="inline-flex items-center mr-1 mb-1">
+                                        <TagComponent hide-x="true"
+                                                      :displayed-text="categories?.find(category => category.id === categoryId)?.name ?? ''"
+                                                      :property="categories?.find(category => category.id === categoryId)"
+                                                      :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainCategoryId === categoryId}"
+                                        />
+                                        <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main category')">
+                                            <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainCategoryId === categoryId" @change="toggleMain('mainCategoryId', categoryId)" />
+                                            <span>{{ t('Main') }}</span>
+                                        </label>
+                                    </div>
+                                    <div v-for="genreId in sortedGenreIds" :key="'gen-'+genreId" class="inline-flex items-center mr-1 mb-1">
+                                        <TagComponent hide-x="true"
+                                                      :displayed-text="genres?.find(genre => genre.id === genreId)?.name ?? ''"
+                                                      :property="genres?.find(genre => genre.id === genreId)"
+                                                      :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainGenreId === genreId}"
+                                        />
+                                        <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main genre')">
+                                            <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainGenreId === genreId" @change="toggleMain('mainGenreId', genreId)" />
+                                            <span>{{ t('Main') }}</span>
+                                        </label>
+                                    </div>
+                                    <div v-for="sectorId in sortedSectorIds" :key="'sec-'+sectorId" class="inline-flex items-center mr-1 mb-1">
+                                        <TagComponent hide-x="true"
                                                       :displayed-text="sectors?.find(sector => sector.id === sectorId)?.name ?? ''"
                                                       :property="sectors?.find(sector => sector.id === sectorId)"
-                                    />
+                                                      :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainSectorId === sectorId}"
+                                        />
+                                        <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main sector')">
+                                            <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainSectorId === sectorId" @change="toggleMain('mainSectorId', sectorId)" />
+                                            <span>{{ t('Main') }}</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
@@ -512,21 +533,39 @@
                                 </transition>
                             </Menu>
                         </div>
-                        <div class="flex">
-                            <div v-for="categoryId in createProjectForm.assignedCategoryIds">
+                        <div class="flex flex-wrap">
+                            <div v-for="categoryId in sortedCategoryIds" :key="'grp-cat-'+categoryId" class="inline-flex items-center mr-1 mb-1">
                                 <TagComponent hide-x="true"
                                               :displayed-text="categories?.find(category => category.id === categoryId)?.name ?? ''"
-                                              :property="categories?.find(category => category.id === categoryId)"></TagComponent>
+                                              :property="categories?.find(category => category.id === categoryId)"
+                                              :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainCategoryId === categoryId}"
+                                />
+                                <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main category')">
+                                    <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainCategoryId === categoryId" @change="toggleMain('mainCategoryId', categoryId)" />
+                                    <span>{{ t('Main') }}</span>
+                                </label>
                             </div>
-                            <div v-for="genreId in createProjectForm.assignedGenreIds">
+                            <div v-for="genreId in sortedGenreIds" :key="'grp-gen-'+genreId" class="inline-flex items-center mr-1 mb-1">
                                 <TagComponent hide-x="true"
                                               :displayed-text="genres?.find(genre => genre.id === genreId)?.name ?? ''"
-                                              :property="genres?.find(genre => genre.id === genreId)"></TagComponent>
+                                              :property="genres?.find(genre => genre.id === genreId)"
+                                              :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainGenreId === genreId}"
+                                />
+                                <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main genre')">
+                                    <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainGenreId === genreId" @change="toggleMain('mainGenreId', genreId)" />
+                                    <span>{{ t('Main') }}</span>
+                                </label>
                             </div>
-                            <div v-for="sectorId in createProjectForm.assignedSectorIds">
+                            <div v-for="sectorId in sortedSectorIds" :key="'grp-sec-'+sectorId" class="inline-flex items-center mr-1 mb-1">
                                 <TagComponent hide-x="true"
                                               :displayed-text="sectors?.find(sector => sector.id === sectorId)?.name ?? ''"
-                                              :property="sectors?.find(sector => sector.id === sectorId)"></TagComponent>
+                                              :property="sectors?.find(sector => sector.id === sectorId)"
+                                              :class="{'ring-2 ring-amber-400 rounded-full': createProjectForm.mainSectorId === sectorId}"
+                                />
+                                <label class="ml-1 flex items-center gap-0.5 text-[10px] text-gray-500 cursor-pointer" :title="t('Main sector')">
+                                    <input type="checkbox" class="size-3 accent-amber-500" :checked="createProjectForm.mainSectorId === sectorId" @change="toggleMain('mainSectorId', sectorId)" />
+                                    <span>{{ t('Main') }}</span>
+                                </label>
                             </div>
                         </div>
                         <div class="mb-2">
@@ -675,6 +714,9 @@ const createProjectForm = useForm({
     assignedSectorIds: props.project ? props.project?.sectors?.map(sector => sector.id) : [],
     assignedCategoryIds: props.project ? props.project?.categories?.map(category => category.id) : [],
     assignedGenreIds: props.project ? props.project?.genres?.map(genre => genre.id) : [],
+    mainCategoryId: props.project ? (props.project?.categories?.find(c => c.pivot?.is_main)?.id ?? null) : null,
+    mainGenreId: props.project ? (props.project?.genres?.find(g => g.pivot?.is_main)?.id ?? null) : null,
+    mainSectorId: props.project ? (props.project?.sectors?.find(s => s.pivot?.is_main)?.id ?? null) : null,
     isGroup: props.project ? props.project.is_group : false,
     projects: [],
     selectedGroup: props.project ? props.project?.groups[0] : props.selectedGroup ? props.selectedGroup : null,
@@ -702,6 +744,34 @@ const showInvalidProjectNameHelpText = ref(false);
 const hasProperties = computed(() => {
     return (props.genres?.length > 0 || props.categories?.length > 0 || props.sectors?.length > 0);
 });
+
+const sortedCategoryIds = computed(() => {
+    const ids = [...createProjectForm.assignedCategoryIds];
+    if (createProjectForm.mainCategoryId) {
+        ids.sort((a, b) => (a === createProjectForm.mainCategoryId ? -1 : b === createProjectForm.mainCategoryId ? 1 : 0));
+    }
+    return ids;
+});
+
+const sortedGenreIds = computed(() => {
+    const ids = [...createProjectForm.assignedGenreIds];
+    if (createProjectForm.mainGenreId) {
+        ids.sort((a, b) => (a === createProjectForm.mainGenreId ? -1 : b === createProjectForm.mainGenreId ? 1 : 0));
+    }
+    return ids;
+});
+
+const sortedSectorIds = computed(() => {
+    const ids = [...createProjectForm.assignedSectorIds];
+    if (createProjectForm.mainSectorId) {
+        ids.sort((a, b) => (a === createProjectForm.mainSectorId ? -1 : b === createProjectForm.mainSectorId ? 1 : 0));
+    }
+    return ids;
+});
+
+const toggleMain = (field, id) => {
+    createProjectForm[field] = createProjectForm[field] === id ? null : id;
+};
 
 // Computed properties
 const tabs = computed(() => {

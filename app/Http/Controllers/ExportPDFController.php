@@ -254,6 +254,7 @@ class ExportPDFController extends Controller
                 ],
                 'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
+                'colorSource'    => $request->get('colorSource', 'eventType'),
             ]
         )
             ->setPaper(
@@ -306,6 +307,172 @@ class ExportPDFController extends Controller
         return $eventStartTs < $slotEndTs && $eventEndTs > $slotStartTs;
     }
 
+
+    public function createMonthlyPDF(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->guard()->user();
+        $userFilter = $user->userFilters()->calendarFilter()->first();
+
+        $projectId = $request->get('project');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $filterData = $request->filter;
+        $userCalendarFilter = new UserFilter($filterData);
+        $userCalendarFilter->exists = false;
+
+        // Determine months to export
+        $months = []; // array of ['start' => Carbon, 'end' => Carbon]
+
+        if ($projectId) {
+            $project = $this->projectService->findById($projectId);
+            $today = Carbon::now();
+            [$projectStart, $projectEnd] = $this->calendarDataService->getProjectDateRange($project, $today);
+            $projectStart = Carbon::parse($projectStart)->startOfMonth();
+            $projectEnd = Carbon::parse($projectEnd)->endOfMonth();
+
+            $cursor = $projectStart->copy();
+            while ($cursor->lte($projectEnd)) {
+                $months[] = [
+                    'start' => $cursor->copy()->startOfMonth(),
+                    'end' => $cursor->copy()->endOfMonth(),
+                ];
+                $cursor->addMonth();
+            }
+        } else {
+            $startMonth = $request->get('startMonth');
+            $endMonth = $request->get('endMonth');
+
+            if ($startMonth) {
+                $start = Carbon::parse($startMonth . '-01')->startOfMonth();
+                $end = $endMonth
+                    ? Carbon::parse($endMonth . '-01')->endOfMonth()
+                    : $start->copy()->endOfMonth();
+
+                $cursor = $start->copy();
+                while ($cursor->lte($end)) {
+                    $months[] = [
+                        'start' => $cursor->copy()->startOfMonth(),
+                        'end' => $cursor->copy()->endOfMonth(),
+                    ];
+                    $cursor->addMonth();
+                }
+            } else {
+                // Fallback: current month
+                $months[] = [
+                    'start' => Carbon::now()->startOfMonth(),
+                    'end' => Carbon::now()->endOfMonth(),
+                ];
+            }
+        }
+
+        // Get the full date range for fetching rooms and events
+        $globalStart = $months[0]['start']->copy();
+        $globalEnd = end($months)['end']->copy();
+
+        // Get filtered rooms
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $globalStart,
+            $globalEnd,
+        );
+
+        // Get calendar data
+        $calendar = $this->eventCalendarService->mapRoomsToContentForCalendar(
+            $this->eventCalendarService->filterRoomsEventsForPdf(
+                $rooms,
+                $userCalendarFilter,
+                $globalStart,
+                $globalEnd,
+                $userCalendarSettings
+            ),
+            $globalStart,
+            $globalEnd
+        );
+
+        // Build lookup: roomId -> content
+        $calendarLookup = [];
+        foreach (($calendar->rooms ?? []) as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? ($roomBlock->roomId ?? null);
+            $content = $roomBlock['content'] ?? ($roomBlock->content ?? []);
+            if ($rid !== null) {
+                $calendarLookup[$rid] = $content;
+            }
+        }
+
+        // Build pages data: one page per month
+        $pages = [];
+        $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+        foreach ($months as $monthData) {
+            $monthStart = $monthData['start'];
+            $monthEnd = $monthData['end'];
+            $days = [];
+            $cursor = $monthStart->copy();
+            while ($cursor->lte($monthEnd)) {
+                $days[] = [
+                    'fullDay' => $cursor->format('d.m.Y'),
+                    'display' => $dayNames[$cursor->dayOfWeekIso - 1] . ', ' . $cursor->format('d.m'),
+                    'isWeekend' => $cursor->isWeekend(),
+                ];
+                $cursor->addDay();
+            }
+            $pages[] = [
+                'monthLabel' => $monthStart->translatedFormat('F Y'),
+                'days' => $days,
+            ];
+        }
+
+        // Big logo as base64
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $bigLogoBase64 = null;
+        if ($generalSettings->big_logo_path) {
+            $storage = $this->filesystemManager->disk('public');
+            if ($storage->exists($generalSettings->big_logo_path)) {
+                $logoContent = $storage->get($generalSettings->big_logo_path);
+                $mimeType = $storage->mimeType($generalSettings->big_logo_path);
+                $bigLogoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
+            }
+        }
+
+        $project = $projectId ? $this->projectService->findById($projectId) : null;
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.calendarMonthlyOverview',
+            [
+                'title' => $request->get('title') ?? 'Monatsübersicht',
+                'project' => $project,
+                'rooms' => $rooms,
+                'calendarLookup' => $calendarLookup,
+                'pages' => $pages,
+                'created_by' => $user->first_name . ' ' . $user->last_name,
+                'created_date' => Carbon::now()->format('d.m.Y'),
+                'bigLogoBase64' => $bigLogoBase64,
+                'colorSource' => $request->get('colorSource', 'eventType'),
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a3'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) $request->float('dpi', 72));
+
+        $filename = $this->createFilename(
+            $request->string('paperOrientation', 'landscape'),
+            $request->string('title', 'Monatsuebersicht'),
+            $request->float('dpi', 72)
+        );
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
 
     public function download(
         string $filename,

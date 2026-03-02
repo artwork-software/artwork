@@ -3,7 +3,7 @@
         <div class="flex flex-col space-y-6">
             <!-- Titel + Hinweis -->
             <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <BaseInput id="title" v-model="pdf.title" :label="$t('Heading')" />
+                <BaseInput id="monthly-title" v-model="pdf.title" :label="$t('Heading')" :placeholder="$t('Monthly overview')" />
 
                 <div
                     v-if="showModalInformation"
@@ -14,7 +14,7 @@
                         <p class="text-sm text-blue-500">
                             {{
                                 $t(
-                                    'If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.'
+                                    'If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.'
                                 )
                             }}
                         </p>
@@ -79,10 +79,10 @@
                     </div>
                 </div>
 
-                <!-- Zeitraum nur wenn kein Projekt -->
+                <!-- Monatswahl nur wenn kein Projekt -->
                 <div v-if="!pdfSelectedProject" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <BaseInput type="date" v-model="pdf.start" :label="$t('Start date')" id="start" />
-                    <BaseInput type="date" v-model="pdf.end" :label="$t('End date')" id="end" />
+                    <BaseInput type="month" v-model="pdf.startMonth" :label="$t('Start month')" id="startMonth" />
+                    <BaseInput type="month" v-model="pdf.endMonth" :label="$t('End month')" id="endMonth" />
                 </div>
             </section>
 
@@ -223,10 +223,10 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div> <!-- card -->
-                            </div> <!-- each sub -->
+                                </div>
+                            </div>
                         </div>
-                    </div> <!-- each main -->
+                    </div>
                 </div>
             </section>
 
@@ -309,8 +309,8 @@
                                     class="relative flex-1"
                                 >
                                     <input
-                                        :id="paperOrientation.id"
-                                        name="notification-method"
+                                        :id="'monthly-' + paperOrientation.id"
+                                        name="monthly-orientation"
                                         type="radio"
                                         :checked="paperOrientation.id === checkedOrientation"
                                         class="peer absolute inset-0 h-0 w-0 opacity-0"
@@ -318,7 +318,7 @@
                                         @change="changePaperOrientation(paperOrientation)"
                                     />
                                     <label
-                                        :for="paperOrientation.id"
+                                        :for="'monthly-' + paperOrientation.id"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                         peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
                                         border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
@@ -332,22 +332,6 @@
                                 {{ $t('The A6 format is only possible in landscape format.') }}
                             </span>
                         </fieldset>
-                    </div>
-
-                    <!-- DPI / weitere Optionen -->
-                    <div>
-                        <BaseInput
-                            id="dpi"
-                            v-model="pdf.dpi"
-                            :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
-                        />
-                    </div>
-                    <div>
-                        <BaseInput
-                            id="daysPerPage"
-                            v-model="pdf.daysPerPage"
-                            :label="$t('Days per page')"
-                        />
                     </div>
 
                     <!-- Color Source Toggle -->
@@ -365,15 +349,15 @@
                                 class="relative flex-1"
                             >
                                 <input
-                                    :id="`colorSource-${mode.id}`"
-                                    name="color-source"
+                                    :id="`monthly-colorSource-${mode.id}`"
+                                    name="monthly-color-source"
                                     type="radio"
                                     :value="mode.id"
                                     v-model="pdf.colorSource"
                                     class="peer absolute inset-0 h-0 w-0 opacity-0"
                                 />
                                 <label
-                                    :for="`colorSource-${mode.id}`"
+                                    :for="`monthly-colorSource-${mode.id}`"
                                     class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                     peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
                                     border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
@@ -384,54 +368,13 @@
                         </fieldset>
                     </div>
 
-                    <!-- Export Mode Toggle -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                            <label class="text-sm font-medium text-zinc-700">
-                                {{ $t('Export mode') }}
-                            </label>
-                            <div class="group relative">
-                                <PropertyIcon
-                                    name="IconInfoCircle"
-                                    class="size-4 text-zinc-400 hover:text-zinc-600 cursor-help"
-                                />
-                                <div class="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-80 bg-zinc-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
-                                    <p>
-                                        {{ $t("When 'Events relative to each other' is active, concurrent events are displayed side by side in the export, which reduces the readability of the information but shows overlaps better. In 'Events in time blocks' mode, events are displayed one after another per time block, which increases readability but does not allow simultaneity to be seen at a glance.") }}
-                                    </p>
-                                    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                                        <div class="border-4 border-transparent border-t-zinc-900"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <fieldset class="flex gap-2">
-                            <div
-                                v-for="mode in [
-                                    { id: 'relative', label: $t('Events relative to each other') },
-                                    { id: 'block', label: $t('Events in time blocks') }
-                                ]"
-                                :key="mode.id"
-                                class="relative flex-1"
-                            >
-                                <input
-                                    :id="`exportMode-${mode.id}`"
-                                    name="export-mode"
-                                    type="radio"
-                                    :value="mode.id"
-                                    v-model="pdf.exportMode"
-                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
-                                />
-                                <label
-                                    :for="`exportMode-${mode.id}`"
-                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                    peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
-                                    border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
-                                >
-                                    {{ mode.label }}
-                                </label>
-                            </div>
-                        </fieldset>
+                    <!-- DPI -->
+                    <div>
+                        <BaseInput
+                            id="monthly-dpi"
+                            v-model="pdf.dpi"
+                            :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+                        />
                     </div>
                 </div>
             </section>
@@ -471,8 +414,6 @@
 import {computed, onMounted, ref, watch} from 'vue'
 import {useForm, usePage} from '@inertiajs/vue3'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
-import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
-import NumberInputComponent from '@/Components/Inputs/NumberInputComponent.vue'
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import LastedProjects from '@/Artwork/LastedProjects.vue'
@@ -500,7 +441,6 @@ const paperOrientations = [
     { id: 'landscape', title: $t('Landscape format') }
 ]
 
-// Local open/close state per subcategory to avoid mutating computed arrays
 const openState = ref<Record<string, boolean>>({});
 const keyFor = (mainKey: string, subKey: string) => `${mainKey}::${subKey}`;
 const isOpen = (mainKey: string, subKey: string) => !!openState.value[keyFor(mainKey, subKey)];
@@ -510,26 +450,24 @@ const toggleOpen = (mainKey: string, subKey: string) => {
 };
 
 const pdf = useForm({
-    title: props.project ? props.project.name : $t('Room assignment'),
-    start: null as string | null,
-    end: null as string | null,
+    title: props.project ? props.project.name : $t('Monthly overview'),
+    startMonth: null as string | null,
+    endMonth: null as string | null,
     paperSize: null as string | null,
     paperOrientation: null as string | null,
     project: null as number | null,
     dpi: 72,
-    daysPerPage: 7,
-    exportMode: 'relative' as 'relative' | 'block',
     filter: {} as Record<string, number[] | null>,
     colorSource: 'eventType' as 'eventType' | 'mainCategory'
 })
 
 const pdfSelectedProject = ref<any | null>(null)
-const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a4', name: 'A4 (Standard)' })
+const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a3', name: 'A3' })
 const selectedPaperOrientation = ref<{ id: 'portrait' | 'landscape'; title: string }>({
-    id: 'portrait',
-    title: $t('Portrait format')
+    id: 'landscape',
+    title: $t('Landscape format')
 })
-const checkedOrientation = ref<'portrait' | 'landscape'>('portrait')
+const checkedOrientation = ref<'portrait' | 'landscape'>('landscape')
 const orientationDisabled = ref(false)
 
 const closeModal = (bool: boolean) => emits('closed', bool)
@@ -540,7 +478,6 @@ const showSavePresetModal = ref(false)
 const showDeletePresetModal = ref(false)
 const presetToDelete = ref<any>(null)
 
-// Filter Presets laden
 const loadFilterPresets = async () => {
     try {
         const response = await axios.get(route('pdf-export-user-filters.index'))
@@ -550,12 +487,10 @@ const loadFilterPresets = async () => {
     }
 }
 
-// Beim Mount laden
 onMounted(() => {
     loadFilterPresets()
 })
 
-// Aktuellen Filter-Status für das Speichern sammeln
 const getCurrentFilterData = () => {
     const data: Record<string, number[] | null> = {}
     Object.assign(data, extractCheckedIds('roomFilters'))
@@ -564,9 +499,7 @@ const getCurrentFilterData = () => {
     return data
 }
 
-// Gespeichertes Preset anwenden
 const applyFilterPreset = (preset: any) => {
-    // Erst alle Filter deaktivieren
     const cats = filteredOptionsByCategories.value
     Object.keys(cats).forEach(category => {
         Object.keys(cats[category]).forEach(subCategory => {
@@ -576,7 +509,6 @@ const applyFilterPreset = (preset: any) => {
         })
     })
 
-    // Dann die gespeicherten Filter aktivieren
     if (preset.filters) {
         Object.entries(preset.filters).forEach(([filterKey, ids]) => {
             if (!ids || !Array.isArray(ids)) return
@@ -594,19 +526,16 @@ const applyFilterPreset = (preset: any) => {
     }
 }
 
-// Preset speichern callback
 const onPresetSaved = (newPreset: any) => {
     savedFilterPresets.value.push(newPreset)
     savedFilterPresets.value.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-// Preset löschen vorbereiten
 const confirmDeletePreset = (preset: any) => {
     presetToDelete.value = preset
     showDeletePresetModal.value = true
 }
 
-// Preset tatsächlich löschen
 const deletePreset = async () => {
     if (!presetToDelete.value) return
 
@@ -640,7 +569,7 @@ const createPdf = () => {
 
     pdf.filter = data;
 
-    pdf.post(route('calendar.export.pdf'), { preserveScroll: true })
+    pdf.post(route('calendar.export.monthly-pdf'), { preserveScroll: true })
     closeModal(true)
 }
 
@@ -666,12 +595,10 @@ const filteredOptionsByCategories = computed(() => {
         eventFilters: {},
     }
 
-    // Areas unverändert
     areaFilters.forEach((filter: string) => {
         filteredOptions.areaFilters[filter] = usePage().props.filterOptions[filter] || [];
     })
 
-    // Rooms: nur tatsächliche Raumliste filtern
     roomFilters.forEach((filter: string) => {
         const list = usePage().props.filterOptions[filter] || [];
         if (filter === 'rooms' || filter === 'room_ids') {
@@ -684,7 +611,6 @@ const filteredOptionsByCategories = computed(() => {
         }
     })
 
-    // Events unverändert
     eventFilters.forEach((filter: string) => {
         filteredOptions.eventFilters[filter] = usePage().props.filterOptions[filter] || [];
     })
@@ -703,18 +629,15 @@ const extractCheckedIds = (filterGroup: 'roomFilters' | 'areaFilters' | 'eventFi
 
 const removeSpaceFromKey = (key: string) => key.replace(/\s/g, '')
 
-// **Fix:** keine gruppenübergreifende Suche – direkt das referenzierte Objekt deaktivieren
 const removeActiveFilter = (filterToRemove: any) => {
     filterToRemove.checked = false;
 };
 
-// Alle auswählen/abwählen innerhalb einer Subkategorie
 const mutateSubcategory = (mainKey: string, subKey: string, value: boolean) => {
     const group = filteredOptionsByCategories.value as Record<string, Record<string, any[]>>;
     const sub = group?.[mainKey]?.[subKey];
     if (!Array.isArray(sub)) return;
     sub.forEach((item: any) => {
-        // Nur boolean toggeln, keine Struktur verändern
         item.checked = value;
     });
 };
@@ -731,6 +654,16 @@ const addProjectToPdf = (project: any) => {
     pdfSelectedProject.value = project
 }
 
+// When start month changes, auto-set end month to same value
+watch(
+    () => pdf.startMonth,
+    (newVal) => {
+        if (newVal && (!pdf.endMonth || pdf.endMonth < newVal)) {
+            pdf.endMonth = newVal
+        }
+    }
+)
+
 // A6 erzwingt Landscape
 watch(
     () => selectedPaperSize.value,
@@ -740,9 +673,7 @@ watch(
             orientationDisabled.value = true
             changePaperOrientation({ id: 'landscape', title: $t('Landscape format') })
         } else {
-            checkedOrientation.value = 'portrait'
             orientationDisabled.value = false
-            changePaperOrientation({ id: 'portrait', title: $t('Portrait format') })
         }
     },
     { immediate: true }

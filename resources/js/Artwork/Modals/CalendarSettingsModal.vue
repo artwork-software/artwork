@@ -76,6 +76,7 @@
                                     name="use_event_status_color"
                                     type="checkbox"
                                     class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    @change="onStatusColorChange"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -87,6 +88,33 @@
                             <label for="use_event_status_color" class="font-medium text-gray-900">{{ $t('Use event status colour') }}</label>
                             <p id="use_event_status_color-description" class="text-gray-500 text-xs">
                                 {{ $t('Colors calendar entries according to their status, making it easier to quickly identify scheduled, confirmed or completed events, for example.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Use main category colour (nicht Schichtplan) -->
+                    <div class="flex gap-3" v-if="!inShiftPlan">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.use_main_category_color"
+                                    id="use_main_category_color"
+                                    aria-describedby="use_main_category_color-description"
+                                    name="use_main_category_color"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    @change="onMainCategoryColorChange"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="use_main_category_color" class="font-medium text-gray-900">{{ $t('Event colour by main category') }}</label>
+                            <p id="use_main_category_color-description" class="text-gray-500 text-xs">
+                                {{ $t('Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.') }}
                             </p>
                         </div>
                     </div>
@@ -626,6 +654,7 @@ const userCalendarSettings = useForm({
     high_contrast: activeSettings ? activeSettings.high_contrast : false,
     expand_days: activeSettings ? activeSettings.expand_days : false,
     use_event_status_color: activeSettings ? activeSettings.use_event_status_color : false,
+    use_main_category_color: activeSettings ? activeSettings.use_main_category_color : false,
     hide_unoccupied_rooms: activeSettings ? activeSettings.hide_unoccupied_rooms : false,
     hide_unoccupied_days: activeSettings ? activeSettings.hide_unoccupied_days : false,
     display_project_groups: activeSettings ? activeSettings.display_project_groups : false,
@@ -637,6 +666,18 @@ const userCalendarSettings = useForm({
     show_timeline: activeSettings ? activeSettings.show_timeline : false,
     show_only_not_fully_staffed_shifts: activeSettings ? activeSettings.show_only_not_fully_staffed_shifts : false,
 });
+
+const onStatusColorChange = () => {
+    if (userCalendarSettings.use_event_status_color) {
+        userCalendarSettings.use_main_category_color = false;
+    }
+};
+
+const onMainCategoryColorChange = () => {
+    if (userCalendarSettings.use_main_category_color) {
+        userCalendarSettings.use_event_status_color = false;
+    }
+};
 
 const saveUserCalendarSettings = () => {
     const valuesToReload = [];

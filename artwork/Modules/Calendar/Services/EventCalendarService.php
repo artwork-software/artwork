@@ -50,7 +50,7 @@ readonly class EventCalendarService
         $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
 
         $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select(['id','first_name','last_name','position','email','profile_photo_path'])->get()->keyBy('id');
-        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups'])->get()->keyBy('id');
+        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups','categories'])->get()->keyBy('id');
         $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id',$eventTypeIds)->select(['id','name','abbreviation','hex_code'])->get()->keyBy('id');
         $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','color'])->get()->keyBy('id');
 
@@ -91,20 +91,25 @@ readonly class EventCalendarService
         $projectIds   = $events->pluck('project_id')->unique()->filter();
 
         $projects   = $projectIds->isEmpty() ? collect() :
-            Project::whereIn('id', $projectIds)->select(['id', 'name'])->get()->keyBy('id');
+            Project::whereIn('id', $projectIds)->select(['id', 'name', 'artists'])->with('categories')->get()->keyBy('id');
         $eventTypes = $eventTypeIds->isEmpty() ? collect() :
             EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => new PdfEventDTO(
-            id: $event->id,
-            startTime: $event->start_time,
-            endTime: $event->end_time,
-            eventName: $event->eventName,
-            allDay: (bool) $event->allDay,
-            roomId: $event->room_id,
-            eventType: $eventTypes[$event->event_type_id] ?? null,
-            project: $projects[$event->project_id] ?? null,
-        ))->groupBy('roomId');
+        $eventDTOs = $events->map(function ($event) use ($eventTypes, $projects) {
+            $project = $projects[$event->project_id] ?? null;
+            return new PdfEventDTO(
+                id: $event->id,
+                startTime: $event->start_time,
+                endTime: $event->end_time,
+                eventName: $event->eventName,
+                allDay: (bool) $event->allDay,
+                roomId: $event->room_id,
+                eventType: $eventTypes[$event->event_type_id] ?? null,
+                project: $project,
+                artistNames: $project?->artists,
+                mainCategoryColor: $project?->categories?->firstWhere('pivot.is_main', true)?->color,
+            );
+        })->groupBy('roomId');
 
         foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();

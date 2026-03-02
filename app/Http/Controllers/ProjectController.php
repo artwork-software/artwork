@@ -547,9 +547,9 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -3168,9 +3168,9 @@ class ProjectController extends Controller
             $this->projectService->attachManagementUsers($project, $request->assignedUsers);
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $this->updateProjectState($request, $project);
 
@@ -3244,16 +3244,32 @@ class ProjectController extends Controller
 
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $mainCategoryId = $request->input('mainCategoryId');
+        $mainGenreId = $request->input('mainGenreId');
+        $mainSectorId = $request->input('mainSectorId');
+
         $oldProjectCategories = $project->categories()->get();
-        $project->categories()->sync($request->assignedCategoryIds);
+        $categorySyncData = [];
+        foreach (($request->assignedCategoryIds ?? []) as $id) {
+            $categorySyncData[$id] = ['is_main' => $mainCategoryId !== null && (int) $id === (int) $mainCategoryId];
+        }
+        $project->categories()->sync($categorySyncData);
         $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $project->categories()->get());
 
         $oldProjectGenres = $project->genres()->get();
-        $project->genres()->sync($request->assignedGenreIds);
+        $genreSyncData = [];
+        foreach (($request->assignedGenreIds ?? []) as $id) {
+            $genreSyncData[$id] = ['is_main' => $mainGenreId !== null && (int) $id === (int) $mainGenreId];
+        }
+        $project->genres()->sync($genreSyncData);
         $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $project->genres()->get());
 
         $oldProjectSectors = $project->sectors()->get();
-        $project->sectors()->sync($request->assignedSectorIds);
+        $sectorSyncData = [];
+        foreach (($request->assignedSectorIds ?? []) as $id) {
+            $sectorSyncData[$id] = ['is_main' => $mainSectorId !== null && (int) $id === (int) $mainSectorId];
+        }
+        $project->sectors()->sync($sectorSyncData);
         $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $project->sectors()->get());
 
         return Redirect::back();

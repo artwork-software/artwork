@@ -288,7 +288,8 @@
     function __buildSegmentForDay(
         $event,
         string $dayDisplay,
-        int $hMorning, int $hNoon, int $hEvening
+        int $hMorning, int $hNoon, int $hEvening,
+        string $colorSource = 'eventType'
     ) {
         $tz = config('app.timezone');
 
@@ -440,7 +441,18 @@
         if ($qStart < 18*60 && $qEnd > 18*60) $slotSpan++;
 
         $abbr      = $event->eventType?->abbreviation ?? '';
-        $hexColor  = $event->eventType?->hex_code ?? '#111111';
+        // Color based on colorSource setting
+        if (($colorSource ?? 'eventType') === 'mainCategory') {
+            if (!$event->project) {
+                $hexColor = '#9E9E9E';
+            } elseif ($event->mainCategoryColor ?? null) {
+                $hexColor = $event->mainCategoryColor;
+            } else {
+                $hexColor = '#3A3A3A';
+            }
+        } else {
+            $hexColor = $event->eventType?->hex_code ?? '#111111';
+        }
         $name      = $event->eventName ?? '';
         $projectNm = $event->project->name ?? null;
 
@@ -450,12 +462,16 @@
 
         // Hintergrund opak (nicht transparent), damit Linien nicht durchscheinen
         // Mische die Event-Farbe mit Weiß für einen hellen, aber undurchsichtigen Hintergrund
-        $bgR = (int)round($r * 0.14 + 255 * 0.86);
-        $bgG = (int)round($g * 0.14 + 255 * 0.86);
-        $bgB = (int)round($b * 0.14 + 255 * 0.86);
-        $bgRGBA     = "rgb($bgR,$bgG,$bgB)";
-        $borderRGBA = "rgba($r,$g,$b,0.95)";
-        $leftRGBA   = "rgba($r,$g,$b,1)";
+        // mixWithWhite: Mische Farbe mit Weiß, t=0 -> original, t=1 -> weiß
+        $mixWithWhite = function(int $r, int $g, int $b, float $t): string {
+            $r2 = (int) round($r + (255 - $r) * $t);
+            $g2 = (int) round($g + (255 - $g) * $t);
+            $b2 = (int) round($b + (255 - $b) * $t);
+            return sprintf('#%02X%02X%02X', $r2, $g2, $b2);
+        };
+        $bgHex      = $mixWithWhite($r, $g, $b, 0.85);
+        $borderHex  = $mixWithWhite($r, $g, $b, 0.05);
+        $leftHex    = sprintf('#%02X%02X%02X', $r, $g, $b);
 
         return [
             'topPx'     => $topPx,
@@ -467,9 +483,9 @@
             'project'   => $projectNm,
             'time'      => $timeString,
             'isMulti'   => $isMultiDay,
-            'bg'        => $bgRGBA,
-            'border'    => $borderRGBA,
-            'left'      => $leftRGBA,
+            'bg'        => $bgHex,
+            'border'    => $borderHex,
+            'left'      => $leftHex,
             'rgb'       => [$r,$g,$b],
         ];
     }
@@ -511,10 +527,10 @@
         return [$byLane, $laneCount];
     }
 
-    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening) {
+    $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening, string $colorSource = 'eventType') {
         $segments = [];
         foreach ($eventsForDay as $event) {
-            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening);
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource);
             if ($seg) $segments[] = $seg;
         }
 
@@ -555,14 +571,14 @@
                 echo '<div class="event-title">';
                 if (!empty($seg['abbr'])) {
                     $rgb = $seg['rgb'];
-                    echo '<span class="abbr" style="color: rgba('.$rgb[0].','.$rgb[1].','.$rgb[2].',1);">'.e($seg['abbr']).'</span>';
+                    echo '<span class="abbr" style="color: '.sprintf('#%02X%02X%02X', $rgb[0], $rgb[1], $rgb[2]).';">'.e($seg['abbr']).'</span>';
                     echo '<span style="font-weight:900;">:</span> ';
                 }
                 echo e($seg['name']);
                 echo '</div>';
 
                 if ($showSubLine) {
-                    echo '<div class="event-sub">'.e($seg['project']).'</div>';
+                    echo e($seg['project']);
                 }
 
                 echo '<div class="event-time">';
@@ -676,7 +692,7 @@
                                     style="{{ $isWeekend ? 'background-color:#f4f4f5;' : 'background-color:#fff;' }} height: {{ $hDay }}px;"
                                 >
                                     <div class="day-wrap" style="height: {{ $hDay }}px;">
-                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening); @endphp
+                                        @php $renderDayCell($eventsForDay, $fullDay, $hMorning, $hNoon, $hEvening, $colorSource ?? 'eventType'); @endphp
                                     </div>
                                 </td>
                             @endif

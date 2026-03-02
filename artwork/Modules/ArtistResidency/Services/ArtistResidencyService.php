@@ -10,7 +10,7 @@ use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
-use Barryvdh\DomPDF\PDF;
+use Barryvdh\Snappy\PdfWrapper;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,7 +28,7 @@ readonly class ArtistResidencyService
 {
     public function __construct(
         private ArtistResidencyRepository $artistResidencyRepository,
-        private PDF $pdf,
+        private PdfWrapper $pdf,
         private FilesystemManager $filesystemManager,
         private InertiaResponseFactory $inertiaResponseFactory,
         private ResponseFactory $responseFactory,
@@ -219,11 +219,16 @@ readonly class ArtistResidencyService
                 'user' => $this->authManager->user(),
                 'language' => $language,
             ]
+<<<<<<< artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
+        )->setPaper('a4', 'portrait')
+            ->setOption('dpi', 72);
+=======
         )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
                 'defaultFont' => 'sans-serif',
             ]);
+>>>>>>> artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
 
         $filename = $this->createFilename(now(), $project->name, '72');
         $filePath = $this->createStoragePath($filename);

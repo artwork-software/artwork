@@ -18,7 +18,7 @@ use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
-use Barryvdh\DomPDF\PDF;
+use Barryvdh\Snappy\PdfWrapper;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
@@ -40,7 +40,7 @@ class ExportPDFController extends Controller
         protected FilesystemManager $filesystemManager,
         protected InertiaResponseFactory $inertiaResponseFactory,
         protected UrlGenerator $urlGenerator,
-        protected PDF $domPdf,
+        protected PdfWrapper $snappyPdf,
         protected AuthManager $authManager,
         protected EventCalendarService $eventCalendarService,
         protected ShiftCalendarService $shiftCalendarService,
@@ -234,7 +234,7 @@ class ExportPDFController extends Controller
         $bladeTemplate = $exportMode === 'block' ? 'pdf.calendarExportNotRelative' : 'pdf.calendar';
 
         // PDF rendern
-        $pdf = $this->domPdf->loadView(
+        $pdf = $this->snappyPdf->loadView(
             $bladeTemplate,
             [
                 'title'          => $request->get('title') ?? 'Raumbelegung',
@@ -260,10 +260,7 @@ class ExportPDFController extends Controller
                 $request->string('paperSize'),
                 $request->string('paperOrientation')
             )
-            ->setOptions([
-                'dpi'         => $request->float('dpi'),
-                'defaultFont' => 'sans-serif'
-            ]);
+            ->setOption('dpi', (int) $request->float('dpi'));
 
         $filename = $this->createFilename(
             $request->string('paperOrientation', ''),
@@ -398,13 +395,10 @@ class ExportPDFController extends Controller
 
         $pdfData['groupedUsersByRole'] = $groupedUsersByRole;
 
-        $pdf = $this->domPdf
+        $pdf = $this->snappyPdf
             ->loadView('pdf.shiftplan_daily_project', $pdfData)
-            ->setOptions([
-                'dpi'         => 300,
-                'defaultFont' => 'sans-serif'
-            ])
-            ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape')
+            ->setOption('dpi', 300);
 
         $safeProjectName = (string) Str::of((string) ($project->name ?? ''))
             ->replace(['/', '\\'], '-')

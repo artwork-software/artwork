@@ -495,11 +495,9 @@ class ExportPDFController extends Controller
         string $dpi
     ): string {
         return sprintf(
-            '%s_%s_%s_dpi_%s.pdf',
-            Carbon::now()->format('d.m.Y-H:i:s'),
-            $paperOrientation,
-            str_replace(' ', '_', $title),
-            $dpi
+            '%s_%s.pdf',
+            Carbon::now()->format('d.m.Y'),
+            Str::uuid()
         );
     }
 

@@ -50,7 +50,7 @@ readonly class EventCalendarService
         $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
 
         $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select(['id','first_name','last_name','position','email','profile_photo_path'])->get()->keyBy('id');
-        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups'])->get()->keyBy('id');
+        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups','categories'])->get()->keyBy('id');
         $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id',$eventTypeIds)->select(['id','name','abbreviation','hex_code'])->get()->keyBy('id');
         $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','color'])->get()->keyBy('id');
 

@@ -25,6 +25,7 @@ class ProjectDTO extends Data
         public ?bool $isInGroup = false,
         public ?Collection $group = null,
         public ?array $userIds = null,
+        public ?string $mainCategoryColor = null,
     ) {
     }
 
@@ -45,6 +46,7 @@ class ProjectDTO extends Data
             $project->groups->isNotEmpty(),
             $project->groups->isNotEmpty() ? $project->groups->map(fn(Project $group) => self::fromModel($group, $userCalendarSettings)) : null,
             $project->users->pluck('id')->toArray(),
+            $project->categories->firstWhere('pivot.is_main', true)?->color,
         );
     }
 
@@ -66,6 +68,9 @@ class ProjectDTO extends Data
             userIds: $project->relationLoaded('users')
                 ? $project->users->pluck('id')->toArray()
                 : [],
+            mainCategoryColor: $project->relationLoaded('categories')
+                ? $project->categories->firstWhere('pivot.is_main', true)?->color
+                : null,
         );
     }
 }

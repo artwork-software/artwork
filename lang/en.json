@@ -3965,5 +3965,7 @@
     "Main": "Main",
     "Main category": "Main category",
     "Main genre": "Main genre",
-    "Main sector": "Main sector"
+    "Main sector": "Main sector",
+    "Event colour by main category": "Event colour by main category",
+    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey."
 }

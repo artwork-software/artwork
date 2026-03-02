@@ -1222,6 +1222,7 @@ class UserController extends Controller
             'high_contrast',
             'expand_days',
             'use_event_status_color',
+            'use_main_category_color',
             'show_qualifications',
             'shift_notes',
             'hide_unoccupied_rooms',

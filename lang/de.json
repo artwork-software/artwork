@@ -4005,5 +4005,7 @@
     "Main": "Haupt",
     "Main category": "Hauptkategorie",
     "Main genre": "Hauptgenre",
-    "Main sector": "Hauptbereich"
+    "Main sector": "Hauptbereich",
+    "Event colour by main category": "Terminfarbe nach Hauptkategorie der Projekte",
+    "Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.": "Färbt Kalendereinträge nach der Hauptkategorie des Projekts. Termine ohne Hauptkategorie werden in Anthrazit angezeigt, Termine ohne Projekt in Grau."
 }

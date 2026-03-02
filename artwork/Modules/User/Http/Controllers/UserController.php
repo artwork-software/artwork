@@ -429,6 +429,42 @@ class UserController extends Controller
         ]);
     }
 
+    public function editUserCompensationDays(User $user): Response|ResponseFactory
+    {
+        $openCompensations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with(['shiftRule', 'createdByUser'])
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNotNull('compensation_days')
+            ->whereNull('compensation_granted_at')
+            ->orderBy('compensation_deadline')
+            ->get();
+
+        $grantedCompensations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with([
+            'shiftRule',
+            'grantedByUser',
+            'createdByUser',
+        ])
+            ->where('user_id', $user->id)
+            ->whereNotNull('compensation_granted_at')
+            ->orderByDesc('compensation_granted_at')
+            ->get();
+
+        $unprocessedViolations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with(['shiftRule'])
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('compensation_days')
+            ->orderByDesc('violation_date')
+            ->get();
+
+        return inertia('Users/UserCompensationDays', [
+            'userToEdit' => new \Artwork\Modules\User\Http\Resources\UserShowResource($user),
+            'currentTab' => 'compensationDays',
+            'openCompensations' => $openCompensations,
+            'grantedCompensations' => $grantedCompensations,
+            'unprocessedViolations' => $unprocessedViolations,
+        ]);
+    }
+
     /**
      * @param Carbon $start
      * @param Carbon $end

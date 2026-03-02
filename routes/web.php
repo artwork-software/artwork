@@ -204,6 +204,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
 
         // Specific routes must come before parameterized routes
+        Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])->name('shift-rules.active');
         Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
@@ -219,8 +220,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Shift Rule Violations routes
     Route::group(['prefix' => 'shift-rule-violations'], function (): void {
+        Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
+        Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+        Route::post('/{violation}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensation'])->name('shift-rule-violations.grant');
     });
 
     // TOOL SETTING ROUTE
@@ -360,6 +365,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/worktimes', [UserController::class, 'showUserWorktimes'])
         ->can('can manage workers')
         ->name('user.edit.worktimes');
+    Route::get('/users/{user}/compensation-days', [UserController::class, 'editUserCompensationDays'])
+        ->name('user.edit.compensationDays');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
     // user.update.open.crafts

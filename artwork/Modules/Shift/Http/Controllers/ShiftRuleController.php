@@ -294,6 +294,104 @@ class ShiftRuleController extends Controller
         ]);
     }
 
+    public function storeManualViolation(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'shift_rule_id' => 'required|exists:shift_rules,id',
+            'violation_date' => 'required|date',
+            'reason' => 'nullable|string',
+            'severity' => 'in:warning,error',
+        ]);
+
+        ShiftRuleViolation::create([
+            'user_id' => $validated['user_id'],
+            'shift_rule_id' => $validated['shift_rule_id'],
+            'violation_date' => $validated['violation_date'],
+            'reason' => $validated['reason'] ?? null,
+            'severity' => $validated['severity'] ?? 'warning',
+            'status' => 'active',
+            'is_manual' => true,
+            'created_by_user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Regelverstoß erfolgreich erstellt'
+        ]);
+    }
+
+    public function processViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
+    {
+        $validated = $request->validate([
+            'compensation_days' => 'required|numeric|min:0.5',
+            'compensation_deadline' => 'required|date|after:today',
+            'compensation_reason' => 'nullable|string',
+        ]);
+
+        // Validate 0.5 steps
+        if (fmod($validated['compensation_days'] * 2, 1) !== 0.0) {
+            return redirect()->back()->withErrors([
+                'compensation_days' => 'Ersatzfreie Tage müssen in 0.5er Schritten angegeben werden.'
+            ]);
+        }
+
+        $violation->update([
+            'compensation_days' => $validated['compensation_days'],
+            'compensation_deadline' => $validated['compensation_deadline'],
+            'compensation_reason' => $validated['compensation_reason'] ?? null,
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Regelverstoß erfolgreich bearbeitet'
+        ]);
+    }
+
+    public function grantCompensation(ShiftRuleViolation $violation): RedirectResponse
+    {
+        if (!$violation->hasCompensation()) {
+            return redirect()->back()->with('error', 'Keine Ersatzfreitage zugewiesen.');
+        }
+
+        $violation->grantCompensation(auth()->id());
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Ersatzfrei erfolgreich gewährt'
+        ]);
+    }
+
+    public function getViolationsForDateRange(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'integer',
+        ]);
+
+        $query = ShiftRuleViolation::with(['shiftRule:id,name,description,warning_color'])
+            ->whereBetween('violation_date', [$validated['start_date'], $validated['end_date']])
+            ->where('status', 'active');
+
+        if (!empty($validated['user_ids'])) {
+            $query->whereIn('user_id', $validated['user_ids']);
+        }
+
+        $violations = $query->get()
+            ->groupBy('user_id')
+            ->map(fn ($userViolations) => $userViolations->groupBy(
+                fn ($v) => $v->violation_date->format('Y-m-d')
+            ));
+
+        return new JsonResponse($violations);
+    }
+
+    public function activeRules(): JsonResponse
+    {
+        return new JsonResponse(
+            ShiftRule::where('is_active', true)->get(['id', 'name', 'description', 'warning_color', 'trigger_type'])
+        );
+    }
+
     private function getAvailableRuleTypes(): array
     {
         $ruleTypes = [

@@ -7,8 +7,10 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Traits\TriggersWorkflows;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ShiftRuleViolation extends Model implements WorkflowSubject
 {
@@ -23,13 +25,26 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         'severity',
         'status',
         'resolved_at',
-        'resolved_by'
+        'resolved_by',
+        'reason',
+        'is_manual',
+        'created_by_user_id',
+        'compensation_days',
+        'compensation_deadline',
+        'compensation_reason',
+        'compensation_granted_at',
+        'compensation_granted_by',
+        'parent_violation_id',
     ];
 
     protected $casts = [
         'violation_date' => 'date',
         'violation_data' => 'array',
-        'resolved_at' => 'datetime'
+        'resolved_at' => 'datetime',
+        'is_manual' => 'boolean',
+        'compensation_days' => 'decimal:1',
+        'compensation_deadline' => 'date',
+        'compensation_granted_at' => 'datetime',
     ];
 
     public function shiftRule(): BelongsTo
@@ -50,6 +65,46 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
     public function resolvedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by', 'id', 'resolvedByUser');
+    }
+
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdByUser');
+    }
+
+    public function grantedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'compensation_granted_by', 'id', 'grantedByUser');
+    }
+
+    public function parentViolation(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_violation_id', 'id', 'parentViolation');
+    }
+
+    public function childViolations(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_violation_id');
+    }
+
+    public function scopeOpenCompensation(Builder $query): Builder
+    {
+        return $query->where('status', 'active')
+            ->whereNotNull('compensation_days')
+            ->whereNull('compensation_granted_at');
+    }
+
+    public function scopeGrantedCompensation(Builder $query): Builder
+    {
+        return $query->whereNotNull('compensation_granted_at');
+    }
+
+    public function scopeOverdueCompensation(Builder $query): Builder
+    {
+        return $query->where('status', 'active')
+            ->whereNotNull('compensation_deadline')
+            ->whereNull('compensation_granted_at')
+            ->where('compensation_deadline', '<', now());
     }
 
     public function isResolved(): bool
@@ -73,6 +128,29 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
             'resolved_at' => now(),
             'resolved_by' => $userId
         ]);
+    }
+
+    public function grantCompensation(int $userId): void
+    {
+        $this->update([
+            'compensation_granted_at' => now(),
+            'compensation_granted_by' => $userId,
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'resolved_by' => $userId,
+        ]);
+    }
+
+    public function hasCompensation(): bool
+    {
+        return $this->compensation_days !== null && $this->compensation_days > 0;
+    }
+
+    public function isCompensationOverdue(): bool
+    {
+        return $this->compensation_deadline !== null
+            && $this->compensation_granted_at === null
+            && $this->compensation_deadline->isPast();
     }
 
     public function getViolationMessage(): string

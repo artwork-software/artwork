@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Console\Commands;
 
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -38,7 +39,7 @@ class ValidateShiftRulesCommand extends Command
                         return [
                             $violation->shiftRule->name,
                             $violation->user->first_name . ' ' . $violation->user->last_name,
-                            $violation->shift->start_date,
+                            $violation->shift?->start_date ?? '-',
                             $violation->violation_date->format('Y-m-d'),
                             $violation->severity
                         ];
@@ -46,12 +47,55 @@ class ValidateShiftRulesCommand extends Command
                 );
             }
 
+            // Check for overdue compensation deadlines
+            $this->checkOverdueCompensations();
+
             $this->info('Shift rule validation completed successfully');
             return self::SUCCESS;
 
         } catch (\Exception $e) {
             $this->error('Error during shift rule validation: ' . $e->getMessage());
             return self::FAILURE;
+        }
+    }
+
+    private function checkOverdueCompensations(): void
+    {
+        $overdueViolations = ShiftRuleViolation::with(['shiftRule', 'user'])
+            ->where('status', 'active')
+            ->whereNotNull('compensation_deadline')
+            ->whereNull('compensation_granted_at')
+            ->where('compensation_deadline', '<', now())
+            ->whereDoesntHave('childViolations')
+            ->get();
+
+        if ($overdueViolations->isEmpty()) {
+            return;
+        }
+
+        $this->info("Found {$overdueViolations->count()} overdue compensation deadlines");
+
+        foreach ($overdueViolations as $violation) {
+            ShiftRuleViolation::create([
+                'shift_rule_id' => $violation->shift_rule_id,
+                'user_id' => $violation->user_id,
+                'violation_date' => $violation->compensation_deadline,
+                'violation_data' => [
+                    'type' => 'compensation_deadline_expired',
+                    'original_violation_date' => $violation->violation_date->format('Y-m-d'),
+                    'compensation_days' => $violation->compensation_days,
+                ],
+                'severity' => 'error',
+                'status' => 'active',
+                'is_manual' => false,
+                'reason' => 'Ersatzfrei-Frist abgelaufen',
+                'parent_violation_id' => $violation->id,
+            ]);
+
+            $this->line(
+                "  Created deadline violation for user {$violation->user->first_name} {$violation->user->last_name} "
+                . "(original: {$violation->violation_date->format('Y-m-d')}, deadline: {$violation->compensation_deadline->format('Y-m-d')})"
+            );
         }
     }
 }

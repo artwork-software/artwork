@@ -27,6 +27,7 @@ RUN apt-get update -y && \
       librsvg2-bin \
       fswatch \
       apt-transport-https \
+      wkhtmltopdf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

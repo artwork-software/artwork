@@ -871,19 +871,31 @@ class ProjectService
         ]);
     }
 
-    public function syncCategories(Project $project, IlluminateCollection $categories): void
+    public function syncCategories(Project $project, IlluminateCollection $categories, ?int $mainCategoryId = null): void
     {
-        $project->categories()->sync($categories);
+        $syncData = $this->buildSyncDataWithMain($categories, $mainCategoryId);
+        $project->categories()->sync($syncData);
     }
 
-    public function syncGenres(Project $project, IlluminateCollection $genres): void
+    public function syncGenres(Project $project, IlluminateCollection $genres, ?int $mainGenreId = null): void
     {
-        $project->genres()->sync($genres);
+        $syncData = $this->buildSyncDataWithMain($genres, $mainGenreId);
+        $project->genres()->sync($syncData);
     }
 
-    public function syncSectors(Project $project, IlluminateCollection $sectors): void
+    public function syncSectors(Project $project, IlluminateCollection $sectors, ?int $mainSectorId = null): void
     {
-        $project->sectors()->sync($sectors);
+        $syncData = $this->buildSyncDataWithMain($sectors, $mainSectorId);
+        $project->sectors()->sync($syncData);
+    }
+
+    private function buildSyncDataWithMain(IlluminateCollection $ids, ?int $mainId): array
+    {
+        $syncData = [];
+        foreach ($ids as $id) {
+            $syncData[$id] = ['is_main' => $mainId !== null && (int) $id === $mainId];
+        }
+        return $syncData;
     }
 
     public function detachManagementUsers(Project $project, bool $detachingAll = false, array $userIds = []): void

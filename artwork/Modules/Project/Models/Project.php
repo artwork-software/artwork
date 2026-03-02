@@ -232,17 +232,17 @@ class Project extends Model
 
     public function sectors(): BelongsToMany
     {
-        return $this->belongsToMany(Sector::class);
+        return $this->belongsToMany(Sector::class)->withPivot('is_main');
     }
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsToMany(Category::class)->withPivot('is_main');
     }
 
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class);
+        return $this->belongsToMany(Genre::class)->withPivot('is_main');
     }
 
     public function rooms(): BelongsToMany

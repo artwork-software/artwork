@@ -4001,5 +4001,9 @@
     "Show name": "Name anzeigen",
     "Use the slider to determine whether you want to see the name or the number in the first two columns when account linking is active.": "Lege mit dem Slider fest ob du in den ersten beiden Spalten bei aktiver Kontoverknüpfung den Namen oder die Nummer angezeigt bekommen willst.",
     "Shift is outside the project period": "Schicht liegt außerhalb des Projektzeitraumes",
-    "The project period is determined by the first and last event of the project.": "Der Projektzeitraum ergibt sich aus dem ersten Termin und dem letzten Termin des Projektes."
+    "The project period is determined by the first and last event of the project.": "Der Projektzeitraum ergibt sich aus dem ersten Termin und dem letzten Termin des Projektes.",
+    "Main": "Haupt",
+    "Main category": "Hauptkategorie",
+    "Main genre": "Hauptgenre",
+    "Main sector": "Hauptbereich"
 }

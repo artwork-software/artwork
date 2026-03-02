@@ -4,10 +4,11 @@
             <div
                 v-for="(attribute, index) in visibleAttributes"
                 :key="index"
-                class="inline-flex items-center rounded-full border border-gray-100 pr-2"
+                class="inline-flex items-center rounded-full border pr-2"
+                :class="attribute.pivot?.is_main ? 'border-amber-400 ring-1 ring-amber-400' : 'border-gray-100'"
             >
                 <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attribute.color }" />
-                <span class="ml-1 text-xs text-secondary truncate max-w-[6rem]">{{ attribute.name }}</span>
+                <span class="ml-1 text-xs truncate max-w-[6rem]" :class="attribute.pivot?.is_main ? 'text-amber-700 font-semibold' : 'text-secondary'">{{ attribute.name }}</span>
             </div>
             <div v-if="overflowAttributes.length > 0" class="relative" @click.stop>
                 <button
@@ -25,10 +26,11 @@
                         <div
                             v-for="(attr, i) in overflowAttributes"
                             :key="i"
-                            class="inline-flex items-center rounded-full border border-gray-100 pr-2"
+                            class="inline-flex items-center rounded-full border pr-2"
+                            :class="attr.pivot?.is_main ? 'border-amber-400 ring-1 ring-amber-400' : 'border-gray-100'"
                         >
                             <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attr.color }" />
-                            <span class="ml-1 text-xs text-secondary">{{ attr.name }}</span>
+                            <span class="ml-1 text-xs" :class="attr.pivot?.is_main ? 'text-amber-700 font-semibold' : 'text-secondary'">{{ attr.name }}</span>
                         </div>
                     </div>
                 </div>
@@ -62,6 +64,8 @@ const allAttributes = computed(() => {
             attrs.push(...category);
         }
     }
+    // Sort main items first
+    attrs.sort((a, b) => (b.pivot?.is_main ? 1 : 0) - (a.pivot?.is_main ? 1 : 0));
     return attrs;
 });
 

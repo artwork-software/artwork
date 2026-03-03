@@ -250,7 +250,7 @@ class ShiftController extends Controller
                     $user?->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -286,7 +286,7 @@ class ShiftController extends Controller
                         $craftUser->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -376,7 +376,7 @@ class ShiftController extends Controller
             $user->language
         );
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -487,7 +487,7 @@ class ShiftController extends Controller
                                     $user->language
                                 );
                                 $broadcastMessage = [
-                                    'id' => rand(1, 1000000),
+                                    'id' => Str::uuid()->toString(),
                                     'type' => 'success',
                                     'message' => $notificationTitle
                                 ];
@@ -539,7 +539,7 @@ class ShiftController extends Controller
                                         $user->language
                                     );
                                     $broadcastMessage = [
-                                        'id' => rand(1, 1000000),
+                                        'id' => Str::uuid()->toString(),
                                         'type' => 'success',
                                         'message' => $notificationTitle
                                     ];
@@ -596,7 +596,7 @@ class ShiftController extends Controller
                                     $user->language
                                 );
                                 $broadcastMessage = [
-                                    'id' => rand(1, 1000000),
+                                    'id' => Str::uuid()->toString(),
                                     'type' => 'success',
                                     'message' => $notificationTitle
                                 ];
@@ -686,7 +686,7 @@ class ShiftController extends Controller
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -722,7 +722,7 @@ class ShiftController extends Controller
                         $craftUser->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];

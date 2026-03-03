@@ -14,6 +14,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ShiftCommitWorkflowRequestsController extends Controller
 {
@@ -104,7 +105,7 @@ class ShiftCommitWorkflowRequestsController extends Controller
                 $userToNotify->language
             );
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];

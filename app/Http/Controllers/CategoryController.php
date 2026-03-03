@@ -26,45 +26,28 @@ class CategoryController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/ProjectSettings', [
-            'categories' => Category::all()->map(fn($category) => [
+            'categories' => Category::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'color' => $category->color,
                 'projects' => $category->projects
             ]),
-            'genres' => Genre::all()->map(fn($genre) => [
+            'genres' => Genre::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'color' => $genre->color,
                 'projects' => $genre->projects
             ]),
-            'sectors' => Sector::all()->map(fn($sector) => [
+            'sectors' => Sector::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'color' => $sector->color,
                 'projects' => $sector->projects
             ]),
-            'contractTypes' => ContractType::all()->map(fn($contractType) => [
-                'id' => $contractType->id,
-                'name' => $contractType->name,
-                'color' => $contractType->color,
-            ]),
-            'companyTypes' => CompanyType::all()->map(fn($companyType) => [
-                'id' => $companyType->id,
-                'name' => $companyType->name,
-                'color' => $companyType->color,
-            ]),
-            'currencies' => Currency::all()->map(fn($currency) => [
-                'id' => $currency->id,
-                'name' => $currency->name,
-                'color' => $currency->color,
-            ]),
-            'states' => ProjectState::all()->map(fn($state) => [
-                'id' => $state->id,
-                'name' => $state->name,
-                'color' => $state->color,
-                'is_planning' => $state->is_planning
-            ]),
+            'contractTypes' => ContractType::select(['id', 'name', 'color'])->get(),
+            'companyTypes' => CompanyType::select(['id', 'name', 'color'])->get(),
+            'currencies' => Currency::select(['id', 'name', 'color'])->get(),
+            'states' => ProjectState::select(['id', 'name', 'color', 'is_planning'])->get(),
             'createSettings' => app(ProjectCreateSettings::class),
             'breakfastDeductionPerDay' => app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class)->breakfast_deduction_per_day
         ]);

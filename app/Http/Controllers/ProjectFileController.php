@@ -106,7 +106,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.permission_add', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -193,7 +193,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.changed', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -256,7 +256,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.deleted', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];

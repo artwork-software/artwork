@@ -148,7 +148,7 @@ class ContractService
         foreach ($contractUsers as $contractUser) {
             $notificationTitle = __('notification.contract.delete', [], $contractUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -333,7 +333,7 @@ class ContractService
                 $contractUser->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -392,7 +392,7 @@ class ContractService
                 $contractUser->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'green',
                 'message' => $notificationTitle
             ];
@@ -446,7 +446,7 @@ class ContractService
                 );
 
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];

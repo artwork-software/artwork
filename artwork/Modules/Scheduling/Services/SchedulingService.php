@@ -16,6 +16,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
 class SchedulingService
@@ -152,7 +153,7 @@ class SchedulingService
                 }
 
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -201,7 +202,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -229,7 +230,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -256,7 +257,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -282,7 +283,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -347,7 +348,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -376,7 +377,7 @@ class SchedulingService
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => random_int(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];

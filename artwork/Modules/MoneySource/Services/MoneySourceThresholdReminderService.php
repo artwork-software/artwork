@@ -8,6 +8,7 @@ use Artwork\Modules\MoneySource\Models\MoneySourceReminder;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 readonly class MoneySourceThresholdReminderService
 {
@@ -90,7 +91,7 @@ readonly class MoneySourceThresholdReminderService
     ): void {
         $notificationTitle = 'Finanzquelle läuft aus';
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];

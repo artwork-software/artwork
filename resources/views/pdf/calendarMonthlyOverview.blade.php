@@ -126,9 +126,9 @@
             white-space: nowrap;
             padding: 1px 3px;
             vertical-align: middle;
-            width: 62px;
-            min-width: 62px;
-            max-width: 62px;
+            width: 75px;
+            min-width: 75px;
+            max-width: 75px;
         }
 
         .weekend-bg { background-color: #f4f4f5; }
@@ -195,7 +195,7 @@
         <table class="monthly">
             <thead>
                 <tr>
-                    <th class="corner" style="width: 62px; white-space: nowrap;">{{ $page['monthLabel'] ?? $title }}</th>
+                    <th class="corner" style="width: 75px; white-space: nowrap;">{{ $page['monthLabel'] ?? $title }}</th>
                     @foreach($rooms as $room)
                         <th>{{ $room->name }}</th>
                     @endforeach

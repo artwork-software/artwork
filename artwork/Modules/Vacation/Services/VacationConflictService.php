@@ -10,6 +10,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 readonly class VacationConflictService
 {
@@ -61,7 +62,7 @@ readonly class VacationConflictService
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -182,7 +183,7 @@ readonly class VacationConflictService
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];

@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class SendDeadlineNotificationsCommand extends Command
@@ -160,7 +161,7 @@ class SendDeadlineNotificationsCommand extends Command
     private function sendDeadlineNotification(string $notificationTitle, User $user, Task $task): void
     {
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle,
         ];

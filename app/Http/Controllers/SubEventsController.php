@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Event\Models\SubEvent;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SubEventsController extends Controller
 {
@@ -47,7 +48,7 @@ class SubEventsController extends Controller
                 $roomAdmin->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];

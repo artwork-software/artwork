@@ -195,7 +195,7 @@ class EventVerificationService
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
         $broadcastMessage = [
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -266,7 +266,7 @@ class EventVerificationService
             'name' => $verification->verifier->full_name,
         ], $eventCreator->language);
         $broadcastMessage = [
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];
@@ -350,7 +350,7 @@ class EventVerificationService
             if ($status === 'pending') {
                 $notificationTitle = __('notification.request-verification.new', [], $verifier->language);
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle,
                 ];

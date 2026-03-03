@@ -25,6 +25,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Str;
 
 class ShiftWorkerService
 {
@@ -605,7 +606,7 @@ class ShiftWorkerService
             $notificationService->setPriority(2);
             $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
             $notificationService->setBroadcastMessage([
-                'id'      => random_int(1, 1000000),
+                'id'      => Str::uuid()->toString(),
                 'type'    => 'success',
                 'message' => $notificationTitle,
             ]);
@@ -732,7 +733,7 @@ class ShiftWorkerService
         $notificationService->setPriority(3);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
-            'id'      => random_int(1, 1000000),
+            'id'      => Str::uuid()->toString(),
             'type'    => 'success',
             'message' => $notificationTitle,
         ]);
@@ -775,7 +776,7 @@ class ShiftWorkerService
         $notificationService->setPriority(1);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
         $notificationService->setBroadcastMessage([
-            'id'      => random_int(1, 1000000),
+            'id'      => Str::uuid()->toString(),
             'type'    => 'error',
             'message' => $notificationTitle,
         ]);
@@ -887,7 +888,7 @@ class ShiftWorkerService
         $notificationService->setPriority(2);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
         $notificationService->setBroadcastMessage([
-            'id'      => random_int(1, 1000000),
+            'id'      => Str::uuid()->toString(),
             'type'    => 'error',
             'message' => $notificationTitle,
         ]);
@@ -922,7 +923,7 @@ class ShiftWorkerService
             $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
 
             $broadcastMessage = [
-                'id'      => random_int(1, 1000000),
+                'id'      => Str::uuid()->toString(),
                 'type'    => 'error',
                 'message' => $notificationTitle,
             ];
@@ -962,7 +963,7 @@ class ShiftWorkerService
                 $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $craftUser->language);
 
                 $broadcastMessage = [
-                    'id'      => random_int(1, 1000000),
+                    'id'      => Str::uuid()->toString(),
                     'type'    => 'error',
                     'message' => $notificationTitle,
                 ];

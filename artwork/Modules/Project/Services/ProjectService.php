@@ -27,6 +27,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -873,27 +874,30 @@ class ProjectService
 
     public function syncCategories(Project $project, IlluminateCollection $categories, ?int $mainCategoryId = null): void
     {
-        $syncData = $this->buildSyncDataWithMain($categories, $mainCategoryId);
+        $syncData = $this->buildSyncDataWithMain($categories, $mainCategoryId, 'category_project');
         $project->categories()->sync($syncData);
     }
 
     public function syncGenres(Project $project, IlluminateCollection $genres, ?int $mainGenreId = null): void
     {
-        $syncData = $this->buildSyncDataWithMain($genres, $mainGenreId);
+        $syncData = $this->buildSyncDataWithMain($genres, $mainGenreId, 'genre_project');
         $project->genres()->sync($syncData);
     }
 
     public function syncSectors(Project $project, IlluminateCollection $sectors, ?int $mainSectorId = null): void
     {
-        $syncData = $this->buildSyncDataWithMain($sectors, $mainSectorId);
+        $syncData = $this->buildSyncDataWithMain($sectors, $mainSectorId, 'project_sector');
         $project->sectors()->sync($syncData);
     }
 
-    private function buildSyncDataWithMain(IlluminateCollection $ids, ?int $mainId): array
+    private function buildSyncDataWithMain(IlluminateCollection $ids, ?int $mainId, string $pivotTable = 'category_project'): array
     {
         $syncData = [];
+        $hasIsMain = Schema::hasColumn($pivotTable, 'is_main');
         foreach ($ids as $id) {
-            $syncData[$id] = ['is_main' => $mainId !== null && (int) $id === $mainId];
+            $syncData[$id] = $hasIsMain
+                ? ['is_main' => $mainId !== null && (int) $id === $mainId]
+                : [];
         }
         return $syncData;
     }

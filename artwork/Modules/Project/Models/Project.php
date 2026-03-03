@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Scout\Searchable;
 
 /**
@@ -232,17 +233,29 @@ class Project extends Model
 
     public function sectors(): BelongsToMany
     {
-        return $this->belongsToMany(Sector::class)->withPivot('is_main');
+        $relation = $this->belongsToMany(Sector::class);
+        if (Schema::hasColumn('project_sector', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class)->withPivot('is_main');
+        $relation = $this->belongsToMany(Category::class);
+        if (Schema::hasColumn('category_project', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class)->withPivot('is_main');
+        $relation = $this->belongsToMany(Genre::class);
+        if (Schema::hasColumn('genre_project', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function rooms(): BelongsToMany

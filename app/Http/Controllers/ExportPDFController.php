@@ -263,11 +263,7 @@ class ExportPDFController extends Controller
             )
             ->setOption('dpi', (int) $request->float('dpi'));
 
-        $filename = $this->createFilename(
-            $request->string('paperOrientation', ''),
-            $request->string('title', ''),
-            $request->float('dpi', '')
-        );
+        $filename = $this->createFilename();
 
         if ($this->filesystemManager->directoryMissing('pdf')) {
             $this->filesystemManager->makeDirectory('pdf');
@@ -457,11 +453,7 @@ class ExportPDFController extends Controller
             )
             ->setOption('dpi', (int) $request->float('dpi', 72));
 
-        $filename = $this->createFilename(
-            $request->string('paperOrientation', 'landscape'),
-            $request->string('title', 'Monatsuebersicht'),
-            $request->float('dpi', 72)
-        );
+        $filename = $this->createFilename();
 
         if ($this->filesystemManager->directoryMissing('pdf')) {
             $this->filesystemManager->makeDirectory('pdf');
@@ -489,11 +481,7 @@ class ExportPDFController extends Controller
         return $filesystemManager->path('pdf/' . $filename);
     }
 
-    private function createFilename(
-        string $paperOrientation,
-        string $title,
-        string $dpi
-    ): string {
+    private function createFilename(): string {
         return sprintf(
             '%s_%s.pdf',
             Carbon::now()->format('d.m.Y'),

@@ -153,6 +153,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -3248,10 +3249,16 @@ class ProjectController extends Controller
         $mainGenreId = $request->input('mainGenreId');
         $mainSectorId = $request->input('mainSectorId');
 
+        $hasCategoryIsMain = Schema::hasColumn('category_project', 'is_main');
+        $hasGenreIsMain = Schema::hasColumn('genre_project', 'is_main');
+        $hasSectorIsMain = Schema::hasColumn('project_sector', 'is_main');
+
         $oldProjectCategories = $project->categories()->get();
         $categorySyncData = [];
         foreach (($request->assignedCategoryIds ?? []) as $id) {
-            $categorySyncData[$id] = ['is_main' => $mainCategoryId !== null && (int) $id === (int) $mainCategoryId];
+            $categorySyncData[$id] = $hasCategoryIsMain
+                ? ['is_main' => $mainCategoryId !== null && (int) $id === (int) $mainCategoryId]
+                : [];
         }
         $project->categories()->sync($categorySyncData);
         $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $project->categories()->get());
@@ -3259,7 +3266,9 @@ class ProjectController extends Controller
         $oldProjectGenres = $project->genres()->get();
         $genreSyncData = [];
         foreach (($request->assignedGenreIds ?? []) as $id) {
-            $genreSyncData[$id] = ['is_main' => $mainGenreId !== null && (int) $id === (int) $mainGenreId];
+            $genreSyncData[$id] = $hasGenreIsMain
+                ? ['is_main' => $mainGenreId !== null && (int) $id === (int) $mainGenreId]
+                : [];
         }
         $project->genres()->sync($genreSyncData);
         $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $project->genres()->get());
@@ -3267,7 +3276,9 @@ class ProjectController extends Controller
         $oldProjectSectors = $project->sectors()->get();
         $sectorSyncData = [];
         foreach (($request->assignedSectorIds ?? []) as $id) {
-            $sectorSyncData[$id] = ['is_main' => $mainSectorId !== null && (int) $id === (int) $mainSectorId];
+            $sectorSyncData[$id] = $hasSectorIsMain
+                ? ['is_main' => $mainSectorId !== null && (int) $id === (int) $mainSectorId]
+                : [];
         }
         $project->sectors()->sync($sectorSyncData);
         $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $project->sectors()->get());

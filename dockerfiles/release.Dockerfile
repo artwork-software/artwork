@@ -27,8 +27,24 @@ RUN apt-get update -y && \
       librsvg2-bin \
       fswatch \
       apt-transport-https \
+      fontconfig \
+      libxrender1 \
+      xfonts-75dpi \
+      xfonts-base \
+      libfontenc1 x11-common xfonts-75dpi xfonts-base xfonts-encodings xfonts-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf 0.12.6.1 (patched Qt) - architecture-aware
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -sSL -o /tmp/wkhtmltox.deb "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_${ARCH}.deb" && \
+    dpkg -i /tmp/wkhtmltox.deb && \
+    apt-get update -y && \
+    apt-get install -y -f && \
+    dpkg -i /tmp/wkhtmltox.deb &&\
+    rm /tmp/wkhtmltox.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22.x and PHP 8.4
 RUN mkdir -p /etc/apt/keyrings && \

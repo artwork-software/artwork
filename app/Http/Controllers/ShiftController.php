@@ -250,7 +250,7 @@ class ShiftController extends Controller
                     $user?->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -286,7 +286,7 @@ class ShiftController extends Controller
                         $craftUser->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -376,7 +376,7 @@ class ShiftController extends Controller
             $user->language
         );
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -487,7 +487,7 @@ class ShiftController extends Controller
                                     $user->language
                                 );
                                 $broadcastMessage = [
-                                    'id' => rand(1, 1000000),
+                                    'id' => Str::uuid()->toString(),
                                     'type' => 'success',
                                     'message' => $notificationTitle
                                 ];
@@ -539,7 +539,7 @@ class ShiftController extends Controller
                                         $user->language
                                     );
                                     $broadcastMessage = [
-                                        'id' => rand(1, 1000000),
+                                        'id' => Str::uuid()->toString(),
                                         'type' => 'success',
                                         'message' => $notificationTitle
                                     ];
@@ -596,7 +596,7 @@ class ShiftController extends Controller
                                     $user->language
                                 );
                                 $broadcastMessage = [
-                                    'id' => rand(1, 1000000),
+                                    'id' => Str::uuid()->toString(),
                                     'type' => 'success',
                                     'message' => $notificationTitle
                                 ];
@@ -686,7 +686,7 @@ class ShiftController extends Controller
                         $user->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -722,7 +722,7 @@ class ShiftController extends Controller
                         $craftUser->language
                     );
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -768,6 +768,44 @@ class ShiftController extends Controller
             ));
         }
         $this->shiftService->forceDelete($shift);
+    }
+
+    public function bulkDelete(Request $request): void
+    {
+        $shiftIds = $request->get('shift_ids', []);
+        foreach ($shiftIds as $shiftId) {
+            $shift = Shift::find($shiftId);
+            if ($shift) {
+                $this->destroy($shift);
+            }
+        }
+    }
+
+    public function bulkDuplicate(Request $request): void
+    {
+        $shiftIds = $request->get('shift_ids', []);
+        foreach ($shiftIds as $shiftId) {
+            $shift = Shift::with(['shiftsQualifications', 'globalQualifications'])->find($shiftId);
+            if (!$shift) {
+                continue;
+            }
+            $newShift = $shift->replicate(['deleted_at']);
+            $newShift->is_committed = false;
+            $newShift->save();
+
+            foreach ($shift->shiftsQualifications as $sq) {
+                $newShift->shiftsQualifications()->create([
+                    'shift_qualification_id' => $sq->shift_qualification_id,
+                    'value' => $sq->value,
+                ]);
+            }
+
+            foreach ($shift->globalQualifications as $gq) {
+                $newShift->globalQualifications()->attach($gq->id, [
+                    'quantity' => $gq->pivot->quantity,
+                ]);
+            }
+        }
     }
 
     //phpcs:ignore

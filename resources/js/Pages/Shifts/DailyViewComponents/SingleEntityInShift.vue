@@ -129,7 +129,7 @@
             </div>
 
             <!-- Notes: begrenzen, damit sie nie den Rest killen -->
-            <div v-if="$page.props.auth.user.calendar_settings.shift_notes" class="flex min-w-0 items-center max-w-56">
+            <div v-if="forceShowNotes || $page.props.auth.user.calendar_settings.shift_notes" class="flex min-w-0 items-center max-w-56">
                 <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <PopoverButton class="flex items-center gap-x-1 min-w-0 w-full !ring-0 border-none">
@@ -239,6 +239,10 @@ const props = defineProps({
         type: String,
         required: false,
         default: null
+    },
+    forceShowNotes: {
+        type: Boolean,
+        default: false
     },
 })
 

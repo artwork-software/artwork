@@ -11,5 +11,6 @@ enum UserFilterTypes: string
     case CALENDAR_DAILY_FILTER = 'calendar_daily_filter';
     case SHIFT_DAILY_FILTER = 'shift_daily_filter';
     case PLANNING_DAILY_FILTER = 'planning_daily_filter';
+    case SHIFT_LIST_VIEW_FILTER = 'shift_list_view_filter';
 
 }

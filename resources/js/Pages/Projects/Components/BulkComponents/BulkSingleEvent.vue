@@ -307,6 +307,33 @@
             </div>
         </div>
 
+        <!-- Inline description row -->
+        <div
+            v-if="showDescriptionInBulk"
+            class="border-t border-b border-dashed border-zinc-300 border-l-2 border-l-zinc-300 ml-6 bg-zinc-50/50 rounded-b-lg px-3 py-1.5"
+        >
+            <div v-if="!editingDescription" @click="startEditDescription" class="cursor-pointer min-h-[24px] flex items-center">
+                <template v-if="event.description && event.description.toString().trim().length > 0">
+                    <span class="text-sm text-zinc-700 whitespace-pre-line break-words">{{ event.description }}</span>
+                </template>
+                <template v-else>
+                    <IconNote class="size-4 text-zinc-400 mr-1.5" stroke-width="1.5" />
+                    <span class="text-sm text-zinc-400 italic">{{ $t('Add description') }}</span>
+                </template>
+            </div>
+            <div v-else>
+                <textarea
+                    ref="descriptionTextarea"
+                    v-model="draftDescription"
+                    @focusout="saveDescription"
+                    @keydown.enter.ctrl="saveDescription"
+                    maxlength="250"
+                    rows="2"
+                    class="w-full border border-artwork-buttons-context/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-artwork-buttons-context/50"
+                />
+            </div>
+        </div>
+
         <!-- Delete confirmation -->
         <confirmation-component
             v-if="showDeleteEventConfirmModal"
@@ -367,10 +394,9 @@ import {
 import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed, defineAsyncComponent, nextTick, onMounted, ref, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
-import {inject} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
@@ -426,6 +452,30 @@ const showDeleteSeriesModal = ref(false);
 const showEditSeriesModal = ref(false);
 const showCreateTimelinePresetModal = ref(false);
 const showSearchTimelinePresetModal = ref(false);
+
+// Inline description
+const showDescriptionInBulk = inject('showDescriptionInBulk', ref(false));
+const editingDescription = ref(false);
+const draftDescription = ref(props.event.description || '');
+const descriptionTextarea = ref(null);
+
+const startEditDescription = () => {
+    draftDescription.value = props.event.description || '';
+    editingDescription.value = true;
+    nextTick(() => {
+        descriptionTextarea.value?.focus();
+    });
+};
+
+const saveDescription = async () => {
+    if (draftDescription.value !== (props.event.description || '')) {
+        await axios.patch(route('event.update.description', props.event.id), {
+            description: draftDescription.value
+        });
+        props.event.description = draftDescription.value;
+    }
+    editingDescription.value = false;
+};
 
 const openSaveTimelinePresetModal = async () => {
     try {

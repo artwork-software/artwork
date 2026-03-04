@@ -42,6 +42,7 @@
                         :item="property"
                         :property="property"
                         :hide-x="true"
+                        :class="{'ring-2 ring-amber-400 rounded-full': property.is_main}"
                     />
                 </div>
 
@@ -161,15 +162,21 @@ export default defineComponent({
                     ...item,
                     key: `${type}-${item?.id ?? name}`,
                     name,
-                    color: item?.color ? item.color : '#ffffff'
+                    color: item?.color ? item.color : '#ffffff',
+                    is_main: !!item?.pivot?.is_main
                 };
             };
 
-            return [
+            const badges = [
                 ...(this.projectCategories ?? []).map((c) => toBadge(c, 'category')),
                 ...(this.projectGenres ?? []).map((g) => toBadge(g, 'genre')),
                 ...(this.projectSectors ?? []).map((s) => toBadge(s, 'sector')),
             ].filter(Boolean);
+
+            // Sort main items first
+            badges.sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0));
+
+            return badges;
         },
         rows() {
             const rows = [];

@@ -856,6 +856,25 @@ watch(dateValuePicker, (newValue) => {
         artistResidency.departure_date = newValue[1] ? newValue[1].toISOString().slice(0, 10) : '';
     }
 }, { immediate: true });
+
+// When arrival_date is a valid complete date (YYYY-MM-DD) and departure_date is empty, set departure_date to one day later
+watch(() => artistResidency.arrival_date, (newValue) => {
+    if (newValue && /^\d{4}-\d{2}-\d{2}$/.test(newValue) && !artistResidency.departure_date) {
+        const parsed = new Date(newValue + 'T12:00:00');
+        if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 1900) {
+            const nextDay = new Date(parsed);
+            nextDay.setDate(nextDay.getDate() + 1);
+            artistResidency.departure_date = nextDay.toISOString().slice(0, 10);
+        }
+    }
+});
+
+// When arrival_time is a valid complete time (HH:MM) and departure_time is empty, set departure_time to the same time
+watch(() => artistResidency.arrival_time, (newValue) => {
+    if (newValue && /^\d{2}:\d{2}$/.test(newValue) && !artistResidency.departure_time) {
+        artistResidency.departure_time = newValue;
+    }
+});
 </script>
 
 <style scoped>

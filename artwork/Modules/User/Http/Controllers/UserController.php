@@ -1258,6 +1258,7 @@ class UserController extends Controller
             'high_contrast',
             'expand_days',
             'use_event_status_color',
+            'use_main_category_color',
             'show_qualifications',
             'shift_notes',
             'hide_unoccupied_rooms',
@@ -1328,6 +1329,11 @@ class UserController extends Controller
     public function updateBulkColumnSize(User $user, Request $request): void
     {
         $user->update($request->only('bulk_column_size'));
+    }
+
+    public function updateShowDescriptionInBulk(User $user, Request $request): void
+    {
+        $user->update($request->only('show_description_in_bulk'));
     }
 
     /**

@@ -350,6 +350,40 @@
                         />
                     </div>
 
+                    <!-- Color Source Toggle -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-zinc-700">
+                            {{ $t('Event color') }}
+                        </label>
+                        <fieldset class="flex gap-2">
+                            <div
+                                v-for="mode in [
+                                    { id: 'eventType', label: $t('Color by event type') },
+                                    { id: 'mainCategory', label: $t('Color by main category of project') }
+                                ]"
+                                :key="mode.id"
+                                class="relative flex-1"
+                            >
+                                <input
+                                    :id="`colorSource-${mode.id}`"
+                                    name="color-source"
+                                    type="radio"
+                                    :value="mode.id"
+                                    v-model="pdf.colorSource"
+                                    class="peer absolute inset-0 h-0 w-0 opacity-0"
+                                />
+                                <label
+                                    :for="`colorSource-${mode.id}`"
+                                    class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
+                                    peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
+                                    border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
+                                >
+                                    {{ mode.label }}
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+
                     <!-- Export Mode Toggle -->
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
@@ -485,7 +519,8 @@ const pdf = useForm({
     dpi: 72,
     daysPerPage: 7,
     exportMode: 'relative' as 'relative' | 'block',
-    filter: {} as Record<string, number[] | null>
+    filter: {} as Record<string, number[] | null>,
+    colorSource: 'eventType' as 'eventType' | 'mainCategory'
 })
 
 const pdfSelectedProject = ref<any | null>(null)

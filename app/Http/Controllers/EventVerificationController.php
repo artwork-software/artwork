@@ -187,7 +187,12 @@ class EventVerificationController extends Controller
         // Request verification for each planning event
         foreach ($planningEvents as $event) {
             $this->eventVerificationService->requestVerification($event, $user);
-            broadcast(new EventCreated($event->fresh(), $event->room_id));
+        }
+
+        // Batch refresh and broadcast after all verifications are processed
+        $refreshedEvents = Event::whereIn('id', $planningEvents->pluck('id'))->get();
+        foreach ($refreshedEvents as $event) {
+            broadcast(new EventCreated($event, $event->room_id));
         }
     }
 
@@ -196,13 +201,17 @@ class EventVerificationController extends Controller
      */
     public function convertToPlanning(Request $request, $project): void
     {
-        // Find all events for the project
+        // Find all events for the project and batch update
         $events = Event::where('project_id', $project)->get();
-        // Convert each event to a planning event
-        foreach ($events as $event) {
-            $event->is_planning = true;
-            $event->save();
-            broadcast(new EventCreated($event->fresh(), $event->room_id));
+        $eventIds = $events->pluck('id');
+
+        // Batch update all events at once instead of individual saves
+        Event::whereIn('id', $eventIds)->update(['is_planning' => true]);
+
+        // Refresh and broadcast after batch update
+        $refreshedEvents = Event::whereIn('id', $eventIds)->get();
+        foreach ($refreshedEvents as $event) {
+            broadcast(new EventCreated($event, $event->room_id));
         }
     }
 

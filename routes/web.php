@@ -774,6 +774,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.plan')
         ->can('can view shift plan');
 
+    Route::get('/shifts/list-view', [EventController::class, 'viewShiftPlanListView'])
+        ->name('shifts.plan.list-view')
+        ->can('can view shift plan');
+
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
         ->name('shifts.workers')
         ->can('can view shift plan');
@@ -1010,6 +1014,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [UserShiftCalendarFilterController::class, 'updateDates']
     )->name('update.user.shift.calendar.filter.dates');
     Route::patch(
+        '/user/{user}/shift-list-view/filter/dates',
+        [UserShiftCalendarFilterController::class, 'updateListViewDates']
+    )->name('update.user.shift-list-view.filter.dates');
+    Route::patch(
+        '/user/{user}/shift-list-view/settings',
+        [EventController::class, 'updateShiftListViewSettings']
+    )->name('user.shift_list_view_settings.update');
+    Route::patch(
         '/user/{user}/worker/shift-plan/filters/update',
         [UserShiftCalendarFilterController::class, 'updateUserWorkerShiftPlanFilters']
     )->name('update.user.worker.shift-plan.filters.update');
@@ -1035,6 +1047,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/update/bulk-column-size', [UserController::class, 'updateBulkColumnSize'])
         ->name('user.bulk-column-size.update');
+
+    Route::patch('/user/{user}/update/bulk/show-description', [UserController::class, 'updateShowDescriptionInBulk'])
+        ->name('user.update.show_description_in_bulk');
 
     Route::resource(
         'user.commentedBudgetItemsSettings',
@@ -1158,6 +1173,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('preset.shift.update.updateDescription');
         // DELETE
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
+        Route::post('/bulk-delete', [ShiftController::class, 'bulkDelete'])->name('shifts.multi.delete');
+        Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])->name('shifts.multi.duplicate');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])
@@ -1750,6 +1767,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ]
         )->name('shift.settings.update.shift-settings.use-first-name-for-sort');
 
+        Route::patch(
+            'shift-settings/updateCalendarAboShowAllShifts',
+            [
+                ShiftSettingsController::class,
+                'updateCalendarAboShowAllShifts'
+            ]
+        )->name('shift.settings.update.calendar-abo-show-all-shifts');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
@@ -1850,6 +1875,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.check.vacation');
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
+    Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']

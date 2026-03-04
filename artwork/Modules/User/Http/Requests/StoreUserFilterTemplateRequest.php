@@ -23,7 +23,7 @@ class StoreUserFilterTemplateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'filter_type' => 'required|string|in:calendar_filter,shift_filter,planning_filter,project_shift_filter',
+            'filter_type' => 'required|string|in:calendar_filter,shift_filter,planning_filter,project_shift_filter,calendar_daily_filter,shift_daily_filter,planning_daily_filter,shift_list_view_filter',
             'event_type_ids' => 'nullable|array',
             'event_type_ids.*' => 'integer|exists:event_types,id',
             'room_ids' => 'nullable|array',

@@ -8,6 +8,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Str;
 
 readonly class MemberChange implements RoomChange
 {
@@ -35,7 +36,7 @@ readonly class MemberChange implements RoomChange
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -67,7 +68,7 @@ readonly class MemberChange implements RoomChange
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];

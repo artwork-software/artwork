@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $high_contrast
  * @property boolean $expand_days
  * @property boolean $use_event_status_color
+ * @property boolean $use_main_category_color
  * @property boolean $work_shifts
  * @property string $created_at
  * @property string $updated_at
@@ -59,6 +60,7 @@ class UserCalendarSettings extends Model
         'high_contrast',
         'expand_days',
         'use_event_status_color',
+        'use_main_category_color',
         'show_qualifications',
         'shift_notes',
         'hide_unoccupied_rooms',
@@ -84,6 +86,7 @@ class UserCalendarSettings extends Model
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
         'use_event_status_color' => 'boolean',
+        'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',
         'shift_notes' => 'boolean',
         'hide_unoccupied_rooms' => 'boolean',

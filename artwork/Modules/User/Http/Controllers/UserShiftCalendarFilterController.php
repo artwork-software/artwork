@@ -52,6 +52,17 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
+    public function updateListViewDates(Request $request, User $user): void
+    {
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value],
+            [
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]
+        );
+    }
+
     public function singleValueUpdate(Request $request, User $user): void
     {
         $user->shift_calendar_filter()->update([

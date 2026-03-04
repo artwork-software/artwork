@@ -6,11 +6,11 @@
       fontsize: fontSize,
       lineHeight: lineHeight
     }"
-        class="group/singleEvent h-full rounded-lg border border-black/5 transition-[border,background-color] duration-150"
+        class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
         :class="[
       event.occupancy_option ? 'event-disabled' : '',
       usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
-      isHeightFull ? 'h-full' : '',
+      isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       usePage().props.auth.user.daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
     ]"
@@ -61,7 +61,7 @@
                     @mouseenter="showProjectGroupTooltipHandler"
                     @mouseleave="hideProjectGroupTooltip"
                 >
-                    <span ref="projectGroupNameSpan" class="block w-full truncate font-semibold text-xs text-black">
+                    <span ref="projectGroupNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs text-black']">
                         {{ event.project.group[0].name }}
                     </span>
                     <Teleport to="body">
@@ -116,7 +116,7 @@
                     @mouseenter="showTooltip"
                     @mouseleave="hideTooltip"
                 >
-                    <span ref="projectNameSpan" class="block w-full truncate font-semibold text-xs">
+                    <span ref="projectNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs']">
                         {{ event.project?.name }}
                     </span>
                     <Teleport to="body">
@@ -189,18 +189,18 @@
                             </div>
 
                             <!-- Artists -->
-                            <div v-if="usePage().props.auth.user.calendar_settings.project_artists && event.project?.artistNames" class="truncate text-xs/5 opacity-90">
+                            <div v-if="usePage().props.auth.user.calendar_settings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90']">
                                 {{ event.project?.artistNames }}
                             </div>
 
                             <!-- Eventname -->
                             <div
                                 v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName"
-                                class="relative truncate text-xs/4 font-semibold"
+                                :class="[expandDays ? 'break-words' : 'truncate', 'relative text-xs/4 font-semibold']"
                                 @mouseenter="showEventNameTooltipHandler"
                                 @mouseleave="hideEventNameTooltip"
                             >
-                                <span ref="eventNameSpan" class="block w-full truncate">
+                                <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full']">
                                     {{ event.eventName }}
                                 </span>
                                 <Teleport to="body">
@@ -219,11 +219,11 @@
                             <!-- Eventtyp + Projekt-State-Indicator rechts -->
                             <div class="flex items-center justify-between">
                                 <div
-                                    class="truncate text-xs/5 opacity-90 min-w-0 flex-1"
+                                    :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90 min-w-0 flex-1']"
                                     @mouseenter="showEventTypeTooltipHandler"
                                     @mouseleave="hideEventTypeTooltip"
                                 >
-                                    <span ref="eventTypeSpan" class="block w-full truncate">
+                                    <span ref="eventTypeSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full']">
                                         {{ event?.eventType?.name }}
                                     </span>
                                     <Teleport to="body">
@@ -921,6 +921,7 @@ import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSer
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+const expandDays = computed(() => usePage().props.auth.user.calendar_settings?.expand_days ?? false);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
 const showConvertToPlanningModal = ref(false);
@@ -1185,7 +1186,20 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_event_status_color ? props.event?.eventStatus?.color : props.event.eventType.hex_code;
+    const settings = usePage().props.auth.user.calendar_settings;
+    if (settings.use_main_category_color) {
+        if (!props.event?.project) {
+            return '#9E9E9E'; // grey for events without project
+        }
+        if (props.event.project.mainCategoryColor) {
+            return props.event.project.mainCategoryColor;
+        }
+        return '#3A3A3A'; // anthracite for project without main category
+    }
+    if (settings.use_event_status_color) {
+        return props.event?.eventStatus?.color ?? props.event.eventType.hex_code;
+    }
+    return props.event.eventType.hex_code;
 });
 
 const totalHeight = computed(() => {

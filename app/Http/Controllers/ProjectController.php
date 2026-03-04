@@ -153,6 +153,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -547,9 +548,9 @@ class ProjectController extends Controller
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -739,32 +740,34 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
+            if ($user !== null) {
+                $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('green');
-            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('green');
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
         }
         $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
             'notification.project.budget.new_verify_request',
             [],
-            User::find($request->user)->language
+            User::find($request->user)?->language ?? 'de'
         );
         $budgetData = new stdClass();
         $budgetData->position_id = $mainPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -789,18 +792,21 @@ class ProjectController extends Controller
                     ) : null,
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setPositionVerifyRequestType('main');
-        $this->notificationService->setPositionVerifyRequestId($mainPosition->getAttribute('id'));
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setButtons(['calculation_check', 'delete_request']);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationTo(User::find($request->user));
-        $this->notificationService->createNotification();
+        $requestedUser = User::find($request->user);
+        if ($requestedUser !== null) {
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('blue');
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setPositionVerifyRequestType('main');
+            $this->notificationService->setPositionVerifyRequestId($mainPosition->getAttribute('id'));
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setButtons(['calculation_check', 'delete_request']);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($requestedUser);
+            $this->notificationService->createNotification();
+        }
 
         $mainPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -832,10 +838,11 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $table = $mainPosition->table()->first();
             $project = $table->project()->first();
@@ -843,7 +850,7 @@ class ProjectController extends Controller
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -867,16 +874,18 @@ class ProjectController extends Controller
                     ) : null,
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->createNotification();
+            }
             $verifiedRequest->forceDelete();
             $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
 
@@ -896,17 +905,18 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -931,16 +941,18 @@ class ProjectController extends Controller
                 ]
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -982,16 +994,17 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $this->removeMainPositionCellVerifiedValue($mainPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1015,17 +1028,19 @@ class ProjectController extends Controller
                     ) : null,
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -1044,16 +1059,17 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $this->removeSubPositionCellVerifiedValue($subPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1078,17 +1094,19 @@ class ProjectController extends Controller
                 ]
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -1118,60 +1136,62 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            // Notification
-            $notificationTitle = __(
-                'notification.project.budget.add',
-                [],
-                $user->language
-            );
-            $project = $mainPosition->table()->first()->project()->first();
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => $subPosition->name,
-                    'href' => null
-                ],
-                2 => [
-                    'type' => 'link',
-                    'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route(
-                        'projects.tab',
-                        [
-                            $project->id,
-                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                                ProjectTabComponentEnum::BUDGET
-                            )
-                        ]
-                    ) : null,
-                ]
-            ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($user !== null) {
+                // Notification
+                $notificationTitle = __(
+                    'notification.project.budget.add',
+                    [],
+                    $user->language
+                );
+                $project = $mainPosition->table()->first()->project()->first();
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'string',
+                        'title' => $subPosition->name,
+                        'href' => null
+                    ],
+                    2 => [
+                        'type' => 'link',
+                        'title' =>  $project ? $project->name : '',
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::BUDGET
+                                )
+                            ]
+                        ) : null,
+                    ]
+                ];
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
         }
         $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
             'notification.project.budget.new_verify_request',
             [],
-            User::find($request->user)->language
+            User::find($request->user)?->language ?? 'de'
         );
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -1195,19 +1215,22 @@ class ProjectController extends Controller
                 ) : null,
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setPositionVerifyRequestType('sub');
-        $this->notificationService->setPositionVerifyRequestId($subPosition->getAttribute('id'));
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setNotificationTo(User::find($request->user));
-        $this->notificationService->setButtons(['calculation_check', 'delete_request']);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->createNotification();
+        $requestedUser = User::find($request->user);
+        if ($requestedUser !== null) {
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setPositionVerifyRequestType('sub');
+            $this->notificationService->setPositionVerifyRequestId($subPosition->getAttribute('id'));
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setNotificationTo($requestedUser);
+            $this->notificationService->setButtons(['calculation_check', 'delete_request']);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->createNotification();
+        }
 
         $subPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -1272,7 +1295,7 @@ class ProjectController extends Controller
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1340,7 +1363,7 @@ class ProjectController extends Controller
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -2408,7 +2431,7 @@ class ProjectController extends Controller
         }
 
         $headerObject = new stdClass();
-        $headerObject->project = $project;
+        $headerObject->project = $project->append('first_and_last_event_date');
         $headerObject->project->cost_center = $project->costCenter;
 
         $loadedProjectInformation = [];
@@ -2544,6 +2567,10 @@ class ProjectController extends Controller
 
         $headerObject->projectGroups     = $project->groups;
 
+        // Append first_and_last_event_date to groups so the frontend can show project periods
+        $project->loadMissing('groups');
+        $project->groups->each->append('first_and_last_event_date');
+
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
         if ($hasGroupComponent) {
             $headerObject->groupProjects = Project::where('is_group', 1)->get();
@@ -2551,7 +2578,7 @@ class ProjectController extends Controller
             $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get();
+        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get()->each->append('first_and_last_event_date');
 
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
@@ -3115,8 +3142,8 @@ class ProjectController extends Controller
     {
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
-            'users' => User::all(),
-            'departments' => Department::all()
+            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'profile_photo_path'])->get(),
+            'departments' => Department::select(['id', 'name'])->get()
         ]);
     }
 
@@ -3168,9 +3195,9 @@ class ProjectController extends Controller
             $this->projectService->attachManagementUsers($project, $request->assignedUsers);
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $this->updateProjectState($request, $project);
 
@@ -3244,16 +3271,49 @@ class ProjectController extends Controller
 
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $mainCategoryId = $request->input('mainCategoryId');
+        $mainGenreId = $request->input('mainGenreId');
+        $mainSectorId = $request->input('mainSectorId');
+
+        // Cache schema checks in a static variable to avoid repeated DB introspection per request
+        static $schemaCache = [];
+        if (empty($schemaCache)) {
+            $schemaCache['category_is_main'] = Schema::hasColumn('category_project', 'is_main');
+            $schemaCache['genre_is_main'] = Schema::hasColumn('genre_project', 'is_main');
+            $schemaCache['sector_is_main'] = Schema::hasColumn('project_sector', 'is_main');
+        }
+        $hasCategoryIsMain = $schemaCache['category_is_main'];
+        $hasGenreIsMain = $schemaCache['genre_is_main'];
+        $hasSectorIsMain = $schemaCache['sector_is_main'];
+
         $oldProjectCategories = $project->categories()->get();
-        $project->categories()->sync($request->assignedCategoryIds);
+        $categorySyncData = [];
+        foreach (($request->assignedCategoryIds ?? []) as $id) {
+            $categorySyncData[$id] = $hasCategoryIsMain
+                ? ['is_main' => $mainCategoryId !== null && (int) $id === (int) $mainCategoryId]
+                : [];
+        }
+        $project->categories()->sync($categorySyncData);
         $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $project->categories()->get());
 
         $oldProjectGenres = $project->genres()->get();
-        $project->genres()->sync($request->assignedGenreIds);
+        $genreSyncData = [];
+        foreach (($request->assignedGenreIds ?? []) as $id) {
+            $genreSyncData[$id] = $hasGenreIsMain
+                ? ['is_main' => $mainGenreId !== null && (int) $id === (int) $mainGenreId]
+                : [];
+        }
+        $project->genres()->sync($genreSyncData);
         $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $project->genres()->get());
 
         $oldProjectSectors = $project->sectors()->get();
-        $project->sectors()->sync($request->assignedSectorIds);
+        $sectorSyncData = [];
+        foreach (($request->assignedSectorIds ?? []) as $id) {
+            $sectorSyncData[$id] = $hasSectorIsMain
+                ? ['is_main' => $mainSectorId !== null && (int) $id === (int) $mainSectorId]
+                : [];
+        }
+        $project->sectors()->sync($sectorSyncData);
         $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $project->sectors()->get());
 
         return Redirect::back();
@@ -3621,7 +3681,7 @@ class ProjectController extends Controller
                     'project' => $project->name
                 ], $managerAfter->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3647,7 +3707,7 @@ class ProjectController extends Controller
                     'project' => $project->name
                 ], $budgetAfter->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3668,11 +3728,14 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore) {
             if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.leader.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -3689,11 +3752,14 @@ class ProjectController extends Controller
         foreach ($budgetIdsBefore as $budgetBefore) {
             if (!in_array($budgetBefore, $budgetIdsAfter)) {
                 $user = User::find($budgetBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.budget.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -3710,11 +3776,14 @@ class ProjectController extends Controller
         foreach ($userIdsAfter as $userIdAfter) {
             if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.member.add', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3740,11 +3809,14 @@ class ProjectController extends Controller
         foreach ($userIdsBefore as $userIdBefore) {
             if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.member.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3849,7 +3921,7 @@ class ProjectController extends Controller
                 'project' => $project->name
             ], $user->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -4419,14 +4491,19 @@ class ProjectController extends Controller
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
         }
 
-        foreach ($subPosition->subPositionRows()->get() as $subPositionRow) {
+        // Eager load cells to avoid N+1 queries during duplication
+        $rows = $subPosition->subPositionRows()->with('cells')->get();
+        foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
+            $newSubPositionRow->name = $subPositionRow->name . ' (Kopie)';
+            $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
-            $newSubPositionRow->update(
-                ['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]
-            );
             $newSubPositionRow->cells()->forceDelete();
-            $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
+
+            $cellsData = $subPositionRow->cells->map(fn($cell) => $cell->toArray())->toArray();
+            if (!empty($cellsData)) {
+                $newSubPositionRow->cells()->createMany($cellsData);
+            }
         }
 
         broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));

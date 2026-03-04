@@ -76,13 +76,13 @@
                   ]"
                                         >
                                             <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
-                                            <div class="relative h-full w-full">
+                                            <div :class="['relative w-full', settings.expand_days ? '' : 'h-full']">
                                                 <!-- SCROLLBAR NUR WENN SINNVOLL -->
                                                 <div
-                                                    class="events-scroll h-full"
                                                     :class="[
-                                                        (!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden',
-                                                        settings.expand_days ? 'flex flex-col' : ''
+                                                        'events-scroll',
+                                                        settings.expand_days ? '' : 'h-full',
+                                                        settings.expand_days ? 'overflow-visible flex flex-col' : ((!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden')
                                                       ]"
                                                     :style="cellStyle"
                                                 >

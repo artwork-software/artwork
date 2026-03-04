@@ -62,7 +62,7 @@ class CalendarService
                 ];
             });
 
-        return $days->chunk(7);
+        return $days->chunk(7)->map(fn($chunk) => $chunk->values());
     }
 
     /**
@@ -169,6 +169,7 @@ class CalendarService
                     'project',
                     'project.managerUsers',
                     'project.state',
+                    'project.categories',
                     'shifts',
                     'shifts.craft',
                     'shifts.users',

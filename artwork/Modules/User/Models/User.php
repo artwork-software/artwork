@@ -117,6 +117,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserCalendarFilter $calendar_filter
  * @property UserCalendarSettings $calendar_settings
  * @property UserDailyViewCalendarSettings $daily_view_calendar_settings
+ * @property UserShiftListViewSettings $shift_list_view_settings
  * @property Collection<Shift> $shifts
  * @property Collection<Permission> $permission
  * @property Collection<Role> $allRoles
@@ -154,6 +155,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $daily_view
  * @property int $last_project_id
  * @property array $bulk_column_size
+ * @property boolean $show_description_in_bulk
  * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
@@ -250,6 +252,7 @@ class User extends Model implements
         'entities_per_page',
         'last_project_id',
         'bulk_column_size',
+        'show_description_in_bulk',
         'chat_public_key',
         'use_chat',
         'work_time_balance',
@@ -287,6 +290,7 @@ class User extends Model implements
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'show_description_in_bulk' => 'boolean',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
         'is_time_preset_open' => 'boolean',
@@ -356,6 +360,11 @@ class User extends Model implements
     public function daily_view_calendar_settings(): HasOne
     {
         return $this->hasOne(UserDailyViewCalendarSettings::class);
+    }
+
+    public function shift_list_view_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftListViewSettings::class);
     }
 
     /**

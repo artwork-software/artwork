@@ -10,6 +10,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AvailabilityConflictService
 {
@@ -57,7 +58,7 @@ class AvailabilityConflictService
                     $user?->language ?? app()->getFallbackLocale()
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -151,7 +152,7 @@ class AvailabilityConflictService
                 $user?->language ?? app()->getFallbackLocale()
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];

@@ -33,6 +33,14 @@
                     v-if="hasCreateEventsPermission && canEditComponent"
                 />
 
+                <SwitchIconTooltip
+                    v-model="showDescriptionInBulk"
+                    :tooltip-text="$t('Show descriptions')"
+                    :icon="IconNote"
+                    size="md"
+                    @change="onToggleShowDescriptionInBulk"
+                />
+
                 <div class="flex items-center gap-x-2">
                     <PlanningSwitch
                         :planning="isPlanningEvent"
@@ -355,7 +363,8 @@ import {
     IconCheck,
     IconCirclePlus,
     IconCircuitCapacitorPolarized,
-    IconFileExport
+    IconFileExport,
+    IconNote
 } from "@tabler/icons-vue";
 import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
 import {onBeforeUnmount, onMounted, ref, watch, provide, computed} from "vue";
@@ -379,6 +388,7 @@ import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import axios from 'axios';
 
@@ -485,6 +495,18 @@ const storeFocus = (id, type = null) => {
 provide('focusRegistry', focusRegistry);
 provide('storeFocusGlobal', storeFocus);
 provide('event_properties', props.event_properties);
+
+// Show description inline toggle
+const showDescriptionInBulk = ref(usePage().props.auth.user.show_description_in_bulk ?? false);
+provide('showDescriptionInBulk', showDescriptionInBulk);
+
+const onToggleShowDescriptionInBulk = () => {
+    router.patch(
+        route('user.update.show_description_in_bulk', {user: usePage().props.auth.user.id}),
+        {show_description_in_bulk: showDescriptionInBulk.value},
+        {preserveScroll: true, preserveState: true}
+    );
+};
 
 // --- Helpers
 const toISO = (d) => d.toISOString().split('T')[0];

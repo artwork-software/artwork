@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
+use App\Settings\ShiftSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Repositories\UserShiftCalendarAboRepository;
 use Carbon\Carbon;
@@ -11,7 +12,8 @@ use Illuminate\Support\Str;
 readonly class UserShiftCalendarAboService
 {
     public function __construct(
-        private UserShiftCalendarAboRepository $userShiftCalendarAboRepository
+        private UserShiftCalendarAboRepository $userShiftCalendarAboRepository,
+        private ShiftSettings $shiftSettings,
     ) {
         //
     }
@@ -47,8 +49,10 @@ readonly class UserShiftCalendarAboService
      */
     public function getFilteredShifts($calendarAbo, $shifts)
     {
-        // Always filter for committed shifts only
-        $shifts = $shifts->where('is_committed', true);
+        // Only filter for committed shifts if the global setting is not set to show all shifts
+        if (!$this->shiftSettings->calendar_abo_show_all_shifts) {
+            $shifts = $shifts->where('is_committed', true);
+        }
 
         if ($calendarAbo->date_range) {
             $shifts = $shifts->filter(function ($shift) use ($calendarAbo) {

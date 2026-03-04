@@ -137,6 +137,10 @@ const props = defineProps({
     is_daily_view: {
         type: Boolean,
         default: false
+    },
+    is_list_view: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -390,6 +394,14 @@ function updateTimes() {
                     end: formatToYYYYMMDD(endDateObj)
                 },
                 preserveState: true,
+            });
+        } else if (props.is_list_view) {
+            router.patch(route('update.user.shift-list-view.filter.dates', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: false,
+                preserveScroll: true,
             });
         } else if (props.is_shift_plan) {
             router.patch(route('update.user.shift.calendar.filter.dates', userId), {

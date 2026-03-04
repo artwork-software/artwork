@@ -24,6 +24,7 @@
             :is-planning="isPlanning"
             :in-shift-plan="isInShiftPlan"
             :is-daily-view="isDailyView"
+            :is-list-view="isListView"
         />
     </teleport>
 </template>
@@ -47,6 +48,10 @@ const props = defineProps({
     isDailyView: {
         type: Boolean,
         default: false
+    },
+    isListView: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -59,6 +64,9 @@ const CalendarSettingsModal = defineAsyncComponent({
 })
 
 const activeSettings = computed(() => {
+    if (props.isListView) {
+        return usePage().props.listViewSettings;
+    }
     if (props.isDailyView) {
         return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
     }
@@ -68,6 +76,11 @@ const activeSettings = computed(() => {
 const checkIfAnySettingIsActive = computed(() => {
     const settings = activeSettings.value;
     if (!settings) return false;
+
+    if (props.isListView) {
+        const listViewKeys = ['detailed_shift_overview', 'show_fully_staffed_shifts'];
+        return listViewKeys.some(setting => settings[setting]);
+    }
 
     const settingsInShiftPlan = [
         'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',

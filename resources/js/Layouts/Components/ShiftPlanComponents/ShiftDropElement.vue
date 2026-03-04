@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
+    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer" :data-shift-id="shift?.id">
         <div
             :class="[
               'px-1',

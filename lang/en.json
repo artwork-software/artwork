@@ -3981,6 +3981,16 @@
     "Shifts in shift plan subscription": "Shifts in shift plan subscription",
     "When a user subscribes to their own shift plan, the following shifts should appear:": "When a user subscribes to their own shift plan, the following shifts should appear:",
     "Only committed shifts": "Only committed shifts",
-    "All shifts": "All shifts",
-    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow."
+    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.",
+    "Shift plan list view": "Shift plan list view",
+    "Show fully staffed shifts": "Show fully staffed shifts",
+    "Also displays shifts that are already fully staffed in the list view.": "Also displays shifts that are already fully staffed in the list view.",
+    "Show in shift plan": "Show in shift plan",
+    "No shifts found for the selected time range.": "No shifts found for the selected time range.",
+    "No room": "No room",
+    "Edit shift": "Edit shift",
+    "Delete shifts": "Delete shifts",
+    "Are you sure you want to delete the selected shifts?": "Are you sure you want to delete the selected shifts?",
+    "Detailed function overview per shift": "Detailed function overview per shift",
+    "Shows assigned persons and unoccupied slots directly under each shift in the list view.": "Shows assigned persons and unoccupied slots directly under each shift in the list view."
 }

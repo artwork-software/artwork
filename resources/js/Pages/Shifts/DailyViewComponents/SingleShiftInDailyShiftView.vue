@@ -1,6 +1,6 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div :class="['w-full min-w-64 rounded-lg select-none border']"
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border']"
          :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}50`, borderColor: borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full">
@@ -105,6 +105,11 @@
     </div>
 
         <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
+            <!-- Shift description (im detailsOnly-Modus hier anzeigen, da Header-Card ausgeblendet) -->
+            <div v-if="detailsOnly && shift.description" class="text-xs text-gray-500 italic mb-1 pl-1">
+                {{ shift.description }}
+            </div>
+
             <template v-for="group in shiftGroups" :key="group.label">
                 <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
@@ -113,6 +118,7 @@
                         :craft-color="fullCraft.color"
                         :shift-qualifications="shiftQualifications"
                         :has-collision="hasCollision"
+                        :force-show-notes="detailsOnly"
                         @userRemoved="onChildUserRemoved"
                     />
                 </div>
@@ -222,7 +228,7 @@
             </div>
         </div>
     <AddShiftModal
-        v-if="showAddShiftModal"
+        v-if="showAddShiftModal && !detailsOnly"
         :crafts="crafts"
         :event="null"
         :shift="shift"
@@ -249,7 +255,7 @@
 
     <!-- Shift Description Modal -->
     <ArtworkBaseModal
-        v-if="showDescriptionModal"
+        v-if="showDescriptionModal && !detailsOnly"
         :title="$t('Shift description')"
         :description="$t('Add or edit a description for this shift.')"
         @close="showDescriptionModal = false"
@@ -274,7 +280,7 @@
 
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
-        v-if="showConfirmDeleteModal"
+        v-if="showConfirmDeleteModal && !detailsOnly"
         titel="Schicht löschen"
         description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
         @closed="handleConfirmDelete"
@@ -338,6 +344,11 @@ const props = defineProps({
     first_project_calendar_tab_id: Number | String | null,
     // hasCollision wird von DailyRoomSplitTimeline gesetzt und steuert das kompaktere Design
     hasCollision: {
+        type: Boolean,
+        default: false
+    },
+    // detailsOnly: nur Zuweisungsbereich ohne Header-Card anzeigen (für Listenansicht)
+    detailsOnly: {
         type: Boolean,
         default: false
     },

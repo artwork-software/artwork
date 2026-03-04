@@ -4021,6 +4021,16 @@
     "Shifts in shift plan subscription": "Schichten im Schichtplanabonnement",
     "When a user subscribes to their own shift plan, the following shifts should appear:": "Wenn eine User*in den eigenen Einsatzplan abonniert sollen folgende Schichten auftauchen:",
     "Only committed shifts": "Nur freigegebene Schichten",
-    "All shifts": "Alle Schichten",
-    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "Eine freigegebene Schicht ist eine Schicht, die im Dienstplan von einem Schichtplaner mit dem Button \"Alle Schichten festsetzen\" als 'fertig' deklariert wurde und wenn aktiv vom Dienstplanfreigabe-Workflow abgesegnet wurde."
+    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "Eine freigegebene Schicht ist eine Schicht, die im Dienstplan von einem Schichtplaner mit dem Button \"Alle Schichten festsetzen\" als 'fertig' deklariert wurde und wenn aktiv vom Dienstplanfreigabe-Workflow abgesegnet wurde.",
+    "Shift plan list view": "Dienstplan Listenansicht",
+    "Show fully staffed shifts": "Voll besetzte Schichten anzeigen",
+    "Also displays shifts that are already fully staffed in the list view.": "Zeigt auch Schichten an, die bereits voll besetzt sind, in der Listenansicht.",
+    "Show in shift plan": "Im Dienstplan anzeigen",
+    "No shifts found for the selected time range.": "Keine Schichten im ausgewählten Zeitraum gefunden.",
+    "No room": "Kein Raum",
+    "Edit shift": "Schicht bearbeiten",
+    "Delete shifts": "Schichten löschen",
+    "Are you sure you want to delete the selected shifts?": "Bist du sicher, dass du die ausgewählten Schichten löschen möchtest?",
+    "Detailed function overview per shift": "Detaillierte Funktionsübersicht pro Schicht",
+    "Shows assigned persons and unoccupied slots directly under each shift in the list view.": "Zeigt zugewiesene Personen und unbesetzte Plätze direkt unter jeder Schicht in der Listenansicht."
 }

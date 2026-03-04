@@ -117,6 +117,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserCalendarFilter $calendar_filter
  * @property UserCalendarSettings $calendar_settings
  * @property UserDailyViewCalendarSettings $daily_view_calendar_settings
+ * @property UserShiftListViewSettings $shift_list_view_settings
  * @property Collection<Shift> $shifts
  * @property Collection<Permission> $permission
  * @property Collection<Role> $allRoles
@@ -359,6 +360,11 @@ class User extends Model implements
     public function daily_view_calendar_settings(): HasOne
     {
         return $this->hasOne(UserDailyViewCalendarSettings::class);
+    }
+
+    public function shift_list_view_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftListViewSettings::class);
     }
 
     /**

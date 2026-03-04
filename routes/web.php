@@ -1029,6 +1029,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/bulk-column-size', [UserController::class, 'updateBulkColumnSize'])
         ->name('user.bulk-column-size.update');
 
+    Route::patch('/user/{user}/update/bulk/show-description', [UserController::class, 'updateShowDescriptionInBulk'])
+        ->name('user.update.show_description_in_bulk');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

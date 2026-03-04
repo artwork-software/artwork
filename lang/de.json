@@ -2031,6 +2031,8 @@
     "History": "Verlauf",
     "Sorting": "Sortierung",
     "Export project list": "Projektliste exportieren",
+    "Show descriptions": "Beschreibungen anzeigen",
+    "Add description": "Beschreibung hinzufügen",
     "At least one project tab must be available": "Mindestens ein Projekttab muss vorhanden sein",
     "Project name is a required field.": "Der Projektname muss zwingend angegeben werden.",
     "Addresses": "Adressen",

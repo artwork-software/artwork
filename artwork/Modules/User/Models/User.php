@@ -154,6 +154,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $daily_view
  * @property int $last_project_id
  * @property array $bulk_column_size
+ * @property boolean $show_description_in_bulk
  * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
@@ -250,6 +251,7 @@ class User extends Model implements
         'entities_per_page',
         'last_project_id',
         'bulk_column_size',
+        'show_description_in_bulk',
         'chat_public_key',
         'use_chat',
         'work_time_balance',
@@ -287,6 +289,7 @@ class User extends Model implements
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'show_description_in_bulk' => 'boolean',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
         'is_time_preset_open' => 'boolean',

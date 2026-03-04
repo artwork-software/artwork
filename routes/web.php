@@ -1743,6 +1743,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ]
         )->name('shift.settings.update.shift-settings.use-first-name-for-sort');
 
+        Route::patch(
+            'shift-settings/updateCalendarAboShowAllShifts',
+            [
+                ShiftSettingsController::class,
+                'updateCalendarAboShowAllShifts'
+            ]
+        )->name('shift.settings.update.calendar-abo-show-all-shifts');
+
         Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');

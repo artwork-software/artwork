@@ -4015,5 +4015,10 @@
     "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.": "Wenn ein Projekt angegeben wird, werden die Monate, in denen das Projekt stattfindet, automatisch ermittelt und pro Monat eine Seite erstellt. Wenn kein Projekt angegeben wird, können Sie Start- und Endmonat selbst auswählen.",
     "Event color": "Terminfarbe",
     "Color by event type": "Terminfarbe nach Terminart",
-    "Color by main category of project": "Terminfarbe nach Hauptkategorie des Projektes"
+    "Color by main category of project": "Terminfarbe nach Hauptkategorie des Projektes",
+    "Shifts in shift plan subscription": "Schichten im Schichtplanabonnement",
+    "When a user subscribes to their own shift plan, the following shifts should appear:": "Wenn eine User*in den eigenen Einsatzplan abonniert sollen folgende Schichten auftauchen:",
+    "Only committed shifts": "Nur freigegebene Schichten",
+    "All shifts": "Alle Schichten",
+    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "Eine freigegebene Schicht ist eine Schicht, die im Dienstplan von einem Schichtplaner mit dem Button \"Alle Schichten festsetzen\" als 'fertig' deklariert wurde und wenn aktiv vom Dienstplanfreigabe-Workflow abgesegnet wurde."
 }

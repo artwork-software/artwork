@@ -3975,5 +3975,10 @@
     "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.": "If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.",
     "Event color": "Event color",
     "Color by event type": "Color by event type",
-    "Color by main category of project": "Color by main category of project"
+    "Color by main category of project": "Color by main category of project",
+    "Shifts in shift plan subscription": "Shifts in shift plan subscription",
+    "When a user subscribes to their own shift plan, the following shifts should appear:": "When a user subscribes to their own shift plan, the following shifts should appear:",
+    "Only committed shifts": "Only committed shifts",
+    "All shifts": "All shifts",
+    "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.": "A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow."
 }

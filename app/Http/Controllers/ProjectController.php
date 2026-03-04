@@ -2431,7 +2431,7 @@ class ProjectController extends Controller
         }
 
         $headerObject = new stdClass();
-        $headerObject->project = $project;
+        $headerObject->project = $project->append('first_and_last_event_date');
         $headerObject->project->cost_center = $project->costCenter;
 
         $loadedProjectInformation = [];
@@ -2567,6 +2567,10 @@ class ProjectController extends Controller
 
         $headerObject->projectGroups     = $project->groups;
 
+        // Append first_and_last_event_date to groups so the frontend can show project periods
+        $project->loadMissing('groups');
+        $project->groups->each->append('first_and_last_event_date');
+
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
         if ($hasGroupComponent) {
             $headerObject->groupProjects = Project::where('is_group', 1)->get();
@@ -2574,7 +2578,7 @@ class ProjectController extends Controller
             $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get();
+        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get()->each->append('first_and_last_event_date');
 
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);

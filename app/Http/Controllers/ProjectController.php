@@ -4577,7 +4577,14 @@ class ProjectController extends Controller
         }
 
         if ($request->integer('type') === 1) {
-            return (new DetailedBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+            $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+            $budgetColumnSettings = \Artwork\Modules\Budget\Models\BudgetColumnSetting::all();
+            return (new DetailedBudgetsByBudgetDeadlineExport(
+                $startBudgetDeadline,
+                $endBudgetDeadline,
+                $generalSettings->budget_account_management_global,
+                $budgetColumnSettings,
+            ))
                 ->download(
                     sprintf(
                         'detaillierter_budget_export_%s-%s_stand_%s.xlsx',

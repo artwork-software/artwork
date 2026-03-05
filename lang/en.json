@@ -557,6 +557,7 @@
     "Belongs to project group": "Belongs to project group",
     "No project group has been created yet": "No project group has been created yet",
     "Budget deadline": "Budget deadline",
+    "This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.": "This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.",
     "Project process": "Project process",
     "Here you can see what was changed by whom and when.": "Here you can see what was changed by whom and when.",
     "Project": "Project",

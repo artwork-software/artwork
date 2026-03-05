@@ -300,11 +300,19 @@
 
 
                             <div v-if="createSettings.budget_deadline" class="px-6 py-2">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span class="text-sm font-medium text-gray-700">{{ $t('Budget deadline') }}</span>
+                                    <ToolTipComponent
+                                        :tooltip-text="$t('This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.')"
+                                        direction="right"
+                                        icon="IconInfoCircle"
+                                        icon-size="h-4 w-4"
+                                    />
+                                </div>
                                 <BaseInput
                                     type="date"
                                     id="budgetDeadline"
-                                    v-model="createProjectForm.budget_deadline"
-                                    label="Budget deadline" />
+                                    v-model="createProjectForm.budget_deadline" />
                             </div>
 
                             <div class="px-6 py-2" v-if="!project?.is_group || !project">

@@ -172,8 +172,14 @@
                     </div>
                 </div>
                 <div class="mt-4">
-                    <div class="xsDark">
+                    <div class="xsDark flex items-center gap-1.5">
                         <span>{{ $t('Budget deadline') }}</span>
+                        <ToolTipComponent
+                            :tooltip-text="$t('This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.')"
+                            direction="right"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
                     </div>
                     <div class="flex mt-1">
                         <input v-model="this.budgetDeadline"
@@ -217,6 +223,7 @@ import ColorHelper from "@/Mixins/ColorHelper.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default {
     mixins: [
@@ -234,6 +241,7 @@ export default {
         createSettings: Object
     },
     components: {
+        ToolTipComponent,
         PropertyIcon,
         UserSearch,
         TextInputComponent,

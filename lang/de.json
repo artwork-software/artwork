@@ -597,6 +597,7 @@
     "Belongs to project group": "Gehört zu Projektgruppe",
     "No project group has been created yet": "Bisher ist keine Projektgruppe angelegt",
     "Budget deadline": "Budget Stichtag",
+    "This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.": "Dieses Datum ist aktuell nur relevant für den 'Budget-Stichtag Export' in der Projektübersicht, damit festgelegt ist für welchen Zeitpunkt das Budget relevant ist.",
     "Project process": "Projektverlauf",
     "Here you can see what was changed by whom and when.": "Hier kannst du nachvollziehen, was von wem wann geändert wurde.",
     "Project": "Projekt",

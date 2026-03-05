@@ -1,14 +1,17 @@
 <template>
-    <AppLayout :title="$t('Meine Dienstplananfragen')">
+    <AppLayout :title="isPlanner ? $t('Shift plan requests') : $t('Meine Dienstplananfragen')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold text-gray-900">
-                        {{ $t('Meine Dienstplananfragen') }}
+                        {{ isPlanner ? $t('Shift plan requests') : $t('Meine Dienstplananfragen') }}
                     </h1>
                     <p class="mt-1 text-sm text-gray-500 max-w-2xl">
-                        {{ $t('Hier siehst du alle deine angefragten Dienstpläne, gruppiert nach Gewerken.') }}
+                        {{ isPlanner
+                            ? $t('Here you can see all shift plan requests grouped by craft.')
+                            : $t('Hier siehst du alle deine angefragten Dienstpläne, gruppiert nach Gewerken.')
+                        }}
                     </p>
                 </div>
             </div>
@@ -95,6 +98,9 @@
                                             {{ $t('Angefragt am') }}:
                                             {{ formatDateTime(request.requested_at) }}
                                         </p>
+                                        <p v-if="isPlanner && request.requested_by_name" class="text-xs text-gray-400">
+                                            {{ $t('Requested by') }}: {{ request.requested_by_name }}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -133,6 +139,7 @@ const { t } = useI18n();
 
 const props = defineProps({
     crafts: { type: Array, required: true },
+    isPlanner: { type: Boolean, default: false },
 });
 
 // Status → Label

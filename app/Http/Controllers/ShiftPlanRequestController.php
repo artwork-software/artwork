@@ -21,6 +21,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Spatie\Activitylog\Models\Activity;
 
 class ShiftPlanRequestController extends Controller
@@ -858,10 +859,33 @@ class ShiftPlanRequestController extends Controller
 
     public function requests(): \Inertia\Response
     {
-        $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-            ->where('requested_by_user_id', $this->auth->id())
-            ->orderByDesc('created_at')
-            ->get();
+        $user = User::find($this->auth->id());
+        $isAdmin = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        $isShiftPlanner = $user->can('can plan shifts');
+
+        if ($isAdmin) {
+            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
+                ->orderByDesc('created_at')
+                ->get();
+        } elseif ($isShiftPlanner) {
+            $accessibleCraftIds = Craft::query()
+                ->where('assignable_by_all', true)
+                ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
+                ->pluck('id');
+
+            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
+                ->where(function ($q) use ($user, $accessibleCraftIds) {
+                    $q->where('requested_by_user_id', $user->id)
+                      ->orWhereIn('craft_id', $accessibleCraftIds);
+                })
+                ->orderByDesc('created_at')
+                ->get();
+        } else {
+            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
+                ->where('requested_by_user_id', $this->auth->id())
+                ->orderByDesc('created_at')
+                ->get();
+        }
 
         // Group requests by craft and build a simple crafts collection that includes shift_plan_requests
         $grouped = $shiftPlanRequests->groupBy(fn ($r) => $r->craft->id ?? 0);
@@ -878,6 +902,7 @@ class ShiftPlanRequestController extends Controller
                     'year' => $r->year,
                     'requested_at' => optional($r->created_at)?->toIso8601String(),
                     'status' => $r->status,
+                    'requested_by_name' => $r->requestedBy?->full_name ?? '',
                 ];
             })->values();
 
@@ -886,6 +911,7 @@ class ShiftPlanRequestController extends Controller
 
         return Inertia::render('ShiftPlanRequests/MyIndex', [
             'crafts' => $crafts,
+            'isPlanner' => $isAdmin || $isShiftPlanner,
         ]);
     }
 

@@ -967,6 +967,8 @@
     "With audience": "With audience",
     "It gets loud": "It gets loud",
     "Full day": "Full day",
+    "Full day as default": "Full day as default",
+    "If activated, the Full day checkbox is preselected when creating a new event.": "If activated, the Full day checkbox is preselected when creating a new event.",
     "What do I need to bear in mind for the event?": "What do I need to bear in mind for the event?",
     "Vouchers": "Vouchers",
     "The end time cannot be before the start time!": "The end time cannot be before the start time!",

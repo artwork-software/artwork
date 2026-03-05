@@ -3899,6 +3899,7 @@ class EventController extends Controller
     {
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
         $this->generalSettingsService->updateEventStartTimeFromRequest($request);
+        $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
     }
 
 

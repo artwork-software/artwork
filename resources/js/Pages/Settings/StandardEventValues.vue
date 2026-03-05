@@ -36,6 +36,20 @@
                     @focusout="update"
                 />
             </div>
+
+            <div class="mt-6">
+                <h3 class="text-sm font-semibold text-secondary">{{ $t('Full day as default') }}</h3>
+                <p class="text-xs text-secondary mt-1">{{ $t('If activated, the Full day checkbox is preselected when creating a new event.') }}</p>
+                <label class="inline-flex items-center gap-2 mt-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        v-model="event_all_day_default"
+                        class="ui-checkbox"
+                        @change="update"
+                    />
+                    <span class="text-sm text-secondary">{{ $t('Full day') }}</span>
+                </label>
+            </div>
         </EventSettingHeader>
     </AppLayout>
 </template>
@@ -52,6 +66,7 @@ import {router, usePage} from "@inertiajs/vue3";
 
 const event_time_length_minutes = ref(usePage().props.event_time_length_minutes || 60)
 const event_start_time = ref(usePage().props.event_start_time || '09:00')
+const event_all_day_default = ref(usePage().props.event_all_day_default || false)
 
 const update = () => {
     if (!event_start_time.value) {
@@ -60,6 +75,7 @@ const update = () => {
     router.patch(route('event.standard.values.update'), {
         event_time_length_minutes: event_time_length_minutes.value,
         event_start_time: event_start_time.value,
+        event_all_day_default: event_all_day_default.value,
     }, {
         preserveState: true,
         preserveScroll: true,

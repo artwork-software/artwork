@@ -42,6 +42,7 @@ class GeneralSettings extends Settings
     public int $allowed_contract_file_size;
     public int $event_time_length_minutes;
     public string $event_start_time;
+    public bool $event_all_day_default;
 
     public string $start_night_time;
     public string $end_night_time;

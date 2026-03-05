@@ -97,6 +97,12 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
 
+    public function updateEventAllDayDefaultFromRequest(Request $request): void
+    {
+        $this->generalSettings->event_all_day_default = (bool) $request->get('event_all_day_default');
+        $this->generalSettings->save();
+    }
+
     function updateWarningMultipleAssignmentsFromRequest(Request $request): void
     {
         $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');

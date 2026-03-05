@@ -622,7 +622,7 @@ const selectedEventType = ref(props.eventTypes?.[0] ?? null)
 const selectedEventStatus = ref(props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null)
 
 const showProjectInfo = ref(Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id))
-const allDayEvent = ref(false)
+const allDayEvent = ref(!!usePage().props.event_all_day_default)
 const selectedProject = ref(null)
 const selectedRoom = ref(null)
 const error = ref(null)
@@ -877,7 +877,7 @@ function closeModal(closedOnPurpose = false) {
     selectedProject.value = selectedRoom.value = null
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
-    allDayEvent.value = false
+    allDayEvent.value = !!page.props.event_all_day_default
     series.value = false
     seriesEndDate.value = null
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)

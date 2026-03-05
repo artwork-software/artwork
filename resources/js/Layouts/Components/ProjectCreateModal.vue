@@ -394,7 +394,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="createProjectGroup && !project">
+                <div v-if="createProjectGroup || (project && project.is_group)">
                     <div class="px-6 pb-6">
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
@@ -403,11 +403,19 @@
                                     title="Icon"
                                     description="Wähle ein Icon für die Projektgruppe aus."
                                 />
-
+                                <button
+                                    v-if="createProjectForm.icon"
+                                    type="button"
+                                    class="ml-1 p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                                    @click="createProjectForm.icon = null"
+                                    :title="$t('Remove icon')"
+                                >
+                                    <IconX class="size-4" />
+                                </button>
                             </div>
                             <div class="flex items-center gap-x-2">
                                 <div class="">
-                                    <ColorPickerComponent @updateColor="addColorToProject" color="#ccc" />
+                                    <ColorPickerComponent @updateColor="addColorToProject" :color="createProjectForm.color || '#ccc'" />
                                 </div>
                                 <BasePageTitle
                                     title="Farbe"
@@ -647,7 +655,7 @@ import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
-import {IconCalendarMonth, IconCirclePlus} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconCirclePlus, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
@@ -732,7 +740,7 @@ const createProjectForm = useForm({
     state: null,
     assignedUsers: [],
     cost_center: props.project ? props.project?.cost_center?.name : '',
-    icon: props.project ? props.project.icon : '',
+    icon: props.project ? props.project.icon : null,
     color: props.project ? props.project.color : null,
     marked_as_done: props.project ? props.project.marked_as_done : false,
 });

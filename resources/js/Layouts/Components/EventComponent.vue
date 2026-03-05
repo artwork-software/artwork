@@ -331,7 +331,13 @@
                 <section class="ui-card">
                     <header class="ui-card-header">
                         <span class="ui-dot bg-violet-400"></span>
-                        <h3 class="ui-card-title">{{ $t('Notes & booking') }}</h3>
+                        <h3 class="ui-card-title">{{ $t('Description') }}</h3>
+                        <ToolTipComponent
+                            :tooltip-text="$t('Other users can see this description in the project\'s event list and in the calendar.')"
+                            direction="right"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
                     </header>
 
                     <div class="space-y-3">
@@ -555,6 +561,7 @@ import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 const { t } = useI18n(), $t = t;

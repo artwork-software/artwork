@@ -555,6 +555,8 @@
     "Continue without saving": "Continue without saving",
     "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.": "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.",
     "Select project status": "Select project status",
+    "Change project status": "Change project status",
+    "Select a new status for this project.": "Select a new status for this project.",
     "Belongs to project group": "Belongs to project group",
     "No project group has been created yet": "No project group has been created yet",
     "Budget deadline": "Budget deadline",

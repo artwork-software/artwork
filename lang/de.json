@@ -595,6 +595,8 @@
     "Continue without saving": "Weiter ohne zu speichern",
     "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.": "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png, .webp und .gif akzeptiert.",
     "Select project status": "Wähle Projekt Status",
+    "Change project status": "Projektstatus ändern",
+    "Select a new status for this project.": "Wähle einen neuen Status für dieses Projekt.",
     "Belongs to project group": "Gehört zu Projektgruppe",
     "No project group has been created yet": "Bisher ist keine Projektgruppe angelegt",
     "Budget deadline": "Budget Stichtag",

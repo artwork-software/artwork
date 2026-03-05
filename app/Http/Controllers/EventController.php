@@ -773,6 +773,17 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         $calendarWarningText = '';
+
+        // Ensure start_date <= end_date (can happen when start_date was null and defaulted to today)
+        if ($startDate->greaterThan($endDate)) {
+            $endDate = $startDate->copy()->addDays($isDailyView ? 0 : 6);
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => $shiftFilterType
+            ], [
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
         if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');

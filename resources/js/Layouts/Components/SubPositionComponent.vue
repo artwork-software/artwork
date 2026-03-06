@@ -143,26 +143,28 @@
                                                @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                                @focusout="this.handleBudgetManagementSearchBlur(cell)"
                                         />
-                                        <PropertyIcon name="XIcon" class="w-10 h-10 cursor-pointer"
+                                        <PropertyIcon name="IconX" class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
                                         />
-                                        <div v-if="cell.accountSearchResults" class="absolute w-64 z-20 top-10">
+                                        <div v-if="cell.accountSearchResults" class="absolute w-96 z-20 top-10">
                                             <div v-if="cell.accountSearchResults.length > 0"
                                                  v-for="account in cell.accountSearchResults"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/account relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, account.title, mainPosition.is_verified, subPosition.is_verified)">
-                                                    <div class="flex">
-                                                        <div class="w-1/2 text-left truncate">
+                                                    <div class="flex gap-2">
+                                                        <div class="shrink-0 text-left">
                                                             {{ account.account_number }}
                                                         </div>
-                                                        <div class="w-1/2 text-right truncate">
+                                                        <div class="text-right truncate">
                                                             {{ account.title }}
                                                         </div>
                                                     </div>
-
+                                                    <div class="hidden group-hover/account:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
+                                                        {{ account.account_number }} - {{ account.title }}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div v-else
@@ -170,21 +172,24 @@
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
-                                        <div v-if="cell.costUnitSearchResults" class="absolute w-64 z-20 top-10">
+                                        <div v-if="cell.costUnitSearchResults" class="absolute w-96 z-20 top-10">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
                                                  v-for="cost_unit in cell.costUnitSearchResults"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/costunit relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, cost_unit.title, mainPosition.is_verified, subPosition.is_verified)">
-                                                    <div class="flex">
-                                                        <div class="w-1/2 text-left truncate">
+                                                    <div class="flex gap-2">
+                                                        <div class="shrink-0 text-left">
                                                             {{ cost_unit.cost_unit_number }}
                                                         </div>
-                                                        <div class="w-1/2 text-right truncate">
+                                                        <div class="text-right truncate">
                                                             {{ cost_unit.title }}
                                                         </div>
+                                                    </div>
+                                                    <div class="hidden group-hover/costunit:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
+                                                        {{ cost_unit.cost_unit_number }} - {{ cost_unit.title }}
                                                     </div>
                                                 </div>
                                             </div>

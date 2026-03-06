@@ -888,6 +888,7 @@ readonly class EventService
                 });
             })
             ->orderBy('position')
+            ->orderBy('id')
             ->get();
 
     }

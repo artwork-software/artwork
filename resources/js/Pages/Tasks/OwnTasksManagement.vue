@@ -33,8 +33,12 @@
 
             <!-- Money Source Tasks -->
             <section class="mt-10" v-if="moneySourceTasks.length > 0">
-                <h2 class="text-lg font-semibold mb-2">{{ $t('Money Source Tasks') }}</h2>
-                <div v-if="moneySourceTasks.length" class="rounded-2xl border border-gray-100 bg-white shadow-sm divide-y">
+                <h2 class="text-lg font-semibold mb-2 flex items-center gap-2 cursor-pointer select-none"
+                    @click="showMoneySourceTasks = !showMoneySourceTasks">
+                    <component :is="showMoneySourceTasks ? IconChevronDown : IconChevronRight" class="w-5 h-5" />
+                    {{ $t('Funding source tasks') }}
+                </h2>
+                <div v-if="showMoneySourceTasks" class="rounded-2xl border border-gray-100 bg-white shadow-sm divide-y">
                     <div v-for="task in moneySourceTasks" :key="task.id" class="px-5 py-4">
                         <SingleMoneySourceTask :task="task" />
                     </div>
@@ -57,7 +61,7 @@
 import { ref } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SingleMoneySourceTask from '@/Pages/Tasks/Components/SingleMoneySourceTask.vue'
-import { IconChecklist } from '@tabler/icons-vue'
+import { IconChecklist, IconChevronDown, IconChevronRight } from '@tabler/icons-vue'
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -72,6 +76,7 @@ const props = defineProps<{
 }>()
 
 const showChecklistEditModal = ref(false)
+const showMoneySourceTasks = ref(true)
 const moneySourceTasks = ref(props.money_source_task ?? [])
 </script>
 

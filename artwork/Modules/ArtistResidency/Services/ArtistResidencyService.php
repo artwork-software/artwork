@@ -219,16 +219,11 @@ readonly class ArtistResidencyService
                 'user' => $this->authManager->user(),
                 'language' => $language,
             ]
-<<<<<<< artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
-        )->setPaper('a4', 'portrait')
-            ->setOption('dpi', 72);
-=======
         )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
                 'defaultFont' => 'sans-serif',
             ]);
->>>>>>> artwork/Modules/ArtistResidency/Services/ArtistResidencyService.php
 
         $filename = $this->createFilename(now(), $project->name, '72');
         $filePath = $this->createStoragePath($filename);

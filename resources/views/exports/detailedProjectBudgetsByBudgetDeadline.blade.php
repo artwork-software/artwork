@@ -3,7 +3,7 @@
     <tr>
         <th>Premiere</th>
         <th>Projektname Originalsprache</th>
-        <th>Künstler / Gruppe</th>
+        <th>Künstler*innen</th>
         <th>Projektstatus</th>
         <th>KTR</th>
         <th>{{ $columnNames[1] ?? 'Kst' }}</th>

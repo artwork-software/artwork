@@ -98,7 +98,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 $row = [
                     'premiere' => $premiere,
                     'project_name' => $project->getAttribute('name'),
-                    'artist_or_group' => $noDataAvailable,
+                    'artist_or_group' => '',
                     'project_state' => ProjectState::query()
                         ->where('id', '=', $project->getAttribute('state'))
                         ->first('name')?->getAttribute('name'),
@@ -201,7 +201,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 $row = [
                     'premiere' => $premiere,
                     'project_name' => $project->name,
-                    'artist_or_group' => 'Noch nicht angegeben',
+                    'artist_or_group' => $project->getAttribute('artists') ?? '',
                     'project_state' => ProjectState::query()
                         ->where('id', '=', $project->state)->first('name')?->name,
                     'cost_center' => $project->costCenter?->getAttribute('name'),
@@ -245,7 +245,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     $rows[] = [
                         'premiere' => $premiere,
                         'project_name' => $project->name,
-                        'artist_or_group' => 'Noch nicht angegeben',
+                        'artist_or_group' => $project->getAttribute('artists') ?? '',
                         'project_state' => ProjectState::query()
                             ->where('id', '=', $project->state)->first('name')?->name,
                         'cost_center' => $project->costCenter?->getAttribute('name'),

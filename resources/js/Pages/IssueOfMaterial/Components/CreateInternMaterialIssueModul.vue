@@ -1227,16 +1227,29 @@ const checkFoundArticlesAvailability = async () => {
         article.periodAvailability = null;
     }
 
+    const hasExplicitTimes =
+        !!internMaterialIssue.start_time &&
+        !!internMaterialIssue.end_time &&
+        internMaterialIssue.start_time !== "00:00" &&
+        internMaterialIssue.end_time !== "23:59";
+
     try {
+        const payload = {
+            article_ids: ids,
+            type: 'intern',
+            issue_id: internMaterialIssue?.id || null,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        };
+
+        if (hasExplicitTimes) {
+            payload.start_time = internMaterialIssue.start_time;
+            payload.end_time = internMaterialIssue.end_time;
+        }
+
         const response = await axios.post(
             route("inventory.articles.available-stock.batch"),
-            {
-                article_ids: ids,
-                type: 'intern',
-                issue_id: internMaterialIssue?.id || null,
-                start_date: internMaterialIssue.start_date,
-                end_date: internMaterialIssue.end_date,
-            }
+            payload
         );
 
         const resultMap = response.data.data;

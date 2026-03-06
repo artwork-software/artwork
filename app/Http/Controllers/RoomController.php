@@ -136,7 +136,7 @@ class RoomController extends Controller
     public function getMoveRooms(): Response|ResponseFactory
     {
         return inertia('Rooms/RoomReorderManagement', [
-            'rooms' => Room::orderBy('position')->get()
+            'rooms' => Room::orderBy('position')->orderBy('id')->get()
         ]);
     }
 

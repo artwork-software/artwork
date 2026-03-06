@@ -331,7 +331,13 @@
                 <section class="ui-card">
                     <header class="ui-card-header">
                         <span class="ui-dot bg-violet-400"></span>
-                        <h3 class="ui-card-title">{{ $t('Notes & booking') }}</h3>
+                        <h3 class="ui-card-title">{{ $t('Description') }}</h3>
+                        <ToolTipComponent
+                            :tooltip-text="$t('Other users can see this description in the project\'s event list and in the calendar.')"
+                            direction="right"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
                     </header>
 
                     <div class="space-y-3">
@@ -555,6 +561,7 @@ import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 const { t } = useI18n(), $t = t;
@@ -615,7 +622,7 @@ const selectedEventType = ref(props.eventTypes?.[0] ?? null)
 const selectedEventStatus = ref(props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null)
 
 const showProjectInfo = ref(Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id))
-const allDayEvent = ref(false)
+const allDayEvent = ref(!!usePage().props.event_all_day_default)
 const selectedProject = ref(null)
 const selectedRoom = ref(null)
 const error = ref(null)
@@ -870,7 +877,7 @@ function closeModal(closedOnPurpose = false) {
     selectedProject.value = selectedRoom.value = null
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
-    allDayEvent.value = false
+    allDayEvent.value = !!page.props.event_all_day_default
     series.value = false
     seriesEndDate.value = null
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)

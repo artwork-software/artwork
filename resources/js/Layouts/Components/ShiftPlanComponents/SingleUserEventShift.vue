@@ -162,7 +162,7 @@
     <!-- Anfrage Arbeitszeitänderung -->
     <RequestWorkTimeChangeModal
         v-if="showRequestWorkTimeChangeModal"
-        :user="shift.users.find(u => u.id === userToEditId)"
+        :user="shift.users?.find(u => u.id === userToEditId)"
         :shift="{
             ...shift,
             start: getDisplayTime().split(' – ')[0],

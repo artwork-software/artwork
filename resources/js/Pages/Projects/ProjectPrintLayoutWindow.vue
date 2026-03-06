@@ -11,7 +11,7 @@
               '--footer-height': `${footerHeight}px`
             }">
                 <!-- HEADER (dynamic height, visible on every page) -->
-                <header ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
+                <header v-if="hasHeaderContent" ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
                     <div class="header-content p-2">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
                             <div v-for="index in layout['columns_header']" :key="index">
@@ -59,7 +59,7 @@
 
 
                 <!-- FOOTER (dynamic height, visible on every page) -->
-                <footer ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-2">
+                <footer v-if="hasFooterContent" ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-2">
                     <div class="footer-content">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
                             <div v-for="index in layout['columns_footer']" :key="index">
@@ -121,7 +121,7 @@ const props = defineProps({
     }
 });
 
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderSeparatorComponent.vue";
 import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectGroupComponent.vue";
 import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistNameDisplayComponent.vue";
@@ -229,6 +229,18 @@ const componentMapping = {
     BuilderLink: BuilderLinkComponent,
     BuilderLinkList: BuilderLinkListComponent
 };
+
+const hasHeaderContent = computed(() => {
+    const hasComponents = props.layout?.header_components?.length > 0;
+    const hasNotes = props.layout?.notes?.header?.some(n => n && n.trim() !== '');
+    return hasComponents || hasNotes;
+});
+
+const hasFooterContent = computed(() => {
+    const hasComponents = props.layout?.footer_components?.length > 0;
+    const hasNotes = props.layout?.notes?.footer?.some(n => n && n.trim() !== '');
+    return hasComponents || hasNotes;
+});
 
 const getComponent = (layout, section, row, col) => {
     return layout[section + '_components'].find(comp => comp.row === row && comp.position === col) || null;

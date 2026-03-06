@@ -244,6 +244,7 @@ readonly class CalendarDataService
                 }
             )
             ->orderBy('position')
+            ->orderBy('id')
             ->get();
 
         return $rooms;

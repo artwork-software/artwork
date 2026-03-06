@@ -562,6 +562,13 @@ const navigation = ref([
                 has_permission: can('can view shift plan') || is('artwork admin'),
             },
             {
+                name: 'Shift plan list view',
+                href: route('shifts.plan.list-view'),
+                icon: 'IconList',
+                current: route().current('shifts.plan.list-view'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
+            },
+            {
                 name: 'My Operational plan',
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',

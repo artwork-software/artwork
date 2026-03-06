@@ -20,10 +20,17 @@
         <div class="mt-4 space-y-3">
             <div v-for="row in rows" :key="row.key" class="space-y-0.5">
                 <div
-                    class="text-[11px] font-semibold uppercase tracking-wide"
+                    class="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
                     :class="inSidebar ? 'text-zinc-200' : 'text-secondary'"
                 >
                     {{ row.label }}
+                    <ToolTipComponent
+                        v-if="row.key === 'budget_deadline'"
+                        :tooltip-text="$t('This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.')"
+                        direction="right"
+                        icon="IconInfoCircle"
+                        icon-size="h-3.5 w-3.5"
+                    />
                 </div>
 
                 <!-- default value rendering -->
@@ -80,10 +87,11 @@ import {can, is} from 'laravel-permission-to-vuejs';
 import ProjectCreateModal from '@/Layouts/Components/ProjectCreateModal.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import SidebarTagComponent from '@/Layouts/Components/SidebarTagComponent.vue';
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 
 export default defineComponent({
     name: 'ProjectBasicDataDisplayComponent',
-    components: {SidebarTagComponent, PropertyIcon, ProjectCreateModal},
+    components: {ToolTipComponent, SidebarTagComponent, PropertyIcon, ProjectCreateModal},
     props: {
         project: {
             type: Object,

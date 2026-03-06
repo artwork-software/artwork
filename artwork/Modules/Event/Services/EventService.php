@@ -84,6 +84,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Throwable;
 
@@ -390,7 +391,7 @@ readonly class EventService
             $notificationTitle = __('notification.event.deleted', [], $projectManager->language);
             $notificationService->setTitle($notificationTitle);
             $notificationService->setBroadcastMessage([
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle,
             ]);
@@ -441,7 +442,7 @@ readonly class EventService
         $notificationTitle = __('notification.event.deleted', [], $event->creator->language);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setBroadcastMessage([
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle,
         ]);
@@ -887,6 +888,7 @@ readonly class EventService
                 });
             })
             ->orderBy('position')
+            ->orderBy('id')
             ->get();
 
     }

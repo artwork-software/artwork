@@ -32,7 +32,7 @@
                         </div>
 
                         <template v-else>
-                            <date-picker-component :date-value-array="props.dateValue" :is_shift_plan="true"/>
+                            <date-picker-component :date-value-array="props.dateValue" :is_shift_plan="true" :is_daily_view="true"/>
 
                             <div class="flex gap-x-1 mx-2">
                                 <ToolTipComponent
@@ -923,7 +923,7 @@ const jumpToToday = () => {
         setTimeout(() => {
             router.patch(
                 route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-                { start_date: today, end_date: today },
+                { start_date: today, end_date: today, isDailyView: true },
                 { preserveScroll: true, preserveState: false }
             )
         }, 100)
@@ -932,7 +932,7 @@ const jumpToToday = () => {
 
     router.patch(
         route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        { start_date: today, end_date: today },
+        { start_date: today, end_date: today, isDailyView: true },
         { preserveScroll: true, preserveState: false }
     )
 }
@@ -954,6 +954,7 @@ const jumpToCurrentWeek = () => {
         {
             start_date: currentWeekStart.toISOString().slice(0, 10),
             end_date: currentWeekEnd.toISOString().slice(0, 10),
+            isDailyView: true,
         },
         { preserveScroll: true, preserveState: false }
     )
@@ -972,6 +973,7 @@ const jumpToCurrentMonth = () => {
                 {
                     start_date: monthStart.toISOString().slice(0, 10),
                     end_date: monthEnd.toISOString().slice(0, 10),
+                    isDailyView: true,
                 },
                 { preserveScroll: true, preserveState: false }
             )
@@ -984,6 +986,7 @@ const jumpToCurrentMonth = () => {
         {
             start_date: monthStart.toISOString().slice(0, 10),
             end_date: monthEnd.toISOString().slice(0, 10),
+            isDailyView: true,
         },
         { preserveScroll: true, preserveState: false }
     )

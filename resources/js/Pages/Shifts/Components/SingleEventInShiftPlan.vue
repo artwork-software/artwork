@@ -15,7 +15,7 @@
                     }"
                 >
                     <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="block w-full truncate font-semibold text-xs text-black">
+                        <span :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs text-black']">
                             {{ event.project.group[0].name }}
                         </span>
                     </div>
@@ -36,7 +36,7 @@
                     >
                         <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})"
                            class="relative flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200">
-                            <span ref="projectNameSpan" class="block w-full truncate font-semibold text-xs">
+                            <span ref="projectNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs']">
                                 {{ event.project?.name }}
                             </span>
                         </a>
@@ -57,7 +57,7 @@
                 <!-- Content-Bereich -->
                 <div class="flex items-stretch gap-x-2 px-2 py-2">
                     <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.eventType.hex_code}" v-if="!usePage().props.auth.user.calendar_settings.high_contrast"></div>
-                    <div class="max-w-40 w-40 min-w-0" :style="{borderColor: event.eventType.hex_code}">
+                    <div :class="[expandDays ? '' : 'max-w-40 w-40', 'min-w-0']" :style="{borderColor: event.eventType.hex_code}">
                         <!-- Eventtyp-Abbreviation: Eventname -->
                         <div
                             class="relative"
@@ -66,12 +66,12 @@
                         >
                             <div v-if="event?.project?.id">
                                 <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
-                                    <span ref="eventNameSpan" class="block w-40 max-w-40 truncate text-xs/4 font-semibold">
+                                    <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'w-40 max-w-40 truncate', 'block text-xs/4 font-semibold']">
                                         {{ event.eventType?.abbreviation }}: {{ event.eventName }}
                                     </span>
                                 </a>
                             </div>
-                            <span v-else ref="eventNameSpan" class="block truncate text-xs/4 font-semibold">
+                            <span v-else ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
                                 {{ event?.eventType?.abbreviation }}: {{ event?.eventName }}
                             </span>
                             <Teleport to="body">
@@ -106,10 +106,11 @@
 
 <script setup>
 
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";
 const percentage = usePage().props.high_contrast_percent;
+const expandDays = computed(() => usePage().props.auth.user.calendar_settings?.expand_days ?? false);
 const {
     backgroundColorWithOpacity,
     getTextColorBasedOnBackground,

@@ -218,15 +218,53 @@ class ExportPDFController extends Controller
                 $rowHeights = [];
             }
         } else {
-            // New export mode: fixed segment height
-            $baseSegmentHeight = 36; // px (gerne anpassen, wenn dir die Zellen zu "flach" wirken)
+            // New export mode: dynamic segment height based on event text length
+            $baseSegmentHeight = 48; // px minimum per slot
+            $charsPerLine = 12;
+            $lineHeight = 9;
+            $paddingPx = 6;
+
+            $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 
             foreach ($rooms as $room) {
-                $rowHeights[$room->id] = [
+                $rid = $room->id;
+                $roomContent = $calendarLookup[$rid] ?? null;
+
+                $slotMaxHeight = [
                     'morning' => $baseSegmentHeight,
                     'noon'    => $baseSegmentHeight,
                     'evening' => $baseSegmentHeight,
                 ];
+
+                if ($roomContent) {
+                    foreach ($allDayStrings as $dayDisplay) {
+                        $events = $roomContent[$dayDisplay]['events'] ?? [];
+                        foreach ($events as $event) {
+                            $tz = config('app.timezone');
+                            $start = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
+                            $end = \Illuminate\Support\Carbon::parse($event->end)->timezone($tz);
+                            $startMin = ((int)$start->format('H')) * 60 + ((int)$start->format('i'));
+                            $endMin = ((int)$end->format('H')) * 60 + ((int)$end->format('i'));
+
+                            // Determine which slot this event falls into
+                            $startMin = max(360, min(1440, $startMin));
+                            $slot = $startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening');
+
+                            // Calculate required height based on text
+                            $name = $event->eventName ?? '';
+                            $projectName = $event->project->name ?? '';
+                            $titleLines = max(1, ceil(mb_strlen($name) / $charsPerLine));
+                            $projectLines = !empty($projectName) ? max(1, ceil(mb_strlen($projectName) / $charsPerLine)) : 0;
+                            $neededHeight = ($titleLines + $projectLines + 1) * $lineHeight + $paddingPx;
+
+                            if ($neededHeight > $slotMaxHeight[$slot]) {
+                                $slotMaxHeight[$slot] = (int)$neededHeight;
+                            }
+                        }
+                    }
+                }
+
+                $rowHeights[$rid] = $slotMaxHeight;
             }
         }
 

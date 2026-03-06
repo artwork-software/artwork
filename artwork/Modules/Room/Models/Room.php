@@ -284,7 +284,7 @@ class Room extends Model
                     }
                 )->orWhereDoesntHave('adjoining_rooms');
             }
-        )->orderBy('position');
+        )->orderBy('position')->orderBy('id');
     }
 
     public function scopeNotIdIn(Builder $builder, array $ids): Builder

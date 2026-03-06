@@ -2,6 +2,7 @@
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
             <VueDatePicker
+                ref="datePickerRef"
                 v-model="dateValuePicker"
                 model-auto
                 range
@@ -112,7 +113,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, defineAsyncComponent, nextTick} from "vue";
+import {ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent, nextTick} from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import '@vuepic/vue-datepicker/dist/main.css'
@@ -137,6 +138,10 @@ const props = defineProps({
     is_daily_view: {
         type: Boolean,
         default: false
+    },
+    is_list_view: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -157,6 +162,7 @@ const endDateString = ref('');
 const startDate = ref(null);
 const endDate = ref(null);
 
+const datePickerRef = ref(null);
 const syncingFromProps = ref(false);
 
 // Formatter
@@ -355,7 +361,6 @@ function format(date) {
 }
 
 function handleManualDateEnter(e) {
-    // Soll sich verhalten wie ein Focus-Out: durch blur wird das bestehende @focusout="updateTimes" ausgelöst.
     e?.target?.blur?.();
 }
 
@@ -390,6 +395,14 @@ function updateTimes() {
                     end: formatToYYYYMMDD(endDateObj)
                 },
                 preserveState: true,
+            });
+        } else if (props.is_list_view) {
+            router.patch(route('update.user.shift-list-view.filter.dates', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: false,
+                preserveScroll: true,
             });
         } else if (props.is_shift_plan) {
             router.patch(route('update.user.shift.calendar.filter.dates', userId), {
@@ -459,6 +472,18 @@ watch(
     { deep: true }
 );
 
+// Enter-Taste → "Anwenden"-Button im VueDatePicker-Popup klicken
+// Capture-Phase, damit der Event vor VueDatePickers eigenem Handler abgefangen wird
+function onEnterKey(e) {
+    if (e.key !== 'Enter') return;
+    const selectBtn = document.querySelector('.dp__action_select');
+    if (selectBtn) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        selectBtn.click();
+    }
+}
+
 // Lifecycle
 onMounted(() => {
     removeDateIcons();
@@ -469,6 +494,11 @@ onMounted(() => {
             showDateRangePicker.value = false;
         }
     });
+    document.addEventListener('keydown', onEnterKey, true);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', onEnterKey, true);
 });
 </script>
 

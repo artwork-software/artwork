@@ -132,7 +132,12 @@ class NotificationController extends Controller
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => NotificationProjectResource::collection(Project::all())->resolve(),
+            'projects' => NotificationProjectResource::collection(
+                Project::select([
+                    'id', 'name', 'shift_description',
+                    'number_of_participants', 'is_group', 'key_visual_path', 'cost_center_id'
+                ])->with(['groups', 'sectors', 'categories', 'genres', 'costCenter'])->get()
+            )->resolve(),
             'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
             'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
@@ -216,8 +221,11 @@ class NotificationController extends Controller
     public function destroy(string $id): string
     {
         $user = User::find(Auth::id());
+        if ($user === null) {
+            return 'User not found';
+        }
         $notification = $user->notifications->find($id);
-        $notification->delete();
+        $notification?->delete();
         return 'Notification deleted';
     }
 }

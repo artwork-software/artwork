@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Project\Exports;
 
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
+use Artwork\Modules\Budget\Models\BudgetManagementAccount;
+use Artwork\Modules\Budget\Models\BudgetManagementCostUnit;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
@@ -12,7 +14,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -26,12 +28,25 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
     public function __construct(
         private readonly string $startBudgetDeadline,
         private readonly string $endBudgetDeadline,
+        private readonly bool $accountManagementGlobal = false,
+        private readonly ?Collection $budgetColumnSettings = null,
     ) {
     }
 
     public function view(): View
     {
-        return view('exports.detailedProjectBudgetsByBudgetDeadline', ['rows' => $this->getRows()]);
+        $columnNames = [];
+        if ($this->accountManagementGlobal && $this->budgetColumnSettings !== null) {
+            foreach ($this->budgetColumnSettings as $setting) {
+                $columnNames[$setting->column_position] = $setting->column_name;
+            }
+        }
+
+        return view('exports.detailedProjectBudgetsByBudgetDeadline', [
+            'rows' => $this->getRows(),
+            'accountManagementGlobal' => $this->accountManagementGlobal,
+            'columnNames' => $columnNames,
+        ]);
     }
 
     /**
@@ -40,6 +55,13 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
     private function getRows(): array
     {
         $rows = [];
+
+        $accountLookup = collect();
+        $costUnitLookup = collect();
+        if ($this->accountManagementGlobal) {
+            $accountLookup = BudgetManagementAccount::all()->keyBy('account_number');
+            $costUnitLookup = BudgetManagementCostUnit::all()->keyBy('cost_unit_number');
+        }
 
         foreach (
             Project::query()
@@ -73,20 +95,24 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
 
             if ($lastColumn === null) {
                 $noDataAvailable = 'Keine Daten vorhanden';
-                $rows[] = [
+                $row = [
                     'premiere' => $premiere,
                     'project_name' => $project->getAttribute('name'),
-                    'artist_or_group' => $noDataAvailable,
+                    'artist_or_group' => '',
                     'project_state' => ProjectState::query()
                         ->where('id', '=', $project->getAttribute('state'))
                         ->first('name')?->getAttribute('name'),
                     'cost_center' => $project->getAttribute('costCenter')?->getAttribute('name'),
                     'kst' => $noDataAvailable,
                     'real_account' => $noDataAvailable,
+                    'kto_name' => $noDataAvailable,
+                    'kst_name' => $noDataAvailable,
+                    'position' => $noDataAvailable,
                     'forecast_costs' => $noDataAvailable,
                     'forecast_earnings' => $noDataAvailable,
                     'forecast_outcome' => $noDataAvailable,
                 ];
+                $rows[] = $row;
 
                 if ($sageColumn !== null) {
                     $rows['sage'] = $noDataAvailable;
@@ -105,6 +131,8 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     $projectBudgetTable,
                     $project,
                     $sageColumn,
+                    $accountLookup,
+                    $costUnitLookup,
                 )
             );
         }
@@ -121,16 +149,15 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
         Table $projectBudgetTable,
         Project $project,
         ?Column $sageColumn,
+        Collection $accountLookup,
+        Collection $costUnitLookup,
     ): array {
         $tableColumns = $projectBudgetTable->getRelation('columns');
-        /** @var Column $kst */
-        $kstColumnId = $tableColumns->first(
-            fn (Column $column) => $column->getAttribute('name') === 'KST'
-        )->getAttribute('id');
-        /** @var Column $kto */
-        $ktoColumnId = $tableColumns->first(
-            fn (Column $column) => $column->getAttribute('name') === 'KTO'
-        )->getAttribute('id');
+
+        $sortedColumns = $tableColumns->sortBy('position')->values();
+        $ktoColumnId = $sortedColumns->get(0)?->getAttribute('id');
+        $kstColumnId = $sortedColumns->get(1)?->getAttribute('id');
+        $positionColumnId = $sortedColumns->get(2)?->getAttribute('id');
 
         $rows = [];
         foreach ($projectBudgetTable->getAttribute('mainPositions') as $mainPosition) {
@@ -152,24 +179,41 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     )
                 )->getAttribute('value');
 
+                $kstValue = $kstColumnId ? $subPositionRow->getAttribute('cells')->first(
+                    fn (ColumnCell $columnCell) => (
+                        $columnCell->getAttribute('column_id') === $kstColumnId
+                    )
+                )?->getAttribute('value') : '';
+
+                $ktoValue = $ktoColumnId ? $subPositionRow->getAttribute('cells')->first(
+                    fn (ColumnCell $columnCell) => (
+                        $columnCell->getAttribute('column_id') === $ktoColumnId
+                    )
+                )?->getAttribute('value') : '';
+
+                $positionValue = $positionColumnId ? $subPositionRow->getAttribute('cells')->first(
+                    fn (ColumnCell $columnCell) => (
+                        $columnCell->getAttribute('column_id') === $positionColumnId
+                    )
+                )?->getAttribute('value') : '';
+
                 //project row
                 $row = [
                     'premiere' => $premiere,
                     'project_name' => $project->name,
-                    'artist_or_group' => 'Noch nicht angegeben',
+                    'artist_or_group' => $project->getAttribute('artists') ?? '',
                     'project_state' => ProjectState::query()
                         ->where('id', '=', $project->state)->first('name')?->name,
                     'cost_center' => $project->costCenter?->getAttribute('name'),
-                    'kst' => $subPositionRow->getAttribute('cells')->first(
-                        fn (ColumnCell $columnCell) => (
-                            $columnCell->getAttribute('column_id') === $kstColumnId
-                        )
-                    )->getAttribute('value'),
-                    'real_account' => $subPositionRow->getAttribute('cells')->first(
-                        fn (ColumnCell $columnCell) => (
-                            $columnCell->getAttribute('column_id') === $ktoColumnId
-                        )
-                    )->getAttribute('value'),
+                    'kst' => $kstValue,
+                    'real_account' => $ktoValue,
+                    'kto_name' => $this->accountManagementGlobal
+                        ? ($accountLookup[$ktoValue]?->title ?? '')
+                        : '',
+                    'kst_name' => $this->accountManagementGlobal
+                        ? ($costUnitLookup[$kstValue]?->title ?? '')
+                        : '',
+                    'position' => $positionValue ?? '',
                     'forecast_costs' => $isCostsMainPosition ? $forecastCellValue : 0,
                     'forecast_earnings' => !$isCostsMainPosition ? $forecastCellValue : 0,
                     'forecast_outcome' => $isCostsMainPosition ?
@@ -201,20 +245,19 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     $rows[] = [
                         'premiere' => $premiere,
                         'project_name' => $project->name,
-                        'artist_or_group' => 'Noch nicht angegeben',
+                        'artist_or_group' => $project->getAttribute('artists') ?? '',
                         'project_state' => ProjectState::query()
                             ->where('id', '=', $project->state)->first('name')?->name,
                         'cost_center' => $project->costCenter?->getAttribute('name'),
-                        'kst' => $subPositionRow->getAttribute('cells')->first(
-                            fn (ColumnCell $columnCell) => (
-                                $columnCell->getAttribute('column_id') === $kstColumnId
-                            )
-                        )->getAttribute('value'),
-                        'real_account' => $subPositionRow->getAttribute('cells')->first(
-                            fn (ColumnCell $columnCell) => (
-                                $columnCell->getAttribute('column_id') === $ktoColumnId
-                            )
-                        )->getAttribute('value'),
+                        'kst' => $kstValue,
+                        'real_account' => $ktoValue,
+                        'kto_name' => $this->accountManagementGlobal
+                            ? ($accountLookup[$ktoValue]?->title ?? '')
+                            : '',
+                        'kst_name' => $this->accountManagementGlobal
+                            ? ($costUnitLookup[$kstValue]?->title ?? '')
+                            : '',
+                        'position' => $positionValue ?? '',
                         'forecast_costs' => 0,
                         'forecast_earnings' => 0,
                         'forecast_outcome' => 0,
@@ -228,7 +271,6 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                 }
             }
         }
-
 
         return $rows;
     }

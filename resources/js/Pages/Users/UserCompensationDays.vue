@@ -184,6 +184,7 @@
         <ViolationEditModal
             v-if="showViolationEditModal && selectedViolation"
             :violation="selectedViolation"
+            :compensation-period="props.compensationPeriod"
             @close="showViolationEditModal = false"
             @updated="handleViolationUpdated"
         />
@@ -197,11 +198,12 @@ import UserEditHeader from '@/Pages/Users/Components/UserEditHeader.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
 
-defineProps({
+const props = defineProps({
     userToEdit: { type: Object, required: true },
     openCompensations: { type: Array, default: () => [] },
     grantedCompensations: { type: Array, default: () => [] },
     unprocessedViolations: { type: Array, default: () => [] },
+    compensationPeriod: { type: Number, default: 0 },
 });
 
 const showViolationEditModal = ref(false);

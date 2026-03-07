@@ -199,7 +199,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // Shift Rules routes - New shift rules management system
-    Route::group(['prefix' => 'shift-rules'], function (): void {
+    Route::group(['prefix' => 'shift-rules', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
 
@@ -219,7 +219,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // Shift Rule Violations routes
-    Route::group(['prefix' => 'shift-rule-violations'], function (): void {
+    Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
         Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
@@ -366,6 +366,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can manage workers')
         ->name('user.edit.worktimes');
     Route::get('/users/{user}/compensation-days', [UserController::class, 'editUserCompensationDays'])
+        ->can('can plan shifts')
         ->name('user.edit.compensationDays');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 

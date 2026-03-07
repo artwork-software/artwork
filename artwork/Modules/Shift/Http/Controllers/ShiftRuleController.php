@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -298,7 +299,7 @@ class ShiftRuleController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'shift_rule_id' => 'required|exists:shift_rules,id',
+            'shift_rule_id' => ['required', Rule::exists('shift_rules', 'id')->whereNull('deleted_at')],
             'violation_date' => 'required|date',
             'reason' => 'nullable|string',
             'severity' => 'in:warning,error',
@@ -322,14 +323,18 @@ class ShiftRuleController extends Controller
 
     public function processViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
     {
+        if ($violation->status !== 'active') {
+            return redirect()->back()->with('error', __('Violation is not active.'));
+        }
+
         $validated = $request->validate([
             'compensation_days' => 'required|numeric|min:0.5',
             'compensation_deadline' => 'required|date|after:today',
             'compensation_reason' => 'nullable|string',
         ]);
 
-        // Validate 0.5 steps
-        if (fmod($validated['compensation_days'] * 2, 1) !== 0.0) {
+        // Validate 0.5 steps (integer check avoids floating-point issues)
+        if (round($validated['compensation_days'] * 2) !== $validated['compensation_days'] * 2) {
             return redirect()->back()->withErrors([
                 'compensation_days' => 'Ersatzfreie Tage müssen in 0.5er Schritten angegeben werden.'
             ]);
@@ -349,7 +354,11 @@ class ShiftRuleController extends Controller
     public function grantCompensation(ShiftRuleViolation $violation): RedirectResponse
     {
         if (!$violation->hasCompensation()) {
-            return redirect()->back()->with('error', 'Keine Ersatzfreitage zugewiesen.');
+            return redirect()->back()->with('error', __('Keine Ersatzfreitage zugewiesen.'));
+        }
+
+        if ($violation->compensation_granted_at !== null) {
+            return redirect()->back()->with('error', __('Compensation already granted.'));
         }
 
         $violation->grantCompensation(auth()->id());
@@ -414,6 +423,10 @@ class ShiftRuleController extends Controller
             'restTimeBeforeHoliday' => [
                 'name' => 'Ruhezeit vor Sonder-/Sonntag',
                 'description' => 'Mindest-Ruhezeit vor Feiertagen und Sonntagen'
+            ],
+            'minDaysBeforeCommit' => [
+                'name' => 'Mindesttage bis Verbindlich-Schaltung',
+                'description' => 'Mindestanzahl Tage bevor eine Schicht verbindlich geschaltet wird'
             ]
         ];
 

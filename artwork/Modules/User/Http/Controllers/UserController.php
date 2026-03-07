@@ -462,6 +462,7 @@ class UserController extends Controller
             'openCompensations' => $openCompensations,
             'grantedCompensations' => $grantedCompensations,
             'unprocessedViolations' => $unprocessedViolations,
+            'compensationPeriod' => $user->activeWorkContract()?->compensation_period ?? 0,
         ]);
     }
 

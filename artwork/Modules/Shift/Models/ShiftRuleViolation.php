@@ -155,12 +155,12 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
 
     public function getViolationMessage(): string
     {
-        return $this->shiftRule->description ?? 'Rule violation detected';
+        return $this->shiftRule?->description ?? 'Rule violation detected';
     }
 
     public function getWarningColor(): string
     {
-        $color = $this->shiftRule->warning_color ?? '#ff0000';
+        $color = $this->shiftRule?->warning_color ?? '#ff0000';
         return empty($color) ? '#ff0000' : $color;
     }
 

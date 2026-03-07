@@ -583,6 +583,7 @@
         <ViolationEditModal
             v-if="showViolationEditModal && selectedViolation"
             :violation="selectedViolation"
+            :compensation-period="user.compensation_period || 0"
             @close="showViolationEditModal = false"
             @updated="handleViolationUpdated"
         />

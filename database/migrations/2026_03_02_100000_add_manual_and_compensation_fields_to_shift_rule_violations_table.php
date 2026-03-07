@@ -59,6 +59,9 @@ return new class extends Migration
                 'compensation_granted_by',
                 'parent_violation_id',
             ]);
+
+            // Revert shift_id back to NOT NULL
+            $table->unsignedBigInteger('shift_id')->nullable(false)->change();
         });
     }
 };

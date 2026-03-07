@@ -37,7 +37,9 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
             $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
 
-            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $breakMinutes);
+            // Only subtract break from the first day-segment of a multi-day shift
+            $applyBreak = $date->isSameDay(Carbon::parse($shift->start_date)) ? $breakMinutes : 0;
+            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $applyBreak);
             $totalMinutes += $minutes;
         }
 
@@ -98,12 +100,12 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         ])->first();
 
         if ($existingViolation) {
-            // Update existing violation data if needed
-            $existingViolation->update([
-                'violation_data' => $violationData,
-                'severity' => 'warning',
-                'status' => 'active'
-            ]);
+            // Only update violation data if still active — preserve resolved/ignored status
+            if ($existingViolation->status === 'active') {
+                $existingViolation->update([
+                    'violation_data' => $violationData,
+                ]);
+            }
             return $existingViolation;
         }
 

@@ -51,7 +51,7 @@
             <div v-if="violation.is_manual" class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
                 <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Manual violation') }}</label>
                 <p v-if="violation.created_by_user" class="text-xs text-zinc-700">
-                    {{ $t('Created by') }}: {{ violation.created_by_user.first_name }} {{ violation.created_by_user.last_name }}
+                    {{ $t('Created by') }}: {{ violation.created_by_user?.first_name }} {{ violation.created_by_user?.last_name }}
                 </p>
                 <p v-if="violation.reason" class="text-xs text-zinc-600 mt-1">
                     {{ $t('Reason') }}: {{ violation.reason }}
@@ -210,22 +210,35 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 
+const { t } = useI18n();
+
 const props = defineProps({
     violation: { type: Object, required: true },
+    compensationPeriod: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(['close', 'updated']);
 
 const isEditing = ref(false);
 
+function getDefaultDeadline() {
+    if (props.compensationPeriod > 0 && props.violation.violation_date) {
+        const d = new Date(props.violation.violation_date);
+        d.setDate(d.getDate() + props.compensationPeriod);
+        return d.toISOString().split('T')[0];
+    }
+    return '';
+}
+
 const processForm = useForm({
     compensation_days: props.violation.compensation_days || 0.5,
-    compensation_deadline: props.violation.compensation_deadline || '',
+    compensation_deadline: props.violation.compensation_deadline || getDefaultDeadline(),
     compensation_reason: props.violation.compensation_reason || '',
 });
 
@@ -236,13 +249,13 @@ function formatDate(date) {
 
 function formatDataKey(key) {
     const keyMap = {
-        'planned_hours': 'Geplante Stunden',
-        'max_allowed': 'Maximum erlaubt',
-        'consecutive_days': 'Aufeinanderfolgende Tage',
-        'weekly_hours': 'Wochenstunden',
-        'rest_hours': 'Ruhezeit (Stunden)',
-        'min_required': 'Minimum erforderlich',
-        'days_until_shift': 'Tage bis Schicht',
+        'planned_hours': t('Planned hours'),
+        'max_allowed': t('Maximum allowed'),
+        'consecutive_days': t('Consecutive days'),
+        'weekly_hours': t('Weekly hours'),
+        'rest_hours': t('Rest hours'),
+        'min_required': t('Minimum required'),
+        'days_until_shift': t('Days until shift'),
     };
     return keyMap[key] || key;
 }

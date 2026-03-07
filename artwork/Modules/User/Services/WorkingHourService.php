@@ -369,6 +369,7 @@ class WorkingHourService
             }
 
             $userData['violations'] = $violationsByUser->get($user->id, collect());
+            $userData['compensation_period'] = $user->activeWorkContract()?->compensation_period ?? 0;
 
             $usersWithPlannedWorkingHours[] = $userData;
         }

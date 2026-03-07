@@ -4020,5 +4020,15 @@
     "Delete shifts": "Delete shifts",
     "Are you sure you want to delete the selected shifts?": "Are you sure you want to delete the selected shifts?",
     "Detailed function overview per shift": "Detailed function overview per shift",
-    "Shows assigned persons and unoccupied slots directly under each shift in the list view.": "Shows assigned persons and unoccupied slots directly under each shift in the list view."
+    "Shows assigned persons and unoccupied slots directly under each shift in the list view.": "Shows assigned persons and unoccupied slots directly under each shift in the list view.",
+    "Severity": "Severity",
+    "Planned hours": "Planned hours",
+    "Maximum allowed": "Maximum allowed",
+    "Consecutive days": "Consecutive days",
+    "Weekly hours": "Weekly hours",
+    "Rest hours": "Rest hours",
+    "Minimum required": "Minimum required",
+    "Days until shift": "Days until shift",
+    "Violation is not active.": "Violation is not active.",
+    "Compensation already granted.": "Compensation already granted."
 }

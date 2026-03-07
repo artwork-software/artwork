@@ -199,7 +199,10 @@ const openMenu = (projectId, event) => {
     });
 };
 
-const closeEditProjectModal = () => (editingProject.value = false);
+const closeEditProjectModal = () => {
+    editingProject.value = false;
+    router.reload({ preserveScroll: true });
+};
 
 const openProject = (component, project) => {
     if (component.type !== "ActionsComponent") {

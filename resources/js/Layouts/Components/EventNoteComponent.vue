@@ -49,6 +49,14 @@ export default {
             }
         }
     },
+    watch: {
+        'event.description'(newVal) {
+            if (!this.showTextField) {
+                this.eventDescription.description = newVal ?? '';
+                this.eventDescription.originalDescription = newVal ?? '';
+            }
+        }
+    },
     methods: {
         async updateDescription() {
             if (this.eventDescription.description !== this.eventDescription.originalDescription) {

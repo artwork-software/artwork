@@ -4,6 +4,11 @@
 
 Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams keep track of all essential project components.
 
+# Update from 1.4 to 1.5
+
+- Soketi has been removed as websocket service. We switched to Laravel Reverb. For an example configuration please take a look at dockerfiles/artwork-php.84.vhost.conf
+- We added wkhtmltopdf as pdf rendering engine. The binaries must be available on the server under `/usr/bin/wkhtmltopdf` please take a look at https://wkhtmltopdf.org/ for more information and retrieve the binaries
+
 # Installation
 
 Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker, we recommend to use the Docker-approach.

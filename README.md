@@ -6,11 +6,11 @@ Artwork is a project organization tool for scheduling projects with events, task
 
 # Installation
 
-Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker.
+Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker, we recommend to use the Docker-approach.
 
 ## Docker
 
-> **This Docker setup is for demo purposes only.**
+> **This Docker setup is for demo purposes only. To get a productive-ready installation you need to fill in your credentials according to your server circumstances in the .env-file especially take care to have the emailing-service setup correctly and that the settings fit to your firewall settings of your setup. When doing this it can be needed, that you also adjust the dockerfiles to your setup.**
 
 ### Setup
 

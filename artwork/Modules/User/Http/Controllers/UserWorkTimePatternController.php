@@ -7,12 +7,14 @@ use Artwork\Modules\User\Http\Requests\StoreUserWorkTimePatternRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserWorkTimePatternRequest;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserWorkTimePatternService;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Inertia\Inertia;
 
 class UserWorkTimePatternController extends Controller
 {
     public function __construct(
-        protected UserWorkTimePatternService $userWorkTimePatternService
+        protected UserWorkTimePatternService $userWorkTimePatternService,
+        protected WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -46,6 +48,11 @@ class UserWorkTimePatternController extends Controller
     ): \Illuminate\Http\RedirectResponse {
         $this->userWorkTimePatternService->update($userWorkTimePattern, $request->validated());
 
+        $affectedUserIds = $userWorkTimePattern->userWorkTime()->pluck('user_id')->unique();
+        foreach ($affectedUserIds as $userId) {
+            $this->workingHourCacheService->forgetForEntity('user', $userId);
+        }
+
         return redirect()->route('shift.work-time-pattern')
             ->with('success', 'Work time pattern updated successfully.');
     }
@@ -55,7 +62,12 @@ class UserWorkTimePatternController extends Controller
      */
     public function destroy(UserWorkTimePattern $userWorkTimePattern): \Illuminate\Http\RedirectResponse
     {
-        // Check if the work time pattern is in use by any user
+        // Invalidate cache for all users using this pattern before removal
+        $affectedUserIds = $userWorkTimePattern->userWorkTime()->pluck('user_id')->unique();
+        foreach ($affectedUserIds as $userId) {
+            $this->workingHourCacheService->forgetForEntity('user', $userId);
+        }
+
         $userWorkTimePattern->userWorkTime()->update([
             'work_time_pattern_id' => null,
         ]);

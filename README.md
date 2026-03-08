@@ -8,56 +8,6 @@ Artwork is a project organization tool for scheduling projects with events, task
 
 Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker.
 
-## Standalone
-
-### Requirements
-
-- PHP 8.4 with extensions:
-  cli, fpm, mysql, gd, imagick, curl, imap, mbstring, xml, zip, bcmath, soap, intl, readline, ldap, redis, swoole, igbinary, msgpack, memcached, pcov
-- wkhtmltopdf 0.12.6 (patched Qt)
-- MariaDB 11
-- Redis
-- Node.js 22+
-- Meilisearch 1.22
-
-Example configurations for these services can be found in the ``dockerfiles`` folder.
-
-### Setup
-
-1. Copy ``.env.example`` to ``.env`` and adjust the values to match your environment
-2. Install dependencies:
-   ```bash
-   php composer.phar install
-   npm install
-   ```
-3. Generate an app key:
-   ```bash
-   php artisan key:generate --show
-   ```
-   Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
-4. Set ``APP_URL`` in ``.env`` to your domain (including ``http://`` or ``https://``)
-5. Run the setup command:
-   ```bash
-   php artisan artwork:container-update
-   ```
-
-### E-Mail (optional)
-
-Fill in the following block in your ``.env`` file:
-```
-MAIL_HOST=
-MAIL_PORT=
-MAIL_MAILER=
-MAIL_USERNAME=
-MAIL_PASSWORD=
-MAIL_ENCRYPTION=
-```
-
-### SSL
-
-We do not ship certificates. Configure SSL as you would for any nginx installation:
-https://nginx.org/en/docs/http/configuring_https_servers.html
-
 ## Docker
 
 > **This Docker setup is for demo purposes only.**
@@ -79,6 +29,72 @@ https://nginx.org/en/docs/http/configuring_https_servers.html
    ```bash
    docker compose up -d
    ```
+
+
+## Standalone
+
+Artwork supports standalone installation on any Linux server.
+Since we do not know your specific setup we cannot provide a sofisticated installation guide for any linux distribution.
+
+### Requirements
+
+- PHP 8.4 with extensions:
+  cli, fpm, mysql, gd, imagick, curl, imap, mbstring, xml, zip, bcmath, soap, intl, readline, ldap, redis, swoole, igbinary, msgpack, memcached, pcov
+- wkhtmltopdf 0.12.6 (patched Qt)
+- MariaDB 11
+- Redis
+- Node.js 22+
+- Meilisearch 1.22
+
+### Additional Requirements 
+
+- Artwork requires Websockets to be accessible. We use Laravel Reverb as host. Which need to be accessible from the system and frontend-
+- Run composer install and npm install after every update
+- Rebuild the the frontend via ``npm run build`` after every update
+- You should have a minutely cronjob running to run the ``php artisan schedule:run`` command.
+- You need to make sure the queue is running via ``php artisan queue:work``
+- After every update remember to run database migrations and the ``php artisan artwork:update`` command.
+
+Example configurations for the nginx, redis and php services can be found in the ``dockerfiles`` folder.
+
+### Setup
+
+1. Copy ``.env.example`` to ``.env`` and adjust the values to match your environment
+2. Install dependencies:
+   ```bash
+   php composer.phar install
+   npm install
+   ```
+3. Generate an app key:
+   ```bash
+   php artisan key:generate --show
+   ```
+   Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
+4. Set ``APP_URL`` in ``.env`` to your domain (including ``http://`` or ``https://``)
+5. Run the setup command:
+   ```bash
+   php artisan artwork:update
+   ```
+
+### E-Mail
+
+Artwork relies on emails for many features like account verification and password resets.
+To get emails working, fill in the following block in your ``.env`` file with your mail server settings:
+
+```
+MAIL_HOST=
+MAIL_PORT=
+MAIL_MAILER=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=
+```
+
+### SSL
+
+We do not ship certificates. Configure SSL as you would for any nginx installation:
+https://nginx.org/en/docs/http/configuring_https_servers.html
+
 
 Dependencies (Composer & NPM) are installed automatically on container start.
 

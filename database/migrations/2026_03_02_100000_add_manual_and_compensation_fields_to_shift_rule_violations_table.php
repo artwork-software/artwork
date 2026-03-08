@@ -15,28 +15,33 @@ return new class extends Migration
             // Manual violation fields
             $table->text('reason')->nullable()->after('violation_data');
             $table->boolean('is_manual')->default(false)->after('reason');
-            $table->foreignId('created_by_user_id')
-                ->nullable()
-                ->after('is_manual')
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->unsignedBigInteger('created_by_user_id')->nullable()->after('is_manual');
 
             // Compensation fields
             $table->decimal('compensation_days', 4, 1)->nullable()->after('created_by_user_id');
             $table->date('compensation_deadline')->nullable()->after('compensation_days');
             $table->text('compensation_reason')->nullable()->after('compensation_deadline');
             $table->dateTime('compensation_granted_at')->nullable()->after('compensation_reason');
-            $table->foreignId('compensation_granted_by')
-                ->nullable()
-                ->after('compensation_granted_at')
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->unsignedBigInteger('compensation_granted_by')->nullable()->after('compensation_granted_at');
 
             // Parent violation reference (for deadline expiry violations)
-            $table->foreignId('parent_violation_id')
-                ->nullable()
-                ->after('compensation_granted_by')
-                ->constrained('shift_rule_violations')
+            $table->unsignedBigInteger('parent_violation_id')->nullable()->after('compensation_granted_by');
+        });
+
+        Schema::table('shift_rule_violations', function (Blueprint $table): void {
+            $table->foreign('created_by_user_id')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+
+            $table->foreign('compensation_granted_by')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+
+            $table->foreign('parent_violation_id')
+                ->references('id')
+                ->on('shift_rule_violations')
                 ->nullOnDelete();
         });
     }
@@ -47,7 +52,9 @@ return new class extends Migration
             $table->dropForeign(['parent_violation_id']);
             $table->dropForeign(['compensation_granted_by']);
             $table->dropForeign(['created_by_user_id']);
+        });
 
+        Schema::table('shift_rule_violations', function (Blueprint $table): void {
             $table->dropColumn([
                 'reason',
                 'is_manual',

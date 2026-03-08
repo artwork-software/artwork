@@ -18,7 +18,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Sum minutes from shifts overlapping this date
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
@@ -77,7 +77,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     protected function getShiftForUserOnDate(User $user, Carbon $date): ?Shift
     {
         return Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
@@ -136,7 +136,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
         // Shifts
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', $date)
             ->orderBy('start')
@@ -275,7 +275,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Earliest shift start on this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', $date)
             ->orderBy('start')
@@ -300,7 +300,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Find latest shift end relevant for this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->where(function ($query) use ($date): void {
                 $query->whereDate('end_date', $date)

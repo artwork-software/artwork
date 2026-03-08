@@ -33,6 +33,7 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -86,6 +87,7 @@ class UserController extends Controller
     public function __construct(
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
+        private readonly ShiftRuleService $shiftRuleService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -431,39 +433,15 @@ class UserController extends Controller
 
     public function editUserCompensationDays(User $user): Response|ResponseFactory
     {
-        $openCompensations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with(['shiftRule', 'createdByUser'])
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
-            ->whereNotNull('compensation_days')
-            ->whereNull('compensation_granted_at')
-            ->orderBy('compensation_deadline')
-            ->get();
+        $compensationData = $this->shiftRuleService->getCompensationDataForUser($user);
 
-        $grantedCompensations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with([
-            'shiftRule',
-            'grantedByUser',
-            'createdByUser',
-        ])
-            ->where('user_id', $user->id)
-            ->whereNotNull('compensation_granted_at')
-            ->orderByDesc('compensation_granted_at')
-            ->get();
-
-        $unprocessedViolations = \Artwork\Modules\Shift\Models\ShiftRuleViolation::with(['shiftRule'])
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
-            ->whereNull('compensation_days')
-            ->orderByDesc('violation_date')
-            ->get();
-
-        return inertia('Users/UserCompensationDays', [
-            'userToEdit' => new \Artwork\Modules\User\Http\Resources\UserShowResource($user),
-            'currentTab' => 'compensationDays',
-            'openCompensations' => $openCompensations,
-            'grantedCompensations' => $grantedCompensations,
-            'unprocessedViolations' => $unprocessedViolations,
-            'compensationPeriod' => $user->activeWorkContract()?->compensation_period ?? 0,
-        ]);
+        return inertia('Users/UserCompensationDays', array_merge(
+            [
+                'userToEdit' => new UserShowResource($user),
+                'currentTab' => 'compensationDays',
+            ],
+            $compensationData
+        ));
     }
 
     /**

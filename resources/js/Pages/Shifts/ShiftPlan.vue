@@ -2162,6 +2162,8 @@ const dropWorkers = computed<any[]>(() => {
             dayServices: user.dayServices,
             individual_times: user.individual_times,
             shift_comments: user.shift_comments,
+            violations: user.violations,
+            compensation_period: user.compensation_period,
             key: `u_${user.user.id}_0`,
         })
     })

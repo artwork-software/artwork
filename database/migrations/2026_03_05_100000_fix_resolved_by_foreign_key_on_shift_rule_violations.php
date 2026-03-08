@@ -10,6 +10,9 @@ return new class extends Migration
     {
         Schema::table('shift_rule_violations', function (Blueprint $table): void {
             $table->dropForeign(['resolved_by']);
+        });
+
+        Schema::table('shift_rule_violations', function (Blueprint $table): void {
             $table->foreign('resolved_by')->references('id')->on('users')->nullOnDelete();
         });
     }
@@ -18,6 +21,9 @@ return new class extends Migration
     {
         Schema::table('shift_rule_violations', function (Blueprint $table): void {
             $table->dropForeign(['resolved_by']);
+        });
+
+        Schema::table('shift_rule_violations', function (Blueprint $table): void {
             $table->foreign('resolved_by')->references('id')->on('users');
         });
     }

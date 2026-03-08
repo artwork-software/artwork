@@ -10,6 +10,8 @@ services:
             - '${APP_PORT:-80}:80'
         env_file:
             - .env
+        environment:
+            RUN_INIT: 1
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:

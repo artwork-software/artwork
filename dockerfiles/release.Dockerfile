@@ -87,17 +87,10 @@ COPY dockerfiles/nginx.conf /etc/nginx/nginx.conf
 # Copy only the artwork application (not the meta repository files)
 COPY --chown=www-data:www-data . /var/www/html/
 
-# Install Composer dependencies
-RUN if [ -f composer.phar ]; then \
-        php composer.phar install --no-dev --optimize-autoloader --no-interaction; \
-    elif [ -f /usr/local/bin/composer ]; then \
-        composer install --no-dev --optimize-autoloader --no-interaction; \
-    else \
-        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
-        composer install --no-dev --optimize-autoloader --no-interaction; \
+# Ensure composer is available (dependencies are installed at container start via entrypoint)
+RUN if ! command -v composer &>/dev/null; then \
+        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
     fi
-
-RUN npm install
 
 # Configure nginx
 RUN cp -rf dockerfiles/artwork-php.84.vhost.conf /etc/nginx/sites-available/default

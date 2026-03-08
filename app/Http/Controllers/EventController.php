@@ -68,6 +68,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPresetGroup;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftListViewService;
 use Artwork\Modules\Shift\Services\ShiftGroupService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -146,6 +147,7 @@ class EventController extends Controller
         protected GlobalQualificationService $globalQualificationService,
         protected ShiftGroupService $shiftGroupService,
         protected HelperService $helperService,
+        private readonly ShiftListViewService $shiftListViewService,
     ) {
     }
 
@@ -771,6 +773,17 @@ class EventController extends Controller
         [$startDate, $endDate] = $this->calendarDataService
             ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         $calendarWarningText = '';
+
+        // Ensure start_date <= end_date (can happen when start_date was null and defaulted to today)
+        if ($startDate->greaterThan($endDate)) {
+            $endDate = $startDate->copy()->addDays($isDailyView ? 0 : 6);
+            $user->userFilters()->updateOrCreate([
+                'filter_type' => $shiftFilterType
+            ], [
+                'end_date' => $endDate->format('Y-m-d')
+            ]);
+        }
+
         if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
             $endDate = $startDate->copy()->addDays(7);
             $calendarWarningText = __('calendar.daily_view_info');
@@ -804,7 +817,7 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::all(),
+            'crafts' => Craft::select(['id', 'name', 'abbreviation', 'color'])->get(),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
@@ -860,6 +873,89 @@ class EventController extends Controller
             'filterType' => $shiftFilterType,
             'isDailyView' => $isDailyView,
         ]);
+    }
+
+    public function viewShiftPlanListView(): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->user();
+
+        $shiftFilterType = UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value;
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $shiftFilterType],
+            [
+                'start_date' => Carbon::now()->startOfMonth()->format('Y-m-d'),
+                'end_date' => Carbon::now()->endOfMonth()->format('Y-m-d'),
+            ]
+        );
+
+        $listViewSettings = $user->shift_list_view_settings;
+        if ($listViewSettings === null) {
+            $listViewSettings = $user->shift_list_view_settings()->create();
+        }
+
+        $startDate = $userCalendarFilter->start_date
+            ? Carbon::parse($userCalendarFilter->start_date)
+            : Carbon::now()->startOfMonth();
+        $endDate = $userCalendarFilter->end_date
+            ? Carbon::parse($userCalendarFilter->end_date)
+            : Carbon::now()->endOfMonth();
+
+        $calendarWarningText = '';
+        if ($startDate->diffInDays($endDate) > 31) {
+            $endDate = $startDate->copy()->addDays(30);
+            $calendarWarningText = __('calendar.calendar_limit_one_month');
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => $shiftFilterType],
+                ['end_date' => $endDate->format('Y-m-d')]
+            );
+        }
+
+        $dateValue = [
+            $startDate->format('Y-m-d'),
+            $endDate->format('Y-m-d'),
+        ];
+
+        $groupedShifts = $this->shiftListViewService->getGroupedShifts(
+            $startDate,
+            $endDate,
+            $listViewSettings,
+            $userCalendarFilter
+        );
+
+        return Inertia::render('Shifts/ShiftPlanListView', [
+            'groupedShifts' => $groupedShifts,
+            'dateValue' => $dateValue,
+            'listViewSettings' => $listViewSettings,
+            'user_filters' => $userCalendarFilter,
+            'crafts' => Craft::with([
+                'users',
+                'freelancers',
+                'serviceProviders',
+                'qualifications',
+            ])->get(),
+            'eventTypes' => EventType::all(),
+            'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
+            'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'firstProjectShiftTabId' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'filterType' => $shiftFilterType,
+            'calendarWarningText' => $calendarWarningText,
+            'rooms' => Room::all(),
+            'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
+            'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
+            'globalQualifications' => $this->globalQualificationService->getAll(),
+            'currentUserCrafts' => $this->getCurrentUserCrafts($user),
+        ]);
+    }
+
+    public function updateShiftListViewSettings(User $user, Request $request): void
+    {
+        $user->shift_list_view_settings()->updateOrCreate(
+            ['user_id' => $user->id],
+            $request->only(['show_qualifications', 'shift_notes', 'show_shift_group_tag', 'show_fully_staffed_shifts', 'detailed_shift_overview'])
+        );
     }
 
 
@@ -1019,13 +1115,8 @@ class EventController extends Controller
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'rooms' => Room::all(),
-            'projects' => Project::all()->map((function ($project) {
-                return [
-                    'id' => $project->getAttribute('id'),
-                    'name' => $project->getAttribute('name'),
-                ];
-            })),
+            'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
+            'projects' => Project::select(['id', 'name'])->get(),
             'historyObjects' => $historyObjects,
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
@@ -1243,7 +1334,7 @@ class EventController extends Controller
         foreach ($joiningEvents as $joiningEvent) {
             foreach ($joiningEvent as $conflict) {
                 $user = User::find($conflict->user_id);
-                if ($user->id === Auth::id()) {
+                if ($user === null || $user->id === Auth::id()) {
                     continue;
                 }
                 if ($request->audience) {
@@ -1271,7 +1362,7 @@ class EventController extends Controller
         // notification.event.with_adjoining_audience
         $notificationTitle = __('notification.event.with_adjoining_audience', [], $user->language);
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];
@@ -1323,7 +1414,7 @@ class EventController extends Controller
     {
         $notificationTitle = __('notification.event.adjoining_is_loud', [], $user->language);
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];
@@ -1388,7 +1479,7 @@ class EventController extends Controller
         if (!empty($collision['created_by'])) {
             $notificationTitle = __('notification.event.conflict', [], $collision['created_by']->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -1484,7 +1575,7 @@ class EventController extends Controller
                 // notification.event.new_room_request
                 $notificationTitle = __('notification.event.new_room_request', [], $admin->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -1530,10 +1621,13 @@ class EventController extends Controller
             }
         } else {
             $user = User::find($room->user_id);
+            if ($user === null) {
+                return;
+            }
             // notification.event.new_room_request
             $notificationTitle = __('notification.event.new_room_request', [], $user->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1624,7 +1718,7 @@ class EventController extends Controller
                     }
                     $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -1675,7 +1769,7 @@ class EventController extends Controller
                 }
                 $notificationTitle = __('notification.event.admin_message', [], $event->creator->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -1742,7 +1836,7 @@ class EventController extends Controller
                 }
                 $notificationTitle = __('notification.event.room_change_confirmed', [], $projectManager->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -1791,7 +1885,7 @@ class EventController extends Controller
             }
             $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1997,7 +2091,7 @@ class EventController extends Controller
             foreach ($admins as $admin) {
                 $notificationTitle = __('notification.event.new_message', [], $admin->language);
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -2048,9 +2142,12 @@ class EventController extends Controller
             }
         } else {
             $user = User::find($room->user_id);
+            if ($user === null) {
+                return;
+            }
             $notificationTitle = __('notification.event.new_message', [], $user->language);
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -2150,7 +2247,7 @@ class EventController extends Controller
             }
             $notificationTitle = __('notification.event.room_request_accept', [], $projectManager->language);
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -2198,7 +2295,7 @@ class EventController extends Controller
         }
         $notificationTitle = __('notification.event.room_request_accept', [], $event->creator()->first()->language);
         $broadcastMessage = [
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -2288,7 +2385,7 @@ class EventController extends Controller
                 }
                 $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -2337,7 +2434,7 @@ class EventController extends Controller
             }
             $notificationTitle = __('notification.event.admin_message', [], $event->creator()->first()->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -2414,7 +2511,7 @@ class EventController extends Controller
             }
             $notificationTitle = __('notification.event.room_request_declined', [], $projectManager->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -2463,7 +2560,7 @@ class EventController extends Controller
         }
         $notificationTitle = __('notification.event.room_request_declined', [], $event->creator()->first()->language);
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];
@@ -3802,6 +3899,7 @@ class EventController extends Controller
     {
         $this->generalSettingsService->updateEventTimeLengthMinutesFromRequest($request);
         $this->generalSettingsService->updateEventStartTimeFromRequest($request);
+        $this->generalSettingsService->updateEventAllDayDefaultFromRequest($request);
     }
 
 

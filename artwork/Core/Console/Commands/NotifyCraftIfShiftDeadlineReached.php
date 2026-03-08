@@ -7,6 +7,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class NotifyCraftIfShiftDeadlineReached extends Command
 {
@@ -145,7 +146,7 @@ class NotifyCraftIfShiftDeadlineReached extends Command
 
         $notificationService->setTitle($notificationTitle);
         $notificationService->setBroadcastMessage([
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ]);

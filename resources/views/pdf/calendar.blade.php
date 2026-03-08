@@ -163,46 +163,46 @@
             border-radius: 3px;
             border: 1px solid rgba(0,0,0,0.40);
             border-left-width: 3px;
-            overflow: hidden;
+            overflow: visible;
             z-index: 10;
         }
 
-        .event-inner { padding: 2px 3px; overflow: hidden; }
+        .event-inner { padding: 2px 3px; overflow: visible; }
 
         .event-title {
             font-weight: 800;
-            font-size: 6px;
-            line-height: 1.15;
+            font-size: 7.5px;
+            line-height: 1.2;
             word-break: break-word;
-            overflow: hidden;
+            overflow: visible;
         }
         .event-sub {
             margin-top: 1px;
             font-weight: 600;
-            font-size: 5.7px;
-            line-height: 1.1;
+            font-size: 7px;
+            line-height: 1.15;
             opacity: 0.9;
             word-break: break-word;
-            overflow: hidden;
+            overflow: visible;
         }
         .event-time {
             margin-top: 1px;
             font-weight: 800;
-            font-size: 5.6px;
-            line-height: 1.1;
+            font-size: 6.5px;
+            line-height: 1.15;
             white-space: nowrap;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .event-compact .event-inner { padding: 1px 2px; }
-        .event-compact .event-title { font-size: 5.4px; line-height: 1.1; }
+        .event-compact .event-title { font-size: 6.5px; line-height: 1.15; }
         .event-compact .event-sub   { display: none; }
-        .event-compact .event-time  { font-size: 5.2px; line-height: 1.05; }
+        .event-compact .event-time  { font-size: 6px; line-height: 1.1; }
 
         .event-supercompact .event-inner { padding: 1px 2px; }
-        .event-supercompact .event-title { font-size: 5.1px; line-height: 1.05; }
+        .event-supercompact .event-title { font-size: 6px; line-height: 1.1; }
         .event-supercompact .event-sub   { display: none; }
-        .event-supercompact .event-time  { font-size: 5.0px; line-height: 1.0; }
+        .event-supercompact .event-time  { font-size: 5.5px; line-height: 1.05; }
 
         .abbr { font-weight: 900; margin-right: 2px; }
     </style>
@@ -373,8 +373,17 @@
         $topPx = $topPxBase;
         $bottomPx = $bottomPxBase;
 
-        // Mindesthöhe: genug für 3 Zeilen (Titel + Projekt + Zeit)
-        $minHeightPx = 28;
+        // Mindesthöhe dynamisch: basierend auf Textlänge (Titel + Projektname + Zeit)
+        // Schätze benötigte Zeilen anhand der Zeichenlänge (ca. 12 Zeichen pro Zeile bei 7.5px Schrift)
+        $charsPerLine = 12;
+        $_evName = $event->eventName ?? '';
+        $_projNm = $event->project->name ?? '';
+        $titleLines = max(1, ceil(mb_strlen($_evName) / $charsPerLine));
+        $projectLines = !empty($_projNm) ? max(1, ceil(mb_strlen($_projNm) / $charsPerLine)) : 0;
+        $timeLines = 1;
+        $lineHeight = 9; // px pro Zeile bei vergrößerter Schrift
+        $paddingPx = 6;  // Innenabstand oben+unten
+        $minHeightPx = max(32, ($titleLines + $projectLines + $timeLines) * $lineHeight + $paddingPx);
 
         $heightPx = $bottomPx - $topPx;
 

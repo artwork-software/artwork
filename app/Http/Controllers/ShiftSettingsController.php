@@ -65,6 +65,19 @@ class ShiftSettingsController extends Controller
     }
 
 
+    public function updateCalendarAboShowAllShifts(
+        Request $request,
+        ShiftSettings $shiftSettings,
+    ): RedirectResponse {
+        try {
+            $shiftSettings->calendar_abo_show_all_shifts = $request->boolean('calendar_abo_show_all_shifts');
+            $shiftSettings->save();
+        } catch (Throwable $t) {
+        }
+
+        return $this->redirector->back();
+    }
+
     public function saveWarningMultipleAssignments(Request $request): void
     {
         $this->generalSettingsService->updateWarningMultipleAssignmentsFromRequest($request);

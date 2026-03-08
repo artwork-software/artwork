@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
@@ -470,7 +471,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'warning',
                     'message' => $notificationTitle
                 ];
@@ -504,7 +505,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'warning',
                     'message' => $notificationTitle
                 ];
@@ -549,7 +550,7 @@ class InventoryArticleService
                         ]
                     ];
                     $broadcastMessage = [
-                        'id' => random_int(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -586,7 +587,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];

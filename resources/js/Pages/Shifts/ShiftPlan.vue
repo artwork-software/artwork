@@ -1731,6 +1731,27 @@ async function initializeShiftPlan() {
 onMounted(async () => {
     await initializeShiftPlan()
 
+    // Handle highlight query param from list view navigation
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightShiftParam = urlParams.get('highlightShift');
+    if (highlightShiftParam) {
+        highlightMode.value = true;
+        highlightedShiftId.value = parseInt(highlightShiftParam);
+        // Scroll to the highlighted shift element
+        nextTick(() => {
+            setTimeout(() => {
+                const el = document.querySelector(`[data-shift-id="${highlightShiftParam}"]`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+        });
+        setTimeout(() => {
+            highlightedShiftId.value = null;
+            highlightMode.value = false;
+        }, 8000);
+    }
+
     // Trigger baseline measurement after data is loaded (if expand_days active)
     if (expandDays.value) {
         measureBaselineMetrics()

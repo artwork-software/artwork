@@ -29,6 +29,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Psr\Log\LoggerInterface;
@@ -43,14 +44,13 @@ class MoneySourceController extends Controller
 
     public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
     {
-        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get();
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'historyChangesMorph'])->get();
 
         foreach ($moneySources as $moneySource) {
             $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
             $historyArray = [];
-            $historyComplete = $moneySource->historyChanges()->all();
 
-            foreach ($historyComplete as $history) {
+            foreach ($moneySource->historyChangesMorph as $history) {
                 $historyArray[] = [
                     'changes' => json_decode($history->changes),
                     'created_at' => $history->created_at->diffInHours() < 24
@@ -133,6 +133,9 @@ class MoneySourceController extends Controller
     {
         foreach ($request->users as $requestUser) {
             $user = User::find($requestUser['user_id']);
+            if ($user === null) {
+                continue;
+            }
             $notificationTitle = __(
                 'notification.moneySource.add_permission',
                 [
@@ -141,7 +144,7 @@ class MoneySourceController extends Controller
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -230,43 +233,44 @@ class MoneySourceController extends Controller
         $subMoneySourcePositions = [];
         $usersWithAccess = [];
         if ($moneySource->is_group) {
-            foreach ($subMoneySources as $subMoneySource) {
-                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)
-                    ->latest('column_id')
-                    ->get()
-                    ->unique('sub_position_row_id');
-                foreach ($columns as $column) {
-                    $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
-                    $subPosition = SubPosition::find($subPositionRow->sub_position_id);
-                    $mainPosition = MainPosition::find($subPosition->main_position_id);
-                    $table = Table::find($mainPosition->table_id);
-                    $project = Project::where('id', $table->project_id)->with(['users'])->first();
-                    foreach ($project->users as $user) {
-                        if (!$user->pivot->is_manager) {
-                            continue;
-                        }
-                        $usersWithAccess[] = $user->id;
+            $subMoneySourceIds = $subMoneySources->pluck('id');
+            $groupColumns = ColumnCell::whereIn('linked_money_source_id', $subMoneySourceIds)
+                ->with(['subPositionRow.subPosition.mainPosition.table.project.users'])
+                ->latest('column_id')
+                ->get()
+                ->unique('sub_position_row_id');
+
+            foreach ($groupColumns as $column) {
+                $subPositionRow = $column->subPositionRow;
+                $subPosition = $subPositionRow->subPosition;
+                $mainPosition = $subPosition->mainPosition;
+                $table = $mainPosition->table;
+                $project = $table->project;
+                foreach ($project->users as $user) {
+                    if (!$user->pivot->is_manager) {
+                        continue;
                     }
-                    $linked_projects[] = [
+                    $usersWithAccess[] = $user->id;
+                }
+                $linked_projects[] = [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                ];
+                $subMoneySourcePositions[] = [
+                    'type' => $column->linked_type,
+                    'value' => $column->value,
+                    'subPositionName' => $subPosition->name,
+                    'mainPositionName' => $mainPosition->name,
+                    'project' => [
                         'id' => $project->id,
                         'name' => $project->name,
-                    ];
-                    $subMoneySourcePositions[] = [
-                        'type' => $column->linked_type,
-                        'value' => $column->value,
-                        'subPositionName' => $subPosition->name,
-                        'mainPositionName' => $mainPosition->name,
-                        'project' => [
-                            'id' => $project->id,
-                            'name' => $project->name,
-                        ],
-                        'created_at' => date('d.m.Y', strtotime($column->created_at))
-                    ];
-                    if ($column->linked_type === 'EARNING') {
-                        $amount = (int)$amount + (int)$column->value;
-                    } else {
-                        $amount = (int)$amount - (int)$column->value;
-                    }
+                    ],
+                    'created_at' => date('d.m.Y', strtotime($column->created_at))
+                ];
+                if ($column->linked_type === 'EARNING') {
+                    $amount = (int)$amount + (int)$column->value;
+                } else {
+                    $amount = (int)$amount - (int)$column->value;
                 }
             }
         } else {
@@ -372,13 +376,16 @@ class MoneySourceController extends Controller
                 }
             }
 
-            foreach ($columns as $column) {
-                $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
-                $subPosition = SubPosition::find($subPositionRow->sub_position_id);
-                $mainPosition = MainPosition::find($subPosition->main_position_id);
-                $table = Table::find($mainPosition->table_id);
+            // Eager load the relationship chain to avoid N+1 queries
+            $columns->load(['subPositionRow.subPosition.mainPosition.table.project.users', 'column']);
 
-                $project = Project::where('id', $table->project_id)->with(['users'])->first();
+            foreach ($columns as $column) {
+                $subPositionRow = $column->subPositionRow;
+                $subPosition = $subPositionRow->subPosition;
+                $mainPosition = $subPosition->mainPosition;
+                $table = $mainPosition->table;
+                $project = $table->project;
+
                 foreach ($project->users as $user) {
                     if (!$user->pivot->is_manager) {
                         continue;
@@ -425,7 +432,7 @@ class MoneySourceController extends Controller
         return inertia('MoneySources/Show', [
             'moneySource' => [
                 'id' => $moneySource->id,
-                'creator' => User::find($moneySource->creator_id),
+                'creator' => User::find($moneySource->creator_id) ?? null,
                 'name' => $moneySource->name,
                 'amount' => $moneySource->amount,
                 'amount_available' => $amount,
@@ -479,10 +486,7 @@ class MoneySourceController extends Controller
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
-            'projects' => Project::all()->map(fn($project) => [
-                'id' => $project->id,
-                'name' => $project->name,
-            ]),
+            'projects' => Project::select(['id', 'name'])->get(),
             'linkedProjects' => $moneySource->projects()->get(),
             'first_project_budget_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET)
@@ -617,7 +621,7 @@ class MoneySourceController extends Controller
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -628,7 +632,7 @@ class MoneySourceController extends Controller
                     NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setNotificationTo(User::find($user->id));
+                $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
             }
         }
@@ -691,13 +695,16 @@ class MoneySourceController extends Controller
             $newUserIds[] = $newUser->id;
             if (!in_array($newUser->id, $oldUserIds)) {
                 $user = User::find($newUser->id);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __(
                     'notification.moneySource.add_permission',
                     ['moneySource' => $moneySource->name],
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -723,14 +730,17 @@ class MoneySourceController extends Controller
 
         foreach ($oldUserIds as $oldUserId) {
             if (!in_array($oldUserId, $newUserIds)) {
-                $user = User::find($newUser->id);
+                $user = User::find($oldUserId);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __(
                     'notification.moneySource.remove_permission',
                     ['moneySource' => $moneySource->name],
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];

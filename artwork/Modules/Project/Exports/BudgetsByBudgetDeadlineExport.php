@@ -60,7 +60,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                     'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)
                         ->format('d.m.Y'),
                     'project_name' => $project->getAttribute('name'),
-                    'artist_or_group' => 'Noch nicht angegeben',
+                    'artist_or_group' => $project->getAttribute('artists') ?? '',
                     'cost_center' => $project->costCenter?->getAttribute('name'),
                     'project_state' => ProjectState::query()
                         ->where('id', '=', $project->state)->first('name')?->name,
@@ -84,7 +84,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                 'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)
                     ->format('d.m.Y'),
                 'project_name' => $project->name,
-                'artist_or_group' => 'Noch nicht angegeben',
+                'artist_or_group' => $project->getAttribute('artists') ?? '',
                 'cost_center' => $project->costCenter?->getAttribute('name'),
                 'project_state' => ProjectState::query()
                     ->where('id', '=', $project->state)->first('name')?->name,

@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -229,7 +230,7 @@ class DocumentRequestController extends Controller
         );
 
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'info',
             'message' => $notificationTitle
         ];
@@ -277,7 +278,7 @@ class DocumentRequestController extends Controller
         );
 
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];

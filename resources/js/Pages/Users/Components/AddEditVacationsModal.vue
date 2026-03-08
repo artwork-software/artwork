@@ -60,7 +60,7 @@
 
                                     <div class="ml-3">
                                         <h2 class="text-sm font-medium text-zinc-700">
-                                            {{ createShowDate[0] }}
+                                            {{ vacationMonthDisplay }}
                                         </h2>
                                     </div>
                                 </div>
@@ -281,6 +281,7 @@
 import { ref, reactive, getCurrentInstance, computed } from 'vue'
 import dayjs from 'dayjs'
 import { useForm, router } from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n'
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -307,8 +308,27 @@ const props = defineProps({
 })
 const emit = defineEmits(['closed'])
 const { proxy } = getCurrentInstance()
+const { locale } = useI18n()
 // State
 const open = ref(true)
+
+// Derive the current vacation month from the calendar data itself
+const currentVacationMonth = computed(() => {
+    for (const week of (props.vacationSelectCalendar || [])) {
+        const days = Array.isArray(week) ? week : Object.values(week)
+        for (const day of days) {
+            if (day && day.inMonth) {
+                return dayjs(day.date)
+            }
+        }
+    }
+    return dayjs()
+})
+
+const vacationMonthDisplay = computed(() => {
+    const date = currentVacationMonth.value.toDate()
+    return new Intl.DateTimeFormat(locale.value, { month: 'long', year: 'numeric' }).format(date)
+})
 
 const vacation = useForm({
     id: props.editVacation ? props.editVacation.id : null,
@@ -508,20 +528,17 @@ const deleteCompleteSeries = () => {
 }
 
 const previousMonth = () => {
-    const currentMonth = new Date(props.createShowDate[1].date)
+    const newMonth = currentVacationMonth.value.subtract(1, 'month').format('YYYY-MM-DD')
     router.reload({
-        data: { vacationMonth: subtractOneMonth(currentMonth) }
+        data: { vacationMonth: newMonth }
     })
 }
 
 const nextMonth = () => {
-    const currentMonth = new Date(props.createShowDate[1].date)
+    const newMonth = currentVacationMonth.value.add(1, 'month').format('YYYY-MM-DD')
     router.reload({
-        data: { vacationMonth: addOneMonth(currentMonth) }
+        data: { vacationMonth: newMonth }
     })
 }
-
-const addOneMonth = (dateObj) => dayjs(dateObj).add(1, 'month').format('YYYY-MM-DD')
-const subtractOneMonth = (dateObj) => dayjs(dateObj).subtract(1, 'month').format('YYYY-MM-DD')
 
 </script>

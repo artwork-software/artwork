@@ -62,7 +62,7 @@ class CalendarService
                 ];
             });
 
-        return $days->chunk(7);
+        return $days->chunk(7)->map(fn($chunk) => $chunk->values());
     }
 
     /**

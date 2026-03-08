@@ -59,10 +59,10 @@ class ContractController extends Controller
 
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts)->resolve(),
-            'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
-            'contract_types' => ContractType::all(),
-            'company_types' => CompanyType::all(),
-            'currencies' => Currency::all(),
+            'contract_modules' => ContractModuleResource::collection(ContractModule::select(['id', 'name'])->get()),
+            'contract_types' => ContractType::select(['id', 'name', 'color'])->get(),
+            'company_types' => CompanyType::select(['id', 'name', 'color'])->get(),
+            'currencies' => Currency::select(['id', 'name'])->get(),
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),

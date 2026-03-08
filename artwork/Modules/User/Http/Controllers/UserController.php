@@ -1295,6 +1295,11 @@ class UserController extends Controller
         $user->update($request->only('bulk_column_size'));
     }
 
+    public function updateShowDescriptionInBulk(User $user, Request $request): void
+    {
+        $user->update($request->only('show_description_in_bulk'));
+    }
+
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface

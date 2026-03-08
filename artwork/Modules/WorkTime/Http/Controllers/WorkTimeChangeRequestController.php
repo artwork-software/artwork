@@ -17,6 +17,7 @@ use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\WorkTime\Services\WorkTimeChangeRequestService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Random\RandomException;
 
@@ -134,7 +135,7 @@ class WorkTimeChangeRequestController extends Controller
                 $planner->language
             );
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];

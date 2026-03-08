@@ -408,6 +408,45 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
+
+            <div class="flex flex-col gap-2 card white p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Shifts in shift plan subscription')"
+                    :description="$t('When a user subscribes to their own shift plan, the following shifts should appear:')"
+                />
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                    <SwitchLabel as="span" class="text-sm">
+                        <span class="flex items-center gap-x-1">
+                            <span :class="[!shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                                {{ $t('Only committed shifts') }}
+                            </span>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.')"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                                classes-button=""
+                                no-relative
+                            />
+                        </span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.calendar_abo_show_all_shifts"
+                            @update:model-value="updateCalendarAboShowAllShifts"
+                            :class="[
+                                shiftSettings.calendar_abo_show_all_shifts ?
+                                    'bg-artwork-buttons-create' :
+                                    'bg-gray-200',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.calendar_abo_show_all_shifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('All shifts') }}
+                        </span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
@@ -483,12 +522,14 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
         GlobalQualificationsSettingsCard,
+        ToolTipComponent,
         PropertyIcon,
         SwitchIconTooltip,
         BaseMenuItem,
@@ -811,6 +852,17 @@ export default defineComponent({
                 route('shift.settings.update.shift-settings.use-first-name-for-sort'),
                 {
                     use_first_name_for_sort: useFirstNameForSort
+                },
+                {
+                    preserveScroll: true
+                }
+            )
+        },
+        updateCalendarAboShowAllShifts(calendarAboShowAllShifts) {
+            router.patch(
+                route('shift.settings.update.calendar-abo-show-all-shifts'),
+                {
+                    calendar_abo_show_all_shifts: calendarAboShowAllShifts
                 },
                 {
                     preserveScroll: true

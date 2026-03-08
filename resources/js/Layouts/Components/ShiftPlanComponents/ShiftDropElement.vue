@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
+    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer" :data-shift-id="shift?.id">
         <div
             :class="[
               'px-1',
@@ -55,7 +55,7 @@
                         </span>
                     </div>
 
-                    <div v-else-if="room" class="truncate">
+                    <div v-else-if="room" :class="expandDays ? 'break-words' : 'truncate'">
                         , {{ room?.name }}
                     </div>
                 </div>
@@ -182,6 +182,7 @@ const seriesShiftData = ref<any | null>(null)
 /* ---------------- Helpers ---------------- */
 const page = usePage()
 const { proxy } = getCurrentInstance() || {}
+const expandDays = computed(() => page.props.auth.user.calendar_settings?.expand_days ?? false)
 
 /* ---------------- Computed ---------------- */
 // Meta-Infos zu globalen Qualifikationen (Icon/Name)

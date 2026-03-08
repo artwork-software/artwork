@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use stdClass;
 use Illuminate\Support\Collection as SupportCollection;
@@ -355,7 +356,7 @@ class ShiftService
         foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
             $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -694,7 +695,7 @@ class ShiftService
                     ];
 
                     $broadcastMessage = [
-                        'id' => random_int(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];

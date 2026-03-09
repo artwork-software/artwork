@@ -87,8 +87,8 @@ function requestDeleteComponentInDisclosure(componentId) {
                     <div class="min-w-0">
                         <!-- Titel + Badges -->
                         <div class="">
-                            <div class="text-sm font-semibold text-zinc-900 truncate" :title="element.component.name">
-                                {{ element.component.name }}
+                            <div class="text-sm font-semibold text-zinc-900 truncate" :title="$t(element.component.name)">
+                                {{ $t(element.component.name) }}
                             </div>
 
                             <!-- Höhe -->

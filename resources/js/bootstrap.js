@@ -12,6 +12,19 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// Session-Expiry bei direkten API-Calls abfangen
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        const status = error.response?.status
+        if (status === 401 || status === 419) {
+            alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
+            window.location.reload()
+        }
+        return Promise.reject(error)
+    }
+);
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

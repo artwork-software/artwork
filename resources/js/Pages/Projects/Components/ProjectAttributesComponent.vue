@@ -118,7 +118,7 @@ export default defineComponent({
                 return true;
             }
 
-            if (this.project.write_auth.length === 0) {
+            if (!this.project.write_auth?.length) {
                 return false;
             }
 

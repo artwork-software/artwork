@@ -155,12 +155,28 @@ class IndividualTimeController extends Controller
             'break_minutes' => 'nullable|integer|min:0',
         ]);
 
-        $individualTime->update([
+        $startTime = $validated['start_time'] ?? $individualTime->start_time;
+        $endTime = $validated['end_time'] ?? $individualTime->end_time;
+        $breakMinutes = $validated['break_minutes'] ?? $individualTime->break_minutes;
+
+        $updateData = [
             'title' => $validated['title'] ?? $individualTime->title,
-            'start_time' => $validated['start_time'] ?? $individualTime->start_time,
-            'end_time' => $validated['end_time'] ?? $individualTime->end_time,
-            'break_minutes' => $validated['break_minutes'] ?? $individualTime->break_minutes,
-        ]);
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'break_minutes' => $breakMinutes,
+        ];
+
+        // Recalculate working_time_minutes when time or break changes
+        if ($startTime && $endTime) {
+            $start = \Carbon\Carbon::parse($individualTime->start_date . ' ' . $startTime);
+            $end = \Carbon\Carbon::parse($individualTime->start_date . ' ' . $endTime);
+            if ($end->lte($start)) {
+                $end->addDay();
+            }
+            $updateData['working_time_minutes'] = max(0, $start->diffInMinutes($end) - ($breakMinutes ?? 0));
+        }
+
+        $individualTime->update($updateData);
 
         $owner = $individualTime->timeable;
         if ($owner) {

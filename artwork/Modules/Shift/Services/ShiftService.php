@@ -395,6 +395,7 @@ class ShiftService
 
         // Vor dem Speichern checken, ob sich Zeit-Felder geändert haben
         $timeWasDirty = $hadOriginal && $shift->isDirty(['start_date', 'end_date', 'start', 'end']);
+        $breakWasDirty = $hadOriginal && $shift->isDirty(['break_minutes']);
 
         /** @var Shift $savedShift */
         $savedShift = $this->shiftRepository->save($shift);
@@ -408,6 +409,8 @@ class ShiftService
                 $originalEnd
             );
 
+            $this->workingHourCacheService->forgetForShift($savedShift);
+        } elseif ($breakWasDirty) {
             $this->workingHourCacheService->forgetForShift($savedShift);
         }
 

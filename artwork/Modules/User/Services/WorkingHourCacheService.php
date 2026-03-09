@@ -7,7 +7,6 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
 
 class WorkingHourCacheService
 {
@@ -22,12 +21,18 @@ class WorkingHourCacheService
     public function setWeeklyData(string $type, int $id, int $year, int $week, array $data): void
     {
         Cache::put($this->key($type, $id, $year, $week), $data, self::TTL);
+        $this->addToIndex($type, $id, $year, $week);
     }
 
     public function forgetForEntity(string $type, int $id): void
     {
-        $pattern = self::PREFIX . "{$type}:{$id}:*";
-        $this->deleteByPattern($pattern);
+        $index = Cache::get($this->indexKey($type, $id), []);
+
+        foreach ($index as $yearWeek) {
+            Cache::forget($this->key($type, $id, $yearWeek['y'], $yearWeek['w']));
+        }
+
+        Cache::forget($this->indexKey($type, $id));
     }
 
     public function forgetForShift(Shift $shift): void
@@ -49,7 +54,8 @@ class WorkingHourCacheService
 
     public function forgetAll(): void
     {
-        $this->deleteByPattern(self::PREFIX . '*');
+        // forgetAll is only used for full resets — flushing is acceptable here
+        Cache::flush();
     }
 
     public static function entityType(User|Freelancer|ServiceProvider $entity): string
@@ -66,19 +72,24 @@ class WorkingHourCacheService
         return self::PREFIX . "{$type}:{$id}:{$year}:{$week}";
     }
 
-    private function deleteByPattern(string $pattern): void
+    private function indexKey(string $type, int $id): string
     {
-        $prefix = config('database.redis.options.prefix', '');
-        $keys = Redis::keys($prefix . $pattern);
+        return self::PREFIX . "{$type}:{$id}:_index";
+    }
 
-        if (!empty($keys)) {
-            // Strip the prefix Redis added so we can delete them
-            $keysWithoutPrefix = array_map(
-                fn (string $key) => $prefix ? str_replace($prefix, '', $key) : $key,
-                $keys
-            );
+    private function addToIndex(string $type, int $id, int $year, int $week): void
+    {
+        $indexKey = $this->indexKey($type, $id);
+        $index = Cache::get($indexKey, []);
 
-            Redis::del(...$keysWithoutPrefix);
+        // Check if already tracked
+        foreach ($index as $entry) {
+            if ($entry['y'] === $year && $entry['w'] === $week) {
+                return;
+            }
         }
+
+        $index[] = ['y' => $year, 'w' => $week];
+        Cache::put($indexKey, $index, self::TTL);
     }
 }

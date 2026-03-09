@@ -1022,10 +1022,12 @@ const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts
 const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
 const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
 
+let workersLoadGeneration = 0
 async function loadShiftPlanWorkers() {
     const start = props.dateValue?.[0]
     const end = props.dateValue?.[1]
     if (!start || !end) return
+    const gen = ++workersLoadGeneration
     try {
         const params: Record<string, any> = { start_date: start, end_date: end }
         const craftIds = props.user_filters?.craft_ids
@@ -1033,12 +1035,15 @@ async function loadShiftPlanWorkers() {
             params.craft_ids = craftIds
         }
         const { data } = await axios.get(route('shifts.workers'), { params })
+        // Only apply if this is still the latest request (prevents stale data from overwriting fresh)
+        if (gen !== workersLoadGeneration) return
         workersLoaded.value = {
             usersForShifts: data.usersForShifts ?? [],
             freelancersForShifts: data.freelancersForShifts ?? [],
             serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
         }
     } catch {
+        if (gen !== workersLoadGeneration) return
         workersLoaded.value = {
             usersForShifts: [],
             freelancersForShifts: [],

@@ -20,7 +20,7 @@ class ProjectShiftPersonalPlanExportController
 
         $fileName = sprintf(
             '%s_personal_plan_%s.xlsx',
-            str_replace(' ', '_', $project->name),
+            str_replace(['/', '\\', ' '], ['_', '_', '_'], $project->name),
             now()->format('Y-m-d')
         );
 

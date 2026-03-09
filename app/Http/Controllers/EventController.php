@@ -819,7 +819,15 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::select(['id', 'name', 'abbreviation', 'color'])->get(),
+            'crafts' => Craft::with([
+                'users',
+                'freelancers',
+                'serviceProviders',
+                'managingUsers',
+                'managingFreelancers',
+                'managingServiceProviders',
+                'qualifications'
+            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),

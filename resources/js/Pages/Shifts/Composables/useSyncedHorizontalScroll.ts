@@ -34,8 +34,8 @@ export function useSyncedHorizontalScroll(
     /** Loop-Guard, damit A->B nicht wieder B->A triggert usw. */
     const syncingFrom = ref<'shift' | 'overview' | null>(null)
 
-    /** rAF für "release guard" */
-    let releaseRafId: number | null = null
+    /** Microtask-guard für "release guard" – schneller als rAF, verhindert 1-Frame-Lag */
+    let guardPending = false
 
     /** rAF für "current day"-Berechnung (throttled) */
     let dayScanRafId: number | null = null
@@ -68,12 +68,14 @@ export function useSyncedHorizontalScroll(
         syncingFrom.value = source
         targetEl.scrollLeft = left
 
-        // nach dem nächsten Frame wieder freigeben
-        if (releaseRafId) cancelAnimationFrame(releaseRafId)
-        releaseRafId = requestAnimationFrame(() => {
-            syncingFrom.value = null
-            releaseRafId = null
-        })
+        // Guard per Microtask freigeben – schneller als rAF, kein Frame-Lag
+        if (!guardPending) {
+            guardPending = true
+            Promise.resolve().then(() => {
+                syncingFrom.value = null
+                guardPending = false
+            })
+        }
     }
 
     function syncScrollUserOverview(e: Event) {
@@ -178,10 +180,7 @@ export function useSyncedHorizontalScroll(
             userOverviewEl.value.removeEventListener('scroll', syncScrollUserOverview)
         }
 
-        if (releaseRafId) {
-            cancelAnimationFrame(releaseRafId)
-            releaseRafId = null
-        }
+        guardPending = false
         if (dayScanRafId) {
             cancelAnimationFrame(dayScanRafId)
             dayScanRafId = null

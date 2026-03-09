@@ -33,3 +33,4 @@ profiling.*
 cachegrind.*
 /storage/app/public/inventory_articles/*
 .output.txt
+/storage/.dep-hashes

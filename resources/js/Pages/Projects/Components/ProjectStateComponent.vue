@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <h3 class="headline3">{{ $t('Project status') }}</h3>
+            <span class="componentLabel">{{ $t('Project status') }}</span>
             <PropertyIcon
                 name="IconEdit"
                 class="w-5 h-5 rounded-full text-artwork-buttons-context cursor-pointer"

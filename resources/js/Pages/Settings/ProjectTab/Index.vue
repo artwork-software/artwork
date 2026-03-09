@@ -172,7 +172,7 @@ function updateComponentOrder(components) {
             </div>
 
             <!-- Components List -->
-            <div class="col-span-1 card glassy p-5">
+            <div class="col-span-1 card glassy p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="card white p-5 space-y-3">
                     <div class="flex items-center justify-end w-full mb-3">
                         <div class="w-44 md:w-56 lg:w-72">

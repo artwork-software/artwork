@@ -301,6 +301,14 @@
         opacity: 1;
     }
 
+    .componentLabel{
+        display: block;
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+    }
+
     .sDark{
         font: normal normal 600 16px/20px Inter;
         letter-spacing: 0;

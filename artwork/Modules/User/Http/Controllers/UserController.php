@@ -27,6 +27,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -1196,15 +1197,21 @@ class UserController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function updateUserTerms(User $user, Request $request): void
+    public function updateUserTerms(User $user, Request $request, WorkingHourCacheService $workingHourCacheService): void
     {
         $this->authorize('updateTerms', User::class);
+
+        $oldWeeklyHours = $user->weekly_working_hours;
 
         $user->update($request->only([
             'weekly_working_hours',
             'salary_per_hour',
             'salary_description',
         ]));
+
+        if ($user->weekly_working_hours != $oldWeeklyHours) {
+            $workingHourCacheService->forgetForEntity('user', $user->id);
+        }
     }
 
 

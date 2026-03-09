@@ -99,7 +99,18 @@ const onDrop = (event) => {
         return false;
     }
 
-    if(data.special){
+    // Große Layout-Komponenten blockieren – diese funktionieren nicht in Ordnern
+    const blockedInDisclosure = [
+        'CalendarTab',
+        'ShiftTab',
+        'BudgetTab',
+        'BulkBody',
+        'ChecklistAllComponent',
+        'CommentAllTab',
+        'ProjectAllDocumentsComponent',
+    ];
+
+    if(blockedInDisclosure.includes(data.type)) {
         dropOver.value = false;
         return false;
     }

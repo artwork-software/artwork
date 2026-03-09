@@ -6,6 +6,7 @@ use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
@@ -14,7 +15,7 @@ class WorkTimeBookingService
     public function __construct(
         protected GeneralSettings $settings,
         protected WorkTimeBookingRepository $repository,
-
+        protected WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -89,6 +90,8 @@ class WorkTimeBookingService
             if ($delta !== 0) {
                 $this->repository->updateUserBalance($user, $delta);
             }
+
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
         }
     }
 

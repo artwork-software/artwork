@@ -2,9 +2,9 @@
     <div class="my-2 flex items-start gap-x-4">
         <div>
             <div>
-                <label class="xsDark font-bold" :class="inSidebar ? 'xsLight' : 'xsDark'">
+                <span class="componentLabel" :class="{'!text-white': inSidebar}">
                    {{ $t('Project Artist')}}
-                </label>
+                </span>
             </div>
             <div v-if="loadError" class="mt-2 text-xs text-rose-600">
                 {{ loadError }}

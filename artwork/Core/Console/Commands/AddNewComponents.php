@@ -117,7 +117,7 @@ class AddNewComponents extends Command
         $contractsDocumentsComponent = Component::query()->where('type', ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS)->first();
         if (!$contractsDocumentsComponent) {
             Component::create([
-                'name' => 'Dokumentenkomponente',
+                'name' => 'Document request',
                 'type' => ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS,
                 'data' => [
                     'icon' => 'IconFileText'
@@ -126,15 +126,15 @@ class AddNewComponents extends Command
                 'sidebar_enabled' => false,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]);
-            $this->info('Component Dokumentenkomponente added');
+            $this->info('Component Document request added');
         } else {
             $contractsDocumentsComponent->update([
-                'name' => 'Dokumentenkomponente',
+                'name' => 'Document request',
                 'data' => [
                     'icon' => 'IconFileText'
                 ],
             ]);
-            $this->info('Component Dokumentenkomponente updated');
+            $this->info('Component Document request updated');
         }
     }
 }

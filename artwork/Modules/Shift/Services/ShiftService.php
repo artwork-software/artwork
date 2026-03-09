@@ -21,6 +21,7 @@ use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
@@ -44,6 +45,7 @@ class ShiftService
         private readonly ShiftFreelancerService $shiftFreelancerService,
         private readonly ShiftServiceProviderService $shiftServiceProviderService,
         private readonly ShiftCountService $shiftCountService,
+        private readonly WorkingHourCacheService $workingHourCacheService,
         protected AuthManager $authManager
     ) {
     }
@@ -259,6 +261,8 @@ class ShiftService
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService
     ): bool {
+        $this->workingHourCacheService->forgetForShift($shift);
+
         foreach ($shift->shiftsQualifications as $shiftsQualification) {
             $shiftsQualificationsService->delete($shiftsQualification);
         }
@@ -328,8 +332,7 @@ class ShiftService
 
     public function forceDelete(Shift $shift): bool
     {
-        //relations are deleted on cascade
-        //broadcast(new ShiftUpdated($shift))->toOthers();
+        $this->workingHourCacheService->forgetForShift($shift);
 
         return $this->shiftRepository->forceDelete($shift);
     }
@@ -392,6 +395,7 @@ class ShiftService
 
         // Vor dem Speichern checken, ob sich Zeit-Felder geändert haben
         $timeWasDirty = $hadOriginal && $shift->isDirty(['start_date', 'end_date', 'start', 'end']);
+        $breakWasDirty = $hadOriginal && $shift->isDirty(['break_minutes']);
 
         /** @var Shift $savedShift */
         $savedShift = $this->shiftRepository->save($shift);
@@ -404,6 +408,10 @@ class ShiftService
                 $originalStart,
                 $originalEnd
             );
+
+            $this->workingHourCacheService->forgetForShift($savedShift);
+        } elseif ($breakWasDirty) {
+            $this->workingHourCacheService->forgetForShift($savedShift);
         }
 
         return $savedShift;

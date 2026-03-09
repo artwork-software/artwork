@@ -291,7 +291,7 @@ class EventCalendarExportBladeTemplateService
                                 'border-left:1px solid #000000;',
                                 $fontColor
                             ),
-                            $eventType->getAttribute('name'),
+                            $eventType->getAttribute('name') . ($event->project ? ' - ' . $event->project->name : ''),
                             'width: 125px; border-top:1px solid #000000; border-right:1px solid #000000;',
                             $event->getAttribute('start_time')->format('H:i'),
                             $event->getAttribute('end_time')->format('H:i'),

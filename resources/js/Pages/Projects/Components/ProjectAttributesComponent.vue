@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <BasePageTitle title="Project properties" :white-text="inSidebar" />
+            <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project properties') }}</span>
 
             <PropertyIcon name="IconEdit" class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="openProjectAttributeEditModal"
@@ -118,7 +118,7 @@ export default defineComponent({
                 return true;
             }
 
-            if (this.project.write_auth.length === 0) {
+            if (!this.project.write_auth?.length) {
                 return false;
             }
 

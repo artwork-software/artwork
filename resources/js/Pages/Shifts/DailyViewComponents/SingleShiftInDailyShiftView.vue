@@ -642,7 +642,7 @@ const getAssignablePeople = (shiftQualificationId) => {
         const personTypes = [
             { type: 'user', list: craft.users || [] },
             { type: 'freelancer', list: craft.freelancers || [] },
-            { type: 'service_provider', list: craft.serviceProviders || [] }
+            { type: 'service_provider', list: craft.service_providers || craft.serviceProviders || [] }
         ];
 
         personTypes.forEach(({ type, list }) => {

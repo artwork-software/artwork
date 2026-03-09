@@ -10,6 +10,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Illuminate\Http\Request;
 
 class IndividualTimeController extends Controller
@@ -19,7 +20,8 @@ class IndividualTimeController extends Controller
 
     public function __construct(
         private IndividualTimeService $individualTimeService,
-        private ShiftPlanCommentService $shiftPlanCommentService
+        private ShiftPlanCommentService $shiftPlanCommentService,
+        private WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -160,6 +162,14 @@ class IndividualTimeController extends Controller
             'break_minutes' => $validated['break_minutes'] ?? $individualTime->break_minutes,
         ]);
 
+        $owner = $individualTime->timeable;
+        if ($owner) {
+            $this->workingHourCacheService->forgetForEntity(
+                WorkingHourCacheService::entityType($owner),
+                $owner->id
+            );
+        }
+
         return redirect()->back()->with('success', 'Individual time updated successfully.');
     }
 
@@ -168,6 +178,14 @@ class IndividualTimeController extends Controller
      */
     public function destroy(IndividualTime $individualTime): void
     {
+        $owner = $individualTime->timeable;
         $individualTime->delete();
+
+        if ($owner) {
+            $this->workingHourCacheService->forgetForEntity(
+                WorkingHourCacheService::entityType($owner),
+                $owner->id
+            );
+        }
     }
 }

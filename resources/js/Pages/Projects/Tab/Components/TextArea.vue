@@ -3,8 +3,8 @@
         <div class="w-full">
             <label
                 :for="'component-' + data.id"
-                class="block text-sm font-bold leading-6"
-                :class="inSidebar ? 'text-white' : ' text-gray-900'"
+                class="componentLabel"
+                :class="{'!text-white': inSidebar}"
             >
                 {{ projectData.data.label }}
             </label>

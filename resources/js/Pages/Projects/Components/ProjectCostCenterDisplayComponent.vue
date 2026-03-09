@@ -1,12 +1,9 @@
 <template>
     <div>
         <div class="flex items-center gap-x-3">
-            <div
-                class="font-lexend font-black tracking-wide"
-                :class="inSidebar ? 'text-white text-md' : 'text-primaryText text-md'"
-            >
+            <span class="componentLabel" :class="{'!text-white': inSidebar}">
                 {{ $t('cost unit') }}
-            </div>
+            </span>
 
             <PropertyIcon
                 v-if="canEditCostCenter"

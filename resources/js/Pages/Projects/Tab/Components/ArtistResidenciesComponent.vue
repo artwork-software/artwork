@@ -8,7 +8,7 @@
         </div>
         <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
-                <BasePageTitle title="artist management" description="Manage the artist management for this project."/>
+                <span class="componentLabel">{{ $t('artist management') }}</span>
             </div>
             <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent

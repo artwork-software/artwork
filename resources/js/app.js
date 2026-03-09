@@ -4,7 +4,7 @@ import '../css/app.css'
 import '../css/global.css'
 
 import { createApp, h } from 'vue'
-import { createInertiaApp } from '@inertiajs/vue3'
+import { createInertiaApp, router } from '@inertiajs/vue3'
 import { createI18n } from 'vue-i18n'
 import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
 import PrimeVue from 'primevue/config'
@@ -81,4 +81,17 @@ createInertiaApp({
         app.mount(el)
     },
     progress: {color: '#3017AD', showSpinner: false, includeCss: true},
-}).then(r => {})
+}).then(() => {
+    // Session-Expiry abfangen: Wenn das Backend eine nicht-Inertia-Antwort
+    // zurückgibt (z.B. 401, 419, oder Redirect zu /oauth/authorize),
+    // dem User eine verständliche Meldung zeigen statt eines Fehlerscreens.
+    router.on('invalid', (event) => {
+        event.preventDefault()
+
+        const status = event.detail.response?.status
+        if (status === 401 || status === 419 || status === 409) {
+            alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
+            window.location.reload()
+        }
+    })
+})

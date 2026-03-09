@@ -119,12 +119,17 @@
                         :row-height="shiftRowHeight"
                         :row-heights="shiftRowHeights"
                         :col-width="shiftColWidth"
+                        :col-widths="shiftColWidths"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
-                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-artwork-navigation-background"></div>
+                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-artwork-navigation-background flex items-center justify-end pr-2">
+                                <span v-if="visibleKW != null" class="text-[10px] font-semibold text-white/80 tracking-wide">
+                                    KW {{ visibleKW }}
+                                </span>
+                            </div>
                         </template>
 
                         <!-- Column Header (Tage) -->
@@ -135,12 +140,14 @@
                                    bg-artwork-navigation-background/95 backdrop-blur
                                    border-b border-white/10 border-r
                                    hover:bg-artwork-navigation-background transition-colors"
+                                :class="day.isExtraRow ? 'border-l-2 border-l-white/40' : ''"
                             >
                                 <!-- ExtraRow (KW) -->
                                 <div v-if="day.isExtraRow" class="flex items-center gap-1">
                                   <span class="text-[10px] font-semibold tracking-wide opacity-90">
                                     KW {{ day.weekNumber }}
                                   </span>
+                                  <span class="text-[10px] opacity-70">&rarr;</span>
                                 </div>
 
                                 <!-- Normal day -->
@@ -230,7 +237,7 @@
                                 ></div>
 
                                 <!-- ExtraRow -->
-                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-gray-800"></div>
+                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-l-2 border-gray-400"></div>
 
                                 <!-- Normal cell -->
                                 <div
@@ -566,6 +573,7 @@
                             :cols="gridCols"
                             :row-height="rowHeight"
                             :col-width="202"
+                            :col-widths="gridColWidths"
                             :sticky-col-width="191.5"
                             class="h-full"
                             :top-padding="10"
@@ -642,11 +650,13 @@
                                     <!-- ExtraRow / Wochenarbeitszeit -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white border-l-2 border-gray-400"
                                         :class="cellWrapperClass(row, day)"
                                     >
                                         <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
-                                            <div class="text-[9px]">Arbeitszeit KW {{ day.weekNumber }}</div>
+                                            <div class="text-[9px] whitespace-nowrap">
+                                                 Arbeitszeit KW {{ day.weekNumber }}<span class="opacity-60">&rarr;</span>
+                                            </div>
                                             <div
                                                 class="font-lexend text-xs"
                                                 :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'"
@@ -1012,10 +1022,12 @@ const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts
 const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
 const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
 
+let workersLoadGeneration = 0
 async function loadShiftPlanWorkers() {
     const start = props.dateValue?.[0]
     const end = props.dateValue?.[1]
     if (!start || !end) return
+    const gen = ++workersLoadGeneration
     try {
         const params: Record<string, any> = { start_date: start, end_date: end }
         const craftIds = props.user_filters?.craft_ids
@@ -1023,12 +1035,15 @@ async function loadShiftPlanWorkers() {
             params.craft_ids = craftIds
         }
         const { data } = await axios.get(route('shifts.workers'), { params })
+        // Only apply if this is still the latest request (prevents stale data from overwriting fresh)
+        if (gen !== workersLoadGeneration) return
         workersLoaded.value = {
             usersForShifts: data.usersForShifts ?? [],
             freelancersForShifts: data.freelancersForShifts ?? [],
             serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
         }
     } catch {
+        if (gen !== workersLoadGeneration) return
         workersLoaded.value = {
             usersForShifts: [],
             freelancersForShifts: [],
@@ -1188,7 +1203,30 @@ const shiftCols = computed(() =>
 
 const shiftHeaderHeight = 32 // wie dein h-8
 const shiftColWidth = 202
+const kwColWidth = 130
 const shiftLeftWidth = 191.5
+
+const shiftColWidths = computed(() =>
+    shiftCols.value.map((col: any) => col.data?.isExtraRow ? kwColWidth : shiftColWidth)
+)
+
+const gridColWidths = computed(() =>
+    (days.value ?? []).map((d: any) => d.isExtraRow ? kwColWidth : shiftColWidth)
+)
+
+const visibleKW = computed(() => {
+    const idx = shiftGridRef.value?.firstVisibleColIndex ?? 0
+    const cols = shiftCols.value
+    if (!cols?.length) return null
+    // Find the first visible non-extra-row column and return its weekNumber
+    for (let i = idx; i < cols.length; i++) {
+        const day = cols[i]?.data
+        if (day && !day.isExtraRow && day.weekNumber != null) {
+            return day.weekNumber
+        }
+    }
+    return null
+})
 
 const shiftRowHeight = computed(() =>
     expandDays.value ? 360 : 112
@@ -2619,14 +2657,15 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
 
     currentDayOnView.value = days.value[scrollOffset]
 
-    const colWidth = 202
     const leftWidth = 191.5
     const roomNameOffsetPx = 200
 
-    const targetIndex = scrollOffset // das ist dein Index im days-array
-    const x = targetIndex * colWidth
-
-
+    // Compute x offset using variable column widths
+    let x = 0
+    const daysArr = days.value
+    for (let i = 0; i < scrollOffset; i++) {
+        x += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
+    }
 
     const roomNameElement = document.getElementById('roomNameContainer_0')
     const containerRect = container.getBoundingClientRect()

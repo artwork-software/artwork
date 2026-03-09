@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
     cols: any[]
     rowHeight: number
     colWidth: number
+    colWidths?: number[]
     stickyColWidth: number
     overscanRows?: number
     overscanCols?: number
@@ -17,6 +18,10 @@ const props = withDefaults(defineProps<{
     topPadding: 0,
 })
 
+function getColWidth(c: number): number {
+    return props.colWidths?.[c] ?? props.colWidth
+}
+
 /** DAS ist der Scroll-Container */
 const viewportEl = ref<HTMLElement | null>(null)
 
@@ -25,15 +30,11 @@ const sl = ref(0)
 const vw = ref(0)
 const vh = ref(0)
 
-let raf = 0
 function onScroll() {
     const v = viewportEl.value
     if (!v) return
-    if (raf) cancelAnimationFrame(raf)
-    raf = requestAnimationFrame(() => {
-        st.value = v.scrollTop
-        sl.value = v.scrollLeft
-    })
+    st.value = v.scrollTop
+    sl.value = v.scrollLeft
 }
 
 let ro: ResizeObserver | null = null
@@ -57,7 +58,6 @@ onBeforeUnmount(() => {
     const v = viewportEl.value
     if (v) v.removeEventListener('scroll', onScroll)
     ro?.disconnect()
-    if (raf) cancelAnimationFrame(raf)
 })
 
 defineExpose({
@@ -65,7 +65,19 @@ defineExpose({
     getViewportEl: () => viewportEl.value,
 })
 
-const totalW = computed(() => props.stickyColWidth + props.cols.length * props.colWidth)
+// Precompute cumulative column offsets for variable column widths
+const colOffsets = computed(() => {
+    const offsets: number[] = []
+    let x = 0
+    for (let c = 0; c < props.cols.length; c++) {
+        offsets.push(x)
+        x += getColWidth(c)
+    }
+    offsets.push(x) // sentinel: total width of all cols
+    return offsets
+})
+
+const totalW = computed(() => props.stickyColWidth + (colOffsets.value[props.cols.length] ?? 0))
 const totalH = computed(() => props.topPadding + props.rows.length * props.rowHeight)
 
 const scrollY = computed(() => Math.max(0, st.value - props.topPadding))
@@ -80,15 +92,28 @@ const r1 = computed(() =>
     )
 )
 
+// Binary search for first col visible
+function findFirstCol(scrollLeft: number): number {
+    const offs = colOffsets.value
+    let lo = 0, hi = props.cols.length - 1
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1
+        if (offs[mid] <= scrollLeft) lo = mid
+        else hi = mid - 1
+    }
+    return lo
+}
+
 const c0 = computed(() =>
-    Math.max(0, Math.floor(sl.value / props.colWidth) - props.overscanCols)
+    Math.max(0, findFirstCol(sl.value) - props.overscanCols)
 )
-const c1 = computed(() =>
-    Math.min(
-        props.cols.length - 1,
-        Math.ceil((sl.value + vw.value) / props.colWidth) + props.overscanCols
-    )
-)
+const c1 = computed(() => {
+    const rightX = sl.value + vw.value
+    const offs = colOffsets.value
+    let c = findFirstCol(rightX)
+    while (c < props.cols.length - 1 && offs[c] < rightX) c++
+    return Math.min(props.cols.length - 1, c + props.overscanCols)
+})
 
 const visibleRows = computed(() => {
     const out: any[] = []
@@ -103,14 +128,13 @@ const visibleRows = computed(() => {
 })
 
 const visibleCols = computed(() => {
-    const out: any[] = []
+    const out: Array<{ c: number; col: any; left: number; width: number }> = []
+    const offs = colOffsets.value
     for (let c = c0.value; c <= c1.value; c++) {
-        out.push({ c, col: props.cols[c] })
+        out.push({ c, col: props.cols[c], left: props.stickyColWidth + offs[c], width: getColWidth(c) })
     }
     return out
 })
-
-const colsLeft = computed(() => props.stickyColWidth + c0.value * props.colWidth)
 </script>
 
 <template>
@@ -133,15 +157,13 @@ const colsLeft = computed(() => props.stickyColWidth + c0.value * props.colWidth
                     </div>
 
                     <!-- Visible cols only -->
-                    <div class="absolute top-0 h-full flex" :style="{ left: colsLeft + 'px' }">
-                        <div
-                            v-for="vc in visibleCols"
-                            :key="vc.col.fullDay ?? vc.c"
-                            class="flex-none p-0.5"
-                            :style="{ width: colWidth + 'px', height: rowHeight + 'px' }"
-                        >
-                            <slot name="cell" :row="vr.row" :day="vc.col" :rowIndex="vr.r" :colIndex="vc.c" />
-                        </div>
+                    <div
+                        v-for="vc in visibleCols"
+                        :key="vc.col.fullDay ?? vc.c"
+                        class="absolute top-0 flex-none p-0.5"
+                        :style="{ left: vc.left + 'px', width: vc.width + 'px', height: rowHeight + 'px' }"
+                    >
+                        <slot name="cell" :row="vr.row" :day="vc.col" :rowIndex="vr.r" :colIndex="vc.c" />
                     </div>
                 </div>
             </div>

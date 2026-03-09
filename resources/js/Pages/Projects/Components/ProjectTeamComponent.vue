@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <BasePageTitle title="Project team" :white-text="inSidebar" />
+            <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project team') }}</span>
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
                       v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"

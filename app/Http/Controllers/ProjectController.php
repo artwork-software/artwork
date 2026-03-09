@@ -4551,7 +4551,7 @@ class ProjectController extends Controller
             ->download(
                 sprintf(
                     '%s_budget_stand_%s.xlsx',
-                    Str::snake($project->name),
+                    Str::snake(str_replace(['/', '\\'], '_', $project->name)),
                     Carbon::now()->format('d-m-Y_H_i_s')
                 )
             )

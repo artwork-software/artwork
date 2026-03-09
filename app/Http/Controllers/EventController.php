@@ -86,6 +86,7 @@ use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -148,6 +149,7 @@ class EventController extends Controller
         protected ShiftGroupService $shiftGroupService,
         protected HelperService $helperService,
         private readonly ShiftListViewService $shiftListViewService,
+        private readonly WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -2037,6 +2039,8 @@ class EventController extends Controller
             $startDay = Carbon::create($shift->start_date)->addDays($diffStartDays)->format('Y-m-d');
             $endDay   = Carbon::create($shift->end_date)->addDays($diffEndDays)->format('Y-m-d');
 
+            $this->workingHourCacheService->forgetForShift($shift);
+
             $shift->update([
                 'start_date' => $startDay,
                 'end_date'   => $endDay,
@@ -3075,6 +3079,11 @@ class EventController extends Controller
                 $calculationType = $request->integer('calculationType');
                 $value = $request->integer('value');
                 $type = $request->integer('type');
+
+                // Invalidate cache for all workers on all shifts before date changes
+                foreach ($shifts as $shift) {
+                    $this->workingHourCacheService->forgetForShift($shift);
+                }
 
                 if ($calculationType === 1) {
                     if ($type === 1) {

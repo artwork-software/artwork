@@ -40,6 +40,7 @@ use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
@@ -68,6 +69,7 @@ class ShiftController extends Controller
         private readonly EventTimelineService $eventTimelineService,
         private readonly EventService $eventService,
         private readonly GeneralSettings $generalSettings,
+        private readonly WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -417,7 +419,7 @@ class ShiftController extends Controller
         $shift->end = Carbon::parse($end)->format('H:i:s');
         $shift->break_minutes = $request->get('break_minutes');
 
-        $shift->save();
+        $this->shiftService->save($shift);
     }
 
     private function setConflictNotificationHeaderAndData(Shift $shift): void
@@ -1391,7 +1393,9 @@ class ShiftController extends Controller
                 ->where('shifts.start_date', Carbon::parse($entity['day'])->format('Y-m-d'))
                 ->get();
 
-            $roomShifts->each(function ($roomShift) use ($entity): void {
+            $roomShifts->each(function ($roomShift): void {
+                $this->workingHourCacheService->forgetForShift($roomShift);
+
                 $roomShift->users()->detach();
                 $roomShift->freelancer()->detach();
                 $roomShift->serviceProvider()->detach();
@@ -1678,6 +1682,11 @@ class ShiftController extends Controller
             'start_date' => $startDateTime->format('Y-m-d'),
             'end_date' => $endDateTime->format('Y-m-d'),
         ]);
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($pivot->employable),
+            $pivot->employable_id
+        );
     }
 
     public function updateShortDescription(Request $request): void

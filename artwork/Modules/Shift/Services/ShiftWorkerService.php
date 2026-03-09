@@ -22,6 +22,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftWorkerRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
@@ -35,6 +36,7 @@ class ShiftWorkerService
         private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
         private readonly ShiftsQualificationsService $shiftsQualificationsService,
         private readonly ShiftCountService $shiftCountService,
+        private readonly WorkingHourCacheService $workingHourCacheService,
         protected AuthManager $auth
     ) {
     }
@@ -350,6 +352,11 @@ class ShiftWorkerService
             );
         }
 
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($worker),
+            $worker->id
+        );
+
         return $shiftWorkerPivot;
     }
 
@@ -510,6 +517,11 @@ class ShiftWorkerService
             $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $worker->id),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$employableType}"),
         };
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($worker),
+            $worker->id
+        );
 
         if ($shift->is_committed && $this->supportsNotifications($worker)) {
             $this->handleRemovedFromShift(

@@ -743,10 +743,13 @@ class Sage100Service
         }
 
         if ($specificDay) {
+            $parsedDay = Carbon::parse($specificDay);
             $query['where'] = sprintf(
-                '%s eq "%s"',
+                '%s ge "%s" and %s lt "%s"',
                 self::FILTER_FIELD_BOOKINGDATE,
-                Carbon::parse($specificDay)->format('d.m.Y')
+                $parsedDay->format('d.m.Y'),
+                self::FILTER_FIELD_BOOKINGDATE,
+                $parsedDay->copy()->addDay()->format('d.m.Y')
             );
         } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
             $query['where'] = sprintf(

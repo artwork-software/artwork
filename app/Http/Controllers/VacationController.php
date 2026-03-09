@@ -11,6 +11,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
@@ -33,7 +34,8 @@ class VacationController extends Controller
         private readonly VacationConflictService $vacationConflictService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -138,6 +140,7 @@ class VacationController extends Controller
                     ]);
                 }
             }
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
         }
 
         $shifts = $user->shifts()->where('event_start_day', $day)->get();
@@ -190,6 +193,7 @@ class VacationController extends Controller
                     ]);
                 }
             }
+            $this->workingHourCacheService->forgetForEntity('freelancer', $freelancer->id);
         }
 
         $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
@@ -242,6 +246,7 @@ class VacationController extends Controller
                     ]);
                 }
             }
+            $this->workingHourCacheService->forgetForEntity('service_provider', $serviceProvider->id);
         }
 
         $shifts = $serviceProvider->shifts()->where('event_start_day', $day)->get();

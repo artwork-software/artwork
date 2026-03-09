@@ -19,6 +19,7 @@ class WorkingHourService
 {
     public function __construct(
         private UserRepository $userRepository,
+        private WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -458,14 +459,39 @@ class WorkingHourService
                 'weekStart' => $weekStart,
                 'actualStart' => $actualStart,
                 'actualEnd' => $actualEnd,
-                'weekNumber' => ltrim($weekStart->format('W'), '0')
+                'weekNumber' => ltrim($weekStart->format('W'), '0'),
+                'year' => (int) $weekStart->format('o'),
+                'isoWeek' => (int) $weekStart->format('W'),
             ];
         }
 
         // Process each user — precompute shift minutes, workTime patterns, and weekly hours in one loop
         foreach ($users as $user) {
             $userId = $user->id;
+            $entityType = WorkingHourCacheService::entityType($user);
             $weeklyWorkingHoursCache[$userId] = [];
+
+            // Check cache for each week first
+            $uncachedWeeks = [];
+            foreach ($weekPeriods as $index => $weekPeriod) {
+                $cached = $this->workingHourCacheService->getWeeklyData(
+                    $entityType,
+                    $userId,
+                    $weekPeriod['year'],
+                    $weekPeriod['isoWeek']
+                );
+
+                if ($cached !== null) {
+                    $weeklyWorkingHoursCache[$userId][$weekPeriod['weekNumber']] = $cached;
+                } else {
+                    $uncachedWeeks[] = $index;
+                }
+            }
+
+            // Skip expensive computation if all weeks are cached
+            if (empty($uncachedWeeks)) {
+                continue;
+            }
 
             $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
             $workTimePatterns = ($user instanceof User)
@@ -507,8 +533,9 @@ class WorkingHourService
                 $bookingsPerDay[$bookingDay] += $booking->worked_hours;
             }
 
-            // Process each week
-            foreach ($weekPeriods as $weekPeriod) {
+            // Process only uncached weeks
+            foreach ($uncachedWeeks as $index) {
+                $weekPeriod = $weekPeriods[$index];
                 $weekStart = $weekPeriod['weekStart'];
                 $actualStart = $weekPeriod['actualStart'];
                 $actualEnd = $weekPeriod['actualEnd'];
@@ -560,12 +587,23 @@ class WorkingHourService
 
                 $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
 
-                $weeklyWorkingHoursCache[$userId][$weekNumber] = [
+                $weekData = [
                     'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
                     'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
                     'difference' => $this->convertMinutesInHours($differenceInMinutes),
                     'isMinus' => $differenceInMinutes < 0,
                 ];
+
+                $weeklyWorkingHoursCache[$userId][$weekNumber] = $weekData;
+
+                // Write back to cache
+                $this->workingHourCacheService->setWeeklyData(
+                    $entityType,
+                    $userId,
+                    $weekPeriod['year'],
+                    $weekPeriod['isoWeek'],
+                    $weekData
+                );
             }
         }
 
@@ -584,7 +622,43 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): array {
+        $entityType = WorkingHourCacheService::entityType($entity);
+        $entityId = $entity->id;
+
         $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
+
+        // Build week periods with cache check
+        $weekPeriods = [];
+        $uncachedIndexes = [];
+        $weeklyWorkingHours = [];
+
+        foreach ($period as $index => $weekStart) {
+            $year = (int) $weekStart->format('o');
+            $isoWeek = (int) $weekStart->format('W');
+            $weekNumber = ltrim($weekStart->format('W'), '0');
+
+            $cached = $this->workingHourCacheService->getWeeklyData($entityType, $entityId, $year, $isoWeek);
+
+            if ($cached !== null) {
+                $weeklyWorkingHours[$weekNumber] = $cached;
+            } else {
+                $weekEnd = $weekStart->copy()->endOfWeek();
+                $weekPeriods[$index] = [
+                    'weekStart' => $weekStart,
+                    'actualStart' => $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate,
+                    'actualEnd' => $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate,
+                    'weekNumber' => $weekNumber,
+                    'year' => $year,
+                    'isoWeek' => $isoWeek,
+                ];
+                $uncachedIndexes[] = $index;
+            }
+        }
+
+        // If all weeks are cached, return early
+        if (empty($uncachedIndexes)) {
+            return $weeklyWorkingHours;
+        }
 
         // Lade individualTimes einmal
         $individualTimes = $entity->individualTimes()->individualByDateRange($startDate->toDateString(), $endDate->toDateString())->get();
@@ -636,12 +710,11 @@ class WorkingHourService
             }
         }
 
-        $weeklyWorkingHours = [];
-
-        foreach ($period as $weekStart) {
-            $weekEnd = $weekStart->copy()->endOfWeek();
-            $actualStart = $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate;
-            $actualEnd = $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate;
+        // Process only uncached weeks
+        foreach ($uncachedIndexes as $index) {
+            $wp = $weekPeriods[$index];
+            $actualStart = $wp['actualStart'];
+            $actualEnd = $wp['actualEnd'];
 
             $totalPlannedMinutes = 0;
             $totalExpectedMinutes = 0;
@@ -688,12 +761,23 @@ class WorkingHourService
 
             $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
 
-            $weeklyWorkingHours[ltrim($weekStart->format('W'), '0')] = [
+            $weekData = [
                 'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
                 'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
                 'difference' => $this->convertMinutesInHours($differenceInMinutes),
                 'isMinus' => $differenceInMinutes < 0,
             ];
+
+            $weeklyWorkingHours[$wp['weekNumber']] = $weekData;
+
+            // Write back to cache
+            $this->workingHourCacheService->setWeeklyData(
+                $entityType,
+                $entityId,
+                $wp['year'],
+                $wp['isoWeek'],
+                $weekData
+            );
         }
 
         return $weeklyWorkingHours;

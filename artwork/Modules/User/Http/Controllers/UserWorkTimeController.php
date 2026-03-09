@@ -7,9 +7,14 @@ use Artwork\Modules\User\Http\Requests\StoreUserWorkTimeRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserWorkTimeRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 
 class UserWorkTimeController extends Controller
 {
+    public function __construct(
+        private readonly WorkingHourCacheService $workingHourCacheService,
+    ) {
+    }
     /**
      * Display a listing of the resource.
      */
@@ -37,6 +42,7 @@ class UserWorkTimeController extends Controller
         if (isset($validated['id'])) {
             $userWorkTime = UserWorkTime::findOrFail($validated['id']);
             $userWorkTime->update($validated);
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
             return;
         }
 
@@ -56,6 +62,8 @@ class UserWorkTimeController extends Controller
         $validated['is_active'] = $isActive;
 
         UserWorkTime::create($validated);
+
+        $this->workingHourCacheService->forgetForEntity('user', $user->id);
     }
 
     /**

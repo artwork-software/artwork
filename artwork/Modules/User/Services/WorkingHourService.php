@@ -543,17 +543,17 @@ class WorkingHourService
 
                 $totalPlannedMinutes = 0;
                 $totalExpectedMinutes = 0;
+                $offWorkNegativeAdjustment = 0;
 
                 $current = $actualStart->copy();
 
                 // Process each day in the week
                 while ($current->lte($actualEnd)) {
                     $dateStr = $current->toDateString();
+                    $isOffWork = $offWorkDays->has($dateStr);
 
-                    // Calculate expected minutes (TAGESSOLL)
-                    if ($offWorkDays->has($dateStr)) {
-                        $dailyTargetMinutes = 0;
-                    } elseif ($user instanceof User && $workTimePatterns) {
+                    // Calculate expected minutes (TAGESSOLL) - normal calculation even for OFF_WORK days
+                    if ($user instanceof User && $workTimePatterns) {
                         $patternData = $workTimePatterns[$dateStr] ?? null;
                         $activePattern = $patternData['pattern'] ?? null;
                         $weekday = $patternData['weekday'] ?? strtolower($current->format('l'));
@@ -570,22 +570,30 @@ class WorkingHourService
 
                     $totalExpectedMinutes += $dailyTargetMinutes;
 
-                    // Calculate planned minutes (GEPLANT)
+                    // Calculate planned minutes (GEPLANT) - track daily for OFF_WORK check
+                    $dailyPlanned = 0;
                     if ($individualMinutesPerDay->has($dateStr)) {
-                        $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
+                        $dailyPlanned += $individualMinutesPerDay[$dateStr];
                     }
 
                     // Immer Schichtminuten dazurechnen (falls vorhanden)
-                    $totalPlannedMinutes += $shiftMinutesPerDay[$dateStr] ?? 0;
+                    $dailyPlanned += $shiftMinutesPerDay[$dateStr] ?? 0;
 
                     if ($bookingsPerDay->has($dateStr)) {
-                        $totalPlannedMinutes += $bookingsPerDay[$dateStr];
+                        $dailyPlanned += $bookingsPerDay[$dateStr];
+                    }
+
+                    $totalPlannedMinutes += $dailyPlanned;
+
+                    // OFF_WORK: Suppress negative difference (no minus hours on off-work days)
+                    if ($isOffWork && $dailyPlanned < $dailyTargetMinutes) {
+                        $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
                     }
 
                     $current->addDay();
                 }
 
-                $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
+                $differenceInMinutes = ($totalPlannedMinutes - $totalExpectedMinutes) + $offWorkNegativeAdjustment;
 
                 $weekData = [
                     'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
@@ -718,16 +726,16 @@ class WorkingHourService
 
             $totalPlannedMinutes = 0;
             $totalExpectedMinutes = 0;
+            $offWorkNegativeAdjustment = 0;
 
             $current = $actualStart->copy();
 
             while ($current->lte($actualEnd)) {
                 $dateStr = $current->toDateString();
+                $isOffWork = $offWorkDays->has($dateStr);
 
-                // TAGESSOLL (Expected)
-                if ($offWorkDays->has($dateStr)) {
-                    $dailyTargetMinutes = 0;
-                } elseif ($entity instanceof User && $workTimePatterns) {
+                // TAGESSOLL (Expected) - normal calculation even for OFF_WORK days
+                if ($entity instanceof User && $workTimePatterns) {
                     $patternData = $workTimePatterns[$dateStr] ?? null;
                     $activePattern = $patternData['pattern'] ?? null;
                     $weekday = $patternData['weekday'] ?? strtolower($current->format('l'));
@@ -744,22 +752,30 @@ class WorkingHourService
 
                 $totalExpectedMinutes += $dailyTargetMinutes;
 
-                // GEPLANT (Planned)
+                // GEPLANT (Planned) - track daily for OFF_WORK check
+                $dailyPlanned = 0;
                 if ($individualMinutesPerDay->has($dateStr)) {
-                    $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
+                    $dailyPlanned += $individualMinutesPerDay[$dateStr];
                 }
 
                 // Immer Schichtzeit dazu
-                $totalPlannedMinutes += $shiftMinutesPerDay[$dateStr] ?? 0;
+                $dailyPlanned += $shiftMinutesPerDay[$dateStr] ?? 0;
 
                 if ($entity instanceof User && $bookingsPerDay->has($dateStr)) {
-                    $totalPlannedMinutes += $bookingsPerDay[$dateStr];
+                    $dailyPlanned += $bookingsPerDay[$dateStr];
+                }
+
+                $totalPlannedMinutes += $dailyPlanned;
+
+                // OFF_WORK: Suppress negative difference (no minus hours on off-work days)
+                if ($isOffWork && $dailyPlanned < $dailyTargetMinutes) {
+                    $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
                 }
 
                 $current->addDay();
             }
 
-            $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
+            $differenceInMinutes = ($totalPlannedMinutes - $totalExpectedMinutes) + $offWorkNegativeAdjustment;
 
             $weekData = [
                 'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),

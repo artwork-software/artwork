@@ -147,8 +147,40 @@
                                 />
                             </div>
 
-                            <div class="font-lexend text-sm font-bold py-4 text-center shrink-0 px-4">
+                            <div class="font-lexend text-sm font-bold py-4 text-center shrink-0 px-4 flex items-center gap-2">
                                 {{ day.dayString }}, {{ day.fullDay }}
+                                <div v-if="day.holidays?.length" class="shrink-0">
+                                    <HolidayToolTip icon-color-class="text-white">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-full
+                                               bg-white/10 hover:bg-white/15
+                                               border border-white/10
+                                               px-2 py-0.5 text-[10px] font-medium"
+                                        >
+                                            <PropertyIcon name="IconSparkles" class="h-3 w-3 opacity-90" />
+                                            <span class="tabular-nums">{{ day.holidays.length }}</span>
+                                        </button>
+
+                                        <div class="space-y-1 divide-y divide-dashed divide-white/20">
+                                            <div
+                                                v-for="holiday in day.holidays"
+                                                :key="holiday.date || holiday.name"
+                                                class="pt-1 text-[11px]"
+                                            >
+                                                <div :style="{ color: holiday.color }" class="font-semibold">
+                                                    {{ holiday.name }}
+                                                </div>
+                                                <div class="text-white/80 text-[10px]" v-if="holiday.subdivisions?.length">
+                                                    {{ holiday.subdivisions.map((p:any) => p).join(', ') }}
+                                                </div>
+                                                <div class="text-white/70 text-[10px]" v-else>
+                                                    {{ $t('Germany-wide') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </HolidayToolTip>
+                                </div>
                             </div>
 
                             <div class="flex items-center justify-end min-w-0 flex-1">
@@ -299,6 +331,8 @@ import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoom
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
 import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
+import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 
 type AnyRoom = any

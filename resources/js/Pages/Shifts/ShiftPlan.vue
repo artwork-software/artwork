@@ -166,7 +166,7 @@
 
                                     <!-- Holiday badge -->
                                     <div v-if="day.holidays?.length" class="shrink-0">
-                                        <HolidayToolTip>
+                                        <HolidayToolTip icon-color-class="text-white">
                                             <button
                                                 type="button"
                                                 class="inline-flex items-center gap-1 rounded-full

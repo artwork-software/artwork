@@ -94,6 +94,8 @@ const props = defineProps({
     request: {type: Object, required: true},
     shifts: {type: Array, required: true},
     days: {type: Array, required: true},
+    individualTimes: {type: Array, default: () => []},
+    craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
 });
 
@@ -268,7 +270,6 @@ const rows = computed(() => {
         if (!row.days[date]) row.days[date] = [];
         const uniqueKey = `${shift.id}-${row.type}-${row.id}`;
 
-        // Find existing entry to avoid duplicates if same shift is assigned to same person multiple times (shouldn't happen but just in case)
         const existing = row.days[date].find(e => e.unique_key === uniqueKey);
         if (existing) return;
 
@@ -289,6 +290,34 @@ const rows = computed(() => {
         row.totals.total_hours += computeDurationHours(shift);
     };
     const dayDates = daysComputed.value.map(d => d.date);
+
+    // Rows für alle Craft-Worker vorab anlegen
+    for (const user of (props.craftWorkers?.users || [])) {
+        ensureRow(`user-${user.id}`, {
+            type: 'user', id: user.id,
+            name: user.full_name,
+            avatar: user.profile_photo_url,
+            typeLabel: 'User'
+        });
+    }
+    for (const fl of (props.craftWorkers?.freelancers || [])) {
+        ensureRow(`freelancer-${fl.id}`, {
+            type: 'freelancer', id: fl.id,
+            name: fl.full_name,
+            avatar: fl.profile_photo_url,
+            typeLabel: 'Freelancer'
+        });
+    }
+    for (const sp of (props.craftWorkers?.service_providers || [])) {
+        ensureRow(`service_provider-${sp.id}`, {
+            type: 'service_provider', id: sp.id,
+            name: sp.name,
+            avatar: sp.profile_photo_url,
+            typeLabel: 'Service provider'
+        });
+    }
+
+    // Schichten in die Rows einfügen
     for (const shift of props.shifts) {
         const date = shift.formatted_dates?.frontend_start || shift.event_start_day;
         if (!date || !dayDates.includes(date)) continue;
@@ -378,6 +407,31 @@ const rows = computed(() => {
             });
         }
     }
+
+    // Individual Times zu den Rows hinzufügen
+    for (const it of props.individualTimes) {
+        const type = it.timeable_type_short;
+        const id = it.timeable_id;
+        const key = `${type}-${id}`;
+
+        if (!map.has(key)) continue;
+
+        const row = map.get(key);
+        for (const date of (it.days_of_individual_time || [])) {
+            if (!dayDates.includes(date)) continue;
+            if (!row.days[date]) row.days[date] = [];
+            row.days[date].push({
+                unique_key: `it-${it.id}`,
+                is_individual_time: true,
+                title: it.title,
+                start_time: it.start_time,
+                end_time: it.end_time,
+                full_day: it.full_day,
+                working_time_minutes: it.working_time_minutes,
+            });
+        }
+    }
+
     return Array.from(map.values());
 });
 

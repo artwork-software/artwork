@@ -99,7 +99,7 @@ class EventCalendarExportBladeTemplateService
                     ]
                 )
             ),
-            !$this->desiresTimespanExport ? implode(', ', $this->projects) : ''
+            !$this->desiresTimespanExport ? e(implode(', ', $this->projects)) : ''
         );
     }
 
@@ -109,7 +109,7 @@ class EventCalendarExportBladeTemplateService
         foreach ($this->rooms as $room) {
             $markup .= sprintf(
                 '<td colspan="2" style="text-align:center; border: 1px solid black;">%s</td>',
-                $room->getAttribute('name')
+                e($room->getAttribute('name'))
             );
         }
 
@@ -257,11 +257,11 @@ class EventCalendarExportBladeTemplateService
                         $markup .= sprintf(
                             '<td style="%s">%s %s %s</td><td style="%s"></td>',
                             'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
-                            ($eventName = $event->getAttribute('name')) ? $eventName . ' | ' : '',
+                            ($eventName = $event->getAttribute('name')) ? e($eventName) . ' | ' : '',
                             (
                                 $eventStatusName = $event->getAttribute('eventStatus')?->getAttribute('name')
-                            ) ? $eventStatusName : '',
-                            ($description = $event->getAttribute('description')) ? ' | ' . $description : '',
+                            ) ? e($eventStatusName) : '',
+                            ($description = $event->getAttribute('description')) ? ' | ' . e($description) : '',
                             'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     } else {
@@ -291,7 +291,7 @@ class EventCalendarExportBladeTemplateService
                                 'border-left:1px solid #000000;',
                                 $fontColor
                             ),
-                            $eventType->getAttribute('name') . ($event->project ? ' - ' . $event->project->name : ''),
+                            e($eventType->getAttribute('name')) . ($event->project ? ' - ' . e($event->project->name) : ''),
                             'width: 125px; border-top:1px solid #000000; border-right:1px solid #000000;',
                             $event->getAttribute('start_time')->format('H:i'),
                             $event->getAttribute('end_time')->format('H:i'),

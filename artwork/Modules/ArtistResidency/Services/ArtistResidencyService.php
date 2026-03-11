@@ -302,8 +302,7 @@ readonly class ArtistResidencyService
         )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
-                'defaultFont' => 'sans-serif',
-                'isRemoteEnabled' => true,
+                'enable-local-file-access' => true,
             ]);
 
         $filename = $this->createFilename(now(), $project->name . '_per_diem', '72');

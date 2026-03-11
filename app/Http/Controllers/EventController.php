@@ -273,6 +273,9 @@ class EventController extends Controller
                 ['start_date' => null, 'end_date' => null]
             );
             $userCalendarSettings = $user->getAttribute('calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->calendar_settings()->create();
+            }
         }
 
         $isPlanning           = $request->boolean('isPlanning', false);

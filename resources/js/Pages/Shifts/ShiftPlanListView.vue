@@ -52,10 +52,42 @@
                     <div v-for="dayData in groupedShifts" :key="dayData.day">
                         <!-- Day header — black sticky bar -->
                         <div
-                            class="sticky z-30 bg-artwork-navigation-background text-white px-4 py-2.5 font-semibold text-base rounded-r-lg"
+                            class="sticky z-30 bg-artwork-navigation-background text-white px-4 py-2.5 font-semibold text-base rounded-r-lg flex items-center gap-2"
                             :style="{ top: dayHeaderStickyTop + 'px' }"
                         >
                             {{ formatDayHeader(dayData.day) }}
+                            <div v-if="dayData.holidays?.length" class="shrink-0">
+                                <HolidayToolTip icon-color-class="text-white">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-1 rounded-full
+                                           bg-white/10 hover:bg-white/15
+                                           border border-white/10
+                                           px-2 py-0.5 text-[10px] font-medium"
+                                    >
+                                        <PropertyIcon name="IconSparkles" class="h-3 w-3 opacity-90" />
+                                        <span class="tabular-nums">{{ dayData.holidays.length }}</span>
+                                    </button>
+
+                                    <div class="space-y-1 divide-y divide-dashed divide-white/20">
+                                        <div
+                                            v-for="holiday in dayData.holidays"
+                                            :key="holiday.date || holiday.name"
+                                            class="pt-1 text-[11px]"
+                                        >
+                                            <div :style="{ color: holiday.color }" class="font-semibold">
+                                                {{ holiday.name }}
+                                            </div>
+                                            <div class="text-white/80 text-[10px]" v-if="holiday.subdivisions?.length">
+                                                {{ holiday.subdivisions.map((p) => p).join(', ') }}
+                                            </div>
+                                            <div class="text-white/70 text-[10px]" v-else>
+                                                {{ $t('Germany-wide') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </HolidayToolTip>
+                            </div>
                         </div>
 
                         <div v-for="roomData in dayData.rooms" :key="roomData.room_id">
@@ -240,6 +272,7 @@ import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
+import HolidayToolTip from '@/Components/ToolTips/HolidayToolTip.vue';
 
 const AddShiftModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),

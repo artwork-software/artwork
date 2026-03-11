@@ -642,10 +642,16 @@ class ShiftChangeRecorder
      */
     protected function recordCommittedChange(array $meta, array $fieldChanges, string $eventName): void
     {
+        // When a Shift is deleted, the row no longer exists in the shifts table.
+        // Setting shift_id to null avoids FK constraint violation; shift data is preserved in field_changes.
+        $shiftId = ($eventName === 'deleted' && $meta['subject_type'] === Shift::class)
+            ? null
+            : $meta['shift_id'];
+
         // 1) Immer einen "globalen" CommittedShiftChange schreiben
         CommittedShiftChange::create([
             'craft_id'                => $meta['craft_id'],
-            'shift_id'                => $meta['shift_id'],
+            'shift_id'                => $shiftId,
             'subject_type'            => $meta['subject_type'],
             'subject_id'              => $meta['subject_id'],
             'change_type'             => $eventName,

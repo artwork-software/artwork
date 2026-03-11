@@ -9,34 +9,49 @@
         </div>
         <template v-if="entries && entries.length">
             <div v-for="entry in entries"
-                 :key="entry.shift_id + '-' + entry.start_time"
-                 class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] cursor-pointer transition relative"
-                 :class="entryCardClass(entry)"
-                 @click="$emit('open-history', entry.shift_id)">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="font-medium text-gray-900">{{ entry.start_time }} – {{ entry.end_time }}</span>
-                    <div class="flex items-center gap-1">
-                        <span v-if="entry.is_committed" class="inline-flex items-center gap-1 text-[10px] text-gray-500">
-                            <IconLock class="h-3 w-3" />
-                            {{ $t('Committed') }}
+                 :key="entry.unique_key"
+                 class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] transition relative"
+                 :class="entry.is_individual_time ? 'bg-blue-50 border border-blue-200' : [entryCardClass(entry), 'cursor-pointer']"
+                 @click="!entry.is_individual_time && $emit('open-history', entry.shift_id)">
+
+                <!-- Shift Entry -->
+                <template v-if="!entry.is_individual_time">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-gray-900">{{ entry.start_time }} – {{ entry.end_time }}</span>
+                        <div class="flex items-center gap-1">
+                            <span v-if="entry.is_committed" class="inline-flex items-center gap-1 text-[10px] text-gray-500">
+                                <IconLock class="h-3 w-3" />
+                                {{ $t('Committed') }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] text-gray-500 truncate">{{ entry.qualification || $t('Shift') }}</span>
+                        <span v-if="entry.has_changes_after_commit" class="inline-flex items-center gap-1 text-[10px] text-red-500">
+                            <IconAlertTriangle class="h-3 w-3" />
+                            {{ $t('Changed') }}
+                        </span>
+                        <span v-if="entry.has_changes_after_workflow" class="inline-flex items-center gap-1 text-[10px] text-orange-500">
+                            <IconAlertTriangle class="h-3 w-3" />
+                            {{ $t('Change requested') }}
                         </span>
                     </div>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-[10px] text-gray-500 truncate">{{ entry.qualification || $t('Shift') }}</span>
-                    <span v-if="entry.has_changes_after_commit" class="inline-flex items-center gap-1 text-[10px] text-red-500">
-                        <IconAlertTriangle class="h-3 w-3" />
-                        {{ $t('Changed') }}
-                    </span>
-                    <span v-if="entry.has_changes_after_workflow" class="inline-flex items-center gap-1 text-[10px] text-orange-500">
-                        <IconAlertTriangle class="h-3 w-3" />
-                        {{ $t('Change requested') }}
-                    </span>
-                </div>
-                <div v-if="entry.short_description" class="text-[10px] text-gray-400 truncate">{{ entry.short_description }}</div>
-                <div v-if="entry.workflow_rejection_reason" class="text-[10px] text-red-500 font-medium leading-tight mt-0.5">
-                    {{ entry.workflow_rejection_reason }}
-                </div>
+                    <div v-if="entry.short_description" class="text-[10px] text-gray-400 truncate">{{ entry.short_description }}</div>
+                    <div v-if="entry.workflow_rejection_reason" class="text-[10px] text-red-500 font-medium leading-tight mt-0.5">
+                        {{ entry.workflow_rejection_reason }}
+                    </div>
+                </template>
+
+                <!-- Individual Time Entry -->
+                <template v-else>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-gray-900">
+                            {{ entry.full_day ? $t('Full day') : `${entry.start_time} – ${entry.end_time}` }}
+                        </span>
+                        <IconClock class="h-3 w-3 text-blue-400" />
+                    </div>
+                    <span class="text-[10px] text-blue-500 truncate">{{ entry.title || $t('Individual time') }}</span>
+                </template>
             </div>
         </template>
         <template v-else>
@@ -47,7 +62,7 @@
     </div>
 </template>
 <script setup>
-import { IconAlertTriangle, IconLock } from '@tabler/icons-vue';
+import { IconAlertTriangle, IconClock, IconLock } from '@tabler/icons-vue';
 import {computed} from 'vue';
 const props = defineProps({
     entries: { type: Array, default: () => [] },

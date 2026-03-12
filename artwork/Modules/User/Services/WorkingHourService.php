@@ -319,10 +319,11 @@ class WorkingHourService
 
         $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
 
+        $workerIds = $workers->pluck('id')->all();
+
         // Batch-load all availabilities in one query instead of N+1
         $availabilitiesByUser = collect();
         if ($addVacationsAndAvailabilities) {
-            $workerIds = $workers->pluck('id')->all();
             $availabilitiesByUser = Availability::query()
                 ->where('available_type', User::class)
                 ->whereIn('available_id', $workerIds)
@@ -331,6 +332,16 @@ class WorkingHourService
                 ->groupBy('available_id')
                 ->map(fn ($availabilities) => $availabilities->groupBy('formatted_date'));
         }
+
+        // Batch-load shift rule violations for all users in date range
+        $violationsByUser = \Artwork\Modules\Shift\Models\ShiftRuleViolation::query()
+            ->with(['shiftRule:id,name,description,warning_color'])
+            ->whereIn('user_id', $workerIds)
+            ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->where('status', 'active')
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($violations) => $violations->groupBy(fn ($v) => $v->violation_date->format('Y-m-d')));
 
         $usersWithPlannedWorkingHours = [];
 
@@ -357,6 +368,9 @@ class WorkingHourService
             if ($addVacationsAndAvailabilities) {
                 $userData['availabilities'] = $availabilitiesByUser->get($user->id, collect());
             }
+
+            $userData['violations'] = $violationsByUser->get($user->id, collect());
+            $userData['compensation_period'] = $user->activeWorkContract()?->compensation_period ?? 0;
 
             $usersWithPlannedWorkingHours[] = $userData;
         }

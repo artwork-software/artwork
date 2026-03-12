@@ -34,6 +34,7 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -87,6 +88,7 @@ class UserController extends Controller
     public function __construct(
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
+        private readonly ShiftRuleService $shiftRuleService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -428,6 +430,19 @@ class UserController extends Controller
                 'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
             ]
         ]);
+    }
+
+    public function editUserCompensationDays(User $user): Response|ResponseFactory
+    {
+        $compensationData = $this->shiftRuleService->getCompensationDataForUser($user);
+
+        return inertia('Users/UserCompensationDays', array_merge(
+            [
+                'userToEdit' => new UserShowResource($user),
+                'currentTab' => 'compensationDays',
+            ],
+            $compensationData
+        ));
     }
 
     /**

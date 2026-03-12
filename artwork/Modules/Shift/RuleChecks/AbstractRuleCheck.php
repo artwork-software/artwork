@@ -18,7 +18,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Sum minutes from shifts overlapping this date
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
@@ -37,7 +37,9 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
             $segStart = $start->greaterThan($dayStart) ? $start : $dayStart;
             $segEnd = $end->lessThan($dayEnd) ? $end : $dayEnd;
 
-            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $breakMinutes);
+            // Only subtract break from the first day-segment of a multi-day shift
+            $applyBreak = $date->isSameDay(Carbon::parse($shift->start_date)) ? $breakMinutes : 0;
+            $minutes = max(0, $segStart->diffInMinutes($segEnd) - $applyBreak);
             $totalMinutes += $minutes;
         }
 
@@ -75,7 +77,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     protected function getShiftForUserOnDate(User $user, Carbon $date): ?Shift
     {
         return Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', '<=', $date)
             ->whereDate('end_date', '>=', $date)
@@ -98,12 +100,12 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         ])->first();
 
         if ($existingViolation) {
-            // Update existing violation data if needed
-            $existingViolation->update([
-                'violation_data' => $violationData,
-                'severity' => 'warning',
-                'status' => 'active'
-            ]);
+            // Only update violation data if still active — preserve resolved/ignored status
+            if ($existingViolation->status === 'active') {
+                $existingViolation->update([
+                    'violation_data' => $violationData,
+                ]);
+            }
             return $existingViolation;
         }
 
@@ -134,7 +136,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
 
         // Shifts
         $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', $date)
             ->orderBy('start')
@@ -273,7 +275,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Earliest shift start on this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->whereDate('start_date', $date)
             ->orderBy('start')
@@ -298,7 +300,7 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
     {
         // Find latest shift end relevant for this date
         $shift = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('user_id', $user->id);
+            $query->where('users.id', $user->id);
         })
             ->where(function ($query) use ($date): void {
                 $query->whereDate('end_date', $date)

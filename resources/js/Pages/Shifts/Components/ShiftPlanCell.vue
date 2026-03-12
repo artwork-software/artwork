@@ -1,6 +1,6 @@
 <template>
     <div
-        class="shiftCell h-full cursor-pointer overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100"
+        class="shiftCell h-full cursor-pointer overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100 relative"
         :class="[
       hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
     ]"
@@ -20,6 +20,21 @@
                     {{ part.text }}
                 </span>
             </template>
+        </div>
+
+        <!-- Violation indicators -->
+        <div v-if="violationsToday.length" class="absolute top-1 right-1 flex items-center gap-0.5">
+            <div
+                v-for="violation in violationsToday"
+                :key="violation.id"
+                class="h-3 w-3 rounded-full flex items-center justify-center"
+                :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
+                :title="(violation.shift_rule?.name || '') + ': ' + (violation.shift_rule?.description || '')"
+            >
+                <svg class="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
         </div>
     </div>
 </template>
@@ -226,6 +241,13 @@ const cellParts = computed(() => {
     }
 
     return parts
+})
+
+/** Violations am Tag */
+const violationsToday = computed(() => {
+    const violations = props.user?.violations?.[props.day.withoutFormat]
+    if (!violations) return []
+    return Array.isArray(violations) ? violations : Object.values(violations)
 })
 
 /** Rahmenregel: mind. 2 unterschiedliche Gruppen am Tag */

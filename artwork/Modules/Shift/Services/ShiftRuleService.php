@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
+use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRuleRepository;
 use Artwork\Modules\Shift\Repositories\ShiftRuleViolationRepository;
 use Artwork\Modules\User\Models\User;
@@ -17,6 +18,7 @@ class ShiftRuleService
     public function __construct(
         private readonly ShiftRuleRepository $shiftRuleRepository,
         private readonly ShiftRuleViolationRepository $shiftRuleViolationRepository,
+        private readonly CompensationDayOffRepository $compensationDayOffRepository,
         private readonly ShiftRuleCheckFactory $ruleCheckFactory,
     ) {
     }
@@ -108,9 +110,9 @@ class ShiftRuleService
         $this->shiftRuleViolationRepository->resolve($violation, $userId);
     }
 
-    public function ignoreViolation(ShiftRuleViolation $violation, ?int $userId = null): void
+    public function ignoreViolation(ShiftRuleViolation $violation, ?int $userId = null, ?string $ignoreReason = null): void
     {
-        $this->shiftRuleViolationRepository->ignore($violation, $userId);
+        $this->shiftRuleViolationRepository->ignore($violation, $userId, $ignoreReason);
     }
 
     public function updateViolationStatus(int $violationId, string $status, ?int $userId = null): void
@@ -124,14 +126,19 @@ class ShiftRuleService
         }
     }
 
-    public function processViolation(ShiftRuleViolation $violation, array $attributes): void
+    public function processViolation(ShiftRuleViolation $violation, array $attributes, int $userId): void
     {
         $this->shiftRuleViolationRepository->update($violation, $attributes);
-    }
 
-    public function grantCompensation(ShiftRuleViolation $violation, int $userId): void
-    {
-        $this->shiftRuleViolationRepository->grantCompensation($violation, $userId);
+        $violation->resolve($userId);
+
+        $this->compensationDayOffRepository->createFromProcessing(
+            $violation->user_id,
+            $violation->id,
+            (float) $attributes['compensation_days'],
+            $attributes['compensation_deadline'],
+            $attributes['compensation_reason'] ?? null
+        );
     }
 
     public function validateRulesForUser(
@@ -190,10 +197,10 @@ class ShiftRuleService
     public function getCompensationDataForUser(User $user): array
     {
         return [
-            'openCompensations' => $this->shiftRuleViolationRepository
-                ->getOpenCompensationsForUser($user->id),
-            'grantedCompensations' => $this->shiftRuleViolationRepository
-                ->getGrantedCompensationsForUser($user->id),
+            'openCompensations' => $this->compensationDayOffRepository
+                ->getOpenForUser($user->id),
+            'grantedCompensations' => $this->compensationDayOffRepository
+                ->getGrantedForUser($user->id),
             'unprocessedViolations' => $this->shiftRuleViolationRepository
                 ->getUnprocessedViolationsForUser($user->id),
             'compensationPeriod' => $user->activeWorkContract()?->compensation_period ?? 0,
@@ -230,7 +237,11 @@ class ShiftRuleService
                 'compensation_days' => $violation->compensation_days,
                 'compensation_deadline' => $violation->compensation_deadline,
                 'compensation_reason' => $violation->compensation_reason,
-                'compensation_granted_at' => $violation->compensation_granted_at,
+                'ignore_reason' => $violation->ignore_reason,
+                'resolved_by_user' => $violation->resolvedByUser ? [
+                    'first_name' => $violation->resolvedByUser->first_name,
+                    'last_name' => $violation->resolvedByUser->last_name,
+                ] : null,
                 'shift_rule' => $violation->shiftRule ? [
                     'name' => $violation->shiftRule->name,
                     'description' => $violation->shiftRule->description,

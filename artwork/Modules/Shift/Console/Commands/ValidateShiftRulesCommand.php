@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Console\Commands;
 
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Carbon\Carbon;
@@ -61,29 +62,47 @@ class ValidateShiftRulesCommand extends Command
 
     private function checkOverdueCompensations(): void
     {
-        $overdueViolations = ShiftRuleViolation::with(['shiftRule', 'user'])
-            ->where('status', 'active')
-            ->whereNotNull('compensation_deadline')
-            ->whereNull('compensation_granted_at')
-            ->where('compensation_deadline', '<', now())
-            ->whereDoesntHave('childViolations')
+        $overdueDayOffs = CompensationDayOff::with(['violation.shiftRule', 'user'])
+            ->overdue()
             ->get();
 
-        if ($overdueViolations->isEmpty()) {
+        if ($overdueDayOffs->isEmpty()) {
             return;
         }
 
-        $this->info("Found {$overdueViolations->count()} overdue compensation deadlines");
+        // Group by violation_id to create one new violation per group
+        $grouped = $overdueDayOffs->groupBy('violation_id');
 
-        foreach ($overdueViolations as $violation) {
+        $this->info("Found {$overdueDayOffs->count()} overdue compensation day offs across {$grouped->count()} violations");
+
+        foreach ($grouped as $violationId => $dayOffs) {
+            $firstDayOff = $dayOffs->first();
+            $violation = $firstDayOff->violation;
+
+            if (!$violation) {
+                continue;
+            }
+
+            // Check if a child violation already exists for this
+            $existingChild = ShiftRuleViolation::where('parent_violation_id', $violationId)
+                ->where('status', 'active')
+                ->whereJsonContains('violation_data->type', 'compensation_deadline_expired')
+                ->exists();
+
+            if ($existingChild) {
+                continue;
+            }
+
+            $totalOverdueDays = $dayOffs->sum('value');
+
             ShiftRuleViolation::create([
                 'shift_rule_id' => $violation->shift_rule_id,
                 'user_id' => $violation->user_id,
-                'violation_date' => $violation->compensation_deadline,
+                'violation_date' => $firstDayOff->deadline,
                 'violation_data' => [
                     'type' => 'compensation_deadline_expired',
                     'original_violation_date' => $violation->violation_date->format('Y-m-d'),
-                    'compensation_days' => $violation->compensation_days,
+                    'compensation_days' => $totalOverdueDays,
                 ],
                 'severity' => 'error',
                 'status' => 'active',
@@ -92,9 +111,13 @@ class ValidateShiftRulesCommand extends Command
                 'parent_violation_id' => $violation->id,
             ]);
 
+            $userName = $firstDayOff->user
+                ? "{$firstDayOff->user->first_name} {$firstDayOff->user->last_name}"
+                : "User #{$firstDayOff->user_id}";
+
             $this->line(
-                "  Created deadline violation for user {$violation->user->first_name} {$violation->user->last_name} "
-                . "(original: {$violation->violation_date->format('Y-m-d')}, deadline: {$violation->compensation_deadline->format('Y-m-d')})"
+                "  Created deadline violation for {$userName} "
+                . "(original: {$violation->violation_date->format('Y-m-d')}, deadline: {$firstDayOff->deadline->format('Y-m-d')})"
             );
         }
     }

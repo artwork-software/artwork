@@ -27,6 +27,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Shift\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\Shift\Models\GlobalQualification;
@@ -468,6 +469,13 @@ class UserController extends Controller
                 fn($day) => [$day => $t->working_time_minutes ?? 0]
             ));
 
+        $compensationDayOffs = CompensationDayOff::where('user_id', $user->id)
+            ->whereNotNull('granted_date')
+            ->whereBetween('granted_date', [$start->toDateString(), $end->toDateString()])
+            ->with(['violation:id,shift_rule_id', 'violation.shiftRule:id,name', 'grantedByUser:id,first_name,last_name'])
+            ->get()
+            ->groupBy(fn ($d) => $d->granted_date->toDateString());
+
         $current = $start->copy();
 
         while ($current->lte($end)) {
@@ -489,6 +497,24 @@ class UserController extends Controller
             $dailyTargetMinutes = 0;
             if ($patternTime instanceof Carbon) {
                 $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
+            }
+
+            $compensationInfo = null;
+            if (isset($compensationDayOffs[$dateKey])) {
+                $dayCompDays = $compensationDayOffs[$dateKey];
+                $totalCompValue = $dayCompDays->sum('value');
+                if ($totalCompValue >= 1.0) {
+                    $dailyTargetMinutes = 0;
+                } else {
+                    $dailyTargetMinutes = (int) round($dailyTargetMinutes * (1 - $totalCompValue));
+                }
+                $compensationInfo = $dayCompDays->map(fn ($d) => [
+                    'value' => (float) $d->value,
+                    'rule_name' => $d->violation?->shiftRule?->name,
+                    'granted_by' => $d->grantedByUser
+                        ? $d->grantedByUser->first_name . ' ' . $d->grantedByUser->last_name
+                        : null,
+                ])->values()->toArray();
             }
 
             $workedMinutes = 0;
@@ -564,6 +590,8 @@ class UserController extends Controller
                 'nightly_working_hours' => $nightlyMinutes,
                 'work_time_balance_change' => $balanceChange,
                 'is_special_day' => $isSpecialDay,
+                'is_compensation_day_off' => $compensationInfo !== null,
+                'compensation_day_off_info' => $compensationInfo,
                 'comments' => $comments,
                 'wantedHoursFormatted' => $this->convertMinutesToHoursAndMinutes($dailyTargetMinutes, true),
                 'worked_hours_formatted' => $this->convertMinutesToHoursAndMinutes($workedMinutes),

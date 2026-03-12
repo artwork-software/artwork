@@ -225,7 +225,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
         Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
-        Route::post('/{violation}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensation'])->name('shift-rule-violations.grant');
+    });
+
+    // Compensation Day Offs routes
+    Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
+        Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
+        Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
+        Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
+        Route::post('/store-manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualCompensationDay'])->name('compensation-day-offs.store-manual');
+        Route::get('/user/{user}/open', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getOpenCompensationDays'])->name('compensation-day-offs.open');
+        Route::delete('/{compensationDayOff}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'deleteCompensationDay'])->name('compensation-day-offs.delete');
+        Route::get('/user/{user}/week-schedule', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getUserWeekSchedule'])->name('compensation-day-offs.week-schedule');
     });
 
     // TOOL SETTING ROUTE

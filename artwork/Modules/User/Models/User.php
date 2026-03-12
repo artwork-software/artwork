@@ -31,6 +31,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Shift;
@@ -683,6 +684,11 @@ class User extends Model implements
     public function workTimeBookings(): HasMany
     {
         return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
+    }
+
+    public function compensationDayOffs(): HasMany
+    {
+        return $this->hasMany(CompensationDayOff::class, 'user_id', 'id');
     }
 
     public function getFormatedWorkTimeBalanceAttribute(): string

@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShiftRuleViolation extends Model implements WorkflowSubject
 {
-    use HasFactory, HasWorkflows, TriggersWorkflows;
+    use HasFactory, HasWorkflows, TriggersWorkflows, LogsActivity;
 
     protected $fillable = [
         'shift_rule_id',
@@ -32,9 +34,8 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         'compensation_days',
         'compensation_deadline',
         'compensation_reason',
-        'compensation_granted_at',
-        'compensation_granted_by',
         'parent_violation_id',
+        'ignore_reason',
     ];
 
     protected $casts = [
@@ -44,8 +45,20 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         'is_manual' => 'boolean',
         'compensation_days' => 'decimal:1',
         'compensation_deadline' => 'date',
-        'compensation_granted_at' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('shift_rule_violation')
+            ->logOnly([
+                'shift_rule_id', 'user_id', 'violation_date', 'status',
+                'resolved_at', 'resolved_by', 'reason', 'ignore_reason',
+                'compensation_days', 'compensation_deadline',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public function shiftRule(): BelongsTo
     {
@@ -72,11 +85,6 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         return $this->belongsTo(User::class, 'created_by_user_id', 'id', 'createdByUser');
     }
 
-    public function grantedByUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'compensation_granted_by', 'id', 'grantedByUser');
-    }
-
     public function parentViolation(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_violation_id', 'id', 'parentViolation');
@@ -87,24 +95,16 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         return $this->hasMany(self::class, 'parent_violation_id');
     }
 
+    public function compensationDayOffs(): HasMany
+    {
+        return $this->hasMany(CompensationDayOff::class, 'violation_id');
+    }
+
     public function scopeOpenCompensation(Builder $query): Builder
     {
         return $query->where('status', 'active')
             ->whereNotNull('compensation_days')
-            ->whereNull('compensation_granted_at');
-    }
-
-    public function scopeGrantedCompensation(Builder $query): Builder
-    {
-        return $query->whereNotNull('compensation_granted_at');
-    }
-
-    public function scopeOverdueCompensation(Builder $query): Builder
-    {
-        return $query->where('status', 'active')
-            ->whereNotNull('compensation_deadline')
-            ->whereNull('compensation_granted_at')
-            ->where('compensation_deadline', '<', now());
+            ->whereDoesntHave('compensationDayOffs', fn (Builder $q) => $q->whereNotNull('granted_at'));
     }
 
     public function isResolved(): bool
@@ -121,36 +121,19 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         ]);
     }
 
-    public function ignore(?int $userId = null): void
+    public function ignore(?int $userId = null, ?string $ignoreReason = null): void
     {
         $this->update([
             'status' => 'ignored',
             'resolved_at' => now(),
             'resolved_by' => $userId,
-        ]);
-    }
-
-    public function grantCompensation(int $userId): void
-    {
-        $this->update([
-            'compensation_granted_at' => now(),
-            'compensation_granted_by' => $userId,
-            'status' => 'resolved',
-            'resolved_at' => now(),
-            'resolved_by' => $userId,
+            'ignore_reason' => $ignoreReason,
         ]);
     }
 
     public function hasCompensation(): bool
     {
         return $this->compensation_days !== null && $this->compensation_days > 0;
-    }
-
-    public function isCompensationOverdue(): bool
-    {
-        return $this->compensation_deadline !== null
-            && $this->compensation_granted_at === null
-            && $this->compensation_deadline->isPast();
     }
 
     public function getViolationMessage(): string

@@ -59,18 +59,27 @@
             </div>
 
             <!-- Violation data details -->
-            <div v-if="violation.violation_data && Object.keys(violation.violation_data).length" class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
+            <div v-if="violationDetails.length" class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
                 <label class="block text-[11px] font-medium text-zinc-500 mb-1">{{ $t('Details') }}</label>
-                <div v-for="(value, key) in violation.violation_data" :key="key" class="text-xs text-zinc-700">
-                    <span class="font-medium">{{ formatDataKey(key) }}:</span> {{ value }}
+                <div v-for="detail in violationDetails" :key="detail.key" class="text-xs text-zinc-700">
+                    <span class="font-medium">{{ detail.label }}:</span> {{ detail.value }}
                 </div>
             </div>
 
-            <!-- Compensation already granted -->
-            <div v-if="violation.compensation_granted_at" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                    <span class="text-xs font-semibold text-emerald-800">{{ $t('Compensation granted') }}</span>
+            <!-- Compensation days assigned -->
+            <div v-if="violation.compensation_days" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-semibold text-emerald-800">{{ $t('Compensation days assigned to account') }}</span>
+                    </div>
+                    <button
+                        type="button"
+                        class="text-[11px] text-emerald-600 hover:text-emerald-800 underline"
+                        @click="isEditing = true"
+                    >
+                        {{ $t('Edit') }}
+                    </button>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-xs text-emerald-700">
                     <div>
@@ -78,52 +87,19 @@
                         {{ violation.compensation_days }}
                     </div>
                     <div>
-                        <span class="font-medium">{{ $t('Granted on') }}:</span>
-                        {{ formatDate(violation.compensation_granted_at) }}
+                        <span class="font-medium">{{ $t('Deadline until granted') }}:</span>
+                        {{ formatDate(violation.compensation_deadline) }}
+                    </div>
+                    <div v-if="violation.compensation_reason" class="col-span-2">
+                        <span class="font-medium">{{ $t('Reason') }}:</span>
+                        {{ violation.compensation_reason }}
                     </div>
                 </div>
             </div>
 
-            <!-- Compensation form (not yet granted) -->
-            <template v-else>
-                <!-- Show existing compensation info if set -->
-                <div v-if="violation.compensation_days && !isEditing" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
-                            <span class="text-xs font-semibold text-blue-800">{{ $t('Open compensations') }}</span>
-                        </div>
-                        <button
-                            type="button"
-                            class="text-[11px] text-blue-600 hover:text-blue-800 underline"
-                            @click="isEditing = true"
-                        >
-                            {{ $t('Edit') }}
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs text-blue-700 mb-3">
-                        <div>
-                            <span class="font-medium">{{ $t('Compensation days') }}:</span>
-                            {{ violation.compensation_days }}
-                        </div>
-                        <div>
-                            <span class="font-medium">{{ $t('Deadline') }}:</span>
-                            {{ formatDate(violation.compensation_deadline) }}
-                        </div>
-                        <div v-if="violation.compensation_reason" class="col-span-2">
-                            <span class="font-medium">{{ $t('Reason') }}:</span>
-                            {{ violation.compensation_reason }}
-                        </div>
-                    </div>
-                    <BaseUIButton
-                        :label="$t('Grant compensation')"
-                        is-add-button
-                        @click="grantCompensation"
-                    />
-                </div>
-
-                <!-- Edit compensation form -->
-                <div v-if="!violation.compensation_days || isEditing" class="space-y-4 rounded-xl border border-zinc-200 px-4 py-3">
+            <!-- Edit compensation form -->
+            <template v-if="!violation.compensation_days || isEditing">
+                <div class="space-y-4 rounded-xl border border-zinc-200 px-4 py-3">
                     <h4 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
                         {{ $t('Compensation days') }}
                     </h4>
@@ -144,12 +120,12 @@
                                 no-margin-top
                             />
                             <p v-if="processForm.errors.compensation_days" class="mt-1 text-xs text-red-500">
-                                {{ processForm.errors.compensation_days }}
+                                {{ $t(processForm.errors.compensation_days) }}
                             </p>
                         </div>
                         <div>
                             <label class="block text-[11px] font-medium text-zinc-500 mb-1">
-                                {{ $t('Deadline') }}
+                                {{ $t('Deadline until granted') }}
                             </label>
                             <BaseInput
                                 type="date"
@@ -160,7 +136,7 @@
                                 no-margin-top
                             />
                             <p v-if="processForm.errors.compensation_deadline" class="mt-1 text-xs text-red-500">
-                                {{ processForm.errors.compensation_deadline }}
+                                {{ $t(processForm.errors.compensation_deadline) }}
                             </p>
                         </div>
                     </div>
@@ -180,6 +156,41 @@
                 </div>
             </template>
 
+            <!-- Ignored info -->
+            <div v-if="violation.status === 'ignored'" class="rounded-lg border border-zinc-200 bg-zinc-50/70 px-3 py-3">
+                <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Ignore reason') }}</label>
+                <p class="text-xs text-zinc-700">{{ violation.ignore_reason || '-' }}</p>
+                <p v-if="violation.resolved_by_user" class="text-xs text-zinc-500 mt-1">
+                    {{ $t('Ignored by') }}: {{ violation.resolved_by_user?.first_name }} {{ violation.resolved_by_user?.last_name }}
+                </p>
+            </div>
+
+            <!-- Inline ignore reason input -->
+            <div v-if="showIgnoreInput" class="space-y-3 rounded-xl border border-red-200 bg-red-50/50 px-4 py-3">
+                <h4 class="text-xs font-semibold text-red-800">{{ $t('Ignore rule violation') }}</h4>
+                <BaseTextarea
+                    id="ignore_reason"
+                    v-model="ignoreReason"
+                    :label="$t('Reason for ignoring')"
+                />
+                <p v-if="ignoreError" class="text-xs text-red-500">{{ $t('Reason for ignoring') }}</p>
+                <div class="flex items-center gap-2">
+                    <BaseUIButton
+                        :label="$t('Confirm ignore')"
+                        is-delete-button
+                        is-small
+                        :disabled="ignoring"
+                        @click="submitIgnore"
+                    />
+                    <BaseUIButton
+                        :label="$t('Cancel')"
+                        is-cancel-button
+                        is-small
+                        @click="showIgnoreInput = false; ignoreReason = ''; ignoreError = false"
+                    />
+                </div>
+            </div>
+
             <!-- Footer -->
             <div class="flex justify-between pt-2 border-t border-zinc-100 mt-2">
                 <div class="flex items-center gap-2">
@@ -189,14 +200,14 @@
                         @click="$emit('close')"
                     />
                     <BaseUIButton
-                        v-if="!violation.compensation_granted_at && violation.status === 'active'"
+                        v-if="violation.status === 'active' && !showIgnoreInput"
                         :label="$t('Ignore')"
                         is-delete-button
-                        @click="ignoreViolation"
+                        @click="showIgnoreInput = true"
                     />
                 </div>
                 <BaseUIButton
-                    v-if="!violation.compensation_granted_at && (!violation.compensation_days || isEditing)"
+                    v-if="!violation.compensation_days || isEditing"
                     :label="$t('Save')"
                     is-add-button
                     :disabled="processForm.processing"
@@ -208,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
@@ -226,6 +237,10 @@ const props = defineProps({
 const emit = defineEmits(['close', 'updated']);
 
 const isEditing = ref(false);
+const showIgnoreInput = ref(false);
+const ignoreReason = ref('');
+const ignoreError = ref(false);
+const ignoring = ref(false);
 
 function getDefaultDeadline() {
     if (props.compensationPeriod > 0 && props.violation.violation_date) {
@@ -247,18 +262,57 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('de-DE');
 }
 
-function formatDataKey(key) {
-    const keyMap = {
-        'planned_hours': t('Planned hours'),
-        'max_allowed': t('Maximum allowed'),
-        'consecutive_days': t('Consecutive days'),
-        'weekly_hours': t('Weekly hours'),
-        'rest_hours': t('Rest hours'),
-        'min_required': t('Minimum required'),
-        'days_until_shift': t('Days until shift'),
-    };
-    return keyMap[key] || key;
+const dataKeyLabels = {
+    'planned_hours': () => t('Planned hours'),
+    'max_allowed': () => t('Maximum allowed'),
+    'consecutive_days': () => t('Consecutive days'),
+    'weekly_hours': () => t('Weekly hours'),
+    'rest_hours': () => t('Rest hours'),
+    'min_required': () => t('Minimum required'),
+    'days_until_shift': () => t('Days until shift'),
+    'previous_segment_end': () => t('Previous shift end'),
+    'current_segment_start': () => t('Next shift start'),
+    'next_segment_type': () => t('Next entry type'),
+    'type': () => t('Type'),
+    'original_violation_date': () => t('Original violation date'),
+    'compensation_days': () => t('Compensation days'),
+};
+
+const datetimePattern = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/;
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+const valueLabels = {
+    'shift': () => t('Shift'),
+    'compensation_deadline_expired': () => t('Compensation deadline expired'),
+};
+
+function formatDataValue(value) {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'string' && datetimePattern.test(value)) {
+        const d = new Date(value);
+        return d.toLocaleDateString('de-DE') + ', ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (typeof value === 'string' && datePattern.test(value)) {
+        return new Date(value).toLocaleDateString('de-DE');
+    }
+    if (typeof value === 'string' && valueLabels[value]) {
+        return valueLabels[value]();
+    }
+    if (typeof value === 'number') {
+        return Number.isInteger(value) ? value : value.toFixed(1);
+    }
+    return value;
 }
+
+const violationDetails = computed(() => {
+    const data = props.violation.violation_data;
+    if (!data || typeof data !== 'object') return [];
+    return Object.entries(data).map(([key, value]) => ({
+        key,
+        label: dataKeyLabels[key]?.() ?? key,
+        value: formatDataValue(value),
+    }));
+});
 
 function submitProcess() {
     processForm.put(route('shift-rule-violations.process', { violation: props.violation.id }), {
@@ -269,21 +323,20 @@ function submitProcess() {
     });
 }
 
-function ignoreViolation() {
-    router.post(route('shift-rule-violations.ignore', { violation: props.violation.id }), {}, {
+function submitIgnore() {
+    ignoreError.value = false;
+    if (!ignoreReason.value.trim()) {
+        ignoreError.value = true;
+        return;
+    }
+    ignoring.value = true;
+    router.post(route('shift-rule-violations.ignore', { violation: props.violation.id }), {
+        ignore_reason: ignoreReason.value,
+    }, {
         preserveScroll: true,
-        onSuccess: () => {
-            emit('updated');
-        },
+        onSuccess: () => emit('updated'),
+        onFinish: () => { ignoring.value = false; },
     });
 }
 
-function grantCompensation() {
-    router.post(route('shift-rule-violations.grant', { violation: props.violation.id }), {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            emit('updated');
-        },
-    });
-}
 </script>

@@ -78,6 +78,13 @@
             @close="selectedViolation = null"
             @updated="onViolationUpdated"
         />
+
+        <IgnoreViolationModal
+            v-if="violationToIgnore"
+            :violation="violationToIgnore"
+            @close="violationToIgnore = null"
+            @ignored="onViolationIgnored"
+        />
     </ShiftSettingsHeader>
 </template>
 
@@ -86,6 +93,7 @@ import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import ViolationEditModal from "@/Pages/Shifts/Components/ViolationEditModal.vue";
+import IgnoreViolationModal from "@/Pages/Shifts/Components/IgnoreViolationModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
@@ -94,6 +102,7 @@ const props = defineProps({
 })
 
 const selectedViolation = ref(null)
+const violationToIgnore = ref(null)
 
 function formatDate(date) {
     if (!date) return '-'
@@ -111,13 +120,16 @@ function resolveViolation(violation) {
 }
 
 function ignoreViolation(violation) {
-    router.post(route('shift-rule-violations.ignore', { violation: violation.id }), {}, {
-        preserveScroll: true,
-    })
+    violationToIgnore.value = violation
 }
 
 function onViolationUpdated() {
     selectedViolation.value = null
+    router.reload()
+}
+
+function onViolationIgnored() {
+    violationToIgnore.value = null
     router.reload()
 }
 </script>

@@ -54,44 +54,14 @@ class ShiftRuleViolationRepository extends BaseRepository
         ]);
     }
 
-    public function ignore(ShiftRuleViolation $violation, ?int $userId = null): void
+    public function ignore(ShiftRuleViolation $violation, ?int $userId = null, ?string $ignoreReason = null): void
     {
         $this->update($violation, [
             'status' => 'ignored',
             'resolved_at' => now(),
             'resolved_by' => $userId,
+            'ignore_reason' => $ignoreReason,
         ]);
-    }
-
-    public function grantCompensation(ShiftRuleViolation $violation, int $userId): void
-    {
-        $this->update($violation, [
-            'compensation_granted_at' => now(),
-            'compensation_granted_by' => $userId,
-            'status' => 'resolved',
-            'resolved_at' => now(),
-            'resolved_by' => $userId,
-        ]);
-    }
-
-    public function getOpenCompensationsForUser(int $userId): Collection
-    {
-        return ShiftRuleViolation::with(['shiftRule', 'createdByUser'])
-            ->where('user_id', $userId)
-            ->where('status', 'active')
-            ->whereNotNull('compensation_days')
-            ->whereNull('compensation_granted_at')
-            ->orderBy('compensation_deadline')
-            ->get();
-    }
-
-    public function getGrantedCompensationsForUser(int $userId): Collection
-    {
-        return ShiftRuleViolation::with(['shiftRule', 'grantedByUser', 'createdByUser'])
-            ->where('user_id', $userId)
-            ->whereNotNull('compensation_granted_at')
-            ->orderByDesc('compensation_granted_at')
-            ->get();
     }
 
     public function getUnprocessedViolationsForUser(int $userId): Collection

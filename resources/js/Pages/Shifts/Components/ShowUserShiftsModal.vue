@@ -386,11 +386,65 @@
                     </div>
                 </section>
 
+                <!-- Compensation day off info -->
+                <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())" class="mt-5">
+                    <div
+                        v-for="compDay in compensationDayForDate"
+                        :key="compDay.id"
+                        class="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 mb-2"
+                    >
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-block h-2 w-2 rounded-full bg-teal-500"></span>
+                            <span class="text-xs font-semibold text-teal-800">
+                                {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
+                            </span>
+                        </div>
+                        <div class="text-xs text-teal-700">
+                            <span class="font-medium">{{ t('Compensation day off for:') }}</span>
+                            {{ compDay.violation?.shift_rule?.name || t('Manual') }}
+                        </div>
+                        <div v-if="compDay.granted_by_user" class="text-xs text-teal-600 mt-0.5">
+                            <span class="font-medium">{{ t('Assigned by') }}:</span>
+                            {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
+                        </div>
+                        <button
+                            type="button"
+                            class="mt-1 text-[11px] text-teal-600 hover:text-teal-800 underline"
+                            @click="revokeCompensationDay(compDay.id)"
+                        >
+                            {{ t('Revoke') }}
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Grant compensation day button -->
+                <section
+                    v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
+                    class="mt-3"
+                >
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-[11px] text-teal-700 hover:border-teal-400 hover:text-teal-800 transition-colors"
+                        @click="showGrantCompensationModal = true"
+                    >
+                        <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
+                        <span>{{ t('Grant compensation day') }}</span>
+                    </button>
+                </section>
+
                 <!-- Rechte Spalte: Availability + Kommentar -->
                 <div class="space-y-6 mt-5">
+                    <!-- Info: Availability locked by compensation day -->
+                    <section
+                        v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
+                        class="rounded-xl border border-teal-200 bg-teal-50/60 px-3.5 py-3 text-xs text-teal-700"
+                    >
+                        {{ t('Availability cannot be changed — compensation day off granted.') }}
+                    </section>
+
                     <!-- Verfügbarkeits-Typ (nur intern & extern) -->
                     <section
-                        v-if="user.type === 0 || user.type === 1"
+                        v-if="(user.type === 0 || user.type === 1) && !compensationDayForDate.length"
                         class="space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3.5 py-3"
                     >
                         <div class="flex items-center justify-between gap-2">
@@ -587,6 +641,15 @@
             @close="showViolationEditModal = false"
             @updated="handleViolationUpdated"
         />
+
+        <GrantCompensationDayModal
+            v-if="showGrantCompensationModal"
+            :user-id="user.element.id"
+            :preselected-date="day.withoutFormat"
+            :user-name="user.element.first_name + ' ' + user.element.last_name"
+            @close="showGrantCompensationModal = false"
+            @granted="handleCompensationGranted"
+        />
     </ArtworkBaseModal>
 </template>
 
@@ -613,6 +676,7 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import IndividualTimeSeriesModal from '@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue';
 import AddManualViolationModal from '@/Pages/Shifts/Components/AddManualViolationModal.vue';
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
+import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
 import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -679,6 +743,15 @@ const showAddViolationModal = ref(false);
 const showViolationEditModal = ref(false);
 const selectedViolation = ref(null);
 
+// Compensation day offs
+const showGrantCompensationModal = ref(false);
+
+const compensationDayForDate = computed(() => {
+    const dayOffs = props.user?.compensation_day_offs?.[props.day.withoutFormat];
+    if (!dayOffs) return [];
+    return Array.isArray(dayOffs) ? dayOffs : Object.values(dayOffs);
+});
+
 const violationsForDay = computed(() => {
     const violations = props.user?.violations?.[props.day.withoutFormat];
     if (!violations) return [];
@@ -693,17 +766,18 @@ function openViolationEditModal(violation) {
 }
 
 function handleViolationCreated() {
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    emit('desiresReload');
 }
 
 function handleViolationUpdated() {
     showViolationEditModal.value = false;
     selectedViolation.value = null;
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    emit('desiresReload');
+}
+
+function handleCompensationGranted() {
+    showGrantCompensationModal.value = false;
+    emit('desiresReload');
 }
 
 // Kommentar
@@ -859,9 +933,7 @@ function closeSeriesModal() {
 }
 
 function handleSeriesUpdated() {
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    emit('desiresReload');
     closeSeriesModal();
 }
 
@@ -986,7 +1058,19 @@ function sendIndividualTimes() {
         });
 }
 
+function revokeCompensationDay(id) {
+    router.post(route('compensation-day-offs.revoke', { compensationDayOff: id }), {}, {
+        preserveScroll: true,
+        onSuccess: () => emit('desiresReload'),
+    });
+}
+
 function sendCheckVacation() {
+    if (compensationDayForDate.value.length > 0) {
+        closeModal(true);
+        return;
+    }
+
     if (props.user.type === 0) {
         router.patch(
             route('user.check.vacation', { user: props.user.element.id }),

@@ -185,6 +185,12 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         for ($i = 0; $i < count($segments) - 1; $i++) {
             $current = $segments[$i];
             $next = $segments[$i + 1];
+
+            // Skip overlapping or concurrent segments — no meaningful rest time to check
+            if ($next['start']->lessThanOrEqualTo($current['end'])) {
+                continue;
+            }
+
             $restHours = $this->calculateRestHours($current['end'], $next['start']);
             if ($restHours < $rule->individual_number_value && $next['type'] === 'shift' && $next['shift']) {
                 $violations->push($this->createViolation($rule, $next['shift'], $user, $date, [

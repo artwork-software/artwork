@@ -710,6 +710,7 @@
             <ShowUserShiftsModal
                 v-if="showUserShifts"
                 @closed="showUserShifts = false"
+                @desires-reload="handleWorkerReload"
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
@@ -2201,6 +2202,7 @@ const dropWorkers = computed<any[]>(() => {
             individual_times: user.individual_times,
             shift_comments: user.shift_comments,
             violations: user.violations,
+            compensation_day_offs: user.compensation_day_offs,
             compensation_period: user.compensation_period,
             key: `u_${user.user.id}_0`,
         })
@@ -2421,6 +2423,17 @@ function openShowUserShiftModal(user: any, day: any) {
     userToShow.value = user
     dayToShow.value = day
     showUserShifts.value = true
+}
+
+async function handleWorkerReload() {
+    await loadShiftPlanWorkers()
+    if (userToShow.value && showUserShifts.value) {
+        const key = userToShow.value.key
+        const fresh = dropWorkers.value.find((w: any) => w.key === key)
+        if (fresh) {
+            userToShow.value = fresh
+        }
+    }
 }
 
 function handleCellClick(user: any, day: any) {

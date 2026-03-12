@@ -3987,7 +3987,6 @@
     "Rule violations for this person on this day.": "Rule violations for this person on this day.",
     "No rule violations for this day.": "No rule violations for this day.",
     "Compensation days": "Compensation days",
-    "Deadline": "Deadline",
     "Grant compensation": "Grant compensation",
     "Compensation granted": "Compensation granted",
     "Open compensations": "Open compensations",
@@ -4045,5 +4044,19 @@
     "Minimum required": "Minimum required",
     "Days until shift": "Days until shift",
     "Violation is not active.": "Violation is not active.",
-    "Compensation already granted.": "Compensation already granted."
+    "Compensation already granted.": "Compensation already granted.",
+    "Rule successfully created": "Rule successfully created",
+    "Rule successfully updated": "Rule successfully updated",
+    "Rule successfully deleted": "Rule successfully deleted",
+    "Rule assignments successfully updated": "Rule assignments successfully updated",
+    "Status successfully updated": "Status successfully updated",
+    "Contracts successfully assigned": "Contracts successfully assigned",
+    "Users successfully assigned": "Users successfully assigned",
+    "Rule violation successfully resolved": "Rule violation successfully resolved",
+    "Rule violation successfully ignored": "Rule violation successfully ignored",
+    "Rule violation successfully created": "Rule violation successfully created",
+    "Rule violation successfully processed": "Rule violation successfully processed",
+    "Compensation successfully granted": "Compensation successfully granted",
+    "Compensation days must be in 0.5 increments.": "Compensation days must be in 0.5 increments.",
+    "No compensation days assigned.": "No compensation days assigned."
 }

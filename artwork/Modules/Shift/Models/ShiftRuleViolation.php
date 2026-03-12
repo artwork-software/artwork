@@ -112,6 +112,34 @@ class ShiftRuleViolation extends Model implements WorkflowSubject
         return $this->status === 'resolved' && $this->resolved_at !== null;
     }
 
+    public function resolve(?int $userId = null): void
+    {
+        $this->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'resolved_by' => $userId,
+        ]);
+    }
+
+    public function ignore(?int $userId = null): void
+    {
+        $this->update([
+            'status' => 'ignored',
+            'resolved_at' => now(),
+            'resolved_by' => $userId,
+        ]);
+    }
+
+    public function grantCompensation(int $userId): void
+    {
+        $this->update([
+            'compensation_granted_at' => now(),
+            'compensation_granted_by' => $userId,
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'resolved_by' => $userId,
+        ]);
+    }
 
     public function hasCompensation(): bool
     {

@@ -59,7 +59,7 @@ class ShiftRuleController extends Controller
         );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich erstellt'
+            'message' => 'Rule successfully created'
         ]);
     }
 
@@ -80,7 +80,7 @@ class ShiftRuleController extends Controller
         );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich aktualisiert'
+            'message' => 'Rule successfully updated'
         ]);
     }
 
@@ -89,7 +89,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->deleteRule($shiftRule);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich gelöscht'
+            'message' => 'Rule successfully deleted'
         ]);
     }
 
@@ -108,7 +108,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->updateContractAssignments($contract, $request->validated()['rule_ids'] ?? []);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelzuweisungen erfolgreich aktualisiert'
+            'message' => 'Rule assignments successfully updated'
         ]);
     }
 
@@ -143,7 +143,7 @@ class ShiftRuleController extends Controller
                 'rules' => $this->shiftRuleService->getAllWithRelations(),
                 'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
-                'error' => 'Fehler beim Validieren der Regeln: ' . $e->getMessage()
+                'error' => 'Error validating rules: ' . $e->getMessage()
             ]);
         }
     }
@@ -167,10 +167,10 @@ class ShiftRuleController extends Controller
             );
 
             return redirect()->back()->with('flash', [
-                'message' => 'Status erfolgreich aktualisiert'
+                'message' => 'Status successfully updated'
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Fehler beim Aktualisieren des Status: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating status: ' . $e->getMessage());
         }
     }
 
@@ -186,7 +186,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->syncContractsForRule($shiftRule, $request->validated()['contract_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Verträge erfolgreich zugewiesen'
+            'message' => 'Contracts successfully assigned'
         ]);
     }
 
@@ -195,7 +195,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->syncUsersForRule($shiftRule, $request->validated()['user_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Benutzer erfolgreich zugewiesen'
+            'message' => 'Users successfully assigned'
         ]);
     }
 
@@ -204,7 +204,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->resolveViolation($violation, auth()->id());
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich gelöst'
+            'message' => 'Rule violation successfully resolved'
         ]);
     }
 
@@ -213,7 +213,7 @@ class ShiftRuleController extends Controller
         $this->shiftRuleService->ignoreViolation($violation, auth()->id());
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich ignoriert'
+            'message' => 'Rule violation successfully ignored'
         ]);
     }
 
@@ -233,21 +233,21 @@ class ShiftRuleController extends Controller
         ]);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich erstellt'
+            'message' => 'Rule violation successfully created'
         ]);
     }
 
     public function processViolation(ProcessViolationRequest $request, ShiftRuleViolation $violation): RedirectResponse
     {
         if ($violation->status !== 'active') {
-            return redirect()->back()->with('error', __('Violation is not active.'));
+            return redirect()->back()->with('error', 'Violation is not active.');
         }
 
         $validated = $request->validated();
 
         if (round($validated['compensation_days'] * 2) !== $validated['compensation_days'] * 2) {
             return redirect()->back()->withErrors([
-                'compensation_days' => 'Ersatzfreie Tage müssen in 0.5er Schritten angegeben werden.'
+                'compensation_days' => 'Compensation days must be in 0.5 increments.'
             ]);
         }
 
@@ -258,24 +258,24 @@ class ShiftRuleController extends Controller
         ]);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich bearbeitet'
+            'message' => 'Rule violation successfully processed'
         ]);
     }
 
     public function grantCompensation(ShiftRuleViolation $violation): RedirectResponse
     {
         if (!$violation->hasCompensation()) {
-            return redirect()->back()->with('error', __('Keine Ersatzfreitage zugewiesen.'));
+            return redirect()->back()->with('error', 'No compensation days assigned.');
         }
 
         if ($violation->compensation_granted_at !== null) {
-            return redirect()->back()->with('error', __('Compensation already granted.'));
+            return redirect()->back()->with('error', 'Compensation already granted.');
         }
 
         $this->shiftRuleService->grantCompensation($violation, auth()->id());
 
         return redirect()->back()->with('flash', [
-            'message' => 'Ersatzfrei erfolgreich gewährt'
+            'message' => 'Compensation successfully granted'
         ]);
     }
 

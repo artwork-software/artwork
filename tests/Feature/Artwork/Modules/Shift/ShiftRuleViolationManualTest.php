@@ -663,7 +663,7 @@ class ShiftRuleViolationManualTest extends TestCase
         $this->assertNotNull($childViolation, 'Child violation should be created for overdue compensation');
         $this->assertEquals('error', $childViolation->severity);
         $this->assertEquals($this->user->id, $childViolation->user_id);
-        $this->assertEquals('Ersatzfrei-Frist abgelaufen', $childViolation->reason);
+        $this->assertEquals('Compensation deadline expired', $childViolation->reason);
     }
 
     #[Test]

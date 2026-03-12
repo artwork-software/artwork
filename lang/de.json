@@ -4083,5 +4083,19 @@
     "Minimum required": "Minimum erforderlich",
     "Days until shift": "Tage bis Schicht",
     "Violation is not active.": "Verstoß ist nicht aktiv.",
-    "Compensation already granted.": "Ersatzfrei bereits gewährt."
+    "Compensation already granted.": "Ersatzfrei bereits gewährt.",
+    "Rule successfully created": "Regel erfolgreich erstellt",
+    "Rule successfully updated": "Regel erfolgreich aktualisiert",
+    "Rule successfully deleted": "Regel erfolgreich gelöscht",
+    "Rule assignments successfully updated": "Regelzuweisungen erfolgreich aktualisiert",
+    "Status successfully updated": "Status erfolgreich aktualisiert",
+    "Contracts successfully assigned": "Verträge erfolgreich zugewiesen",
+    "Users successfully assigned": "Benutzer erfolgreich zugewiesen",
+    "Rule violation successfully resolved": "Regelverstoß erfolgreich gelöst",
+    "Rule violation successfully ignored": "Regelverstoß erfolgreich ignoriert",
+    "Rule violation successfully created": "Regelverstoß erfolgreich erstellt",
+    "Rule violation successfully processed": "Regelverstoß erfolgreich bearbeitet",
+    "Compensation successfully granted": "Ersatzfrei erfolgreich gewährt",
+    "Compensation days must be in 0.5 increments.": "Ersatzfreie Tage müssen in 0,5er-Schritten angegeben werden.",
+    "No compensation days assigned.": "Keine Ersatzfreitage zugewiesen."
 }

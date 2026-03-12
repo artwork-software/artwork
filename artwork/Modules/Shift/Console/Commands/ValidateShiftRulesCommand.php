@@ -88,7 +88,7 @@ class ValidateShiftRulesCommand extends Command
                 'severity' => 'error',
                 'status' => 'active',
                 'is_manual' => false,
-                'reason' => 'Ersatzfrei-Frist abgelaufen',
+                'reason' => 'Compensation deadline expired',
                 'parent_violation_id' => $violation->id,
             ]);
 

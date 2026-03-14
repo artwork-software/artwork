@@ -46,6 +46,7 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
@@ -197,6 +198,7 @@ class User extends Model implements
     use LaravelPermissionToVueJS;
     use HasWorkflows;
     use HasProfilePhotoCustom;
+    use HasCrmContact;
 
     protected $fillable = [
         'first_name',

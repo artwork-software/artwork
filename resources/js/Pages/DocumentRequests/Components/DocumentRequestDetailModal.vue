@@ -52,6 +52,16 @@
                 </a>
             </div>
 
+            <!-- CRM Contact Profile -->
+            <div v-if="documentRequest?.crm_contact_id">
+                <span class="text-sm font-medium text-gray-500 mb-2 block">{{ $t('Linked CRM contact') }}</span>
+                <CrmContactProfileCard
+                    :document-request-id="documentRequest.id"
+                    :crm-contact="documentRequest.crm_contact"
+                    :readonly="true"
+                />
+            </div>
+
             <hr class="border-gray-200">
 
             <!-- Metadata Section -->
@@ -167,6 +177,7 @@
 <script>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import CrmContactProfileCard from "./CrmContactProfileCard.vue";
 
 export default {
     name: "DocumentRequestDetailModal",
@@ -176,6 +187,7 @@ export default {
         documentRequest: Object,
     },
     components: {
+        CrmContactProfileCard,
         PropertyIcon,
         ArtworkBaseModal,
     },

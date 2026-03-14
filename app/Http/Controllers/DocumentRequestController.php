@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
+use Artwork\Modules\Crm\Services\CrmContactService;
+use Artwork\Modules\Crm\Services\CrmContactTypeService;
+use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\DocumentRequest\Http\Resources\DocumentRequestResource;
 use Artwork\Modules\DocumentRequest\Models\DocumentRequest;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Events\UpdateProjectContractsDocuments;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +29,10 @@ class DocumentRequestController extends Controller
 {
     public function __construct(
         private readonly NotificationService $notificationService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        private readonly CrmContactTypeService $crmContactTypeService,
+        private readonly CrmContactService $crmContactService,
+        private readonly CrmPropertyGroupService $crmPropertyGroupService,
     ) {
     }
 
@@ -35,19 +43,21 @@ class DocumentRequestController extends Controller
     {
         $userId = Auth::id();
 
+        $eagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+
         // Get requests created by the user
         $createdRequests = DocumentRequest::where('requester_id', $userId)
-            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->with($eagerLoad)
             ->get();
 
         // Get requests assigned to the user
         $assignedRequests = DocumentRequest::where('requested_id', $userId)
-            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->with($eagerLoad)
             ->get();
 
         // Get requests that are not assigned to any user
         $unassignedRequests = DocumentRequest::whereNull('requested_id')
-            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->with($eagerLoad)
             ->get();
 
         return inertia('DocumentRequests/Index', [
@@ -60,6 +70,7 @@ class DocumentRequestController extends Controller
             'first_project_calendar_tab_id' => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                 ProjectTabComponentEnum::CALENDAR
             ),
+            'crmContactTypes' => $this->crmContactTypeService->getActive(),
         ]);
     }
 
@@ -88,6 +99,7 @@ class DocumentRequestController extends Controller
             'comment' => 'nullable|string',
             'contract_state' => 'nullable|string|max:255',
             'contract_state_comment' => 'nullable|string',
+            'crm_contact_id' => 'nullable|exists:crm_contacts,id',
         ]);
 
         $documentRequest = DocumentRequest::create([
@@ -112,6 +124,7 @@ class DocumentRequestController extends Controller
             'comment' => $validated['comment'] ?? null,
             'contract_state' => $validated['contract_state'] ?? null,
             'contract_state_comment' => $validated['contract_state_comment'] ?? null,
+            'crm_contact_id' => $validated['crm_contact_id'] ?? null,
         ]);
 
         // Send notification to requested user (only if a user was assigned)
@@ -149,6 +162,7 @@ class DocumentRequestController extends Controller
             'contract_state' => 'nullable|string|max:255',
             'contract_state_comment' => 'nullable|string',
             'contract_id' => 'nullable|exists:contracts,id',
+            'crm_contact_id' => 'nullable|exists:crm_contacts,id',
         ]);
 
         $documentRequest->update($validated);
@@ -202,6 +216,35 @@ class DocumentRequestController extends Controller
         }
 
         return Redirect::back();
+    }
+
+    /**
+     * Get CRM contact data for a document request (permission-aware).
+     */
+    public function getCrmContactData(DocumentRequest $documentRequest): JsonResponse
+    {
+        if (!$documentRequest->crm_contact_id) {
+            return response()->json(null);
+        }
+
+        $contact = $this->crmContactService->findById($documentRequest->crm_contact_id);
+
+        if (!$contact) {
+            return response()->json(null);
+        }
+
+        $contact->load(['contactType.properties', 'propertyValues.property.group']);
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $groups = $this->crmPropertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+
+        return response()->json([
+            'contact' => $contact,
+            'propertyGroups' => $groups,
+        ]);
     }
 
     /**

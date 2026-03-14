@@ -82,7 +82,8 @@ return [
     'confirmation_title' => 'Bestätigung der sachlichen Richtigkeit',
     'confirmation_text' => 'Hiermit wird bestätigt, dass die oben genannten Personen im Rahmen der Produktion tätig waren und die Verpflegungspauschalen den geltenden Richtlinien entsprechen.',
     'name_artist' => 'Name Künstler',
-    'civil_name' => 'Zivilname',
+    'first_name' => 'Vorname',
+    'last_name' => 'Nachname',
     'phone_number' => 'Telefonnummer',
     'position' => 'Position',
 

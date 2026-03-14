@@ -66,4 +66,6 @@ enum PermissionEnum : string
     case DOCUMENT_REQUEST_CREATE = 'can create document requests';
     case DOCUMENT_REQUEST_EDIT = 'can edit document requests';
 
+    case CRM_VIEW = 'can view crm';
+    case CRM_MANAGER = 'crm manager';
 }

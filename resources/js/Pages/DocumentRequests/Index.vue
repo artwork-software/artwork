@@ -283,6 +283,7 @@
             :show="showCreateModal"
             :contract-types="contract_types"
             :company-types="company_types"
+            :crm-contact-types="crmContactTypes"
             @close="showCreateModal = false"
         />
 
@@ -293,6 +294,7 @@
             :document-request="selectedRequest"
             :contract-types="contract_types"
             :company-types="company_types"
+            :crm-contact-types="crmContactTypes"
             @close="closeEditModal"
         />
 
@@ -313,6 +315,7 @@
             :currencies="currencies"
             :document-request="selectedRequest"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
+            :crm-contact-types="crmContactTypes"
             @close-modal="closeUploadModal"
         />
 
@@ -384,6 +387,10 @@ const props = defineProps({
     first_project_calendar_tab_id: {
         type: Number,
         default: null
+    },
+    crmContactTypes: {
+        type: Array,
+        default: () => []
     }
 })
 

@@ -12,13 +12,15 @@ class Artist extends Model
 
     protected $fillable = [
         'name',
-        'civil_name',
+        'first_name',
+        'last_name',
         'phone_number',
         'position',
     ];
 
     protected $appends = [
         'profile_photo_url',
+        'display_name',
     ];
 
     public function residencies(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -26,6 +28,13 @@ class Artist extends Model
         return $this->hasMany(ArtistResidency::class);
     }
 
+
+    public function getDisplayNameAttribute(): string
+    {
+        $fullName = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+
+        return $fullName ?: ($this->name ?? '');
+    }
 
     public function getProfilePhotoUrlAttribute(): string
     {

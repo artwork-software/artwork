@@ -12,6 +12,7 @@ use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -62,6 +63,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
     use HasShifts;
     use Searchable;
     use HasProfilePhotoCustom;
+    use HasCrmContact;
 
     /**
      * @var string[]

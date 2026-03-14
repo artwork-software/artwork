@@ -66,6 +66,20 @@
                             id="eventTitle"
                             :label="$t('Contract partner*')"
                         />
+                        <!-- CRM Contact Link -->
+                        <div class="mt-2">
+                            <div v-if="selectedCrmContact" class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                                <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
+                                <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
+                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
+                                <button type="button" @click="removeCrmContact" class="ml-auto text-gray-400 hover:text-red-500">
+                                    <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                            </div>
+                            <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                {{ $t('Link CRM contact') }}
+                            </button>
+                        </div>
                     </div>
                     <div class="">
                         <div class="flex relative">
@@ -413,6 +427,13 @@
                         @click="storeContract" />
                 </div>
             </div>
+        <!-- CRM Contact Search Modal -->
+        <CrmContactSearchModal
+            v-if="showCrmSearch"
+            :contact-types="crmContactTypes"
+            @close="showCrmSearch = false"
+            @contact-selected="onCrmContactSelected"
+        />
         </ArtworkBaseModal>
 </template>
 
@@ -443,6 +464,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import CrmContactSearchModal from "@/Pages/DocumentRequests/Components/CrmContactSearchModal.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -456,9 +478,11 @@ export default {
         'companyTypes',
         'currencies',
         'first_project_calendar_tab_id',
-        'documentRequest'
+        'documentRequest',
+        'crmContactTypes'
     ],
     components: {
+        CrmContactSearchModal,
         PropertyIcon,
         BaseUIButton,
         ArtworkBaseModal,
@@ -548,6 +572,8 @@ export default {
             selectedProject: this.documentRequest?.project || null,
             project_query: '',
             project_search_results: [],
+            showCrmSearch: false,
+            selectedCrmContact: this.documentRequest?.crm_contact || null,
 
             errorText: null,
             creatingNewTask: false,
@@ -597,6 +623,14 @@ export default {
         }
     },
     methods: {
+        onCrmContactSelected(contact) {
+            this.selectedCrmContact = contact;
+            this.contractForm.contract_partner = contact.display_name;
+            this.showCrmSearch = false;
+        },
+        removeCrmContact() {
+            this.selectedCrmContact = null;
+        },
         showError() {
             this.errorText = this.$t('You must assign the task to a person with document access')
         },

@@ -136,6 +136,12 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemContr
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\Crm\Http\Controllers\CrmContactController;
+use Artwork\Modules\Crm\Http\Controllers\CrmContactTypeController;
+use Artwork\Modules\Crm\Http\Controllers\CrmController;
+use Artwork\Modules\Crm\Http\Controllers\CrmPropertyController;
+use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
+use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
@@ -995,6 +1001,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('document-requests.destroy');
     Route::post('/document-requests/{documentRequest}/link-contract', [DocumentRequestController::class, 'linkContract'])
         ->name('document-requests.link-contract');
+    Route::get('/document-requests/{documentRequest}/crm-contact', [DocumentRequestController::class, 'getCrmContactData'])
+        ->name('document-requests.crm-contact');
 
     //MoneySourceTasks
     Route::patch('money_source/task/{moneySourceTask}/done', [MoneySourceTaskController::class, 'markAsDone'])
@@ -2244,6 +2252,35 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'destroy'
         ]
     );
+
+    // CRM Routes
+    Route::group(['prefix' => 'crm'], function (): void {
+        Route::get('/', [CrmController::class, 'index'])->name('crm.index');
+        Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
+        Route::post('/contacts', [CrmContactController::class, 'store'])->name('crm.contacts.store');
+        Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])->name('crm.contacts.update');
+        Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])->name('crm.contacts.destroy');
+        Route::post('/contacts/{crmContact}/profile-image', [CrmContactController::class, 'updateProfileImage'])->name('crm.contacts.profile-image');
+        Route::post('/contacts/{crmContact}/property-file', [CrmContactController::class, 'uploadPropertyFile'])->name('crm.contacts.property-file.upload');
+        Route::delete('/contacts/{crmContact}/property-file', [CrmContactController::class, 'deletePropertyFile'])->name('crm.contacts.property-file.delete');
+
+        Route::group(['prefix' => 'settings'], function (): void {
+            Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');
+            Route::post('/types', [CrmContactTypeController::class, 'store'])->name('crm.types.store');
+            Route::patch('/types/{crmContactType}/properties', [CrmContactTypeController::class, 'syncProperties'])->name('crm.types.sync-properties');
+            Route::patch('/types/{crmContactType}', [CrmContactTypeController::class, 'update'])->name('crm.types.update');
+            Route::delete('/types/{crmContactType}', [CrmContactTypeController::class, 'destroy'])->name('crm.types.destroy');
+            Route::post('/groups', [CrmPropertyGroupController::class, 'store'])->name('crm.groups.store');
+            Route::patch('/groups/{crmPropertyGroup}', [CrmPropertyGroupController::class, 'update'])->name('crm.groups.update');
+            Route::delete('/groups/{crmPropertyGroup}', [CrmPropertyGroupController::class, 'destroy'])->name('crm.groups.destroy');
+            Route::patch('/groups/{crmPropertyGroup}/permissions', [CrmPropertyGroupController::class, 'updatePermissions'])->name('crm.groups.permissions');
+            Route::post('/properties', [CrmPropertyController::class, 'store'])->name('crm.properties.store');
+            Route::patch('/properties/reorder', [CrmPropertyController::class, 'reorder'])->name('crm.properties.reorder');
+            Route::patch('/properties/{crmProperty}', [CrmPropertyController::class, 'update'])->name('crm.properties.update');
+            Route::delete('/properties/{crmProperty}', [CrmPropertyController::class, 'destroy'])->name('crm.properties.destroy');
+        });
+    });
 
     Route::group(['prefix' => 'planning-event-calendar'], function (): void {
         Route::get('/', [EventController::class, 'viewPlanningCalendar'])->name('planning-event-calendar.index');

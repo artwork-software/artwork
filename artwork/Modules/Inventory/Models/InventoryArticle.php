@@ -6,7 +6,7 @@ use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -178,13 +178,12 @@ class InventoryArticle extends Model
             return null;
         }
 
-        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
         static $manufacturerCache = [];
 
         $manufacturerId = $manufacturerProperty->pivot->value;
 
         if (!isset($manufacturerCache[$manufacturerId])) {
-            $manufacturerCache[$manufacturerId] = Manufacturer::select('id', 'name')->find($manufacturerId);
+            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
         }
 
         $manufacturer = $manufacturerCache[$manufacturerId];
@@ -195,7 +194,7 @@ class InventoryArticle extends Model
 
         return [
             'id' => $manufacturer->id,
-            'name' => $manufacturer->name,
+            'name' => $manufacturer->display_name,
             'property_id' => $manufacturerProperty->id,
         ];
     }

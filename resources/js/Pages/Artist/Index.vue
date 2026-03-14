@@ -145,7 +145,8 @@ const props = defineProps({
 
 const cols = ref<TableColumn[]>([
     { key: 'name',  label: 'Name',  sortable: false },
-    { key: 'civil_name', label: 'Civil name', sortable: false },
+    { key: 'first_name', label: 'First name', sortable: false },
+    { key: 'last_name', label: 'Last name', sortable: false },
     { key: 'phone_number', label: 'Phone', sortable: false },
     { key: 'position', label: 'Position', sortable: false },
 ])

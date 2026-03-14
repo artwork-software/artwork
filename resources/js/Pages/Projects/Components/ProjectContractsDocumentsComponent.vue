@@ -299,6 +299,7 @@
             :contract-types="contractTypes"
             :currencies="currencies"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
+            :crm-contact-types="crmContactTypes"
         />
 
         <!-- Contract Edit Modal -->
@@ -327,6 +328,7 @@
             :contract-types="contractTypes"
             :company-types="companyTypes"
             :preselected-project="project"
+            :crm-contact-types="crmContactTypes"
             @close="showCreateRequestModal = false"
         />
 
@@ -337,6 +339,7 @@
             :document-request="selectedRequest"
             :contract-types="contractTypes"
             :company-types="companyTypes"
+            :crm-contact-types="crmContactTypes"
             @close="closeEditRequestModal"
         />
 
@@ -358,6 +361,7 @@
             :document-request="selectedRequest"
             :project-id="project.id"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
+            :crm-contact-types="crmContactTypes"
             @close-modal="closeUploadModal"
         />
 
@@ -430,6 +434,7 @@ const contracts = computed(() => page.props.projectContracts || [])
 const contractTypes = computed(() => page.props.contractTypes || [])
 const companyTypes = computed(() => page.props.companyTypes || [])
 const currencies = computed(() => page.props.currencies || [])
+const crmContactTypes = computed(() => page.props.crmContactTypes || [])
 
 // Document requests data from page props (reactive)
 const createdRequests = computed(() => page.props.projectCreatedRequests || [])

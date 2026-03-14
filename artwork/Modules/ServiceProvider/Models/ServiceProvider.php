@@ -5,6 +5,7 @@ namespace Artwork\Modules\ServiceProvider\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
@@ -49,6 +50,7 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
     use Searchable;
     use HasContacts;
     use HasProfilePhotoCustom;
+    use HasCrmContact;
 
     protected $fillable = [
         'profile_image',

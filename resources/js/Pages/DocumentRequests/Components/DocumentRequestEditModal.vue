@@ -51,6 +51,20 @@
                         id="contractPartner"
                         :label="$t('Contract partner')"
                     />
+                    <!-- CRM Contact Link -->
+                    <div class="mt-2">
+                        <div v-if="selectedCrmContact" class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                            <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
+                            <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
+                            <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
+                            <button type="button" @click="removeCrmContact" class="ml-auto text-gray-400 hover:text-red-500">
+                                <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
+                            </button>
+                        </div>
+                        <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ $t('Link CRM contact') }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Contract Value -->
@@ -239,6 +253,13 @@
                 />
             </div>
         </div>
+        <!-- CRM Contact Search Modal -->
+        <CrmContactSearchModal
+            v-if="showCrmSearch"
+            :contact-types="crmContactTypes"
+            @close="showCrmSearch = false"
+            @contact-selected="onCrmContactSelected"
+        />
     </ArtworkBaseModal>
 </template>
 
@@ -251,6 +272,7 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import CrmContactSearchModal from "./CrmContactSearchModal.vue";
 
 export default {
     name: "DocumentRequestEditModal",
@@ -265,9 +287,14 @@ export default {
         companyTypes: {
             type: Array,
             default: () => []
+        },
+        crmContactTypes: {
+            type: Array,
+            default: () => []
         }
     },
     components: {
+        CrmContactSearchModal,
         PropertyIcon,
         UserSearch,
         BaseUIButton,
@@ -286,6 +313,8 @@ export default {
             selectedStatus: this.documentRequest?.status || 'open',
             selectedLegalForm: this.documentRequest?.company_type || null,
             selectedContractType: this.documentRequest?.contract_type || null,
+            showCrmSearch: false,
+            selectedCrmContact: this.documentRequest?.crm_contact || null,
             statuses: [
                 { value: 'open', label: this.$t('Open') },
                 { value: 'in_progress', label: this.$t('In Progress') },
@@ -311,6 +340,7 @@ export default {
                 comment: this.documentRequest?.comment || '',
                 contract_state: this.documentRequest?.contract_state || '',
                 contract_state_comment: this.documentRequest?.contract_state_comment || '',
+                crm_contact_id: this.documentRequest?.crm_contact_id || null,
             }),
         }
     },
@@ -323,6 +353,15 @@ export default {
             const found = this.statuses.find(s => s.value === status);
             return found ? found.label : status;
         },
+        onCrmContactSelected(contact) {
+            this.selectedCrmContact = contact;
+            this.form.contract_partner = contact.display_name;
+            this.showCrmSearch = false;
+        },
+        removeCrmContact() {
+            this.selectedCrmContact = null;
+            this.form.crm_contact_id = null;
+        },
         closeModal() {
             this.$emit('close');
         },
@@ -331,6 +370,7 @@ export default {
             this.form.requested_id = this.selectedUser?.id || null;
             this.form.company_type_id = this.selectedLegalForm?.id;
             this.form.contract_type_id = this.selectedContractType?.id;
+            this.form.crm_contact_id = this.selectedCrmContact?.id || null;
 
             this.form.patch(this.route('document-requests.update', this.documentRequest.id), {
                 preserveScroll: true,

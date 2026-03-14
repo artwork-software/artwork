@@ -4,6 +4,7 @@ namespace Artwork\Modules\DocumentRequest\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contract\Models\Contract;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -54,6 +55,7 @@ class DocumentRequest extends Model
         'contract_id',
         'status',
         'contract_partner',
+        'crm_contact_id',
         'contract_value',
         'ksk_liable',
         'ksk_amount',
@@ -118,6 +120,14 @@ class DocumentRequest extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contracts');
+    }
+
+    /**
+     * Linked CRM contact
+     */
+    public function crmContact(): BelongsTo
+    {
+        return $this->belongsTo(CrmContact::class, 'crm_contact_id');
     }
 
     /**

@@ -14,6 +14,7 @@
             :verifierForEventTypIds="verifierForEventTypIds"
             :is-planning="isPlanning"
             :is-in-daily-view="isInDailyView"
+            :is-height-full="isHeightFull"
             @editEvent="e => emit('editEvent', e)"
             @editSubEvent="e => openAddSubEventModal"
             @openAddSubEventModal="openAddSubEventModal"

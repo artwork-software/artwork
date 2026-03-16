@@ -49,6 +49,9 @@
                                         {{ getPropertyValue(property.id).split('/').pop() }}
                                     </a>
                                 </template>
+                                <template v-else-if="property.type === 'date' && getPropertyValue(property.id)">
+                                    {{ formatDate(getPropertyValue(property.id)) }}
+                                </template>
                                 <template v-else>
                                     {{ getPropertyValue(property.id) || '-' }}
                                 </template>
@@ -77,6 +80,16 @@ const props = defineProps({
 const emit = defineEmits(['update-value', 'clear-error'])
 
 const expanded = ref(true)
+
+const formatDate = (value) => {
+    if (!value) return '-'
+    const date = new Date(value)
+    if (isNaN(date.getTime())) return value
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}.${month}.${year}`
+}
 
 const getPropertyValue = (propertyId) => {
     const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)

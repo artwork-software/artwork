@@ -1,7 +1,7 @@
 <template>
     <div class="print:break-before-auto">
         <div v-if="loadResidenciesError" class="mb-2 text-xs text-rose-600">
-            {{ loadResidenciesError }}
+            {{ $t(loadResidenciesError) }}
         </div>
         <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
             {{ $t('Loading data...') }}
@@ -181,7 +181,6 @@ const closeAddEditArtistResidenciesModal = (boolean) => {
 
     artistResidencyToEdit.value = null;
     if (boolean) {
-        console.log('Saved');
         showSaveSuccess.value = true;
         setTimeout(() => {
             showSaveSuccess.value = false;

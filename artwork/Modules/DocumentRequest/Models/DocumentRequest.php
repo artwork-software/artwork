@@ -127,7 +127,7 @@ class DocumentRequest extends Model
      */
     public function crmContact(): BelongsTo
     {
-        return $this->belongsTo(CrmContact::class, 'crm_contact_id');
+        return $this->belongsTo(CrmContact::class, 'crm_contact_id', 'id', 'crmContact');
     }
 
     /**

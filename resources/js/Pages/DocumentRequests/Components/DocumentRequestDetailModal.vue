@@ -90,7 +90,7 @@
 
                 <div v-if="documentRequest?.deadline_date">
                     <span class="font-medium text-gray-500">{{ $t('Deadline date') }}</span>
-                    <p class="text-gray-900">{{ documentRequest.deadline_date }}</p>
+                    <p class="text-gray-900">{{ formatDate(documentRequest.deadline_date) }}</p>
                 </div>
             </div>
 
@@ -222,6 +222,14 @@ export default {
         formatCurrency(value) {
             if (!value) return '-';
             return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+        },
+        formatDate(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
         }
     },
 }

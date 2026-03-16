@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Crm\Events\CrmSettingsChanged;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Services\CrmPropertyService;
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CrmPropertyController extends Controller
 {
@@ -35,7 +37,7 @@ class CrmPropertyController extends Controller
         $validated = $request->validate([
             'crm_property_group_id' => 'required|exists:crm_property_groups,id',
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:text,date,number,checkbox,select,link,textarea,upload',
+            'type' => ['required', 'string', Rule::enum(CrmPropertyTypeEnum::class)],
             'select_values' => 'nullable|array',
             'tooltip_text' => 'nullable|string',
         ]);

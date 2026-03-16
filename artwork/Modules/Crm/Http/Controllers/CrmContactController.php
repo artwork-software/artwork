@@ -5,6 +5,8 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Services\CrmContactService;
+use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +15,7 @@ class CrmContactController extends Controller
 {
     public function __construct(
         private readonly CrmContactService $contactService,
+        private readonly CrmPropertyGroupService $propertyGroupService,
     ) {}
 
     public function search(Request $request): JsonResponse
@@ -34,6 +37,22 @@ class CrmContactController extends Controller
                 'color' => $c->contactType->color,
             ] : null,
         ]));
+    }
+
+    public function getData(CrmContact $crmContact): JsonResponse
+    {
+        $crmContact->load(['contactType.properties', 'propertyValues.property.group']);
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $groups = $this->propertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+
+        return response()->json([
+            'contact' => $crmContact,
+            'propertyGroups' => $groups,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

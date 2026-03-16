@@ -57,10 +57,12 @@ class CrmPropertyGroupController extends Controller
 
         $this->service->update($crmPropertyGroup, $validated);
 
-        if (!($validated['is_confidential'] ?? true)) {
-            $crmPropertyGroup->permissions()->delete();
-        } else {
-            $this->service->updatePermissions($crmPropertyGroup, $validated['permissions'] ?? []);
+        if (array_key_exists('is_confidential', $validated)) {
+            if (!$validated['is_confidential']) {
+                $crmPropertyGroup->permissions()->delete();
+            } else {
+                $this->service->updatePermissions($crmPropertyGroup, $validated['permissions'] ?? []);
+            }
         }
 
         broadcast(new CrmSettingsChanged());

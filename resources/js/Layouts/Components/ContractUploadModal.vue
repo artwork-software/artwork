@@ -72,13 +72,36 @@
                                 <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
                                 <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
                                 <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
-                                <button type="button" @click="removeCrmContact" class="ml-auto text-gray-400 hover:text-red-500">
+                                <button type="button" @click="toggleCrmDetails" class="ml-auto text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                    <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                                <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">
                                     <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
                             </div>
                             <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
                                 {{ $t('Link CRM contact') }}
                             </button>
+                        </div>
+                    </div>
+                    <!-- Collapsible CRM Details (full width) -->
+                    <div v-if="selectedCrmContact && showCrmDetails" class="col-span-full rounded-md border border-gray-200 bg-gray-50 overflow-hidden">
+                        <div class="px-3 py-3">
+                            <div v-if="loadingCrmDetails" class="text-center text-sm text-gray-500 py-2">
+                                {{ $t('Loading...') }}
+                            </div>
+                            <div v-else-if="crmContactData && crmVisibleGroups.length > 0" class="space-y-3">
+                                <CrmPropertyGroupSection
+                                    v-for="group in crmVisibleGroups"
+                                    :key="group.id"
+                                    :group="group"
+                                    :contact="crmContactData.contact"
+                                    :editing="false"
+                                />
+                            </div>
+                            <div v-else class="text-sm text-gray-500 py-2">
+                                {{ $t('No CRM data available.') }}
+                            </div>
                         </div>
                     </div>
                     <div class="">
@@ -465,6 +488,7 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import CrmContactSearchModal from "@/Pages/DocumentRequests/Components/CrmContactSearchModal.vue";
+import CrmPropertyGroupSection from "@/Pages/CRM/Components/CrmPropertyGroupSection.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -482,6 +506,7 @@ export default {
         'crmContactTypes'
     ],
     components: {
+        CrmPropertyGroupSection,
         CrmContactSearchModal,
         PropertyIcon,
         BaseUIButton,
@@ -574,6 +599,9 @@ export default {
             project_search_results: [],
             showCrmSearch: false,
             selectedCrmContact: this.documentRequest?.crm_contact || null,
+            showCrmDetails: false,
+            loadingCrmDetails: false,
+            crmContactData: null,
 
             errorText: null,
             creatingNewTask: false,
@@ -622,14 +650,60 @@ export default {
             }),
         }
     },
+    computed: {
+        crmVisibleGroups() {
+            if (!this.crmContactData) return [];
+
+            const typePropertyIds = new Set(
+                (this.crmContactData.contact.contact_type?.properties ?? []).map(p => p.id)
+            );
+
+            const pivotMap = {};
+            for (const p of (this.crmContactData.contact.contact_type?.properties ?? [])) {
+                pivotMap[p.id] = p.pivot ?? {};
+            }
+
+            return (this.crmContactData.propertyGroups ?? [])
+                .map(group => ({
+                    ...group,
+                    properties: (group.properties ?? [])
+                        .filter(p => typePropertyIds.has(p.id))
+                        .map(p => ({ ...p, pivot: pivotMap[p.id] ?? {} })),
+                }))
+                .filter(group => group.properties.length > 0);
+        },
+    },
     methods: {
         onCrmContactSelected(contact) {
             this.selectedCrmContact = contact;
             this.contractForm.contract_partner = contact.display_name;
             this.showCrmSearch = false;
+            this.showCrmDetails = false;
+            this.crmContactData = null;
         },
         removeCrmContact() {
             this.selectedCrmContact = null;
+            this.showCrmDetails = false;
+            this.crmContactData = null;
+        },
+        toggleCrmDetails() {
+            this.showCrmDetails = !this.showCrmDetails;
+            if (this.showCrmDetails && !this.crmContactData) {
+                this.loadCrmDetails();
+            }
+        },
+        loadCrmDetails() {
+            this.loadingCrmDetails = true;
+            axios.get(this.route('crm.contacts.data', this.selectedCrmContact.id))
+                .then(response => {
+                    this.crmContactData = response.data;
+                })
+                .catch(() => {
+                    this.crmContactData = null;
+                })
+                .finally(() => {
+                    this.loadingCrmDetails = false;
+                });
         },
         showError() {
             this.errorText = this.$t('You must assign the task to a person with document access')

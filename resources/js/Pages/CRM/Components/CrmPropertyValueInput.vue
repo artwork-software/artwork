@@ -26,7 +26,7 @@
                 :id="`prop_${property.id}`"
                 type="number"
                 :model-value="value"
-                @update:model-value="$emit('update:value', $event)"
+                @update:model-value="$emit('update:value', $event !== null && $event !== '' ? String($event) : '')"
                 :label="$t(property.name) + (required ? ' *' : '')"
                 :disabled="disabled"
             />
@@ -152,7 +152,7 @@ import { IconFile, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
 
 const props = defineProps({
     property: { type: Object, required: true },
-    value: { type: String, default: '' },
+    value: { type: [String, Number], default: '' },
     contactId: { type: Number, default: null },
     required: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },

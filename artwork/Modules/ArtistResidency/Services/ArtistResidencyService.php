@@ -63,6 +63,13 @@ readonly class ArtistResidencyService
                 return $this->residencies->create($resData);
             }
 
+            // Store name/phone fields on the residency for display purposes
+            $resData['name'] = $artistInput['name'] ?? null;
+            $resData['first_name'] = $artistInput['first_name'] ?? null;
+            $resData['last_name'] = $artistInput['last_name'] ?? null;
+            $resData['phone_number'] = $artistInput['phone_number'] ?? null;
+            $resData['position'] = $artistInput['position'] ?? null;
+
             $residency = $this->residencies->create($resData);
 
             // CRM contact: use existing or create new from property values
@@ -117,9 +124,14 @@ readonly class ArtistResidencyService
                 return $residency->refresh();
             }
 
-            if (!empty($resData)) {
-                $this->residencies->update($residency, $resData);
-            }
+            // Update name/phone fields on the residency for display purposes
+            $resData['name'] = $artistInput['name'] ?? $residency->name;
+            $resData['first_name'] = $artistInput['first_name'] ?? $residency->first_name;
+            $resData['last_name'] = $artistInput['last_name'] ?? $residency->last_name;
+            $resData['phone_number'] = $artistInput['phone_number'] ?? $residency->phone_number;
+            $resData['position'] = $artistInput['position'] ?? $residency->position;
+
+            $this->residencies->update($residency, $resData);
 
             // Handle CRM property sync/overrides
             $crmContactId = $residency->artist_crm_contact_id;
@@ -345,7 +357,6 @@ readonly class ArtistResidencyService
         )->setPaper('a4', 'landscape')
             ->setOptions([
                 'dpi' => 72,
-                'defaultFont' => 'sans-serif',
             ]);
 
         $filename = $this->createFilename(now(), $project->name, '72');

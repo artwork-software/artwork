@@ -208,7 +208,7 @@ class MigrateToCrmCommand extends Command
 
         $assignments = [
             CrmSystemContactTypeEnum::ARTIST->value => [
-                'Künstler*innen Name', 'Vorname', 'Nachname', 'Telefon',
+                'Künstler*innen Name', 'Telefon', 'Vorname', 'Nachname',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Position', 'Notiz',
             ],

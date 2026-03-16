@@ -25,7 +25,7 @@
                             <div class="flex items-center">
                                 <div class="mx-2">
                                     <p class="text-blue-500 text-xs group-hover:text-blue-600">
-                                        {{ prop.name }}: {{ formatFilterLabel(prop) }}
+                                        {{ prop.name }}: {{ $t(formatFilterLabel(prop)) }}
                                     </p>
                                 </div>
                                 <XIcon class="size-4 text-blue-500 hover:text-error" />
@@ -154,7 +154,7 @@ const hasActiveFilters = computed(() =>
 const formatFilterLabel = (prop) => {
     const val = localFilters[prop.id]
     if (prop.type === 'checkbox') {
-        return val === '1' ? 'Ja' : 'Nein'
+        return val === '1' ? 'Yes' : 'No'
     }
     if (Array.isArray(val)) {
         return val.join(', ')

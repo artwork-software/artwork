@@ -8,15 +8,16 @@
         <div class="space-y-4">
             <!-- Contact Type Filter -->
             <div>
-                <select
-                    v-model="selectedTypeId"
-                    class="block w-full rounded-md border border-gray-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out text-sm"
-                >
-                    <option :value="null">{{ $t('All contact types') }}</option>
-                    <option v-for="type in contactTypes" :key="type.id" :value="type.id">
-                        {{ type.name }}
-                    </option>
-                </select>
+                <ArtworkBaseListbox
+                    :model-value="selectedType"
+                    @update:model-value="onTypeChange"
+                    :items="typeOptions"
+                    by="id"
+                    option-label="name"
+                    :label="$t('Contact type')"
+                    :placeholder="$t('All contact types')"
+                    :enable-search="false"
+                />
             </div>
 
             <!-- Search Input -->
@@ -72,12 +73,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { IconUser } from '@tabler/icons-vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 
-defineProps({
+const props = defineProps({
     contactTypes: {
         type: Array,
         default: () => []
@@ -88,6 +90,14 @@ const emit = defineEmits(['close', 'contact-selected'])
 
 const searchQuery = ref('')
 const selectedTypeId = ref(null)
+
+const typeOptions = computed(() => props.contactTypes)
+const selectedType = computed(() =>
+    typeOptions.value.find(t => t.id === selectedTypeId.value) ?? null
+)
+const onTypeChange = (type) => {
+    selectedTypeId.value = type?.id ?? null
+}
 const results = ref([])
 const loading = ref(false)
 const hasSearched = ref(false)

@@ -4272,5 +4272,9 @@
     "Link CRM contact": "CRM-Kontakt verknüpfen",
     "Linked CRM contact": "Verknüpfter CRM-Kontakt",
     "View in CRM": "Im CRM ansehen",
-    "Unlink CRM contact": "CRM-Kontakt entfernen"
+    "Unlink CRM contact": "CRM-Kontakt entfernen",
+    "Show CRM details": "CRM-Details anzeigen",
+    "No CRM data available.": "Keine CRM-Daten verfügbar.",
+    "Unable to load artist residencies.": "Künstleraufenthalte konnten nicht geladen werden.",
+    "Saved. The Artist Residency has been successfully applied.": "Gespeichert. Der Künstleraufenthalt wurde erfolgreich übernommen."
 }

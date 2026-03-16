@@ -85,9 +85,12 @@ class ArtistResidency extends Model
             return $fullName ?: $this->name;
         }
 
+        if (!empty($this->name)) {
+            return $this->name;
+        }
+
         return $this->artistContact?->display_name
-            ?? $this->artist?->display_name
-            ?? $this->name;
+            ?? $this->artist?->display_name;
     }
 
     public function artistContact(): BelongsTo

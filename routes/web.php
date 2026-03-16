@@ -2257,6 +2257,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'crm'], function (): void {
         Route::get('/', [CrmController::class, 'index'])->name('crm.index');
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
         Route::post('/contacts', [CrmContactController::class, 'store'])->name('crm.contacts.store');
         Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])->name('crm.contacts.update');

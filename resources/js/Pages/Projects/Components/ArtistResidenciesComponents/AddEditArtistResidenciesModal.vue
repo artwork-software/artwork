@@ -738,17 +738,25 @@ const createOrUpdateArtistResidency = () => {
     artistResidency.type_of_room = selectedRoomType.value.id;
     artistResidency.accommodation_id = selectedAccommodation.value.id;
 
-    // Set CRM property values and sync flag on the form
-    artistResidency.crm_property_values = crmPropertyValues.value
+    // Set CRM property values and sync flag on the form — ensure all values are strings
+    const stringifiedValues = {}
+    for (const [key, val] of Object.entries(crmPropertyValues.value)) {
+        stringifiedValues[key] = val !== null && val !== '' ? String(val) : ''
+    }
+    artistResidency.crm_property_values = stringifiedValues
     artistResidency.sync_crm_changes = syncCrmChanges.value
 
-    // Derive name/first_name/last_name from CRM properties
+    // Derive name/first_name/last_name/phone_number/position from CRM properties
     const kuenstlerNameProp = props.artistContactTypeProperties.find(p => p.name === 'Künstler*innen Name')
     const vornameProp = props.artistContactTypeProperties.find(p => p.name === 'Vorname')
     const nachnameProp = props.artistContactTypeProperties.find(p => p.name === 'Nachname')
+    const telefonProp = props.artistContactTypeProperties.find(p => p.name === 'Telefon')
+    const positionProp = props.artistContactTypeProperties.find(p => p.name === 'Position')
     artistResidency.name = kuenstlerNameProp ? (crmPropertyValues.value[kuenstlerNameProp.id] ?? '') : ''
     artistResidency.first_name = vornameProp ? (crmPropertyValues.value[vornameProp.id] ?? '') : ''
     artistResidency.last_name = nachnameProp ? (crmPropertyValues.value[nachnameProp.id] ?? '') : ''
+    artistResidency.phone_number = telefonProp ? (crmPropertyValues.value[telefonProp.id] ?? '') : ''
+    artistResidency.position = positionProp ? (crmPropertyValues.value[positionProp.id] ?? '') : ''
 
     // Bug-Fix: CRM artist -> artist_crm_contact_id, Legacy artist -> artist_id
     if (selectedArtist.value?.is_crm) {

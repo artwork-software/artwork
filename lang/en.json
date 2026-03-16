@@ -4234,5 +4234,9 @@
     "Link CRM contact": "Link CRM contact",
     "Linked CRM contact": "Linked CRM contact",
     "View in CRM": "View in CRM",
-    "Unlink CRM contact": "Unlink CRM contact"
+    "Unlink CRM contact": "Unlink CRM contact",
+    "Show CRM details": "Show CRM details",
+    "No CRM data available.": "No CRM data available.",
+    "Unable to load artist residencies.": "Unable to load artist residencies.",
+    "Saved. The Artist Residency has been successfully applied.": "Saved. The Artist Residency has been successfully applied."
 }

@@ -7,6 +7,7 @@ use Artwork\Modules\Crm\Repositories\CrmPropertyGroupRepository;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 readonly class CrmPropertyGroupService
 {
@@ -79,15 +80,17 @@ readonly class CrmPropertyGroupService
 
     public function updatePermissions(CrmPropertyGroup $group, array $permissions): void
     {
-        $group->permissions()->delete();
+        DB::transaction(function () use ($group, $permissions) {
+            $group->permissions()->delete();
 
-        foreach ($permissions as $permission) {
-            $group->permissions()->create([
-                'permissionable_type' => $permission['permissionable_type'],
-                'permissionable_id' => $permission['permissionable_id'],
-                'can_view' => $permission['can_view'] ?? false,
-                'can_edit' => $permission['can_edit'] ?? false,
-            ]);
-        }
+            foreach ($permissions as $permission) {
+                $group->permissions()->create([
+                    'permissionable_type' => $permission['permissionable_type'],
+                    'permissionable_id' => $permission['permissionable_id'],
+                    'can_view' => $permission['can_view'] ?? false,
+                    'can_edit' => $permission['can_edit'] ?? false,
+                ]);
+            }
+        });
     }
 }

@@ -19,7 +19,8 @@ use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -117,7 +118,11 @@ class InventoryCategoryController extends Controller
             'filterableProperties' => $filterableProperties->values(), // Reset keys
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
-            'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
+            'manufacturers' => CrmContact::query()
+                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->select('id', 'display_name as name')
+                    ->orderBy('display_name')
+                    ->get(),
             'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
             'countsByStatus' => $this->articleService->getCountsByStatusAggregated(
                 $inventoryCategory,
@@ -175,7 +180,11 @@ class InventoryCategoryController extends Controller
             'categories' => $this->categoryService->paginateWithRelations(),
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
-            'manufacturers' => Manufacturer::all(),
+            'manufacturers' => CrmContact::query()
+                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->select('id', 'display_name as name')
+                    ->orderBy('display_name')
+                    ->get(),
         ]);
     }
 

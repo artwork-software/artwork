@@ -9,36 +9,42 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Add boolean columns to pivot table
-        Schema::table('crm_contact_type_property', function (Blueprint $table): void {
-            $table->boolean('is_required')->default(false)->after('sort_order');
-            $table->boolean('show_in_list')->default(false)->after('is_required');
-            $table->boolean('is_filterable')->default(false)->after('show_in_list');
-        });
+        // 1. Add boolean columns to pivot table (if not already present)
+        if (!Schema::hasColumn('crm_contact_type_property', 'is_required')) {
+            Schema::table('crm_contact_type_property', function (Blueprint $table): void {
+                $table->boolean('is_required')->default(false)->after('sort_order');
+                $table->boolean('show_in_list')->default(false)->after('is_required');
+                $table->boolean('is_filterable')->default(false)->after('show_in_list');
+            });
+        }
 
-        // 2. Copy existing values from crm_properties into pivot rows
-        DB::table('crm_contact_type_property as pivot')
-            ->join('crm_properties as p', 'pivot.crm_property_id', '=', 'p.id')
-            ->update([
-                'pivot.is_required' => DB::raw('p.is_required'),
-                'pivot.show_in_list' => DB::raw('p.show_in_list'),
-                'pivot.is_filterable' => DB::raw('p.is_filterable'),
-            ]);
+        // 2. Copy existing values from crm_properties into pivot rows (only if source columns still exist)
+        if (Schema::hasColumn('crm_properties', 'is_required')) {
+            DB::statement('
+                UPDATE crm_contact_type_property
+                INNER JOIN crm_properties ON crm_contact_type_property.crm_property_id = crm_properties.id
+                SET crm_contact_type_property.is_required = crm_properties.is_required,
+                    crm_contact_type_property.show_in_list = crm_properties.show_in_list,
+                    crm_contact_type_property.is_filterable = crm_properties.is_filterable
+            ');
 
-        // 3. Remove columns from crm_properties
-        Schema::table('crm_properties', function (Blueprint $table): void {
-            $table->dropColumn(['is_required', 'show_in_list', 'is_filterable']);
-        });
+            // 3. Remove columns from crm_properties
+            Schema::table('crm_properties', function (Blueprint $table): void {
+                $table->dropColumn(['is_required', 'show_in_list', 'is_filterable']);
+            });
+        }
     }
 
     public function down(): void
     {
         // 1. Re-add columns to crm_properties
-        Schema::table('crm_properties', function (Blueprint $table): void {
-            $table->boolean('is_required')->default(false)->after('tooltip_text');
-            $table->boolean('show_in_list')->default(false)->after('is_required');
-            $table->boolean('is_filterable')->default(false)->after('show_in_list');
-        });
+        if (!Schema::hasColumn('crm_properties', 'is_required')) {
+            Schema::table('crm_properties', function (Blueprint $table): void {
+                $table->boolean('is_required')->default(false)->after('tooltip_text');
+                $table->boolean('show_in_list')->default(false)->after('is_required');
+                $table->boolean('is_filterable')->default(false)->after('show_in_list');
+            });
+        }
 
         // 2. Copy values back (take first pivot row's values)
         $pivotRows = DB::table('crm_contact_type_property')
@@ -58,8 +64,10 @@ return new class extends Migration
         }
 
         // 3. Remove columns from pivot
-        Schema::table('crm_contact_type_property', function (Blueprint $table): void {
-            $table->dropColumn(['is_required', 'show_in_list', 'is_filterable']);
-        });
+        if (Schema::hasColumn('crm_contact_type_property', 'is_required')) {
+            Schema::table('crm_contact_type_property', function (Blueprint $table): void {
+                $table->dropColumn(['is_required', 'show_in_list', 'is_filterable']);
+            });
+        }
     }
 };

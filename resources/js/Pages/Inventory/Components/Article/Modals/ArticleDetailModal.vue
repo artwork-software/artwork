@@ -214,7 +214,15 @@
                                         {{ property.name }}
                                     </dt>
                                     <dd class="font-lexend text-sm text-artwork-buttons-create">
-                                        <span>{{ formatProperty(article, property) }}</span>
+                                        <a
+                                            v-if="property.type === 'manufacturer' && canViewCrm && article.manufacturer?.id"
+                                            :href="route('crm.contacts.show', article.manufacturer.id)"
+                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                            @click.prevent="router.visit(route('crm.contacts.show', article.manufacturer.id))"
+                                        >
+                                            {{ formatProperty(article, property) }}
+                                        </a>
+                                        <span v-else>{{ formatProperty(article, property) }}</span>
                                     </dd>
                                 </div>
                             </dl>
@@ -349,7 +357,15 @@
                                                 {{ property.name }}
                                             </dt>
                                             <dd class="font-lexend text-sm text-artwork-buttons-create">
-                                                <span>{{ formatProperty(detailedArticle, property) }}</span>
+                                                <a
+                                                    v-if="property.type === 'manufacturer' && canViewCrm && detailedArticle.manufacturer?.id"
+                                                    :href="route('crm.contacts.show', detailedArticle.manufacturer.id)"
+                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                    @click.prevent="router.visit(route('crm.contacts.show', detailedArticle.manufacturer.id))"
+                                                >
+                                                    {{ formatProperty(detailedArticle, property) }}
+                                                </a>
+                                                <span v-else>{{ formatProperty(detailedArticle, property) }}</span>
                                             </dd>
                                         </div>
                                     </dl>
@@ -569,7 +585,9 @@ const onMaskClick = (e) => {
  * 🔹 Tag-Anzeige & -Berechtigungen
  */
 const page = usePage()
-const { hasAdminRole } = usePermission(page.props)
+const { hasAdminRole, can: canPermission } = usePermission(page.props)
+
+const canViewCrm = computed(() => canPermission('can view crm') || hasAdminRole())
 
 const currentUser = computed(() => page.props.auth?.user ?? null)
 

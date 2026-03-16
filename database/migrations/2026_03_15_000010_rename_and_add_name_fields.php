@@ -62,26 +62,40 @@ return new class extends Migration {
             ->where('crm_property_group_id', $baseGroupId)
             ->value('id');
 
-        $kuenstlerNameId = DB::table('crm_properties')->insertGetId([
-            'crm_property_group_id' => $baseGroupId,
-            'name' => 'Künstler*innen Name',
-            'type' => 'text',
-            'is_system' => true,
-            'sort_order' => 2,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $kuenstlerNameId = DB::table('crm_properties')
+            ->where('name', 'Künstler*innen Name')
+            ->where('crm_property_group_id', $baseGroupId)
+            ->value('id');
+
+        if (!$kuenstlerNameId) {
+            $kuenstlerNameId = DB::table('crm_properties')->insertGetId([
+                'crm_property_group_id' => $baseGroupId,
+                'name' => 'Künstler*innen Name',
+                'type' => 'text',
+                'is_system' => true,
+                'sort_order' => 2,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         // 3c. Create new property "Nachname"
-        $nachnameId = DB::table('crm_properties')->insertGetId([
-            'crm_property_group_id' => $baseGroupId,
-            'name' => 'Nachname',
-            'type' => 'text',
-            'is_system' => true,
-            'sort_order' => 4,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $nachnameId = DB::table('crm_properties')
+            ->where('name', 'Nachname')
+            ->where('crm_property_group_id', $baseGroupId)
+            ->value('id');
+
+        if (!$nachnameId) {
+            $nachnameId = DB::table('crm_properties')->insertGetId([
+                'crm_property_group_id' => $baseGroupId,
+                'name' => 'Nachname',
+                'type' => 'text',
+                'is_system' => true,
+                'sort_order' => 4,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         // 3d. Artist contact type: replace "Name" with "Künstler*innen Name" in pivot
         $artistTypeId = DB::table('crm_contact_types')

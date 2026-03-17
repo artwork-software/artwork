@@ -161,7 +161,7 @@ class ExportPDFController extends Controller
         if ($exportMode === 'block') {
             // Old export mode: dynamic row heights based on event count per slot
             try {
-                $perEventHeight = 18; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
+                $perEventHeight = 22; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
                 $baseMinHeight  = 36; // px, Mindesthöhe wenn keine Events vorhanden sind
 
                 // Liste der Tag-Strings (Format wie im View: d.m.Y)
@@ -219,10 +219,10 @@ class ExportPDFController extends Controller
             }
         } else {
             // New export mode: dynamic segment height based on event text length
-            $baseSegmentHeight = 48; // px minimum per slot
-            $charsPerLine = 12;
-            $lineHeight = 9;
-            $paddingPx = 6;
+            $baseSegmentHeight = 52; // px minimum per slot
+            $charsPerLine = 10;
+            $lineHeight = 11;
+            $paddingPx = 8;
 
             $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 

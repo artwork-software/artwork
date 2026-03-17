@@ -190,7 +190,7 @@
             border-style: solid;
             margin-bottom: 2px;
             padding: 3px 4px;
-            font-size: 6px;
+            font-size: 8px;
             line-height: 1.3;
             font-weight: 500;
             display: block;
@@ -201,7 +201,7 @@
             align-items: flex-start;
             gap: 2px;
             font-weight: 500;
-            font-size: 6px;
+            font-size: 8px;
             line-height: 1.3;
         }
         .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; color: #000000 !important; }
@@ -209,7 +209,7 @@
         .event-time {
             flex: 0 0 auto;
             font-weight: 500;
-            font-size: 6px;
+            font-size: 8px;
             line-height: 1.2;
             word-wrap: break-word;
         }

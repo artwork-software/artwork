@@ -552,9 +552,16 @@ class NotificationService
     public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift): stdClass
     {
         $minDurationHours = 12;
-        $formattedEndTime = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
+        $newShiftStart = Carbon::parse($shift->event_start_day . ' ' . $shift->start);
+        $newShiftEnd = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
 
-        $shifts = $user->shifts()
+        // If the shift crosses midnight (end time < start time on same day), advance end by 1 day
+        if ($newShiftEnd->lessThanOrEqualTo($newShiftStart)) {
+            $newShiftEnd->addDay();
+        }
+
+        $otherShifts = $user->shifts()
+            ->where('shifts.id', '!=', $shift->id)
             ->whereBetween(
                 'event_start_day',
                 [
@@ -568,13 +575,24 @@ class NotificationService
         $notificationObj = new stdClass();
         $notificationObj->shortBreak = false;
 
-        foreach ($shifts as $shift) {
-            $formattedStartTime = Carbon::parse($shift->event_start_day . ' ' . $shift->start);
-            $diffInHours = $formattedStartTime->diffInRealHours($formattedEndTime);
-            if ($diffInHours < $minDurationHours) {
+        foreach ($otherShifts as $otherShift) {
+            $otherStart = Carbon::parse($otherShift->event_start_day . ' ' . $otherShift->start);
+            $otherEnd = Carbon::parse($otherShift->event_end_day . ' ' . $otherShift->end);
+
+            // If the other shift crosses midnight, advance end by 1 day
+            if ($otherEnd->lessThanOrEqualTo($otherStart)) {
+                $otherEnd->addDay();
+            }
+
+            // Rest period = gap between consecutive shifts (the smaller of the two gaps)
+            $restAfterNew = abs($otherStart->diffInRealHours($newShiftEnd));
+            $restAfterOther = abs($newShiftStart->diffInRealHours($otherEnd));
+            $restHours = min($restAfterNew, $restAfterOther);
+
+            if ($restHours < $minDurationHours) {
                 $notificationObj->shortBreak = true;
-                $notificationObj->firstShift = $shifts->first();
-                $notificationObj->lastShift = $shifts->last();
+                $notificationObj->firstShift = $otherShift;
+                $notificationObj->lastShift = $shift;
             }
         }
 

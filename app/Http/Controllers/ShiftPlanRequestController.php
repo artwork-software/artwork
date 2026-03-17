@@ -22,6 +22,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -41,15 +42,82 @@ class ShiftPlanRequestController extends Controller
      */
     public function index(): \Inertia\Response
     {
+        $fourWeeksAgo = Carbon::now()->subWeeks(4);
+        $cutoffYear = (int) $fourWeeksAgo->format('o');
+        $cutoffWeek = (int) $fourWeeksAgo->format('W');
+
         $craftsWithShiftPlans = Craft::query()
-            ->with(['shiftPlanRequests' => function ($query): void {
-                $query->orderBy('created_at', 'desc');
+            ->with(['shiftPlanRequests' => function ($query) use ($cutoffYear, $cutoffWeek): void {
+                $query->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+                    $q->where('status', 'pending')
+                        ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                            $q2->whereIn('status', ['approved', 'rejected'])
+                                ->where(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                    $q3->where('year', '>', $cutoffYear)
+                                        ->orWhere(function ($q4) use ($cutoffYear, $cutoffWeek) {
+                                            $q4->where('year', '=', $cutoffYear)
+                                                ->where('week_number', '>=', $cutoffWeek);
+                                        });
+                                });
+                        });
+                })
+                ->orderByDesc('year')
+                ->orderByDesc('week_number');
             }])
+            ->withCount([
+                'shiftPlanRequests as past_approved_count' => function ($q) use ($cutoffYear, $cutoffWeek) {
+                    $q->where('status', 'approved')
+                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                            $q2->where('year', '<', $cutoffYear)
+                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                    $q3->where('year', '=', $cutoffYear)
+                                        ->where('week_number', '<', $cutoffWeek);
+                                });
+                        });
+                },
+                'shiftPlanRequests as past_rejected_count' => function ($q) use ($cutoffYear, $cutoffWeek) {
+                    $q->where('status', 'rejected')
+                        ->where(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                            $q2->where('year', '<', $cutoffYear)
+                                ->orWhere(function ($q3) use ($cutoffYear, $cutoffWeek) {
+                                    $q3->where('year', '=', $cutoffYear)
+                                        ->where('week_number', '<', $cutoffWeek);
+                                });
+                        });
+                },
+            ])
             ->get();
 
         return Inertia::render('ShiftPlanRequests/Index', [
             'crafts' => $craftsWithShiftPlans,
         ]);
+    }
+
+    public function pastRequests(Craft $craft, Request $request): JsonResponse
+    {
+        $status = $request->get('status');
+        $offset = (int) $request->get('offset', 0);
+
+        $fourWeeksAgo = Carbon::now()->subWeeks(4);
+        $cutoffYear = (int) $fourWeeksAgo->format('o');
+        $cutoffWeek = (int) $fourWeeksAgo->format('W');
+
+        $requests = ShiftPlanRequest::where('craft_id', $craft->id)
+            ->where('status', $status)
+            ->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+                $q->where('year', '<', $cutoffYear)
+                    ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                        $q2->where('year', '=', $cutoffYear)
+                            ->where('week_number', '<', $cutoffWeek);
+                    });
+            })
+            ->orderByDesc('year')
+            ->orderByDesc('week_number')
+            ->skip($offset)
+            ->take(10)
+            ->get();
+
+        return response()->json(['requests' => $requests]);
     }
 
     /**

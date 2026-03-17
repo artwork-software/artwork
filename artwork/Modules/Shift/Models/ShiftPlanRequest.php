@@ -4,8 +4,11 @@ namespace Artwork\Modules\Shift\Models;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 
 /**
  * @property int $id
@@ -28,6 +31,7 @@ class ShiftPlanRequest extends Model
 {
     /** @use HasFactory<\Database\Factories\ShiftPlanRequestFactory> */
     use HasFactory;
+    use Prunable;
 
 
     protected $fillable = [
@@ -50,6 +54,21 @@ class ShiftPlanRequest extends Model
         'rejected_days' => 'array',
         'rejected_shifts' => 'array',
     ];
+
+    public function prunable(): Builder
+    {
+        $twelveMonthsAgo = Carbon::now()->subMonths(12);
+        $cutoffYear = (int) $twelveMonthsAgo->format('o');
+        $cutoffWeek = (int) $twelveMonthsAgo->format('W');
+
+        return static::query()->where(function ($q) use ($cutoffYear, $cutoffWeek) {
+            $q->where('year', '<', $cutoffYear)
+                ->orWhere(function ($q2) use ($cutoffYear, $cutoffWeek) {
+                    $q2->where('year', '=', $cutoffYear)
+                        ->where('week_number', '<', $cutoffWeek);
+                });
+        });
+    }
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

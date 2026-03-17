@@ -2837,6 +2837,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
             ->name('requests');        // Angefragte Dienstpläne
+
+        Route::get('/{craft}/past-requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'pastRequests'])
+            ->name('past-requests');
     });
 
 

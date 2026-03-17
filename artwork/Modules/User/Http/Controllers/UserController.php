@@ -1410,6 +1410,11 @@ class UserController extends Controller
         $user->update($request->only('compact_mode'));
     }
 
+    public function toggleShowProjectTeamNames(User $user, Request $request): void
+    {
+        $user->update($request->only('show_project_team_names'));
+    }
+
     public function updateShowCrafts(User $user, Request $request): void
     {
         $user->userFilters()->updateOrCreate(

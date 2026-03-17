@@ -6,6 +6,13 @@
                       @click="showTeamModal = true"
                       v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"
             />
+            <SwitchIconTooltip
+                :model-value="showNames"
+                @update:model-value="toggleShowNames"
+                :tooltip-text="$t('Show names')"
+                icon="IconUser"
+                size="sm"
+            />
         </div>
         <div v-if="loadError" class="text-xs text-rose-600 mt-2">
             {{ loadError }}
@@ -13,47 +20,78 @@
         <div v-else-if="loadingTeam" class="text-xs text-secondary mt-2">
             {{ $t('Loading data...') }}
         </div>
-        <div class="flex w-full mt-2 flex-wrap mb-3" v-if="(teamProject.project_managers || []).length > 0">
-            <span
-                class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
-                {{ $t('Project management') }}
-            </span>
-            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in (teamProject.project_managers || [])" :key="user.id">
-                <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+        <div class="flex flex-wrap gap-4 mt-2 mb-3">
+            <!-- Projektleitung -->
+            <div v-if="(teamProject.project_managers || []).length > 0">
+                <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project management') }}
+                </span>
+                <div class="flex flex-wrap mt-2 gap-2">
+                    <template v-for="user in (teamProject.project_managers || [])" :key="user.id">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                            <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                        </div>
+                        <div v-else class="-mr-3">
+                            <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                        </div>
+                    </template>
+                </div>
             </div>
-        </div>
-        <div class="mb-3">
-            <div v-for="role in (teamProject.projectRoles || [])" :key="role.id" class="mb-3">
-                 <div v-if="checkRoleHasUser(role)">
-                     <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+            <!-- Rollen -->
+            <template v-for="role in (teamProject.projectRoles || [])" :key="role.id">
+                <div v-if="checkRoleHasUser(role)">
+                    <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                         {{ role.name }}
-                     </span>
-                     <div class="flex">
-                         <div class="flex mt-2" v-for="(user, index) in (teamProject.usersArray || [])" :key="`${role.id}-${user.id}`">
-                             <div v-if="user?.pivot_roles?.includes(role.id)" :class="index !== 0 ? '' : '-mr-3'">
-                                 <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-        </div>
-        <div class="flex w-full mt-2 flex-wrap mb-4" v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
-            <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
-                {{ $t('Project team') }}
-            </span>
-            <div class="flex w-full">
-                <div class="flex" v-if="teamProject.departments?.length > 0">
-                    <div class="flex mt-2 -mr-3" v-for="department in teamProject.departments" :key="department.id">
-                        <TeamIconCollection :data-tooltip-target="department.name"
-                                            :iconName="department.svg_name"
-                                            :alt="department.name"
-                                            class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                        <TeamTooltip :team="department"/>
+                    </span>
+                    <div class="flex flex-wrap mt-2 gap-2">
+                        <template v-for="user in (teamProject.usersArray || [])" :key="`${role.id}-${user.id}`">
+                            <template v-if="user?.pivot_roles?.includes(role.id)">
+                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                    <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                                    <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                                </div>
+                                <div v-else class="-mr-3">
+                                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                                </div>
+                            </template>
+                        </template>
                     </div>
                 </div>
-                <div class="flex -mr-3 mt-2" v-for="user in (teamProject.usersArray || [])" :key="user.id">
-                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+            </template>
+            <!-- Projektteam (Departments + Users) -->
+            <div v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
+                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project team') }}
+                </span>
+                <div class="flex flex-wrap mt-2 gap-2">
+                    <template v-if="teamProject.departments?.length > 0">
+                        <template v-for="department in teamProject.departments" :key="department.id">
+                            <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                <TeamIconCollection :data-tooltip-target="department.name"
+                                                    :iconName="department.svg_name"
+                                                    :alt="department.name"
+                                                    class="ring-white ring-2 rounded-full h-8 w-8 object-cover"/>
+                                <span class="text-xs font-medium whitespace-nowrap">{{ department.name }}</span>
+                            </div>
+                            <div v-else class="-mr-3">
+                                <TeamIconCollection :data-tooltip-target="department.name"
+                                                    :iconName="department.svg_name"
+                                                    :alt="department.name"
+                                                    class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                <TeamTooltip :team="department"/>
+                            </div>
+                        </template>
+                    </template>
+                    <template v-for="user in (teamProject.usersArray || [])" :key="user.id">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                            <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                        </div>
+                        <div v-else class="-mr-3">
+                            <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -83,6 +121,7 @@ import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamMod
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import {IconEdit} from "@tabler/icons-vue";
 
 export default defineComponent({
@@ -98,7 +137,8 @@ export default defineComponent({
         TeamTooltip,
         UserTooltip,
         TeamIconCollection,
-        IconEdit
+        IconEdit,
+        SwitchIconTooltip
     },
     props: {
         project: {
@@ -127,7 +167,8 @@ export default defineComponent({
             showTeamModal: false,
             loadingTeam: false,
             loadError: null,
-            localProject: hasInitialTeam ? this.project : null
+            localProject: hasInitialTeam ? this.project : null,
+            showNames: this.$page.props.auth.user.show_project_team_names ?? false
         };
     },
     computed: {
@@ -217,6 +258,13 @@ export default defineComponent({
         },
         userIsProjectCreator() {
             return this.teamProject?.user_id === this.$page.props.auth.user.id;
+        },
+        toggleShowNames(value) {
+            this.showNames = value;
+            axios.post(
+                route('user.show.project.team.names.toggle', {user: this.$page.props.auth.user.id}),
+                {show_project_team_names: value}
+            );
         },
         checkRoleHasUser(role) {
             return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id));

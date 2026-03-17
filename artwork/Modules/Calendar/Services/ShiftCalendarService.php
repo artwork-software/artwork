@@ -73,6 +73,7 @@ class ShiftCalendarService
                 'occupancy_option',
                 'declined_room_id',
             ])
+            ->withExists('timelines')
             ->with($eventWith)
             ->whereIn('room_id', $roomIds)
             ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))

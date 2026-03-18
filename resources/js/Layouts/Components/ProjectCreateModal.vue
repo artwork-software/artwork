@@ -585,25 +585,17 @@
                             </div>
                         </div>
                         <div class="mb-2">
+                            <div class="font-semibold text-sm mb-3">{{ t('Projects of the group') }}</div>
+                            <div v-if="projectGroupProjects.length > 0" class="mb-4 flex items-center flex-wrap gap-2">
+                                <div v-for="(groupProject, index) in projectGroupProjects" :key="groupProject.id" class="inline-flex items-center gap-x-1.5 px-3 py-1.5 rounded-full border border-gray-300 bg-gray-50 text-sm">
+                                    <span>{{ groupProject.name }}</span>
+                                    <button type="button" @click="deleteProjectFromProjectGroup(index)">
+                                        <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                    </button>
+                                </div>
+                            </div>
                             <div class="relative w-full">
                                 <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
-                            </div>
-                            <div v-if="projectGroupProjects.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3">
-                                <div v-for="(groupProject, index) in projectGroupProjects" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
-                                    <div class="flex items-center">
-                                        <div>
-                                            <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
-                                        </div>
-                                        <div class="mx-2">
-                                            <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <button type="button" @click="deleteProjectFromProjectGroup(index)">
-                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -678,6 +670,11 @@ const props = defineProps({
         default: null,
         required: false,
     },
+    projectsOfGroup: {
+        type: Array,
+        default: () => [],
+        required: false,
+    },
 });
 
 // Define emits
@@ -744,7 +741,7 @@ const createProjectForm = useForm({
     color: props.project ? props.project.color : null,
     marked_as_done: props.project ? props.project.marked_as_done : false,
 });
-const projectGroupProjects = ref([]);
+const projectGroupProjects = ref(props.project?.is_group && props.projectsOfGroup?.length > 0 ? [...props.projectsOfGroup] : []);
 const projectGroupSearchResults = ref([]);
 const projectGroupQuery = ref('');
 const selectedState = ref(props.project && props.project.state && props.states ? props.states.find(state => state.id === (typeof props.project.state === 'object' ? props.project.state.id : props.project.state)) : null);
@@ -885,7 +882,7 @@ function handleOpenProject(p) {
 }
 
 const addProjectToProjectGroup = (project) => {
-    if (!projectGroupProjects.value.includes(project)) {
+    if (!projectGroupProjects.value.find(p => p.id === project.id)) {
         projectGroupProjects.value.push(project);
     }
 };

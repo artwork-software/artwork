@@ -315,6 +315,7 @@
             :create-settings="createSettings"
             :project="projectForCreateModal"
             :selected-group="selectedGroup"
+            :projects-of-group="projectsOfGroup"
         />
 
         <project-history-component @closed="closeProjectHistoryModal" v-if="showProjectHistory" :project_id="project.id" />

@@ -1822,6 +1822,7 @@ readonly class EventService
         $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
             'name' => $event['name'] ?? '',
+            'description' => $event['description'] ?? null,
             'user_id' => $userId,
             'start_time' => $startTime,
             'end_time' => $endTime,

@@ -1282,7 +1282,8 @@ class UserController extends Controller
             'hide_unoccupied_days',
             'show_shift_group_tag',
             'show_timeline',
-            'show_only_not_fully_staffed_shifts'
+            'show_only_not_fully_staffed_shifts',
+            'show_user_overview'
         ]);
 
         if ($request->boolean('is_daily_view')) {

@@ -384,7 +384,7 @@
         </div>
 
         <!-- Dein bestehendes Modal; API bleibt unverändert -->
-        <CraftSelectorModal v-if="showCraftSelector" />
+        <CraftSelectorModal v-if="showCraftSelector" @close="showCraftSelector = false" />
     </AppLayout>
 </template>
 

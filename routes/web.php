@@ -199,11 +199,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // Shift Rules routes - New shift rules management system
-    Route::group(['prefix' => 'shift-rules'], function (): void {
+    Route::group(['prefix' => 'shift-rules', 'middleware' => 'can:can plan shifts'], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
 
         // Specific routes must come before parameterized routes
+        Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])->name('shift-rules.active');
         Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
@@ -218,9 +219,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // Shift Rule Violations routes
-    Route::group(['prefix' => 'shift-rule-violations'], function (): void {
+    Route::group(['prefix' => 'shift-rule-violations', 'middleware' => 'can:can plan shifts'], function (): void {
+        Route::post('/manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualViolation'])->name('shift-rule-violations.manual.store');
+        Route::get('/date-range', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getViolationsForDateRange'])->name('shift-rule-violations.date-range');
         Route::post('/{violation}/resolve', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'resolveViolation'])->name('shift-rule-violations.resolve');
         Route::post('/{violation}/ignore', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'ignoreViolation'])->name('shift-rule-violations.ignore');
+        Route::put('/{violation}/process', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'processViolation'])->name('shift-rule-violations.process');
+    });
+
+    // Compensation Day Offs routes
+    Route::group(['prefix' => 'compensation-day-offs', 'middleware' => 'can:can plan shifts'], function (): void {
+        Route::get('/dashboard', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'compensationDashboard'])->name('compensation-day-offs.dashboard');
+        Route::post('/{compensationDayOff}/grant', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'grantCompensationDay'])->name('compensation-day-offs.grant');
+        Route::post('/{compensationDayOff}/check', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'checkCompensationDay'])->name('compensation-day-offs.check');
+        Route::post('/{compensationDayOff}/revoke', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'revokeCompensationDay'])->name('compensation-day-offs.revoke');
+        Route::post('/store-manual', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'storeManualCompensationDay'])->name('compensation-day-offs.store-manual');
+        Route::get('/user/{user}/open', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getOpenCompensationDays'])->name('compensation-day-offs.open');
+        Route::delete('/{compensationDayOff}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'deleteCompensationDay'])->name('compensation-day-offs.delete');
+        Route::get('/user/{user}/week-schedule', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getUserWeekSchedule'])->name('compensation-day-offs.week-schedule');
     });
 
     // TOOL SETTING ROUTE
@@ -360,6 +376,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/worktimes', [UserController::class, 'showUserWorktimes'])
         ->can('can manage workers')
         ->name('user.edit.worktimes');
+    Route::get('/users/{user}/compensation-days', [UserController::class, 'editUserCompensationDays'])
+        ->can('can plan shifts')
+        ->name('user.edit.compensationDays');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
     // user.update.open.crafts
@@ -2051,6 +2070,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
+        Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
+            ->name('user.show.project.team.names.toggle');
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
@@ -2816,6 +2837,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
             ->name('requests');        // Angefragte Dienstpläne
+
+        Route::get('/{craft}/past-requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'pastRequests'])
+            ->name('past-requests');
     });
 
 

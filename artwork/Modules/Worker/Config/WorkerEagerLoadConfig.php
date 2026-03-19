@@ -47,7 +47,8 @@ class WorkerEagerLoadConfig
                     },
                 ]);
                 if ($startDate && $endDate) {
-                    $query->where('shifts.start_date', '>=', $startDate)->where('shifts.end_date', '<=', $endDate);
+                    $query->where('shifts.start_date', '<=', $endDate)
+                          ->where('shifts.end_date', '>=', $startDate);
                 }
             },
             'shiftQualifications' => function ($query) {

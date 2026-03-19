@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Services;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
@@ -319,10 +320,11 @@ class WorkingHourService
 
         $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
 
+        $workerIds = $workers->pluck('id')->all();
+
         // Batch-load all availabilities in one query instead of N+1
         $availabilitiesByUser = collect();
         if ($addVacationsAndAvailabilities) {
-            $workerIds = $workers->pluck('id')->all();
             $availabilitiesByUser = Availability::query()
                 ->where('available_type', User::class)
                 ->whereIn('available_id', $workerIds)
@@ -331,6 +333,29 @@ class WorkingHourService
                 ->groupBy('available_id')
                 ->map(fn ($availabilities) => $availabilities->groupBy('formatted_date'));
         }
+
+        // Batch-load shift rule violations for all users in date range
+        $violationsByUser = \Artwork\Modules\Shift\Models\ShiftRuleViolation::query()
+            ->with(['shiftRule:id,name,description,warning_color'])
+            ->whereIn('user_id', $workerIds)
+            ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereIn('status', ['active', 'resolved'])
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($violations) => $violations->groupBy(fn ($v) => $v->violation_date->format('Y-m-d')));
+
+        // Batch-load granted compensation day offs for all users in date range
+        $compensationDaysByUser = CompensationDayOff::whereIn('user_id', $workerIds)
+            ->whereNotNull('granted_date')
+            ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->with([
+                'violation:id,shift_rule_id',
+                'violation.shiftRule:id,name',
+                'grantedByUser:id,first_name,last_name',
+            ])
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($days) => $days->groupBy(fn ($d) => $d->granted_date->format('Y-m-d')));
 
         $usersWithPlannedWorkingHours = [];
 
@@ -357,6 +382,10 @@ class WorkingHourService
             if ($addVacationsAndAvailabilities) {
                 $userData['availabilities'] = $availabilitiesByUser->get($user->id, collect());
             }
+
+            $userData['violations'] = $violationsByUser->get($user->id, collect());
+            $userData['compensation_day_offs'] = $compensationDaysByUser->get($user->id, collect());
+            $userData['compensation_period'] = $user->activeWorkContract()?->compensation_period ?? 0;
 
             $usersWithPlannedWorkingHours[] = $userData;
         }
@@ -533,6 +562,20 @@ class WorkingHourService
                 $bookingsPerDay[$bookingDay] += $booking->worked_hours;
             }
 
+            // Create a map of granted compensation days per day
+            $compensationDays = collect();
+            $grantedCompDays = CompensationDayOff::where('user_id', $userId)
+                ->whereNotNull('granted_date')
+                ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->get();
+            foreach ($grantedCompDays as $compDay) {
+                $compDateStr = $compDay->granted_date->toDateString();
+                if (!$compensationDays->has($compDateStr)) {
+                    $compensationDays[$compDateStr] = 0;
+                }
+                $compensationDays[$compDateStr] += (float) $compDay->value;
+            }
+
             // Process only uncached weeks
             foreach ($uncachedWeeks as $index) {
                 $weekPeriod = $weekPeriods[$index];
@@ -588,6 +631,19 @@ class WorkingHourService
                     // OFF_WORK: Suppress negative difference (no minus hours on off-work days)
                     if ($isOffWork && $dailyPlanned < $dailyTargetMinutes) {
                         $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
+                    }
+
+                    // Compensation day off: reduce daily target
+                    $compValue = $compensationDays->get($dateStr, 0);
+                    if ($compValue >= 1.0) {
+                        // Full compensation day off: suppress entire daily target
+                        $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
+                    } elseif ($compValue > 0) {
+                        // Half compensation day off: suppress proportional target
+                        $compReduction = (int) round($dailyTargetMinutes * $compValue);
+                        if ($dailyPlanned < $compReduction) {
+                            $offWorkNegativeAdjustment += ($compReduction - $dailyPlanned);
+                        }
                     }
 
                     $current->addDay();

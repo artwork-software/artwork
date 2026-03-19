@@ -53,9 +53,10 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
         
-        // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
+        // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
-            ->dailyAt('02:00')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
             ->runInBackground();
 
         if (env('BACKUP_ENABLED', false)) {

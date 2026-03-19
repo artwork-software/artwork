@@ -618,6 +618,13 @@ const navigation = ref([
                 current: route().current('shifts.approvals.requests'),
                 has_permission: usePage().props.canSeeShiftPlanRequestedPlans,
             },
+            {
+                name: 'Compensation days overview',
+                href: route('compensation-day-offs.dashboard'),
+                icon: 'IconCalendarOff',
+                current: route().current('compensation-day-offs.dashboard'),
+                has_permission: can('can plan shifts') || is('artwork admin'),
+            },
         ]
     },
     {

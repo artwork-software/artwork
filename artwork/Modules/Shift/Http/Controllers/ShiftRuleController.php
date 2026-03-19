@@ -3,15 +3,27 @@
 namespace Artwork\Modules\Shift\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Shift\Http\Requests\AssignContractsToRuleRequest;
+use Artwork\Modules\Shift\Http\Requests\AssignUsersToRuleRequest;
+use Artwork\Modules\Shift\Http\Requests\GetViolationsForDateRangeRequest;
+use Artwork\Modules\Shift\Http\Requests\ProcessViolationRequest;
+use Artwork\Modules\Shift\Http\Requests\StoreManualViolationRequest;
+use Artwork\Modules\Shift\Http\Requests\StoreShiftRuleRequest;
+use Artwork\Modules\Shift\Http\Requests\UpdateContractAssignmentsRequest;
+use Artwork\Modules\Shift\Http\Requests\UpdateShiftRuleRequest;
+use Artwork\Modules\Shift\Http\Requests\UpdateViolationStatusRequest;
+use Artwork\Modules\Shift\Http\Requests\ValidateShiftRulesRequest;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
+use Artwork\Modules\Shift\Repositories\CompensationDayOffRepository;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,86 +34,103 @@ class ShiftRuleController extends Controller
     ) {
     }
 
+    public function compensationDashboard(Request $request): Response
+    {
+        $compensationDayOffRepository = app(CompensationDayOffRepository::class);
+
+        $craftId = $request->integer('craft_id') ?: null;
+
+        $recentActivity = \Spatie\Activitylog\Models\Activity::query()
+            ->whereIn('log_name', ['compensation_day_off', 'shift_rule_violation'])
+            ->with('causer')
+            ->latest()
+            ->paginate(15)
+            ->through(fn ($a) => [
+                'id' => $a->id,
+                'description' => $a->description,
+                'event' => $a->event,
+                'log_name' => $a->log_name,
+                'properties' => $a->properties,
+                'causer' => $a->causer ? [
+                    'first_name' => $a->causer->first_name,
+                    'last_name' => $a->causer->last_name,
+                ] : null,
+                'created_at' => $a->created_at->toIso8601String(),
+            ]);
+
+        $crafts = \Artwork\Modules\Craft\Models\Craft::select('id', 'name', 'abbreviation', 'color')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('CompensationDays/Index', [
+            'openCompensations' => $compensationDayOffRepository->getAllOpen($craftId),
+            'grantedCompensations' => $compensationDayOffRepository->getAllGranted($craftId),
+            'overdueCompensations' => $compensationDayOffRepository->getAllOverdue($craftId),
+            'stats' => $compensationDayOffRepository->getDashboardStats($craftId),
+            'recentActivity' => $recentActivity,
+            'crafts' => $crafts,
+            'selectedCraftId' => $craftId,
+        ]);
+    }
+
     public function index(): Response
     {
         return Inertia::render('ShiftWarnings/Index', [
-            'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
-            'availableRuleTypes' => $this->getAvailableRuleTypes(),
+            'rules' => $this->shiftRuleService->getAllWithRelations(),
+            'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
             'contracts' => UserContract::all()
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreShiftRuleRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'trigger_type' => 'required|string',
-            'individual_number_value' => 'required|numeric|min:0.1',
-            'warning_color' => 'required|string',
-            'contract_ids' => 'nullable|array',
-            'contract_ids.*' => 'exists:user_contracts,id',
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'exists:users,id'
-        ]);
+        $validated = $request->validated();
 
-        $rule = ShiftRule::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? '',
-            'trigger_type' => $validated['trigger_type'],
-            'individual_number_value' => $validated['individual_number_value'],
-            'warning_color' => $validated['warning_color'],
-            'is_active' => true
-        ]);
-
-        if (!empty($validated['contract_ids'])) {
-            $rule->contracts()->sync($validated['contract_ids']);
-        }
-
-        if (!empty($validated['user_ids'])) {
-            $rule->usersToNotify()->sync($validated['user_ids']);
-        }
+        $this->shiftRuleService->createRule(
+            [
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? '',
+                'trigger_type' => $validated['trigger_type'],
+                'individual_number_value' => $validated['individual_number_value'],
+                'warning_color' => $validated['warning_color'],
+                'is_active' => true,
+            ],
+            $validated['contract_ids'] ?? null,
+            $validated['user_ids'] ?? null
+        );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich erstellt'
+            'message' => 'Rule successfully created'
         ]);
     }
 
-    public function update(Request $request, ShiftRule $shiftRule): RedirectResponse
+    public function update(UpdateShiftRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'individual_number_value' => 'required|numeric|min:0.1',
-            'warning_color' => 'required|string',
-            'contract_ids' => 'nullable|array',
-            'contract_ids.*' => 'exists:user_contracts,id',
-            'user_ids' => 'nullable|array',
-            'user_ids.*' => 'exists:users,id'
-        ]);
+        $validated = $request->validated();
 
-        $shiftRule->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? '',
-            'individual_number_value' => $validated['individual_number_value'],
-            'warning_color' => $validated['warning_color']
-        ]);
-
-        // Update assignments
-        $shiftRule->contracts()->sync($validated['contract_ids'] ?? []);
-        $shiftRule->usersToNotify()->sync($validated['user_ids'] ?? []);
+        $this->shiftRuleService->updateRule(
+            $shiftRule,
+            [
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? '',
+                'individual_number_value' => $validated['individual_number_value'],
+                'warning_color' => $validated['warning_color'],
+            ],
+            $validated['contract_ids'] ?? null,
+            $validated['user_ids'] ?? null
+        );
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich aktualisiert'
+            'message' => 'Rule successfully updated'
         ]);
     }
 
     public function destroy(ShiftRule $shiftRule): RedirectResponse
     {
-        $shiftRule->delete();
+        $this->shiftRuleService->deleteRule($shiftRule);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regel erfolgreich gelöscht'
+            'message' => 'Rule successfully deleted'
         ]);
     }
 
@@ -109,31 +138,24 @@ class ShiftRuleController extends Controller
     {
         return Inertia::render('ShiftWarnings/ContractAssignments', [
             'contracts' => UserContract::with(['shiftRules', 'userContractAssigns.user'])->get(),
-            'rules' => ShiftRule::where('is_active', true)->get()
+            'rules' => $this->shiftRuleService->getActiveRules()
         ]);
     }
 
-    public function updateContractAssignments(Request $request, UserContract $contract): RedirectResponse
-    {
-        $validated = $request->validate([
-            'rule_ids' => 'nullable|array',
-            'rule_ids.*' => 'exists:shift_rules,id'
-        ]);
-
-        $contract->shiftRules()->sync($validated['rule_ids'] ?? []);
+    public function updateContractAssignments(
+        UpdateContractAssignmentsRequest $request,
+        UserContract $contract
+    ): RedirectResponse {
+        $this->shiftRuleService->updateContractAssignments($contract, $request->validated()['rule_ids'] ?? []);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelzuweisungen erfolgreich aktualisiert'
+            'message' => 'Rule assignments successfully updated'
         ]);
     }
 
-    public function validateRules(Request $request): Response
+    public function validateRules(ValidateShiftRulesRequest $request): Response
     {
-        $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'user_id' => 'nullable|exists:users,id'
-        ]);
+        $validated = $request->validated();
 
         try {
             $startDate = Carbon::parse($validated['start_date']);
@@ -146,24 +168,11 @@ class ShiftRuleController extends Controller
                 $violations = $this->shiftRuleService->validateShiftRulesForDateRange($startDate, $endDate);
             }
 
-            $violationsData = $violations->map(function ($violation) {
-                return [
-                    'id' => $violation->id,
-                    'rule_name' => $violation->shiftRule?->name,
-                    'user_name' => $violation->user->first_name . ' ' . $violation->user->last_name,
-                    'violation_date' => $violation->violation_date,
-                    'message' => $violation->getViolationMessage(),
-                    'severity' => $violation->severity,
-                    'warning_color' => $violation->getWarningColor(),
-                    'violation_data' => $violation->violation_data
-                ];
-            })->values();
-
             return Inertia::render('ShiftWarnings/Index', [
-                'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
-                'availableRuleTypes' => $this->getAvailableRuleTypes(),
+                'rules' => $this->shiftRuleService->getAllWithRelations(),
+                'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
-                'violations' => $violationsData,
+                'violations' => $this->shiftRuleService->mapViolationsToArray($violations),
                 'violationsCount' => $violations->count(),
                 'dateRange' => [
                     'start' => $startDate->toDateString(),
@@ -172,72 +181,37 @@ class ShiftRuleController extends Controller
             ]);
         } catch (\Exception $e) {
             return Inertia::render('ShiftWarnings/Index', [
-                'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
-                'availableRuleTypes' => $this->getAvailableRuleTypes(),
+                'rules' => $this->shiftRuleService->getAllWithRelations(),
+                'availableRuleTypes' => $this->shiftRuleService->getAvailableRuleTypes(),
                 'contracts' => UserContract::all(),
-                'error' => 'Fehler beim Validieren der Regeln: ' . $e->getMessage()
+                'error' => 'Error validating rules: ' . $e->getMessage()
             ]);
         }
     }
 
     public function getPendingViolations(): Response
     {
-        try {
-            $violations = ShiftRuleViolation::with(['shiftRule', 'user', 'shift'])
-                ->where('status', 'active')
-                ->orderBy('violation_date', 'desc')
-                ->get();
+        $violations = $this->shiftRuleService->getActiveViolations();
 
-            $violationsData = $violations->map(function ($violation) {
-                return [
-                    'id' => $violation->id,
-                    'rule_name' => $violation->shiftRule?->name,
-                    'user_name' => $violation->user->first_name . ' ' . $violation->user->last_name,
-                    'violation_date' => $violation->violation_date,
-                    'message' => $violation->getViolationMessage(),
-                    'severity' => $violation->severity,
-                    'status' => $violation->status,
-                    'warning_color' => $violation->getWarningColor()
-                ];
-            })->values();
-
-            return Inertia::render('ShiftWarnings/Index', [
-                'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
-                'availableRuleTypes' => $this->getAvailableRuleTypes(),
-                'contracts' => UserContract::all(),
-                'pendingViolations' => $violationsData,
-                'pendingViolationsCount' => $violations->count()
-            ]);
-        } catch (\Exception $e) {
-            return Inertia::render('ShiftWarnings/Index', [
-                'rules' => ShiftRule::with(['usersToNotify', 'contracts'])->get(),
-                'availableRuleTypes' => $this->getAvailableRuleTypes(),
-                'contracts' => UserContract::all(),
-                'error' => 'Fehler beim Abrufen der Verstöße: ' . $e->getMessage()
-            ]);
-        }
+        return Inertia::render('ShiftWarnings/Violations', [
+            'violations' => $this->shiftRuleService->mapViolationsToArray($violations),
+        ]);
     }
 
-    public function updateViolationStatus(Request $request, int $violationId): RedirectResponse
+    public function updateViolationStatus(UpdateViolationStatusRequest $request, int $violationId): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|in:resolved,ignored'
-        ]);
-
         try {
-            $violation = ShiftRuleViolation::findOrFail($violationId);
-
-            if ($validated['status'] === 'resolved') {
-                $violation->resolve(auth()->id());
-            } else {
-                $violation->ignore(auth()->id());
-            }
+            $this->shiftRuleService->updateViolationStatus(
+                $violationId,
+                $request->validated()['status'],
+                auth()->id()
+            );
 
             return redirect()->back()->with('flash', [
-                'message' => 'Status erfolgreich aktualisiert'
+                'message' => 'Status successfully updated'
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Fehler beim Aktualisieren des Status: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating status: ' . $e->getMessage());
         }
     }
 
@@ -248,77 +222,335 @@ class ShiftRuleController extends Controller
         ]);
     }
 
-    public function assignContracts(Request $request, ShiftRule $shiftRule): RedirectResponse
+    public function assignContracts(AssignContractsToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
     {
-        $validated = $request->validate([
-            'contract_ids' => 'required|array',
-            'contract_ids.*' => 'exists:user_contracts,id'
-        ]);
-
-        $shiftRule->contracts()->sync($validated['contract_ids']);
+        $this->shiftRuleService->syncContractsForRule($shiftRule, $request->validated()['contract_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Verträge erfolgreich zugewiesen'
+            'message' => 'Contracts successfully assigned'
         ]);
     }
 
-    public function assignUsers(Request $request, ShiftRule $shiftRule): RedirectResponse
+    public function assignUsers(AssignUsersToRuleRequest $request, ShiftRule $shiftRule): RedirectResponse
     {
-        $validated = $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,id'
-        ]);
-
-        $shiftRule->usersToNotify()->sync($validated['user_ids']);
+        $this->shiftRuleService->syncUsersForRule($shiftRule, $request->validated()['user_ids']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Benutzer erfolgreich zugewiesen'
+            'message' => 'Users successfully assigned'
         ]);
     }
 
     public function resolveViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
     {
-        $violation->resolve(auth()->id());
+        $this->shiftRuleService->resolveViolation($violation, auth()->id());
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich gelöst'
+            'message' => 'Rule violation successfully resolved'
         ]);
     }
 
     public function ignoreViolation(Request $request, ShiftRuleViolation $violation): RedirectResponse
     {
-        $violation->ignore(auth()->id());
+        $validated = $request->validate([
+            'ignore_reason' => 'required|string|max:500',
+        ]);
+
+        $this->shiftRuleService->ignoreViolation($violation, auth()->id(), $validated['ignore_reason']);
 
         return redirect()->back()->with('flash', [
-            'message' => 'Regelverstoß erfolgreich ignoriert'
+            'message' => 'Rule violation successfully ignored'
         ]);
     }
 
-    private function getAvailableRuleTypes(): array
+    public function storeManualViolation(StoreManualViolationRequest $request): RedirectResponse
     {
-        $ruleTypes = [
-            'maxWorkingHoursOnDay' => [
-                'name' => 'Tagesmaximum an Stunden',
-                'description' => 'Maximal erlaubte Arbeitsstunden pro Tag'
-            ],
-            'maxConsecWorkingDays' => [
-                'name' => 'Maximale Tage in Folge arbeiten',
-                'description' => 'Maximale aufeinanderfolgende Arbeitstage'
-            ],
-            'weeklyMaxHours' => [
-                'name' => 'Wochenmaximum an Stunden',
-                'description' => 'Maximal erlaubte Arbeitsstunden pro Woche'
-            ],
-            'restTimeBeforeWorkday' => [
-                'name' => 'Ruhezeit vor Werktag',
-                'description' => 'Mindest-Ruhezeit zwischen zwei Arbeitstagen'
-            ],
-            'restTimeBeforeHoliday' => [
-                'name' => 'Ruhezeit vor Sonder-/Sonntag',
-                'description' => 'Mindest-Ruhezeit vor Feiertagen und Sonntagen'
-            ]
-        ];
+        $validated = $request->validated();
 
-        return array_keys($ruleTypes);
+        $this->shiftRuleService->createManualViolation([
+            'user_id' => $validated['user_id'],
+            'shift_rule_id' => $validated['shift_rule_id'],
+            'violation_date' => $validated['violation_date'],
+            'reason' => $validated['reason'] ?? null,
+            'severity' => $validated['severity'] ?? 'warning',
+            'status' => 'active',
+            'is_manual' => true,
+            'created_by_user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Rule violation successfully created'
+        ]);
+    }
+
+    public function processViolation(ProcessViolationRequest $request, ShiftRuleViolation $violation): RedirectResponse
+    {
+        if ($violation->status !== 'active') {
+            return redirect()->back()->with('error', 'Violation is not active.');
+        }
+
+        $validated = $request->validated();
+
+        $days = (float) $validated['compensation_days'];
+        if (round($days * 2) !== (float) ($days * 2)) {
+            return redirect()->back()->withErrors([
+                'compensation_days' => 'Compensation days must be in 0.5 increments.',
+            ]);
+        }
+
+        $this->shiftRuleService->processViolation($violation, [
+            'compensation_days' => $validated['compensation_days'],
+            'compensation_deadline' => $validated['compensation_deadline'],
+            'compensation_reason' => $validated['compensation_reason'] ?? null,
+        ], auth()->id());
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Rule violation successfully processed'
+        ]);
+    }
+
+    public function grantCompensationDay(Request $request, CompensationDayOff $compensationDayOff): JsonResponse|RedirectResponse
+    {
+        if ($compensationDayOff->isGranted()) {
+            return new JsonResponse(['error' => 'Compensation day already granted.'], 422);
+        }
+
+        $validated = $request->validate([
+            'granted_date' => 'required|date',
+            'remove_shifts' => 'boolean',
+            'check_only' => 'boolean',
+        ]);
+
+        $grantedDate = $validated['granted_date'];
+
+        // Check if user has shifts on that date
+        $shiftsOnDate = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
+            ->whereHas('shift', function ($query) use ($grantedDate): void {
+                $query->whereDate('start_date', '<=', $grantedDate)
+                    ->whereDate('end_date', '>=', $grantedDate);
+            })
+            ->count();
+
+        if (!empty($validated['check_only'])) {
+            return new JsonResponse([
+                'has_shifts' => $shiftsOnDate > 0,
+                'shift_count' => $shiftsOnDate,
+            ]);
+        }
+
+        // Remove shifts if requested
+        if (!empty($validated['remove_shifts']) && $shiftsOnDate > 0) {
+            \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
+                ->whereHas('shift', function ($query) use ($grantedDate): void {
+                    $query->whereDate('start_date', '<=', $grantedDate)
+                        ->whereDate('end_date', '>=', $grantedDate);
+                })
+                ->delete();
+        }
+
+        $compensationDayOff->update([
+            'granted_date' => $grantedDate,
+            'granted_by' => auth()->id(),
+            'granted_at' => now(),
+        ]);
+
+        // Invalidate WorkingHourCache
+        app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
+            ->forgetForEntity('user', $compensationDayOff->user_id);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Compensation day successfully granted'
+        ]);
+    }
+
+    public function checkCompensationDay(Request $request, CompensationDayOff $compensationDayOff): JsonResponse
+    {
+        $validated = $request->validate([
+            'granted_date' => 'required|date',
+        ]);
+
+        $shiftsOnDate = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
+            ->whereHas('shift', function ($query) use ($validated): void {
+                $query->whereDate('start_date', '<=', $validated['granted_date'])
+                    ->whereDate('end_date', '>=', $validated['granted_date']);
+            })
+            ->count();
+
+        return new JsonResponse([
+            'has_shifts' => $shiftsOnDate > 0,
+            'shift_count' => $shiftsOnDate,
+        ]);
+    }
+
+    public function getOpenCompensationDays(User $user): JsonResponse
+    {
+        $compensationDayOffRepository = app(CompensationDayOffRepository::class);
+
+        return new JsonResponse(
+            $compensationDayOffRepository->getOpenForUser($user->id)
+        );
+    }
+
+    public function getViolationsForDateRange(GetViolationsForDateRangeRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $violations = $this->shiftRuleService->getViolationsForDateRange(
+            $validated['start_date'],
+            $validated['end_date'],
+            $validated['user_ids'] ?? null
+        );
+
+        return new JsonResponse($violations);
+    }
+
+    public function activeRules(): JsonResponse
+    {
+        return new JsonResponse(
+            $this->shiftRuleService->getActiveRules(['id', 'name', 'description', 'warning_color', 'trigger_type'])
+        );
+    }
+
+    public function revokeCompensationDay(CompensationDayOff $compensationDayOff): RedirectResponse
+    {
+        if (!$compensationDayOff->isGranted()) {
+            return redirect()->back()->with('flash', ['error' => 'Compensation day is not granted.']);
+        }
+
+        $compensationDayOff->update([
+            'granted_date' => null,
+            'granted_by' => null,
+            'granted_at' => null,
+        ]);
+
+        app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
+            ->forgetForEntity('user', $compensationDayOff->user_id);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Compensation day revoked successfully'
+        ]);
+    }
+
+    public function deleteCompensationDay(Request $request, CompensationDayOff $compensationDayOff): RedirectResponse
+    {
+        $validated = $request->validate([
+            'delete_reason' => 'required|string|max:500',
+        ]);
+
+        activity('compensation_day_off')
+            ->performedOn($compensationDayOff)
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'delete_reason' => $validated['delete_reason'],
+                'deleted_data' => $compensationDayOff->toArray(),
+            ])
+            ->event('deleted_with_reason')
+            ->log('Compensation day off deleted');
+
+        $userId = $compensationDayOff->user_id;
+        $compensationDayOff->delete();
+
+        app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
+            ->forgetForEntity('user', $userId);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Compensation day successfully deleted'
+        ]);
+    }
+
+    public function getUserWeekSchedule(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $date = Carbon::parse($validated['date']);
+        $monday = $date->copy()->startOfWeek(Carbon::MONDAY);
+        $sunday = $monday->copy()->addDays(6);
+
+        $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+        // Load shifts for the week
+        $shiftUsers = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $user->id)
+            ->whereHas('shift', function ($query) use ($monday, $sunday): void {
+                $query->whereDate('start_date', '<=', $sunday->toDateString())
+                    ->whereDate('end_date', '>=', $monday->toDateString());
+            })
+            ->with('shift:id,start_date,end_date,start,end')
+            ->get();
+
+        // Load individual times for the week
+        $individualTimes = $user->individualTimes()
+            ->where('start_date', '<=', $sunday->toDateString())
+            ->where('end_date', '>=', $monday->toDateString())
+            ->get();
+
+        // Load vacations for the week
+        $vacations = $user->vacations()
+            ->whereBetween('date', [$monday->toDateString(), $sunday->toDateString()])
+            ->get()
+            ->keyBy('date');
+
+        $days = [];
+        for ($i = 0; $i < 7; $i++) {
+            $currentDay = $monday->copy()->addDays($i);
+            $dateStr = $currentDay->toDateString();
+
+            $dayShifts = $shiftUsers->filter(function ($su) use ($dateStr) {
+                $shift = $su->shift;
+                if (!$shift) return false;
+                return $shift->start_date <= $dateStr && $shift->end_date >= $dateStr;
+            })->map(fn ($su) => [
+                'start' => $su->shift->start ?? '',
+                'end' => $su->shift->end ?? '',
+            ])->values();
+
+            $dayIndividualTimes = $individualTimes->filter(function ($it) use ($dateStr) {
+                return $it->start_date <= $dateStr && $it->end_date >= $dateStr;
+            })->map(fn ($it) => [
+                'start_time' => $it->start_time ?? '',
+                'end_time' => $it->end_time ?? '',
+                'title' => $it->title ?? '',
+            ])->values();
+
+            $vacation = $vacations->get($dateStr);
+
+            $days[] = [
+                'date' => $dateStr,
+                'day_name' => $dayNames[$i],
+                'day_short' => $currentDay->format('d.m'),
+                'is_selected' => $dateStr === $date->toDateString(),
+                'shifts' => $dayShifts,
+                'individual_times' => $dayIndividualTimes,
+                'is_free' => $dayShifts->isEmpty() && $dayIndividualTimes->isEmpty() && !$vacation,
+                'vacation_type' => $vacation?->type ?? null,
+            ];
+        }
+
+        return new JsonResponse([
+            'calendar_week' => $monday->isoWeek(),
+            'days' => $days,
+        ]);
+    }
+
+    public function storeManualCompensationDay(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'value' => 'required|in:0.5,1.0',
+            'deadline' => 'required|date',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        CompensationDayOff::create([
+            'user_id' => $validated['user_id'],
+            'violation_id' => null,
+            'value' => $validated['value'],
+            'deadline' => $validated['deadline'],
+            'reason' => $validated['reason'] ?? null,
+        ]);
+
+        return redirect()->back()->with('flash', [
+            'message' => 'Compensation day created successfully'
+        ]);
     }
 }

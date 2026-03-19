@@ -275,9 +275,11 @@ const form = useForm({
 const triggerTypeLabels = {
     'maxWorkingHoursOnDay': 'Tagesmaximum an Stunden',
     'maxConsecWorkingDays': 'Maximale Tage in Folge arbeiten',
+    'weeklyMaxHours': 'Wochenmaximum an Stunden',
     'maxWorkingHoursOnWeek': 'Wochenmaximum an Stunden',
     'restTimeBeforeWorkday': 'Ruhezeit vor Werktag',
-    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag'
+    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag',
+    'minDaysBeforeCommit': 'Mindesttage bis Verbindlich-Schaltung'
 }
 
 function formatTriggerType(type) {

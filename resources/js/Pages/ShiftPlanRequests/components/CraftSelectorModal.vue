@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal :title="$t('Select craft')" :description="$t('Select any Craft to show changes in shifts')">
+    <ArtworkBaseModal :title="$t('Select craft')" :description="$t('Select any Craft to show changes in shifts')" @close="$emit('close')">
         <ArtworkBaseListbox
             v-model="selectedCraft"
             :items="allCrafts"
@@ -22,6 +22,8 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+
+defineEmits(['close']);
 
 const allCrafts = ref(usePage().props.allCrafts);
 const selectedCraft = ref(null);

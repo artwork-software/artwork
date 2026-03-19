@@ -31,6 +31,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Shift;
@@ -253,6 +254,7 @@ class User extends Model implements
         'last_project_id',
         'bulk_column_size',
         'show_description_in_bulk',
+        'show_project_team_names',
         'chat_public_key',
         'use_chat',
         'work_time_balance',
@@ -291,6 +293,7 @@ class User extends Model implements
         'daily_view' => 'boolean',
         'bulk_column_size' => 'array',
         'show_description_in_bulk' => 'boolean',
+        'show_project_team_names' => 'boolean',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
         'is_time_preset_open' => 'boolean',
@@ -683,6 +686,11 @@ class User extends Model implements
     public function workTimeBookings(): HasMany
     {
         return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
+    }
+
+    public function compensationDayOffs(): HasMany
+    {
+        return $this->hasMany(CompensationDayOff::class, 'user_id', 'id');
     }
 
     public function getFormatedWorkTimeBalanceAttribute(): string

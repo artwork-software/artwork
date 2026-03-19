@@ -171,7 +171,7 @@
 
         .event-title {
             font-weight: 800;
-            font-size: 7.5px;
+            font-size: 9px;
             line-height: 1.2;
             word-break: break-word;
             overflow: visible;
@@ -179,7 +179,7 @@
         .event-sub {
             margin-top: 1px;
             font-weight: 600;
-            font-size: 7px;
+            font-size: 8.5px;
             line-height: 1.15;
             opacity: 0.9;
             word-break: break-word;
@@ -188,21 +188,21 @@
         .event-time {
             margin-top: 1px;
             font-weight: 800;
-            font-size: 6.5px;
+            font-size: 8px;
             line-height: 1.15;
             white-space: nowrap;
             overflow: visible;
         }
 
         .event-compact .event-inner { padding: 1px 2px; }
-        .event-compact .event-title { font-size: 6.5px; line-height: 1.15; }
+        .event-compact .event-title { font-size: 8px; line-height: 1.15; }
         .event-compact .event-sub   { display: none; }
-        .event-compact .event-time  { font-size: 6px; line-height: 1.1; }
+        .event-compact .event-time  { font-size: 7.5px; line-height: 1.1; }
 
         .event-supercompact .event-inner { padding: 1px 2px; }
-        .event-supercompact .event-title { font-size: 6px; line-height: 1.1; }
+        .event-supercompact .event-title { font-size: 7.5px; line-height: 1.1; }
         .event-supercompact .event-sub   { display: none; }
-        .event-supercompact .event-time  { font-size: 5.5px; line-height: 1.05; }
+        .event-supercompact .event-time  { font-size: 7px; line-height: 1.05; }
 
         .abbr { font-weight: 900; margin-right: 2px; }
     </style>

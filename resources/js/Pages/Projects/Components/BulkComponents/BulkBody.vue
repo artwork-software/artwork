@@ -469,7 +469,7 @@ const copyTypes = ref([
 const events = ref([]);
 
 // --- BulkEventsBroadcastUpdater Integration
-useBulkEventsBroadcastUpdater(events, {
+useBulkEventsBroadcastUpdater(events, computed(() => props.project?.id), {
     onEvent: (event, action) => {
         // add event id if not existing in lastEditEventIds
         if (action === 'updated') {

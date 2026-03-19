@@ -300,7 +300,7 @@ class Event extends Model
      */
     public function getDaysOfEventAttribute(): array
     {
-        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days_period = CarbonPeriod::create($this->start_time->copy()->startOfDay(), $this->end_time->copy()->startOfDay());
         $days = [];
 
         foreach ($days_period as $day) {
@@ -491,25 +491,23 @@ class Event extends Model
         $end = Carbon::parse($this->end_time);
 
         if ($start->isSameDay($end)) {
-            // Differenz in Stunden und Minuten berechnen
-            $diffInMinutes = $end->diffInMinutes($start);
-            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+            $diffInMinutes = abs($end->diffInMinutes($start));
+            return round($diffInMinutes / 60, 2);
         } else {
-            // Wenn nicht am selben Tag: Bis zum Tagesende des Starttags berechnen
-            $diffInMinutes = $start->endOfDay()->diffInMinutes($start);
-            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+            $diffInMinutes = abs($start->copy()->endOfDay()->diffInMinutes($start));
+            return round($diffInMinutes / 60, 2);
         }
     }
 
 
     public function getHoursToNextDayAttribute(): int
     {
-        return Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->endOfDay());
+        return abs(Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->copy()->endOfDay()));
     }
 
     public function getMinutesFormStartHourToStartAttribute(): int
     {
-        return Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->startOfHour());
+        return abs(Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->copy()->startOfHour()));
     }
 
     public function scopeIsPlanning(Builder $builder): Builder

@@ -469,9 +469,11 @@ const startEditDescription = () => {
 
 const saveDescription = async () => {
     if (draftDescription.value !== (props.event.description || '')) {
-        await axios.patch(route('event.update.description', props.event.id), {
-            description: draftDescription.value
-        });
+        if (props.event.id) {
+            await axios.patch(route('event.update.description', props.event.id), {
+                description: draftDescription.value
+            });
+        }
         props.event.description = draftDescription.value;
     }
     editingDescription.value = false;

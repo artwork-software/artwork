@@ -14,7 +14,14 @@ class MaxConsecutiveWorkingDaysCheck extends AbstractRuleCheck
     {
         $violations = collect();
         $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        // Look back before startDate to count any existing consecutive work streak
         $consecutiveDaysOfWork = 0;
+        $checkDate = $startDate->copy()->subDay();
+        while ($this->getPlannedWorkingHoursForDay($user, $checkDate) > 0) {
+            $consecutiveDaysOfWork++;
+            $checkDate->subDay();
+        }
 
         foreach ($dateRange as $date) {
             $plannedHours = $this->getPlannedWorkingHoursForDay($user, $date);

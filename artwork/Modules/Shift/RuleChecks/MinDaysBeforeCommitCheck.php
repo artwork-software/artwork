@@ -16,9 +16,10 @@ class MinDaysBeforeCommitCheck extends AbstractRuleCheck
         $today = now();
         $futureDate = $today->copy()->addDays($rule->individual_number_value);
 
-        // Get all non-committed shifts within the rule's time frame
+        // Get non-committed shifts assigned to this user within the rule's time frame
         $shifts = Shift::where('is_committed', false)
             ->whereBetween('start_date', [$today, $futureDate])
+            ->whereHas('users', fn ($q) => $q->where('user_id', $user->id))
             ->get();
 
         foreach ($shifts as $shift) {

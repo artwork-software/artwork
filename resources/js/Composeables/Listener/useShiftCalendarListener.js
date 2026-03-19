@@ -153,6 +153,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             } else {
                 room.content[dayKey].events.push(eventData);
             }
+            sortArrayByStartDateTimes(room.content[dayKey].events);
         }
 
         return true;

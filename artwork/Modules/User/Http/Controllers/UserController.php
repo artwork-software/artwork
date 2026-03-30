@@ -1282,7 +1282,8 @@ class UserController extends Controller
             'hide_unoccupied_days',
             'show_shift_group_tag',
             'show_timeline',
-            'show_only_not_fully_staffed_shifts'
+            'show_only_not_fully_staffed_shifts',
+            'show_user_overview'
         ]);
 
         if ($request->boolean('is_daily_view')) {
@@ -1408,6 +1409,11 @@ class UserController extends Controller
     public function compactMode(User $user, Request $request): void
     {
         $user->update($request->only('compact_mode'));
+    }
+
+    public function toggleShowProjectTeamNames(User $user, Request $request): void
+    {
+        $user->update($request->only('show_project_team_names'));
     }
 
     public function updateShowCrafts(User $user, Request $request): void

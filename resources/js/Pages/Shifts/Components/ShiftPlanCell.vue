@@ -85,7 +85,11 @@ const isOnVacation = computed(() => !!vacationToday.value)
 const vacationLabel = computed(() => {
     const v = vacationToday.value
     if (!v) return 'On Vacation'
-    return vacationTypeMap.value?.[v.type] || 'On Vacation'
+    const label = vacationTypeMap.value?.[v.type] || 'On Vacation'
+    if (!v.full_day && v.start_time && v.end_time) {
+        return `${v.start_time} - ${v.end_time} ${label}`
+    }
+    return label
 })
 
 /** Prüft ob die Vacation vom User der Zelle selbst eingetragen wurde */

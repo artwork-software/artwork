@@ -1037,7 +1037,10 @@
     "Yesterday": "Yesterday",
     "Last {0} days": "Last {0} days",
     "Current month": "Current month",
+    "Past approvals": "Past approvals",
     "Past month": "Past month",
+    "Past rejections": "Past rejections",
+    "Show past": "Show past",
     "Apply": "Apply",
     "Apply changes to artist in CRM": "Apply changes to artist in CRM",
     "Current week": "Current week",
@@ -2061,6 +2064,7 @@
     "No colleagues": "No colleagues",
     "Input fields marked with * are mandatory": "Input fields marked with * are mandatory",
     "Projects of this group": "Projekte dieser Gruppe",
+    "Projects of the group": "Projects of the group",
     "This Project is part of the group": "This Project is part of the group",
     "Highlight": "Highlight",
     "Compact view": "Compact view",
@@ -4239,4 +4243,5 @@
     "No CRM data available.": "No CRM data available.",
     "Unable to load artist residencies.": "Unable to load artist residencies.",
     "Saved. The Artist Residency has been successfully applied.": "Saved. The Artist Residency has been successfully applied."
+    "Show names": "Show names"
 }

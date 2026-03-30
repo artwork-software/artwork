@@ -202,7 +202,7 @@ const hasIndivTime = ref(false)
 
 const canAccessProject = computed(() => {
     if (hasAdminRole()) return true
-    if (can('can view projects')) return true
+    if (can('view projects')) return true
     // Check if user is part of project team
     const currentUserId = usePage().props.auth.user.id
     if (props.project?.users?.some(u => u.id === currentUserId)) return true

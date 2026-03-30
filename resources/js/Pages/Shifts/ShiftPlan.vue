@@ -1131,7 +1131,7 @@ const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
-const showUserOverview = ref(true)
+const showUserOverview = ref(usePage().props.auth.user.calendar_settings?.show_user_overview ?? true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
@@ -1236,7 +1236,10 @@ const shiftRowHeight = computed(() =>
 // Reactive metrics for cell height estimation – defaults until measured from DOM
 const cellMetrics = reactive({
     pgBarWithMb: 26,          // Link + mb-0.5
-    eventWithMb: 36,          // SingleEvent + mb-1
+    eventContentHeight: 54,   // SingleEvent content area (py-2 + name text-xs/4 + mt-0.5 + time text-xs/5)
+    eventProjectBar: 25,      // project name bar inside event (py-1 + text + border-b)
+    eventGroupBar: 25,        // project group bar inside event (py-1 + text + border-b)
+    eventMarginBottom: 4,     // mb-1 between events
     eventOnlyMb: 4,           // Event wrapper when event has shifts (only mb-1)
     shiftRow: 28,             // SingleShift row
     shiftRowGap: 2,           // space-y-0.5
@@ -1280,12 +1283,6 @@ async function measureBaselineMetrics() {
     const pg = measureMax('[data-sp-pgbar]', outerHeightWithMargin)
     if (pg !== null) cellMetrics.pgBarWithMb = pg
 
-    const evWrap = measureMax('[data-sp-eventwrap]', outerHeightWithMargin)
-    if (evWrap !== null) {
-        cellMetrics.eventWithMb = evWrap
-        cellMetrics.eventOnlyMb = 4 // mb-1 (Tailwind)
-    }
-
     const sr = measureMax('[data-sp-shiftrow]', el => el.getBoundingClientRect().height)
     if (sr !== null) cellMetrics.shiftRow = sr
 
@@ -1299,8 +1296,7 @@ async function measureBaselineMetrics() {
 // --- CellSummary cache ---
 type CellSummary = {
     pgGroupCount: number
-    eventRenderedCount: number
-    eventPlaceholderCount: number
+    totalEventHeight: number
     shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
 }
 
@@ -1319,8 +1315,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     const showProjectGroups = displayProjectGroups.value
 
     let pgGroupCount = 0
-    let eventRenderedCount = 0
-    let eventPlaceholderCount = 0
+    let totalEventHeight = 0
 
     if (showProjectGroups && events.length) {
         const groups = getAllProjectGroupsInEventsByDay(events)
@@ -1329,9 +1324,14 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
 
     for (const event of events) {
         if (!checkIfEventHasShiftsToDisplay(event)) {
-            eventRenderedCount++
+            let h = cellMetrics.eventContentHeight
+            if (event.project?.id) h += cellMetrics.eventProjectBar
+            if (showProjectGroups && event.project?.isInGroup && event.project?.group?.length > 0 && !event.project?.isGroup) {
+                h += cellMetrics.eventGroupBar
+            }
+            totalEventHeight += h + cellMetrics.eventMarginBottom
         } else {
-            eventPlaceholderCount++
+            totalEventHeight += cellMetrics.eventOnlyMb
         }
     }
 
@@ -1341,7 +1341,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
         shiftCount: g.shifts.length,
     }))
 
-    const summary: CellSummary = { pgGroupCount, eventRenderedCount, eventPlaceholderCount, shiftGroups }
+    const summary: CellSummary = { pgGroupCount, totalEventHeight, shiftGroups }
     cellSummaryCache.set(cacheKey, summary)
     return summary
 }
@@ -1353,9 +1353,8 @@ function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetr
     // Projektgruppenbars
     h += summary.pgGroupCount * metrics.pgBarWithMb
 
-    // Events
-    h += summary.eventRenderedCount * metrics.eventWithMb
-    h += summary.eventPlaceholderCount * metrics.eventOnlyMb
+    // Events (per-event heights already computed in summarizeCell)
+    h += summary.totalEventHeight
 
     // Shiftgruppen
     const groups = summary.shiftGroups
@@ -2611,6 +2610,11 @@ function openHistoryModal() {
 
 function showCloseUserOverview() {
     showUserOverview.value = !showUserOverview.value
+    router.patch(
+        route('user.calendar_settings.update', { user: authUser.value.id }),
+        { show_user_overview: showUserOverview.value },
+        { preserveScroll: true, preserveState: true },
+    )
 }
 
 function selectGoToMode(direction: 'next' | 'previous') {

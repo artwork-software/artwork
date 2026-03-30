@@ -2078,6 +2078,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
+        Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
+            ->name('user.show.project.team.names.toggle');
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
@@ -2873,6 +2875,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
             ->name('requests');        // Angefragte Dienstpläne
+
+        Route::get('/{craft}/past-requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'pastRequests'])
+            ->name('past-requests');
     });
 
 

@@ -3208,6 +3208,27 @@ class ProjectController extends Controller
             $this->projectService->attachManagementUsers($project, $request->assignedUsers);
         }
 
+        if ($request->boolean('isGroup')) {
+            $project->update(['is_group' => true]);
+            $project->projectsOfGroup()->sync($request->get('projects', []));
+
+            foreach ($request->get('projects', []) as $projectId) {
+                $childProject = Project::find($projectId);
+                if ($childProject) {
+                    $table = $childProject->table()->first();
+                    if ($table) {
+                        $columns = $table->columns()->get();
+                        if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                            $lastColumn = $columns->sortBy('position')->last();
+                            if ($lastColumn) {
+                                $lastColumn->update(['relevant_for_project_groups' => true]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
         $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
         $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));

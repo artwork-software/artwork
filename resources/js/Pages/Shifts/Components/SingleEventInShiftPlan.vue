@@ -98,17 +98,49 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Timeline Icon -->
+                    <div
+                        v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                        class="ml-auto cursor-pointer self-center"
+                        @click.stop="openTimelineModal"
+                    >
+                        <IconTimeline
+                            class="size-4"
+                            stroke-width="1.5"
+                            :class="event.hasTimelines ? '' : 'text-gray-400'"
+                            :style="event.hasTimelines ? {
+                                color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, percentage))
+                            } : {}"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Timeline Modal -->
+        <AddEditTimelineModal
+            v-if="showTimelineModal"
+            :event="event"
+            :timelineToEdit="timelineData"
+            @close="closeTimelineModal"
+        />
     </div>
 </template>
 
 <script setup>
 
-import { ref, computed } from "vue";
+import { ref, computed, defineAsyncComponent } from "vue";
+import axios from "axios";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";
+import {IconTimeline} from "@tabler/icons-vue";
+
+const AddEditTimelineModal = defineAsyncComponent({
+    loader: () => import("@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue"),
+    delay: 200,
+    timeout: 3000,
+});
+
 const percentage = usePage().props.high_contrast_percent;
 const expandDays = computed(() => usePage().props.auth.user.calendar_settings?.expand_days ?? false);
 const {
@@ -116,7 +148,7 @@ const {
     getTextColorBasedOnBackground,
 } = useColorHelper();
 
-defineProps({
+const props = defineProps({
     event: {
         type: Object,
         required: true,
@@ -130,6 +162,24 @@ defineProps({
         required: true
     }
 });
+
+const showTimelineModal = ref(false);
+const timelineData = ref([]);
+
+const openTimelineModal = async () => {
+    try {
+        const response = await axios.get(route('events.timelines', { event: props.event.id }));
+        timelineData.value = response.data.timelines || [];
+        showTimelineModal.value = true;
+    } catch (error) {
+        console.error('Error loading timelines:', error);
+    }
+};
+
+const closeTimelineModal = () => {
+    showTimelineModal.value = false;
+    timelineData.value = [];
+};
 
 // Project name tooltip
 const projectNameSpan = ref(null);

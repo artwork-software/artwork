@@ -199,7 +199,7 @@ class AvailabilityConflictService
                         $shiftStart->greaterThanOrEqualTo($availabilityEnd)
                     ) {
                         $this->create([
-                            'vacation_id' => $availability->id,
+                            'availability_id' => $availability->id,
                             'shift_id' => $shift->id,
                             'user_name' => $shiftCommittedBy->full_name,
                             'date' => $shift->event_start_day,

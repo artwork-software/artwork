@@ -23,8 +23,10 @@ class CrmController extends Controller
     public function index(Request $request): Response
     {
         $contactTypes = $this->contactTypeService->getActive();
-        $activeTypeSlug = $request->get('type', $contactTypes->first()?->slug);
-        $activeType = $this->contactTypeService->getBySlug($activeTypeSlug) ?? $contactTypes->first();
+        $activeTypeSlug = $request->get('type') ?? $contactTypes->first()?->slug;
+        $activeType = $activeTypeSlug
+            ? $this->contactTypeService->getBySlug($activeTypeSlug) ?? $contactTypes->first()
+            : $contactTypes->first();
 
         $filters = json_decode($request->get('filters', '[]'), true) ?: [];
 

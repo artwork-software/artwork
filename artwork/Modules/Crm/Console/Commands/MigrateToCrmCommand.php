@@ -6,6 +6,7 @@ use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Contacts\Models\Contact;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
@@ -18,6 +19,7 @@ use Artwork\Modules\Manufacturer\Models\Manufacturer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class MigrateToCrmCommand extends Command
@@ -261,25 +263,52 @@ class MigrateToCrmCommand extends Command
         }
     }
 
+    /**
+     * Migriert ein CrmEntity-Model: erstellt CrmContact, setzt entity-Morph,
+     * crm_contact_id und schreibt Property-Werte via getCrmFields().
+     */
+    private function migrateEntity(Model&CrmEntity $entity, CrmContactType $type, ?string $profileImage = null): CrmContact
+    {
+        $contact = CrmContact::firstOrCreate(
+            [
+                'crm_contact_type_id' => $type->id,
+                'display_name' => $entity->getCrmDisplayName(),
+            ],
+            [
+                'is_active' => true,
+                'profile_image' => $profileImage,
+                'entity_type' => $entity->getMorphClass(),
+                'entity_id' => $entity->getKey(),
+            ]
+        );
+
+        // Sicherstellen dass entity-Morph gesetzt ist (bei bestehenden Kontakten)
+        if (!$contact->entity_type || !$contact->entity_id) {
+            $contact->update([
+                'entity_type' => $entity->getMorphClass(),
+                'entity_id' => $entity->getKey(),
+            ]);
+        }
+
+        // Property-Werte aus getCrmFields() schreiben
+        foreach ($entity->getCrmFields() as $propertyName => $mapping) {
+            $value = $entity->resolveCrmFieldValue($propertyName);
+            $this->setPropertyValue($contact, $propertyName, $value);
+        }
+
+        // crm_contact_id auf dem Source-Model setzen
+        $entity->updateQuietly(['crm_contact_id' => $contact->id]);
+
+        return $contact;
+    }
+
     private function migrateArtists(): void
     {
         $this->info('Migrating artists...');
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ARTIST->value];
 
         Artist::all()->each(function (Artist $artist) use ($type) {
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $artist->name,
-                ],
-                ['is_active' => true]
-            );
-
-            $this->setPropertyValue($contact, 'Künstler*innen Name', $artist->name);
-            $this->setPropertyValue($contact, 'Vorname', $artist->first_name);
-            $this->setPropertyValue($contact, 'Nachname', $artist->last_name);
-            $this->setPropertyValue($contact, 'Telefon', $artist->phone_number);
-            $this->setPropertyValue($contact, 'Position', $artist->position);
+            $contact = $this->migrateEntity($artist, $type);
 
             // Update ArtistResidencies
             ArtistResidency::where('artist_id', $artist->id)
@@ -293,24 +322,7 @@ class MigrateToCrmCommand extends Command
         $type = $this->contactTypes[CrmSystemContactTypeEnum::ACCOMMODATION->value];
 
         Accommodation::all()->each(function (Accommodation $accommodation) use ($type) {
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $accommodation->name,
-                ],
-                [
-                    'is_active' => true,
-                    'profile_image' => $accommodation->profile_image,
-                ]
-            );
-
-            $this->setPropertyValue($contact, 'Name', $accommodation->name);
-            $this->setPropertyValue($contact, 'Email', $accommodation->email);
-            $this->setPropertyValue($contact, 'Telefon', $accommodation->phone_number);
-            $this->setPropertyValue($contact, 'Straße, Hausnummer', $accommodation->street);
-            $this->setPropertyValue($contact, 'PLZ', $accommodation->zip_code);
-            $this->setPropertyValue($contact, 'Stadt', $accommodation->location);
-            $this->setPropertyValue($contact, 'Notiz', $accommodation->note);
+            $contact = $this->migrateEntity($accommodation, $type, $accommodation->profile_image);
 
             // Migrate room type pivot
             DB::table('accommodation_accommodation_room_type')
@@ -337,21 +349,7 @@ class MigrateToCrmCommand extends Command
         $type = $this->contactTypes[CrmSystemContactTypeEnum::MANUFACTURER->value];
 
         Manufacturer::all()->each(function (Manufacturer $manufacturer) use ($type) {
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $manufacturer->name,
-                ],
-                ['is_active' => true]
-            );
-
-            $this->setPropertyValue($contact, 'Name', $manufacturer->name);
-            $this->setPropertyValue($contact, 'Email', $manufacturer->email);
-            $this->setPropertyValue($contact, 'Telefon', $manufacturer->phone);
-            $this->setPropertyValue($contact, 'Straße, Hausnummer', $manufacturer->address);
-            $this->setPropertyValue($contact, 'Website', $manufacturer->website);
-            $this->setPropertyValue($contact, 'Kundennummer', $manufacturer->customer_number);
-            $this->setPropertyValue($contact, 'Kontaktperson', $manufacturer->contact_person);
+            $contact = $this->migrateEntity($manufacturer, $type);
 
             // Migrate inventory manufacturer property values
             DB::table('inventory_property_values')
@@ -368,26 +366,7 @@ class MigrateToCrmCommand extends Command
         $type = $this->contactTypes[CrmSystemContactTypeEnum::USER->value];
 
         User::all()->each(function (User $user) use ($type) {
-            $displayName = trim($user->first_name . ' ' . $user->last_name);
-
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $displayName,
-                ],
-                [
-                    'is_active' => true,
-                    'profile_image' => $user->profile_photo_path,
-                ]
-            );
-
-            $this->setPropertyValue($contact, 'Name', $displayName);
-            $this->setPropertyValue($contact, 'Email', $user->email);
-            $this->setPropertyValue($contact, 'Telefon', $user->phone_number);
-            $this->setPropertyValue($contact, 'Position', $user->position);
-            $this->setPropertyValue($contact, 'Business', $user->business);
-
-            $user->update(['crm_contact_id' => $contact->id]);
+            $this->migrateEntity($user, $type, $user->profile_photo_path);
         });
     }
 
@@ -397,31 +376,7 @@ class MigrateToCrmCommand extends Command
         $type = $this->contactTypes[CrmSystemContactTypeEnum::FREELANCER->value];
 
         Freelancer::all()->each(function (Freelancer $freelancer) use ($type) {
-            $displayName = trim($freelancer->first_name . ' ' . $freelancer->last_name);
-
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $displayName,
-                ],
-                [
-                    'is_active' => true,
-                    'profile_image' => $freelancer->profile_image,
-                ]
-            );
-
-            $this->setPropertyValue($contact, 'Name', $displayName);
-            $this->setPropertyValue($contact, 'Email', $freelancer->email);
-            $this->setPropertyValue($contact, 'Telefon', $freelancer->phone_number);
-            $this->setPropertyValue($contact, 'Position', $freelancer->position);
-            $this->setPropertyValue($contact, 'Business', $freelancer->business);
-            $this->setPropertyValue($contact, 'Work Name', $freelancer->work_name);
-            $this->setPropertyValue($contact, 'Work Description', $freelancer->work_description);
-            $this->setPropertyValue($contact, 'Stundensatz', $freelancer->salary_per_hour ? (string) $freelancer->salary_per_hour : null);
-            $this->setPropertyValue($contact, 'Vergütungsbeschreibung', $freelancer->salary_description);
-            $this->setPropertyValue($contact, 'Can Work Shifts', $freelancer->can_work_shifts ? '1' : '0');
-
-            $freelancer->update(['crm_contact_id' => $contact->id]);
+            $this->migrateEntity($freelancer, $type, $freelancer->profile_image);
         });
     }
 
@@ -431,27 +386,7 @@ class MigrateToCrmCommand extends Command
         $type = $this->contactTypes[CrmSystemContactTypeEnum::SERVICE_PROVIDER->value];
 
         ServiceProvider::all()->each(function (ServiceProvider $provider) use ($type) {
-            $contact = CrmContact::firstOrCreate(
-                [
-                    'crm_contact_type_id' => $type->id,
-                    'display_name' => $provider->provider_name,
-                ],
-                [
-                    'is_active' => true,
-                    'profile_image' => $provider->profile_image,
-                ]
-            );
-
-            $this->setPropertyValue($contact, 'Name', $provider->provider_name);
-            $this->setPropertyValue($contact, 'Email', $provider->email);
-            $this->setPropertyValue($contact, 'Telefon', $provider->phone_number);
-            $this->setPropertyValue($contact, 'Work Name', $provider->work_name);
-            $this->setPropertyValue($contact, 'Work Description', $provider->work_description);
-            $this->setPropertyValue($contact, 'Stundensatz', $provider->salary_per_hour ? (string) $provider->salary_per_hour : null);
-            $this->setPropertyValue($contact, 'Vergütungsbeschreibung', $provider->salary_description);
-            $this->setPropertyValue($contact, 'Can Work Shifts', $provider->can_work_shifts ? '1' : '0');
-
-            $provider->update(['crm_contact_id' => $contact->id]);
+            $this->migrateEntity($provider, $type, $provider->profile_image);
         });
     }
 

@@ -2,7 +2,9 @@
 
 namespace Artwork\Modules\Crm\Services;
 
+use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Repositories\CrmContactRepository;
 use Artwork\Modules\Crm\Repositories\CrmPropertyValueRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -54,6 +56,9 @@ readonly class CrmContactService
 
         $this->savePropertyValues($contact, $propertyValues);
 
+        // Sync display_name from source entity if available
+        $this->syncDisplayName($contact);
+
         return $contact->fresh(['contactType', 'propertyValues.property']);
     }
 
@@ -74,6 +79,41 @@ readonly class CrmContactService
             $propertyId,
             $value
         );
+
+        $this->writeBackToSource($contact, $propertyId, $value);
+    }
+
+    private function writeBackToSource(CrmContact $contact, int $propertyId, ?string $value): void
+    {
+        $entity = $contact->getSourceEntity();
+
+        if (!$entity) {
+            return;
+        }
+
+        $property = CrmProperty::find($propertyId);
+
+        if (!$property) {
+            return;
+        }
+
+        $entity->setCrmFieldValue($property->name, $value);
+    }
+
+    private function syncDisplayName(CrmContact $contact): void
+    {
+        $entity = $contact->getSourceEntity();
+
+        if (!$entity) {
+            return;
+        }
+
+        $entity->refresh();
+        $displayName = $entity->getCrmDisplayName();
+
+        if ($displayName && $contact->display_name !== $displayName) {
+            $contact->update(['display_name' => $displayName]);
+        }
     }
 
     private function savePropertyValues(CrmContact $contact, array $propertyValues): void

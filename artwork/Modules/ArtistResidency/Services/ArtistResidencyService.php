@@ -8,6 +8,9 @@ use Artwork\Modules\ArtistResidency\Models\Artist;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistRepository;
 use Artwork\Modules\ArtistResidency\Repositories\ArtistResidencyRepository;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Snappy\PdfWrapper;
@@ -16,18 +19,13 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Routing\ResponseFactory;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
-use Artwork\Modules\Crm\Models\CrmContact;
-use Artwork\Modules\Crm\Models\CrmContactType;
-use Artwork\Modules\Crm\Models\CrmProperty;
-use Artwork\Modules\Crm\Models\CrmPropertyValue;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 readonly class ArtistResidencyService
 {
@@ -40,11 +38,11 @@ readonly class ArtistResidencyService
         private AuthManager $authManager,
         protected ArtistResidencyRepository $residencies,
         protected ArtistRepository $artists,
+        private CrmContactService $crmContactService,
     ) {
     }
 
-
-    /** Erstellen + sichere Artist-Verknüpfung/Neuanlage */
+    /** Erstellen + sichere Artist-Verknuepfung/Neuanlage */
     public function create(array $payload): ArtistResidency
     {
         return DB::transaction(function () use ($payload) {
@@ -72,25 +70,19 @@ readonly class ArtistResidencyService
 
             $residency = $this->residencies->create($resData);
 
-            // CRM contact: use existing or create new from property values
+            // CRM contact: use existing or create new
             $crmContactId = $artistInput['artist_crm_contact_id'] ?? null;
             if (!$crmContactId && !empty($artistInput['crm_property_values'])) {
-                $crmContact = $this->createCrmContactForArtist($artistInput['crm_property_values']);
-                if ($crmContact) {
-                    $crmContactId = $crmContact->id;
-                }
-            }
-            if ($crmContactId) {
-                $residency->update(['artist_crm_contact_id' => $crmContactId]);
+                $crmContact = $this->createCrmContactForArtist($artistInput);
+                $crmContactId = $crmContact?->id;
             }
 
-            // Handle CRM property sync/overrides for existing CRM contacts
-            if ($crmContactId && !empty($artistInput['crm_property_values'])) {
-                if (!empty($artistInput['sync_crm_changes'])) {
-                    $this->syncCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
-                    $residency->update(['crm_property_overrides' => null]);
-                } else {
-                    $residency->update(['crm_property_overrides' => $artistInput['crm_property_values']]);
+            if ($crmContactId) {
+                $residency->update(['artist_crm_contact_id' => $crmContactId]);
+
+                // Write property values back to source entity via CrmContactService
+                if (!empty($artistInput['crm_property_values'])) {
+                    $this->saveCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
                 }
             }
 
@@ -104,13 +96,13 @@ readonly class ArtistResidencyService
         });
     }
 
-    /** Update + sichere Artist-Verknüpfung/Neuanlage/Dissociate */
+    /** Update + sichere Artist-Verknuepfung/Neuanlage/Dissociate */
     public function update(ArtistResidency $residency, array $payload): ArtistResidency
     {
         return DB::transaction(function () use ($residency, $payload) {
             [$artistInput, $resData] = $this->splitPayload($payload);
 
-            // Wenn do_not_save_artist aktiv: Daten lokal auf Residency speichern, keinen Artist anlegen
+            // Wenn do_not_save_artist aktiv: Daten lokal auf Residency speichern
             if ($residency->do_not_save_artist) {
                 $resData['name'] = $artistInput['name'] ?? $residency->name;
                 $resData['first_name'] = $artistInput['first_name'] ?? $residency->first_name;
@@ -133,15 +125,10 @@ readonly class ArtistResidencyService
 
             $this->residencies->update($residency, $resData);
 
-            // Handle CRM property sync/overrides
+            // Write property values back to source entity via CrmContactService
             $crmContactId = $residency->artist_crm_contact_id;
             if ($crmContactId && !empty($artistInput['crm_property_values'])) {
-                if (!empty($artistInput['sync_crm_changes'])) {
-                    $this->syncCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
-                    $residency->update(['crm_property_overrides' => null]);
-                } else {
-                    $residency->update(['crm_property_overrides' => $artistInput['crm_property_values']]);
-                }
+                $this->saveCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
             }
 
             if (!empty($artistInput) || $this->wantsDissociate($artistInput)) {
@@ -163,7 +150,7 @@ readonly class ArtistResidencyService
     /** Trennt Artist-Felder von Residency-Feldern */
     private function splitPayload(array $payload): array
     {
-        $artistKeys = ['artist_id', 'artist_crm_contact_id', 'name', 'first_name', 'last_name', 'phone_number', 'position', 'crm_property_values', 'sync_crm_changes'];
+        $artistKeys = ['artist_id', 'artist_crm_contact_id', 'name', 'first_name', 'last_name', 'phone_number', 'position', 'crm_property_values'];
         $artistInput = Arr::only($payload, $artistKeys);
         $residencyData = Arr::except($payload, array_merge($artistKeys, ['do_not_save_artist']));
 
@@ -177,93 +164,69 @@ readonly class ArtistResidencyService
             && empty(trim((string)($artistInput['name'] ?? '')));
     }
 
-    private function syncCrmPropertyValues(int $contactId, array $propertyValues): void
+    /** Speichert CRM-Property-Werte ueber den CrmContactService (schreibt ins Source-Model zurueck) */
+    private function saveCrmPropertyValues(int $contactId, array $propertyValues): void
     {
-        foreach ($propertyValues as $propId => $value) {
-            if ($value !== null && $value !== '') {
-                CrmPropertyValue::updateOrCreate(
-                    ['crm_contact_id' => $contactId, 'crm_property_id' => $propId],
-                    ['value' => $value]
-                );
-            } else {
-                CrmPropertyValue::where('crm_contact_id', $contactId)
-                    ->where('crm_property_id', $propId)
-                    ->delete();
-            }
+        $contact = $this->crmContactService->findById($contactId);
+
+        if (!$contact) {
+            return;
         }
 
-        // Update display_name on the CRM contact
-        $contact = CrmContact::find($contactId);
-        if ($contact) {
-            $vornameProp = CrmProperty::where('name', 'Vorname')
-                ->whereHas('group', fn ($q) => $q->where('is_system', true))
-                ->first();
-            $nachnameProp = CrmProperty::where('name', 'Nachname')
-                ->whereHas('group', fn ($q) => $q->where('is_system', true))
-                ->first();
-            $kuenstlerNameProp = CrmProperty::where('name', 'Künstler*innen Name')
-                ->whereHas('group', fn ($q) => $q->where('is_system', true))
-                ->first();
-
-            $vorname = $propertyValues[$vornameProp?->id] ?? '';
-            $nachname = $propertyValues[$nachnameProp?->id] ?? '';
-            $kuenstlerName = $propertyValues[$kuenstlerNameProp?->id] ?? '';
-            $displayName = trim("$vorname $nachname") ?: $kuenstlerName;
-
-            if (!empty($displayName)) {
-                $contact->update(['display_name' => $displayName]);
-            }
+        foreach ($propertyValues as $propId => $value) {
+            $this->crmContactService->savePropertyValue(
+                $contact,
+                (int) $propId,
+                $value !== null && $value !== '' ? (string) $value : null
+            );
         }
     }
 
-    private function createCrmContactForArtist(array $propertyValues): ?CrmContact
+    /** Erstellt einen CRM-Kontakt + Artist-Model fuer einen neuen Kuenstler */
+    private function createCrmContactForArtist(array $artistInput): ?\Artwork\Modules\Crm\Models\CrmContact
     {
         $artistType = CrmContactType::where('slug', CrmSystemContactTypeEnum::ARTIST->value)->first();
+
         if (!$artistType) {
             return null;
         }
 
-        $vornameProp = CrmProperty::where('name', 'Vorname')
-            ->whereHas('group', fn ($q) => $q->where('is_system', true))
-            ->first();
-        $nachnameProp = CrmProperty::where('name', 'Nachname')
-            ->whereHas('group', fn ($q) => $q->where('is_system', true))
-            ->first();
-        $kuenstlerNameProp = CrmProperty::where('name', 'Künstler*innen Name')
-            ->whereHas('group', fn ($q) => $q->where('is_system', true))
-            ->first();
+        // Artist-Model anlegen/finden
+        $artist = $this->resolveArtistStrict($artistInput);
 
-        $vorname = $propertyValues[$vornameProp?->id] ?? '';
-        $nachname = $propertyValues[$nachnameProp?->id] ?? '';
-        $kuenstlerName = $propertyValues[$kuenstlerNameProp?->id] ?? '';
-        $displayName = trim("$vorname $nachname") ?: $kuenstlerName;
+        if (!$artist) {
+            return null;
+        }
+
+        $displayName = $artist->getCrmDisplayName();
 
         if (empty($displayName)) {
             return null;
         }
 
-        $contact = CrmContact::create([
+        // CRM-Contact ueber Service erstellen
+        $contact = $this->crmContactService->store([
             'crm_contact_type_id' => $artistType->id,
             'display_name' => $displayName,
             'is_active' => true,
+        ], $artistInput['crm_property_values'] ?? []);
+
+        // Polymorphe Rueckbeziehung setzen
+        $contact->update([
+            'entity_type' => $artist->getMorphClass(),
+            'entity_id' => $artist->id,
         ]);
 
-        foreach ($propertyValues as $propId => $value) {
-            if ($value !== null && $value !== '') {
-                CrmPropertyValue::updateOrCreate(
-                    ['crm_contact_id' => $contact->id, 'crm_property_id' => $propId],
-                    ['value' => $value]
-                );
-            }
-        }
+        // crm_contact_id auf dem Artist setzen
+        $artist->update(['crm_contact_id' => $contact->id]);
 
         return $contact;
     }
 
     /**
      * Liefert:
-     *  - Artist:   wenn verknüpft/gefunden/neu angelegt werden soll
-     *  - null:     wenn explizit dissociate gewünscht ist
+     *  - Artist:   wenn verknuepft/gefunden/neu angelegt werden soll
+     *  - null:     wenn explizit dissociate gewuenscht ist
      *  - wirft ValidationException bei Konflikten oder inkonsistenten Eingaben
      * @throws ValidationException
      */
@@ -288,7 +251,6 @@ readonly class ArtistResidencyService
         if ($hasId && $id) {
             $artist = $this->artists->findById((int)$id, lockForUpdate: true);
             if (!$artist) {
-                // Sollte die Request-Rule eigentlich abfangen (exists)
                 throw ValidationException::withMessages([
                     'artist_id' => __('Selected artist does not exist.'),
                 ]);
@@ -313,13 +275,13 @@ readonly class ArtistResidencyService
 
         // Fall B: keine ID, aber Name vorhanden → finden oder erstellen
         if ($name !== '') {
-            // Robust per Lock + Unique-Fallback
             return $this->artists->getOrCreateByNameForUpdate($name, $extraUpdates);
         }
 
         // Fall C: weder ID noch Name → nichts zu tun (Residency ohne Artist)
         return null;
     }
+
     /**
      * Exports artist residency data based on project and type.
      */

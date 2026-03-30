@@ -77,7 +77,15 @@ class CrmController extends Controller
         $departmentIds = $user->departments?->pluck('id')->toArray() ?? [];
         $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
         $propertyGroups = $this->propertyGroupService->getVisibleForUser($user->id, $departmentIds, $isCrmManager);
+        $propertyGroups->loadMissing('properties');
         $this->propertyGroupService->annotateEditPermissions($propertyGroups, $user->id, $departmentIds, $isCrmManager);
+
+        // Filter property values to only include those from visible groups
+        $visiblePropertyIds = $propertyGroups->flatMap(fn ($g) => $g->properties)->pluck('id')->toArray();
+        $crmContact->setRelation(
+            'propertyValues',
+            $crmContact->propertyValues->whereIn('crm_property_id', $visiblePropertyIds)->values()
+        );
 
         return Inertia::render('CRM/Show', [
             'contact' => $crmContact,

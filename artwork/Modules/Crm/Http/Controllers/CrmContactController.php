@@ -48,6 +48,15 @@ class CrmContactController extends Controller
         $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
 
         $groups = $this->propertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+        $groups->loadMissing('properties');
+        $this->propertyGroupService->annotateEditPermissions($groups, $user->id, $deptIds, $isCrmManager);
+
+        // Filter property values to only include those from visible groups
+        $visiblePropertyIds = $groups->flatMap(fn ($g) => $g->properties)->pluck('id')->toArray();
+        $crmContact->setRelation(
+            'propertyValues',
+            $crmContact->propertyValues->whereIn('crm_property_id', $visiblePropertyIds)->values()
+        );
 
         return response()->json([
             'contact' => $crmContact,
@@ -66,9 +75,12 @@ class CrmContactController extends Controller
             'property_values.*' => 'nullable',
         ]);
 
+        $propertyValues = $validated['property_values'] ?? [];
+        $this->authorizePropertyEdits(array_keys($propertyValues));
+
         $contact = $this->contactService->store(
             $validated,
-            $validated['property_values'] ?? []
+            $propertyValues
         );
 
         return redirect()->route('crm.contacts.show', $contact);
@@ -84,10 +96,13 @@ class CrmContactController extends Controller
             'property_values.*' => 'nullable',
         ]);
 
+        $propertyValues = $validated['property_values'] ?? [];
+        $this->authorizePropertyEdits(array_keys($propertyValues));
+
         $this->contactService->update(
             $crmContact,
             $validated,
-            $validated['property_values'] ?? []
+            $propertyValues
         );
 
         return redirect()->back();
@@ -119,12 +134,11 @@ class CrmContactController extends Controller
             'file' => 'required|file|max:10240',
         ]);
 
+        $propertyId = (int) $request->input('property_id');
+        $this->authorizePropertyEdits([$propertyId]);
+
         $path = $request->file('file')->store('crm-property-files', 'public');
-        $this->contactService->savePropertyValue(
-            $crmContact,
-            (int) $request->input('property_id'),
-            $path
-        );
+        $this->contactService->savePropertyValue($crmContact, $propertyId, $path);
 
         return redirect()->back();
     }
@@ -135,12 +149,37 @@ class CrmContactController extends Controller
             'property_id' => 'required|integer|exists:crm_properties,id',
         ]);
 
-        $this->contactService->savePropertyValue(
-            $crmContact,
-            (int) $request->input('property_id'),
-            null
-        );
+        $propertyId = (int) $request->input('property_id');
+        $this->authorizePropertyEdits([$propertyId]);
+
+        $this->contactService->savePropertyValue($crmContact, $propertyId, null);
 
         return redirect()->back();
+    }
+
+    private function authorizePropertyEdits(array $propertyIds): void
+    {
+        if (empty($propertyIds)) {
+            return;
+        }
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $editablePropertyIds = $this->propertyGroupService->getEditablePropertyIds(
+            $user->id,
+            $deptIds,
+            $isCrmManager
+        );
+
+        $forbidden = array_diff(
+            array_map('intval', $propertyIds),
+            $editablePropertyIds
+        );
+
+        if (!empty($forbidden)) {
+            abort(403, 'Keine Berechtigung zum Bearbeiten dieser Eigenschaften.');
+        }
     }
 }

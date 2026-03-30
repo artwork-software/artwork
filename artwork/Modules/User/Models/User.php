@@ -46,7 +46,9 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
@@ -175,7 +177,8 @@ class User extends Model implements
     Available,
     DayServiceable,
     WorkflowSubject,
-    Employable
+    Employable,
+    CrmEntity
 {
     use Authenticatable;
     use Authorizable;
@@ -199,6 +202,7 @@ class User extends Model implements
     use HasWorkflows;
     use HasProfilePhotoCustom;
     use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'first_name',
@@ -783,5 +787,27 @@ class User extends Model implements
             'user_id',
             'inventory_tag_id'
         );
+    }
+
+    public function getCrmFields(): array
+    {
+        return array_merge(
+            $this->getSharedCrmFields(),
+            [
+                'Position' => 'position',
+                'Business' => 'business',
+            ],
+            $this->getWorkProfileCrmFields(),
+        );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'user';
     }
 }

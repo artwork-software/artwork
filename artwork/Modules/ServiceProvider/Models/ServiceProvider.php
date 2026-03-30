@@ -5,7 +5,9 @@ namespace Artwork\Modules\ServiceProvider\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
 use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
@@ -39,7 +41,7 @@ use Laravel\Scout\Searchable;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class ServiceProvider extends Model implements Vacationer, DayServiceable, Employable
+class ServiceProvider extends Model implements Vacationer, DayServiceable, Employable, CrmEntity
 {
     use HasFactory;
     use CanHasDayServices;
@@ -51,6 +53,7 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
     use HasContacts;
     use HasProfilePhotoCustom;
     use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'profile_image',
@@ -135,4 +138,23 @@ class ServiceProvider extends Model implements Vacationer, DayServiceable, Emplo
         return Str::upper(Str::substr($name, 0, 2));
     }
 
+    public function getCrmFields(): array
+    {
+        return array_merge(
+            $this->getSharedCrmFields(),
+            $this->getWorkProfileCrmFields(),
+            $this->getAddressCrmFields(),
+            ['Notiz' => 'note'],
+        );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return $this->provider_name;
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'service_provider';
+    }
 }

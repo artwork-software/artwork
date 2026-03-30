@@ -78,6 +78,30 @@ readonly class CrmPropertyGroupService
         }
     }
 
+    public function getEditablePropertyIds(int $userId, array $departmentIds, bool $isCrmManager): array
+    {
+        $groups = $this->getVisibleForUser($userId, $departmentIds, $isCrmManager);
+        $groups->loadMissing('properties');
+        $this->annotateEditPermissions($groups, $userId, $departmentIds, $isCrmManager);
+
+        return $groups
+            ->where('can_edit', true)
+            ->flatMap(fn ($g) => $g->properties)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    public function getVisiblePropertyIds(int $userId, array $departmentIds, bool $isCrmManager): array
+    {
+        $groups = $this->getVisibleForUser($userId, $departmentIds, $isCrmManager);
+        $groups->loadMissing('properties');
+
+        return $groups
+            ->flatMap(fn ($g) => $g->properties)
+            ->pluck('id')
+            ->toArray();
+    }
+
     public function updatePermissions(CrmPropertyGroup $group, array $permissions): void
     {
         DB::transaction(function () use ($group, $permissions) {

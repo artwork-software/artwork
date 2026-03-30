@@ -30,7 +30,7 @@ Artwork can be installed standalone on a dedicated server or as a multi-containe
    docker compose exec artwork php artisan key:generate --show
    ```
    Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
-   It should look like `APP_KEY=base64:tVkZTza0DQJH4zQchY6EqN8QwpdgN/LEthLHIfklO7E=` please do **NOT** use the key from the example.
+   It should look like `APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=` please do **NOT** use the key from the example.
    
    If you receive an error regarding missing files wait a few minutes for the application to load the missing dependencies and set everything up. This may take up to 10 minutes depending on your setup.
 4. Restart to load the new key:

@@ -2849,7 +2849,7 @@ class ProjectController extends Controller
             ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
-            'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),
             'filterOptions' => $filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),

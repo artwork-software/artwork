@@ -1133,13 +1133,13 @@ const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
-const showUserOverview = ref(usePage().props.auth.user.calendar_settings?.show_user_overview ?? true)
+const showUserOverview = ref(usePage().props.shift_plan_settings?.show_user_overview ?? true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
 // Cached computeds for usePage().props – avoid redundant reactive access in hot paths
 const authUser = computed(() => usePage().props.auth.user)
-const calendarSettings = computed(() => authUser.value.calendar_settings)
+const calendarSettings = computed(() => usePage().props.shift_plan_settings ?? authUser.value.calendar_settings)
 const expandDays = computed(() => calendarSettings.value.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
@@ -1547,7 +1547,7 @@ function getRoomDayShifts(room: any, day: string): any[] {
     }
 
     // Filter: nur nicht voll besetzte Schichten anzeigen
-    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
     if (showOnlyNotFullyStaffed) {
         shifts = shifts.filter((shift: any) => {
             const qualifications = Array.isArray(shift?.shifts_qualifications)
@@ -2545,7 +2545,7 @@ function calculateTopPositionOfUserOverView() {
 
 function checkIfEventHasShiftsToDisplay(event: any) {
     const showCrafts = authUser.value?.show_crafts
-    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
 
     let shifts = event.shifts || []
 
@@ -2647,7 +2647,7 @@ function showCloseUserOverview() {
     showUserOverview.value = !showUserOverview.value
     router.patch(
         route('user.calendar_settings.update', { user: authUser.value.id }),
-        { show_user_overview: showUserOverview.value },
+        { show_user_overview: showUserOverview.value, is_shift_plan: true },
         { preserveScroll: true, preserveState: true },
     )
 }

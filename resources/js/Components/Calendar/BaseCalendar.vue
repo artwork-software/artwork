@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-auto h-screen' : ''">
         <!-- Topbar -->
-        <div class="w-full left-8 top-0 px-5 fixed z-40">
+        <div class="w-full left-8 top-0 px-5 fixed z-[45]">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -229,7 +229,7 @@
         </div>
 
         <!-- Multi-Edit Bottom Bar -->
-        <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
+        <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-[45] pointer-events-none" v-if="multiEdit">
             <div class="flex items-center justify-center h-full gap-4" v-if="!isPlanning">
                 <div>
                     <FormButton

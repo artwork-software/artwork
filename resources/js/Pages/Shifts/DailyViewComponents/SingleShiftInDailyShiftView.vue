@@ -10,7 +10,7 @@
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         {{ shift.start }} - {{ shift.end }}
                     </div>
-                    <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                    <div v-if="shift.shiftGroup && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
                         ({{ shift.shiftGroup.name }})
                     </div>
                     <span
@@ -25,7 +25,7 @@
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
                 <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center shrink-0 pr-1">
                     <div class="flex transition-opacity duration-150">
-                        <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
+                        <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete shift')" />
                         </BaseMenu>

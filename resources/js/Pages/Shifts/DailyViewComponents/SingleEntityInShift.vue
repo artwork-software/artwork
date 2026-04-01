@@ -129,7 +129,7 @@
             </div>
 
             <!-- Notes: begrenzen, damit sie nie den Rest killen -->
-            <div v-if="forceShowNotes || $page.props.auth.user.calendar_settings.shift_notes" class="flex min-w-0 items-center max-w-56">
+            <div v-if="forceShowNotes || ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).shift_notes" class="flex min-w-0 items-center max-w-56">
                 <Popover as="div" v-slot="{ open, close }" class="relative text-left ring-0">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <PopoverButton class="flex items-center gap-x-1 min-w-0 w-full !ring-0 border-none">
@@ -174,7 +174,7 @@
             <!-- Menü: NICHT absolut, sondern im Flow => immer rechts am Rand -->
             <div v-if="can('can plan shifts') || is('artwork admin')" class="shrink-0">
                 <BaseMenu has-no-offset white-menu-background dots-size="size-4"
-                          :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''"
+                          :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''"
                           menu-width="w-fit">
                     <BaseMenuItem
                         white-menu-background

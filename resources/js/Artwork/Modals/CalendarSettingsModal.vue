@@ -753,9 +753,13 @@ const listViewSettings = props.isListView ? usePage().props.listViewSettings : n
 
 const activeSettings = props.isListView
     ? listViewSettings
-    : (props.isDailyView
-        ? (usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)
-        : usePage().props.auth.user.calendar_settings);
+    : props.inShiftPlan
+        ? (props.isDailyView
+            ? (usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
+            : (usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings))
+        : (props.isDailyView
+            ? (usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)
+            : usePage().props.auth.user.calendar_settings);
 
 const userCalendarSettings = props.isListView
     ? useForm({
@@ -767,6 +771,7 @@ const userCalendarSettings = props.isListView
     })
     : useForm({
         is_daily_view: props.isDailyView,
+        is_shift_plan: props.inShiftPlan,
         project_status: activeSettings ? activeSettings.project_status : false,
         project_artists: activeSettings ? activeSettings.project_artists : false,
         options: activeSettings ? activeSettings.options : false,

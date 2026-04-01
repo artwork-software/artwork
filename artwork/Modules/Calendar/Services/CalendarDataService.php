@@ -20,6 +20,8 @@ use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
+use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -164,7 +166,7 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(
         ?UserFilter $filter,
-        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
         bool $considerShiftsForOccupancy = false,
@@ -252,7 +254,7 @@ readonly class CalendarDataService
 
 
     public function getCalendarDateRange(
-        UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings,
+        UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         ?UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {

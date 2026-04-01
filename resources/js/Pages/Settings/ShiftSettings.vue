@@ -605,8 +605,7 @@ export default defineComponent({
             confirmDeleteTitle: '',
             confirmDeleteDescription: '',
             userForWorkflowForm: useForm({
-                // users form this.shiftCommitWorkflowUsers but only id is needed
-                users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
+                users: []
             }),
             deleteType: '',
             tabs: [

@@ -111,7 +111,7 @@
                 </div>
                 <SwitchIconTooltip
                     v-if="!project"
-                    v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                    v-model="activeCalSettings.use_project_time_period"
                     :tooltip-text="$t('Project search')"
                     size="md"
                     @change="handleUseTimePeriodChange"
@@ -408,7 +408,8 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
         {
             use_project_time_period: enabled,
-            project_id: projectId
+            project_id: projectId,
+            is_daily_view: props.dailyView
         },
         {
             preserveState: false
@@ -448,7 +449,7 @@ const getExportModalConfiguration = () => {
 };
 
 const handleUseTimePeriodChange = (enabled) => {
-    if (!enabled && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0) {
+    if (!enabled && getTimePeriodProjectId() > 0) {
         toggleProjectTimePeriodAndRedirect(0, false);
     }
 };
@@ -754,12 +755,10 @@ watch(() => projectSearch.value, (searchValue) => {
     );
 });
 
-// watch on usePage().props.auth.user.calendar_settings.use_project_time_period
-watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period, (newValue) => {
-    // if to focus on input field
+watch(() => activeCalSettings.value?.use_project_time_period, (newValue) => {
     if (newValue) {
         nextTick(() => {
-            document.getElementById('calendarProjectSearch').focus();
+            document.getElementById('calendarProjectSearch')?.focus();
         });
     }
 });

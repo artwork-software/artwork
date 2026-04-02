@@ -37,7 +37,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <button class="ui-button-add"  @click="addingUser = true">
+                    <button v-if="hasAdminRole()" class="ui-button-add"  @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
                     </button>

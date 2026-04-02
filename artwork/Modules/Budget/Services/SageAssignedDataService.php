@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\Models\CollectiveBookings\CollectiveBooking;
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageAssignedDataRepository;
@@ -17,8 +18,21 @@ class SageAssignedDataService implements CollectiveBookingService
 
     public function __construct(
         private readonly SageAssignedDataRepository $sageAssignedDataRepository,
-        private readonly SageNotAssignedDataService $sageNotAssignedDataService
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService,
+        private readonly ColumnCellService $columnCellService,
     ) {
+    }
+
+    private function recalculateForCell(?int $columnCellId): void
+    {
+        if ($columnCellId === null) {
+            return;
+        }
+
+        $cell = ColumnCell::find($columnCellId);
+        if ($cell?->sub_position_row_id) {
+            $this->columnCellService->recalculateAutomaticColumns($cell->sub_position_row_id);
+        }
     }
 
     public function create(array $attributes): SageAssignedData
@@ -26,6 +40,8 @@ class SageAssignedDataService implements CollectiveBookingService
         $sageAssignedData = new SageAssignedData($attributes);
 
         $this->sageAssignedDataRepository->save($sageAssignedData);
+
+        $this->recalculateForCell($sageAssignedData->column_cell_id);
 
         return $sageAssignedData;
     }
@@ -102,12 +118,17 @@ class SageAssignedDataService implements CollectiveBookingService
 
     public function delete(SageAssignedData $sageAssignedData): void
     {
+        $columnCellId = $sageAssignedData->column_cell_id;
         $this->sageAssignedDataRepository->delete($sageAssignedData);
+        $this->recalculateForCell($columnCellId);
     }
 
     public function forceDelete(SageAssignedData $sageAssignedData): bool
     {
-        return $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
+        $columnCellId = $sageAssignedData->column_cell_id;
+        $result = $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
+        $this->recalculateForCell($columnCellId);
+        return $result;
     }
 
     public function findBySageId(int $sageId): SageAssignedData|null

@@ -222,7 +222,7 @@ defineExpose({
             v-for="vr in allRows"
             :key="vr.row.key"
             class="relative flex border-b border-dashed border-gray-400"
-            :style="{ width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px' }"
+            :style="{ width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px', height: vr.height + 'px' }"
         >
             <!-- Sticky left column -->
             <div

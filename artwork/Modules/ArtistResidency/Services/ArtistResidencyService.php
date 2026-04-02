@@ -290,6 +290,10 @@ readonly class ArtistResidencyService
             'email' => $generalSettings->letterhead_email ?? '',
         ];
 
+        $generalSettings->per_diem_export_counter++;
+        $generalSettings->save();
+        $perDiemNumber = $generalSettings->per_diem_export_counter;
+
         $pdfContent = $this->pdf->loadView(
             'pdf.artist-residency-per-diem-standalone',
             [
@@ -298,8 +302,9 @@ readonly class ArtistResidencyService
                 'language' => $language,
                 'bigLogoBase64' => $bigLogoBase64,
                 'letterhead' => $letterhead,
+                'perDiemNumber' => $perDiemNumber,
             ]
-        )->setPaper('a4', 'landscape')
+        )->setPaper('a4', 'portrait')
             ->setOptions([
                 'dpi' => 72,
                 'enable-local-file-access' => true,

@@ -68,19 +68,12 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $firstEvent */
-        $firstEvent = $project->events()
+        return $project->events()
             ->select('events.*')
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->where('event_types.relevant_for_project_period', true)
             ->orderBy('start_time', 'asc')
             ->first();
-        //$firstEvent = $project->events()
-        //->orderByStartTime()
-        //->where('event_type.relevant_for_project_period', true)
-        //->limit(1)
-        //->first();
-
-        return $firstEvent;
     }
 
     /**
@@ -92,16 +85,12 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $lastEvent */
-        $lastEvent = $project->events()
+        return $project->events()
             ->select('events.*')
             ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->orderByStartTime('DESC')
-            ->limit(1)
+            ->where('event_types.relevant_for_project_period', true)
+            ->orderBy('start_time', 'DESC')
             ->first();
-        //$lastEvent = $project->events()->orderByStartTime('DESC')->limit(1)->first();
-
-        return $lastEvent;
     }
 
     public function getLatestEndingEvent(int|Project $project): Event|null
@@ -110,10 +99,12 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $latestEndingEvent */
-        $latestEndingEvent = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
-
-        return $latestEndingEvent;
+        return $project->events()
+            ->select('events.*')
+            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->where('event_types.relevant_for_project_period', true)
+            ->orderBy('end_time', 'DESC')
+            ->first();
     }
 
     public function getProjects(array $with = []): Collection

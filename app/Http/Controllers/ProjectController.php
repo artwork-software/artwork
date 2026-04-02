@@ -2461,8 +2461,8 @@ class ProjectController extends Controller
 
         $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
 
-        $firstEvent = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEvent  = $project->events()->orderBy('end_time', 'DESC')->first();
+        $firstEvent = $this->projectService->getFirstEventInProject($project);
+        $lastEvent  = $this->projectService->getLatestEndingEventInProject($project);
 
         $projectTabComponents = $projectTab
             ->components()

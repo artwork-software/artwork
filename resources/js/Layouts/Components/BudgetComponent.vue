@@ -702,16 +702,16 @@
                 </div>
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
-                <tr class="bg-secondaryHover items-center xsDark flex h-10 mt-4 mb-2 w-full text-right">
-                    <td class="w-44 xsDark uppercase flex ml-6">
-                        {{ $t('Revenue') }} - {{ $t('Expenses') }}
-                    </td>
-                    <td class="w-10 mr-1"></td>
-                    <td class="w-72 my-2">SUM</td>
-                    <td class="flex items-center w-48"
-                        v-for="column in table.columns.slice(3)"
-                        v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
-                        <div class="w-48 my-2 p-1" :class="[
+                <table class="w-[97%] mt-4 mb-2 ml-5">
+                    <tbody>
+                    <tr class="bg-secondaryHover items-center xsDark flex h-10 w-full text-right">
+                        <td class="w-48"></td>
+                        <td class="w-48"></td>
+                        <td class="w-72 my-2">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>
+                        <td class="flex items-center w-48"
+                            v-for="column in table.columns.slice(3)"
+                            v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
+                            <div class="w-48 my-2 p-1 flex justify-end items-center" :class="[
                             this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '',
                              this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
                             calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
@@ -732,8 +732,10 @@
                                 }}
                             </span>
                         </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -1347,14 +1349,9 @@ export default {
         getSumOfTable(tableType, columnId) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += mainPosition.columnSums?.[columnId]?.sum ?? 0;
+                sum += parseFloat(mainPosition.columnSums?.[columnId]?.sum) || 0;
             })
-            if (isNaN(sum)) {
-                return 0;
-            } else {
-                return sum;
-            }
-
+            return sum;
         },
         calculateSageColumnWithCellSageDataCommented(tableType) {
             if (tableType === 0) {

@@ -1133,13 +1133,18 @@ const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
-const showUserOverview = ref(usePage().props.shift_plan_settings?.show_user_overview ?? true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
 // Cached computeds for usePage().props – avoid redundant reactive access in hot paths
 const authUser = computed(() => usePage().props.auth.user)
-const calendarSettings = computed(() => usePage().props.shift_plan_settings ?? authUser.value.calendar_settings)
+const calendarSettings = computed(() => {
+    if (dailyViewMode.value) {
+        return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+    }
+    return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+})
+const showUserOverview = ref(calendarSettings.value.show_user_overview ?? true)
 const expandDays = computed(() => calendarSettings.value.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)

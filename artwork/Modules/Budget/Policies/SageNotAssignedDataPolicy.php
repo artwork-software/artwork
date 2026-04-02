@@ -15,7 +15,6 @@ class SageNotAssignedDataPolicy
         return $user->canAny([
             PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
             PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
-            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
         ]);
     }
 
@@ -24,7 +23,6 @@ class SageNotAssignedDataPolicy
         return $user->canAny([
             PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
             PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
-            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
         ]);
     }
 
@@ -33,7 +31,6 @@ class SageNotAssignedDataPolicy
         return $user->canAny([
             PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
             PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
-            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
         ]);
     }
 
@@ -42,7 +39,6 @@ class SageNotAssignedDataPolicy
         return $user->canAny([
             PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
             PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
-            PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value, // Legacy support
         ]);
     }
 }

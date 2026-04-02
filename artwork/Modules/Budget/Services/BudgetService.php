@@ -436,10 +436,8 @@ class BudgetService
 
         if ($this->sageApiSettingsService->getFirst()?->enabled) {
             $user = Auth::user();
-            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value) ||
-                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
-            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value) ||
-                $user->can(PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value);
+            $canViewProjectSageData = $user->can(PermissionEnum::VIEW_PROJECT_SAGE_DATA->value);
+            $canViewGlobalSageData = $user->can(PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value);
 
             if ($canViewProjectSageData || $canViewGlobalSageData) {
                 $sageNotAssigned = $this->sageNotAssignedDataService->getForFrontend($project);

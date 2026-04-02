@@ -1848,7 +1848,8 @@ class ProjectController extends Controller
     public function updateCellValue(
         Request $request,
         MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
-        MoneySourceCalculationService $moneySourceCalculationService
+        MoneySourceCalculationService $moneySourceCalculationService,
+        ColumnCellService $columnCellService
     ): void {
         $column = Column::find($request->column_id);
         $project = $column->table->project;
@@ -1876,7 +1877,7 @@ class ProjectController extends Controller
         }
 
         $cell->update(['value' => $request->value]);
-        $this->updateAutomaticCellValues($request->sub_position_row_id);
+        $columnCellService->recalculateAutomaticColumns($request->sub_position_row_id);
 
         if ($cell->linked_money_source_id) {
             $moneySourceThresholdReminderService->handleThresholdReminders(
@@ -2263,52 +2264,6 @@ class ProjectController extends Controller
         }
 
         return Redirect::back();
-    }
-
-    /**
-     * This function automatically recalculates the linked columns when changes are made.
-     * @param $subPositionRowId
-     * @return void
-     */
-    private function updateAutomaticCellValues($subPositionRowId): void
-    {
-
-        $rows = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
-
-        foreach ($rows as $row) {
-            $column = Column::find($row->column_id);
-
-            if ($column->type === 'empty' || $column->type === 'sage') {
-                continue;
-            }
-            $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first()
-                ?->value;
-            $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first()
-                ?->value;
-            $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)
-                ->where('column_id', $column->id)
-                ->first();
-
-            if ($column->type === 'sum') {
-                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
-                $sum = bcadd($firstDecimal, $secondDecimal, 2);
-                $updateColumn->update([
-                    'value' => $sum
-                ]);
-            } else {
-                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
-                $sum = bcsub($firstDecimal, $secondDecimal, 2);
-                $updateColumn->update([
-                    'value' => $sum
-                ]);
-            }
-        }
     }
 
     public function lockColumn(Request $request): void

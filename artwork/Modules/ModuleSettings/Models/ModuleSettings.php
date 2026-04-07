@@ -22,6 +22,8 @@ class ModuleSettings extends Settings
 
     public bool $contracts;
 
+    public bool $crm;
+
     public static function group(): string
     {
         return 'module_settings';

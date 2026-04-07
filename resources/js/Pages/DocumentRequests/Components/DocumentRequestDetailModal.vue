@@ -52,6 +52,16 @@
                 </a>
             </div>
 
+            <!-- CRM Contact Profile -->
+            <div v-if="documentRequest?.crm_contact_id">
+                <span class="text-sm font-medium text-gray-500 mb-2 block">{{ $t('Linked CRM contact') }}</span>
+                <CrmContactProfileCard
+                    :document-request-id="documentRequest.id"
+                    :crm-contact="documentRequest.crm_contact"
+                    :readonly="true"
+                />
+            </div>
+
             <hr class="border-gray-200">
 
             <!-- Metadata Section -->
@@ -80,7 +90,7 @@
 
                 <div v-if="documentRequest?.deadline_date">
                     <span class="font-medium text-gray-500">{{ $t('Deadline date') }}</span>
-                    <p class="text-gray-900">{{ documentRequest.deadline_date }}</p>
+                    <p class="text-gray-900">{{ formatDate(documentRequest.deadline_date) }}</p>
                 </div>
             </div>
 
@@ -167,6 +177,7 @@
 <script>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import CrmContactProfileCard from "./CrmContactProfileCard.vue";
 
 export default {
     name: "DocumentRequestDetailModal",
@@ -176,6 +187,7 @@ export default {
         documentRequest: Object,
     },
     components: {
+        CrmContactProfileCard,
         PropertyIcon,
         ArtworkBaseModal,
     },
@@ -210,6 +222,14 @@ export default {
         formatCurrency(value) {
             if (!value) return '-';
             return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+        },
+        formatDate(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
         }
     },
 }

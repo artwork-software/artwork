@@ -12,6 +12,9 @@ use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -51,7 +54,7 @@ use Laravel\Scout\Searchable;
  * @property-read Collection<int, \Artwork\Modules\Shift\Models\GlobalQualification> $globalQualifications
  *
  */
-class Freelancer extends Model implements Vacationer, Available, DayServiceable, Employable
+class Freelancer extends Model implements Vacationer, Available, DayServiceable, Employable, CrmEntity
 {
     use HasFactory;
     use GoesOnVacation;
@@ -62,6 +65,8 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
     use HasShifts;
     use Searchable;
     use HasProfilePhotoCustom;
+    use HasCrmContact;
+    use HasCrmFields;
 
     /**
      * @var string[]
@@ -158,4 +163,27 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable,
         return $this->last_name . ', ' . $this->first_name;
     }
 
+    public function getCrmFields(): array
+    {
+        return array_merge(
+            $this->getSharedCrmFields(),
+            [
+                'Position' => 'position',
+                'Business' => 'business',
+            ],
+            $this->getWorkProfileCrmFields(),
+            $this->getAddressCrmFields(),
+            ['Notiz' => 'note'],
+        );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'freelancer';
+    }
 }

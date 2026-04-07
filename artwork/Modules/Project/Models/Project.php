@@ -316,17 +316,20 @@ class Project extends Model
     public function getFirstAndLastEventDateAttribute(): ?array
     {
         $firstEvent = $this->events()
-            ->select('events.*')
-            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->where('event_types.relevant_for_project_period', true)
-            ->orderBy('start_time', 'ASC')
-            ->first();
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('start_time', 'ASC')
+                ->first()
+            ?? $this->events()->orderBy('start_time', 'ASC')->first();
+
         $lastEvent = $this->events()
-            ->select('events.*')
-            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->where('event_types.relevant_for_project_period', true)
-            ->orderBy('end_time', 'DESC')
-            ->first();
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('end_time', 'DESC')
+                ->first()
+            ?? $this->events()->orderBy('end_time', 'DESC')->first();
 
         if ($firstEvent && $lastEvent) {
             return [

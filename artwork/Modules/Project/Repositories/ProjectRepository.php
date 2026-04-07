@@ -68,19 +68,15 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $firstEvent */
-        $firstEvent = $project->events()
-            ->select('events.*')
-            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->orderBy('start_time', 'asc')
-            ->first();
-        //$firstEvent = $project->events()
-        //->orderByStartTime()
-        //->where('event_type.relevant_for_project_period', true)
-        //->limit(1)
-        //->first();
-
-        return $firstEvent;
+        return $project->events()
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('start_time', 'asc')
+                ->first()
+            ?? $project->events()
+                ->orderBy('start_time', 'asc')
+                ->first();
     }
 
     /**
@@ -92,16 +88,15 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $lastEvent */
-        $lastEvent = $project->events()
-            ->select('events.*')
-            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
-            ->orderByStartTime('DESC')
-            ->limit(1)
-            ->first();
-        //$lastEvent = $project->events()->orderByStartTime('DESC')->limit(1)->first();
-
-        return $lastEvent;
+        return $project->events()
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('start_time', 'DESC')
+                ->first()
+            ?? $project->events()
+                ->orderBy('start_time', 'DESC')
+                ->first();
     }
 
     public function getLatestEndingEvent(int|Project $project): Event|null
@@ -110,10 +105,15 @@ class ProjectRepository extends BaseRepository
             $project = $this->findOrFail($project);
         }
 
-        /** @var Event|null $latestEndingEvent */
-        $latestEndingEvent = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
-
-        return $latestEndingEvent;
+        return $project->events()
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('end_time', 'DESC')
+                ->first()
+            ?? $project->events()
+                ->orderBy('end_time', 'DESC')
+                ->first();
     }
 
     public function getProjects(array $with = []): Collection

@@ -122,6 +122,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserCalendarSettings $calendar_settings
  * @property UserDailyViewCalendarSettings $daily_view_calendar_settings
  * @property UserShiftListViewSettings $shift_list_view_settings
+ * @property UserShiftPlanSettings $shift_plan_settings
+ * @property UserShiftPlanDailySettings $shift_plan_daily_settings
  * @property Collection<Shift> $shifts
  * @property Collection<Permission> $permission
  * @property Collection<Role> $allRoles
@@ -374,6 +376,20 @@ class User extends Model implements
     public function shift_list_view_settings(): HasOne
     {
         return $this->hasOne(UserShiftListViewSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to shiftPlanSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function shift_plan_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftPlanSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to shiftPlanDailySettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function shift_plan_daily_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftPlanDailySettings::class);
     }
 
     /**

@@ -1004,7 +1004,8 @@ export default {
             return row.cells?.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data?.length > 0) ?? false;
         },
         async handleCellClick(cell, type = '', index = null, row = null) {
-            if (!this.hasBudgetAccess) {
+            const isSageInteraction = type === 'sageAssignedData' || cell.column.type === 'sage';
+            if (!this.hasBudgetAccess && !(isSageInteraction && this.$canAny(['can view project sage data', 'can view global sage data']))) {
                 return;
             }
             if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {

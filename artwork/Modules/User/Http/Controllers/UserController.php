@@ -1286,10 +1286,26 @@ class UserController extends Controller
             'show_user_overview'
         ]);
 
-        if ($request->boolean('is_daily_view')) {
+        if ($request->boolean('is_shift_plan')) {
+            if ($request->boolean('is_daily_view')) {
+                $settings = $user->shift_plan_daily_settings;
+                if ($settings === null) {
+                    $user->shift_plan_daily_settings()->create($settingsFields);
+                } else {
+                    $settings->update($settingsFields);
+                }
+            } else {
+                $settings = $user->shift_plan_settings;
+                if ($settings === null) {
+                    $user->shift_plan_settings()->create($settingsFields);
+                } else {
+                    $settings->update($settingsFields);
+                }
+            }
+        } elseif ($request->boolean('is_daily_view')) {
             $dailySettings = $user->daily_view_calendar_settings;
             if ($dailySettings === null) {
-                $dailySettings = $user->daily_view_calendar_settings()->create($settingsFields);
+                $user->daily_view_calendar_settings()->create($settingsFields);
             } else {
                 $dailySettings->update($settingsFields);
             }

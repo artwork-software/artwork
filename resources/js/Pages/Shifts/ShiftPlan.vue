@@ -122,6 +122,7 @@
                         :col-widths="shiftColWidths"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
+                        :no-virtualize="true"
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
@@ -215,7 +216,7 @@
                         </template>
 
                         <!-- Cell -->
-                        <template #cell="{ room, day }">
+                        <template #cell="{ room, day, rowIndex }">
                             <div
                                 class="day-container relative h-full w-full align-top px-[1px] border-gray-400"
                                 :class="[
@@ -244,6 +245,7 @@
                                     v-else
                                     class="cell group relative"
                                     :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
+                                    :data-sp-row="rowIndex"
                                 >
                                     <!-- Project Groups in Events -->
                                     <template v-if="displayProjectGroups && getRoomDayEvents(room, day.fullDay)?.length">
@@ -1131,13 +1133,18 @@ const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
 const shiftClickedInHighlightMode = ref(null)
-const showUserOverview = ref(usePage().props.auth.user.calendar_settings?.show_user_overview ?? true)
 const pageProps = usePage().props
 const auth = pageProps.auth.user;
 
 // Cached computeds for usePage().props – avoid redundant reactive access in hot paths
 const authUser = computed(() => usePage().props.auth.user)
-const calendarSettings = computed(() => authUser.value.calendar_settings)
+const calendarSettings = computed(() => {
+    if (dailyViewMode.value) {
+        return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+    }
+    return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+})
+const showUserOverview = ref(calendarSettings.value.show_user_overview ?? true)
 const expandDays = computed(() => calendarSettings.value.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
@@ -1293,9 +1300,25 @@ async function measureBaselineMetrics() {
     recomputeRowHeights()
 }
 
+// --- Text wrapping estimation for expanded mode ---
+// Average char width for text-xs (12px) font-semibold, conservative estimate
+const AVG_CHAR_WIDTH = 7
+
+// Available text widths derived from shiftColWidth (202) and CSS padding/gaps
+const pgBarTextWidth = shiftColWidth - 2 - 16 - 4 - 16    // 164px: px-[1px]*2, px-2, gap-x-1, icon
+const eventNameTextWidth = shiftColWidth - 2 - 16 - 8 - 12 // 164px: px-[1px]*2, px-2, gap-x-2, color stripe
+const projectBarTextWidth = shiftColWidth - 2 - 16          // 184px: px-[1px]*2, px-2
+const groupBarTextWidth = shiftColWidth - 2 - 16 - 6 - 16  // 162px: px-[1px]*2, px-2, gap-1.5, icon
+
+function estimateTextLines(text: string | undefined | null, availableWidth: number): number {
+    if (!text || availableWidth <= 0) return 1
+    const charsPerLine = Math.max(1, Math.floor(availableWidth / AVG_CHAR_WIDTH))
+    return Math.max(1, Math.ceil(text.length / charsPerLine))
+}
+
 // --- CellSummary cache ---
 type CellSummary = {
-    pgGroupCount: number
+    pgTotalHeight: number
     totalEventHeight: number
     shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
 }
@@ -1313,22 +1336,40 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     const events = getRoomDayEvents(room, dayKey)
     const shifts = getRoomDayShifts(room, dayKey)
     const showProjectGroups = displayProjectGroups.value
+    const expanded = expandDays.value
 
-    let pgGroupCount = 0
-    let totalEventHeight = 0
-
+    // --- Project group bars ---
+    let pgTotalHeight = 0
     if (showProjectGroups && events.length) {
         const groups = getAllProjectGroupsInEventsByDay(events)
-        pgGroupCount = groups.length
+        for (const group of groups) {
+            const lines = expanded ? estimateTextLines(group.name, pgBarTextWidth) : 1
+            // py-1 (8px) + lines * 16px (text-xs line-height) + mb-0.5 (2px)
+            pgTotalHeight += 8 + lines * 16 + 2
+        }
     }
 
+    // --- Events ---
+    let totalEventHeight = 0
     for (const event of events) {
         if (!checkIfEventHasShiftsToDisplay(event)) {
-            let h = cellMetrics.eventContentHeight
-            if (event.project?.id) h += cellMetrics.eventProjectBar
-            if (showProjectGroups && event.project?.isInGroup && event.project?.group?.length > 0 && !event.project?.isGroup) {
-                h += cellMetrics.eventGroupBar
+            // Content area: py-2 (16px) + event name + mt-0.5 (2px) + time text-xs/5 (20px)
+            const nameText = `${event.eventType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
+            const nameLines = expanded ? estimateTextLines(nameText, eventNameTextWidth) : 1
+            let h = 16 + nameLines * 16 + 2 + 20
+
+            // Project name bar: py-1 (8px) + text + border-b (1px)
+            if (event.project?.id) {
+                const projLines = expanded ? estimateTextLines(event.project?.name, projectBarTextWidth) : 1
+                h += 8 + projLines * 16 + 1
             }
+
+            // Group bar inside event: py-1 (8px) + text + border-b (1px)
+            if (showProjectGroups && event.project?.isInGroup && event.project?.group?.length > 0 && !event.project?.isGroup) {
+                const grpLines = expanded ? estimateTextLines(event.project.group[0]?.name, groupBarTextWidth) : 1
+                h += 8 + grpLines * 16 + 1
+            }
+
             totalEventHeight += h + cellMetrics.eventMarginBottom
         } else {
             totalEventHeight += cellMetrics.eventOnlyMb
@@ -1341,7 +1382,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
         shiftCount: g.shifts.length,
     }))
 
-    const summary: CellSummary = { pgGroupCount, totalEventHeight, shiftGroups }
+    const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
     cellSummaryCache.set(cacheKey, summary)
     return summary
 }
@@ -1350,8 +1391,8 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
 function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetrics): number {
     let h = metrics.basePadding
 
-    // Projektgruppenbars
-    h += summary.pgGroupCount * metrics.pgBarWithMb
+    // Projektgruppenbars (already text-wrapping-aware)
+    h += summary.pgTotalHeight
 
     // Events (per-event heights already computed in summarizeCell)
     h += summary.totalEventHeight
@@ -1443,7 +1484,6 @@ watch(
     },
 )
 
-
 watchEffect(() => {
     userOverviewEl.value =
         userOverviewGridRef.value?.getViewportEl?.() ??
@@ -1512,7 +1552,7 @@ function getRoomDayShifts(room: any, day: string): any[] {
     }
 
     // Filter: nur nicht voll besetzte Schichten anzeigen
-    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
     if (showOnlyNotFullyStaffed) {
         shifts = shifts.filter((shift: any) => {
             const qualifications = Array.isArray(shift?.shifts_qualifications)
@@ -2510,7 +2550,7 @@ function calculateTopPositionOfUserOverView() {
 
 function checkIfEventHasShiftsToDisplay(event: any) {
     const showCrafts = authUser.value?.show_crafts
-    const showOnlyNotFullyStaffed = authUser.value?.calendar_settings?.show_only_not_fully_staffed_shifts
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
 
     let shifts = event.shifts || []
 
@@ -2612,7 +2652,7 @@ function showCloseUserOverview() {
     showUserOverview.value = !showUserOverview.value
     router.patch(
         route('user.calendar_settings.update', { user: authUser.value.id }),
-        { show_user_overview: showUserOverview.value },
+        { show_user_overview: showUserOverview.value, is_shift_plan: true },
         { preserveScroll: true, preserveState: true },
     )
 }

@@ -757,9 +757,9 @@ class EventController extends Controller
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
+            $userCalendarSettings = $user->getAttribute('shift_plan_daily_settings');
             if ($userCalendarSettings === null) {
-                $userCalendarSettings = $user->daily_view_calendar_settings()->create();
+                $userCalendarSettings = $user->shift_plan_daily_settings()->create();
             }
         } else {
             $shiftFilterType = UserFilterTypes::SHIFT_FILTER->value;
@@ -767,7 +767,10 @@ class EventController extends Controller
                 ['filter_type' => $shiftFilterType],
                 ['start_date' => null, 'end_date' => null]
             );
-            $userCalendarSettings = $user->getAttribute('calendar_settings');
+            $userCalendarSettings = $user->getAttribute('shift_plan_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->shift_plan_settings()->create();
+            }
         }
 
         $renderViewName = 'Shifts/ShiftPlan';
@@ -799,10 +802,10 @@ class EventController extends Controller
             ]);
         }
 
-        // only allow one month in shift plan view
-        if ($startDate->diffInDays($endDate) > 31) {
-            $endDate = $startDate->copy()->addDays(30);
-            $calendarWarningText = __('calendar.calendar_limit_one_month');
+        // only allow six months in shift plan view
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addMonths(6);
+            $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $shiftFilterType
             ], [
@@ -915,9 +918,9 @@ class EventController extends Controller
             : Carbon::now()->endOfMonth();
 
         $calendarWarningText = '';
-        if ($startDate->diffInDays($endDate) > 31) {
-            $endDate = $startDate->copy()->addDays(30);
-            $calendarWarningText = __('calendar.calendar_limit_one_month');
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addMonths(6);
+            $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate(
                 ['filter_type' => $shiftFilterType],
                 ['end_date' => $endDate->format('Y-m-d')]

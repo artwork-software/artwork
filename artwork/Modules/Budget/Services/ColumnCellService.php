@@ -4,6 +4,7 @@ namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
+use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Repositories\ColumnCellRepository;
@@ -79,6 +80,47 @@ readonly class ColumnCellService
     public function updateValue(ColumnCell $columnCell, mixed $value): void
     {
         $this->columnCellRepository->update($columnCell, ['value' => $value]);
+    }
+
+    public function recalculateAutomaticColumns(int $subPositionRowId): void
+    {
+        $cells = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
+
+        foreach ($cells as $cell) {
+            $column = Column::find($cell->column_id);
+
+            if ($column->type === 'empty' || $column->type === 'sage') {
+                continue;
+            }
+
+            $firstLinkedColumn = Column::find($column->linked_first_column);
+            $secondLinkedColumn = Column::find($column->linked_second_column);
+
+            $firstCell = ColumnCell::where('column_id', $column->linked_first_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first();
+            $secondCell = ColumnCell::where('column_id', $column->linked_second_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first();
+
+            $firstRowValue = $firstLinkedColumn?->type === 'sage'
+                ? $firstCell?->sage_value
+                : $firstCell?->value;
+            $secondRowValue = $secondLinkedColumn?->type === 'sage'
+                ? $secondCell?->sage_value
+                : $secondCell?->value;
+
+            $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+            $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+
+            if ($column->type === 'sum') {
+                $result = bcadd($firstDecimal, $secondDecimal, 2);
+            } else {
+                $result = bcsub($firstDecimal, $secondDecimal, 2);
+            }
+
+            $cell->update(['value' => $result]);
+        }
     }
 
     public function softDelete(

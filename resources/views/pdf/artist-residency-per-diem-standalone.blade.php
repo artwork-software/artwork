@@ -5,7 +5,7 @@
     <style>
         @import url(https://fonts.bunny.net/css?family=poppins:300,400,500,600,700);
         @page {
-            size: landscape;
+            size: portrait;
             margin: 12mm;
         }
         body {
@@ -95,7 +95,7 @@
 
 <div class="header clearfix">
     <div class="header-left">
-        <p style="font-weight: 600;">{{ __('export.per_diem_number', [], $language) }}</p>
+        <p style="font-weight: 600;">{{ __('export.per_diem_number', [], $language) }}: {{ $perDiemNumber }}</p>
         <p>{{ __('export.production', [], $language) }}: {{ $project?->name }}</p>
         <p>{{ __('export.cost_bearer', [], $language) }}: {{ $project?->costCenter?->name ?? '' }}</p>
     </div>

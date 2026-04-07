@@ -91,14 +91,14 @@ class ShiftPlanService
         $isDailyView = !$isProjectView && (bool) $currentUser->getAttribute('daily_view');
 
         if ($isDailyView) {
-            $userCalendarSettings = $currentUser->getAttribute('daily_view_calendar_settings');
+            $userCalendarSettings = $currentUser->getAttribute('shift_plan_daily_settings');
             if ($userCalendarSettings === null) {
-                $userCalendarSettings = $currentUser->daily_view_calendar_settings()->create();
+                $userCalendarSettings = $currentUser->shift_plan_daily_settings()->create();
             }
         } else {
-            $userCalendarSettings = $currentUser->getAttribute('calendar_settings');
+            $userCalendarSettings = $currentUser->getAttribute('shift_plan_settings');
             if ($userCalendarSettings === null) {
-                $userCalendarSettings = $currentUser->calendar_settings()->create();
+                $userCalendarSettings = $currentUser->shift_plan_settings()->create();
             }
         }
 

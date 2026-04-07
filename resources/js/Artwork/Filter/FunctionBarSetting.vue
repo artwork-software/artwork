@@ -67,6 +67,12 @@ const activeSettings = computed(() => {
     if (props.isListView) {
         return usePage().props.listViewSettings;
     }
+    if (props.isInShiftPlan) {
+        if (props.isDailyView) {
+            return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings;
+        }
+        return usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings;
+    }
     if (props.isDailyView) {
         return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
     }

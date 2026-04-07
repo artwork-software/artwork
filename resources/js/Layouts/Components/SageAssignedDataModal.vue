@@ -9,7 +9,7 @@
         </span>
                 </div>
                 <TrashIcon
-                    v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data', 'can view and delete sage100-api-data'])"
+                    v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
                     class="w-6 h-6 hover:text-red-600 cursor-pointer"
                     @click="showDeleteConfirmation"
                 />

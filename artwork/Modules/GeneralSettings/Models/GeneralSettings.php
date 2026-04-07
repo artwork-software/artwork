@@ -60,6 +60,8 @@ class GeneralSettings extends Settings
     public string $letterhead_city = '';
     public string $letterhead_email = '';
 
+    public int $per_diem_export_counter = 0;
+
     public static function group(): string
     {
         return 'general';

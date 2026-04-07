@@ -30,16 +30,20 @@ Artwork can be installed standalone on a dedicated server or as a multi-containe
    docker compose exec artwork php artisan key:generate --show
    ```
    Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
+   It should look like `APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=` please do **NOT** use the key from the example.
+   
+   If you receive an error regarding missing files wait a few minutes for the application to load the missing dependencies and set everything up. This may take up to 10 minutes depending on your setup.
 4. Restart to load the new key:
    ```bash
    docker compose up -d
    ```
+5. The frontend should be available at http://localhost
 
 
 ## Standalone
 
 Artwork supports standalone installation on any Linux server.
-Since we do not know your specific setup we cannot provide a sofisticated installation guide for any linux distribution.
+Since we do not know your specific setup we cannot provide a sophisticated installation guide for any linux distribution.
 
 ### Requirements
 

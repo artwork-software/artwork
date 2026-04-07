@@ -255,7 +255,7 @@ const filteredOptionsByCategories = computed(() => {
     })
 
     // Crafts are only included for shift filter / shift plan
-    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.inShiftPlan) {
+    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
         filteredOptions.craftFilters = {};
         craftFilter.forEach(filter => {
             filteredOptions.craftFilters[filter] = props.filterOptions[filter];
@@ -313,7 +313,7 @@ const applyFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.inShiftPlan) {
+    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
         Object.assign(data, extractCheckedIds('craftFilters'));
     }
     router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
@@ -336,7 +336,7 @@ const saveFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.inShiftPlan || props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter') {
+    if(props.inShiftPlan || props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter') {
         Object.assign(data, extractCheckedIds('craftFilters'));
     }
     router.post(route('filter.store', usePage().props.auth.user.id), data, {

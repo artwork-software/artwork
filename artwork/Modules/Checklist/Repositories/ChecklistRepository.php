@@ -188,8 +188,18 @@ class ChecklistRepository extends BaseRepository
                 'checklist_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::CHECKLIST
                 ),
-                'firstEventInProject' => $checklist?->project?->events()->orderBy('start_time', 'ASC')->first(),
-                'lastEventInProject' => $checklist?->project?->events()->orderBy('end_time', 'DESC')->first(),
+                'firstEventInProject' => $checklist?->project?->events()
+                    ->select('events.*')
+                    ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                    ->where('event_types.relevant_for_project_period', true)
+                    ->orderBy('start_time', 'ASC')
+                    ->first(),
+                'lastEventInProject' => $checklist?->project?->events()
+                    ->select('events.*')
+                    ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                    ->where('event_types.relevant_for_project_period', true)
+                    ->orderBy('end_time', 'DESC')
+                    ->first(),
             ],
             'checklist_tab_id' => $checklist->tab_id,
             'tasks' => $sortedTasks->map(function (Task $task) {

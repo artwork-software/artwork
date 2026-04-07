@@ -103,7 +103,7 @@ const tabsMap = computed(() => {
             key: "Trash/SageNotAssignedData",
             name: proxy?.$t ? proxy.$t("Sage API data sets") : "Sage API data sets",
             href: route("sageNotAssignedData.trashed"),
-            available: canAny(["can view project sage data", "can view global sage data", "can view and delete sage100-api-data"]) || is('artwork admin'),
+            available: canAny(["can view project sage data", "can view global sage data"]) || is('artwork admin'),
         },
         "Trash/BudgetManagementAccount": {
             key: "Trash/BudgetManagementAccount",

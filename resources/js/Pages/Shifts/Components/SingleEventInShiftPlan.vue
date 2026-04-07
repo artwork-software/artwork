@@ -2,13 +2,13 @@
     <div>
         <div>
             <div class="text-secondary-hover rounded-lg flex flex-col"
-                 :class="[usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id && usePage().props.auth.user.calendar_settings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
+                 :class="[shiftPlanSettings.time_period_project_id === event?.project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
                  borderColor: event.eventType.hex_code}">
 
                 <!-- Projektgruppen-Balken (wie im FullEventInCalendar) -->
                 <div
-                    v-if="usePage().props.auth.user.calendar_settings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+                    v-if="shiftPlanSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
                     class="w-full rounded-t-lg px-2 py-1 border-b border-black/15"
                     :style="{
                         backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent'
@@ -56,7 +56,7 @@
 
                 <!-- Content-Bereich -->
                 <div class="flex items-stretch gap-x-2 px-2 py-2">
-                    <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.eventType.hex_code}" v-if="!usePage().props.auth.user.calendar_settings.high_contrast"></div>
+                    <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.eventType.hex_code}" v-if="!shiftPlanSettings.high_contrast"></div>
                     <div :class="[expandDays ? '' : 'max-w-40 w-40', 'min-w-0']" :style="{borderColor: event.eventType.hex_code}">
                         <!-- Eventtyp-Abbreviation: Eventname -->
                         <div
@@ -100,7 +100,7 @@
                     </div>
                     <!-- Timeline Icon -->
                     <div
-                        v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                        v-if="shiftPlanSettings.show_timeline"
                         class="ml-auto cursor-pointer self-center"
                         @click.stop="openTimelineModal"
                     >
@@ -142,7 +142,8 @@ const AddEditTimelineModal = defineAsyncComponent({
 });
 
 const percentage = usePage().props.high_contrast_percent;
-const expandDays = computed(() => usePage().props.auth.user.calendar_settings?.expand_days ?? false);
+const shiftPlanSettings = computed(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings);
+const expandDays = computed(() => shiftPlanSettings.value?.expand_days ?? false);
 const {
     backgroundColorWithOpacity,
     getTextColorBasedOnBackground,

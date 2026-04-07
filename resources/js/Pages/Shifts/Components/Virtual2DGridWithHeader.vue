@@ -15,9 +15,12 @@ const props = withDefaults(defineProps<{
 
     overscanRows?: number
     overscanCols?: number
+
+    noVirtualize?: boolean
 }>(), {
     overscanRows: 6,
     overscanCols: 3,
+    noVirtualize: false,
 })
 
 function getRowHeight(r: number): number {
@@ -168,6 +171,15 @@ const visibleCols = computed(() => {
     return out
 })
 
+// -- noVirtualize: all rows/cols for full render --
+const allRows = computed(() =>
+    props.rows.map((row, r) => ({ r, row, height: getRowHeight(r) }))
+)
+
+const allCols = computed(() =>
+    props.cols.map((col, c) => ({ c, col, width: getColWidth(c) }))
+)
+
 // First actually visible column (without overscan)
 const firstVisibleColIndex = computed(() => findFirstCol(sl.value))
 
@@ -179,7 +191,67 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
+    <!-- ==================== NO-VIRTUALIZE MODE ==================== -->
+    <div v-if="noVirtualize" ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
+        <!-- Sticky Header Row -->
+        <div
+            class="sticky top-0 z-40 bg-artwork-navigation-background/95 backdrop-blur
+                   border-b border-white/10 flex"
+            :style="{ height: headerHeight + 'px', width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px' }"
+        >
+            <div
+                class="sticky left-0 z-50 shrink-0 flex items-stretch
+                       bg-artwork-navigation-background/95 backdrop-blur
+                       border-r border-white/10"
+                :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
+            >
+                <slot name="corner" />
+            </div>
+            <div
+                v-for="vc in allCols"
+                :key="vc.col.key"
+                class="shrink-0"
+                :style="{ width: vc.width + 'px', height: headerHeight + 'px' }"
+            >
+                <slot name="colHeader" :day="vc.col.data" :colIndex="vc.c" />
+            </div>
+        </div>
+
+        <!-- Body Rows -->
+        <div
+            v-for="vr in allRows"
+            :key="vr.row.key"
+            class="relative flex border-b border-dashed border-gray-400"
+            :style="{ width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px', height: vr.height + 'px' }"
+        >
+            <!-- Sticky left column -->
+            <div
+                class="sticky left-0 z-30 shrink-0 flex items-center bg-white"
+                :style="{ width: stickyColWidth + 'px' }"
+            >
+                <slot name="rowHeader" :room="vr.row.data" :rowIndex="vr.r" />
+            </div>
+
+            <!-- All cells -->
+            <div
+                v-for="vc in allCols"
+                :key="vc.col.key"
+                class="shrink-0 border-r border-gray-200"
+                :style="{ width: vc.width + 'px' }"
+            >
+                <slot
+                    name="cell"
+                    :room="vr.row.data"
+                    :day="vc.col.data"
+                    :rowIndex="vr.r"
+                    :colIndex="vc.c"
+                />
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIRTUAL MODE (default) ==================== -->
+    <div v-else ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
         <div class="relative" :style="{ width: totalW + 'px', height: totalH + 'px' }">
 
             <!-- Sticky Header Row -->

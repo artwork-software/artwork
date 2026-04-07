@@ -266,8 +266,8 @@ onMounted(() => {
             updatedAt: new Date().toISOString(), // optional: für spätere Sortierung
             key_visual_path: project.key_visual_path,
             is_group: project.is_group,
-            firstEventStart: props.headerObject.firstEventInProject.event_date_without_time.start,
-            lastEventEnd: props.headerObject.lastEventInProject.event_date_without_time.end
+            firstEventStart: props.headerObject.firstEventInProject?.event_date_without_time?.start ?? null,
+            lastEventEnd: props.headerObject.lastEventInProject?.event_date_without_time?.end ?? null
         });
 
         // Nur die letzten 10 behalten

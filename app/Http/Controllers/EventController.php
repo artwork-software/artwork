@@ -802,10 +802,10 @@ class EventController extends Controller
             ]);
         }
 
-        // only allow one month in shift plan view
-        if ($startDate->diffInDays($endDate) > 31) {
-            $endDate = $startDate->copy()->addDays(30);
-            $calendarWarningText = __('calendar.calendar_limit_one_month');
+        // only allow six months in shift plan view
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addMonths(6);
+            $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $shiftFilterType
             ], [
@@ -918,9 +918,9 @@ class EventController extends Controller
             : Carbon::now()->endOfMonth();
 
         $calendarWarningText = '';
-        if ($startDate->diffInDays($endDate) > 31) {
-            $endDate = $startDate->copy()->addDays(30);
-            $calendarWarningText = __('calendar.calendar_limit_one_month');
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addMonths(6);
+            $calendarWarningText = __('calendar.calendar_limit_six_months');
             $user->userFilters()->updateOrCreate(
                 ['filter_type' => $shiftFilterType],
                 ['end_date' => $endDate->format('Y-m-d')]

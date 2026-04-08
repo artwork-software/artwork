@@ -734,7 +734,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',

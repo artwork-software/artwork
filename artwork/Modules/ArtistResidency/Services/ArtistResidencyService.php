@@ -58,6 +58,10 @@ readonly class ArtistResidencyService
                 $resData['do_not_save_artist'] = true;
                 $resData['artist_id'] = null;
 
+                if (!empty($artistInput['crm_property_values'])) {
+                    $resData['crm_property_overrides'] = $artistInput['crm_property_values'];
+                }
+
                 return $this->residencies->create($resData);
             }
 
@@ -80,8 +84,8 @@ readonly class ArtistResidencyService
             if ($crmContactId) {
                 $residency->update(['artist_crm_contact_id' => $crmContactId]);
 
-                // Write property values back to source entity via CrmContactService
-                if (!empty($artistInput['crm_property_values'])) {
+                // Write property values back to CRM only when sync checkbox is checked
+                if (!empty($artistInput['crm_property_values']) && !empty($artistInput['sync_crm_changes'])) {
                     $this->saveCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
                 }
             }
@@ -112,6 +116,10 @@ readonly class ArtistResidencyService
                 $resData['do_not_save_artist'] = true;
                 $resData['artist_id'] = null;
 
+                if (!empty($artistInput['crm_property_values'])) {
+                    $resData['crm_property_overrides'] = $artistInput['crm_property_values'];
+                }
+
                 $this->residencies->update($residency, $resData);
                 return $residency->refresh();
             }
@@ -125,9 +133,9 @@ readonly class ArtistResidencyService
 
             $this->residencies->update($residency, $resData);
 
-            // Write property values back to source entity via CrmContactService
+            // Write property values back to CRM only when sync checkbox is checked
             $crmContactId = $residency->artist_crm_contact_id;
-            if ($crmContactId && !empty($artistInput['crm_property_values'])) {
+            if ($crmContactId && !empty($artistInput['crm_property_values']) && !empty($artistInput['sync_crm_changes'])) {
                 $this->saveCrmPropertyValues($crmContactId, $artistInput['crm_property_values']);
             }
 
@@ -150,7 +158,7 @@ readonly class ArtistResidencyService
     /** Trennt Artist-Felder von Residency-Feldern */
     private function splitPayload(array $payload): array
     {
-        $artistKeys = ['artist_id', 'artist_crm_contact_id', 'name', 'first_name', 'last_name', 'phone_number', 'position', 'crm_property_values'];
+        $artistKeys = ['artist_id', 'artist_crm_contact_id', 'name', 'first_name', 'last_name', 'phone_number', 'position', 'crm_property_values', 'sync_crm_changes'];
         $artistInput = Arr::only($payload, $artistKeys);
         $residencyData = Arr::except($payload, array_merge($artistKeys, ['do_not_save_artist']));
 

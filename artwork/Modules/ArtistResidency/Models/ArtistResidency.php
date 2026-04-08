@@ -61,6 +61,7 @@ class ArtistResidency extends Model
         'last_name',
         'phone_number',
         'position',
+        'crm_property_overrides',
     ];
 
     protected $casts = [
@@ -68,6 +69,7 @@ class ArtistResidency extends Model
         'arrival_time' => TimeWithoutSeconds::class,
         'departure_date' => 'date',
         'departure_time' => TimeWithoutSeconds::class,
+        'crm_property_overrides' => 'array',
     ];
 
     protected $appends = ['formatted_dates', 'display_name'];

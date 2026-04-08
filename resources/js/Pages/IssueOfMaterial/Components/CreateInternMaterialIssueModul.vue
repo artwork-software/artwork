@@ -462,7 +462,7 @@
 
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
-    <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
+    <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null; editingArticleQuantity = null" :editing-issue-id="internMaterialIssue.id" :editing-article-quantity="editingArticleQuantity" />
 </template>
 
 <script setup lang="ts">
@@ -631,6 +631,7 @@ const scrollContainer = ref(null);
 const articleSearchFilter = ref("");
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
+const editingArticleQuantity = ref(null);
 const hasMoreArticles = ref(true);
 const paginationPage = ref(1);
 const baskets = ref([]);
@@ -941,6 +942,7 @@ const getArticleDataForUsage = async (article) => {
         });
         // Die Nutzungsdaten werden im Modal angezeigt
         articleForUsageModal.value = response.data.data;
+        editingArticleQuantity.value = article.quantity;
     } catch (error) {
         console.error('Fehler beim Abrufen der Artikel-Nutzungsdaten:', error);
     } finally {

@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -72,7 +72,7 @@ class InventoryDetailedQuantityArticle extends Model
         $manufacturerId = $manufacturerProperty->pivot->value;
 
         if (!isset($manufacturerCache[$manufacturerId])) {
-            $manufacturerCache[$manufacturerId] = Manufacturer::select('id', 'name')->find($manufacturerId);
+            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name as name')->find($manufacturerId);
         }
 
         $manufacturer = $manufacturerCache[$manufacturerId];

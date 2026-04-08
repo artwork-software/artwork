@@ -51,6 +51,43 @@
                         id="contractPartner"
                         :label="$t('Contract partner')"
                     />
+                    <!-- CRM Contact Link -->
+                    <div class="mt-2">
+                        <div v-if="selectedCrmContact" class="rounded-md border border-gray-200 bg-gray-50 overflow-hidden">
+                            <div class="flex items-center gap-2 px-3 py-2">
+                                <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
+                                <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
+                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
+                                <button type="button" @click="toggleCrmDetails" class="ml-auto text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                    <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                                <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">
+                                    <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                            </div>
+                            <!-- Collapsible CRM Details -->
+                            <div v-if="showCrmDetails" class="border-t border-gray-200 px-3 py-3">
+                                <div v-if="loadingCrmDetails" class="text-center text-sm text-gray-500 py-2">
+                                    {{ $t('Loading...') }}
+                                </div>
+                                <div v-else-if="crmContactData && crmVisibleGroups.length > 0" class="space-y-3">
+                                    <CrmPropertyGroupSection
+                                        v-for="group in crmVisibleGroups"
+                                        :key="group.id"
+                                        :group="group"
+                                        :contact="crmContactData.contact"
+                                        :editing="false"
+                                    />
+                                </div>
+                                <div v-else class="text-sm text-gray-500 py-2">
+                                    {{ $t('No CRM data available.') }}
+                                </div>
+                            </div>
+                        </div>
+                        <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ $t('Link CRM contact') }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Contract Value -->
@@ -239,6 +276,13 @@
                 />
             </div>
         </div>
+        <!-- CRM Contact Search Modal -->
+        <CrmContactSearchModal
+            v-if="showCrmSearch"
+            :contact-types="crmContactTypes"
+            @close="showCrmSearch = false"
+            @contact-selected="onCrmContactSelected"
+        />
     </ArtworkBaseModal>
 </template>
 
@@ -251,6 +295,8 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import CrmContactSearchModal from "./CrmContactSearchModal.vue";
+import CrmPropertyGroupSection from "@/Pages/CRM/Components/CrmPropertyGroupSection.vue";
 
 export default {
     name: "DocumentRequestEditModal",
@@ -265,9 +311,15 @@ export default {
         companyTypes: {
             type: Array,
             default: () => []
+        },
+        crmContactTypes: {
+            type: Array,
+            default: () => []
         }
     },
     components: {
+        CrmPropertyGroupSection,
+        CrmContactSearchModal,
         PropertyIcon,
         UserSearch,
         BaseUIButton,
@@ -286,6 +338,11 @@ export default {
             selectedStatus: this.documentRequest?.status || 'open',
             selectedLegalForm: this.documentRequest?.company_type || null,
             selectedContractType: this.documentRequest?.contract_type || null,
+            showCrmSearch: false,
+            selectedCrmContact: this.documentRequest?.crm_contact || null,
+            showCrmDetails: false,
+            loadingCrmDetails: false,
+            crmContactData: null,
             statuses: [
                 { value: 'open', label: this.$t('Open') },
                 { value: 'in_progress', label: this.$t('In Progress') },
@@ -311,8 +368,29 @@ export default {
                 comment: this.documentRequest?.comment || '',
                 contract_state: this.documentRequest?.contract_state || '',
                 contract_state_comment: this.documentRequest?.contract_state_comment || '',
+                crm_contact_id: this.documentRequest?.crm_contact_id || null,
             }),
         }
+    },
+    computed: {
+        crmVisibleGroups() {
+            if (!this.crmContactData) return [];
+            const typePropertyIds = new Set(
+                (this.crmContactData.contact.contact_type?.properties ?? []).map(p => p.id)
+            );
+            const pivotMap = {};
+            for (const p of (this.crmContactData.contact.contact_type?.properties ?? [])) {
+                pivotMap[p.id] = p.pivot ?? {};
+            }
+            return (this.crmContactData.propertyGroups ?? [])
+                .map(group => ({
+                    ...group,
+                    properties: (group.properties ?? [])
+                        .filter(p => typePropertyIds.has(p.id))
+                        .map(p => ({ ...p, pivot: pivotMap[p.id] ?? {} })),
+                }))
+                .filter(group => group.properties.length > 0);
+        },
     },
     methods: {
         selectUser(user) {
@@ -323,6 +401,33 @@ export default {
             const found = this.statuses.find(s => s.value === status);
             return found ? found.label : status;
         },
+        onCrmContactSelected(contact) {
+            this.selectedCrmContact = contact;
+            this.form.contract_partner = contact.display_name;
+            this.showCrmSearch = false;
+            this.showCrmDetails = false;
+            this.crmContactData = null;
+        },
+        removeCrmContact() {
+            this.selectedCrmContact = null;
+            this.form.crm_contact_id = null;
+            this.form.contract_partner = '';
+            this.showCrmDetails = false;
+            this.crmContactData = null;
+        },
+        toggleCrmDetails() {
+            this.showCrmDetails = !this.showCrmDetails;
+            if (this.showCrmDetails && !this.crmContactData) {
+                this.loadCrmDetails();
+            }
+        },
+        loadCrmDetails() {
+            this.loadingCrmDetails = true;
+            axios.get(this.route('crm.contacts.data', this.selectedCrmContact.id))
+                .then(response => { this.crmContactData = response.data; })
+                .catch(() => { this.crmContactData = null; })
+                .finally(() => { this.loadingCrmDetails = false; });
+        },
         closeModal() {
             this.$emit('close');
         },
@@ -331,6 +436,7 @@ export default {
             this.form.requested_id = this.selectedUser?.id || null;
             this.form.company_type_id = this.selectedLegalForm?.id;
             this.form.contract_type_id = this.selectedContractType?.id;
+            this.form.crm_contact_id = this.selectedCrmContact?.id || null;
 
             this.form.patch(this.route('document-requests.update', this.documentRequest.id), {
                 preserveScroll: true,

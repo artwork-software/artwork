@@ -24,27 +24,6 @@ const tabs = computed(() => ([
         icon: 'IconCompass',
     },
     {
-        name: 'Manufacturers',
-        href: route('manufacturers.index'),
-        current: route().current('manufacturers.index'),
-        permission: true,
-        icon: 'IconBuildingWarehouse',
-    },
-    {
-        name: 'Accommodations',
-        href: route('accommodation.index'),
-        current: route().current('accommodation.index'),
-        permission: true,
-        icon: 'IconHome',
-    },
-    {
-        name: 'Artists',
-        href: route('artist.index'),
-        current: route().current('artist.index'),
-        permission: true,
-        icon: 'IconUsers',
-    },
-    {
         name: 'Teams',
         href: route('departments'),
         current: route().current('departments'),

@@ -9,7 +9,7 @@
 
         :root{
             --ink:#0b1220;
-            --muted:#64748b;
+            --muted:#475569;
             --line:#cbd5e1;
             --lineStrong:#0f172a;
             --paper:#ffffff;
@@ -31,7 +31,7 @@
             line-height: 1.20;
         }
 
-        .page:last-child{ page-break-after: auto; }
+        /* page-breaks werden von .day gesteuert */
 
         /* ---------- HEADER (flach) ---------- */
         .hdr{
@@ -171,8 +171,7 @@
         }
 
         .page{
-            page-break-after: always;
-            page-break-inside: avoid;
+            /* kein page-break – physische Umbrüche steuert .day */
         }
 
         /* Dompdf: thead/tbody Separation-Bug */
@@ -182,8 +181,7 @@
         .day{
             border: 1px solid var(--lineStrong);
             overflow: hidden;
-            margin-bottom: 20px;    /* +20% */
-            page-break-inside: avoid;
+            margin-bottom: 20px;
         }
         .day-head{
             padding: 9px 12px;      /* +20% */
@@ -219,7 +217,7 @@
             overflow: hidden;
         }
         .event-body{ padding: 8px 10px; } /* +20% */
-        .event-name{ font-weight: 900; font-size: 6.4pt; margin-bottom: 2px; } /* margin leicht mitgezogen */
+        .event-name{ font-weight: 900; font-size: 6.4pt; margin-bottom: 2px; color: #1e293b; } /* margin leicht mitgezogen */
         .event-time{ font-weight: 900; font-size: 5.8pt; color: #0f172a; }
         .event-desc{ margin-top: 4px; color: var(--muted); font-size: 5.4pt; } /* +20% */
 
@@ -308,8 +306,22 @@
         }
 
         /* Timeline Text */
-        .tlMeta{ font-weight: 900; font-size: 5.7pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tlMeta{ font-weight: 900; font-size: 5.7pt; word-break: break-all; overflow:hidden; }
+        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); word-break: break-all; overflow:hidden; }
+
+        /* Empty day compact – eigenes Element, kein .day */
+        .day-empty {
+            margin-bottom: 6px;
+            page-break-inside: avoid;
+        }
+        .day-empty-head {
+            font-size: 6pt;
+            font-weight: 900;
+            padding: 5px 12px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid var(--line);
+        }
     </style>
 </head>
 <body>
@@ -468,8 +480,15 @@
             </div>
         @endif
 
-        {{-- pro Seite: 1 Tag --}}
+        {{-- Tage fließen natürlich – kein erzwungener Seitenumbruch --}}
         @foreach($page as $chunk)
+            @if(!empty($chunk['isEmpty']))
+                <div class="day-empty">
+                    <div class="day-empty-head">{{ $chunk['dateLabel'] }} — Keine Termine</div>
+                </div>
+                @continue
+            @endif
+
             @php
                 $layout    = $chunk['layout'] ?? ['timeCol'=>44,'timelineCol'=>42,'timelineMax'=>84];
                 $timeW     = (int)($layout['timeCol'] ?? 44);

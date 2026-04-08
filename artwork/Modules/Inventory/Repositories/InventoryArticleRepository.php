@@ -56,14 +56,14 @@ class InventoryArticleRepository
                     }
 
                     if ($property && $property->type === 'manufacturer') {
-                        $q->join('manufacturers', 'inventory_property_values.value', '=', 'manufacturers.id');
+                        $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
 
                         match ($filter['operator']) {
-                            'like' => $q->where('manufacturers.name', 'like', '%' . $filter['value'] . '%'),
-                            'starts_with' => $q->where('manufacturers.name', 'like', $filter['value'] . '%'),
-                            'ends_with' => $q->where('manufacturers.name', 'like', '%' . $filter['value']),
-                            'exact', 'equals' => $q->where('manufacturers.name', '=', $filter['value']),
-                            'not_equals' => $q->where('manufacturers.name', '!=', $filter['value']),
+                            'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
+                            'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
+                            'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
+                            'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
+                            'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
                         };
 
                         return;

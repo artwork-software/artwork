@@ -160,6 +160,8 @@
                         <TabPanels class="mt-5">
                             <TabPanel>
                                 <UsageTable :issues="props.detailsForModal.internal || []"
+                                            :editing-issue-id="editingIssueId"
+                                            :editing-article-quantity="editingArticleQuantity"
                                             @dataChanged="handleDataChanged" @quantityUpdated="handleQuantityUpdated"/>
                             </TabPanel>
                             <TabPanel>
@@ -199,6 +201,14 @@ const props = defineProps({
     detailsForModal: {
         type: Object,
         required: true
+    },
+    editingIssueId: {
+        type: Number,
+        default: null
+    },
+    editingArticleQuantity: {
+        type: Number,
+        default: null
     }
 })
 

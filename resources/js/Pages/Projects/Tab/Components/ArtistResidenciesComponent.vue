@@ -1,7 +1,7 @@
 <template>
     <div class="print:break-before-auto">
         <div v-if="loadResidenciesError" class="mb-2 text-xs text-rose-600">
-            {{ loadResidenciesError }}
+            {{ $t(loadResidenciesError) }}
         </div>
         <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
             {{ $t('Loading data...') }}
@@ -40,6 +40,7 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Accommodation') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Room type') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Total cost') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                         </tr>
                         </thead>
@@ -72,6 +73,9 @@
         :artist_residency="artistResidencyToEdit"
         :accommodations="localAccommodations"
         :artists="localArtists"
+        :crm-artists="localCrmArtists"
+        :crm-accommodations="localCrmAccommodations"
+        :artist-contact-type-properties="localArtistContactTypeProperties"
         :default-breakfast-deduction="defaultBreakfastDeduction"
     />
 
@@ -131,6 +135,9 @@ const loadResidenciesError = ref('');
 const localArtistResidencies = ref([]);
 const localArtists = ref([]);
 const localAccommodations = ref([]);
+const localCrmArtists = ref([]);
+const localCrmAccommodations = ref([]);
+const localArtistContactTypeProperties = ref([]);
 const defaultBreakfastDeduction = ref(5.60);
 
 watch(
@@ -158,6 +165,9 @@ async function fetchArtistResidencies() {
         localArtistResidencies.value = data?.artist_residencies ?? [];
         localArtists.value = data?.artists ?? [];
         localAccommodations.value = data?.accommodations ?? [];
+        localCrmArtists.value = data?.crm_artists ?? [];
+        localCrmAccommodations.value = data?.crm_accommodations ?? [];
+        localArtistContactTypeProperties.value = data?.artist_contact_type_properties ?? [];
         defaultBreakfastDeduction.value = data?.default_breakfast_deduction ?? 5.60;
     } catch (error) {
         console.error(error);
@@ -172,7 +182,6 @@ const closeAddEditArtistResidenciesModal = (boolean) => {
 
     artistResidencyToEdit.value = null;
     if (boolean) {
-        console.log('Saved');
         showSaveSuccess.value = true;
         setTimeout(() => {
             showSaveSuccess.value = false;

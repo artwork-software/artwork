@@ -238,10 +238,9 @@ export default  {
             this.deleteComponentVisible = true;
         },
         setAllOnRead() {
-            // filter all notifications that icon is not blue and don't have buttons (except showInTasks and show_project)
+            // filter notifications to only include those with archivable button types
             const notifications = this.notifications.filter(
-                notification => notification.data.icon !== 'blue' &&
-                    notification.data.buttons.filter(button => !['showInTasks', 'show_project'].includes(button)).length === 0
+                notification => notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete'].includes(button)).length === 0
             );
 
             // get all notification ids and push it in set on read all form

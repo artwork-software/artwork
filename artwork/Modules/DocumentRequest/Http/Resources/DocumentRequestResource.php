@@ -39,6 +39,16 @@ class DocumentRequestResource extends JsonResource
             ] : null,
             'status' => $this->status,
             'contract_partner' => $this->contract_partner,
+            'crm_contact_id' => $this->crm_contact_id,
+            'crm_contact' => $this->whenLoaded('crmContact', fn () => $this->crmContact ? [
+                'id' => $this->crmContact->id,
+                'display_name' => $this->crmContact->display_name,
+                'profile_photo_url' => $this->crmContact->profile_photo_url,
+                'contact_type' => $this->crmContact->contactType ? [
+                    'id' => $this->crmContact->contactType->id,
+                    'name' => $this->crmContact->contactType->name,
+                ] : null,
+            ] : null),
             'contract_value' => $this->contract_value,
             'amount' => $this->contract_value,
             'contract_type_id' => $this->contract_type_id,

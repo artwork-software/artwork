@@ -2903,15 +2903,17 @@ class ProjectController extends Controller
             });
 
         // Load document requests for this project (created by user or assigned to user)
+        $docRequestEagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+
         $createdRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requester_id', $userId)
             ->where('project_id', $project->id)
-            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->with($docRequestEagerLoad)
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
         $assignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requested_id', $userId)
             ->where('project_id', $project->id)
-            ->with(['requester', 'requested', 'project', 'contract', 'contractType', 'companyType'])
+            ->with($docRequestEagerLoad)
             ->get()
             ->map(fn($request) => $this->mapDocumentRequest($request));
 
@@ -2922,6 +2924,7 @@ class ProjectController extends Controller
             'contractTypes' => $contractTypeService->getAll(),
             'companyTypes' => $companyTypeService->getAll(),
             'currencies' => $currencyService->getAll(),
+            'crmContactTypes' => app(\Artwork\Modules\Crm\Services\CrmContactTypeService::class)->getActive(),
         ];
     }
 
@@ -2939,6 +2942,16 @@ class ProjectController extends Controller
             'status' => $request->status,
             'deadline_date' => $request->deadline_date?->format('Y-m-d'),
             'contract_partner' => $request->contract_partner,
+            'crm_contact_id' => $request->crm_contact_id,
+            'crm_contact' => $request->crmContact ? [
+                'id' => $request->crmContact->id,
+                'display_name' => $request->crmContact->display_name,
+                'profile_photo_url' => $request->crmContact->profile_photo_url,
+                'contact_type' => $request->crmContact->contactType ? [
+                    'id' => $request->crmContact->contactType->id,
+                    'name' => $request->crmContact->contactType->name,
+                ] : null,
+            ] : null,
             'contract_value' => $request->contract_value,
             'ksk_liable' => $request->ksk_liable,
             'ksk_amount' => $request->ksk_amount,

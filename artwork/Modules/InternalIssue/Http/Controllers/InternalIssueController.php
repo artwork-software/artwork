@@ -123,6 +123,22 @@ class InternalIssueController extends Controller
     }
 
 
+    public function show(InternalIssue $internalIssue): JsonResponse
+    {
+        $internalIssue->load([
+            'files',
+            'articles.images',
+            'articles.category',
+            'articles.subCategory',
+            'specialItems',
+            'room',
+            'project',
+            'responsibleUsers.departments',
+        ]);
+
+        return response()->json($internalIssue);
+    }
+
     public function store(StoreInternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
         $issue = $this->internalIssueService

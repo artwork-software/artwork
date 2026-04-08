@@ -23,13 +23,16 @@
             </div>
             <span v-else>{{ artist_residency?.display_name ?? '' }}</span>
         </td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.do_not_save_artist ? artist_residency?.position : artist_residency?.artist?.position }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.do_not_save_artist ? artist_residency?.phone_number : artist_residency?.artist?.phone_number }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.position || artist_residency?.artist?.position || '' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.phone_number || artist_residency?.artist?.phone_number || '' }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.room_type?.name ?? '-' }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ calculateTotalCost(artist_residency) }} €</td>
+        <td class="px-3 py-4 text-sm text-gray-500 max-w-[200px]">
+            <span class="block truncate" v-tooltip.bottom="{ value: artist_residency.description, class: 'aw-tooltip' }">{{ artist_residency.description || '-' }}</span>
+        </td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset white-menu-background>
                 <BaseMenuItem white-menu-background :icon="IconEdit" title="Edit" @click="$emit('editResidency', artist_residency)"/>

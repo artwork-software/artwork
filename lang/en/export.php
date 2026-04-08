@@ -82,7 +82,8 @@ return [
     'confirmation_title' => 'Confirmation of factual accuracy',
     'confirmation_text' => 'It is hereby confirmed that the above-mentioned persons were active in the context of the production and that the meal allowances comply with the applicable guidelines.',
     'name_artist' => 'Name Artist',
-    'civil_name' => 'Civil Name',
+    'first_name' => 'First Name',
+    'last_name' => 'Last Name',
     'phone_number' => 'Phone Number',
     'position' => 'Position',
 

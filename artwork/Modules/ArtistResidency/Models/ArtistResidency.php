@@ -7,6 +7,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Accommodation\Models\Accommodation;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\ArtistResidency\Models\Artist;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,8 @@ use Illuminate\Support\Facades\Date;
 
 /**
  * @property string name
- * @property string civil_name
+ * @property string first_name
+ * @property string last_name
  * @property string phone_number
  * @property string position
  * @property int service_provider_id
@@ -37,7 +39,9 @@ class ArtistResidency extends Model
 
     protected $fillable = [
         'artist_id',
+        'artist_crm_contact_id',
         'accommodation_id',
+        'accommodation_crm_contact_id',
         'project_id',
         'arrival_date',
         'arrival_time',
@@ -53,9 +57,11 @@ class ArtistResidency extends Model
         'description',
         'do_not_save_artist',
         'name',
-        'civil_name',
+        'first_name',
+        'last_name',
         'phone_number',
         'position',
+        'crm_property_overrides',
     ];
 
     protected $casts = [
@@ -63,6 +69,7 @@ class ArtistResidency extends Model
         'arrival_time' => TimeWithoutSeconds::class,
         'departure_date' => 'date',
         'departure_time' => TimeWithoutSeconds::class,
+        'crm_property_overrides' => 'array',
     ];
 
     protected $appends = ['formatted_dates', 'display_name'];
@@ -73,10 +80,37 @@ class ArtistResidency extends Model
     public function getDisplayNameAttribute(): ?string
     {
         if ($this->do_not_save_artist) {
+            $fullName = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+
+            return $fullName ?: $this->name;
+        }
+
+        if (!empty($this->name)) {
             return $this->name;
         }
 
-        return $this->artist?->name ?? $this->name;
+        return $this->artistContact?->display_name
+            ?? $this->artist?->display_name;
+    }
+
+    public function artistContact(): BelongsTo
+    {
+        return $this->belongsTo(
+            CrmContact::class,
+            'artist_crm_contact_id',
+            'id',
+            'artistContact'
+        );
+    }
+
+    public function accommodationContact(): BelongsTo
+    {
+        return $this->belongsTo(
+            CrmContact::class,
+            'accommodation_crm_contact_id',
+            'id',
+            'accommodationContact'
+        );
     }
 
     public function accommodation(): BelongsTo

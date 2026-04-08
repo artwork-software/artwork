@@ -691,6 +691,16 @@ const navigation = ref([
         prefetch: false,
     },
     {
+        name: 'CRM',
+        href: route('crm.index'),
+        icon: 'IconAddressBook',
+        current: route().current('crm.*'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: moduleIsVisible('crm') && (can('can view crm') || is('artwork admin')),
+        prefetch: false,
+    },
+    {
         name: 'Documents',
         href: '#',
         icon: 'IconFileText',
@@ -724,7 +734,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -739,6 +749,13 @@ const navigation = ref([
                 icon: 'IconCalendarUser',
                 current: route().current('shift.settings'),
                 has_permission: is('artwork admin') || can('shift.settings_view_edit')
+            },
+            {
+                name: 'CRM Settings',
+                href: route('crm.settings.index'),
+                icon: 'IconAddressBook',
+                current: route().current('crm.settings.*'),
+                has_permission: can('crm manager') || is('artwork admin')
             },
             {
                 name: 'Inventory',

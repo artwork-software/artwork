@@ -28,34 +28,52 @@
                             </header>
                             <div class="p-4">
                                 <!-- Wenn ein Künstler ausgewählt ist (z. B. aus vorherigem Residency), zeige nur diesen -->
-                                <div v-if="selectedArtist && !selectArtist" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                                    <!-- Avatar + Name -->
-                                    <div class="flex items-center gap-4">
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-semibold text-sm">
-                                            {{ selectedArtist.name.slice(0, 2).toUpperCase() }}
+                                <div v-if="selectedArtist && !selectArtist">
+                                    <div class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                                        <!-- Avatar + Name -->
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-semibold text-sm">
+                                                {{ selectedArtist.name?.slice(0, 2).toUpperCase() }}
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-zinc-900">{{ selectedArtist.name }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-medium text-zinc-900">{{ selectedArtist.name }}</span>
-                                            <span v-if="selectedArtist.civil_name" class="text-xs text-zinc-500">{{ selectedArtist.civil_name }}</span>
-                                        </div>
+
+                                        <!-- Entfernen Button -->
+                                        <button
+                                            type="button"
+                                            @click="selectedArtist = null; selectArtist = true"
+                                            class="text-xs font-medium text-red-600 hover:underline"
+                                        >
+                                            {{ $t('Remove artist') }}
+                                        </button>
                                     </div>
 
-                                    <!-- Entfernen Button -->
-                                    <button
-                                        type="button"
-                                        @click="selectedArtist = null; selectArtist = true"
-                                        class="text-xs font-medium text-red-600 hover:underline"
-                                    >
-                                        {{ $t('Remove artist') }}
-                                    </button>
+                                    <!-- CRM-Felder bei CRM-Artist -->
+                                    <div v-if="selectedArtist.is_crm" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <template v-for="prop in props.artistContactTypeProperties" :key="prop.id">
+                                            <CrmPropertyValueInput
+                                                :property="prop"
+                                                :value="crmPropertyValues[prop.id] ?? ''"
+                                                :required="prop.is_required"
+                                                :disabled="!canManageCrm"
+                                                @update:value="crmPropertyValues[prop.id] = $event"
+                                            />
+                                        </template>
+                                    </div>
                                 </div>
 
-                                <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige leeres Formular -->
-                                <div v-else-if="!selectArtist" class=" grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <BaseInput v-model="artistResidency.name" :label="$t('Name')" id="name" no-margin-top required />
-                                    <BaseInput v-model="artistResidency.civil_name" :label="$t('Civil name')" id="civil_name" no-margin-top />
-                                    <BaseInput v-model="artistResidency.phone_number" :label="$t('phone number')" id="phone_number" />
-                                    <BaseInput v-model="artistResidency.position" label="Position" id="position" />
+                                <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige dynamische CRM-Felder -->
+                                <div v-else-if="!selectArtist" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <template v-for="prop in props.artistContactTypeProperties" :key="prop.id">
+                                        <CrmPropertyValueInput
+                                            :property="prop"
+                                            :value="crmPropertyValues[prop.id] ?? ''"
+                                            :required="prop.is_required"
+                                            @update:value="crmPropertyValues[prop.id] = $event"
+                                        />
+                                    </template>
                                     <!-- Checkbox: nur beim Erstellen sichtbar -->
                                     <div v-if="!artistResidency.id" class="md:col-span-2 flex items-center gap-2 mt-2">
                                         <input
@@ -107,10 +125,9 @@
                                                     {{ artist.name.slice(0, 2).toUpperCase() }}
                                                 </div>
 
-                                                <!-- Name + Civil -->
+                                                <!-- Name -->
                                                 <div class="flex flex-col overflow-hidden">
                                                     <span class="truncate font-medium text-sm text-zinc-900">{{ artist.name }}</span>
-                                                    <span class="truncate text-xs text-zinc-500" v-if="artist.civil_name">{{ artist.civil_name }}</span>
                                                 </div>
 
                                                 <!-- Check -->
@@ -453,6 +470,19 @@
                                 {{ $t('Values update automatically when dates or rates change.') }}
                             </p>
 
+                            <div v-if="crmValuesModified && canManageCrm && selectedArtist?.is_crm"
+                                 class="flex items-center gap-2 mt-4">
+                                <input
+                                    type="checkbox"
+                                    id="sync_crm_changes"
+                                    v-model="syncCrmChanges"
+                                    class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                />
+                                <label for="sync_crm_changes" class="text-sm text-zinc-700">
+                                    {{ $t('Apply changes to artist in CRM') }}
+                                </label>
+                            </div>
+
                             <div class="my-6 flex w-full items-center justify-center">
                                 <BaseUIButton
                                     type="submit"
@@ -502,8 +532,12 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {IconCalendar, IconCheck, IconInfoCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
+import CrmPropertyValueInput from "@/Pages/CRM/Components/CrmPropertyValueInput.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {usePermission} from "@/Composeables/Permission.js";
 const $t = useTranslation()
+const { can, hasAdminRole } = usePermission(usePage().props)
+const canManageCrm = computed(() => can('crm manager') || hasAdminRole())
 
 const props = defineProps({
     project: {
@@ -523,6 +557,21 @@ const props = defineProps({
     artists: {
         type: Array,
         required: true,
+        default: () => []
+    },
+    crmArtists: {
+        type: Array,
+        required: false,
+        default: () => []
+    },
+    crmAccommodations: {
+        type: Array,
+        required: false,
+        default: () => []
+    },
+    artistContactTypeProperties: {
+        type: Array,
+        required: false,
         default: () => []
     },
     defaultBreakfastDeduction: {
@@ -547,17 +596,65 @@ const selectedAccommodation = ref(props.accommodations?.find(accommodation => ac
 const selectedRoomType = ref(selectedAccommodation.value?.room_types?.find(room => room.id === parseInt(props.artist_residency?.type_of_room)) || null)
 
 const selectArtist = ref(false)
-const selectedArtist = ref(props.artist_residency?.artist || null)
+const selectedArtist = ref(props.artist_residency?.artist_contact || props.artist_residency?.artist || null)
 const validationErrors = ref({})
 const showValidationErrors = ref(false)
+
+// CRM property values (keyed by property ID)
+const crmPropertyValues = ref({})
+const syncCrmChanges = ref(false)
+const originalCrmPropertyValues = ref({})
+
+const crmValuesModified = computed(() => {
+    if (!selectedArtist.value?.is_crm) return false
+    for (const key of Object.keys(crmPropertyValues.value)) {
+        if ((crmPropertyValues.value[key] ?? '') !== (originalCrmPropertyValues.value[key] ?? '')) return true
+    }
+    return false
+})
+
+// Pre-fill CRM property values when editing with an existing CRM contact
+if (props.artist_residency?.crm_property_overrides) {
+    // Overrides exist — use them for display
+    const overrides = props.artist_residency.crm_property_overrides
+    for (const [key, val] of Object.entries(overrides)) {
+        crmPropertyValues.value[key] = val
+    }
+    // Original = CRM-Werte (zum Vergleich)
+    if (props.artist_residency?.artist_contact?.property_values) {
+        props.artist_residency.artist_contact.property_values.forEach(pv => {
+            originalCrmPropertyValues.value[pv.crm_property_id] = pv.value
+        })
+    }
+} else if (props.artist_residency?.artist_contact?.property_values) {
+    // Keine Overrides → CRM-Werte direkt
+    props.artist_residency.artist_contact.property_values.forEach(pv => {
+        crmPropertyValues.value[pv.crm_property_id] = pv.value
+    })
+    originalCrmPropertyValues.value = { ...crmPropertyValues.value }
+}
+
+// Mark selected artist as CRM if it comes from artist_contact
+if (props.artist_residency?.artist_contact && selectedArtist.value) {
+    selectedArtist.value = {
+        id: props.artist_residency.artist_contact.id,
+        name: props.artist_residency.artist_contact.display_name,
+        property_values: props.artist_residency.artist_contact.property_values ?? [],
+        is_crm: true,
+    }
+}
 
 const artistResidency = useForm({
     id: props.artist_residency ? props.artist_residency.id : null,
     name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.name ?? '') : '',
-    civil_name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.civil_name ?? '') : '',
+    first_name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.first_name ?? '') : '',
+    last_name: props.artist_residency?.do_not_save_artist ? (props.artist_residency.last_name ?? '') : '',
     phone_number: props.artist_residency?.do_not_save_artist ? (props.artist_residency.phone_number ?? '') : '',
     position: props.artist_residency?.do_not_save_artist ? (props.artist_residency.position ?? '') : '',
     artist_id: props.artist_residency?.artist ? props.artist_residency.artist.id : null,
+    artist_crm_contact_id: props.artist_residency?.artist_crm_contact_id ?? null,
+    crm_property_values: {},
+    sync_crm_changes: false,
     do_not_save_artist: props.artist_residency?.do_not_save_artist ?? false,
     accommodation_id: null,
     project_id: props.project.id,
@@ -640,7 +737,35 @@ const createOrUpdateArtistResidency = () => {
     artistResidency.days = calculateTotalNights();
     artistResidency.type_of_room = selectedRoomType.value.id;
     artistResidency.accommodation_id = selectedAccommodation.value.id;
-    artistResidency.artist_id = selectedArtist.value ? selectedArtist.value.id : null;
+
+    // Set CRM property values and sync flag on the form — ensure all values are strings
+    const stringifiedValues = {}
+    for (const [key, val] of Object.entries(crmPropertyValues.value)) {
+        stringifiedValues[key] = val !== null && val !== '' ? String(val) : ''
+    }
+    artistResidency.crm_property_values = stringifiedValues
+    artistResidency.sync_crm_changes = syncCrmChanges.value
+
+    // Derive name/first_name/last_name/phone_number/position from CRM properties
+    const kuenstlerNameProp = props.artistContactTypeProperties.find(p => p.name === 'Künstler*innen Name')
+    const vornameProp = props.artistContactTypeProperties.find(p => p.name === 'Vorname')
+    const nachnameProp = props.artistContactTypeProperties.find(p => p.name === 'Nachname')
+    const telefonProp = props.artistContactTypeProperties.find(p => p.name === 'Telefon')
+    const positionProp = props.artistContactTypeProperties.find(p => p.name === 'Position')
+    artistResidency.name = kuenstlerNameProp ? (crmPropertyValues.value[kuenstlerNameProp.id] ?? '') : ''
+    artistResidency.first_name = vornameProp ? (crmPropertyValues.value[vornameProp.id] ?? '') : ''
+    artistResidency.last_name = nachnameProp ? (crmPropertyValues.value[nachnameProp.id] ?? '') : ''
+    artistResidency.phone_number = telefonProp ? (crmPropertyValues.value[telefonProp.id] ?? '') : ''
+    artistResidency.position = positionProp ? (crmPropertyValues.value[positionProp.id] ?? '') : ''
+
+    // Bug-Fix: CRM artist -> artist_crm_contact_id, Legacy artist -> artist_id
+    if (selectedArtist.value?.is_crm) {
+        artistResidency.artist_crm_contact_id = selectedArtist.value.id
+        artistResidency.artist_id = null
+    } else {
+        artistResidency.artist_id = selectedArtist.value?.id ?? null
+        artistResidency.artist_crm_contact_id = null
+    }
 
     if(artistResidency.id){
         artistResidency.patch(route('artist-residencies.update', {artistResidency: artistResidency.id}), {
@@ -662,12 +787,39 @@ const createOrUpdateArtistResidency = () => {
 
 const artistSearch = ref('')
 
+const allArtists = computed(() => {
+    // Merge legacy artists with CRM artists, preferring CRM
+    const crmArtists = (props.crmArtists ?? []).map(c => ({
+        id: c.id,
+        name: c.display_name,
+        property_values: c.property_values ?? [],
+        is_crm: true,
+    }))
+
+    if (crmArtists.length > 0) {
+        return crmArtists
+    }
+
+    return props.artists
+})
+
 const filteredArtists = computed(() => {
-    if (!artistSearch.value) return props.artists
-    return props.artists.filter(a =>
-        a.name.toLowerCase().includes(artistSearch.value.toLowerCase()) ||
-        (a.civil_name && a.civil_name.toLowerCase().includes(artistSearch.value.toLowerCase()))
+    if (!artistSearch.value) return allArtists.value
+    return allArtists.value.filter(a =>
+        a.name?.toLowerCase().includes(artistSearch.value.toLowerCase())
     )
+})
+
+// When a CRM artist is selected, pre-fill property values
+watch(selectedArtist, (newArtist) => {
+    if (newArtist?.is_crm && newArtist.property_values) {
+        crmPropertyValues.value = {}
+        newArtist.property_values.forEach(pv => {
+            crmPropertyValues.value[pv.crm_property_id] = pv.value
+        })
+        originalCrmPropertyValues.value = { ...crmPropertyValues.value }
+        syncCrmChanges.value = false
+    }
 })
 
 // Auto-fill cost_per_night when accommodation and room type are selected

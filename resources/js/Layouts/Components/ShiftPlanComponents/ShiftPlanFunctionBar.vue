@@ -166,7 +166,7 @@
 
                 <div class=" mr-2">
                     <SwitchIconTooltip
-                        v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                        v-model="activeSettings.use_project_time_period"
                         :tooltip-text="$t('Project search')"
                         size="md"
                         @change="handleUseTimePeriodChange"
@@ -320,9 +320,9 @@ const projectSearch = ref('');
 const projectSearchResults = ref([]);
 const activeSettings = computed(() => {
     if (props.isDailyView) {
-        return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
+        return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings;
     }
-    return usePage().props.auth.user.calendar_settings;
+    return usePage().props.shift_plan_settings;
 });
 
 const userCalendarSettings = useForm({
@@ -398,7 +398,8 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         route('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan'),
         {
             use_project_time_period: enabled,
-            project_id: projectId
+            project_id: projectId,
+            is_daily_view: props.isDailyView
         },
         {
             preserveState: false

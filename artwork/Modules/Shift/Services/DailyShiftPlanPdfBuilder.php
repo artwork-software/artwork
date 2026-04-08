@@ -123,7 +123,7 @@ class DailyShiftPlanPdfBuilder
                 'name'  => (string)($craft->name ?? ''),
                 'abbr'  => (string)($craft->abbreviation ?? ''),
                 'color' => $color,
-                'bg'    => $this->mixWithWhite($color, 0.92),
+                'bg'    => $this->mixWithWhite($color, 0.82),
                 'quals' => $craft->qualifications?->pluck('name')->values()->all() ?? [],
                 'pos'   => (int)($craft->position ?? 9999),
             ];
@@ -205,9 +205,20 @@ class DailyShiftPlanPdfBuilder
         $eventCards = $this->buildEventCardsCompact($events);
         $timelineBlocks = $this->buildTimelineBlocks($events);
 
-        // komplett leer? -> keinen Chunk erzeugen
+        // komplett leer? -> kompakten Platzhalter-Chunk erzeugen
         if ($events->isEmpty() && $shifts->isEmpty() && empty($timelineBlocks) && empty($eventCards)) {
-            return collect();
+            return collect([[
+                'dateLabel'      => $day->translatedFormat('l, d.m.Y'),
+                'isEmpty'        => true,
+                'eventCards'     => [],
+                'rows'           => [],
+                'timelineLanes'  => 0,
+                'craftGroups'    => [],
+                'laneColumns'    => [],
+                'craftLaneMaps'  => [],
+                'craftMeta'      => [],
+                'layout'         => ['timeCol' => 44, 'timelineCol' => 0, 'timelineMax' => 0],
+            ]]);
         }
 
 
@@ -258,18 +269,11 @@ class DailyShiftPlanPdfBuilder
      */
     private function computeLayoutForDay(int $timelineLanes, int $craftCols): array
     {
-        // Zeitspalte sehr klein, aber noch gut lesbar
         $timeCol = 44;
 
-        // Timeline gesamt sehr klein
-        $timelineMax = 120;
-        if ($craftCols >= 4) $timelineMax = 104;
-        if ($craftCols >= 6) $timelineMax = 92;
-
-        // pro Lane min/max
-        $timelineCol = (int) floor($timelineMax / max(1, $timelineLanes));
-        $timelineCol = max(36, min(52, $timelineCol));
-
+        // Mindestens 56px pro Lane
+        $minPerLane = 56;
+        $timelineCol = max($minPerLane, min(80, (int) floor(200 / max(1, $timelineLanes))));
         $timelineMax = $timelineCol * max(1, $timelineLanes);
 
         return [
@@ -460,17 +464,31 @@ class DailyShiftPlanPdfBuilder
             $typeColor = $this->normalizeHexColor($rawColor) ?? '#6366f1';
 
             $cards[] = [
-                'title'       => $e->eventName ?: ($e->name ?? 'Event'),
+                'title'       => $this->buildEventTitle($e),
                 'time'        => sprintf('%s – %s', $start->format('H:i'), $end->format('H:i')),
                 'description' => trim((string)($e->description ?? '')) ?: null,
                 'color'       => $typeColor,
-                'bg'          => $this->mixWithWhite($typeColor, 0.93),
+                'bg'          => $this->mixWithWhite($typeColor, 0.82),
                 'room'        => $e->room->name ?? null,
             ];
         }
 
         usort($cards, fn($a, $b) => strcmp($a['time'], $b['time']));
         return $cards;
+    }
+
+    private function buildEventTitle(Event $e): string
+    {
+        $typeName = $e->event_type?->name ?? '';
+        $typeAbbr = $e->event_type?->abbreviation ?? '';
+        $eventName = trim((string)($e->eventName ?: ($e->name ?? '')));
+
+        if ($eventName !== '') {
+            $prefix = $typeAbbr !== '' ? $typeAbbr : $typeName;
+            return $prefix !== '' ? ($prefix . ' ' . $eventName) : $eventName;
+        }
+
+        return $typeName !== '' ? $typeName : 'Event';
     }
 
     private function formatGapMessage(int $minutes): string
@@ -531,7 +549,7 @@ class DailyShiftPlanPdfBuilder
                         'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
                         'meta'  => $metaPrefix() . $timeStr,
                         'color' => '#16a34a',
-                        'bg'    => $this->mixWithWhite('#16a34a', 0.93),
+                        'bg'    => $this->mixWithWhite('#16a34a', 0.82),
                     ];
 
                     continue;
@@ -553,7 +571,7 @@ class DailyShiftPlanPdfBuilder
                         'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
                         'meta'  => $metaPrefix() . $startStr,
                         'color' => '#16a34a',
-                        'bg'    => $this->mixWithWhite('#16a34a', 0.93),
+                        'bg'    => $this->mixWithWhite('#16a34a', 0.82),
                     ];
 
                     continue;
@@ -566,7 +584,7 @@ class DailyShiftPlanPdfBuilder
                     'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
                     'meta'  => sprintf('%s – %s', $startStr, $endStr),
                     'color' => '#16a34a',
-                    'bg'    => $this->mixWithWhite('#16a34a', 0.93),
+                    'bg'    => $this->mixWithWhite('#16a34a', 0.82),
                 ];
             }
         }
@@ -869,19 +887,9 @@ class DailyShiftPlanPdfBuilder
 
     private function packChunksIntoPages(Collection $chunks): array
     {
-        $pages = [];
-        $current = [];
-
-        foreach ($chunks as $chunk) {
-            if (count($current) >= $this->maxChunksPerPage) {
-                $pages[] = $current;
-                $current = [];
-            }
-            $current[] = $chunk;
-        }
-        if (!empty($current)) $pages[] = $current;
-
-        return $pages;
+        // Alle Chunks auf einer einzigen logischen "Seite" –
+        // physische PDF-Seitenumbrüche werden per CSS gesteuert (.day)
+        return [$chunks->values()->all()];
     }
 
     /* ----------------------------- HELPERS ----------------------------- */

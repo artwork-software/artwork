@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
@@ -60,6 +61,7 @@ class UpdateArtwork extends Command
         $this->updateSpecialComponentsSidebarEnabled();
         $this->migrateShiftsWorkers();
         $this->updateSagePermissions();
+        $this->migrateToCrm();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -502,5 +504,17 @@ class UpdateArtwork extends Command
         $this->section('Sage Permissions Split');
 
         $this->sagePermissionUpdater->seed();
+    }
+
+    private function migrateToCrm(): void
+    {
+        $this->section('CRM Migration');
+
+        if (CrmContactType::where('is_system', true)->exists()) {
+            $this->info('CRM migration already performed, skipping.');
+            return;
+        }
+
+        $this->call('artwork:migrate-to-crm');
     }
 }

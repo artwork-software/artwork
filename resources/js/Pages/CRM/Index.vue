@@ -228,6 +228,7 @@ const columns = computed(() => {
                     key: `prop_${p.id}`,
                     label: p.name,
                     sortable: false,
+                    type: p.type,
                     accessor: (row) => {
                         const pv = (row.property_values ?? []).find(v => v.crm_property_id === p.id)
                         return pv?.value ?? '-'

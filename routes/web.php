@@ -2685,6 +2685,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
+        Route::get('/{internalIssue}', 'show')->name('issue-of-material.show');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::match(['patch', 'post'], '/{internalIssue}/update', 'update')->name('issue-of-material.update');
         Route::delete('/{internalIssue}/destroy', 'destroy')->name('issue-of-material.destroy');

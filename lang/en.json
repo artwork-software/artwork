@@ -4244,5 +4244,7 @@
     "Unable to load artist residencies.": "Unable to load artist residencies.",
     "Saved. The Artist Residency has been successfully applied.": "Saved. The Artist Residency has been successfully applied.",
     "Show names": "Show names",
-    "There are no events and shifts for this project yet.": "There are no events and shifts for this project yet."
+    "There are no events and shifts for this project yet.": "There are no events and shifts for this project yet.",
+    "Current adjustment": "Current adjustment",
+    "Stk": "pcs"
 }

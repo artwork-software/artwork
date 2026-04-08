@@ -181,6 +181,24 @@ class UpdatePermissionsCommand extends Command
                 'tooltipKey' => "User is allowed to edit document requests and change their status.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CRM_VIEW->value,
+                'name_de' => "CRM einsehen",
+                'translation_key' => "View CRM",
+                'group' => 'CRM',
+                'tooltipText' => "Erlaubt den Zugriff auf das CRM-Modul und die Kontaktübersicht.",
+                'tooltipKey' => "Allows access to the CRM module and the contact overview.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CRM_MANAGER->value,
+                'name_de' => "CRM verwalten",
+                'translation_key' => "Manage CRM",
+                'group' => 'CRM',
+                'tooltipText' => "Erlaubt das Verwalten von Kontakttypen, Eigenschaftsgruppen und Eigenschaften im CRM.",
+                'tooltipKey' => "Allows managing contact types, property groups, and properties in the CRM.",
+                'checked' => false
+            ],
 
         ];
 

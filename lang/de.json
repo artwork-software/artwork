@@ -4282,5 +4282,7 @@
     "Unable to load artist residencies.": "Künstleraufenthalte konnten nicht geladen werden.",
     "Saved. The Artist Residency has been successfully applied.": "Gespeichert. Der Künstleraufenthalt wurde erfolgreich übernommen.",
     "Show names": "Namen anzeigen",
-    "There are no events and shifts for this project yet.": "Zu diesem Projekt gibt es noch keine Termine und Schichten."
+    "There are no events and shifts for this project yet.": "Zu diesem Projekt gibt es noch keine Termine und Schichten.",
+    "Current adjustment": "Aktuelle Anpassung",
+    "Stk": "Stk"
 }

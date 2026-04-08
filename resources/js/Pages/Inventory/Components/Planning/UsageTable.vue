@@ -16,13 +16,22 @@
                         class="flex justify-between py-1"
                     >
                         <span>{{ article.name }}</span>
-                        <span>{{ article.pivot.quantity }} Stk</span>
+                        <span class="flex items-center gap-2">
+                            <span>{{ article.pivot.quantity }} {{ $t('Stk') }}</span>
+                            <span
+                                v-if="editingIssueId && issue.id === editingIssueId && editingArticleQuantity != null"
+                                class="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-300"
+                            >
+                                {{ $t('Current adjustment') }}: {{ editingArticleQuantity }} {{ $t('Stk') }}
+                            </span>
+                        </span>
                     </li>
                 </ul>
             </div>
             <div>
-                <button class="new-button-small" @click="openMaterialIssueModal(issue.id)" type="button">
-                    <IconEdit class="size-4" />
+                <button class="new-button-small" @click="openMaterialIssueModal(issue.id)" type="button" :disabled="loadingIssueId === issue.id">
+                    <IconLoader2 v-if="loadingIssueId === issue.id" class="size-4 animate-spin" />
+                    <IconEdit v-else class="size-4" />
                     {{ $t('Edit')}}
                 </button>
             </div>
@@ -46,8 +55,9 @@
 
 <script setup>
 
-import { IconEdit } from '@tabler/icons-vue';
+import { IconEdit, IconLoader2 } from '@tabler/icons-vue';
 import {defineAsyncComponent, ref} from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     issues: {
@@ -57,6 +67,14 @@ const props = defineProps({
     extern: {
         type: Boolean,
         default: false
+    },
+    editingIssueId: {
+        type: Number,
+        default: null
+    },
+    editingArticleQuantity: {
+        type: Number,
+        default: null
     }
 });
 
@@ -65,13 +83,30 @@ const emit = defineEmits(['dataChanged', 'quantityUpdated']);
 
 const showIssueOfMaterialModal = ref(false);
 const issueForModal = ref(null);
+const loadingIssueId = ref(null);
 
 const IssueOfMaterialModal = defineAsyncComponent({
     loader: () => import('@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue'),
     delay: 200,
 })
-const openMaterialIssueModal = (issueId) => {
-    issueForModal.value = props.issues.find(issue => issue.id === issueId) || null;
+const openMaterialIssueModal = async (issueId) => {
+    const localIssue = props.issues.find(issue => issue.id === issueId) || null;
+
+    if (!props.extern) {
+        loadingIssueId.value = issueId;
+        try {
+            const response = await axios.get(route('issue-of-material.show', issueId));
+            issueForModal.value = response.data;
+        } catch (error) {
+            console.error('Failed to fetch full issue data, using local fallback:', error);
+            issueForModal.value = localIssue;
+        } finally {
+            loadingIssueId.value = null;
+        }
+    } else {
+        issueForModal.value = localIssue;
+    }
+
     showIssueOfMaterialModal.value = true;
 };
 

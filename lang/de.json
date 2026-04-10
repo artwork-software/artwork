@@ -3117,6 +3117,7 @@
     "Selected Articles": "Ausgewählte Artikel",
     "Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.": "Hier siehst du die Artikel, die du für die Materialausgabe ausgewählt hast. Passe die Menge an oder entferne Artikel.",
     "Available stock in period": "Verfügbarer Bestand im Zeitraum",
+    "Available stock on date": "Verfügbarer Bestand am Stichtag",
     "Fetching": "Abfrage",
     "You have selected more items than are available.": "Du hast mehr Artikel ausgewählt, als verfügbar sind.",
     "Show usage": "Verwendung anzeigen",
@@ -4284,5 +4285,6 @@
     "Show names": "Namen anzeigen",
     "There are no events and shifts for this project yet.": "Zu diesem Projekt gibt es noch keine Termine und Schichten.",
     "Current adjustment": "Aktuelle Anpassung",
-    "Stk": "Stk"
+    "Stk": "Stk",
+    "Ungrouped": "Ungruppiert"
 }

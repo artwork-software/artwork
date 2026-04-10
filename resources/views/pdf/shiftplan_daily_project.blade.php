@@ -306,8 +306,9 @@
         }
 
         /* Timeline Text */
-        .tlMeta{ font-weight: 900; font-size: 5.7pt; word-break: break-all; overflow:hidden; }
-        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); word-break: break-all; overflow:hidden; }
+        .tlBody{ padding: 4px 3px; }
+        .tlMeta{ font-weight: 900; font-size: 5.7pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
         /* Empty day compact – eigenes Element, kein .day */
         .day-empty {
@@ -615,9 +616,9 @@
 
                                 @if($tm && !empty($tm['skip']))
                                 @elseif($tm)
-                                    <td rowspan="{{ $tm['rowspan'] }}" style="background: {{ $tm['data']['bg'] }};">
+                                    <td rowspan="{{ $tm['rowspan'] }}" style="background: {{ $tm['data']['bg'] }}; border-left: 3px solid {{ $tm['data']['color'] ?? $tm['data']['bg'] }};">
                                         <div class="cellBox">
-                                            <div class="cellBody">
+                                            <div class="tlBody">
                                                 <div class="tlMeta">{{ $tm['data']['meta'] }}</div>
                                                 @if(!empty($tm['data']['title']) && $tm['data']['title'] !== $tm['data']['meta'])
                                                     <div class="tlTitle">{{ $tm['data']['title'] }}</div>
@@ -649,7 +650,7 @@
                                     @if($cm && !empty($cm['skip']))
                                         {{-- skip --}}
                                     @elseif($cm)
-                                        <td rowspan="{{ $cm['rowspan'] }}" style="background: {{ $cBg }};">
+                                        <td rowspan="{{ $cm['rowspan'] }}" style="background: {{ $cBg }}; border-left: 3px solid {{ $craft['color'] ?? $cBg }};">
                                             <div class="cellBox">
                                                 <div class="cellBody">
                                                     <div class="cellTitle">{{ $craft['key'] }}</div>

@@ -50,6 +50,7 @@
         :is-extern-or-intern="extern"
         :extern-material-issue="extern ? issueForModal : null"
         :project="issueForModal?.project || null"
+        :planning-date="props.planningDate"
     />
 </template>
 
@@ -74,6 +75,10 @@ const props = defineProps({
     },
     editingArticleQuantity: {
         type: Number,
+        default: null
+    },
+    planningDate: {
+        type: String,
         default: null
     }
 });

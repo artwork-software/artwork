@@ -17,7 +17,7 @@ class ArtistResidencyCreateRequest extends FormRequest
             'name' => 'nullable|string|max:255',
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:50',
             'position' => 'nullable|string|max:255',
             'artist_id' => 'nullable|integer|exists:artists,id',
             'artist_crm_contact_id' => 'nullable|integer|exists:crm_contacts,id',

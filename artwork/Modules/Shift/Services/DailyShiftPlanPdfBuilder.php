@@ -271,8 +271,8 @@ class DailyShiftPlanPdfBuilder
     {
         $timeCol = 44;
 
-        // Mindestens 56px pro Lane
-        $minPerLane = 56;
+        // Mindestens 60px pro Lane (genug für "ab 18:00" einzeilig)
+        $minPerLane = 60;
         $timelineCol = max($minPerLane, min(80, (int) floor(200 / max(1, $timelineLanes))));
         $timelineMax = $timelineCol * max(1, $timelineLanes);
 
@@ -783,8 +783,8 @@ class DailyShiftPlanPdfBuilder
                 'abbr'     => $craft->abbreviation ?? $key,
                 'position' => (int)($craft->position ?? 9999),
                 'color'    => $color,
-                'bg'       => $this->mixWithWhite($color, 0.93),
-                'soft'     => $this->mixWithWhite($color, 0.96),
+                'bg'       => $this->mixWithWhite($color, 0.82),
+                'soft'     => $this->mixWithWhite($color, 0.90),
             ];
         }
 

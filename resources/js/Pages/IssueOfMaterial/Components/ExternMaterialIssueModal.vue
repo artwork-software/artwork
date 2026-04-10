@@ -232,7 +232,7 @@
                                                 <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
                                             </h4>
                                             <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
-                                                {{ $t('Available stock in period') }}:
+                                                {{ props.planningDate ? $t('Available stock on date') : $t('Available stock in period') }}:
                                                 <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
                                                   'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
                                                   'text-red-600': (article.availableStock?.available ?? 0) === 0
@@ -246,7 +246,7 @@
                                                     <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                                                 </span>
                                             </div>
-                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
                                                 <span>
                                                     {{ $t('You have selected more items than are available.') }}
                                                     <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
@@ -484,6 +484,11 @@ const props = defineProps({
         required: false,
         default: false,
     },
+    planningDate: {
+        type: String,
+        required: false,
+        default: null,
+    },
 })
 
 
@@ -716,7 +721,9 @@ const reloadArticlesWithNewFilter = async () => {
 }
 
 const getArticleDataForUsage = async (article) => {
-    if (!article?.id || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
+    const startDate = props.planningDate || externMaterialIssueForm.issue_date;
+    const endDate = props.planningDate || externMaterialIssueForm.return_date;
+    if (!article?.id || !startDate || !endDate) {
         return;
     }
     article.availableStockRequestIsLoading = true;
@@ -724,8 +731,8 @@ const getArticleDataForUsage = async (article) => {
         const response = await axios.get(route('inventory.articles.usage'), {
             params: {
                 article_id: article.id,
-                start_date: externMaterialIssueForm.issue_date,
-                end_date: externMaterialIssueForm.return_date,
+                start_date: startDate,
+                end_date: endDate,
             }
         });
         // Die Nutzungsdaten werden im Modal angezeigt
@@ -804,7 +811,10 @@ const submit = () => {
 
 
 const checkAvailableStock = async () => {
-    if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || externMaterialIssueForm.articles.length === 0) {
+    const startDate = props.planningDate || externMaterialIssueForm.issue_date;
+    const endDate = props.planningDate || externMaterialIssueForm.return_date;
+
+    if (!startDate || !endDate || externMaterialIssueForm.articles.length === 0) {
         return
     }
 
@@ -822,8 +832,8 @@ const checkAvailableStock = async () => {
                 article_ids: ids,
                 type: 'extern',
                 issue_id: externMaterialIssueForm?.id || null,
-                start_date: externMaterialIssueForm.issue_date,
-                end_date: externMaterialIssueForm.return_date,
+                start_date: startDate,
+                end_date: endDate,
             }
         )
 

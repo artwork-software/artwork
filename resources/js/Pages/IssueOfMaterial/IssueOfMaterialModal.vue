@@ -33,10 +33,10 @@
 
         <div class="px-5 pb-5 pt-2">
             <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-                <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
+                <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
@@ -113,6 +113,11 @@ const props = defineProps({
     },
     lastEvent: {
         type: Object,
+        required: false,
+        default: null,
+    },
+    planningDate: {
+        type: String,
         required: false,
         default: null,
     },

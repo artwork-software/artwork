@@ -151,13 +151,13 @@
                 </div>
 
                 <div class="space-y-1">
-                    <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1">
+                    <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1" v-show="hasNonEmptySubcategory(filterMainCategory)">
                         <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
                             {{ $t(mainKey) }}
                         </div>
 
                         <div class="space-y-2 mt-2">
-                            <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
+                            <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey" v-show="filterSubCategory.length > 0">
                                 <div class="card white px-4 ">
                                     <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                         <div class="text-sm text-gray-900">
@@ -702,6 +702,10 @@ const extractCheckedIds = (filterGroup: 'roomFilters' | 'areaFilters' | 'eventFi
 };
 
 const removeSpaceFromKey = (key: string) => key.replace(/\s/g, '')
+
+const hasNonEmptySubcategory = (mainCategory: Record<string, any[]>) => {
+    return Object.values(mainCategory).some((list) => Array.isArray(list) && list.length > 0)
+}
 
 // **Fix:** keine gruppenübergreifende Suche – direkt das referenzierte Objekt deaktivieren
 const removeActiveFilter = (filterToRemove: any) => {

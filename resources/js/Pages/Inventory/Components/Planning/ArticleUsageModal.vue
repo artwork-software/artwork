@@ -162,10 +162,12 @@
                                 <UsageTable :issues="props.detailsForModal.internal || []"
                                             :editing-issue-id="editingIssueId"
                                             :editing-article-quantity="editingArticleQuantity"
+                                            :planning-date="props.detailsForModal.date || null"
                                             @dataChanged="handleDataChanged" @quantityUpdated="handleQuantityUpdated"/>
                             </TabPanel>
                             <TabPanel>
                                 <UsageTable :issues="props.detailsForModal.external || []" extern
+                                            :planning-date="props.detailsForModal.date || null"
                                             @dataChanged="handleDataChanged" @quantityUpdated="handleQuantityUpdated"/>
                             </TabPanel>
                         </TabPanels>

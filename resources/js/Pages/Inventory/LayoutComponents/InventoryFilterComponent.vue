@@ -306,6 +306,59 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Ungrouped tags -->
+                    <div
+                        v-if="filteredUngroupedTags.length"
+                        class="rounded-lg border border-gray-100 bg-gray-50/40 p-3"
+                    >
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="font-lexend text-[11px] text-gray-700">
+                                    {{ $t('Ungrouped') }}
+                                </span>
+                                <span class="text-[11px] text-gray-400">
+                                    ({{ filteredUngroupedTags.length }})
+                                </span>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="text-[11px] text-gray-400 hover:text-gray-600"
+                                @click="toggleGroupCollapsed('ungrouped')"
+                                :title="$t('Collapse / expand')"
+                            >
+                                <component
+                                    :is="IconChevronDown"
+                                    class="size-4 transition-transform duration-150"
+                                    :class="collapsedGroupIds.includes('ungrouped') ? '' : 'rotate-180 transform'"
+                                />
+                            </button>
+                        </div>
+
+                        <div v-if="!collapsedGroupIds.includes('ungrouped')" class="mt-2 flex flex-wrap gap-1.5">
+                            <button
+                                v-for="tag in filteredUngroupedTags"
+                                :key="tag.id"
+                                type="button"
+                                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
+                                :class="
+                                    selectedTagIds.includes(tag.id)
+                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                "
+                                @click="toggleTag(tag.id)"
+                            >
+                                <span
+                                    class="inline-block h-2 w-2 rounded-full border border-white/60"
+                                    :style="{ backgroundColor: tag.color || '#4f46e5' }"
+                                />
+                                <span class="truncate max-w-[140px]">
+                                    {{ tag.name }}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Flat tags fallback -->
@@ -729,6 +782,14 @@ const filteredTagsFlat = computed(() => {
     const q = (tagSearch.value || "").trim().toLowerCase()
     if (!q) return list
     return list.filter((t) => (t.name || "").toLowerCase().includes(q))
+})
+
+const filteredUngroupedTags = computed(() => {
+    const list = Array.isArray(tags) ? tags : []
+    const ungrouped = list.filter((t) => !t.inventory_tag_group_id)
+    const q = (tagSearch.value || "").trim().toLowerCase()
+    if (!q) return ungrouped
+    return ungrouped.filter((t) => (t.name || "").toLowerCase().includes(q))
 })
 
 const filteredTagsByGroup = (group) => {

@@ -11,6 +11,13 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import Tooltip from 'primevue/tooltip'
 
+import * as pdfjs from 'pdfjs-dist'
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+).toString()
+
 async function loadLocaleMessages(locale) {
     // Vite macht daraus separate Chunks pro Sprache
     const messages = await import(`../../lang/${locale}.json`)

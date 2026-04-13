@@ -126,14 +126,8 @@ class Sage100Service
                     if ($parentBooking) {
                         $serviceToUse = $this->sageNotAssignedDataService;
                     } else {
-                        $projectId = null;
-                        if ($kstTraeger) {
-                            $project = $this->projectService->getProjectByCostCenter($kstTraeger);
-                            $projectId = $project?->id;
-                        }
                         $parentBooking = $this->sageNotAssignedDataService->createFromSageApiData(
                             $items[0],
-                            $projectId,
                         );
                         $parentBooking->is_collective_booking = true;
                     }
@@ -143,18 +137,27 @@ class Sage100Service
                 $parentBooking->buchungsbetrag = 0;
                 $serviceToUse->deleteChildData($parentBooking);
 
-                // Cross-table children cleanup (findChildren uses __CLASS__, only finds same table)
                 if ($parentBooking instanceof SageNotAssignedData) {
                     SageAssignedData::where('parent_booking_id', $parentBooking->id)->delete();
                 } elseif ($parentBooking instanceof SageAssignedData) {
                     SageNotAssignedData::where('parent_booking_id', $parentBooking->id)->forceDelete();
                 }
 
+                $resolvedProjectId = null;
                 foreach ($items as $item) {
-                    if (!$booking = $this->importBooking($item, $parentBooking)) {
+                    $childProjectId = null;
+                    if (!$booking = $this->importBooking($item, $parentBooking, $childProjectId)) {
                         continue;
                     }
                     $parentBooking->buchungsbetrag += $booking->buchungsbetrag;
+
+                    if ($resolvedProjectId === null && $childProjectId !== null) {
+                        $resolvedProjectId = $childProjectId;
+                    }
+                }
+
+                if ($parentBooking instanceof SageNotAssignedData && $resolvedProjectId !== null) {
+                    $parentBooking->project_id = $resolvedProjectId;
                 }
 
                 $parentBooking->save();
@@ -183,7 +186,8 @@ class Sage100Service
 
     private function importBooking(
         array $item,
-        CollectiveBooking|null $parentBooking = null
+        CollectiveBooking|null $parentBooking = null,
+        ?int &$resolvedProjectId = null,
     ): SageAssignedData|SageNotAssignedData|null {
 
         $sageNotAssignedData = null;
@@ -203,6 +207,7 @@ class Sage100Service
             return null;
         }
         $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+        $resolvedProjectId = $project?->id;
 
         if (is_null($project)) {
             //create project unrelated SageNotAssignedData if no Project is found

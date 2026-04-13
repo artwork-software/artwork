@@ -13,6 +13,7 @@ use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
+use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -49,6 +50,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
         $schedule->command(RemoveExpiredInvitationsCommand::class)->dailyAt('01:00')->runInBackground();
+        $schedule->command(CleanupCrmImportFilesCommand::class)->dailyAt('02:00')->runInBackground();
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

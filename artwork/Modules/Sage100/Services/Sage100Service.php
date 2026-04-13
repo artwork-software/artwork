@@ -102,7 +102,7 @@ class Sage100Service
         foreach ($collectiveBookings as $key => $items) {
             DB::beginTransaction();
             try {
-                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('-', $key);
+                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('|~|', $key);
 
                 $serviceToUse = $this->sageNotAssignedDataService;
 
@@ -137,11 +137,27 @@ class Sage100Service
                 $parentBooking->buchungsbetrag = 0;
                 $serviceToUse->deleteChildData($parentBooking);
 
+                if ($parentBooking instanceof SageNotAssignedData) {
+                    SageAssignedData::where('parent_booking_id', $parentBooking->id)->delete();
+                } elseif ($parentBooking instanceof SageAssignedData) {
+                    SageNotAssignedData::where('parent_booking_id', $parentBooking->id)->forceDelete();
+                }
+
+                $resolvedProjectId = null;
                 foreach ($items as $item) {
-                    if (!$booking = $this->importBooking($item, $parentBooking)) {
+                    $childProjectId = null;
+                    if (!$booking = $this->importBooking($item, $parentBooking, $childProjectId)) {
                         continue;
                     }
                     $parentBooking->buchungsbetrag += $booking->buchungsbetrag;
+
+                    if ($resolvedProjectId === null && $childProjectId !== null) {
+                        $resolvedProjectId = $childProjectId;
+                    }
+                }
+
+                if ($parentBooking instanceof SageNotAssignedData && $resolvedProjectId !== null) {
+                    $parentBooking->project_id = $resolvedProjectId;
                 }
 
                 $parentBooking->save();
@@ -170,7 +186,8 @@ class Sage100Service
 
     private function importBooking(
         array $item,
-        CollectiveBooking|null $parentBooking = null
+        CollectiveBooking|null $parentBooking = null,
+        ?int &$resolvedProjectId = null,
     ): SageAssignedData|SageNotAssignedData|null {
 
         $sageNotAssignedData = null;
@@ -190,6 +207,7 @@ class Sage100Service
             return null;
         }
         $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+        $resolvedProjectId = $project?->id;
 
         if (is_null($project)) {
             //create project unrelated SageNotAssignedData if no Project is found

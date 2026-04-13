@@ -989,26 +989,21 @@ class ShiftPlanRequestController extends Controller
         $isAdmin = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
         $isShiftPlanner = $user->can('can plan shifts');
 
+        $accessibleCraftIds = Craft::query()
+            ->where('assignable_by_all', true)
+            ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
+            ->pluck('id');
+
         if ($isAdmin) {
             $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
                 ->orderByDesc('created_at')
                 ->get();
-        } elseif ($isShiftPlanner) {
-            $accessibleCraftIds = Craft::query()
-                ->where('assignable_by_all', true)
-                ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
-                ->pluck('id');
-
+        } else {
             $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
                 ->where(function ($q) use ($user, $accessibleCraftIds) {
                     $q->where('requested_by_user_id', $user->id)
                       ->orWhereIn('craft_id', $accessibleCraftIds);
                 })
-                ->orderByDesc('created_at')
-                ->get();
-        } else {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->where('requested_by_user_id', $this->auth->id())
                 ->orderByDesc('created_at')
                 ->get();
         }
@@ -1037,7 +1032,7 @@ class ShiftPlanRequestController extends Controller
 
         return Inertia::render('ShiftPlanRequests/MyIndex', [
             'crafts' => $crafts,
-            'isPlanner' => $isAdmin || $isShiftPlanner,
+            'isPlanner' => $isAdmin || $isShiftPlanner || $accessibleCraftIds->isNotEmpty(),
         ]);
     }
 

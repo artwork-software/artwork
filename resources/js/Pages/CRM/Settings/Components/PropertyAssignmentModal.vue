@@ -26,7 +26,7 @@
                 <div class="divide-y">
                     <div v-for="property in group.properties" :key="property.id" class="px-4 py-2">
                         <div class="flex items-center gap-3">
-                            <template v-if="contactType.is_system && property.is_system">
+                            <template v-if="contactType.is_system && property.is_system && checkedPropertyIds.has(property.id)">
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('This property is relevant for artwork functions and cannot be deselected')"

@@ -271,7 +271,7 @@ const columns = computed(() => {
 
     if (props.activeType?.properties) {
         props.activeType.properties
-            .filter(p => p.pivot?.show_in_list && p.name !== 'Name')
+            .filter(p => p.pivot?.show_in_list)
             .forEach(p => {
                 cols.push({
                     key: `prop_${p.id}`,

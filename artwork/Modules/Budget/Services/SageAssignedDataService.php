@@ -74,7 +74,7 @@ class SageAssignedDataService implements CollectiveBookingService
             'kst_traeger' => $sageApiData['KstTraeger'],
             'kst_stelle' => $sageApiData['KstStelle'],
             'buchungsdatum' => $sageApiData['Buchungsdatum'],
-            'is_collective_booking' => (bool)$collectiveBooking,
+            'is_collective_booking' => false,
             'parent_booking_id' => $collectiveBooking?->id,
         ];
 

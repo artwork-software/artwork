@@ -670,7 +670,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
     const incRooms: any[] = Array.isArray(incomingCalendar) ? incomingCalendar : [];
     if (incRooms.length === 0) return;
     if (!Array.isArray(newCalendarData.value) || newCalendarData.value.length === 0) {
-        newCalendarData.value = incRooms.map((inc) => {
+        const mapped = incRooms.map((inc) => {
             const incContent = inc?.content && typeof inc.content === 'object' ? inc.content : {};
             const pruned: Record<string, any> = {};
 
@@ -687,6 +687,19 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
                 content: pruned,
             };
         });
+
+        // Sort rooms to match the order from the rooms prop (position-based from DB)
+        const roomOrder = new Map<number, number>();
+        (props.rooms as any[]).forEach((r: any, idx: number) => {
+            roomOrder.set(r.id, idx);
+        });
+        mapped.sort((a: any, b: any) => {
+            const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
+            const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
+            return posA - posB;
+        });
+
+        newCalendarData.value = mapped;
         loadedMonths?.value?.add?.(monthKey);
         return;
     }
@@ -733,6 +746,17 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             target.roomName = inc.roomName;
         }
     }
+    // Sort rooms to match the order from the rooms prop (position-based from DB)
+    const roomOrder = new Map<number, number>();
+    (props.rooms as any[]).forEach((r: any, idx: number) => {
+        roomOrder.set(r.id, idx);
+    });
+    targetRooms.sort((a: any, b: any) => {
+        const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
+        const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
+        return posA - posB;
+    });
+
     newCalendarData.value = [...targetRooms];
 }
 

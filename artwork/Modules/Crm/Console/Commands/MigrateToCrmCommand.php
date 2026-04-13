@@ -129,10 +129,9 @@ class MigrateToCrmCommand extends Command
             ['sort_order' => 1]
         );
 
-        $this->createProperty($baseGroup, 'Name', CrmPropertyTypeEnum::TEXT, true, true, 1);
-        $this->createProperty($baseGroup, 'Künstler*innen Name', CrmPropertyTypeEnum::TEXT, false, true, 2);
-        $this->createProperty($baseGroup, 'Vorname', CrmPropertyTypeEnum::TEXT, false, false, 3);
-        $this->createProperty($baseGroup, 'Nachname', CrmPropertyTypeEnum::TEXT, false, false, 4);
+        $this->createProperty($baseGroup, 'Künstler*innen Name', CrmPropertyTypeEnum::TEXT, false, true, 1);
+        $this->createProperty($baseGroup, 'Vorname', CrmPropertyTypeEnum::TEXT, false, false, 2);
+        $this->createProperty($baseGroup, 'Nachname', CrmPropertyTypeEnum::TEXT, false, false, 3);
         $this->createProperty($baseGroup, 'Email', CrmPropertyTypeEnum::TEXT, false, true, 5);
         $this->createProperty($baseGroup, 'Telefon', CrmPropertyTypeEnum::TEXT, false, false, 6);
         $this->createProperty($baseGroup, 'Straße, Hausnummer', CrmPropertyTypeEnum::TEXT, false, false, 7);
@@ -210,34 +209,34 @@ class MigrateToCrmCommand extends Command
 
         $assignments = [
             CrmSystemContactTypeEnum::ARTIST->value => [
-                'Künstler*innen Name', 'Telefon', 'Vorname', 'Nachname',
+                'Künstler*innen Name', 'Email', 'Telefon', 'Vorname', 'Nachname',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Position', 'Notiz',
             ],
             CrmSystemContactTypeEnum::ACCOMMODATION->value => [
-                'Name', 'Email', 'Telefon',
+                'Email', 'Telefon',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Notiz',
             ],
             CrmSystemContactTypeEnum::MANUFACTURER->value => [
-                'Name', 'Email', 'Telefon',
+                'Email', 'Telefon',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Website', 'Kundennummer', 'Kontaktperson', 'Notiz',
             ],
             CrmSystemContactTypeEnum::FREELANCER->value => [
-                'Name', 'Email', 'Telefon',
+                'Email', 'Telefon',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Position', 'Business', 'Work Name',
                 'Work Description', 'Can Work Shifts', 'Stundensatz', 'Vergütungsbeschreibung', 'Notiz',
             ],
             CrmSystemContactTypeEnum::SERVICE_PROVIDER->value => [
-                'Name', 'Email', 'Telefon',
+                'Email', 'Telefon',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Position', 'Work Name',
                 'Work Description', 'Can Work Shifts', 'Stundensatz', 'Vergütungsbeschreibung', 'Notiz',
             ],
             CrmSystemContactTypeEnum::USER->value => [
-                'Name', 'Email', 'Telefon',
+                'Email', 'Telefon',
                 'Straße, Hausnummer', 'PLZ', 'Stadt', 'Land',
                 'Position', 'Business', 'Notiz',
             ],

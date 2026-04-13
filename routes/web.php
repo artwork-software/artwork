@@ -139,6 +139,8 @@ use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactController;
 use Artwork\Modules\Crm\Http\Controllers\CrmContactTypeController;
 use Artwork\Modules\Crm\Http\Controllers\CrmController;
+use Artwork\Modules\Crm\Http\Controllers\CrmExportController;
+use Artwork\Modules\Crm\Http\Controllers\CrmImportController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
@@ -2258,6 +2260,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // CRM Routes
     Route::group(['prefix' => 'crm'], function (): void {
         Route::get('/', [CrmController::class, 'index'])->name('crm.index');
+
+        // Import routes (before contacts to avoid {crmContact} param conflict)
+        Route::get('/import', [CrmImportController::class, 'showUpload'])->name('crm.import');
+        Route::post('/import/upload', [CrmImportController::class, 'upload'])->name('crm.import.upload');
+        Route::post('/import/execute', [CrmImportController::class, 'execute'])->name('crm.import.execute');
+        Route::delete('/import', [CrmImportController::class, 'cancel'])->name('crm.import.cancel');
+
+        // Export
+        Route::post('/export', [CrmExportController::class, 'export'])->name('crm.export');
+
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');

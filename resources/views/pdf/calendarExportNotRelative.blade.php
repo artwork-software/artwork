@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Kalender</title>
+    @php
+        $scaleFactor = match(strtolower($paperSize ?? 'a4')) {
+            'a3' => 1.4,
+            'a5' => 0.85,
+            'a6' => 0.7,
+            default => 1.0, // a4
+        };
+        $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
+    @endphp
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #111;
             -webkit-font-smoothing: antialiased;
         }
@@ -24,46 +33,46 @@
             width: 100%;
             margin-bottom: 10px;
             padding-bottom: 6px;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             line-height: 1.3;
             border: none;
-            border-collapse: collapse; /* keine sichtbaren Rahmen */
+            border-collapse: collapse;
         }
 
         .header-table td {
-            vertical-align: top; /* gleiche Höhe oben */
+            vertical-align: top;
             padding: 0;
             border: none;
         }
 
         .header-left {
             width: 60%;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #111;
         }
 
         .header-right {
             width: 40%;
             text-align: right;
-            font-size: 7px;
+            font-size: {{ $s(7) }};
             color: #71717a;
             line-height: 1.4;
         }
 
         .title {
-            font-size: 12px;
+            font-size: {{ $s(12) }};
             font-weight: 600;
             color: #0a0a0a;
             line-height: 1.3;
         }
         .subtitle {
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #52525b;
             margin-top: 2px;
             line-height: 1.4;
         }
         .chunk-info {
-            font-size: 7px;
+            font-size: {{ $s(7) }};
             color: #71717a;
             line-height: 1.4;
             margin-top: 2px;
@@ -73,17 +82,15 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;   /* <--- WICHTIG */
+            table-layout: fixed;
             border: 1px solid #404040;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             font-weight: 500;
         }
 
-        /* Damit Inhalte nicht über die Zelle hinausquellen */
         th, td {
             word-wrap: break-word;
         }
-
 
         thead th {
             border-bottom: 1px solid #404040;
@@ -91,14 +98,14 @@
             background: #f9fafb;
             vertical-align: top;
             word-wrap: break-word;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             font-weight: 500;
         }
 
         /* Kopfspalten */
         .th-room-head {
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.3;
             text-align: left;
             padding: 4px;
@@ -113,11 +120,11 @@
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
         }
         .th-daygroup-meta {
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.2;
             color: #4b5563;
         }
@@ -148,15 +155,15 @@
             line-height: 1.2;
             font-weight: 500;
             color: #000;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             word-break: break-word;
             max-height: 24px;
             overflow: hidden;
         }
 
-        /* Slot/Zeitraum Spalte (jetzt schlanker) */
+        /* Slot/Zeitraum Spalte */
         .td-slot-label {
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.2;
             color: #4b5563;
             font-weight: 500;
@@ -164,21 +171,19 @@
             text-align: center;
             padding: 1px;
             white-space: nowrap;
-            /* gleiche Mindesthöhe wie Eventzellen */
             min-height: 32px;
         }
 
         .slot-cell {
             vertical-align: top;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.25;
             padding: 3px;
             word-wrap: break-word;
-            /* Mindesthöhe für leere Zeilen: Platz für einen 4-zeiligen Termin */
             min-height: 80px;
         }
 
-        /* Innen-Wrapper in Slot-Zellen, damit DomPDF min-height zuverlässig anwendet */
+        /* Innen-Wrapper in Slot-Zellen */
         .slot-inner {
             min-height: 64px;
         }
@@ -190,7 +195,7 @@
             border-style: solid;
             margin-bottom: 2px;
             padding: 3px 4px;
-            font-size: 8px;
+            font-size: {{ $s(10) }};
             line-height: 1.3;
             font-weight: 500;
             display: block;
@@ -201,7 +206,7 @@
             align-items: flex-start;
             gap: 2px;
             font-weight: 500;
-            font-size: 8px;
+            font-size: {{ $s(10) }};
             line-height: 1.3;
         }
         .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; color: #000000 !important; }
@@ -209,7 +214,7 @@
         .event-time {
             flex: 0 0 auto;
             font-weight: 500;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             line-height: 1.2;
             word-wrap: break-word;
         }
@@ -359,17 +364,16 @@
                     <thead>
                     <tr>
                                     {{-- Linke Kopfspalte: Raum --}}
-                    <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:9px; font-weight:700;">
+                    <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:{{ $s(9) }}; font-weight:700;">
                         Raum
                     </th>
-                    {{-- Slot/Zeitraum Kopf (jetzt sehr klein) --}}
-                    <th class="th-room-head time-col-bg" style="padding: 1px; font-size: 9px; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
+                    {{-- Slot/Zeitraum Kopf --}}
+                    <th class="th-room-head time-col-bg" style="padding: 1px; font-size: {{ $s(9) }}; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
                         Zeit
                     </th>
 
                     {{-- Dann pro Tag EINE Spalte --}}
                     @php
-                        // Berechne die Breite für jede Tagesspalte, damit alle gleich breit sind
                         $dayCount = count($daysPage);
                     @endphp
                     @foreach($daysPage as $dayInfo)
@@ -379,7 +383,7 @@
                         <th class="th-daygroup {{ $isWeekend ? 'weekend-bg-top' : '' }}"
                             style="
                                 {{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}
-                                font-size:9px;
+                                font-size:{{ $s(9) }};
                                 line-height:1.3;
                                 font-weight:700;
                                 padding:4px 2px;
@@ -451,7 +455,7 @@
                         {{-- Raumzelle für Nachmittag-Zeile mit Raumnamen (größer und dicker) --}}
                         <td class="td-room"
                             style="
-                                font-size:9px;
+                                font-size:{{ $s(9) }};
                                 font-weight:700;
                                 line-height:1.2;
                                 word-break:break-word;

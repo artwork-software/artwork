@@ -293,6 +293,7 @@ class ExportPDFController extends Controller
                 'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
                 'colorSource'    => $request->get('colorSource', 'eventType'),
+                'paperSize'      => $request->string('paperSize', 'a4'),
             ]
         )
             ->setPaper(
@@ -483,6 +484,7 @@ class ExportPDFController extends Controller
                 'created_date' => Carbon::now()->format('d.m.Y'),
                 'bigLogoBase64' => $bigLogoBase64,
                 'colorSource' => $request->get('colorSource', 'eventType'),
+                'paperSize' => $request->string('paperSize', 'a3'),
             ]
         )
             ->setPaper(

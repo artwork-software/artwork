@@ -12,6 +12,12 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
+                    <!--
+                    <button v-if="canImport" class="ui-button flex items-center gap-1.5" @click="showExportModal = true">
+                        <component :is="IconDownload" stroke-width="1" class="size-5" />
+                        {{ $t('Export') }}
+                    </button>
+                    -->
                     <div v-if="hasFilterableProperties" class="relative inline-flex">
                         <ToolTipComponent
                             direction="bottom"
@@ -33,10 +39,16 @@
                         <template v-else-if="activeType?.slug === 'freelancer'">{{ $t('Creation only possible in freelancer management') }}</template>
                         <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
                     </span>
-                    <button v-else class="ui-button-add" @click="showCreateModal = true">
-                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
-                        {{ $t('New contact') }}
-                    </button>
+                    <template v-else>
+                        <Link v-if="canImport" :href="route('crm.import')" class="ui-button flex items-center gap-1.5">
+                            <component :is="IconUpload" stroke-width="1" class="size-5" />
+                            {{ $t('Import') }}
+                        </Link>
+                        <button class="ui-button-add" @click="showCreateModal = true">
+                            <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                            {{ $t('New contact') }}
+                        </button>
+                    </template>
                 </template>
             </ToolbarHeader>
 
@@ -52,6 +64,31 @@
                     <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
                 </div>
             </Transition>
+
+            <!-- Import Result Banner -->
+            <div v-if="importResult" class="mt-4 space-y-2">
+                <div v-if="importResult.created > 0" class="rounded-md bg-green-50 p-3">
+                    <p class="text-sm font-medium text-green-800">
+                        {{ $t('{count} contacts created', { count: importResult.created }) }}
+                    </p>
+                </div>
+                <div v-if="importResult.skipped?.length > 0" class="rounded-md bg-yellow-50 border border-yellow-200 p-3">
+                    <button
+                        class="flex items-center gap-2 text-sm font-medium text-yellow-800 w-full text-left"
+                        @click="showSkipped = !showSkipped"
+                    >
+                        {{ $t('{count} rows skipped', { count: importResult.skipped.length }) }}
+                        <svg class="size-4 transition-transform" :class="showSkipped ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <ul v-if="showSkipped" class="mt-2 space-y-1">
+                        <li v-for="(skip, i) in importResult.skipped" :key="i" class="text-xs text-yellow-700">
+                            {{ $t('Row') }} {{ skip.row }}: {{ skip.reason }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
             <!-- Contact Type Tabs -->
             <div class="mt-4 border-b border-gray-200">
@@ -158,11 +195,18 @@
             @close="showFilterModal = false"
             @apply="applyFilters"
         />
+
+        <!-- Export Modal -->
+        <CrmExportModal
+            v-if="showExportModal"
+            :contact-types="contactTypes"
+            @close="showExportModal = false"
+        />
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -174,14 +218,17 @@ import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import CreateContactModal from '@/Pages/CRM/Components/CreateContactModal.vue'
 import CrmFilterModal from '@/Pages/CRM/Components/CrmFilterModal.vue'
+import CrmExportModal from '@/Pages/CRM/Components/CrmExportModal.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconAddressBook, IconCirclePlus, IconEye, IconTrash } from '@tabler/icons-vue'
+import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload } from '@tabler/icons-vue'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
     contactTypes: { type: Array, required: true },
     activeType: { type: Object, default: null },
     contacts: { type: Object, default: null },
+    canImport: { type: Boolean, default: false },
+    importResult: { type: Object, default: null },
 })
 
 const $t = useTranslation()
@@ -201,6 +248,8 @@ const page = ref(props.contacts?.current_page ?? 1)
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const showFilterModal = ref(false)
+const showExportModal = ref(false)
+const showSkipped = ref(false)
 const contactToDelete = ref(null)
 const activeFilters = ref({})
 
@@ -222,7 +271,7 @@ const columns = computed(() => {
 
     if (props.activeType?.properties) {
         props.activeType.properties
-            .filter(p => p.pivot?.show_in_list && p.name !== 'Name')
+            .filter(p => p.pivot?.show_in_list)
             .forEach(p => {
                 cols.push({
                     key: `prop_${p.id}`,

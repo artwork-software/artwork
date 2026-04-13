@@ -300,10 +300,11 @@ export default {
                 assignedUsers: this.assignedUsers.map(user => user.id),
                 cost_center: this.cost_center,
             }, {
-                preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.closeModal(true);
+                }
             })
-            this.closeModal(true);
         },
         closeModal(bool) {
             this.$emit('closed', bool);

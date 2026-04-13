@@ -26,8 +26,22 @@ class RoomCalendarResource extends JsonResource
         $historyComplete = $this->historyChanges()->all();
 
         foreach ($historyComplete as $history) {
+            $changer = $history->changer;
+            $changerData = $changer ? [
+                'id' => $changer->id,
+                'first_name' => $changer->first_name,
+                'last_name' => $changer->last_name,
+                'profile_photo_url' => $changer->profile_photo_url,
+            ] : null;
+
+            $changes = json_decode($history->changes, true) ?: [];
+            foreach ($changes as &$change) {
+                $change['changed_by'] = $changerData;
+            }
+            unset($change);
+
             $historyArray[] = [
-                'changes' => json_decode($history->changes),
+                'changes' => $changes,
                 'created_at' => $history->created_at->diffInHours() < 24
                     ? $history->created_at->diffForHumans()
                     : $history->created_at->format('d.m.Y, H:i'),

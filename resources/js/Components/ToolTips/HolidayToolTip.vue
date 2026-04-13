@@ -13,8 +13,8 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg bg-zinc-800 shadow-xl ring-1 ring-zinc-600 ring-opacity-5 focus:outline-none min-w-44" >
-                    <div class="text-white px-3 py-2 text-xs ">
+                <MenuItems class="z-50 rounded-lg bg-white shadow-xl ring-1 ring-zinc-200 ring-opacity-5 focus:outline-none min-w-44" >
+                    <div class="px-3 py-2 text-xs">
                         <slot />
                     </div>
                 </MenuItems>

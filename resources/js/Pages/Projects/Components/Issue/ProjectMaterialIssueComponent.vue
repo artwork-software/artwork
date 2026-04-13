@@ -156,6 +156,10 @@
                               <IconClock class="size-4" />
                               ~ {{ diffDays(issue) }} {{ $t('Days')}}
                             </span>
+                        <span v-if="issue.room" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
+                              <IconHome class="size-4" />
+                              {{ issue.room.name }}
+                            </span>
                         <span v-if="issue.special_items?.length > 0"
                             class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1"
                             :class="issue.special_items_done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"

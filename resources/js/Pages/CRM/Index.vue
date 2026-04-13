@@ -12,10 +12,12 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
+                    <!--
                     <button v-if="canImport" class="ui-button flex items-center gap-1.5" @click="showExportModal = true">
                         <component :is="IconDownload" stroke-width="1" class="size-5" />
                         {{ $t('Export') }}
                     </button>
+                    -->
                     <div v-if="hasFilterableProperties" class="relative inline-flex">
                         <ToolTipComponent
                             direction="bottom"

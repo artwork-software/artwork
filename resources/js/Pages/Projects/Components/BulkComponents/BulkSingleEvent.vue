@@ -289,7 +289,7 @@
                             @click="showEditSeriesModal = true"
                         />
                         <BaseMenuItem
-                            v-if="event.id"
+                            v-if="event.id && (can('create events without request') || hasAdminRole())"
                             white-menu-background
                             :icon="IconDeviceFloppy"
                             title="Save timeline as preset"
@@ -422,7 +422,7 @@ const SearchTimelinePresetModal = defineAsyncComponent({
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
-const {hasAdminRole} = usePermission(usePage().props);
+const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
     event: { type: Object, required: true },

@@ -427,7 +427,7 @@
                         <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
                         <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
                         <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
-                        <BaseMenuItem white-menu-background v-if="event.hasTimelines" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" title="Save timeline as preset" />
+                        <BaseMenuItem white-menu-background v-if="event.hasTimelines && (can('create events without request') || hasAdminRole)" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" title="Save timeline as preset" />
                         <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" title="Import timeline preset" />
                     </BaseMenu>
                 </div>

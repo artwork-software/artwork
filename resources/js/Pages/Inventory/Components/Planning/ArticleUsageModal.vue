@@ -5,7 +5,7 @@
         @close="$emit('close')"
         modal-size="max-w-4xl"
     >
-        <div class="mt-4 space-y-6 text-sm text-zinc-800">
+        <div class="mt-4 space-y-6 text-sm text-zinc-800" :class="{ 'opacity-50 pointer-events-none': isRefreshing }">
             <!-- Artikel Kopfkarte -->
             <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
                 <div
@@ -112,6 +112,41 @@
                 </div>
             </section>
 
+            <!-- Availability Timeline (only in range mode) -->
+            <section v-if="props.detailsForModal.availability_timeline && props.detailsForModal.availability_timeline.length > 0"
+                     class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                <div class="border-b border-zinc-100 bg-gradient-to-r from-amber-50 via-amber-50/60 to-transparent px-5 py-3 rounded-t-2xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                            <span class="inline-block size-2 rounded-full bg-amber-500"></span>
+                            {{ $t('Availability timeline') }}
+                        </h3>
+                        <div class="text-sm font-medium"
+                             :class="props.detailsForModal.min_available < 0 ? 'text-red-700' : 'text-emerald-700'">
+                            {{ $t('Minimum availability in period') }}:
+                            <span class="font-bold tabular-nums text-base">{{ props.detailsForModal.min_available }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <div class="flex rounded-lg overflow-hidden border border-zinc-200">
+                        <div v-for="(segment, idx) in props.detailsForModal.availability_timeline"
+                             :key="idx"
+                             class="relative flex flex-col items-center justify-center py-3 px-1 min-w-[40px] text-center border-r last:border-r-0 border-zinc-200 transition-all"
+                             :style="{ flexGrow: segment.days }"
+                             :class="getSegmentColorClass(segment.available)"
+                        >
+                            <span class="text-lg font-bold tabular-nums">{{ segment.available }}</span>
+                            <span class="text-[10px] text-zinc-600 leading-tight">{{ $t('available') }}</span>
+                            <span class="text-[10px] text-zinc-500 mt-1 leading-tight">
+                                {{ formatDate(segment.start) }}<template v-if="segment.start !== segment.end"> – {{ formatDate(segment.end) }}</template>
+                            </span>
+                            <span class="text-[10px] text-zinc-400">{{ segment.usage }} {{ $t('in use') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Stichtag / Datum -->
             <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
                 <div
@@ -198,6 +233,7 @@ import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import UsageTable from './UsageTable.vue'
 import {ref} from 'vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import axios from 'axios';
 
 const props = defineProps({
     detailsForModal: {
@@ -223,8 +259,36 @@ const toggleStatusDetails = () => {
     isStatusDetailsExpanded.value = !isStatusDetailsExpanded.value
 }
 
-const handleDataChanged = () => {
-    // Emit refresh event to parent to reload modal data
+const isRefreshing = ref(false)
+
+const handleDataChanged = async () => {
+    const articleId = props.detailsForModal?.article?.id
+    const startDate = props.detailsForModal?.start_date
+    const endDate = props.detailsForModal?.end_date
+    const singleDate = props.detailsForModal?.date
+
+    // Self-refresh via axios
+    if (articleId && (startDate || singleDate)) {
+        isRefreshing.value = true
+        try {
+            const response = await axios.get(route('inventory.articles.usage'), {
+                params: {
+                    article_id: articleId,
+                    start_date: startDate || singleDate,
+                    end_date: endDate || singleDate,
+                }
+            })
+            const newData = response.data.data
+            // Update the detailsForModal prop data in-place
+            Object.assign(props.detailsForModal, newData)
+        } catch (error) {
+            console.error('Failed to refresh usage data:', error)
+        } finally {
+            isRefreshing.value = false
+        }
+    }
+
+    // Also emit to parent (for planning grid context which uses Inertia reload)
     emit('refreshData')
 }
 
@@ -281,9 +345,21 @@ const getEinsatzbereitQuantity = () => {
 }
 
 const getAvailableQuantity = () => {
+    // Use min_available from backend (sweep-line) when available (range mode)
+    if (props.detailsForModal.min_available !== undefined && props.detailsForModal.min_available !== null) {
+        return props.detailsForModal.min_available
+    }
+    // Fallback for single-day view (naive sum is correct for a single day)
     const avail = getEinsatzbereitQuantity()
     const internalUsage = getTotalQuantity(props.detailsForModal.internal || [])
     const externalUsage = getTotalQuantity(props.detailsForModal.external || [])
     return avail - (internalUsage + externalUsage)
+}
+
+const getSegmentColorClass = (available) => {
+    if (available < 0) return 'bg-red-50 text-red-900'
+    if (available === 0) return 'bg-orange-50 text-orange-900'
+    if (available <= 2) return 'bg-yellow-50 text-yellow-900'
+    return 'bg-green-50 text-green-900'
 }
 </script>

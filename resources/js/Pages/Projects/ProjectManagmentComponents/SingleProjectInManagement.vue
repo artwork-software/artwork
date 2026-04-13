@@ -201,7 +201,14 @@ const openMenu = (projectId, event) => {
 
 const closeEditProjectModal = () => {
     editingProject.value = false;
-    router.reload({ preserveScroll: true });
+    router.reload({
+        preserveScroll: true,
+        data: {
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: query.value,
+        },
+    });
 };
 
 const openProject = (component, project) => {

@@ -989,26 +989,21 @@ class ShiftPlanRequestController extends Controller
         $isAdmin = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value);
         $isShiftPlanner = $user->can('can plan shifts');
 
+        $accessibleCraftIds = Craft::query()
+            ->where('assignable_by_all', true)
+            ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
+            ->pluck('id');
+
         if ($isAdmin) {
             $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
                 ->orderByDesc('created_at')
                 ->get();
-        } elseif ($isShiftPlanner) {
-            $accessibleCraftIds = Craft::query()
-                ->where('assignable_by_all', true)
-                ->orWhereHas('craftShiftPlaner', fn ($q) => $q->where('user_id', $user->id))
-                ->pluck('id');
-
+        } else {
             $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
                 ->where(function ($q) use ($user, $accessibleCraftIds) {
                     $q->where('requested_by_user_id', $user->id)
                       ->orWhereIn('craft_id', $accessibleCraftIds);
                 })
-                ->orderByDesc('created_at')
-                ->get();
-        } else {
-            $shiftPlanRequests = ShiftPlanRequest::with(['craft', 'requestedBy'])
-                ->where('requested_by_user_id', $this->auth->id())
                 ->orderByDesc('created_at')
                 ->get();
         }
@@ -1037,7 +1032,7 @@ class ShiftPlanRequestController extends Controller
 
         return Inertia::render('ShiftPlanRequests/MyIndex', [
             'crafts' => $crafts,
-            'isPlanner' => $isAdmin || $isShiftPlanner,
+            'isPlanner' => $isAdmin || $isShiftPlanner || $accessibleCraftIds->isNotEmpty(),
         ]);
     }
 
@@ -1086,10 +1081,65 @@ class ShiftPlanRequestController extends Controller
             ])
             ->get();
 
+        // Alle Worker des Gewerks laden (gleich wie in show())
+        $craft = $shiftPlanRequest->craft;
+        $craftUsers = $craft->users()->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])->get();
+        $craftFreelancers = $craft->freelancers()->get();
+        $craftServiceProviders = $craft->serviceProviders()->get();
+
+        $craftUserIds = $craftUsers->pluck('id');
+        $craftFreelancerIds = $craftFreelancers->pluck('id');
+        $craftServiceProviderIds = $craftServiceProviders->pluck('id');
+
+        // Individual Times für alle Craft-Worker im Wochenzeitraum laden
+        $individualTimes = IndividualTime::query()
+            ->individualByDateRange($start->toDateString(), $end->toDateString())
+            ->where(function ($q) use ($craftUserIds, $craftFreelancerIds, $craftServiceProviderIds) {
+                $q->where(function ($q) use ($craftUserIds) {
+                    $q->where('timeable_type', User::class)
+                      ->whereIn('timeable_id', $craftUserIds);
+                })->orWhere(function ($q) use ($craftFreelancerIds) {
+                    $q->where('timeable_type', Freelancer::class)
+                      ->whereIn('timeable_id', $craftFreelancerIds);
+                })->orWhere(function ($q) use ($craftServiceProviderIds) {
+                    $q->where('timeable_type', ServiceProvider::class)
+                      ->whereIn('timeable_id', $craftServiceProviderIds);
+                });
+            })
+            ->get()
+            ->makeVisible(['timeable_type', 'timeable_id'])
+            ->map(function ($it) {
+                $typeMap = [
+                    User::class => 'user',
+                    Freelancer::class => 'freelancer',
+                    ServiceProvider::class => 'service_provider',
+                ];
+                $it->timeable_type_short = $typeMap[$it->timeable_type] ?? 'unknown';
+                return $it;
+            });
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
+            'individualTimes' => $individualTimes,
+            'craftWorkers' => [
+                'users' => $craftUsers->map(fn ($u) => [
+                    'id' => $u->id,
+                    'full_name' => $u->full_name ?? ($u->first_name . ' ' . $u->last_name),
+                    'profile_photo_url' => $u->profile_photo_url,
+                ]),
+                'freelancers' => $craftFreelancers->map(fn ($f) => [
+                    'id' => $f->id,
+                    'full_name' => $f->full_name ?? $f->name,
+                    'profile_photo_url' => $f->profile_photo_url,
+                ]),
+                'service_providers' => $craftServiceProviders->map(fn ($sp) => [
+                    'id' => $sp->id,
+                    'name' => $sp->name,
+                    'profile_photo_url' => $sp->profile_photo_url,
+                ]),
+            ],
             'isMyRequest' => true,
         ]);
     }

@@ -148,7 +148,7 @@ const selectedTypeLabel = computed(() => {
 })
 
 const requiredProperties = computed(() => {
-    return (selectedType.value?.properties ?? []).filter(p => p.pivot?.is_required && p.name !== 'Name')
+    return (selectedType.value?.properties ?? []).filter(p => p.pivot?.is_required)
 })
 
 // Reset property values when type changes

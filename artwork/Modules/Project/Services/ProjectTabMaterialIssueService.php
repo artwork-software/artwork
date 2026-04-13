@@ -13,6 +13,7 @@ class ProjectTabMaterialIssueService
         $materials = InternalIssue::where('project_id', $project->id)
             ->with([
                 'project',
+                'room',
                 'articles.images',
                 // 🔹 Tags der Artikel
                 'articles.tags',

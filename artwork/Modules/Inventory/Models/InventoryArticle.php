@@ -8,10 +8,12 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 
 /**
@@ -205,14 +207,6 @@ class InventoryArticle extends Model
         ?int $excludeIssueId = null,
         ?string $excludeType = null
     ): array {
-        $sumQuantity = function ($issues): int {
-            $used = 0;
-            foreach ($issues as $issue) {
-                $used += (int) ($issue->pivot->quantity ?? 0);
-            }
-            return $used;
-        };
-
         if ($this->relationLoaded('internalIssues')) {
             $internalIssues = $this->internalIssues;
             // Apply exclusion filter to pre-loaded relations if needed
@@ -255,7 +249,10 @@ class InventoryArticle extends Model
                 ->get();
         }
 
-        $usedQuantity = $sumQuantity($internalIssues) + $sumQuantity($externalIssues);
+        $usedQuantity = self::calculatePeakConcurrentUsage(
+            collect($internalIssues),
+            collect($externalIssues)
+        );
 
         // Get the quantity of items with "Einsatzbereit" status
         $total = 0;
@@ -296,6 +293,79 @@ class InventoryArticle extends Model
             'reserved'  => $usedQuantity,
             'quantity'  => $total,
         ];
+    }
+
+    /**
+     * Sweep-line algorithm to calculate peak concurrent usage across all issues.
+     * Instead of summing all quantities (which overcounts non-overlapping issues),
+     * this finds the maximum quantity in use at any single point in time.
+     *
+     * @param Collection $internalIssues Issues with start_date, start_time, end_date, end_time
+     * @param Collection $externalIssues Issues with issue_date, return_date
+     * @return int Peak concurrent usage
+     */
+    public static function calculatePeakConcurrentUsage(
+        Collection $internalIssues,
+        Collection $externalIssues
+    ): int {
+        $events = [];
+
+        foreach ($internalIssues as $issue) {
+            $qty = (int) ($issue->pivot->quantity ?? 0);
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $startDateStr = Carbon::parse($issue->start_date)->format('Y-m-d');
+            $startTime = $issue->start_time ?? '00:00:00';
+            $endDateStr = Carbon::parse($issue->end_date ?? $issue->start_date)->format('Y-m-d');
+            $endTime = $issue->end_time ?? '23:59:59';
+
+            $start = Carbon::parse("{$startDateStr} {$startTime}")->timestamp;
+            // +1 second after end so that issues ending exactly when another starts don't overlap
+            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp + 1;
+
+            $events[] = [$start, $qty];   // issue starts: add quantity
+            $events[] = [$end, -$qty];    // issue ends: remove quantity
+        }
+
+        foreach ($externalIssues as $issue) {
+            $qty = (int) ($issue->pivot->quantity ?? 0);
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $issueDateStr = Carbon::parse($issue->issue_date)->format('Y-m-d');
+            $returnDateStr = Carbon::parse($issue->return_date ?? $issue->issue_date)->format('Y-m-d');
+
+            $start = Carbon::parse("{$issueDateStr} 00:00:00")->timestamp;
+            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1;
+
+            $events[] = [$start, $qty];
+            $events[] = [$end, -$qty];
+        }
+
+        if (empty($events)) {
+            return 0;
+        }
+
+        // Sort by timestamp; on tie, process removals (-qty) before additions (+qty)
+        usort($events, function ($a, $b) {
+            if ($a[0] !== $b[0]) {
+                return $a[0] <=> $b[0];
+            }
+            return $a[1] <=> $b[1];
+        });
+
+        $current = 0;
+        $peak = 0;
+
+        foreach ($events as [$timestamp, $delta]) {
+            $current += $delta;
+            $peak = max($peak, $current);
+        }
+
+        return $peak;
     }
 
     public function tags(): BelongsToMany

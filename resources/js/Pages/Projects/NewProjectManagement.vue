@@ -195,7 +195,7 @@
                             :create-settings="createSettings"
                             :full-project="pinnedProjectsAll.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at]"
+                            v-memo="[project.id, project.updated_at, project.title]"
                         />
                     </div>
 
@@ -214,7 +214,7 @@
                             :create-settings="createSettings"
                             :full-project="projects.data.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at]"
+                            v-memo="[project.id, project.updated_at, project.title]"
                         />
                     </div>
                 </div>

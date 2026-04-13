@@ -32,7 +32,7 @@
                     <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showEventComponent = true" :icon="IconEdit" title="edit" />
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete event')" />
-                        <BaseMenuItem white-menu-background v-if="event.timelines?.length > 0" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" :title="$t('Save timeline as preset')" />
+                        <BaseMenuItem white-menu-background v-if="event.timelines?.length > 0 && (can('create events without request') || hasAdminRole())" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" :title="$t('Save timeline as preset')" />
                         <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" :title="$t('Import timeline preset')" />
                     </BaseMenu>
                 </div>

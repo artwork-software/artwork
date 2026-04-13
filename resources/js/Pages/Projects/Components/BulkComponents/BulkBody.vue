@@ -818,7 +818,7 @@ const addEmptyEventForGroup = (group) => {
         index: events.value.length + 1,
         status: baseEvent?.status || props.eventStatuses?.find(s => s.default) || null,
         type: baseEvent?.type || props.eventTypes?.[0] || null,
-        name: baseEvent?.name ? baseEvent?.name : 'Name',
+        name: baseEvent?.name || '',
         room: baseEvent?.room || props.rooms?.[0] || null,
         day: toISO(newDate),
         end_day: toISO(newDate),

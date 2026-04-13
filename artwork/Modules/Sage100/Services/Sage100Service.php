@@ -102,7 +102,7 @@ class Sage100Service
         foreach ($collectiveBookings as $key => $items) {
             DB::beginTransaction();
             try {
-                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('-', $key);
+                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('|~|', $key);
 
                 $serviceToUse = $this->sageNotAssignedDataService;
 
@@ -126,8 +126,14 @@ class Sage100Service
                     if ($parentBooking) {
                         $serviceToUse = $this->sageNotAssignedDataService;
                     } else {
+                        $projectId = null;
+                        if ($kstTraeger) {
+                            $project = $this->projectService->getProjectByCostCenter($kstTraeger);
+                            $projectId = $project?->id;
+                        }
                         $parentBooking = $this->sageNotAssignedDataService->createFromSageApiData(
                             $items[0],
+                            $projectId,
                         );
                         $parentBooking->is_collective_booking = true;
                     }
@@ -136,6 +142,13 @@ class Sage100Service
                 //cost of parentBooking is the amount of all child bookings
                 $parentBooking->buchungsbetrag = 0;
                 $serviceToUse->deleteChildData($parentBooking);
+
+                // Cross-table children cleanup (findChildren uses __CLASS__, only finds same table)
+                if ($parentBooking instanceof SageNotAssignedData) {
+                    SageAssignedData::where('parent_booking_id', $parentBooking->id)->delete();
+                } elseif ($parentBooking instanceof SageAssignedData) {
+                    SageNotAssignedData::where('parent_booking_id', $parentBooking->id)->forceDelete();
+                }
 
                 foreach ($items as $item) {
                     if (!$booking = $this->importBooking($item, $parentBooking)) {

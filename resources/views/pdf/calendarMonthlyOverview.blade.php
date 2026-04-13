@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
+    @php
+        $scaleFactor = match(strtolower($paperSize ?? 'a3')) {
+            'a3' => 1.0,
+            'a4' => 0.75,
+            'a5' => 0.6,
+            'a6' => 0.5,
+            default => 1.0,
+        };
+        $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
+    @endphp
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,7 +22,7 @@
 
         body {
             font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-            font-size: 7px;
+            font-size: {{ $s(7) }};
             color: #111;
             -webkit-font-smoothing: antialiased;
         }
@@ -50,14 +60,14 @@
         }
 
         .header-title {
-            font-size: 18px;
+            font-size: {{ $s(18) }};
             font-weight: 700;
             color: #000000;
             display: inline;
         }
 
         .header-subtitle {
-            font-size: 11px;
+            font-size: {{ $s(11) }};
             color: #000000;
             display: inline;
             margin-left: 6px;
@@ -110,7 +120,7 @@
             padding: 2px 1px;
             border-bottom: 1.5px solid #404040;
             white-space: nowrap;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
         }
 
         table.monthly thead th.corner {
@@ -122,7 +132,7 @@
 
         table.monthly tbody td.day-label {
             font-weight: 700;
-            font-size: 12px;
+            font-size: {{ $s(12) }};
             white-space: nowrap;
             padding: 1px 3px;
             vertical-align: middle;
@@ -146,7 +156,7 @@
         }
 
         .evt-line1 {
-            font-size: 10px;
+            font-size: {{ $s(10) }};
             font-weight: 800;
             white-space: nowrap;
             overflow: hidden;
@@ -155,7 +165,7 @@
         }
 
         .evt-line2 {
-            font-size: 10px;
+            font-size: {{ $s(10) }};
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;

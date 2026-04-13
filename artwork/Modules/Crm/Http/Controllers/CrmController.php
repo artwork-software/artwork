@@ -23,6 +23,7 @@ class CrmController extends Controller
     public function index(Request $request): Response
     {
         $contactTypes = $this->contactTypeService->getActive();
+        $contactTypes->load('properties');
         $activeTypeSlug = $request->get('type') ?? $contactTypes->first()?->slug;
         $activeType = $activeTypeSlug
             ? $this->contactTypeService->getBySlug($activeTypeSlug) ?? $contactTypes->first()
@@ -68,6 +69,8 @@ class CrmController extends Controller
             'contactTypes' => $contactTypes,
             'activeType' => $activeType,
             'contacts' => $contacts,
+            'canImport' => $isCrmManager,
+            'importResult' => session('importResult'),
         ]);
     }
 

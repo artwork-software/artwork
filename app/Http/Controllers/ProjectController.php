@@ -319,6 +319,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
+            $projectData->updated_at = $project->updated_at;
             $projectData->firstTabId = $firstTabId;
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;

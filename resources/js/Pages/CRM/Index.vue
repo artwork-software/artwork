@@ -40,10 +40,12 @@
                         <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
                     </span>
                     <template v-else>
+                        <!--
                         <Link v-if="canImport" :href="route('crm.import')" class="ui-button flex items-center gap-1.5">
                             <component :is="IconUpload" stroke-width="1" class="size-5" />
                             {{ $t('Import') }}
                         </Link>
+                        -->
                         <button class="ui-button-add" @click="showCreateModal = true">
                             <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                             {{ $t('New contact') }}

@@ -174,8 +174,8 @@
             /* kein page-break – physische Umbrüche steuert .day */
         }
 
-        /* Dompdf: thead/tbody Separation-Bug */
-        table.grid thead{ display: table-row-group; }
+        /* thead auf jeder Seite wiederholen wenn die Tabelle umbricht */
+        table.grid thead{ display: table-header-group; }
         table.grid tr{ page-break-inside: avoid; }
 
         .day{
@@ -189,6 +189,7 @@
             border-bottom: 1px solid var(--lineStrong);
             font-weight: 900;
             font-size: 6.8pt;
+            page-break-after: avoid;
         }
 
         /* Events */
@@ -196,7 +197,6 @@
             padding: 9px 12px 8px 12px; /* +20% */
             background: #fff;
             border-bottom: 1px solid var(--line);
-            page-break-inside: avoid;
         }
         .event-grid{
             display: table;
@@ -215,19 +215,19 @@
         .event-card{
             border: 1px solid rgba(15,23,42,0.18);
             overflow: hidden;
+            page-break-inside: avoid;
         }
         .event-body{ padding: 8px 10px; } /* +20% */
         .event-name{ font-weight: 900; font-size: 6.4pt; margin-bottom: 2px; color: #1e293b; } /* margin leicht mitgezogen */
         .event-time{ font-weight: 900; font-size: 5.8pt; color: #0f172a; }
         .event-desc{ margin-top: 4px; color: var(--muted); font-size: 5.4pt; } /* +20% */
 
-        /* Grid */
+        /* Grid – erlaubt Seitenumbrüche zwischen Zeilen, thead wird wiederholt */
         table.grid{
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
             background: #fff;
-            page-break-inside: avoid;
         }
         table.grid th, table.grid td{
             border: 1px solid var(--line);
@@ -307,7 +307,7 @@
 
         /* Timeline Text */
         .tlBody{ padding: 4px 3px; }
-        .tlMeta{ font-weight: 900; font-size: 5.7pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tlMeta{ font-weight: 900; font-size: 5.7pt; word-wrap:break-word; overflow-wrap:break-word; }
         .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
         /* Empty day compact – eigenes Element, kein .day */
@@ -602,9 +602,13 @@
                         <tr style="height: {{ $h }}px;">
                             {{-- TIME --}}
                             <td>
-                                <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
-                                <div class="timeSub">-</div>
-                                <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
+                                @if(!empty($row['markerLabel']))
+                                    <div class="timeRange">{{ $row['markerLabel'] }}</div>
+                                @else
+                                    <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
+                                    <div class="timeSub">-</div>
+                                    <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
+                                @endif
                             </td>
 
                             {{-- TIMELINE Lanes --}}

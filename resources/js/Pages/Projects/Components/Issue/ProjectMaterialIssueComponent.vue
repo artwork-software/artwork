@@ -14,6 +14,14 @@
                 <p class="text-sm text-zinc-500">{{ $t('Linked material issues for this project.')}}</p>
             </div>
             <div class="flex items-center gap-2">
+                <ToolTipComponent
+                    v-if="can('can view material issue log') || is('artwork admin')"
+                    direction="bottom"
+                    :tooltip-text="$t('Material issue log')"
+                    icon="IconHistory"
+                    icon-size="h-4 w-4"
+                    @click="showLogModal = true"
+                />
                 <button
                     type="button"
                     class="new-button"
@@ -504,6 +512,13 @@
         @closed="showDeleteModal = false"
         @delete="confirmDelete"
     />
+
+    <MaterialIssueLogModal
+        v-if="showLogModal"
+        :projects="logProjects"
+        :initial-project-id="Number(project.id)"
+        @close="showLogModal = false"
+    />
 </template>
 
 <script setup lang="ts">
@@ -515,7 +530,9 @@ import {
     IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {can, is} from "laravel-permission-to-vuejs";
 import { router } from '@inertiajs/vue3';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
@@ -568,6 +585,8 @@ const emit = defineEmits<{
 }>()
 
 const showIssueOfMaterialModal = ref(false)
+const showLogModal = ref(false)
+const logProjects = computed(() => usePage().props.projects ?? [])
 const materialIssueToEdit = ref(null)
 const showDeleteModal = ref(false)
 const issueToDelete = ref<InternalIssue | null>(null)

@@ -133,6 +133,14 @@ class ExternalIssueController extends Controller
             'return_remarks' => $request->input('return_remarks'),
         ]);
 
+        $this->externalIssueService->logActivity($externalIssue, 'returned', 'External issue returned', [
+            'translation_key' => 'External issue returned',
+            'issue_type' => 'external',
+            'issue_name' => $externalIssue->name,
+            'external_name' => $externalIssue->external_name,
+            'return_remarks' => $request->input('return_remarks'),
+        ]);
+
         return redirect()->route('extern-issue-of-material.index');
     }
 

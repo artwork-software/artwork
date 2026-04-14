@@ -246,8 +246,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "MA-Verwaltung",
                 'translation_key' => "Employee management",
                 'group' => 'Employee settings',
-                'tooltipText' => 'Darf MA Seiten anlegen und bearbeiten, aber die User nicht einladen.',
-                'tooltipKey' => "User can create and edit employee pages but cannot invite users.",
+                'tooltipText' => 'Darf MA Seiten bearbeiten, aber die User nicht einladen.',
+                'tooltipKey' => "User can edit employee pages but cannot invite users.",
                 'checked' => false
             ],
             [
@@ -470,6 +470,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Inventory',
                 'tooltipText' => "Erlaubt die Disposition und Verwaltung des Inventars",
                 'tooltipKey' => "Allows disposition and management of inventory",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::MATERIAL_ISSUE_LOG_VIEW->value,
+                'name_de' => "Logbuch Materialausgaben einsehen",
+                'translation_key' => "View material issue log",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Einsehen des Logbuchs aller Materialausgabe-Änderungen",
+                'tooltipKey' => "Allows viewing the log of all material issue changes",
                 'checked' => false
             ],
             [

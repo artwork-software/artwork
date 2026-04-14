@@ -153,8 +153,8 @@
                                 id="articleSearchFilter"
                                 v-model="articleSearchFilter"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                :placeholder="$t('Filter articles by name...')"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
@@ -428,6 +428,11 @@
                         {{ $t('Selected') }}: <span class="font-medium">{{ internMaterialIssue.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ internMaterialIssue.files?.length || 0 }}</span>
                     </div>
                     <FormButton :text="issueOfMaterial?.id ? $t('Aktualisieren') : $t('Speichern')" :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name || isEndDateBeforeStartDate" type="submit" />
+                </div>
+                <div v-if="Object.keys(internMaterialIssue.errors).length > 0" class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                    <p v-for="(error, field) in internMaterialIssue.errors" :key="field" class="text-xs text-red-600">
+                        {{ error }}
+                    </p>
                 </div>
             </div>
         </div>

@@ -242,9 +242,17 @@ class InventoryArticleController extends Controller
         $user = $this->authManager->user();
         $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticlesNew($user);
 
-        // Apply search filter if provided
+        // Apply search filter if provided (search by name, category, or subcategory)
         if (!empty($search)) {
-            $articlesByFilter = $articlesByFilter->where('name', 'like', '%' . $search . '%');
+            $articlesByFilter = $articlesByFilter->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('subCategory', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
+            });
         }
 
         return response()->json([

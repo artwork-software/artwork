@@ -411,6 +411,32 @@ class DailyShiftPlanPdfBuilder
             ];
         }
 
+        // Marker-Blöcke (ab/bis Zeitpunkte) erfassen
+        $markerMinutes = [];
+        $markerByStart = [];
+        foreach ($timelineBlocks as $tb) {
+            if (!empty($tb['isMarker'])) {
+                $markerMinutes[] = (int)$tb['start'];
+                $markerMinutes[] = (int)$tb['end'];
+                $markerByStart[(int)$tb['start']] = $tb['meta']; // z.B. "ab 18:00"
+            }
+        }
+
+        if (!empty($markerMinutes)) {
+            foreach ($rows as &$row) {
+                // Gap-Message unterdrücken wenn Gap direkt an Marker grenzt
+                if ($row['isGap'] && (in_array($row['from'], $markerMinutes, true) || in_array($row['to'], $markerMinutes, true))) {
+                    $row['message'] = null;
+                }
+
+                // Aktive Zeile eines Markers: Zeitanzeige links als "ab/bis" statt "18:00 – 18:01"
+                if (!$row['isGap'] && isset($markerByStart[$row['from']]) && ($row['to'] - $row['from']) === 1) {
+                    $row['markerLabel'] = $markerByStart[$row['from']];
+                }
+            }
+            unset($row);
+        }
+
         $timelineLaneMaps = [];
         for ($lane = 0; $lane < $timelineLanes; $lane++) {
             $laneBlocks = array_values(array_filter(
@@ -544,12 +570,13 @@ class DailyShiftPlanPdfBuilder
                     $end   = $start + 1;
 
                     $blocks[] = [
-                        'start' => $start,
-                        'end'   => $end,
-                        'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
-                        'meta'  => $metaPrefix() . $timeStr,
-                        'color' => '#16a34a',
-                        'bg'    => $this->mixWithWhite('#16a34a', 0.82),
+                        'start'    => $start,
+                        'end'      => $end,
+                        'title'    => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
+                        'meta'     => $metaPrefix() . $timeStr,
+                        'color'    => '#16a34a',
+                        'bg'       => $this->mixWithWhite('#16a34a', 0.82),
+                        'isMarker' => true,
                     ];
 
                     continue;
@@ -564,14 +591,14 @@ class DailyShiftPlanPdfBuilder
                     $end += 1;
 
                     // Anzeige als Marker statt "12:00 – 12:00"
-                    // Zeit nehmen wir aus startStr (weil bei euch bei Punkt-Timelines start==end ist)
                     $blocks[] = [
-                        'start' => $start,
-                        'end'   => $end,
-                        'title' => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
-                        'meta'  => $metaPrefix() . $startStr,
-                        'color' => '#16a34a',
-                        'bg'    => $this->mixWithWhite('#16a34a', 0.82),
+                        'start'    => $start,
+                        'end'      => $end,
+                        'title'    => trim((string)$desc) !== '' ? trim((string)$desc) : 'Timeline',
+                        'meta'     => $metaPrefix() . $startStr,
+                        'color'    => '#16a34a',
+                        'bg'       => $this->mixWithWhite('#16a34a', 0.82),
+                        'isMarker' => true,
                     ];
 
                     continue;

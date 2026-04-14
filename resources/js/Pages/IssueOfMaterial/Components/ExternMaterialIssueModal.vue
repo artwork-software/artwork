@@ -151,8 +151,8 @@
                                 id="articleSearchFilter"
                                 v-model="articleSearchFilter"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                :placeholder="$t('Filter articles by name...')"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
@@ -570,7 +570,7 @@ const conflicts = computed(() => {
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
 
-// Filtered articles based on search input
+// Filtered articles based on search input (name, category, subcategory)
 const filteredArticles = computed(() => {
     if (!articleSearchFilter.value) {
         return articles.value;
@@ -578,7 +578,9 @@ const filteredArticles = computed(() => {
 
     const searchTerm = articleSearchFilter.value.toLowerCase();
     return articles.value.filter(article =>
-        article.name?.toLowerCase().includes(searchTerm)
+        article.name?.toLowerCase().includes(searchTerm) ||
+        article.category?.name?.toLowerCase().includes(searchTerm) ||
+        article.sub_category?.name?.toLowerCase().includes(searchTerm)
     );
 })
 

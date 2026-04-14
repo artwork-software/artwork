@@ -246,8 +246,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "MA-Verwaltung",
                 'translation_key' => "Employee management",
                 'group' => 'Employee settings',
-                'tooltipText' => 'Darf MA Seiten anlegen und bearbeiten, aber die User nicht einladen.',
-                'tooltipKey' => "User can create and edit employee pages but cannot invite users.",
+                'tooltipText' => 'Darf MA Seiten bearbeiten, aber die User nicht einladen.',
+                'tooltipKey' => "User can edit employee pages but cannot invite users.",
                 'checked' => false
             ],
             [

@@ -153,8 +153,8 @@
                                 id="articleSearchFilter"
                                 v-model="articleSearchFilter"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                :placeholder="$t('Filter articles by name...')"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />

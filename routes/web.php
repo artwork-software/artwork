@@ -118,6 +118,7 @@ use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationControl
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSeriesController;
 use Artwork\Modules\IndividualTimes\Http\Controllers\IndividualTimeSubjectsSearchController;
 use Artwork\Modules\InternalIssue\Http\Controllers\InternalIssueController;
+use Artwork\Modules\Inventory\Http\Controllers\MaterialIssueLogController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertiesController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryArticleStatusController;
@@ -2720,6 +2721,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
     Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
+
+    Route::get('/material-issue-log', [MaterialIssueLogController::class, 'index'])
+        ->name('material-issue-log.index');
 
     Route::prefix('material-sets')
         ->as('material-sets.')

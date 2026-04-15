@@ -53,10 +53,10 @@
                             {{ timeline.formatted_dates.end_date }} {{ timeline.end }}
                         </template>
                         <template v-else-if="timeline.start_or_end && timeline.start === timeline.end">
-                            {{ $t('From') }} {{ timeline.start }}
+                            {{ $t('from (time)') }} {{ timeline.start }}
                         </template>
                         <template v-else-if="!timeline.start_or_end && timeline.start === timeline.end">
-                            {{ $t('Until') }} {{ timeline.end }}
+                            {{ $t('until (time)') }} {{ timeline.end }}
                         </template>
                         <template v-else>
                             {{ timeline.start }} - {{ timeline.end }}

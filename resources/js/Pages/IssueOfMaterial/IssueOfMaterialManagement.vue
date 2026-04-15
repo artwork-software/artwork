@@ -9,6 +9,15 @@
                            icon-bg-class="bg-amber-600/10 text-amber-700"
             >
                 <template #actions>
+                    <ToolTipComponent
+                        v-if="can('can view material issue log') || is('artwork admin')"
+                        direction="bottom"
+                        :tooltip-text="$t('Material issue log')"
+                        icon="IconHistory"
+                        icon-size="h-5 w-5"
+                        classes-button="ui-button"
+                        @click="showLogModal = true"
+                    />
                     <button class="ui-button-add" @click="openIssueOfMaterialModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5"/>
                         {{ $t('New issue of material') }}
@@ -556,6 +565,13 @@
             :issue-of-material="issueToEdit"
             @close="closeIssueModal"
         />
+
+        <!-- Log Modal -->
+        <MaterialIssueLogModal
+            v-if="showLogModal"
+            :projects="projects"
+            @close="showLogModal = false"
+        />
     </AppLayout>
 </template>
 
@@ -567,6 +583,8 @@ import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import IssueTabs from "@/Pages/IssueOfMaterial/Components/IssueTabs.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SingleInternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleInternMaterialIssue.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {computed, provide, ref, watch, nextTick, onMounted, onBeforeUnmount} from "vue";
@@ -593,6 +611,7 @@ const users = computed(() => page.props.users ?? []);
 const initial = page.props.urlParameters ?? {};
 
 const showIssueOfMaterialModal = ref(false);
+const showLogModal = ref(false);
 const issueToEdit = ref(null);
 const openIssueOfMaterialModal = () => {
     issueToEdit.value = null;

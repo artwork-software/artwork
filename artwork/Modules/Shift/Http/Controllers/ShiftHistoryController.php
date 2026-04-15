@@ -12,16 +12,9 @@ class ShiftHistoryController
 {
     public function index(Request $request): JsonResponse
     {
-        $craftId = (int) $request->query('craftId');
-        if ($craftId <= 0) {
-            return response()->json([
-                'shifts' => [],
-                'logs'   => [
-                    'data' => [],
-                    'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => 50, 'total' => 0],
-                ],
-            ], 422);
-        }
+        $craftId = $request->query('craftId');
+        // craftId=0 or null means "all crafts"
+        $craftId = $craftId !== null ? (int) $craftId : 0;
 
         // Zeitraum (Default: aktueller Monat)
         $startParam = $request->query('start_date');
@@ -60,7 +53,7 @@ class ShiftHistoryController
                 'project:id,name',
                 'craft:id,name,abbreviation',
             ])
-            ->where('craft_id', $craftId)
+            ->when($craftId > 0, fn ($q) => $q->where('craft_id', $craftId))
             ->startAndEndDateOverlap($startDate->toDateString(), $endDate->toDateString())
             ->orderBy('start_date')
             ->orderBy('start')

@@ -59,6 +59,7 @@ enum PermissionEnum : string
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
+    case MATERIAL_ISSUE_LOG_VIEW = 'can view material issue log';
     case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
 
     case DOCUMENT_REQUEST_CREATE = 'can create document requests';

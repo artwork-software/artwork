@@ -37,7 +37,7 @@
                     <div class="col-span-full">
                         <ArtworkBaseListbox
                             v-model="selectedCraft"
-                            :items="crafts"
+                            :items="craftsWithAll"
                             :disabled="loading"
                             :useTranslations="false"
                             :placeholder="t('Select craft')"
@@ -45,6 +45,16 @@
                             label="Craft"
                             optionLabel="name"
                             optionKey="id"
+                        />
+                    </div>
+
+                    <div class="col-span-full flex items-center gap-1">
+                        <span class="text-xs font-medium text-gray-700">{{ t('Shift start') }}</span>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="t('This period refers to the start of the shifts to be displayed in the history, not when the change was made. Only shift entries of shifts starting in the specified period are shown in the history.')"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
                         />
                     </div>
 
@@ -71,7 +81,7 @@
                     <!-- Actions: vertikal, dadurch nicht gequetscht -->
                     <div class="col-span-full flex gap-4">
                         <BaseUIButton
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                             :icon="loadBtnIcon"
                             @click="fetchHistory(true)"
                             class="w-full justify-center"
@@ -80,7 +90,7 @@
                         </BaseUIButton>
 
                         <BaseUIButton
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                             icon="IconX"
                             @click="resetFilters"
                             class="w-full justify-center"
@@ -102,7 +112,7 @@
                             type="text"
                             label="Search"
                             :placeholder="t('Search in history...')"
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                         />
                     </div>
 
@@ -110,7 +120,7 @@
                         <ArtworkBaseListbox
                             v-model="selectedContext"
                             :items="contextItems"
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                             :useTranslations="true"
                             label="Context"
                             placeholder="All contexts"
@@ -124,7 +134,7 @@
                         <ArtworkBaseListbox
                             v-model="selectedLevel"
                             :items="levelItems"
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                             :useTranslations="true"
                             label="Type"
                             placeholder="All types"
@@ -138,7 +148,7 @@
                         <ArtworkBaseListbox
                             v-model="selectedShift"
                             :items="shiftOptions"
-                            :disabled="loading || !craftId"
+                            :disabled="loading"
                             :useTranslations="false"
                             :placeholder="t('All shifts')"
                             :emptyText="t('No shifts in selected range')"
@@ -155,11 +165,7 @@
             </div>
 
             <!-- Empty states -->
-            <div v-if="!craftId" class="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
-                {{ t('Select a craft to load shift history.') }}
-            </div>
-
-            <div v-else-if="!filteredLogs.length && !loading" class="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
+            <div v-if="!filteredLogs.length && !loading" class="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
                 <div class="font-medium text-gray-900">{{ t('No history entries available for this selection yet.') }}</div>
                 <div class="mt-1 text-gray-600">{{ t('Try adjusting filters or expanding the date range.') }}</div>
             </div>
@@ -240,7 +246,7 @@
                     </div>
 
                     <!-- Load more -->
-                    <div v-if="craftId && meta.current_page < meta.last_page" class="pt-2">
+                    <div v-if="meta.current_page < meta.last_page" class="pt-2">
                         <BaseUIButton
                             :disabled="loading"
                             :icon="loading ? 'IconLoader2' : 'IconChevronDown'"
@@ -260,6 +266,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
+import { usePage } from '@inertiajs/vue3'
 
 import { useShiftPlanRequest } from '../../ShiftPlanRequests/components/useShiftPlanRequest.js'
 
@@ -269,6 +276,7 @@ import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 type ShiftActivityProperties = {
     translation_key?: string | null
@@ -338,11 +346,16 @@ const defaultEndOfMonth = () => {
     return toYmd(new Date(n.getFullYear(), n.getMonth() + 1, 0))
 }
 
-// Selection
+// "Alle Gewerke" option + Selection
+const allCraftsOption: CraftLite = { id: 0, name: t('All crafts') }
+const craftsWithAll = computed(() => [allCraftsOption, ...props.crafts])
+
 const selectedCraft = ref<CraftLite | null>(
-    props.initialCraftId ? (props.crafts.find(c => c.id === props.initialCraftId) ?? null) : null
+    props.initialCraftId
+        ? (props.crafts.find(c => c.id === props.initialCraftId) ?? allCraftsOption)
+        : allCraftsOption
 )
-const craftId = computed(() => selectedCraft.value?.id ?? null)
+const craftId = computed(() => selectedCraft.value?.id ?? 0)
 
 const startDate = ref<string>(props.initialStartDate ?? defaultStartOfMonth())
 const endDate   = ref<string>(props.initialEndDate ?? defaultEndOfMonth())
@@ -358,8 +371,12 @@ const meta = ref({ current_page: 1, last_page: 1, per_page: 50, total: 0 })
 // Button icons (safe: IconLoader2 & IconRefresh exist bei dir)
 const loadBtnIcon = computed(() => (loading.value ? 'IconLoader2' : 'IconRefresh'))
 
+// Pre-fill search with current user's name
+const page = usePage()
+const currentUserName = (page.props as any).auth?.user?.full_name ?? ''
+
 // Filters
-const search = ref('')
+const search = ref(currentUserName)
 const selectedContext = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All contexts' })
 const selectedLevel   = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All types' })
 const selectedShift   = ref<ShiftLite | null>(null)
@@ -403,7 +420,7 @@ const shiftLabelById = (id: number) => {
 }
 
 const resetFilters = () => {
-    search.value = ''
+    search.value = currentUserName
     selectedContext.value = { id: 'all', name: 'All contexts' }
     selectedLevel.value   = { id: 'all', name: 'All types' }
     selectedShift.value   = null
@@ -411,8 +428,6 @@ const resetFilters = () => {
 
 // Fetch
 const fetchHistory = async (reset: boolean) => {
-    if (!craftId.value) return
-
     loading.value = true
     error.value = null
 
@@ -446,13 +461,12 @@ const fetchHistory = async (reset: boolean) => {
 // Auto-refresh (debounced)
 let timer: number | null = null
 watch([craftId, startDate, endDate], () => {
-    if (!craftId.value) return
     if (timer) window.clearTimeout(timer)
     timer = window.setTimeout(() => fetchHistory(true), 250)
 })
 
 onMounted(() => {
-    if (craftId.value) fetchHistory(true)
+    fetchHistory(true)
 })
 
 // Normalized logs

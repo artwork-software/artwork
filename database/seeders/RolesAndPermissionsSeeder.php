@@ -24,7 +24,10 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         foreach ($dataprovider->getPermissions() as $permissionData) {
-            Permission::firstOrCreate($permissionData);
+            Permission::firstOrCreate(
+                ['name' => $permissionData['name']],
+                $permissionData
+            );
         }
     }
 }

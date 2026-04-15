@@ -1,6 +1,6 @@
 <template>
     <ArtworkBaseModal
-        @close="$emit('close')"
+        @close="handleClose"
         modal-size="max-w-7xl"
         :title="issueOfMaterial?.id ?  $t('Edit issue of material') : $t('New issue of material')"
         :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
@@ -40,6 +40,32 @@
             </div>
         </div>
 
+    </ArtworkBaseModal>
+
+    <!-- Bestätigungsdialog beim Schließen -->
+    <ArtworkBaseModal
+        v-if="showDiscardConfirmation"
+        @close="showDiscardConfirmation = false"
+        modal-size="sm:max-w-md"
+        :title="$t('Discard data')"
+        :description="$t('Should the entered data be discarded?')"
+    >
+        <div class="flex justify-end gap-3 mt-4">
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition"
+                @click="showDiscardConfirmation = false"
+            >
+                {{ $t('No, continue editing') }}
+            </button>
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                @click="confirmDiscard"
+            >
+                {{ $t('Discard') }}
+            </button>
+        </div>
     </ArtworkBaseModal>
 </template>
 <script setup>
@@ -125,6 +151,20 @@ const props = defineProps({
 
 
 const internOrExternal = ref(props.isExternOrIntern)
+const showDiscardConfirmation = ref(false)
+
+const handleClose = () => {
+    if (!checkIfEditMode.value) {
+        showDiscardConfirmation.value = true
+        return
+    }
+    emit('close')
+}
+
+const confirmDiscard = () => {
+    showDiscardConfirmation.value = false
+    emit('close')
+}
 
 const CreateInternMaterialIssueModul = defineAsyncComponent({
     loader: () => import('@/Pages/IssueOfMaterial/Components/CreateInternMaterialIssueModul.vue'),

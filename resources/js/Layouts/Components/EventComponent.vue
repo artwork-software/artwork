@@ -3,7 +3,7 @@
         :title="modalTitle"
         :description="modalDescription"
         modal-size="max-w-4xl"
-        @close="closeModal"
+        @close="handleCloseAttempt"
     >
         <div class="space-y-4">
 
@@ -535,6 +535,32 @@
             @single="singleSaveEvent"
         />
     </ArtworkBaseModal>
+
+    <!-- Bestätigungsdialog beim Schließen -->
+    <ArtworkBaseModal
+        v-if="showDiscardConfirmation"
+        @close="showDiscardConfirmation = false"
+        modal-size="sm:max-w-md"
+        :title="$t('Discard data')"
+        :description="$t('Should the entered data be discarded?')"
+    >
+        <div class="flex justify-end gap-3 mt-4">
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition"
+                @click="showDiscardConfirmation = false"
+            >
+                {{ $t('No, continue editing') }}
+            </button>
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                @click="confirmDiscard"
+            >
+                {{ $t('Discard') }}
+            </button>
+        </div>
+    </ArtworkBaseModal>
 </template>
 
 
@@ -891,6 +917,22 @@ function closeModal(closedOnPurpose = false) {
     ;(event_properties ?? []).forEach(p => (p.checked = false))
     initialRoomId.value = null
 }
+
+const showDiscardConfirmation = ref(false)
+
+function handleCloseAttempt() {
+    if (!props.event?.id) {
+        showDiscardConfirmation.value = true
+        return
+    }
+    closeModal()
+}
+
+function confirmDiscard() {
+    showDiscardConfirmation.value = false
+    closeModal()
+}
+
 function formatDate(date, time, toUTC = true) {
     // fehlende Werte abfangen
     if (!date || !time) return null

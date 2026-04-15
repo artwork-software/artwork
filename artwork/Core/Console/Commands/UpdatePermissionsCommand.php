@@ -155,6 +155,15 @@ class UpdatePermissionsCommand extends Command
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::MATERIAL_ISSUE_LOG_VIEW->value,
+                'name_de' => "Logbuch Materialausgaben einsehen",
+                'translation_key' => "View material issue log",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Einsehen des Logbuchs aller Materialausgabe-Änderungen",
+                'tooltipKey' => "Allows viewing the log of all material issue changes",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value,
                 'name_de' => "Schichteinstellungen einsehen und bearbeiten",
                 'translation_key' => "View and edit shift settings",

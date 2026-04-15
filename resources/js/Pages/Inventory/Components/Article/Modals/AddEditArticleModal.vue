@@ -646,7 +646,7 @@
                                             <select class="focus:outline-hidden w-full"
                                                     v-model="bulkEdit.status">
                                                 <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="status in statuses" :value="status" :key="status.id">
+                                                <option v-for="status in statusList" :value="status" :key="status.id">
                                                     {{ status.name }}
                                                 </option>
                                             </select>
@@ -777,7 +777,7 @@
                                                         name="comments"
                                                         type="checkbox"
                                                         :checked="isSelected(item)"
-                                                        @change.stop="toggleSelection(item, $event.target.checked)"
+                                                        @click.stop="toggleSelection(item, null, $event)"
                                                         class="aw-checklist-input" />
                                                     <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -892,7 +892,7 @@
                                     <select id="location" name="location" class=" focus:outline-hidden"
                                             v-model="activeDetailedArticleForEditing.status" required>
                                         <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
-                                        <option v-for="status in statuses" :value="status" :key="status.id">
+                                        <option v-for="status in statusList" :value="status" :key="status.id">
                                             {{ status.name }}
                                         </option>
                                     </select>
@@ -1115,7 +1115,8 @@ const ensureKeys = (arr = []) => {
     for (const a of arr) if (a && a._key == null) a._key = uid()
 }
 const getIsDeletable = id => properties?.find(p => p.id === id)?.is_deletable ?? false
-const defaultStatus = () => statuses.find(s => s.default) ?? (statuses.length > 0 ? statuses[2] : null)
+const statusList = Array.isArray(statuses) ? statuses : Object.values(statuses ?? {})
+const defaultStatus = () => statusList.find(s => s.default) ?? statusList[0] ?? null
 
 const getValue = (prop) => {
     if (prop.type === 'selection' && (prop.value === '' || prop.value == null)) return ''
@@ -1136,7 +1137,7 @@ const articleForm = useForm({
     inventory_category_id: props.article?.inventory_category_id ?? null,
     inventory_sub_category_id: props.article?.inventory_sub_category_id ?? null,
     quantity: props.article?.quantity ?? 0,
-    statusValues: statuses.map(s => ({
+    statusValues: statusList.map(s => ({
         id: s.id,
         name: s.name,
         value: props.article ? props.article.status_values.find(v => v.id === s.id)?.pivot?.value ?? 0 : 0
@@ -1174,7 +1175,7 @@ const articleForm = useForm({
             across_articles: !!p.across_articles,
             individual_value: !!p.individual_value,
         })) ?? [],
-        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
     })) ?? []) : [],
     main_image_index: 0,
 })
@@ -1678,7 +1679,7 @@ onMounted(() => {
                         description: da.description,
                         quantity: da.quantity,
                         properties: [...existingDaProps, ...newCatProps],
-                        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+                        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
                     }
                 })
             }
@@ -1784,13 +1785,35 @@ const selectedBulkProp = computed(() =>
   bulkEditableProperties.value.find(p => p.id === bulkEdit.value.propertyId) || null
 )
 
-const toggleSelection = (it, checked = null) => {
+const lastClickedIndex = ref(null)
+
+const toggleSelection = (it, checked = null, event = null) => {
   const k = itemKey(it)
   if (k == null) return
+
+  const list = filteredDetailedArticles.value
+  const currentIndex = list.indexOf(it)
+
+  // Shift-Click: Bereich zwischen letztem Klick und aktuellem auswählen/abwählen
+  if (event?.shiftKey && lastClickedIndex.value != null && currentIndex !== -1 && currentIndex !== lastClickedIndex.value) {
+    const from = Math.min(lastClickedIndex.value, currentIndex)
+    const to = Math.max(lastClickedIndex.value, currentIndex)
+    const selecting = !selectedDetailedKeys.value.has(k)
+    const next = new Set(selectedDetailedKeys.value)
+    for (let i = from; i <= to; i++) {
+      const rangeKey = itemKey(list[i])
+      if (rangeKey != null) { selecting ? next.add(rangeKey) : next.delete(rangeKey) }
+    }
+    selectedDetailedKeys.value = next
+    lastClickedIndex.value = currentIndex
+    return
+  }
+
   const next = new Set(selectedDetailedKeys.value)
   const shouldSelect = checked == null ? !next.has(k) : !!checked
   if (shouldSelect) next.add(k); else next.delete(k)
   selectedDetailedKeys.value = next
+  lastClickedIndex.value = currentIndex !== -1 ? currentIndex : null
 }
 
 const toggleSelectAllVisible = (checked) => {

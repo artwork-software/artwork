@@ -3,7 +3,7 @@
         <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2 flex items-center gap-1.5">
             {{ $t('Budget deadline') }}
             <ToolTipComponent
-                :tooltip-text="$t('This date is currently only relevant for the budget deadline export in the project overview, to determine the point in time for which the budget is relevant.')"
+                :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
                 direction="right"
                 icon="IconInfoCircle"
                 icon-size="h-3.5 w-3.5"

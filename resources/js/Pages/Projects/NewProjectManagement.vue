@@ -285,11 +285,7 @@
         <export-modal
             v-if="showExportModal"
             @close="showExportModal = false"
-            :enums="[
-                exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-              ]"
+            :enums="exportTabs"
             :configuration="getExportModalConfiguration()"
         />
     </AppLayout>
@@ -537,6 +533,17 @@ const reloadProjectsDebounced = debounce(reloadProjects, 800);
 watch(project_search, () => reloadProjectsDebounced());
 
 // Export-Konfig
+const exportTabs = computed(() => {
+    const tabs = [
+        exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+        exportTabEnums.EXCEL_CALENDAR_EXPORT,
+    ];
+    if (props.createSettings.budget_deadline) {
+        tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
+    }
+    return tabs;
+});
+
 const getExportModalConfiguration = () => ({
     [exportTabEnums.EXCEL_EVENT_LIST_EXPORT]: { show_artists: props.createSettings.show_artists },
 });

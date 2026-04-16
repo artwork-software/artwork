@@ -153,6 +153,13 @@
                             no-margin-top
                         />
                     </div>
+
+                    <BaseCheckbox
+                        id="for_holiday"
+                        v-model="processForm.for_holiday"
+                        :label="$t('Compensation day for public holiday')"
+                        :description="$t('If activated, the compensation day reduces the daily target hours')"
+                    />
                 </div>
             </template>
 
@@ -225,6 +232,7 @@ import { useI18n } from 'vue-i18n';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 
 const { t } = useI18n();
@@ -243,18 +251,24 @@ const ignoreError = ref(false);
 const ignoring = ref(false);
 
 function getDefaultDeadline() {
-    if (props.compensationPeriod > 0 && props.violation.violation_date) {
+    const days = props.violation.shift_rule?.default_compensation_deadline_days
+        || props.compensationPeriod
+        || 0;
+    if (days > 0 && props.violation.violation_date) {
         const d = new Date(props.violation.violation_date);
-        d.setDate(d.getDate() + props.compensationPeriod);
+        d.setDate(d.getDate() + days);
         return d.toISOString().split('T')[0];
     }
     return '';
 }
 
 const processForm = useForm({
-    compensation_days: props.violation.compensation_days || 0.5,
+    compensation_days: props.violation.compensation_days
+        || props.violation.shift_rule?.default_compensation_days
+        || 0.5,
     compensation_deadline: props.violation.compensation_deadline || getDefaultDeadline(),
     compensation_reason: props.violation.compensation_reason || '',
+    for_holiday: false,
 });
 
 function formatDate(date) {

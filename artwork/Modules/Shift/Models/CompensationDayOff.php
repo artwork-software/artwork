@@ -19,7 +19,7 @@ class CompensationDayOff extends Model
     {
         return LogOptions::defaults()
             ->useLogName('compensation_day_off')
-            ->logOnly(['user_id', 'violation_id', 'value', 'deadline', 'granted_date', 'granted_by', 'granted_at', 'reason'])
+            ->logOnly(['user_id', 'violation_id', 'value', 'deadline', 'granted_date', 'granted_by', 'granted_at', 'reason', 'for_holiday'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -33,6 +33,7 @@ class CompensationDayOff extends Model
         'granted_by',
         'granted_at',
         'reason',
+        'for_holiday',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class CompensationDayOff extends Model
         'deadline' => 'date',
         'granted_date' => 'date',
         'granted_at' => 'datetime',
+        'for_holiday' => 'boolean',
     ];
 
     public function user(): BelongsTo

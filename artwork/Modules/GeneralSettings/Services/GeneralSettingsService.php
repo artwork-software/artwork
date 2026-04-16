@@ -108,4 +108,11 @@ class GeneralSettingsService
         $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');
         $this->generalSettings->save();
     }
+
+    public function updateInventoryDetailedArticlesAlwaysQuantityOne(Request $request): void
+    {
+        $this->generalSettings->inventory_detailed_articles_always_quantity_one =
+            (bool) $request->get('enabled');
+        $this->generalSettings->save();
+    }
 }

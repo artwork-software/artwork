@@ -94,14 +94,14 @@
 
                     <div class="ui-grid-2 mt-2">
                         <div class="flex gap-2 items-end">
-                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="checkChanges" class="ui-input" />
+                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="() => { shiftEndByStartDelta('date'); checkChanges() }" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"
                                 id="startTime"
                                 v-model="startTime"
                                 :label="$t('Start time')"
-                                @change="() => { endAutoFilled = !endTime; checkChanges() }"
+                                @change="() => { shiftEndByStartDelta('time'); endAutoFilled = !endTime; checkChanges() }"
                                 class="ui-input"
                             />
                         </div>
@@ -1008,6 +1008,38 @@ function applyQuickDuration(minutes) {
 
     validateStartBeforeEndTime()
     checkCollisions()
+}
+
+function shiftEndByStartDelta(type) {
+    // Nur bei bestehenden Terminen (oldStart-Werte vorhanden)
+    if (!oldStartDate.value || !endDate.value) return
+
+    if (type === 'date') {
+        const oldStart = dayjs(oldStartDate.value)
+        const newStart = dayjs(startDate.value)
+        if (!oldStart.isValid() || !newStart.isValid()) return
+
+        const diffDays = newStart.diff(oldStart, 'day')
+        if (diffDays === 0) return
+
+        endDate.value = dayjs(endDate.value).add(diffDays, 'day').format('YYYY-MM-DD')
+        oldStartDate.value = startDate.value
+    } else if (type === 'time') {
+        if (!oldStartTime.value || !startTime.value || !endTime.value || !endDate.value) return
+
+        const oldDT = dayjs(`${oldStartDate.value}T${oldStartTime.value}`)
+        const newDT = dayjs(`${startDate.value}T${startTime.value}`)
+        if (!oldDT.isValid() || !newDT.isValid()) return
+
+        const diffMinutes = newDT.diff(oldDT, 'minute')
+        if (diffMinutes === 0) return
+
+        const newEnd = dayjs(`${endDate.value}T${endTime.value}`).add(diffMinutes, 'minute')
+        endDate.value = newEnd.format('YYYY-MM-DD')
+        endTime.value = newEnd.format('HH:mm')
+        oldStartTime.value = startTime.value
+        oldStartDate.value = startDate.value
+    }
 }
 
 function updateTimes() {

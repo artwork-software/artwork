@@ -96,7 +96,8 @@ class CompensationDayOffRepository extends BaseRepository
         int $violationId,
         float $totalDays,
         string $deadline,
-        ?string $reason
+        ?string $reason,
+        bool $forHoliday = false
     ): void {
         $records = [];
 
@@ -115,6 +116,7 @@ class CompensationDayOffRepository extends BaseRepository
                 'value' => $value,
                 'deadline' => $deadline,
                 'reason' => $reason,
+                'for_holiday' => $forHoliday,
             ]);
         }
     }

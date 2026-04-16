@@ -51,6 +51,12 @@
                             />
                         </div>
                     </div>
+                    <BaseCheckbox
+                        id="new_comp_for_holiday"
+                        v-model="newCompDay.for_holiday"
+                        :label="$t('Compensation day for public holiday')"
+                        :description="$t('If activated, the compensation day reduces the daily target hours')"
+                    />
                     <div class="flex items-center gap-2">
                         <BaseUIButton
                             :label="$t('Save')"
@@ -72,6 +78,7 @@
                         <thead class="bg-zinc-50">
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Deadline') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Reason') }}</th>
@@ -92,6 +99,15 @@
                                     >
                                         {{ dayOff.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                                     </span>
+                                </td>
+                                <td class="px-3 py-2.5">
+                                    <span
+                                        v-if="dayOff.for_holiday"
+                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700"
+                                    >
+                                        {{ $t('Public holiday') }}
+                                    </span>
+                                    <span v-else class="text-zinc-400">-</span>
                                 </td>
                                 <td class="px-3 py-2.5" :class="isOverdue(dayOff) ? 'text-red-600 font-medium' : 'text-zinc-700'">
                                     {{ formatDate(dayOff.deadline) }}
@@ -150,6 +166,7 @@
                         <thead class="bg-zinc-50">
                             <tr>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted on') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted by') }}</th>
                                 <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
@@ -170,6 +187,15 @@
                                     >
                                         {{ dayOff.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                                     </span>
+                                </td>
+                                <td class="px-3 py-2.5">
+                                    <span
+                                        v-if="dayOff.for_holiday"
+                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700"
+                                    >
+                                        {{ $t('Public holiday') }}
+                                    </span>
+                                    <span v-else class="text-zinc-400">-</span>
                                 </td>
                                 <td class="px-3 py-2.5 text-zinc-700">{{ formatDate(dayOff.granted_date) }}</td>
                                 <td class="px-3 py-2.5 text-zinc-600">
@@ -305,6 +331,7 @@ import { router } from '@inertiajs/vue3';
 import UserEditHeader from '@/Pages/Users/Components/UserEditHeader.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import DeleteCompensationDayModal from '@/Pages/Shifts/Components/DeleteCompensationDayModal.vue';
@@ -328,6 +355,7 @@ const newCompDay = ref({
     value: '1.0',
     deadline: '',
     reason: '',
+    for_holiday: false,
 });
 
 function formatDate(date) {
@@ -384,11 +412,12 @@ function createManualCompensationDay() {
         value: newCompDay.value.value,
         deadline: newCompDay.value.deadline,
         reason: newCompDay.value.reason,
+        for_holiday: newCompDay.value.for_holiday,
     }, {
         preserveScroll: true,
         onSuccess: () => {
             showCreateForm.value = false;
-            newCompDay.value = { value: '1.0', deadline: '', reason: '' };
+            newCompDay.value = { value: '1.0', deadline: '', reason: '', for_holiday: false };
             router.reload();
         },
     });

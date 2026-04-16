@@ -188,6 +188,13 @@
                             :maxlength="1000000"
                             required
                         />
+                        <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
+                            <span class="text-xs text-red-500 font-lexend">{{ $t('Sum of detailed articles') }}: </span>
+                            <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
+                                {{ formatQuantity(calculateTotalQuantity) }}
+                                <component :is="IconClick" class="size-3.5" />
+                            </button>
+                        </div>
                     </div>
                     <div class="col-span-3">
                         <div class="mb-4">
@@ -766,7 +773,11 @@
                             <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
                                     <!-- NEU: Checkbox + Button nebeneinander -->
-                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2" :class="isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900'">
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2"
+                                         :class="[
+                                             isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900',
+                                             isDetailedArticleIncomplete(item) ? 'border-l-2 border-red-500 bg-red-50' : ''
+                                         ]">
 
                                         <div class="flex gap-1.5">
                                             <div class="flex h-6 shrink-0 items-center">
@@ -997,13 +1008,19 @@
                 </div>
 
             </div>
-            <div class="flex items-center justify-center my-10">
-                <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
-                            :processing="articleForm.processing"
-                            :disabled="!checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
-                            (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
-                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
-                />
+            <div class="flex flex-col items-center justify-center my-10 gap-y-3">
+                <div class="relative" @click="onDisabledButtonClick">
+                    <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
+                                :processing="articleForm.processing"
+                                :disabled="isButtonDisabled"
+                    />
+                    <div v-if="isButtonDisabled" class="absolute inset-0 cursor-pointer" />
+                </div>
+                <div v-if="showValidationHints && isButtonDisabled && articleForm.is_detailed_quantity && validationErrors.length" class="flex flex-col items-center gap-y-1">
+                    <p v-for="(error, idx) in validationErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                        {{ error }}
+                    </p>
+                </div>
             </div>
         </form>
 
@@ -1096,6 +1113,7 @@ const currentPageLanguage = ref(document.documentElement.lang || 'en')
 const activeId = ref(null)
 const activeKey = ref(null)
 const storedDetailedArticleQuantities = ref([])
+const showValidationHints = ref(false)
 /* Neu: zentrale Werte für artikelübergreifende Eigenschaften */
 
 
@@ -1334,6 +1352,40 @@ const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     const checkList = (propsArr) => propsArr?.every(p => !p.is_required || getValue(p))
     if (articleForm.is_detailed_quantity) return articleForm.detailed_article_quantities?.every(da => da.status && checkList(da.properties))
     return checkList(articleForm.properties)
+})
+
+const isDetailedArticleIncomplete = (da) => {
+    if (!da) return false
+    if (!da.status) return true
+    return da.properties?.some(p => p.is_required && !getValue(p)) ?? false
+}
+
+const isButtonDisabled = computed(() => {
+    return !checkIfEveryPropertyWhereAreRequiredIsFilled.value || !selectedCategory.value ||
+        (articleForm.is_detailed_quantity && (calculateTotalQuantity.value !== articleForm.quantity)) ||
+        (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle.value !== articleForm.quantity)) || !canSaveWithTags.value
+})
+
+const validationErrors = computed(() => {
+    if (!articleForm.is_detailed_quantity) return []
+    const errors = []
+    if (calculateTotalQuantity.value !== articleForm.quantity) {
+        errors.push($t('The specified total quantity does not match the specified individual quantities'))
+    }
+    if (!checkIfEveryPropertyWhereAreRequiredIsFilled.value) {
+        errors.push($t('A required field is missing'))
+    }
+    return errors
+})
+
+const onDisabledButtonClick = () => {
+    if (isButtonDisabled.value) {
+        showValidationHints.value = true
+    }
+}
+
+watch(isButtonDisabled, (disabled) => {
+    if (!disabled) showValidationHints.value = false
 })
 
 const formatQuantity = (q) => q?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, '.')

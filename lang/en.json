@@ -4333,5 +4333,8 @@
     "External name": "External name",
     "Return remarks": "Return remarks",
     "Detailed articles always with quantity 1": "Detailed articles always with quantity 1",
-    "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.": "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique."
+    "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.": "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.",
+    "The specified total quantity does not match the specified individual quantities": "The specified total quantity does not match the specified individual quantities",
+    "A required field is missing": "A required field is missing",
+    "Sum of detailed articles": "Sum of detailed articles"
 }

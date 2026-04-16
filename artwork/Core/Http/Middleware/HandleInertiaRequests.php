@@ -160,6 +160,7 @@ class HandleInertiaRequests extends Middleware
                 'letterheadCity' => $generalSettings->letterhead_city,
                 'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
+                'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
                 'permissionsArray' => $permissionsArray,

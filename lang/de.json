@@ -4368,5 +4368,7 @@
     "Issue date": "Ausgabedatum",
     "Return date": "Rückgabedatum",
     "External name": "Externer Name",
-    "Return remarks": "Rückgabebemerkungen"
+    "Return remarks": "Rückgabebemerkungen",
+    "Detailed articles always with quantity 1": "Detaillierte Artikel immer mit Menge 1",
+    "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.": "Wenn diese Einstellung aktiv ist entfällt bei den detaillierten Artikeln von Inventar-Artikeln, die als 'einzelbestandsfähig' markiert sind, das Feld für die Menge. Somit hat jeder Detailartikel die Menge 1 und die Menge kann nicht angepasst werden. Dies ist dann sinnvoll, wenn die Eigenschaft 'einzelbestandsfähig' für Artikel immer dann genutzt wird, wenn die einzelnen Artikel unique sind und es diese nicht mehrfach geben kann."
 }

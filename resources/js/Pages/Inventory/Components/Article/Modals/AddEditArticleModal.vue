@@ -653,7 +653,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-span-full">
+                                    <div v-if="!detailedAlwaysOne" class="col-span-full">
                                         <BaseInput
                                             type="number"
                                             id="bulk_quantity"
@@ -871,7 +871,7 @@
                                 />
                             </div>
 
-                            <div class="col-span-full">
+                            <div v-if="!detailedAlwaysOne" class="col-span-full">
                                 <BaseInput
                                     type="number"
                                     :id="'quantity-' + activeDetailedArticleForEditing.name"
@@ -1067,6 +1067,7 @@ import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation()
 const acrossValues = ref({})
+const detailedAlwaysOne = computed(() => usePage().props.inventoryDetailedArticlesAlwaysQuantityOne ?? false)
 const props = defineProps({article: {type: Object, required: false, default: null}})
 
 const properties = inject('properties')
@@ -1384,7 +1385,7 @@ const addNewDetailedArticle = () => {
         _key: uid(),
         name: currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article',
         description: '',
-        quantity: 0,
+        quantity: detailedAlwaysOne.value ? 1 : 0,
         properties: baseProps,
         status: defaultStatus()
     }
@@ -1428,7 +1429,7 @@ const copyDetailedArticle = (d) => {
         _key: uid(),
         name: d.name + ' (Copy)',
         description: d.description,
-        quantity: d.quantity ?? 0,
+        quantity: detailedAlwaysOne.value ? 1 : (d.quantity ?? 0),
         properties: copiedProps,
         status: d.status
     }
@@ -1567,7 +1568,7 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
             articleForm.detailed_article_quantities = [{
                 name: articleForm.name || (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article'),
                 description: articleForm.description,
-                quantity: '',
+                quantity: detailedAlwaysOne.value ? 1 : '',
                 properties: baseProps,
                 status: defaultStatus()
             }]

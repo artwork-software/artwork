@@ -235,7 +235,7 @@ const selectedContract = computed(() => {
 
 
 const submit = () => {
-    userContractForm.patch(route('user-contract-settings.update-user', usePage().props.auth.user), {
+    userContractForm.patch(route('user-contract-settings.update-user', props.userToEdit), {
         onSuccess: () => {
             showVisualFeedback.value = true;
             setTimeout(() => {

@@ -19,7 +19,7 @@ class MinDaysBeforeCommitCheck extends AbstractRuleCheck
         // Get non-committed shifts assigned to this user within the rule's time frame
         $shifts = Shift::where('is_committed', false)
             ->whereBetween('start_date', [$today, $futureDate])
-            ->whereHas('users', fn ($q) => $q->where('user_id', $user->id))
+            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
             ->get();
 
         foreach ($shifts as $shift) {

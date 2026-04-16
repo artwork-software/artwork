@@ -4336,5 +4336,12 @@
     "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.": "If this setting is active, the quantity field for detailed articles of items marked as 'single inventory capable' is hidden. Each detailed article then always has a quantity of 1 and the quantity cannot be adjusted. This is useful when the 'single inventory capable' property is always used for items that are unique.",
     "The specified total quantity does not match the specified individual quantities": "The specified total quantity does not match the specified individual quantities",
     "A required field is missing": "A required field is missing",
-    "Sum of detailed articles": "Sum of detailed articles"
+    "Sum of detailed articles": "Sum of detailed articles",
+    "Compensation day for public holiday": "Compensation day for public holiday",
+    "If activated, the compensation day reduces the daily target hours": "If activated, the compensation day reduces the daily target hours",
+    "Public holiday": "Public holiday",
+    "Default substitute days off": "Default substitute days off",
+    "Default number of substitute days off when a violation occurs": "Default number of substitute days off when a violation occurs",
+    "Default compensation deadline (days)": "Default compensation deadline (days)",
+    "Number of days after violation date by which the compensation day must be granted": "Number of days after violation date by which the compensation day must be granted"
 }

@@ -93,6 +93,8 @@ class ShiftRuleController extends Controller
                 'trigger_type' => $validated['trigger_type'],
                 'individual_number_value' => $validated['individual_number_value'],
                 'warning_color' => $validated['warning_color'],
+                'default_compensation_days' => $validated['default_compensation_days'] ?? null,
+                'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
                 'is_active' => true,
             ],
             $validated['contract_ids'] ?? null,
@@ -115,6 +117,8 @@ class ShiftRuleController extends Controller
                 'description' => $validated['description'] ?? '',
                 'individual_number_value' => $validated['individual_number_value'],
                 'warning_color' => $validated['warning_color'],
+                'default_compensation_days' => $validated['default_compensation_days'] ?? null,
+                'default_compensation_deadline_days' => $validated['default_compensation_deadline_days'] ?? null,
             ],
             $validated['contract_ids'] ?? null,
             $validated['user_ids'] ?? null
@@ -301,6 +305,7 @@ class ShiftRuleController extends Controller
             'compensation_days' => $validated['compensation_days'],
             'compensation_deadline' => $validated['compensation_deadline'],
             'compensation_reason' => $validated['compensation_reason'] ?? null,
+            'for_holiday' => $validated['for_holiday'] ?? false,
         ], auth()->id());
 
         return redirect()->back()->with('flash', [
@@ -539,6 +544,7 @@ class ShiftRuleController extends Controller
             'value' => 'required|in:0.5,1.0',
             'deadline' => 'required|date',
             'reason' => 'nullable|string|max:500',
+            'for_holiday' => 'sometimes|boolean',
         ]);
 
         CompensationDayOff::create([
@@ -547,6 +553,7 @@ class ShiftRuleController extends Controller
             'value' => $validated['value'],
             'deadline' => $validated['deadline'],
             'reason' => $validated['reason'] ?? null,
+            'for_holiday' => $validated['for_holiday'] ?? false,
         ]);
 
         return redirect()->back()->with('flash', [

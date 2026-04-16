@@ -89,6 +89,11 @@
                             />
                         </div>
 
+                        <div v-if="editingRule" class="mb-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('Rule type') }}</label>
+                            <p class="text-sm text-gray-900">{{ formatTriggerType(form.trigger_type) }}</p>
+                        </div>
+
                         <div v-if="!editingRule" class="relative">
                             <Listbox as="div" class="flex relative" v-model="form.trigger_type" id="eventType">
                                 <ListboxButton v-if="form.trigger_type !== ''" class="menu-button">
@@ -136,6 +141,30 @@
                                 type="number"
                                 id="individual_number_value"
                             />
+                        </div>
+
+                        <div>
+                            <BaseInput
+                                v-model.number="form.default_compensation_days"
+                                :label="$t('Default substitute days off')"
+                                type="number"
+                                id="default_compensation_days"
+                                :min="0.5"
+                                :step="0.5"
+                            />
+                            <p class="mt-1 text-xs text-gray-500">{{ $t('Default number of substitute days off when a violation occurs') }}</p>
+                        </div>
+
+                        <div>
+                            <BaseInput
+                                v-model.number="form.default_compensation_deadline_days"
+                                :label="$t('Default compensation deadline (days)')"
+                                type="number"
+                                id="default_compensation_deadline_days"
+                                :min="1"
+                                :step="1"
+                            />
+                            <p class="mt-1 text-xs text-gray-500">{{ $t('Number of days after violation date by which the compensation day must be granted') }}</p>
                         </div>
 
                         <div>
@@ -267,6 +296,8 @@ const form = useForm({
     trigger_type: '',
     individual_number_value: 0,
     warning_color: '#ff6b6b',
+    default_compensation_days: null,
+    default_compensation_deadline_days: null,
     notify_on_violation: false,
     contract_ids: [],
     user_ids: []
@@ -303,6 +334,8 @@ function editRule(rule) {
     form.trigger_type = rule.trigger_type
     form.individual_number_value = rule.individual_number_value
     form.warning_color = rule.warning_color
+    form.default_compensation_days = rule.default_compensation_days ?? null
+    form.default_compensation_deadline_days = rule.default_compensation_deadline_days ?? null
     form.notify_on_violation = rule.notify_on_violation || false
     form.contract_ids = rule.contracts ? rule.contracts.map(c => c.id) : []
     form.user_ids = rule.users_to_notify ? rule.users_to_notify.map(u => u.id) : []
@@ -321,6 +354,8 @@ function resetForm() {
     form.trigger_type = ''
     form.individual_number_value = 0
     form.warning_color = '#ff6b6b'
+    form.default_compensation_days = null
+    form.default_compensation_deadline_days = null
     form.notify_on_violation = false
     form.contract_ids = []
     form.user_ids = []

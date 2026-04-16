@@ -336,7 +336,7 @@ class WorkingHourService
 
         // Batch-load shift rule violations for all users in date range
         $violationsByUser = \Artwork\Modules\Shift\Models\ShiftRuleViolation::query()
-            ->with(['shiftRule:id,name,description,warning_color'])
+            ->with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
             ->whereIn('user_id', $workerIds)
             ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->whereIn('status', ['active', 'resolved'])
@@ -566,6 +566,7 @@ class WorkingHourService
             $compensationDays = collect();
             $grantedCompDays = CompensationDayOff::where('user_id', $userId)
                 ->whereNotNull('granted_date')
+                ->where('for_holiday', true)
                 ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
                 ->get();
             foreach ($grantedCompDays as $compDay) {

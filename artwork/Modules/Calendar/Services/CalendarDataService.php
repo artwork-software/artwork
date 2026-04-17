@@ -118,9 +118,20 @@ readonly class CalendarDataService
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
-        // Einmal alle Feiertage holen (per-day Filter lokal)
-        $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
-            ->groupBy(fn(CalendarHolidayDTO $h) => $h->date);
+        // Einmal alle Feiertage holen und über alle Tage ihrer Dauer expandieren
+        $holidays = $this->getHolidaysForRange($startDate, $endDate);
+        $holidaysByDate = collect();
+        foreach ($holidays as $holiday) {
+            $holidayStart = Carbon::parse($holiday->date);
+            $holidayEnd = $holiday->end_date ? Carbon::parse($holiday->end_date) : $holidayStart;
+            foreach (CarbonPeriod::create($holidayStart, $holidayEnd) as $day) {
+                $key = $day->toDateString();
+                if (!$holidaysByDate->has($key)) {
+                    $holidaysByDate[$key] = collect();
+                }
+                $holidaysByDate[$key]->push($holiday);
+            }
+        }
 
         $hoursOfDay = $user->getAttribute('daily_view')
             ? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23))

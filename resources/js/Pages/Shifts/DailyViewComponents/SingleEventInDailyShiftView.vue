@@ -12,7 +12,9 @@
             <div class="flex items-center gap-x-2 min-w-0 pr-3">
                 <div :class="['rounded-md', timePillPadding, 'whitespace-nowrap']" :style="{ backgroundColor: hexColor + '90' }">
                     <span v-if="event.allDay">{{ $t('All day') }}</span>
-                    <span v-else>{{ displayStartTime }} - {{ displayEndTime }}</span>
+                    <span v-else>
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
+                    </span>
                 </div>
                 <div class="whitespace-nowrap font-medium" :class="subtitleTextClass">
                     {{ event.eventType?.abbreviation }}:

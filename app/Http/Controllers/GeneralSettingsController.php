@@ -7,7 +7,9 @@ use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 
 class GeneralSettingsController extends Controller
 {
@@ -24,6 +26,23 @@ class GeneralSettingsController extends Controller
         $this->authorize('updateBudgetAccountManagementGlobal', GeneralSettings::class);
 
         $this->generalSettingsService->updateBudgetAccountManagementGlobalFromRequest($request);
+
+        return Redirect::back();
+    }
+
+    public function inventoryGeneral(): \Inertia\Response
+    {
+        $generalSettings = app(GeneralSettings::class);
+
+        return Inertia::render('InventorySetting/General', [
+            'inventoryDetailedArticlesAlwaysQuantityOne' =>
+                $generalSettings->inventory_detailed_articles_always_quantity_one,
+        ]);
+    }
+
+    public function updateInventoryDetailedArticlesAlwaysQuantityOne(Request $request): RedirectResponse
+    {
+        $this->generalSettingsService->updateInventoryDetailedArticlesAlwaysQuantityOne($request);
 
         return Redirect::back();
     }

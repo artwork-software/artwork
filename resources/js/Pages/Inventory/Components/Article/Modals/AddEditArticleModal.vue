@@ -188,6 +188,13 @@
                             :maxlength="1000000"
                             required
                         />
+                        <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
+                            <span class="text-xs text-red-500 font-lexend">{{ $t('Sum of detailed articles') }}: </span>
+                            <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
+                                {{ formatQuantity(calculateTotalQuantity) }}
+                                <component :is="IconClick" class="size-3.5" />
+                            </button>
+                        </div>
                     </div>
                     <div class="col-span-3">
                         <div class="mb-4">
@@ -646,14 +653,14 @@
                                             <select class="focus:outline-hidden w-full"
                                                     v-model="bulkEdit.status">
                                                 <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="status in statuses" :value="status" :key="status.id">
+                                                <option v-for="status in statusList" :value="status" :key="status.id">
                                                     {{ status.name }}
                                                 </option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    <div class="col-span-full">
+                                    <div v-if="!detailedAlwaysOne" class="col-span-full">
                                         <BaseInput
                                             type="number"
                                             id="bulk_quantity"
@@ -766,7 +773,11 @@
                             <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
                                     <!-- NEU: Checkbox + Button nebeneinander -->
-                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2" :class="isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900'">
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2"
+                                         :class="[
+                                             isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900',
+                                             isDetailedArticleIncomplete(item) ? 'border-l-2 border-red-500 bg-red-50' : ''
+                                         ]">
 
                                         <div class="flex gap-1.5">
                                             <div class="flex h-6 shrink-0 items-center">
@@ -777,7 +788,7 @@
                                                         name="comments"
                                                         type="checkbox"
                                                         :checked="isSelected(item)"
-                                                        @change.stop="toggleSelection(item, $event.target.checked)"
+                                                        @click.stop="toggleSelection(item, null, $event)"
                                                         class="aw-checklist-input" />
                                                     <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -871,7 +882,7 @@
                                 />
                             </div>
 
-                            <div class="col-span-full">
+                            <div v-if="!detailedAlwaysOne" class="col-span-full">
                                 <BaseInput
                                     type="number"
                                     :id="'quantity-' + activeDetailedArticleForEditing.name"
@@ -892,7 +903,7 @@
                                     <select id="location" name="location" class=" focus:outline-hidden"
                                             v-model="activeDetailedArticleForEditing.status" required>
                                         <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
-                                        <option v-for="status in statuses" :value="status" :key="status.id">
+                                        <option v-for="status in statusList" :value="status" :key="status.id">
                                             {{ status.name }}
                                         </option>
                                     </select>
@@ -997,13 +1008,19 @@
                 </div>
 
             </div>
-            <div class="flex items-center justify-center my-10">
-                <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
-                            :processing="articleForm.processing"
-                            :disabled="!checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
-                            (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
-                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
-                />
+            <div class="flex flex-col items-center justify-center my-10 gap-y-3">
+                <div class="relative" @click="onDisabledButtonClick">
+                    <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
+                                :processing="articleForm.processing"
+                                :disabled="isButtonDisabled"
+                    />
+                    <div v-if="isButtonDisabled" class="absolute inset-0 cursor-pointer" />
+                </div>
+                <div v-if="showValidationHints && isButtonDisabled && articleForm.is_detailed_quantity && validationErrors.length" class="flex flex-col items-center gap-y-1">
+                    <p v-for="(error, idx) in validationErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                        {{ error }}
+                    </p>
+                </div>
             </div>
         </form>
 
@@ -1067,6 +1084,7 @@ import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation()
 const acrossValues = ref({})
+const detailedAlwaysOne = computed(() => usePage().props.inventoryDetailedArticlesAlwaysQuantityOne ?? false)
 const props = defineProps({article: {type: Object, required: false, default: null}})
 
 const properties = inject('properties')
@@ -1095,6 +1113,7 @@ const currentPageLanguage = ref(document.documentElement.lang || 'en')
 const activeId = ref(null)
 const activeKey = ref(null)
 const storedDetailedArticleQuantities = ref([])
+const showValidationHints = ref(false)
 /* Neu: zentrale Werte für artikelübergreifende Eigenschaften */
 
 
@@ -1115,7 +1134,8 @@ const ensureKeys = (arr = []) => {
     for (const a of arr) if (a && a._key == null) a._key = uid()
 }
 const getIsDeletable = id => properties?.find(p => p.id === id)?.is_deletable ?? false
-const defaultStatus = () => statuses.find(s => s.default) ?? (statuses.length > 0 ? statuses[2] : null)
+const statusList = Array.isArray(statuses) ? statuses : Object.values(statuses ?? {})
+const defaultStatus = () => statusList.find(s => s.default) ?? statusList[0] ?? null
 
 const getValue = (prop) => {
     if (prop.type === 'selection' && (prop.value === '' || prop.value == null)) return ''
@@ -1136,7 +1156,7 @@ const articleForm = useForm({
     inventory_category_id: props.article?.inventory_category_id ?? null,
     inventory_sub_category_id: props.article?.inventory_sub_category_id ?? null,
     quantity: props.article?.quantity ?? 0,
-    statusValues: statuses.map(s => ({
+    statusValues: statusList.map(s => ({
         id: s.id,
         name: s.name,
         value: props.article ? props.article.status_values.find(v => v.id === s.id)?.pivot?.value ?? 0 : 0
@@ -1174,7 +1194,7 @@ const articleForm = useForm({
             across_articles: !!p.across_articles,
             individual_value: !!p.individual_value,
         })) ?? [],
-        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
     })) ?? []) : [],
     main_image_index: 0,
 })
@@ -1334,6 +1354,40 @@ const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     return checkList(articleForm.properties)
 })
 
+const isDetailedArticleIncomplete = (da) => {
+    if (!da) return false
+    if (!da.status) return true
+    return da.properties?.some(p => p.is_required && !getValue(p)) ?? false
+}
+
+const isButtonDisabled = computed(() => {
+    return !checkIfEveryPropertyWhereAreRequiredIsFilled.value || !selectedCategory.value ||
+        (articleForm.is_detailed_quantity && (calculateTotalQuantity.value !== articleForm.quantity)) ||
+        (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle.value !== articleForm.quantity)) || !canSaveWithTags.value
+})
+
+const validationErrors = computed(() => {
+    if (!articleForm.is_detailed_quantity) return []
+    const errors = []
+    if (calculateTotalQuantity.value !== articleForm.quantity) {
+        errors.push($t('The specified total quantity does not match the specified individual quantities'))
+    }
+    if (!checkIfEveryPropertyWhereAreRequiredIsFilled.value) {
+        errors.push($t('A required field is missing'))
+    }
+    return errors
+})
+
+const onDisabledButtonClick = () => {
+    if (isButtonDisabled.value) {
+        showValidationHints.value = true
+    }
+}
+
+watch(isButtonDisabled, (disabled) => {
+    if (!disabled) showValidationHints.value = false
+})
+
 const formatQuantity = (q) => q?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 const addImage = () => articleImageInput.value?.click()
 const capitalizeFirstLetter = (v) => String(v).charAt(0).toUpperCase() + String(v).slice(1)
@@ -1383,7 +1437,7 @@ const addNewDetailedArticle = () => {
         _key: uid(),
         name: currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article',
         description: '',
-        quantity: 0,
+        quantity: detailedAlwaysOne.value ? 1 : 0,
         properties: baseProps,
         status: defaultStatus()
     }
@@ -1427,7 +1481,7 @@ const copyDetailedArticle = (d) => {
         _key: uid(),
         name: d.name + ' (Copy)',
         description: d.description,
-        quantity: d.quantity ?? 0,
+        quantity: detailedAlwaysOne.value ? 1 : (d.quantity ?? 0),
         properties: copiedProps,
         status: d.status
     }
@@ -1566,7 +1620,7 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
             articleForm.detailed_article_quantities = [{
                 name: articleForm.name || (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article'),
                 description: articleForm.description,
-                quantity: '',
+                quantity: detailedAlwaysOne.value ? 1 : '',
                 properties: baseProps,
                 status: defaultStatus()
             }]
@@ -1678,7 +1732,7 @@ onMounted(() => {
                         description: da.description,
                         quantity: da.quantity,
                         properties: [...existingDaProps, ...newCatProps],
-                        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+                        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
                     }
                 })
             }
@@ -1784,13 +1838,35 @@ const selectedBulkProp = computed(() =>
   bulkEditableProperties.value.find(p => p.id === bulkEdit.value.propertyId) || null
 )
 
-const toggleSelection = (it, checked = null) => {
+const lastClickedIndex = ref(null)
+
+const toggleSelection = (it, checked = null, event = null) => {
   const k = itemKey(it)
   if (k == null) return
+
+  const list = filteredDetailedArticles.value
+  const currentIndex = list.indexOf(it)
+
+  // Shift-Click: Bereich zwischen letztem Klick und aktuellem auswählen/abwählen
+  if (event?.shiftKey && lastClickedIndex.value != null && currentIndex !== -1 && currentIndex !== lastClickedIndex.value) {
+    const from = Math.min(lastClickedIndex.value, currentIndex)
+    const to = Math.max(lastClickedIndex.value, currentIndex)
+    const selecting = !selectedDetailedKeys.value.has(k)
+    const next = new Set(selectedDetailedKeys.value)
+    for (let i = from; i <= to; i++) {
+      const rangeKey = itemKey(list[i])
+      if (rangeKey != null) { selecting ? next.add(rangeKey) : next.delete(rangeKey) }
+    }
+    selectedDetailedKeys.value = next
+    lastClickedIndex.value = currentIndex
+    return
+  }
+
   const next = new Set(selectedDetailedKeys.value)
   const shouldSelect = checked == null ? !next.has(k) : !!checked
   if (shouldSelect) next.add(k); else next.delete(k)
   selectedDetailedKeys.value = next
+  lastClickedIndex.value = currentIndex !== -1 ? currentIndex : null
 }
 
 const toggleSelectAllVisible = (checked) => {

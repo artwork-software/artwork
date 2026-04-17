@@ -2320,6 +2320,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::group(['prefix' => 'settings'], function (): void {
 
+            Route::get('/general', [GeneralSettingsController::class, 'inventoryGeneral'])
+                ->name('inventory-management.settings.general');
+
+            Route::patch('/general/detailed-articles-always-quantity-one', [GeneralSettingsController::class, 'updateInventoryDetailedArticlesAlwaysQuantityOne'])
+                ->name('inventory-management.settings.general.update-detailed-articles-always-quantity-one');
+
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
 

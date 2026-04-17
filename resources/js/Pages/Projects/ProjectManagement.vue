@@ -276,11 +276,7 @@
         />
         <export-modal v-if="showExportModal"
                       @close="showExportModal = false"
-                      :enums="[
-                          exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-                      ]"
+                      :enums="exportTabs"
                       :configuration="getExportModalConfiguration()"/>
     </app-layout>
 </template>
@@ -472,6 +468,16 @@ export default defineComponent({
         }
     },
     computed: {
+        exportTabs() {
+            const tabs = [
+                exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                exportTabEnums.EXCEL_CALENDAR_EXPORT,
+            ];
+            if (this.createSettings.budget_deadline) {
+                tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
+            }
+            return tabs;
+        },
         computedStates() {
             if (this.userProjectManagementSetting) {
                 this.states.forEach((state) => {

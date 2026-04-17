@@ -116,7 +116,7 @@ function getShiftGroupId(shift) {
     return null
 }
 
-/** Alle Schichten am Tag (einmal filtern, dann überall verwenden) */
+/** Alle Schichten am Tag – nur Schichten die an diesem Tag starten (Folgetage werden nicht angezeigt) */
 const shiftsToday = computed(() => {
     const list = props.user?.element?.shifts ?? []
     const dayA = props.day.fullDay
@@ -124,13 +124,7 @@ const shiftsToday = computed(() => {
 
     return list.filter(s => {
         const start = s?.start_of_shift
-        const byStart = start === dayA || start === dayB
-
-        const days = s?.days_of_shift
-        const byDays =
-            Array.isArray(days) && (days.includes(dayA) || days.includes(dayB))
-
-        return byStart || byDays
+        return start === dayA || start === dayB
     })
 })
 
@@ -175,20 +169,8 @@ const cellParts = computed(() => {
         let timeDisplay = `${s.startPivot} - ${s.endPivot}`
         const daysOfShift = s?.days_of_shift
         if (Array.isArray(daysOfShift) && daysOfShift.length > 1 && s.startPivot && s.endPivot) {
-            const currentDayFormatted = props.day.fullDay // Format: d.m.Y
-            const firstDay = daysOfShift[0]
-            const lastDay = daysOfShift[daysOfShift.length - 1]
-
-            if (currentDayFormatted === firstDay) {
-                // First day: show startPivot - 00:00
-                timeDisplay = `${s.startPivot} - 00:00`
-            } else if (currentDayFormatted === lastDay) {
-                // Last day: show 00:00 - endPivot
-                timeDisplay = `00:00 - ${s.endPivot}`
-            } else {
-                // Middle day: show full day
-                timeDisplay = '00:00 - 00:00'
-            }
+            // Mehrtägige Schicht: volle Zeitspanne mit Pfeil anzeigen
+            timeDisplay = `${s.startPivot} - ${s.endPivot} →`
         }
 
         parts.push({

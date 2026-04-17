@@ -29,7 +29,7 @@ class ShiftRuleViolationRepository extends BaseRepository
 
     public function getActiveForDateRange(string $startDate, string $endDate, ?array $userIds = null): Collection
     {
-        $query = ShiftRuleViolation::with(['shiftRule:id,name,description,warning_color'])
+        $query = ShiftRuleViolation::with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
             ->whereBetween('violation_date', [$startDate, $endDate])
             ->where('status', 'active');
 

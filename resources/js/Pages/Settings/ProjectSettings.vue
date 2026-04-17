@@ -161,9 +161,17 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.budget_deadline" id="budget_deadline" aria-describedby="budget_deadline-description" name="budget_deadline" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="budget_deadline" class="font-medium text-gray-900">
-                            {{ $t('Project Budget Deadline') }}
-                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <label for="budget_deadline" class="font-medium text-gray-900">
+                                {{ $t('Budget deadline') }}
+                            </label>
+                            <ToolTipComponent
+                                :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
+                                direction="right"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <p id="budget_deadline-description" class="text-gray-500 text-xs">
                             {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
                         </p>
@@ -296,7 +304,8 @@
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
-import {IconPlus} from '@tabler/icons-vue';
+import {IconInfoCircle, IconPlus} from '@tabler/icons-vue';
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -334,7 +343,9 @@ export default {
         DotsVerticalIcon,
         TrashIcon,
         PencilAltIcon,
-        XIcon
+        XIcon,
+        ToolTipComponent,
+        IconInfoCircle,
     },
     props: [
         'genres',

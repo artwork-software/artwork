@@ -5,6 +5,7 @@
                 <tr>
                     <th v-if="showUser" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Employee') }}</th>
                     <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
                     <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Deadline') }}</th>
                     <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted on') }}</th>
                     <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted by') }}</th>
@@ -30,6 +31,15 @@
                         >
                             {{ item.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                         </span>
+                    </td>
+                    <td class="px-3 py-2.5">
+                        <span
+                            v-if="item.for_holiday"
+                            class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700"
+                        >
+                            {{ $t('Public holiday') }}
+                        </span>
+                        <span v-else class="text-zinc-400">-</span>
                     </td>
                     <td class="px-3 py-2.5" :class="isOverdue(item) ? 'text-red-600 font-medium' : 'text-zinc-700'">
                         {{ formatDate(item.deadline) }}

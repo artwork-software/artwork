@@ -12,6 +12,7 @@ class ProcessViolationRequest extends FormRequest
             'compensation_days' => 'required|numeric|min:0.5',
             'compensation_deadline' => 'required|date|after:today',
             'compensation_reason' => 'nullable|string',
+            'for_holiday' => 'sometimes|boolean',
         ];
     }
 }

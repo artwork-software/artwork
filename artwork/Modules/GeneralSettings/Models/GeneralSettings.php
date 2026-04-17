@@ -62,6 +62,8 @@ class GeneralSettings extends Settings
 
     public int $per_diem_export_counter = 0;
 
+    public bool $inventory_detailed_articles_always_quantity_one = false;
+
     public static function group(): string
     {
         return 'general';

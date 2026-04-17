@@ -1,14 +1,14 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
     <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border']"
-         :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}50`, borderColor: borderColor }">
+         :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
         <div class="flex flex-col w-full">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
-                        {{ shift.start }} - {{ shift.end }}
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
                     <div v-if="shift.shiftGroup && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
                         ({{ shift.shiftGroup.name }})
@@ -23,7 +23,7 @@
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
-                <div v-if="can('can plan shifts') || is('artwork admin')" class="flex items-center shrink-0 pr-1">
+                <div v-if="!isFollowUpDay && (can('can plan shifts') || is('artwork admin'))" class="flex items-center shrink-0 pr-1">
                     <div class="flex transition-opacity duration-150">
                         <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
@@ -88,12 +88,13 @@
                 <template v-if="shift.description">
                     <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
                     <component
+                        v-if="!isFollowUpDay"
                         :is="IconEdit"
                         class="size-4 shrink-0 text-gray-500 hover:text-gray-700 cursor-pointer"
                         @click.stop="openDescriptionModal"
                     />
                 </template>
-                <template v-else>
+                <template v-else-if="!isFollowUpDay">
                     <component
                         :is="IconNote"
                         class="size-4 shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
@@ -104,7 +105,7 @@
         </div>
     </div>
 
-        <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
+        <div v-if="showShiftDetails && !isFollowUpDay" class="mt-1 ml-2 space-y-1">
             <!-- Shift description (im detailsOnly-Modus hier anzeigen, da Header-Card ausgeblendet) -->
             <div v-if="detailsOnly && shift.description" class="text-xs text-gray-500 italic mb-1 pl-1">
                 {{ shift.description }}
@@ -352,7 +353,25 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // Position der Schicht innerhalb eines mehrtägigen Zeitraums
+    dayRole: {
+        type: String,
+        default: 'single', // 'single' | 'start' | 'middle' | 'end'
+    },
 });
+
+// Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
+const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Angezeigte Zeiten anpassen wenn Schicht über Tagesgrenze geht
+const displayStartTime = computed(() => {
+    if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
+    return props.shift.start
+})
+const displayEndTime = computed(() => {
+    if (props.dayRole === 'middle') return '00:00'
+    return props.shift.end
+})
 
 // Initialize i18n
 const { t } = useI18n();

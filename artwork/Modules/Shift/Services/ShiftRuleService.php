@@ -137,7 +137,8 @@ class ShiftRuleService
             $violation->id,
             (float) $attributes['compensation_days'],
             $attributes['compensation_deadline'],
-            $attributes['compensation_reason'] ?? null
+            $attributes['compensation_reason'] ?? null,
+            $attributes['for_holiday'] ?? false
         );
     }
 
@@ -246,6 +247,8 @@ class ShiftRuleService
                     'name' => $violation->shiftRule->name,
                     'description' => $violation->shiftRule->description,
                     'warning_color' => $violation->shiftRule->warning_color,
+                    'default_compensation_days' => $violation->shiftRule->default_compensation_days,
+                    'default_compensation_deadline_days' => $violation->shiftRule->default_compensation_deadline_days,
                 ] : null,
                 'created_by_user' => $violation->createdByUser ? [
                     'first_name' => $violation->createdByUser->first_name,

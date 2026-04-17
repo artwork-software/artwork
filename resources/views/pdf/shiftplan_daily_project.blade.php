@@ -189,7 +189,16 @@
             border-bottom: 1px solid var(--lineStrong);
             font-weight: 900;
             font-size: 6.8pt;
-            page-break-after: avoid;
+        }
+        .day-head-arrow{
+            float: right;
+            font-size: 7pt;
+            color: rgba(15,23,42,0.50);
+            margin-left: 8px;
+        }
+        /* Tagesbalken + Events als Einheit: verhindert verwaisten Balken am Seitenende */
+        .day-head-group{
+            page-break-inside: avoid;
         }
 
         /* Events */
@@ -260,7 +269,7 @@
         .cellBox{ overflow: hidden; }
         .cellBody{ padding: 6px 8px; } /* +20% */
         .cellTitle{ font-weight: 900; font-size: 6.0pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .cellMeta{ margin-top: 3px; color: var(--muted); font-size: 5.5pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* +20% */
+        .cellMeta{ margin-top: 3px; color: var(--muted); font-size: 5.5pt; word-wrap:break-word; overflow-wrap:break-word; } /* +20% */
 
         .shiftSummary{ padding: 5px 0 0 0; } /* +20% */
         .shiftQualLine{
@@ -308,7 +317,7 @@
         /* Timeline Text */
         .tlBody{ padding: 4px 3px; }
         .tlMeta{ font-weight: 900; font-size: 5.7pt; word-wrap:break-word; overflow-wrap:break-word; }
-        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); word-wrap:break-word; overflow-wrap:break-word; }
 
         /* Empty day compact – eigenes Element, kein .day */
         .day-empty {
@@ -496,10 +505,13 @@
                 $tlW       = (int)($layout['timelineCol'] ?? 42);
                 $tlCols    = (int)($chunk['timelineLanes'] ?? 1);
                 $craftCols = count($chunk['laneColumns'] ?? []);
+                // Zeitspalte entfernt: deren Breite geht an die Timeline-Spalten
+                $tlWExpanded = $tlW + (int)floor($timeW / max(1, $tlCols));
             @endphp
 
             <div class="day">
-                <div class="day-head">{{ $chunk['dateLabel'] }}</div>
+                <div class="day-head-group">
+                <div class="day-head"><span class="day-head-arrow">▼</span>{{ $chunk['dateLabel'] }}</div>
 
                 {{-- EVENTS --}}
                 <div class="events">
@@ -536,15 +548,14 @@
                         <div style="color: #64748b; font-weight: 900;">Keine Events</div>
                     @endif
                 </div>
+                </div>{{-- /day-head-group --}}
 
                 {{-- GRID --}}
                 <table class="grid">
 
-                    {{-- Dompdf-wrap verhindern: harte col widths für Zeit + Timeline --}}
                     <colgroup>
-                        <col style="width: {{ $timeW }}px;">
                         @for($tl = 0; $tl < $tlCols; $tl++)
-                            <col style="width: {{ $tlW }}px;">
+                            <col style="width: {{ $tlWExpanded }}px;">
                         @endfor
                         @for($i = 0; $i < $craftCols; $i++)
                             <col>
@@ -553,7 +564,6 @@
 
                     <thead>
                     <tr>
-                        <th rowspan="2">Zeit</th>
                         <th colspan="{{ $tlCols }}">Timeline</th>
 
                         @if(!empty($chunk['craftGroups']))
@@ -584,12 +594,6 @@
 
                         @if($row['isGap'])
                             <tr class="gapRow" style="height: {{ $h }}px;">
-                                <td>
-                                    <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
-                                    <div class="timeSub">-</div>
-                                    <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
-                                </td>
-
                                 <td colspan="{{ $tlCols + $craftCols }}">
                                     <div class="gapMsg {{ !empty($row['prominent']) ? 'gapMsgStrong' : '' }}">
                                         {{ $row['message'] }}
@@ -600,17 +604,6 @@
                         @endif
 
                         <tr style="height: {{ $h }}px;">
-                            {{-- TIME --}}
-                            <td>
-                                @if(!empty($row['markerLabel']))
-                                    <div class="timeRange">{{ $row['markerLabel'] }}</div>
-                                @else
-                                    <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
-                                    <div class="timeSub">-</div>
-                                    <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
-                                @endif
-                            </td>
-
                             {{-- TIMELINE Lanes --}}
                             @for($tl = 0; $tl < $tlCols; $tl++)
                                 @php

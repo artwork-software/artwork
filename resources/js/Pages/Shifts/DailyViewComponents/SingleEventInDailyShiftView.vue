@@ -5,7 +5,7 @@
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
     <div :class="['w-full min-w-64 select-none rounded-lg border']"
-         :style="{ backgroundColor: hexColor + '40', borderColor: borderColor }">
+         :style="{ backgroundColor: hexColor + (isFollowUpDay ? '20' : '40'), borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
             <!-- Zeile 1: Zeit + Typ -->
@@ -29,7 +29,7 @@
                     {{ eventTitle }}
                 </span>
             </div>
-            <div class="flex items-center min-w-0 pr-1">
+            <div v-if="!isFollowUpDay" class="flex items-center min-w-0 pr-1">
                 <div class="flex transition-opacity duration-150">
                     <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showEventComponent = true" :icon="IconEdit" title="edit" />
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <div v-if="showEventDetails" class="mt-1 ml-2">
+    <div v-if="showEventDetails && !isFollowUpDay" class="mt-1 ml-2">
         <div v-if="event.timelines?.length !== 0" class="space-y-1">
             <div v-for="(timeline, index) in event.timelines"
                 :key="timeline.id"
@@ -170,13 +170,16 @@ const props = defineProps({
     },
 })
 
+// Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
+const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
 const displayStartTime = computed(() => {
     if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
     return props.event.formattedDates.startTime
 })
 const displayEndTime = computed(() => {
-    if (props.dayRole === 'start' || props.dayRole === 'middle') return '00:00'
+    if (props.dayRole === 'middle') return '00:00'
     return props.event.formattedDates.endTime
 })
 

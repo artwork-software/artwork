@@ -8,7 +8,7 @@
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
-                        {{ shift.start }} - {{ shift.end }}
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
                     <div v-if="shift.shiftGroup && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
                         ({{ shift.shiftGroup.name }})
@@ -352,7 +352,22 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // Position der Schicht innerhalb eines mehrtägigen Zeitraums
+    dayRole: {
+        type: String,
+        default: 'single', // 'single' | 'start' | 'middle' | 'end'
+    },
 });
+
+// Angezeigte Zeiten anpassen wenn Schicht über Tagesgrenze geht
+const displayStartTime = computed(() => {
+    if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
+    return props.shift.start
+})
+const displayEndTime = computed(() => {
+    if (props.dayRole === 'start' || props.dayRole === 'middle') return '00:00'
+    return props.shift.end
+})
 
 // Initialize i18n
 const { t } = useI18n();

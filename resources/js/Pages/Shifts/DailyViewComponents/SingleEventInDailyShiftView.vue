@@ -12,7 +12,9 @@
             <div class="flex items-center gap-x-2 min-w-0 pr-3">
                 <div :class="['rounded-md', timePillPadding, 'whitespace-nowrap']" :style="{ backgroundColor: hexColor + '90' }">
                     <span v-if="event.allDay">{{ $t('All day') }}</span>
-                    <span v-else>{{ event.formattedDates.startTime }} - {{ event.formattedDates.endTime }}</span>
+                    <span v-else>
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
+                    </span>
                 </div>
                 <div class="whitespace-nowrap font-medium" :class="subtitleTextClass">
                     {{ event.eventType?.abbreviation }}:
@@ -161,6 +163,21 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // Position des Events innerhalb eines mehrtägigen Zeitraums
+    dayRole: {
+        type: String,
+        default: 'single', // 'single' | 'start' | 'middle' | 'end'
+    },
+})
+
+// Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
+const displayStartTime = computed(() => {
+    if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
+    return props.event.formattedDates.startTime
+})
+const displayEndTime = computed(() => {
+    if (props.dayRole === 'start' || props.dayRole === 'middle') return '00:00'
+    return props.event.formattedDates.endTime
 })
 
 // Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt anzeigen,

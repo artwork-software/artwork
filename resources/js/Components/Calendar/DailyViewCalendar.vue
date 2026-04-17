@@ -63,16 +63,17 @@
                                     height: zoom_factor * 115 + 'px',
                                     minHeight: zoom_factor * 115 + 'px',
                                     overflow: 'visible',
+                                    position: 'relative',
                                     }"
                                      class="group/container"
                                      :id="'scroll_container-' + day.withoutFormat">
                                     <!-- Container für die Events -->
-                                    <div :class="{'relative grid': hasOverlappingEvents(room.content[day.fullDay]?.events || [], day, hour)}" :style="hasOverlappingEvents(room.content[day.fullDay]?.events || [], day, hour) ? { gridTemplateColumns: 'repeat(auto-fit, minmax(' + zoom_factor * 100 + 'px, 1fr))' } : {}">
+                                    <div>
                                         <div v-for="(event, index) in (room.content[day.fullDay]?.events || [])" :key="event.id">
                                             <div v-if="event && shouldRenderEvent(event, day, hour)"
-                                                 class="rounded-lg relative z-10"
+                                                 class="rounded-lg z-10"
                                                  :id="'event_scroll-' + index + '-day-' + day.withoutFormat"
-                                                 :style="getEventStyle(event, day, hour, zoom_factor)"
+                                                 :style="getEventStyle(event, day, hour, zoom_factor, room.content[day.fullDay]?.events || [])"
                                                  @click="onEventClick(event, $event)">
                                                 <SingleEventInCalendar
                                                     :event="event"
@@ -442,6 +443,103 @@ const hasOverlappingEvents = (events, day, hour) => {
     return overlappingEvents.length > 1;
 };
 
+// Compute column layout for overlapping events in a room+day.
+// Returns Map<eventId, { col, totalCols }> for horizontal positioning.
+const computeEventLayout = (events, day) => {
+    const layout = new Map();
+    if (!events || events.length === 0) return layout;
+
+    if (events.length === 1) {
+        layout.set(events[0].id, { col: 0, totalCols: 1 });
+        return layout;
+    }
+
+    // Compute time intervals for each event on this day
+    const items = [];
+    for (const event of events) {
+        const pos = dayPosOf(event, day.fullDay);
+        if (pos === 'none') continue;
+
+        let startMin, endMin;
+
+        if (event.allDay) {
+            startMin = 0;
+            endMin = 1440;
+        } else {
+            startMin = eventStartMinutesLocal(event);
+            const rawEnd = eventEndMinutesLocal(event);
+
+            switch (pos) {
+                case 'start':
+                    endMin = 1440;
+                    break;
+                case 'middle':
+                    startMin = 0;
+                    endMin = 1440;
+                    break;
+                case 'end':
+                    startMin = 0;
+                    // +1 so events starting exactly when this ends are treated as overlapping
+                    // (prevents z-index stacking issues with multi-day events extending via CSS height)
+                    endMin = (rawEnd != null && rawEnd > 0) ? rawEnd + 1 : 60;
+                    break;
+                default: // 'single'
+                    if (rawEnd != null && rawEnd > startMin) {
+                        endMin = rawEnd;
+                    } else if (rawEnd != null && rawEnd === 0) {
+                        endMin = 1440; // midnight = end of day
+                    } else {
+                        const lenH = parseFloat(event?.eventLengthInHours);
+                        endMin = (!isNaN(lenH) && lenH > 0)
+                            ? Math.min(1440, startMin + Math.round(lenH * 60))
+                            : startMin + 60;
+                    }
+            }
+        }
+
+        items.push({ event, startMin, endMin: Math.max(startMin + 1, endMin) });
+    }
+
+    // Sort by start time, then by longest duration first
+    items.sort((a, b) => {
+        if (a.startMin !== b.startMin) return a.startMin - b.startMin;
+        return (b.endMin - b.startMin) - (a.endMin - a.startMin);
+    });
+
+    // Greedy lane assignment
+    const laneEnds = [];
+    for (const item of items) {
+        let placed = false;
+        for (let i = 0; i < laneEnds.length; i++) {
+            if (item.startMin >= laneEnds[i]) {
+                layout.set(item.event.id, { col: i, totalCols: 1 });
+                laneEnds[i] = item.endMin;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            layout.set(item.event.id, { col: laneEnds.length, totalCols: 1 });
+            laneEnds.push(item.endMin);
+        }
+    }
+
+    // Compute totalCols: for each event, find all overlapping events and take max col + 1
+    for (const item of items) {
+        const overlapping = items.filter(other =>
+            other.startMin < item.endMin && other.endMin > item.startMin
+        );
+        const maxCol = Math.max(...overlapping.map(o => layout.get(o.event.id).col));
+        const totalCols = maxCol + 1;
+        for (const o of overlapping) {
+            const entry = layout.get(o.event.id);
+            entry.totalCols = Math.max(entry.totalCols, totalCols);
+        }
+    }
+
+    return layout;
+};
+
 // Find the first visible hour for a given day (respects hidden hours)
 const getFirstVisibleHour = (day) => {
     const calendarHours = usePage().props.calendarHours;
@@ -533,7 +631,7 @@ const minutesFromDateString = (dateStr) => {
     return 0;
 };
 
-const getEventStyle = (event, day, hour, zoom_factor) => {
+const getEventStyle = (event, day, hour, zoom_factor, roomEvents) => {
     const perHourPx = zoom_factor * 115;
     const perMinutePx = perHourPx / 60;
     const BORDER_PX = 1; // matches border-b on each hour row div
@@ -550,11 +648,17 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
     const pos = dayPosOf(event, day.fullDay);
     const isMultiDay = (event?.daysOfEvent?.length ?? 1) > 1;
 
+    // Compute column layout for overlapping events
+    const layout = computeEventLayout(roomEvents || [], day);
+    const eventLayout = layout.get(event.id) || { col: 0, totalCols: 1 };
+    const widthPct = 100 / eventLayout.totalCols;
+    const leftPct = widthPct * eventLayout.col;
+
     // All-Day: span visible hours including inter-hour borders
     if (event.allDay) {
         const visibleHours = getVisibleHourCount(day);
         const heightPx = visibleHours * (perHourPx + BORDER_PX);
-        return { height: `${heightPx}px`, minHeight: `${heightPx}px`, marginTop: '0px', opacity: 1 };
+        return { position: 'absolute', top: '0', left: `${leftPct}%`, width: `${widthPct}%`, height: `${heightPx}px`, minHeight: `${heightPx}px`, marginTop: '0px', opacity: 1 };
     }
 
     let heightMinutes = 0;
@@ -567,7 +671,7 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
         switch (pos) {
             case 'start':
                 heightMinutes = Math.max(0, 1440 - startClockMin);
-                marginTopPx = -(parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx;
+                marginTopPx = (parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx;
                 dayStartMin = startClockMin;
                 dayEndMin = 1440;
                 break;
@@ -601,7 +705,7 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
             }
         }
 
-        marginTopPx = -(parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx;
+        marginTopPx = (parseInt(event?.minutesFormStartHourToStart, 10) || 0) * perMinutePx;
         dayStartMin = startClockMin;
         dayEndMin = endClockMin >= startClockMin ? endClockMin : startClockMin + heightMinutes;
     }
@@ -614,6 +718,10 @@ const getEventStyle = (event, day, hour, zoom_factor) => {
     const heightPx = Math.max(MIN_EVENT_HEIGHT_PX, Math.min(heightMinutes * perMinutePx + borderPx, maxHeightPx));
 
     return {
+        position: 'absolute',
+        top: '0',
+        left: `${leftPct}%`,
+        width: `${widthPct}%`,
         height: `${heightPx}px`,
         minHeight: `${heightPx}px`,
         marginTop: `${marginTopPx}px`,

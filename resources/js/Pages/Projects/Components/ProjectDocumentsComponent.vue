@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, getCurrentInstance, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, computed, onMounted, getCurrentInstance, onBeforeUnmount, watch, inject } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
@@ -55,6 +55,18 @@ const effectiveProjectWriteIds = computed(
 const effectiveProjectManagerIds = computed(
     () => (remoteProjectManagerIds.value.length ? remoteProjectManagerIds.value : (props.projectManagerIds ?? []))
 )
+
+const headerObject = inject('headerObject', null)
+
+const scopeTabNames = computed(() => {
+    const scopeIds = Array.isArray(props.component?.scope) ? props.component.scope : []
+    if (!scopeIds.length) return ''
+    const allTabs = headerObject?.tabs ?? []
+    const names = scopeIds
+        .map(id => allTabs.find(t => t.id === id)?.name)
+        .filter(Boolean)
+    return names.length ? names.join(', ') : ''
+})
 
 const canEdit = computed(() =>
     !!props.canEditComponent ||
@@ -266,7 +278,19 @@ function closePreview() {
     <div class="my-6 space-y-4">
         <!-- Header -->
         <div class="flex items-center justify-between">
-            <BasePageTitle title="Documents" description="Here you can upload and download documents for the project." />
+            <div>
+                <h3 class="font-medium text-lg subpixel-antialiased">
+                    <template v-if="scopeTabNames">
+                        {{ $t('Documents from Tabs') }}: {{ scopeTabNames }}
+                    </template>
+                    <template v-else>
+                        {{ $t('Documents') }}
+                    </template>
+                </h3>
+                <p class="text-xs text-zinc-500 subpixel-antialiased mt-0.5">
+                    {{ $t('Here you can upload and download documents for the project.') }}
+                </p>
+            </div>
             <InfoButtonComponent :component="component" />
         </div>
         <div v-if="loadDocumentsError" class="text-xs text-rose-600">

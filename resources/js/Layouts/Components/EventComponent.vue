@@ -969,7 +969,7 @@ async function checkCollisions() {
         const startFull = formatDate(startDate.value, startTime.value ?? '00:00')
         const endFull = formatDate(endDate.value, endTime.value ?? '23:59')
         try {
-            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull } })
+            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } })
             roomCollisionArray.value = data
         } catch { /* ignore */ }
     }

@@ -338,6 +338,7 @@ const eventItems = computed<Item[]>(() => {
                     rooms: props.rooms,
                     first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                     eventStatuses: props.eventStatuses,
+                    dayRole,
                 },
             })
 
@@ -365,6 +366,7 @@ const eventItems = computed<Item[]>(() => {
                 rooms: props.rooms,
                 first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                 eventStatuses: props.eventStatuses,
+                dayRole,
             },
         })
     }
@@ -479,6 +481,7 @@ const shiftItems = computed<Item[]>(() => {
                 shiftQualifications: props.shiftQualifications,
                 first_project_calendar_tab_id: props.first_project_calendar_tab_id,
                 crafts: props.crafts,
+                dayRole,
             },
         })
     }

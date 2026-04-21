@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\MoneySource\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\MoneySource\Models\MoneySourceCategory;

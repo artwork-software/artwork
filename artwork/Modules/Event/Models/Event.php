@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Event\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;

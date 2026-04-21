@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Project\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;

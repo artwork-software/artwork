@@ -4,6 +4,11 @@
 
 Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams keep track of all essential project components.
 
+# Update from 1.5 to 1.6
+
+- Make sure you ran the latest database migrations via ``php artisan migrate`` before updating. In this release we consolidated the migration to a new base dump. Since some migrations were moving and/or transforming data make sure you are up to date with the latest migrations from 1.5.1
+
+
 # Update from 1.4 to 1.5
 
 - Soketi has been removed as websocket service. We switched to Laravel Reverb. For an example configuration please take a look at dockerfiles/artwork-php.84.vhost.conf

@@ -115,6 +115,19 @@ class FreelancerController extends Controller
 
     public function update(Request $request, Freelancer $freelancer): void
     {
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email',
+            'position' => 'nullable|string',
+            'business' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'street' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'location' => 'nullable|string',
+            'note' => 'nullable|string',
+        ]);
+
         $freelancer->update($request->only([
                 'position',
                 'business',

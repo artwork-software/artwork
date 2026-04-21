@@ -144,12 +144,14 @@ class AvailabilityConflictService
                 ->get();
         }
 
+        $shiftDate = $shift->event_start_day ?? $shift->start_date;
+
         $shiftCommittedBy = $shift->committedBy()->first();
-        if (!$user) {
+        if ($user) {
             $notificationTitle = __(
                 'notification.shift.conflict',
                 [],
-                $user?->language ?? app()->getFallbackLocale()
+                $user->language ?? app()->getFallbackLocale()
             );
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -163,11 +165,11 @@ class AvailabilityConflictService
                         'notification.shift.conflict_text',
                         [
                             'username' => $shiftCommittedBy->full_name,
-                            'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                            'date' => Carbon::parse($shiftDate)->format('d.m.Y'),
                             'from' => $shift->start,
                             'to' => $shift->end
                         ],
-                        $user?->language ?? app()->getFallbackLocale()
+                        $user->language ?? app()->getFallbackLocale()
                     ),
                     'href' => null
                 ],
@@ -202,11 +204,11 @@ class AvailabilityConflictService
                             'availability_id' => $availability->id,
                             'shift_id' => $shift->id,
                             'user_name' => $shiftCommittedBy->full_name,
-                            'date' => $shift->event_start_day,
+                            'date' => $shiftDate,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
                         ]);
-                        if (!$user) {
+                        if ($user) {
                             $notificationService->setNotificationTo($user);
                             $notificationService->createNotification();
                         }

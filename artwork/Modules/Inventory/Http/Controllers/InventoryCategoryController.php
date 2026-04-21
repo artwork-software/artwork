@@ -213,10 +213,12 @@ class InventoryCategoryController extends Controller
         $user = Auth::user();
 
         // Get filtered article IDs based on user's saved filters (including tags)
-        $filteredArticleIds = $this->filterService
-            ->getFilteredArticlesNew($user)
-            ->pluck('id')
-            ->toArray();
+        $filteredArticleIds = $user
+            ? $this->filterService
+                ->getFilteredArticlesNew($user)
+                ->pluck('id')
+                ->toArray()
+            : [];
 
         // Load categories with filtered articles
         $categories = InventoryCategory::with([

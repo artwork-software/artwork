@@ -431,7 +431,9 @@ const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
     tabComponentTypes: { type: Object, default: () => ({}) },
     componentToEdit: { type: Object, default: null }, // Legacy: for backward compatibility
-    componentId: { type: [Number, String], default: null } // New: for lazy loading
+    componentId: { type: [Number, String], default: null }, // New: for lazy loading
+    storeRouteName: { type: String, default: 'component.store' },
+    updateRouteName: { type: String, default: 'component.update' },
 })
 const emit = defineEmits(['close'])
 
@@ -630,10 +632,10 @@ function updateOrSaveComponent() {
     }
 
     if (isCreateMode.value) {
-        router.post(route('component.store'), payload, options)
+        router.post(route(props.storeRouteName), payload, options)
     } else {
         const componentId = props.componentId || componentToEdit.value?.id
-        router.patch(route('component.update', { component: componentId }), payload, options)
+        router.patch(route(props.updateRouteName, { component: componentId }), payload, options)
     }
 }
 

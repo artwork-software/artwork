@@ -2,6 +2,12 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\BiComponentSettingsController;
+use App\Http\Controllers\BiEventTypeTagController;
+use App\Http\Controllers\BiExportController;
+use App\Http\Controllers\BiProjectDataController;
+use App\Http\Controllers\BiSnapshotController;
+use App\Http\Controllers\BiTimeEffortController;
 use App\Http\Controllers\ArtistResidencyController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BudgetAccountManagementController;
@@ -3021,3 +3027,61 @@ Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions
 
 Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])
     ->name('generate-avatar-image');
+
+// BI Event Type Tags
+Route::middleware(['auth', 'can:change event settings'])->prefix('bi/tags')->group(function () {
+    Route::get('/', [BiEventTypeTagController::class, 'index'])->name('bi.tags.index');
+    Route::post('/', [BiEventTypeTagController::class, 'store'])->name('bi.tags.store');
+    Route::put('/{biEventTypeTag}', [BiEventTypeTagController::class, 'update'])->name('bi.tags.update');
+    Route::delete('/{biEventTypeTag}', [BiEventTypeTagController::class, 'destroy'])->name('bi.tags.destroy');
+    Route::post('/{biEventTypeTag}/sync-event-types', [BiEventTypeTagController::class, 'syncEventTypes'])
+        ->name('bi.tags.sync-event-types');
+});
+
+// BI Project Data
+Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () {
+    Route::get('/', [BiProjectDataController::class, 'show'])->name('projects.bi.show');
+    Route::put('/data', [BiProjectDataController::class, 'updateData'])->name('projects.bi.update-data');
+    Route::put('/visitor-mode', [BiProjectDataController::class, 'switchVisitorMode'])
+        ->name('projects.bi.switch-visitor-mode');
+    Route::put('/sold-tickets-mode', [BiProjectDataController::class, 'switchSoldTicketsMode'])
+        ->name('projects.bi.switch-sold-tickets-mode');
+    Route::put('/revenue-mode', [BiProjectDataController::class, 'switchRevenueMode'])
+        ->name('projects.bi.switch-revenue-mode');
+    Route::put('/events/{event}', [BiProjectDataController::class, 'upsertEventData'])
+        ->name('projects.bi.upsert-event-data');
+    Route::get('/room-capacities', [BiProjectDataController::class, 'roomCapacities'])
+        ->name('projects.bi.room-capacities');
+    Route::put('/room-capacities/{room}', [BiProjectDataController::class, 'updateRoomCapacity'])
+        ->name('projects.bi.update-room-capacity');
+
+    // Snapshots
+    Route::get('/snapshots', [BiSnapshotController::class, 'index'])->name('projects.bi.snapshots.index');
+    Route::post('/snapshots', [BiSnapshotController::class, 'store'])->name('projects.bi.snapshots.store');
+    Route::get('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'show'])->name('projects.bi.snapshots.show');
+    Route::delete('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'destroy'])
+        ->name('projects.bi.snapshots.destroy');
+
+    // Time Efforts
+    Route::get('/time-efforts', [BiTimeEffortController::class, 'index'])->name('projects.bi.time-efforts.index');
+    Route::post('/time-efforts', [BiTimeEffortController::class, 'store'])->name('projects.bi.time-efforts.store');
+    Route::put('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'update'])
+        ->name('projects.bi.time-efforts.update');
+    Route::delete('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'destroy'])
+        ->name('projects.bi.time-efforts.destroy');
+});
+
+// BI Export
+Route::middleware(['auth'])->prefix('bi/export')->group(function () {
+    Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
+    Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])->name('bi.export.download');
+});
+
+// BI Component Settings (Custom Fields)
+Route::middleware(['auth'])->prefix('settings/bi')->group(function () {
+    Route::get('/', [BiComponentSettingsController::class, 'index'])->name('bi.settings.index');
+    Route::post('/fields', [BiComponentSettingsController::class, 'store'])->name('bi.settings.store');
+    Route::post('/fields/order', [BiComponentSettingsController::class, 'updateOrder'])->name('bi.settings.update-order');
+    Route::patch('/fields/{component}', [BiComponentSettingsController::class, 'update'])->name('bi.settings.update');
+    Route::delete('/fields/{component}', [BiComponentSettingsController::class, 'destroy'])->name('bi.settings.destroy');
+});

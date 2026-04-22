@@ -209,6 +209,15 @@ class UpdatePermissionsCommand extends Command
                 'checked' => false
             ],
 
+            [
+                'name' => PermissionEnum::BI_EXPORT->value,
+                'name_de' => "BI-Daten exportieren",
+                'translation_key' => "Export BI data",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Export von Business-Intelligence-Daten aus Projekten als Excel-Datei.",
+                'tooltipKey' => "Allows exporting business intelligence data from projects as an Excel file.",
+                'checked' => false
+            ],
         ];
 
         foreach ($permissions as $permission) {

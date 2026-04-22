@@ -77,6 +77,12 @@ export default defineComponent({
                     current: route().current('project-management-builder.index'),
                     permission: true
                 },
+                {
+                    name: this.$t('BI Field Settings'),
+                    href: route('bi.settings.index'),
+                    current: route().current('bi.settings.index'),
+                    permission: true
+                },
             ]
         }
     }

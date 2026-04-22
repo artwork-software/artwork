@@ -104,6 +104,7 @@ class RoomController extends Controller
             'user_id' => $request->user_id,
             'everyone_can_book' => $request->everyone_can_book,
             'relevant_for_disposition' => $request->relevant_for_disposition,
+            'capacity' => $request->capacity,
             'order' => Room::max('order') + 1,
         ]);
 
@@ -184,7 +185,8 @@ class RoomController extends Controller
                 'start_date',
                 'end_date',
                 'everyone_can_book',
-                'relevant_for_disposition'
+                'relevant_for_disposition',
+                'capacity'
             )
         );
 

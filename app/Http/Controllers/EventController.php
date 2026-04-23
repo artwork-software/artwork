@@ -2700,6 +2700,14 @@ class EventController extends Controller
             $freq         = (int) ($newFrequency ?: $oldFrequency);
             $seriesEndStr = $newSeriesEnd ?: $oldEnd->toDateString();
 
+            $frequencyChanged = $freq !== $oldFrequency;
+            $endDateChanged   = $seriesEndStr !== $oldEnd->toDateString();
+
+            // Wenn weder Turnus noch Enddatum geändert wurde, Serie nicht neu generieren
+            if (!$frequencyChanged && !$endDateChanged) {
+                return;
+            }
+
             $series->update([
                 'frequency_id' => $freq,
                 'end_date'     => $seriesEndStr,

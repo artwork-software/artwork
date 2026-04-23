@@ -50,7 +50,8 @@
         "spatie/laravel-settings": "^3.4.4",
         "symfony/event-dispatcher": "^v8",
         "symfony/http-client": "^v8",
-        "symfony/mailgun-mailer": "^v8"
+        "symfony/mailgun-mailer": "^v8",
+        "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
         "fakerphp/faker": "^v1.20.0",

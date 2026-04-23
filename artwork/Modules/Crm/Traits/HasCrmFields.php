@@ -2,8 +2,61 @@
 
 namespace Artwork\Modules\Crm\Traits;
 
+use Artwork\Modules\Crm\Models\CrmProperty;
+use Artwork\Modules\Crm\Models\CrmPropertyValue;
+
 trait HasCrmFields
 {
+    /**
+     * Sync all CRM-mapped field values from this entity to its CRM contact property values.
+     * Also syncs the display_name on the CRM contact.
+     */
+    public function syncToCrm(): void
+    {
+        // Try the direct FK relationship first, then fall back to polymorphic lookup
+        $crmContact = null;
+
+        if (method_exists($this, 'crmContact')) {
+            $crmContact = $this->crmContact;
+        }
+
+        if (!$crmContact) {
+            $crmContact = \Artwork\Modules\Crm\Models\CrmContact::where('entity_type', $this->getMorphClass())
+                ->where('entity_id', $this->getKey())
+                ->first();
+        }
+
+        if (!$crmContact) {
+            return;
+        }
+
+        $fields = $this->getCrmFields();
+
+        foreach ($fields as $propertyName => $mapping) {
+            $value = $this->resolveCrmFieldValue($propertyName);
+
+            $property = CrmProperty::where('name', $propertyName)->first();
+
+            if (!$property) {
+                continue;
+            }
+
+            CrmPropertyValue::updateOrCreate(
+                [
+                    'crm_contact_id' => $crmContact->id,
+                    'crm_property_id' => $property->id,
+                ],
+                ['value' => $value]
+            );
+        }
+
+        // Sync display name
+        $displayName = $this->getCrmDisplayName();
+        if ($displayName && $crmContact->display_name !== $displayName) {
+            $crmContact->update(['display_name' => $displayName]);
+        }
+    }
+
     public function resolveCrmFieldValue(string $propertyName): ?string
     {
         $fields = $this->getCrmFields();

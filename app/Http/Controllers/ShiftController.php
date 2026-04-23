@@ -323,6 +323,7 @@ class ShiftController extends Controller
             'description',
             'project_id',
             'shift_group_id',
+            'room_id',
         ]));
 
         $this->shiftService->save($shift);

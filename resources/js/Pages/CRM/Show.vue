@@ -62,23 +62,104 @@
             <!-- Room Types (for Accommodation type) -->
             <div v-if="contact.contact_type?.slug === 'accommodation'" class="mt-8">
                 <h2 class="text-lg font-semibold mb-4">{{ $t('Room types') }}</h2>
-                <div v-if="contact.room_types?.length" class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-300">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Room type') }}</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Cost per night') }}</th>
+                                <th v-if="!isReadOnly" class="relative px-6 py-3">
+                                    <span class="sr-only">{{ $t('Actions') }}</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="rt in contact.room_types" :key="rt.id">
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ $t(rt.name) }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ rt.pivot?.cost_per_night ?? '-' }}</td>
+                            <!-- Existing room types -->
+                            <tr v-for="rt in selectedRoomTypes" :key="rt.id" class="hover:bg-gray-50">
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <BaseInput
+                                        v-if="!isReadOnly"
+                                        :id="`name_${rt.id}`"
+                                        type="text"
+                                        v-model="rt.name"
+                                        no-margin-top
+                                        @focusout="updateRoomTypeName(rt)"
+                                    />
+                                    <span v-else>{{ $t(rt.name) }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <div v-if="!isReadOnly" class="w-32">
+                                        <BaseInput
+                                            :id="`cost_${rt.id}`"
+                                            type="number"
+                                            :step="0.01"
+                                            :max="50000"
+                                            v-model="roomTypeCosts[rt.id]"
+                                            placeholder="0.00"
+                                            no-margin-top
+                                            @focusout="saveRoomTypes"
+                                        />
+                                    </div>
+                                    <span v-else>{{ rt.pivot?.cost_per_night ?? '-' }}</span>
+                                </td>
+                                <td v-if="!isReadOnly" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button
+                                        type="button"
+                                        class="text-red-600 hover:text-red-800"
+                                        @click="removeRoomType(rt.id)"
+                                    >
+                                        <component :is="IconTrash" class="h-4 w-4" />
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- New row for adding -->
+                            <tr v-if="!isReadOnly && showNewRow" class="bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <BaseInput
+                                        id="new_room_type_name"
+                                        type="text"
+                                        v-model="newRoomTypeName"
+                                        :placeholder="$t('Name')"
+                                        no-margin-top
+                                        @keyup.enter="createRoomType"
+                                    />
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="w-32">
+                                        <BaseInput
+                                            id="new_room_type_cost"
+                                            type="number"
+                                            :step="0.01"
+                                            v-model="newRoomTypeCost"
+                                            placeholder="0.00"
+                                            no-margin-top
+                                            @keyup.enter="createRoomType"
+                                        />
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" class="text-green-600 hover:text-green-800" @click="createRoomType" :disabled="!newRoomTypeName.trim()">
+                                            <component :is="IconCheck" class="h-5 w-5" />
+                                        </button>
+                                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="showNewRow = false; newRoomTypeName = ''; newRoomTypeCost = 0">
+                                            <component :is="IconX" class="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p v-else class="text-sm text-gray-500">{{ $t('No room types assigned.') }}</p>
+
+                <div v-if="!isReadOnly && !showNewRow" class="mt-3">
+                    <button type="button" class="ui-button-add" @click="showNewRow = true">
+                        <component :is="IconPlus" class="h-4 w-4 mr-1" />
+                        {{ $t('Add room type') }}
+                    </button>
+                </div>
             </div>
 
             <!-- Read-only notice for User-type contacts -->
@@ -102,7 +183,8 @@ import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyGroupSection from '@/Pages/CRM/Components/CrmPropertyGroupSection.vue'
-import { IconArrowLeft, IconEdit, IconCheck, IconInfoCircle } from '@tabler/icons-vue'
+import { IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconPlus, IconX } from '@tabler/icons-vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const props = defineProps({
@@ -192,6 +274,85 @@ const updatePropertyValue = ({ propertyId, value }) => {
     }, {
         preserveState: true,
         preserveScroll: true,
+    })
+}
+
+/* ----- Room Types (Accommodation) ----- */
+const selectedRoomTypes = ref(
+    (props.contact.room_types ?? []).map(rt => ({
+        id: rt.id,
+        name: rt.name,
+    }))
+)
+
+const roomTypeCosts = ref(
+    Object.fromEntries(
+        (props.contact.room_types ?? []).map(rt => [rt.id, rt.pivot?.cost_per_night ?? 0])
+    )
+)
+
+const showNewRow = ref(false)
+const newRoomTypeName = ref('')
+const newRoomTypeCost = ref(0)
+
+const saveRoomTypes = () => {
+    router.patch(route('crm.contacts.room-types.update', props.contact.id), {
+        room_types: selectedRoomTypes.value.map(rt => rt.id),
+        room_type_costs: roomTypeCosts.value,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+    })
+}
+
+const createRoomType = () => {
+    const name = newRoomTypeName.value.trim()
+    if (!name) return
+
+    router.post(route('crm.contacts.room-types.store', props.contact.id), {
+        name: name,
+        cost_per_night: newRoomTypeCost.value || 0,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+            // Refresh from server data
+            const updatedContact = page.props.contact
+            selectedRoomTypes.value = (updatedContact.room_types ?? []).map(rt => ({
+                id: rt.id,
+                name: rt.name,
+            }))
+            roomTypeCosts.value = Object.fromEntries(
+                (updatedContact.room_types ?? []).map(rt => [rt.id, rt.pivot?.cost_per_night ?? 0])
+            )
+            newRoomTypeName.value = ''
+            newRoomTypeCost.value = 0
+            showNewRow.value = false
+        },
+    })
+}
+
+const updateRoomTypeName = (rt) => {
+    if (!rt.name.trim()) return
+    router.patch(route('crm.contacts.room-types.update-name', rt.id), {
+        name: rt.name.trim(),
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+    })
+}
+
+const removeRoomType = (roomTypeId) => {
+    router.delete(route('crm.contacts.room-types.destroy', {
+        crmContact: props.contact.id,
+        roomType: roomTypeId,
+    }), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedRoomTypes.value = selectedRoomTypes.value.filter(rt => rt.id !== roomTypeId)
+            delete roomTypeCosts.value[roomTypeId]
+        },
     })
 }
 </script>

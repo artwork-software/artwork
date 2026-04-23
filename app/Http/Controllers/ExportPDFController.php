@@ -218,11 +218,14 @@ class ExportPDFController extends Controller
                 $rowHeights = [];
             }
         } else {
-            // New export mode: dynamic segment height based on event text length
-            $baseSegmentHeight = 52; // px minimum per slot
-            $charsPerLine = 10;
-            $lineHeight = 11;
-            $paddingPx = 8;
+            // New export mode: dynamic segment height so every event's time-proportional
+            // pixel area is large enough to display its full text (name + time).
+            $SLOT_MINUTES      = 360; // each slot spans 6 hours
+            $baseSegmentHeight = 52;  // px minimum per slot
+            $maxSegmentHeight  = 400; // px cap to prevent absurdly tall rows
+            $baseCharsPerLine  = 14;  // chars per line at full column width (single lane)
+            $lineHeight        = 11;
+            $paddingPx         = 8;
 
             $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 
@@ -239,26 +242,62 @@ class ExportPDFController extends Controller
                 if ($roomContent) {
                     foreach ($allDayStrings as $dayDisplay) {
                         $events = $roomContent[$dayDisplay]['events'] ?? [];
-                        foreach ($events as $event) {
-                            $tz = config('app.timezone');
-                            $start = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
-                            $end = \Illuminate\Support\Carbon::parse($event->end)->timezone($tz);
-                            $startMin = ((int)$start->format('H')) * 60 + ((int)$start->format('i'));
-                            $endMin = ((int)$end->format('H')) * 60 + ((int)$end->format('i'));
+                        if (empty($events)) {
+                            continue;
+                        }
 
-                            // Determine which slot this event falls into
-                            $startMin = max(360, min(1440, $startMin));
+                        // Count max concurrent events per slot to determine lane count
+                        $slotCounts = ['morning' => 0, 'noon' => 0, 'evening' => 0];
+                        foreach ($events as $event) {
+                            foreach (['morning', 'noon', 'evening'] as $slot) {
+                                if (self::eventOverlapsSlot($event, $dayDisplay, $slot)) {
+                                    $slotCounts[$slot]++;
+                                }
+                            }
+                        }
+                        $laneCount = max(1, max($slotCounts['morning'], $slotCounts['noon'], $slotCounts['evening']));
+
+                        // Fewer chars per line when events share lanes (narrower)
+                        $effectiveCharsPerLine = max(4, (int) floor($baseCharsPerLine / $laneCount));
+
+                        $tz = config('app.timezone');
+                        foreach ($events as $event) {
+                            $start    = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
+                            $end      = \Illuminate\Support\Carbon::parse($event->end)->timezone($tz);
+                            $startMin = max(360, min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i'))));
+                            $endMin   = max(360, min(1440, ((int) $end->format('H')) * 60 + ((int) $end->format('i'))));
+                            $allDay   = (bool) ($event->allDay ?? false);
+
                             $slot = $startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening');
 
-                            // Calculate required height based on text
-                            $name = $event->eventName ?? '';
+                            // Calculate content height needed for text
+                            $name        = $event->eventName ?? '';
+                            $abbr        = $event->eventType?->abbreviation ?? '';
                             $projectName = $event->project->name ?? '';
-                            $titleLines = max(1, ceil(mb_strlen($name) / $charsPerLine));
-                            $projectLines = !empty($projectName) ? max(1, ceil(mb_strlen($projectName) / $charsPerLine)) : 0;
-                            $neededHeight = ($titleLines + $projectLines + 1) * $lineHeight + $paddingPx;
 
-                            if ($neededHeight > $slotMaxHeight[$slot]) {
-                                $slotMaxHeight[$slot] = (int)$neededHeight;
+                            $titleText    = ($abbr !== '' ? $abbr . ': ' : '') . $name;
+                            $titleLines   = max(1, (int) ceil(mb_strlen($titleText) / $effectiveCharsPerLine));
+                            $projectLines = $projectName !== '' ? max(1, (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)) : 0;
+                            $contentHeight = ($titleLines + $projectLines + 1) * $lineHeight + $paddingPx;
+
+                            // How much of the slot does this event occupy? (quantized to hours)
+                            if ($allDay) {
+                                $durationFraction = 1.0;
+                            } else {
+                                // Quantize to full hours like the Blade template does
+                                $qStart  = (int) (floor($startMin / 60) * 60);
+                                $qEnd    = (int) (ceil($endMin / 60) * 60);
+                                $qEnd    = max($qEnd, $qStart + 60); // minimum 1 hour
+                                $eventMinutesInSlot = min($qEnd - $qStart, $SLOT_MINUTES);
+                                $durationFraction   = max(0.1, $eventMinutesInSlot / $SLOT_MINUTES);
+                            }
+
+                            // Slot must be tall enough so that this event's proportional slice fits its content
+                            $requiredSlotHeight = (int) ceil($contentHeight / $durationFraction);
+                            $requiredSlotHeight = min($requiredSlotHeight, $maxSegmentHeight);
+
+                            if ($requiredSlotHeight > $slotMaxHeight[$slot]) {
+                                $slotMaxHeight[$slot] = $requiredSlotHeight;
                             }
                         }
                     }

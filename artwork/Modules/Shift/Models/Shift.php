@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;

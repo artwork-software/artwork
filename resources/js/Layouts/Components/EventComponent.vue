@@ -528,13 +528,14 @@
             :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [event?.title ?? ''])"
             @closed="afterConfirm"
         />
-        <ChangeAllSubmitModal
-            v-if="showSeriesEdit"
-            @closed="closeSeriesEditModal"
-            @all="saveAllSeriesEvents"
-            @single="singleSaveEvent"
-        />
     </ArtworkBaseModal>
+
+    <ChangeAllSubmitModal
+        v-if="showSeriesEdit"
+        @close-modal="closeSeriesEditModal"
+        @allEvents="saveAllSeriesEvents"
+        @single="singleSaveEvent"
+    />
 
     <!-- Bestätigungsdialog beim Schließen -->
     <ArtworkBaseModal
@@ -1153,7 +1154,6 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
-    isLoading.value = true
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -1164,6 +1164,12 @@ async function updateOrCreateEvent(isOptionParam = false) {
         isOption.value = true
     }
 
+    // Normales Bearbeiten: immer nur diesen einen Termin speichern
+    allSeriesEvents.value = false
+    await doSaveEvent()
+}
+async function doSaveEvent() {
+    isLoading.value = true
     const data = payload()
 
     if (!props.requiresAxiosRequests &&
@@ -1211,29 +1217,14 @@ async function updateOrCreateEvent(isOptionParam = false) {
     }
 }
 async function singleSaveEvent() {
-    isLoading.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    allSeriesEvents.value = false
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 async function saveAllSeriesEvents() {
-    isLoading.value = true
     allSeriesEvents.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 function closeSeriesEditModal() {
     showSeriesEdit.value = false

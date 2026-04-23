@@ -2280,6 +2280,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/contacts/{crmContact}/profile-image', [CrmContactController::class, 'updateProfileImage'])->name('crm.contacts.profile-image');
         Route::post('/contacts/{crmContact}/property-file', [CrmContactController::class, 'uploadPropertyFile'])->name('crm.contacts.property-file.upload');
         Route::delete('/contacts/{crmContact}/property-file', [CrmContactController::class, 'deletePropertyFile'])->name('crm.contacts.property-file.delete');
+        Route::patch('/contacts/{crmContact}/room-types', [CrmContactController::class, 'updateRoomTypes'])->name('crm.contacts.room-types.update');
+        Route::post('/contacts/{crmContact}/room-types', [CrmContactController::class, 'storeRoomType'])->name('crm.contacts.room-types.store');
+        Route::patch('/room-types/{roomType}/name', [CrmContactController::class, 'updateRoomTypeName'])->name('crm.contacts.room-types.update-name');
+        Route::delete('/contacts/{crmContact}/room-types/{roomType}', [CrmContactController::class, 'destroyRoomType'])->name('crm.contacts.room-types.destroy');
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');

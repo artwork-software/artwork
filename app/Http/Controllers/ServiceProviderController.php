@@ -95,6 +95,8 @@ class ServiceProviderController extends Controller
             'note',
             'type_of_provider'
         ]));
+
+        $serviceProvider->syncToCrm();
     }
 
     /**
@@ -108,6 +110,8 @@ class ServiceProviderController extends Controller
             'salary_per_hour',
             'salary_description',
         ]));
+
+        $serviceProvider->syncToCrm();
     }
 
     /**
@@ -122,6 +126,8 @@ class ServiceProviderController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
+        $serviceProvider->syncToCrm();
+
         return Redirect::back();
     }
 
@@ -135,6 +141,8 @@ class ServiceProviderController extends Controller
         $serviceProvider->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        $serviceProvider->syncToCrm();
 
         return Redirect::back();
     }

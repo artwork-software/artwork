@@ -6,6 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ArtistResidencyUpdateRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'breakfast_deduction_per_day' => $this->input('breakfast_deduction_per_day') ?? 0,
+            'breakfast_count' => $this->input('breakfast_count') ?? 0,
+            'additional_daily_allowance' => $this->input('additional_daily_allowance') ?? 0,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Vacation\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;

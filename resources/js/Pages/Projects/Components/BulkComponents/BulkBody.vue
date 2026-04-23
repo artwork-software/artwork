@@ -1076,6 +1076,7 @@ async function fetchBulkEditData() {
                     is_planning: event.is_planning,
                     is_series: event.is_series || false,
                     series_id: event.series_id || null,
+                    eventProperties: event.eventProperties || event.event_properties || [],
                 });
             });
         }
@@ -1146,6 +1147,7 @@ onMounted(async () => {
                 is_planning: event.is_planning,
                 is_series: event.is_series || false,
                 series_id: event.series_id || null,
+                eventProperties: event.eventProperties || event.event_properties || [],
             });
         });
 

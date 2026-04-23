@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Room\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;

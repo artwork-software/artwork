@@ -415,11 +415,21 @@ class ShiftWorkerService
         }
 
         if ($vacationConflictService && $notificationService) {
-            $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $worker);
+            $vacationConflictService->checkVacationConflictsShifts(
+                $shift,
+                $notificationService,
+                $worker instanceof User ? $worker : null,
+                $worker instanceof Freelancer ? $worker : null,
+            );
         }
 
         if ($availabilityConflictService && $notificationService) {
-            $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $worker);
+            $availabilityConflictService->checkAvailabilityConflictsShifts(
+                $shift,
+                $notificationService,
+                $worker instanceof User ? $worker : null,
+                $worker instanceof Freelancer ? $worker : null,
+            );
         }
 
         broadcast(new ShiftAssigned($worker, $shift));

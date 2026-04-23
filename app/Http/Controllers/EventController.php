@@ -1176,7 +1176,7 @@ class EventController extends Controller
         $this->authorize('create', Event::class);
         /** @var Event $firstEvent */
         $firstEvent = Event::create($request->data());
-        $firstEvent->eventProperties()->sync($request->get('event_properties'));
+        $firstEvent->eventProperties()->sync($request->input('event_properties', []));
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
             $this->associateProject(
@@ -1317,7 +1317,7 @@ class EventController extends Controller
             'allDay' => $sourceEvent?->allDay ?? $request->allDay
         ]);
         $event->eventProperties()
-            ->sync($request->get('event_properties', []));
+            ->sync($request->input('event_properties', []));
 
         broadcast(new EventCreated(
             $event->fresh(),
@@ -1965,7 +1965,7 @@ class EventController extends Controller
         // remove is_series and series_id from data to prevent overwriting
         unset($data['is_series'], $data['series_id']);
         $event->fill($data);
-        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
+        $event->eventProperties()->sync(($newEventPropertyIds = $request->input('event_properties', [])));
         $this->eventService->save($event);
 
         // Projekt ggf. anlegen & zuordnen (dein Original)

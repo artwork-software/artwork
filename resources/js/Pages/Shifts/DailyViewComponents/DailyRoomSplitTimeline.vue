@@ -764,7 +764,7 @@ function getEventItemHeightPx(item: any, block: any) {
     }
 
     const expanded = !!eventsExpanded.value[item.id]
-    const minH = expanded ? EXPANDED_MIN_EVENT : COLLAPSED_MIN_EVENT
+    const minH = expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
     return Math.max(timeHeight, minH)
 }
 
@@ -972,8 +972,7 @@ function getEventItemStyle(item: any, block: any) {
   const ensureVisualMetrics = (it: any) => {
     if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
       const top = getTopForItem(it, block)
-      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
-      const vH = Math.max(timeH, EXPANDED_MIN_EVENT)
+      const vH = getEventItemHeightPx(it, block)
       it._vTop = top
       it._vHeight = vH
       it._vBottom = top + vH

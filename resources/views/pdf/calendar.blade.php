@@ -172,18 +172,18 @@
             border-radius: 3px;
             border: 1px solid rgba(0,0,0,0.40);
             border-left-width: 3px;
-            overflow: visible;
+            overflow: hidden;
             z-index: 10;
         }
 
-        .event-inner { padding: 2px 3px; overflow: visible; }
+        .event-inner { padding: 2px 3px; overflow: hidden; }
 
         .event-title {
             font-weight: 800;
             font-size: {{ $s(11) }};
             line-height: 1.2;
             word-break: break-word;
-            overflow: visible;
+            overflow: hidden;
         }
         .event-sub {
             margin-top: 1px;
@@ -192,7 +192,7 @@
             line-height: 1.2;
             color: #111;
             word-break: break-word;
-            overflow: visible;
+            overflow: hidden;
         }
         .event-time {
             margin-top: 1px;
@@ -200,7 +200,7 @@
             font-size: {{ $s(8) }};
             line-height: 1.15;
             white-space: nowrap;
-            overflow: visible;
+            overflow: hidden;
         }
 
         .event-compact .event-inner { padding: 1px 2px; }
@@ -298,7 +298,8 @@
         $event,
         string $dayDisplay,
         int $hMorning, int $hNoon, int $hEvening,
-        string $colorSource = 'eventType'
+        string $colorSource = 'eventType',
+        int $laneCount = 1
     ) {
         $tz = config('app.timezone');
 
@@ -382,16 +383,18 @@
         $topPx = $topPxBase;
         $bottomPx = $bottomPxBase;
 
-        // Mindesthöhe dynamisch: basierend auf Textlänge (Titel + Projektname + Zeit)
-        // Schätze benötigte Zeilen anhand der Zeichenlänge (ca. 12 Zeichen pro Zeile bei 7.5px Schrift)
-        $charsPerLine = 12;
+        // Mindesthöhe dynamisch: basierend auf Textlänge und effektiver Lane-Breite
+        $baseCharsPerLine = 14;
+        $charsPerLine = max(4, (int) floor($baseCharsPerLine / max(1, $laneCount)));
         $_evName = $event->eventName ?? '';
+        $_abbr   = $event->eventType?->abbreviation ?? '';
         $_projNm = $event->project->name ?? '';
-        $titleLines = max(1, ceil(mb_strlen($_evName) / $charsPerLine));
-        $projectLines = !empty($_projNm) ? max(1, ceil(mb_strlen($_projNm) / $charsPerLine)) : 0;
+        $_titleText = ($_abbr !== '' ? $_abbr . ': ' : '') . $_evName;
+        $titleLines = max(1, (int) ceil(mb_strlen($_titleText) / $charsPerLine));
+        $projectLines = $_projNm !== '' ? max(1, (int) ceil(mb_strlen($_projNm) / $charsPerLine)) : 0;
         $timeLines = 1;
-        $lineHeight = 9; // px pro Zeile bei vergrößerter Schrift
-        $paddingPx = 6;  // Innenabstand oben+unten
+        $lineHeight = 9;
+        $paddingPx = 6;
         $minHeightPx = max(32, ($titleLines + $projectLines + $timeLines) * $lineHeight + $paddingPx);
 
         $heightPx = $bottomPx - $topPx;
@@ -546,9 +549,18 @@
     }
 
     $renderDayCell = function(array $eventsForDay, string $dayDisplay, int $hMorning, int $hNoon, int $hEvening, string $colorSource = 'eventType') {
+        // Pre-compute lane count so segment min-heights account for narrower lanes
+        $preSegments = [];
+        foreach ($eventsForDay as $event) {
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource, 1);
+            if ($seg) $preSegments[] = $seg;
+        }
+        [, $laneCount] = __assignLanes($preSegments);
+
+        // Rebuild segments with correct lane count for accurate min-heights
         $segments = [];
         foreach ($eventsForDay as $event) {
-            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource);
+            $seg = __buildSegmentForDay($event, $dayDisplay, $hMorning, $hNoon, $hEvening, $colorSource, $laneCount);
             if ($seg) $segments[] = $seg;
         }
 

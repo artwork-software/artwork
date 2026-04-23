@@ -140,6 +140,8 @@ class FreelancerController extends Controller
                 'location',
                 'note',
             ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -153,6 +155,8 @@ class FreelancerController extends Controller
             'salary_per_hour',
             'salary_description',
         ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -167,6 +171,8 @@ class FreelancerController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
+        $freelancer->syncToCrm();
+
         return Redirect::back();
     }
 
@@ -180,6 +186,8 @@ class FreelancerController extends Controller
         $freelancer->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        $freelancer->syncToCrm();
 
         return Redirect::back();
     }

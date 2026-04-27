@@ -432,7 +432,9 @@ class ShiftWorkerService
             );
         }
 
-        broadcast(new ShiftAssigned($worker, $shift));
+        if ($worker instanceof User) {
+            broadcast(new ShiftAssigned($worker, $shift));
+        }
     }
 
     private function logManualAssignmentActivity(Shift $shift, ShiftWorker $pivot, Employable $worker): void

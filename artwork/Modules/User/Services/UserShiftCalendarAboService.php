@@ -87,13 +87,12 @@ readonly class UserShiftCalendarAboService
         try {
             $shiftStart = Carbon::parse($shift->start_date)->format('Y-m-d');
             $shiftEnd = Carbon::parse($shift->end_date)->format('Y-m-d');
-            $shiftEvent = method_exists($shift, 'event') ? $shift->event()->first() : null;
-            $eventCreator = $shiftEvent?->creator()->first();
-            $craft = $shift->craft()->first();
-            $craftName = $craft->name ?? 'Unbekannte Tätigkeit';
-            $projectName = optional($shiftEvent?->project()->first())->name ?? '';
+            $shiftEvent = $shift->event;
+            $eventCreator = $shiftEvent?->creator;
+            $craftName = $shift->craft?->name ?? 'Unbekannte Tätigkeit';
+            $projectName = $shiftEvent?->project?->name ?? '';
             $eventName = $shiftEvent?->eventName ?? '';
-            $roomName = optional($shiftEvent?->room()->first())->name ?? '';
+            $roomName = $shiftEvent?->room?->name ?? '';
 
             $title = 'Schicht: ' . $craftName;
             if (!empty($shift->start) && !empty($shift->end)) {
@@ -186,7 +185,7 @@ readonly class UserShiftCalendarAboService
                     $alertTime->subDays($calendarAbo->notification_time);
                     break;
             }
-            $craftName = optional($shift->craft()->first())->name ?? 'Schicht';
+            $craftName = $shift->craft?->name ?? 'Schicht';
             $event->alertAt($alertTime, 'Schicht: ' . $craftName . ' - ' .
                 $shift->start . ' - ' . $shift->end . ' beginnt in ' .
                 $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);

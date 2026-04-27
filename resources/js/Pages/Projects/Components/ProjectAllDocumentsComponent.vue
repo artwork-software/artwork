@@ -15,7 +15,7 @@ import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from '@/Artwork/Files/FilePreview.vue'
 
 /** Nur benötigte Icons lokal einbinden (Tree-Shaking) */
-import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
+import { IconFileUpload, IconFileText, IconEyeOff } from '@tabler/icons-vue'
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 interface ProjectFile {
@@ -43,6 +43,7 @@ const isLoadingDocuments = ref(false)
 const loadDocumentsError = ref('')
 const remoteProjectWriteIds = ref<Array<number | string>>(props.projectWriteIds ?? [])
 const remoteProjectManagerIds = ref<Array<number | string>>(props.projectManagerIds ?? [])
+const hiddenTabNames = ref<string[]>([])
 
 const documentForm = reactive<{ errors: Record<string, string[] | string> }>({ errors: {} })
 const uploadDocumentFeedback = ref('')
@@ -107,6 +108,8 @@ async function fetchDocuments() {
         if (Array.isArray(data?.projectManagerIds)) {
             remoteProjectManagerIds.value = data.projectManagerIds
         }
+
+        hiddenTabNames.value = Array.isArray(data?.hiddenTabNames) ? data.hiddenTabNames : []
     } catch (error) {
         console.error(error)
         loadDocumentsError.value = 'Unable to load project documents.'
@@ -303,6 +306,18 @@ function closePreview() {
             />
             <InfoButtonComponent :component="component" />
         </div>
+        <!-- Sichtbarkeitshinweis -->
+        <div
+            v-if="hiddenTabNames.length > 0"
+            class="group/hint relative inline-flex items-center gap-1.5 text-xs text-zinc-400"
+        >
+            <IconEyeOff class="size-4 shrink-0" />
+            <span class="invisible group-hover/hint:visible absolute left-6 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                {{ $t('Due to missing visibility rights, you cannot see the documents from tab') }}
+                '{{ hiddenTabNames.join("', '") }}'
+            </span>
+        </div>
+
         <div v-if="loadDocumentsError" class="mb-2 text-xs text-rose-600">
             {{ loadDocumentsError }}
         </div>

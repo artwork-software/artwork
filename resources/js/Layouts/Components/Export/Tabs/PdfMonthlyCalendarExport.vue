@@ -81,8 +81,34 @@
 
                 <!-- Monatswahl nur wenn kein Projekt -->
                 <div v-if="!pdfSelectedProject" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <BaseInput type="month" v-model="pdf.startMonth" :label="$t('Start month')" id="startMonth" />
-                    <BaseInput type="month" v-model="pdf.endMonth" :label="$t('End month')" id="endMonth" />
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <label class="text-sm font-medium text-zinc-700" for="startMonth">
+                                {{ $t('Day of start month') }}
+                            </label>
+                            <div class="group/info relative">
+                                <IconInfoCircle class="size-4 text-zinc-400 cursor-help" />
+                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                                    {{ $t('Select a day of the month in which the export should start. The entire month of the selected day will be used for the export.') }}
+                                </span>
+                            </div>
+                        </div>
+                        <BaseInput type="date" v-model="pdf.startMonth" :placeholder="todayFormatted" id="startMonth" />
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <label class="text-sm font-medium text-zinc-700" for="endMonth">
+                                {{ $t('Day of end month') }}
+                            </label>
+                            <div class="group/info relative">
+                                <IconInfoCircle class="size-4 text-zinc-400 cursor-help" />
+                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                                    {{ $t('Select a day of the month in which the export should end. The entire month of the selected day will be used for the export.') }}
+                                </span>
+                            </div>
+                        </div>
+                        <BaseInput type="date" v-model="pdf.endMonth" :placeholder="todayFormatted" id="endMonth" />
+                    </div>
                 </div>
             </section>
 
@@ -420,7 +446,7 @@ import LastedProjects from '@/Artwork/LastedProjects.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconX, IconInfoCircle} from "@tabler/icons-vue";
 import SaveFilterPresetModal from '@/Layouts/Components/Export/Modals/SaveFilterPresetModal.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
@@ -429,6 +455,13 @@ const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
 const props = defineProps<{ pdfTitle?: string; project?: any }>()
 
 const showModalInformation = ref(true)
+
+const todayFormatted = computed(() => {
+    const now = new Date()
+    const day = String(now.getDate()).padStart(2, '0')
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    return `${day}.${month}.${now.getFullYear()}`
+})
 
 const paperSizes = [
     { id: 'a4', name: 'A4 (Standard)' },
@@ -559,6 +592,14 @@ const createPdf = () => {
     }
     if (pdfSelectedProject.value) {
         pdf.project = pdfSelectedProject.value.id
+    }
+
+    // Convert date (YYYY-MM-DD) to month (YYYY-MM) for backend
+    if (pdf.startMonth && pdf.startMonth.length > 7) {
+        pdf.startMonth = pdf.startMonth.substring(0, 7)
+    }
+    if (pdf.endMonth && pdf.endMonth.length > 7) {
+        pdf.endMonth = pdf.endMonth.substring(0, 7)
     }
 
     const data: Record<string, number[] | null> = {};

@@ -47,7 +47,7 @@ class ProjectDocumentsController extends Controller
     public function all(Project $project): JsonResponse
     {
         return response()->json(
-            $this->projectTabDocumentService->buildAllDocumentsPayload($project)
+            $this->projectTabDocumentService->buildAllDocumentsPayload($project, auth()->user())
         );
     }
 }

@@ -67,7 +67,7 @@ const onPickColor = (color) => {
 
 const save = () => {
     if (shiftGroupForm.id) {
-        shiftGroupForm.put(route('shift-groups.update', {shift_group: shiftGroupForm.id}), {
+        shiftGroupForm.patch(route('shift-groups.update', {shiftGroup: shiftGroupForm.id}), {
             onSuccess: () => {
                 emit('close');
             }

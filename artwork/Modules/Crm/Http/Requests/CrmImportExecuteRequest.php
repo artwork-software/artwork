@@ -15,10 +15,16 @@ class CrmImportExecuteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mapping' => ['required', 'array'],
-            'mapping.display_name' => ['required', 'integer'],
+            'mapping' => ['required_without:type_mappings', 'nullable', 'array'],
+            'mapping.display_name' => ['nullable', 'integer'],
             'mapping.properties' => ['nullable', 'array'],
             'mapping.properties.*' => ['integer'],
+
+            'type_mappings' => ['required_without:mapping', 'nullable', 'array'],
+            'type_mappings.*.crm_contact_type_id' => ['required', 'integer'],
+            'type_mappings.*.display_name' => ['nullable', 'integer'],
+            'type_mappings.*.properties' => ['nullable', 'array'],
+            'type_mappings.*.properties.*' => ['integer'],
         ];
     }
 }

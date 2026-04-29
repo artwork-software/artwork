@@ -2265,6 +2265,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Import routes (before contacts to avoid {crmContact} param conflict)
         Route::get('/import', [CrmImportController::class, 'showUpload'])->name('crm.import');
         Route::post('/import/upload', [CrmImportController::class, 'upload'])->name('crm.import.upload');
+        Route::post('/import/map-types', [CrmImportController::class, 'mapTypes'])->name('crm.import.map-types');
+        Route::get('/import/column-values/{columnIndex}', [CrmImportController::class, 'columnValues'])->name('crm.import.column-values');
         Route::post('/import/execute', [CrmImportController::class, 'execute'])->name('crm.import.execute');
         Route::delete('/import', [CrmImportController::class, 'cancel'])->name('crm.import.cancel');
 

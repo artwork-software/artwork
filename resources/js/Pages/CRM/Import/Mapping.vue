@@ -28,8 +28,11 @@
             </div>
 
             <!-- Warnings -->
-            <div v-if="!hasDisplayNameMapping" class="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4">
-                <p class="text-sm font-medium text-yellow-800">{{ $t('Name is required for import. Please map a column to "Name".') }}</p>
+            <div v-if="!hasDisplayNameMapping && !hasNameFallback" class="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4">
+                <p class="text-sm font-medium text-yellow-800">{{ $t('Name is required for import. Please map a column to "Name" or map at least first name or last name.') }}</p>
+            </div>
+            <div v-else-if="!hasDisplayNameMapping && hasNameFallback" class="mb-4 rounded-md bg-blue-50 border border-blue-200 p-4">
+                <p class="text-sm text-blue-800">{{ $t('Name will be generated automatically from first name and/or last name.') }}</p>
             </div>
             <div v-if="unmappedRequiredProperties.length > 0" class="mb-4 rounded-md bg-blue-50 border border-blue-200 p-4">
                 <p class="text-sm text-blue-800">
@@ -177,7 +180,7 @@
                     {{ $t('Cancel') }}
                 </button>
                 <button
-                    :disabled="!hasDisplayNameMapping || form.processing"
+                    :disabled="!canSubmit || form.processing"
                     class="ui-button-add disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="submit"
                 >
@@ -291,9 +294,25 @@ const propertyTypeIcons = {
 
 const getPropertyTypeIcon = (type) => propertyTypeIcons[type] ?? IconTypography
 
+const firstNameAliases = ['vorname', 'first name', 'first_name', 'firstname']
+const lastNameAliases = ['nachname', 'last name', 'last_name', 'lastname', 'familienname', 'surname']
+
 const hasDisplayNameMapping = computed(() =>
     Object.values(columnMapping.value).includes('display_name')
 )
+
+const hasNameFallback = computed(() => {
+    const mappedPropIds = Object.values(columnMapping.value)
+        .filter(v => v.startsWith('prop_'))
+        .map(v => parseInt(v.replace('prop_', '')))
+
+    const mappedProps = (props.contactType.properties ?? []).filter(p => mappedPropIds.includes(p.id))
+    const hasFirst = mappedProps.some(p => firstNameAliases.includes(p.name.toLowerCase().trim()))
+    const hasLast = mappedProps.some(p => lastNameAliases.includes(p.name.toLowerCase().trim()))
+    return hasFirst || hasLast
+})
+
+const canSubmit = computed(() => hasDisplayNameMapping.value || hasNameFallback.value)
 
 const unmappedRequiredProperties = computed(() => {
     const mappedPropIds = Object.values(columnMapping.value)
@@ -319,7 +338,7 @@ const submit = () => {
     }
 
     form.mapping = {
-        display_name: parseInt(displayNameColIndex),
+        display_name: displayNameColIndex !== undefined ? parseInt(displayNameColIndex) : null,
         properties,
     }
 

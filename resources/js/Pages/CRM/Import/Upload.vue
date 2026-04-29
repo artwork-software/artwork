@@ -19,8 +19,17 @@
                     <span class="flex items-center justify-center size-8 rounded-full bg-indigo-600 text-white text-sm font-bold">1</span>
                     <span class="text-sm font-medium text-gray-900">{{ $t('Upload file') }}</span>
                     <div class="flex-1 h-px bg-gray-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-gray-200 text-gray-500 text-sm font-bold">2</span>
-                    <span class="text-sm text-gray-500">{{ $t('Map columns') }}</span>
+                    <template v-if="form.use_type_column">
+                        <span class="flex items-center justify-center size-8 rounded-full bg-gray-200 text-gray-500 text-sm font-bold">2</span>
+                        <span class="text-sm text-gray-500">{{ $t('Map type values') }}</span>
+                        <div class="flex-1 h-px bg-gray-300"></div>
+                        <span class="flex items-center justify-center size-8 rounded-full bg-gray-200 text-gray-500 text-sm font-bold">3</span>
+                        <span class="text-sm text-gray-500">{{ $t('Map columns') }}</span>
+                    </template>
+                    <template v-else>
+                        <span class="flex items-center justify-center size-8 rounded-full bg-gray-200 text-gray-500 text-sm font-bold">2</span>
+                        <span class="text-sm text-gray-500">{{ $t('Map columns') }}</span>
+                    </template>
                 </div>
             </div>
 
@@ -30,8 +39,33 @@
             </div>
 
             <form @submit.prevent="submit" class="max-w-xl space-y-6">
-                <!-- Contact Type -->
-                <div>
+                <!-- Use Type Column Toggle -->
+                <div class="flex items-start gap-3">
+                    <button
+                        type="button"
+                        :class="[
+                            form.use_type_column ? 'bg-indigo-600' : 'bg-gray-200',
+                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                        ]"
+                        role="switch"
+                        :aria-checked="form.use_type_column"
+                        @click="form.use_type_column = !form.use_type_column"
+                    >
+                        <span
+                            :class="[
+                                form.use_type_column ? 'translate-x-5' : 'translate-x-0',
+                                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                            ]"
+                        />
+                    </button>
+                    <div>
+                        <span class="text-sm font-medium text-gray-900">{{ $t('Determine different contact types by column in Excel') }}</span>
+                        <p class="text-sm text-gray-500 mt-0.5">{{ $t('If active, you select a column in the next step from which values are read and then you can assign the values to the contact types in the CRM. If inactive, all imported entries are assigned to the same selected contact type.') }}</p>
+                    </div>
+                </div>
+
+                <!-- Contact Type (only when not using type column) -->
+                <div v-if="!form.use_type_column">
                     <Listbox as="div" v-model="form.crm_contact_type_id">
                         <ListboxLabel class="componentLabel">{{ $t('Contact type') }}</ListboxLabel>
                         <div class="relative mt-2">
@@ -160,7 +194,7 @@
                             </svg>
                             {{ $t('Uploading') }}...
                         </span>
-                        <span v-else>{{ $t('Next: Map columns') }}</span>
+                        <span v-else>{{ form.use_type_column ? $t('Next: Map type values') : $t('Next: Map columns') }}</span>
                     </button>
                 </div>
             </form>
@@ -196,13 +230,18 @@ const isDragging = ref(false)
 const form = useForm({
     file: null,
     crm_contact_type_id: props.contactTypes.length === 1 ? props.contactTypes[0].id : null,
+    use_type_column: false,
 })
 
 const selectedType = computed(() =>
     props.contactTypes.find(t => t.id === form.crm_contact_type_id) ?? null
 )
 
-const canSubmit = computed(() => form.file && form.crm_contact_type_id)
+const canSubmit = computed(() => {
+    if (!form.file) return false
+    if (form.use_type_column) return true
+    return !!form.crm_contact_type_id
+})
 
 const onFileChange = (e) => {
     form.file = e.target.files[0] ?? null

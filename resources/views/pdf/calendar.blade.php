@@ -10,6 +10,7 @@
             'a6' => 0.7,
             default => 1.0, // a4
         };
+        $scaleFactor *= 0.9; // globally reduce font sizes by ~10%
         $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
     @endphp
     <style>
@@ -534,7 +535,7 @@
                 if ($laneCount >= 4) $cls .= ' event-supercompact';
                 elseif ($laneCount === 3) $cls .= ' event-compact';
 
-                $showSubLine = ($laneCount <= 2 && $seg['slotSpan'] >= 2 && !empty($seg['project']));
+                $showSubLine = ($laneCount <= 2 && !empty($seg['project']));
 
                 echo '<div class="'.$cls.'" style="'
                     .'top: '.$seg['topPx'].'px;'
@@ -556,7 +557,10 @@
                 echo '</div>';
 
                 if ($showSubLine) {
-                    echo '<div class="event-sub">'.e($seg['project']).'</div>';
+                    $projectText = mb_strlen($seg['project']) > 50
+                        ? mb_substr($seg['project'], 0, 50) . '…'
+                        : $seg['project'];
+                    echo '<div class="event-sub">'.e($projectText).'</div>';
                 }
 
                 echo '<div class="event-time">';

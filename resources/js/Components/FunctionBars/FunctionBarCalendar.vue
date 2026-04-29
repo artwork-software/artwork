@@ -1,6 +1,6 @@
 <template>
     <div class="py-4 px-7 bg-white border-b border-zinc-200 shadow-sm">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-y-2">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <!-- Date Shortcuts - 3 vertical icons -->

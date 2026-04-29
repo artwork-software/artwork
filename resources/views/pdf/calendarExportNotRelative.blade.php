@@ -10,6 +10,7 @@
             'a6' => 0.7,
             default => 1.0, // a4
         };
+        $scaleFactor *= 0.9; // globally reduce font sizes by ~10%
         $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
     @endphp
     <style>
@@ -210,6 +211,10 @@
             line-height: 1.3;
         }
         .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; color: #000000 !important; }
+        .event-project {
+            word-break: break-word;
+            line-height: 1.2;
+        }
         .event-abbr { font-weight: 600; }
         .event-time {
             flex: 0 0 auto;
@@ -289,15 +294,18 @@
             echo    '<div class="event-headerline">';
 
             // Linker Block (Name, Projekt)
-            echo        '<span class="event-left">';
+            echo        '<div class="event-left">';
             if ($abbr) {
                 echo '<span class="event-abbr">'.$abbr.'</span>: ';
             }
             echo        e($name);
             if ($projectNm) {
-                echo '<br>'.e($projectNm);
+                $projectText = mb_strlen($projectNm) > 50
+                    ? mb_substr($projectNm, 0, 50) . '…'
+                    : $projectNm;
+                echo '<div class="event-project">'.e($projectText).'</div>';
             }
-            echo        '</span>';
+            echo        '</div>';
 
             // Rechter Block (Zeit). Hier kommt das "!" bei mehrtägig
             echo        '<div class="event-time">';

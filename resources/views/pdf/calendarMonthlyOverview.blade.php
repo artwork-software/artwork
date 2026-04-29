@@ -11,6 +11,7 @@
             'a6' => 0.5,
             default => 1.0,
         };
+        $scaleFactor *= 0.9; // globally reduce font sizes by ~10%
         $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
     @endphp
     <style>
@@ -167,10 +168,10 @@
         .evt-line2 {
             font-size: {{ $s(10) }};
             font-weight: 700;
-            white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
             color: #000000 !important;
+            word-break: break-word;
+            line-height: 1.2;
         }
 
         .abbr {
@@ -265,6 +266,9 @@
                                         if ($eventName) $line2Parts[] = $eventName;
                                         if ($artistNames) $line2Parts[] = $artistNames;
                                         $line2 = implode(', ', $line2Parts);
+                                        if (mb_strlen($line2) > 60) {
+                                            $line2 = mb_substr($line2, 0, 60) . '…';
+                                        }
                                     @endphp
                                     <div class="evt" style="background:{{ $bgRGB }}; border-color:{{ $borderRGB }}; border-left-color:{{ $leftRGB }};">
                                         <div class="evt-line1">

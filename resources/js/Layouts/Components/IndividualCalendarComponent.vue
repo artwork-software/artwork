@@ -446,12 +446,18 @@ export default {
     position: sticky;
     align-self: flex-start;
     position: -webkit-sticky;
-    left: 60px;
+    left: 0;
     z-index: 22;
     background-color: #EDEDEC;
 }
 
-.stickyDaysNoMarginleft {
+@media (min-width: 1024px) {
+    .stickyDays {
+        left: 60px;
+    }
+}
+
+.stickyDaysNoMarginLeft {
     position: sticky;
     align-self: flex-start;
     position: -webkit-sticky;

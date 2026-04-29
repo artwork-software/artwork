@@ -28,7 +28,14 @@
                     <img :src="contact.profile_photo_url" alt="" class="size-20 rounded-full object-cover" />
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ contact.display_name }}</h1>
+                    <h1 v-if="!editing" class="text-2xl font-bold text-gray-900">{{ contact.display_name }}</h1>
+                    <input
+                        v-else
+                        v-model="editableDisplayName"
+                        type="text"
+                        class="text-2xl font-bold text-gray-900 border-b-2 border-indigo-400 bg-transparent outline-none px-0 py-0.5 w-full max-w-md"
+                        :placeholder="$t('Name')"
+                    />
                     <span class="inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium mt-1"
                           :style="contact.contact_type?.color
                               ? { backgroundColor: contact.contact_type.color + '15', color: contact.contact_type.color }
@@ -195,6 +202,7 @@ const props = defineProps({
 const $t = useTranslation()
 
 const editing = ref(false)
+const editableDisplayName = ref(props.contact.display_name ?? '')
 const validationErrors = ref({})
 const successMessage = ref('')
 const showSuccess = (msg) => {
@@ -231,9 +239,22 @@ const toggleEditing = () => {
             return
         }
         validationErrors.value = {}
+
+        // Save display_name if changed
+        const trimmedName = editableDisplayName.value.trim()
+        if (trimmedName && trimmedName !== props.contact.display_name) {
+            router.patch(route('crm.contacts.update', props.contact.id), {
+                display_name: trimmedName,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+            })
+        }
+
         editing.value = false
         showSuccess($t('Changes saved'))
     } else {
+        editableDisplayName.value = props.contact.display_name ?? ''
         validationErrors.value = {}
         editing.value = true
     }

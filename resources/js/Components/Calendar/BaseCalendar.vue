@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-auto h-screen' : ''">
         <!-- Topbar -->
-        <div class="w-full left-8 top-0 px-5 fixed z-[45]">
+        <div class="fixed z-[45] top-14 lg:top-0 left-0 lg:left-16 right-0">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -29,7 +29,7 @@
             </div>
         </div>
         <!-- Grid -->
-        <div class="pt-20">
+        <div class="pt-34 lg:pt-20">
             <!-- Monatsansicht -->
             <div v-if="!isDaily && !atAGlance">
                 <div class="w-max -ml-3">

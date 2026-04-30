@@ -803,16 +803,16 @@ watch([eventItems, shiftItems], () => {
     }
   }
   if (dirty) measuredHeights.value = next
-  for (const k of Array.from(itemObservers.keys())) {
-    if (!validKeys.has(k)) {
-      itemObservers.get(k)?.observer.disconnect()
-      itemObservers.delete(k)
-    }
-  }
+  const staleKeys: string[] = []
+  itemObservers.forEach((_, k) => { if (!validKeys.has(k)) staleKeys.push(k) })
+  staleKeys.forEach((k) => {
+    itemObservers.get(k)?.observer.disconnect()
+    itemObservers.delete(k)
+  })
 })
 
 onBeforeUnmount(() => {
-  for (const entry of itemObservers.values()) entry.observer.disconnect()
+  itemObservers.forEach((entry) => entry.observer.disconnect())
   itemObservers.clear()
 })
 

@@ -17,7 +17,7 @@ class DailyShiftPlanPdfBuilder
     private int $gapProminentFromMinutes = 45;
 
     /** Zielhöhe Grid (px) – Dompdf-friendly */
-    private int $gridTargetHeightPx = 380;
+    private int $gridTargetHeightPx = 180;
 
     private int $gapRowHeightPx = 14;
     private int $activeRowMinHeightPx = 18;
@@ -388,8 +388,11 @@ class DailyShiftPlanPdfBuilder
         $gapTotalHeight = $gapCount * $this->gapRowHeightPx;
         $availableForActive = max(120, $this->gridTargetHeightPx - $gapTotalHeight);
 
-        $pxPerMinute = $totalActiveMinutes > 0 ? ($availableForActive / $totalActiveMinutes) : 1.0;
-        $pxPerMinute = max(0.35, min(1.4, $pxPerMinute));
+        $pxPerMinute = $totalActiveMinutes > 0 ? ($availableForActive / $totalActiveMinutes) : 0.4;
+        // Bewusst niedrigere Bounds: weniger leerer Platz unter Schichten, ohne dass
+        // Timelines unlesbar werden. In Edge-Cases (z.B. 1h-Timeline mit viel Text)
+        // werden 1-2 Zeilen abgeschnitten – das ist akzeptiert.
+        $pxPerMinute = max(0.18, min(0.5, $pxPerMinute));
 
         $rows = [];
         foreach ($merged as $idx => $seg) {

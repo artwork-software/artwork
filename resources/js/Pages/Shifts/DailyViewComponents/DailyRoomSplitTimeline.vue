@@ -542,9 +542,32 @@ function isInVisibleSegment(minute: number): boolean {
 
 // Build unified blocks from both lists to keep vertical alignment between columns
 function buildBlocks(evItems: Item[], shItems: Item[]) {
-  const all = [...evItems, ...shItems].sort((a, b) => a.startMin - b.startMin)
+  // Separate AllDay items – they should not influence block boundaries
+  const allDayItems: Item[] = []
+  const nonAllDayItems: Item[] = []
+  for (const it of [...evItems, ...shItems]) {
+    if (it.payload?.allDay === true) {
+      allDayItems.push(it)
+    } else {
+      nonAllDayItems.push(it)
+    }
+  }
+
+  const all = nonAllDayItems.sort((a, b) => a.startMin - b.startMin)
   const blocks: any[] = []
-  if (!all.length) return blocks
+
+  // If only AllDay items exist, create a single block for them
+  if (!all.length) {
+    if (!allDayItems.length) return blocks
+    const block: any = {
+      startMin: allDayItems[0].startMin,
+      endMin: allDayItems[0].endMin,
+      items: [...allDayItems],
+    }
+    finalizeBlock(block)
+    blocks.push(block)
+    return blocks
+  }
 
   let current: any = { startMin: all[0].startMin, endMin: all[0].endMin, items: [all[0]] }
 
@@ -564,6 +587,16 @@ function buildBlocks(evItems: Item[], shItems: Item[]) {
 
   finalizeBlock(current)
   blocks.push(current)
+
+  // Insert AllDay items into the first non-gap block
+  if (allDayItems.length) {
+    const firstBlock = blocks.find((b: any) => b.type !== 'gap')
+    if (firstBlock) {
+      firstBlock.items.push(...allDayItems)
+      firstBlock.eventItems.push(...allDayItems.filter((it: any) => it.type === 'event'))
+      firstBlock.shiftItems.push(...allDayItems.filter((it: any) => it.type === 'shift'))
+    }
+  }
 
   // move gaps into previous blocks as property
   const compact: any[] = []
@@ -656,6 +689,23 @@ function assignLanes(items: Item[]) {
 
 function maxLaneIndex(items: Item[]) {
   return items.reduce((m: number, it: any) => Math.max(m, it.laneIndex ?? 0), 0)
+}
+
+type HeightMode = 'proportional' | 'content-only' | 'uniform'
+
+function detectHeightMode(block: any): HeightMode {
+  const nonAllDay = [...(block.eventItems || []), ...(block.shiftItems || [])]
+    .filter((it: any) => it.payload?.allDay !== true)
+
+  if (nonAllDay.length <= 1) return 'content-only'
+
+  const first = nonAllDay[0]
+  const allSameTime = nonAllDay.every(
+    (it: any) => it.startMin === first.startMin && it.endMin === first.endMin
+  )
+  if (allSameTime) return 'uniform'
+
+  return 'proportional'
 }
 
 const blocks = computed(() => buildBlocks(eventItems.value, shiftItems.value))
@@ -759,6 +809,13 @@ function getDailyTimeHeight(item: any): number {
 
 
 function getEventItemHeightPx(item: any, block: any) {
+    // AllDay events: nur Inhaltsmindesthöhe, NICHT zeitproportional strecken.
+    // Die tatsächliche Höhe wird im layoutBlocks auf die Blockhöhe angepasst.
+    if (item.payload?.allDay === true) {
+        const expanded = !!eventsExpanded.value[item.id]
+        return expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
+    }
+
     const timeHeight = getDailyTimeHeight(item)
 
     // Multi-Day: keine riesigen Expanded-Höhen erzwingen,
@@ -803,12 +860,21 @@ type CompactSegment = {
   shiftStack?: Record<number, number>,
 }
 
-function buildCompactSegments(block: any): CompactSegment[] {
+function buildCompactSegments(block: any, mode: HeightMode = 'proportional'): CompactSegment[] {
   const items: any[] = Array.isArray(block?.items) ? block.items : []
   if (!items.length) return []
   const intervals = items
+    .filter(it => it.payload?.allDay !== true)
     .map(it => ({ s: Math.max(0, it.startMin), e: Math.max(0, it.endMin) }))
     .sort((a, b) => a.s - b.s)
+
+  // If all items are allDay, use their intervals as fallback
+  if (!intervals.length) {
+    const allDayIntervals = items
+      .map(it => ({ s: Math.max(0, it.startMin), e: Math.max(0, it.endMin) }))
+      .sort((a, b) => a.s - b.s)
+    intervals.push(...allDayIntervals)
+  }
 
   // Merge zu aktiven Segmenten
   const merged: { s: number, e: number }[] = []
@@ -825,14 +891,41 @@ function buildCompactSegments(block: any): CompactSegment[] {
     }
   }
 
+  // Estimate content height for items within a time range
+  const estimateContentHeight = (startMin: number, endMin: number): number => {
+    const nonAllDayItems = items.filter((it: any) => it.payload?.allDay !== true)
+    const overlapping = nonAllDayItems.filter((it: any) =>
+      it.startMin < endMin && it.endMin > startMin
+    )
+    let maxH = 0
+    for (const it of overlapping) {
+      const h = it.type === 'shift'
+        ? estimateShiftExpandedMinPx(it.payload)
+        : estimateEventExpandedMinPx(it.payload)
+      maxH = Math.max(maxH, h)
+    }
+    return maxH || EXPANDED_MIN_SHIFT
+  }
+
   // In Pixelhöhen und Basistops umrechnen
   const segments: CompactSegment[] = []
   let y = 0
   for (let i = 0; i < merged.length; i++) {
     const m = merged[i]
-    // Ab jetzt IMMER zeitproportionale Segmente, damit zeitliche Relativität erhalten bleibt
-    const heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
-    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: true })
+
+    let heightPx: number
+    let isProportional = true
+
+    if (mode === 'content-only' || mode === 'uniform') {
+      // Content-driven: use estimated content height instead of time-proportional
+      heightPx = estimateContentHeight(m.s, m.e)
+      isProportional = false
+    } else {
+      // Proportional: time-based
+      heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
+    }
+
+    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: isProportional })
     y += heightPx
     if (i < merged.length - 1) y += SEGMENT_GAP_PX
   }
@@ -875,6 +968,9 @@ function getSegmentForMinute(block: any, minute: number): CompactSegment | null 
 }
 
 function getTopForItem(item: any, block: any): number {
+  // AllDay items always start at the top of the block
+  if (item.payload?.allDay === true) return 0
+
   const seg = getSegmentForMinute(block, item.startMin)
   if (!seg) return 0
   // In proportionalen Segmenten: rein zeitbasierter Top-Offset
@@ -886,8 +982,10 @@ function getTopForItem(item: any, block: any): number {
 // Blöcke um Layout-Höhe erweitern (Pixelhöhe = max Bottom beider Spalten)
 const layoutBlocks = computed(() => {
   return (blocks.value || []).map((b: any) => {
-    // Kompakt-Segmente vorbereiten (immer neu berechnen, da Min-Höhen dynamisch sind)
-    b.compactSegments = buildCompactSegments(b)
+    // Height-Mode erkennen und Kompakt-Segmente vorbereiten
+    const mode = detectHeightMode(b)
+    b.heightMode = mode
+    b.compactSegments = buildCompactSegments(b, mode)
 
       const computeVisualMetrics = (arr: any[], type: 'event' | 'shift') => {
           for (const it of arr) {
@@ -947,19 +1045,39 @@ const layoutBlocks = computed(() => {
     b.eventVisualLaneCount = assignVisualLanesByRect(b.eventItems || [])
     b.shiftVisualLaneCount = assignVisualLanesByRect(b.shiftItems || [])
 
-    // Gesamthöhe des Blocks auf Basis der tatsächlich verwendeten Tops/Höhen berechnen
+    // Gesamthöhe des Blocks: nur non-AllDay Items bestimmen die Blockhöhe
     let maxBottom = 0
     for (const it of b.eventItems || []) {
+      if (it.payload?.allDay === true) continue
       const top = getTopForItem(it, b)
       const h = getEventItemHeightPx(it, b)
       maxBottom = Math.max(maxBottom, top + h)
     }
     for (const it of b.shiftItems || []) {
+      if (it.payload?.allDay === true) continue
       const top = getTopForItem(it, b)
       const h = getShiftItemHeightPx(it, b)
       maxBottom = Math.max(maxBottom, top + h)
     }
-    return { ...b, pixelHeight: Math.max(48, maxBottom) }
+
+    // AllDay-Events: content minimum kann die Blockhöhe erhöhen wenn nötig
+    for (const it of b.eventItems || []) {
+      if (it.payload?.allDay !== true) continue
+      const contentH = getEventItemHeightPx(it, b)
+      maxBottom = Math.max(maxBottom, contentH)
+    }
+
+    const blockHeight = Math.max(48, maxBottom)
+
+    // AllDay-Events passen sich an die Blockhöhe an
+    for (const it of b.eventItems || []) {
+      if (it.payload?.allDay !== true) continue
+      ;(it as any)._vTop = 0
+      ;(it as any)._vHeight = blockHeight
+      ;(it as any)._vBottom = blockHeight
+    }
+
+    return { ...b, pixelHeight: blockHeight }
   })
 })
 

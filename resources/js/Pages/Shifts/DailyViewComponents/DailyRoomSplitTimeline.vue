@@ -16,7 +16,7 @@
               <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getEventBlockStyle(block)">
                 <template v-for="item in block.eventItems" :key="item.key">
 
-                    <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)">
+                    <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
                     <SingleEventInDailyShiftView
                       v-bind="item.props"
                       @toggle="onEventToggle(item.id, $event)"
@@ -43,7 +43,7 @@
             <div v-for="(block, bIdx) in layoutBlocks" :key="'sh-block-' + bIdx" class="">
               <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getShiftBlockStyle(block)">
                 <template v-for="item in block.shiftItems" :key="item.key">
-                  <div class="absolute rounded-b-lg" :style="getShiftItemStyle(item, block)">
+                  <div class="absolute rounded-b-lg" :style="getShiftItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
                     <SingleShiftInDailyShiftView v-bind="item.props" @toggle="onShiftToggle(item.id, $event)" />
                   </div>
                 </template>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import SingleEventInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue'
 import SingleShiftInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -716,9 +716,22 @@ const shiftsExpanded = ref<Record<number, boolean>>({})
 
 function onEventToggle(id: number, state: boolean) {
   eventsExpanded.value[id] = state
+  // Stale Messung entfernen, damit ResizeObserver die neue Höhe meldet
+  const key = `event-${id}`
+  if (measuredHeights.value[key] !== undefined) {
+    const next = { ...measuredHeights.value }
+    delete next[key]
+    measuredHeights.value = next
+  }
 }
 function onShiftToggle(id: number, state: boolean) {
   shiftsExpanded.value[id] = state
+  const key = `shift-${id}`
+  if (measuredHeights.value[key] !== undefined) {
+    const next = { ...measuredHeights.value }
+    delete next[key]
+    measuredHeights.value = next
+  }
 }
 
 // Initialzustände anhand der Kind-Defaults ableiten
@@ -742,6 +755,67 @@ watch(shiftItems, (list) => {
   }
 }, { immediate: true, deep: true })
 
+// Tatsächlich gerenderte Höhen pro Item per ResizeObserver tracken,
+// damit Lane-Berechnungen visuelle Überlappungen erkennen, wenn der
+// Karteninhalt (z.B. lange Timeline-Beschreibungen) die geschätzte
+// Höhe übersteigt.
+const measuredHeights = ref<Record<string, number>>({})
+const itemObservers = new Map<string, { el: HTMLElement, observer: ResizeObserver }>()
+
+function setItemRef(el: any, key: string) {
+  const target = el instanceof HTMLElement ? el : null
+  // Wichtig: Bei v-for mit inline arrow function ref ruft Vue auf jedem Render
+  // zuerst die alte Funktion mit null und dann die neue mit dem Element auf.
+  // Wir dürfen daher die Messung NICHT bei null-Aufrufen löschen, sonst flackert
+  // das Layout dauerhaft.
+  if (!target) return
+
+  const existing = itemObservers.get(key)
+  if (existing && existing.el === target) return
+
+  if (existing) existing.observer.disconnect()
+
+  const observer = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const newH = Math.ceil(entry.contentRect.height)
+      const prevH = measuredHeights.value[key] ?? 0
+      if (newH > 0 && Math.abs(prevH - newH) >= 2) {
+        measuredHeights.value = { ...measuredHeights.value, [key]: newH }
+      }
+    }
+  })
+  observer.observe(target)
+  itemObservers.set(key, { el: target, observer })
+}
+
+// Verwaiste Messungen aufräumen, wenn Items aus dem Block verschwinden
+watch([eventItems, shiftItems], () => {
+  const validKeys = new Set<string>([
+    ...eventItems.value.map((it: any) => it.key),
+    ...shiftItems.value.map((it: any) => it.key),
+  ])
+  let dirty = false
+  const next = { ...measuredHeights.value }
+  for (const k of Object.keys(next)) {
+    if (!validKeys.has(k)) {
+      delete next[k]
+      dirty = true
+    }
+  }
+  if (dirty) measuredHeights.value = next
+  for (const k of Array.from(itemObservers.keys())) {
+    if (!validKeys.has(k)) {
+      itemObservers.get(k)?.observer.disconnect()
+      itemObservers.delete(k)
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  for (const entry of itemObservers.values()) entry.observer.disconnect()
+  itemObservers.clear()
+})
+
 // Min-Höhen in Pixel (geschätzt): collapsed = Headerhöhe, expanded = Details sichtbar
 const COLLAPSED_MIN_EVENT = 56
 const EXPANDED_MIN_EVENT = 140
@@ -754,6 +828,9 @@ const LANE_MIN_WIDTH_PX = 256
 // Heuristik: geschätzte Zeilenhöhe für eine Entity/Drop-Zeile in der aufgeklappten Schicht
 const SHIFT_ROW_PX = 36
 const SHIFT_ROW_GAP_PX = 4 // space-y-1 bzw. mt-1
+const EVENT_TIMELINE_BUTTON_PX = 40
+const EVENT_CARD_PADDING_PX = 12
+const TIMELINE_DESCRIPTION_BUFFER_PX = 16
 
 function estimateShiftExpandedMinPx(shift: any): number {
   if (!shift) return EXPANDED_MIN_SHIFT
@@ -793,9 +870,10 @@ function estimateEventExpandedMinPx(event: any): number {
   if (!event) return EXPANDED_MIN_EVENT
   const timelines = Array.isArray(event?.timelines) ? event.timelines.length : 0
   const headerPx = COLLAPSED_MIN_EVENT
-  const rowsPx = timelines * SHIFT_ROW_PX
+  const rowsPx = timelines * (SHIFT_ROW_PX + TIMELINE_DESCRIPTION_BUFFER_PX)
   const gapsPx = Math.max(0, timelines - 1) * SHIFT_ROW_GAP_PX + SHIFT_ROW_GAP_PX
-  const estimated = headerPx + rowsPx + gapsPx
+  const buttonPx = EVENT_TIMELINE_BUTTON_PX + EVENT_CARD_PADDING_PX
+  const estimated = headerPx + rowsPx + gapsPx + buttonPx
   return Math.max(EXPANDED_MIN_EVENT, estimated)
 }
 
@@ -809,11 +887,14 @@ function getDailyTimeHeight(item: any): number {
 
 
 function getEventItemHeightPx(item: any, block: any) {
+    const measured = measuredHeights.value[item.key] ?? 0
+
     // AllDay events: nur Inhaltsmindesthöhe, NICHT zeitproportional strecken.
     // Die tatsächliche Höhe wird im layoutBlocks auf die Blockhöhe angepasst.
     if (item.payload?.allDay === true) {
         const expanded = !!eventsExpanded.value[item.id]
-        return expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
+        const estimated = expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
+        return Math.max(estimated, measured)
     }
 
     const timeHeight = getDailyTimeHeight(item)
@@ -821,24 +902,25 @@ function getEventItemHeightPx(item: any, block: any) {
     // Multi-Day: keine riesigen Expanded-Höhen erzwingen,
     // nur mind. Headerhöhe
     if (item.isMultiDay) {
-        return Math.max(timeHeight, COLLAPSED_MIN_EVENT)
+        return Math.max(timeHeight, COLLAPSED_MIN_EVENT, measured)
     }
 
     const expanded = !!eventsExpanded.value[item.id]
     const minH = expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
-    return Math.max(timeHeight, minH)
+    return Math.max(timeHeight, minH, measured)
 }
 
 function getShiftItemHeightPx(item: any, block: any) {
+    const measured = measuredHeights.value[item.key] ?? 0
     const timeHeight = getDailyTimeHeight(item)
 
     if (item.isMultiDay) {
-        return Math.max(timeHeight, COLLAPSED_MIN_SHIFT)
+        return Math.max(timeHeight, COLLAPSED_MIN_SHIFT, measured)
     }
 
     const expanded = !!shiftsExpanded.value[item.id]
     const minH = expanded ? estimateShiftExpandedMinPx(item?.payload) : COLLAPSED_MIN_SHIFT
-    return Math.max(timeHeight, minH)
+    return Math.max(timeHeight, minH, measured)
 }
 
 
@@ -1088,9 +1170,9 @@ const hasAny = computed(() => hasEvents.value || hasShifts.value)
 
 // style helpers
 function getEventItemStyle(item: any, block: any) {
-  // Breite/Position für Events basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
-  // Dadurch werden Events nebeneinander dargestellt, wenn ihre ausgeklappten Höhen kollidieren –
-  // auch ohne direkte Zeitüberschneidung.
+  // Breite/Position für Events: jedes Item kennt seine zugewiesene Lane und nutzt
+  // die Gesamt-Lane-Anzahl des Blocks. Damit weiß ein Termin in Spalte 1 immer, dass
+  // es Spalte 2 gibt (dort liegt z.B. ein hoher Termin) und nimmt nur seine Spalte ein.
   const ensureVisualMetrics = (it: any) => {
     if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
       const top = getTopForItem(it, block)
@@ -1103,13 +1185,11 @@ function getEventItemStyle(item: any, block: any) {
   const arr: any[] = Array.isArray(block?.eventItems) ? block.eventItems : []
   for (const it of arr) ensureVisualMetrics(it)
   ensureVisualMetrics(item)
-  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
-  const overlapping = arr.filter(it => overlapsRect(it, item))
-  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
-  const activeCount = Math.max(1, activeLaneIndices.length)
-  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
-  const widthPct = 100 / activeCount
-  const leftPct = widthPct * rank
+
+  const totalLanes = Math.max(1, block?.eventVisualLaneCount || 1)
+  const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
+  const widthPct = 100 / totalLanes
+  const leftPct = widthPct * laneIndex
   const topPx = getTopForItem(item, block)
   const heightPx = getEventItemHeightPx(item, block)
   // hasCollision an Kinder weitergeben (Dokumentation):
@@ -1123,7 +1203,7 @@ function getEventItemStyle(item: any, block: any) {
   const bg = typeHex ? hexToRgba(typeHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',
-    height: heightPx + 'px',
+    minHeight: heightPx + 'px',
     left: `calc(${leftPct}% + 2px)`,
     width: `calc(${widthPct}% - 4px)`,
     backgroundColor: bg,
@@ -1131,12 +1211,13 @@ function getEventItemStyle(item: any, block: any) {
 }
 
 function getShiftItemStyle(item: any, block: any) {
-  // Breite/Position für Schichten basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
+  // Breite/Position für Schichten: jede Schicht kennt ihre zugewiesene Lane und nutzt
+  // die Gesamt-Lane-Anzahl des Blocks. Eine Schicht in Spalte 1 weiß damit, dass es
+  // Spalte 2 (mit hoher Schicht) gibt und nimmt nur ihre Spalte ein.
   const ensureVisualMetrics = (it: any) => {
     if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
       const top = getTopForItem(it, block)
-      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
-      const vH = Math.max(timeH, estimateShiftExpandedMinPx(it?.payload))
+      const vH = getShiftItemHeightPx(it, block)
       it._vTop = top
       it._vHeight = vH
       it._vBottom = top + vH
@@ -1145,13 +1226,11 @@ function getShiftItemStyle(item: any, block: any) {
   const arr: any[] = Array.isArray(block?.shiftItems) ? block.shiftItems : []
   for (const it of arr) ensureVisualMetrics(it)
   ensureVisualMetrics(item)
-  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
-  const overlapping = arr.filter(it => overlapsRect(it, item))
-  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
-  const activeCount = Math.max(1, activeLaneIndices.length)
-  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
-  const widthPct = 100 / activeCount
-  const leftPct = widthPct * rank
+
+  const totalLanes = Math.max(1, block?.shiftVisualLaneCount || 1)
+  const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
+  const widthPct = 100 / totalLanes
+  const leftPct = widthPct * laneIndex
   const topPx = getTopForItem(item, block)
   const heightPx = getShiftItemHeightPx(item, block)
   // Wichtig laut Vorgabe: Schicht-Styling ändert sich nicht bei Kollisionen; daher kein hasCollision-Prop.
@@ -1163,7 +1242,7 @@ function getShiftItemStyle(item: any, block: any) {
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',
-    height: heightPx + 'px',
+    minHeight: heightPx + 'px',
     left: `calc(${leftPct}% + 2px)`,
     width: `calc(${widthPct}% - 4px)`,
     backgroundColor: bg,

@@ -15,21 +15,21 @@
         <div class="col-span-4 mt-12">
         </div>
     </div>
-    <div class="grid grid-cols-12 w-full mb-20">
-        <div class="col-span-7">
+    <div class="grid grid-cols-12 w-full mb-20 items-start">
+        <div ref="calendarCol" class="col-span-7">
             <UserAvailabilityCalendar :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>
         <div class="col-span-1">
 
         </div>
-        <div class="col-span-4 mt-12">
+        <div class="col-span-4 mt-12 overflow-y-auto" :style="{ maxHeight: calendarHeight + 'px' }">
             <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" />
         </div>
     </div>
 </template>
 
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent, ref, onMounted, onBeforeUnmount} from 'vue'
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
 import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 import TemporarilyHired from "@/Pages/Users/Components/TemporarilyHired.vue";
@@ -58,5 +58,28 @@ export default defineComponent({
         'showVacationsAndAvailabilitiesDate',
         'availabilities'
     ],
+    setup() {
+        const calendarCol = ref(null)
+        const calendarHeight = ref(500)
+        let observer = null
+
+        onMounted(() => {
+            if (calendarCol.value) {
+                calendarHeight.value = calendarCol.value.offsetHeight
+                observer = new ResizeObserver((entries) => {
+                    for (const entry of entries) {
+                        calendarHeight.value = entry.target.offsetHeight
+                    }
+                })
+                observer.observe(calendarCol.value)
+            }
+        })
+
+        onBeforeUnmount(() => {
+            observer?.disconnect()
+        })
+
+        return { calendarCol, calendarHeight }
+    },
 })
 </script>

@@ -230,7 +230,7 @@
                                     :event-statuses="eventStatusesResolved"
                                     :crafts="craftsResolved"
                                     :shift-qualifications="shiftQualificationsArray"
-                                    :px-per-min="1.0"
+                                    :px-per-min="0.5"
                                     :gap-threshold-min="90"
                                     @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
                                     @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"

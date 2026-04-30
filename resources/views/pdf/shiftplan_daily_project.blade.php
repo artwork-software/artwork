@@ -174,8 +174,8 @@
             /* kein page-break – physische Umbrüche steuert .day */
         }
 
-        /* thead auf jeder Seite wiederholen wenn die Tabelle umbricht */
-        table.grid thead{ display: table-header-group; }
+        /* thead nur einmal pro Tag-Tabelle anzeigen (kein doppelter Header bei Seitenumbruch) */
+        table.grid thead{ display: table-row-group; }
         table.grid tr{ page-break-inside: avoid; }
 
         .day{

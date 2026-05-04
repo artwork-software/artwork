@@ -366,9 +366,7 @@
                     ];
                 }
 
-                $maxRoleCards = 6;
-                $roleCardsVisible = array_slice($roleCards, 0, $maxRoleCards);
-                $hiddenRoleCount = max(0, count($roleCards) - count($roleCardsVisible));
+                $roleCardsVisible = $roleCards;
             @endphp
 
             <div class="hdr">
@@ -420,7 +418,6 @@
 
                                                     $entries[] = $label;
                                                 }
-                                                $entries = array_slice($entries, 0, 2);
                                                 $peopleLine = !empty($entries) ? implode(' • ', $entries) : '—';
                                             }
                                         @endphp
@@ -431,12 +428,6 @@
                                         </li>
                                     @endforeach
 
-                                    @if($hiddenRoleCount > 0)
-                                        <li class="roleItem">
-                                            <div class="roleLine">Weitere Rollen</div>
-                                            <div class="rolePeople">+{{ $hiddenRoleCount }}</div>
-                                        </li>
-                                    @endif
                                 </ul>
                             @else
                                 <div class="roleItem">

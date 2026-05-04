@@ -734,7 +734,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | inventory.settings') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -762,7 +762,7 @@ const navigation = ref([
                 href: route('inventory-management.settings.category'),
                 icon: 'IconBuildingWarehouse',
                 current: route().current('inventory-management.settings.category'),
-                has_permission: is('artwork admin')
+                has_permission: is('artwork admin') || can('inventory.settings')
             },
             {
                 name: 'Material Sets',

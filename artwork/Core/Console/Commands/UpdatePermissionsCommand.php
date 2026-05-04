@@ -74,6 +74,19 @@ class UpdatePermissionsCommand extends Command
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::INVENTORY_SETTINGS->value,
+                'name_de' => "Inventareinstellungen verwalten",
+                'translation_key' => "Manage inventory settings",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt den Zugriff auf und die Verwaltung aller Inventareinstellungen ' .
+                    '(Kategorien, Eigenschaften, Status, Tags, Allgemein) sowie die Sichtbarkeit ' .
+                    'von „Inventar" im Systemmenü',
+                'tooltipKey' => 'Allows access to and management of all inventory settings ' .
+                    '(categories, properties, status, tags, general) as well as the visibility ' .
+                    'of "Inventory" in the system menu',
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
                 'name_de' => "Private Kontaktdaten einsehen’",
                 'translation_key' => "View private contact details",

@@ -6,14 +6,20 @@
     ]"
     >
         <div :class="classes">
-            <!-- Urlaub zuerst anzeigen, dann restliche Teile -->
+            <!-- Abwesenheit -->
             <span
                 v-if="isOnVacation"
-                :class="vacationIsItalic ? 'italic' : ''"
                 class="text-[#f08b32]"
             >
-                {{ vacationLabel }}<template v-if="cellParts.length || compensationDayToday">, </template>
+                {{ vacationLabel }}<template v-if="availabilitiesToday.length || cellParts.length || compensationDayToday">, </template>
             </span>
+
+            <!-- Verfügbarkeit -->
+            <template v-for="av in availabilitiesToday" :key="`av-top:${av.id}`">
+                <span class="text-green-500">
+                    {{ availabilityLabel(av) }}<template v-if="cellParts.length || compensationDayToday">, </template>
+                </span>
+            </template>
 
             <span v-if="compensationDayToday" class="text-teal-400">
                 {{ compensationDayToday === 'full' ? t('Compensation day off') : t('Half compensation day off') }}<template v-if="cellParts.length">, </template>
@@ -59,22 +65,16 @@ const props = defineProps({
 const page = usePage()
 
 /**
- * Vacation types: als Konstante statt ref (keine Reaktivität nötig)
+ * Vacation types: Typ-Label-Mapping
  */
-const vacationTypes = [
-    { name: 'Verfügbar', type: 'AVAILABLE' },
-    { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
-    { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
-    { name: 'Frei', type: 'FREE_WORK' },
-]
+const vacationTypeMap = {
+    AVAILABLE: 'Verfügbar',
+    OFF_WORK: 'Arbeitsfreier Tag',
+    NOT_AVAILABLE: 'Nicht Verfügbar',
+    FREE_WORK: 'Frei',
+}
 
-const vacationTypeMap = computed(() => {
-    const map = Object.create(null)
-    for (const v of vacationTypes) map[v.type] = v.name
-    return map
-})
-
-/** Urlaub am Tag nur 1x ermitteln */
+/** Abwesenheit am Tag (Vacation-Einträge) */
 const vacationToday = computed(() => {
     const list = props.user?.vacations ?? []
     return list.find(v => v?.date === props.day.withoutFormat) ?? null
@@ -84,22 +84,25 @@ const isOnVacation = computed(() => !!vacationToday.value)
 
 const vacationLabel = computed(() => {
     const v = vacationToday.value
-    if (!v) return 'On Vacation'
-    const label = vacationTypeMap.value?.[v.type] || 'On Vacation'
+    if (!v) return t('not available')
+    const label = vacationTypeMap[v.type] || t('not available')
     if (!v.full_day && v.start_time && v.end_time) {
         return `${v.start_time} - ${v.end_time} ${label}`
     }
     return label
 })
 
-/** Prüft ob die Vacation vom User der Zelle selbst eingetragen wurde */
-const vacationIsItalic = computed(() => {
-    const v = vacationToday.value
-    if (!v) return false
-    const cellUserId = props.user?.element?.id
-    // type 0 = User, bei Freelancern/ServiceProvidern ist created_by nie gleich element.id
-    return v.created_by != null && cellUserId != null && v.created_by == cellUserId && props.user?.type === 0
-})
+/** Verfügbarkeit-Label: Zeitraum + Kommentar */
+function availabilityLabel(av) {
+    const parts = []
+    if (!av.full_day && av.start_time && av.end_time) {
+        parts.push(`${av.start_time} - ${av.end_time}`)
+    }
+    if (av.comment) {
+        parts.push(`„${av.comment}"`)
+    }
+    return parts.length ? parts.join(' ') : t('Available')
+}
 
 /** ID des Users der Zelle (für italic-Prüfung) */
 const cellUserId = computed(() => props.user?.element?.id)
@@ -219,17 +222,6 @@ const cellParts = computed(() => {
             key: 'comment',
             text: comment.comment,
             class: isSelfCreated(comment.created_by) ? 'italic' : '',
-        })
-    }
-
-    // Availabilities (nur Comments anzeigen, wie vorher)
-    for (const a of availabilitiesToday.value) {
-        if (!a?.comment) continue
-        // Availabilities werden immer vom User selbst eingetragen → immer italic
-        parts.push({
-            key: `av:${a.id}`,
-            text: `„${a.comment}" `,
-            class: 'text-green-500 italic',
         })
     }
 

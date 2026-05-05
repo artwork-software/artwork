@@ -48,7 +48,7 @@
             </div>
 
             <div class="pb-10">
-                <template v-if="hasShifts">
+                <template v-if="hasContent">
                     <div v-for="dayData in groupedShifts" :key="dayData.day">
                         <!-- Day header — black sticky bar -->
                         <div
@@ -90,123 +90,358 @@
                             </div>
                         </div>
 
-                        <div v-for="roomData in dayData.rooms" :key="roomData.room_id">
-                            <!-- Room header -->
-                            <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-gray-600 uppercase tracking-wide border-gray-200 bg-gray-50 rounded-r-lg">
-                                <span>{{ roomData.room ? roomData.room.name : $t('No room') }}</span>
-                                <ToolTipComponent
-                                    v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
-                                    direction="left"
-                                    :tooltip-text="$t('Add Shift')"
-                                    icon="IconPlus"
-                                    icon-size="size-4"
-                                    @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
-                                    classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out mr-2"
-                                />
-                            </div>
-
-                            <!-- Shifts -->
-                            <template v-for="shift in roomData.shifts" :key="shift.id">
-                                <div class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
-                                     :style="{ backgroundColor: hexToRgba(shift.craft?.color, 0.12), borderLeftColor: shift.craft?.color || '#d1d5db' }">
-                                    <!-- Multi-edit checkbox -->
-                                    <div v-if="multiEditMode" class="shrink-0">
-                                        <input
-                                            type="checkbox"
-                                            :checked="selectedShiftIds.includes(shift.id)"
-                                            @change="toggleShiftSelection(shift.id)"
-                                            class="input-checklist"
-                                        />
+                        <div v-for="roomData in dayData.rooms" :key="roomData.room_id" class="mb-1">
+                            <!-- ============ Mode B/D: vertical room bar layout (show_appointments active) ============ -->
+                            <template v-if="showAppointments">
+                                <div class="flex border border-gray-200 rounded-r-lg overflow-hidden">
+                                    <!-- Vertical room bar -->
+                                    <div class="flex-shrink-0 w-32 bg-gray-50 px-3 py-2 flex items-start font-semibold text-xs uppercase tracking-wide text-gray-600 border-r border-gray-200">
+                                        {{ roomData.room ? roomData.room.name : $t('No room') }}
                                     </div>
 
-                                    <!-- Shift info -->
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-x-2">
-                                            <!-- Craft abbreviation + time -->
-                                            <div class="flex items-center gap-x-1.5 text-sm">
-                                                <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="shift.is_committed" />
-                                                <span v-if="shift.shiftGroup && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ shift.shiftGroup.name }})</span>
-                                                <span class="font-medium" :style="{ color: shift.craft?.color }">{{ shift.craft?.abbreviation }}</span>
-                                                <span>{{ shift.start }} - {{ shift.end }}</span>
-                                            </div>
+                                    <!-- Appointments column -->
+                                    <div class="flex-1 min-w-0 px-2 py-1.5 border-r border-gray-200">
+                                        <div
+                                            v-for="event in roomData.events || []"
+                                            :key="`evt-${event.id}`"
+                                            class="flex items-center gap-2 border-b border-gray-100 py-1 px-1.5 border-l-4"
+                                            :style="{ backgroundColor: hexToRgba(event.event_type?.hex_code || event.event_type?.color, 0.12), borderLeftColor: event.event_type?.hex_code || event.event_type?.color || '#d1d5db' }"
+                                        >
+                                            <span class="font-medium text-xs" :style="{ color: event.event_type?.hex_code || event.event_type?.color }">
+                                                {{ event.event_type?.abbreviation }}
+                                            </span>
+                                            <span class="text-xs text-gray-700 truncate flex-1 min-w-0">
+                                                {{ event.eventName || event.name || event.event_type?.name }}
+                                            </span>
+                                            <span class="text-[11px] text-gray-500 tabular-nums shrink-0">
+                                                <template v-if="event.allDay">{{ $t('All day') }}</template>
+                                                <template v-else>{{ formatEventTime(event.start_time) }} – {{ formatEventTime(event.end_time) }}</template>
+                                            </span>
+                                            <Link
+                                                v-if="event.project"
+                                                :href="route('projects.tab', { project: event.project.id, projectTab: firstProjectShiftTabId })"
+                                                class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-black underline hover:bg-gray-50 transition shrink-0"
+                                            >
+                                                {{ event.project.name }}
+                                            </Link>
+                                        </div>
+                                        <button
+                                            v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
+                                            type="button"
+                                            class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
+                                            @click="openAddEventForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
+                                        >
+                                            <PropertyIcon name="IconPlus" class="size-3" />
+                                            {{ $t('Add appointment') }}
+                                        </button>
+                                    </div>
 
-                                            <!-- Total count with status dot -->
-                                            <div class="flex items-center text-xs text-gray-500">
-                                                ({{ getUsedWorkerCount(shift) }}/{{ getMaxWorkerCount(shift) }})
-                                                <span class="inline-block w-2 h-2 rounded-full ml-1"
-                                                      :class="{
-                                                        'bg-red-500': getUsedWorkerCount(shift) === 0 && getMaxWorkerCount(shift) !== 0,
-                                                        'bg-yellow-500': getUsedWorkerCount(shift) > 0 && getUsedWorkerCount(shift) < getMaxWorkerCount(shift),
-                                                        'bg-green-500': getUsedWorkerCount(shift) >= getMaxWorkerCount(shift)
-                                                      }">
-                                                </span>
+                                    <!-- Shifts column -->
+                                    <div class="flex-[2] min-w-0 px-2 py-1.5">
+                                        <template v-for="(section, sIdx) in renderShiftSections(roomData, dayData.day)" :key="sIdx">
+                                            <!-- Shift group bar -->
+                                            <div
+                                                v-if="section.type === 'group_bar'"
+                                                class="bg-zinc-100 border-l-4 border-zinc-300 px-2 py-1 mt-1 first:mt-0 text-xs font-semibold flex items-center justify-between rounded-r"
+                                            >
+                                                <span>{{ section.name }}</span>
+                                                <ToolTipComponent
+                                                    v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
+                                                    direction="left"
+                                                    :tooltip-text="$t('Add Shift')"
+                                                    icon="IconPlus"
+                                                    icon-size="size-3.5"
+                                                    @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
+                                                    classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-5 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
+                                                />
                                             </div>
-
-                                            <!-- Individual qualification lines -->
-                                            <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                            <!-- Shift row -->
+                                            <template v-else-if="section.type === 'shift'">
                                                 <div
-                                                    v-for="row in getQualificationRows(shift)"
-                                                    :key="row.shift_qualification_id"
-                                                    class="flex items-center"
+                                                    v-if="!hideShiftRow"
+                                                    class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                                    :style="{ backgroundColor: hexToRgba(section.shift.craft?.color, 0.12), borderLeftColor: section.shift.craft?.color || '#d1d5db' }"
                                                 >
-                                                    {{ row.workerCount }}/{{ row.maxWorkerCount }}
-                                                    <PropertyIcon
-                                                        stroke-width="1"
-                                                        class="text-black size-3 ml-0.5"
-                                                        :name="getShiftQualificationIcon(row.shift_qualification_id)"
+                                                    <div v-if="multiEditMode" class="shrink-0">
+                                                        <input
+                                                            type="checkbox"
+                                                            :checked="selectedShiftIds.includes(section.shift.id)"
+                                                            @change="toggleShiftSelection(section.shift.id)"
+                                                            class="input-checklist"
+                                                        />
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="flex items-center gap-x-2 flex-wrap">
+                                                            <div class="flex items-center gap-x-1.5 text-sm">
+                                                                <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="section.shift.is_committed" />
+                                                                <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
+                                                                <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
+                                                                <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
+                                                            </div>
+                                                            <div class="flex items-center text-xs text-gray-500">
+                                                                ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
+                                                                <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                                      :class="{
+                                                                        'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
+                                                                        'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
+                                                                        'bg-green-500': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
+                                                                      }">
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                                <div
+                                                                    v-for="row in getQualificationRows(section.shift)"
+                                                                    :key="row.shift_qualification_id"
+                                                                    class="flex items-center"
+                                                                >
+                                                                    {{ row.workerCount }}/{{ row.maxWorkerCount }}
+                                                                    <PropertyIcon
+                                                                        stroke-width="1"
+                                                                        class="text-black size-3 ml-0.5"
+                                                                        :name="getShiftQualificationIcon(row.shift_qualification_id)"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                                            {{ section.shift.description }}
+                                                        </div>
+                                                    </div>
+                                                    <div v-if="getProject(section.shift)" class="shrink-0">
+                                                        <Link
+                                                            :href="getProjectShiftTabUrl(section.shift)"
+                                                            class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                                        >
+                                                            {{ getProject(section.shift).name }}
+                                                        </Link>
+                                                    </div>
+                                                    <div class="shrink-0">
+                                                        <BaseMenu white-menu-background>
+                                                            <BaseMenuItem icon="IconEdit" :title="$t('Edit shift')" white-menu-background @click="openEditShift(section.shift)" />
+                                                            <BaseMenuItem icon="IconCalendarEvent" :title="$t('Show in shift plan')" white-menu-background @click="navigateToShiftPlan(section.shift, dayData.day)" />
+                                                        </BaseMenu>
+                                                    </div>
+                                                </div>
+                                                <div v-if="listViewSettings.detailed_shift_overview" :class="hideShiftRow ? 'mb-1' : 'ml-2 mb-1'">
+                                                    <SingleShiftInDailyShiftView
+                                                        :shift="normalizeShift(section.shift)"
+                                                        :shift-qualifications="shiftQualifications"
+                                                        :crafts="crafts"
+                                                        :first_project_calendar_tab_id="firstProjectShiftTabId"
+                                                        :has-collision="false"
+                                                        :prepend-craft-abbreviation="hideShiftRow"
+                                                        details-only
                                                     />
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Shift notes -->
-                                        <div v-if="listViewSettings.shift_notes && shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
-                                            {{ shift.description }}
-                                        </div>
+                                            </template>
+                                            <!-- Add shift button at bottom of shifts column (only when not grouped) -->
+                                            <button
+                                                v-else-if="section.type === 'add_button' && (can('can plan shifts') || hasAdminRole()) && !multiEditMode"
+                                                type="button"
+                                                class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
+                                                @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
+                                            >
+                                                <PropertyIcon name="IconPlus" class="size-3" />
+                                                {{ $t('Add Shift') }}
+                                            </button>
+                                        </template>
                                     </div>
-
-                                    <!-- Project name as tag -->
-                                    <div v-if="getProject(shift)" class="shrink-0">
-                                        <Link
-                                            :href="getProjectShiftTabUrl(shift)"
-                                            class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
-                                        >
-                                            {{ getProject(shift).name }}
-                                        </Link>
-                                    </div>
-
-                                    <!-- 3-dot menu -->
-                                    <div class="shrink-0">
-                                        <BaseMenu white-menu-background>
-                                            <BaseMenuItem
-                                                icon="IconEdit"
-                                                :title="$t('Edit shift')"
-                                                white-menu-background
-                                                @click="openEditShift(shift)"
-                                            />
-                                            <BaseMenuItem
-                                                icon="IconCalendarEvent"
-                                                :title="$t('Show in shift plan')"
-                                                white-menu-background
-                                                @click="navigateToShiftPlan(shift, dayData.day)"
-                                            />
-                                        </BaseMenu>
-                                    </div>
-                                </div>
-
-                                <!-- Detailed function overview -->
-                                <div v-if="listViewSettings.detailed_shift_overview" class="ml-2 mb-1">
-                                    <SingleShiftInDailyShiftView
-                                        :shift="normalizeShift(shift)"
-                                        :shift-qualifications="shiftQualifications"
-                                        :crafts="crafts"
-                                        :first_project_calendar_tab_id="firstProjectShiftTabId"
-                                        :has-collision="false"
-                                        details-only
-                                    />
                                 </div>
                             </template>
 
+                            <!-- ============ Mode C: only group_by_shift_groups active (horizontal layout, group bars) ============ -->
+                            <template v-else-if="groupByShiftGroups">
+                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-gray-600 uppercase tracking-wide border-gray-200 bg-gray-50 rounded-r-lg">
+                                    <span>{{ roomData.room ? roomData.room.name : $t('No room') }}</span>
+                                </div>
+                                <template v-for="(section, sIdx) in renderShiftSections(roomData, dayData.day)" :key="sIdx">
+                                    <div
+                                        v-if="section.type === 'group_bar'"
+                                        class="bg-zinc-100 border-l-4 border-zinc-300 px-3 py-1 text-xs font-semibold flex items-center justify-between"
+                                    >
+                                        <span>{{ section.name }}</span>
+                                        <ToolTipComponent
+                                            v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
+                                            direction="left"
+                                            :tooltip-text="$t('Add Shift')"
+                                            icon="IconPlus"
+                                            icon-size="size-4"
+                                            @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
+                                            classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
+                                        />
+                                    </div>
+                                    <template v-else-if="section.type === 'shift'">
+                                        <div
+                                            v-if="!hideShiftRow"
+                                            class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                            :style="{ backgroundColor: hexToRgba(section.shift.craft?.color, 0.12), borderLeftColor: section.shift.craft?.color || '#d1d5db' }"
+                                        >
+                                            <div v-if="multiEditMode" class="shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    :checked="selectedShiftIds.includes(section.shift.id)"
+                                                    @change="toggleShiftSelection(section.shift.id)"
+                                                    class="input-checklist"
+                                                />
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-x-2">
+                                                    <div class="flex items-center gap-x-1.5 text-sm">
+                                                        <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="section.shift.is_committed" />
+                                                        <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
+                                                        <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
+                                                        <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
+                                                    </div>
+                                                    <div class="flex items-center text-xs text-gray-500">
+                                                        ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
+                                                        <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                              :class="{
+                                                                'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
+                                                                'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
+                                                                'bg-green-500': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
+                                                              }">
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                        <div
+                                                            v-for="row in getQualificationRows(section.shift)"
+                                                            :key="row.shift_qualification_id"
+                                                            class="flex items-center"
+                                                        >
+                                                            {{ row.workerCount }}/{{ row.maxWorkerCount }}
+                                                            <PropertyIcon
+                                                                stroke-width="1"
+                                                                class="text-black size-3 ml-0.5"
+                                                                :name="getShiftQualificationIcon(row.shift_qualification_id)"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                                    {{ section.shift.description }}
+                                                </div>
+                                            </div>
+                                            <div v-if="getProject(section.shift)" class="shrink-0">
+                                                <Link
+                                                    :href="getProjectShiftTabUrl(section.shift)"
+                                                    class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                                >
+                                                    {{ getProject(section.shift).name }}
+                                                </Link>
+                                            </div>
+                                            <div class="shrink-0">
+                                                <BaseMenu white-menu-background>
+                                                    <BaseMenuItem icon="IconEdit" :title="$t('Edit shift')" white-menu-background @click="openEditShift(section.shift)" />
+                                                    <BaseMenuItem icon="IconCalendarEvent" :title="$t('Show in shift plan')" white-menu-background @click="navigateToShiftPlan(section.shift, dayData.day)" />
+                                                </BaseMenu>
+                                            </div>
+                                        </div>
+                                        <div v-if="listViewSettings.detailed_shift_overview" :class="hideShiftRow ? 'mb-1' : 'ml-2 mb-1'">
+                                            <SingleShiftInDailyShiftView
+                                                :shift="normalizeShift(section.shift)"
+                                                :shift-qualifications="shiftQualifications"
+                                                :crafts="crafts"
+                                                :first_project_calendar_tab_id="firstProjectShiftTabId"
+                                                :has-collision="false"
+                                                :prepend-craft-abbreviation="hideShiftRow"
+                                                details-only
+                                            />
+                                        </div>
+                                    </template>
+                                </template>
+                            </template>
+
+                            <!-- ============ Mode A: default layout (no toggles) ============ -->
+                            <template v-else>
+                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-gray-600 uppercase tracking-wide border-gray-200 bg-gray-50 rounded-r-lg">
+                                    <span>{{ roomData.room ? roomData.room.name : $t('No room') }}</span>
+                                    <ToolTipComponent
+                                        v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
+                                        direction="left"
+                                        :tooltip-text="$t('Add Shift')"
+                                        icon="IconPlus"
+                                        icon-size="size-4"
+                                        @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
+                                        classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out mr-2"
+                                    />
+                                </div>
+                                <template v-for="shift in roomData.shifts" :key="shift.id">
+                                    <div v-if="!hideShiftRow"
+                                         class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                         :style="{ backgroundColor: hexToRgba(shift.craft?.color, 0.12), borderLeftColor: shift.craft?.color || '#d1d5db' }">
+                                        <div v-if="multiEditMode" class="shrink-0">
+                                            <input
+                                                type="checkbox"
+                                                :checked="selectedShiftIds.includes(shift.id)"
+                                                @change="toggleShiftSelection(shift.id)"
+                                                class="input-checklist"
+                                            />
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-x-2">
+                                                <div class="flex items-center gap-x-1.5 text-sm">
+                                                    <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="shift.is_committed" />
+                                                    <span v-if="getShiftGroup(shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(shift).name }})</span>
+                                                    <span class="font-medium" :style="{ color: shift.craft?.color }">{{ shift.craft?.abbreviation }}</span>
+                                                    <span>{{ shift.start }} - {{ shift.end }}</span>
+                                                </div>
+                                                <div class="flex items-center text-xs text-gray-500">
+                                                    ({{ getUsedWorkerCount(shift) }}/{{ getMaxWorkerCount(shift) }})
+                                                    <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                          :class="{
+                                                            'bg-red-500': getUsedWorkerCount(shift) === 0 && getMaxWorkerCount(shift) !== 0,
+                                                            'bg-yellow-500': getUsedWorkerCount(shift) > 0 && getUsedWorkerCount(shift) < getMaxWorkerCount(shift),
+                                                            'bg-green-500': getUsedWorkerCount(shift) >= getMaxWorkerCount(shift)
+                                                          }">
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                    <div
+                                                        v-for="row in getQualificationRows(shift)"
+                                                        :key="row.shift_qualification_id"
+                                                        class="flex items-center"
+                                                    >
+                                                        {{ row.workerCount }}/{{ row.maxWorkerCount }}
+                                                        <PropertyIcon
+                                                            stroke-width="1"
+                                                            class="text-black size-3 ml-0.5"
+                                                            :name="getShiftQualificationIcon(row.shift_qualification_id)"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="listViewSettings.shift_notes && shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                                {{ shift.description }}
+                                            </div>
+                                        </div>
+                                        <div v-if="getProject(shift)" class="shrink-0">
+                                            <Link
+                                                :href="getProjectShiftTabUrl(shift)"
+                                                class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                            >
+                                                {{ getProject(shift).name }}
+                                            </Link>
+                                        </div>
+                                        <div class="shrink-0">
+                                            <BaseMenu white-menu-background>
+                                                <BaseMenuItem icon="IconEdit" :title="$t('Edit shift')" white-menu-background @click="openEditShift(shift)" />
+                                                <BaseMenuItem icon="IconCalendarEvent" :title="$t('Show in shift plan')" white-menu-background @click="navigateToShiftPlan(shift, dayData.day)" />
+                                            </BaseMenu>
+                                        </div>
+                                    </div>
+                                    <div v-if="listViewSettings.detailed_shift_overview" :class="hideShiftRow ? 'mb-1' : 'ml-2 mb-1'">
+                                        <SingleShiftInDailyShiftView
+                                            :shift="normalizeShift(shift)"
+                                            :shift-qualifications="shiftQualifications"
+                                            :crafts="crafts"
+                                            :first_project_calendar_tab_id="firstProjectShiftTabId"
+                                            :has-collision="false"
+                                            :prepend-craft-abbreviation="hideShiftRow"
+                                            details-only
+                                        />
+                                    </div>
+                                </template>
+                            </template>
                         </div>
                     </div>
                 </template>
@@ -233,8 +468,25 @@
             :rooms="rooms"
             :room="roomForShiftAdd"
             :day="dayForShiftAdd"
+            :default-shift-group-id="shiftGroupForShiftAdd"
             :shift-plan-modal="true"
             :edit="shiftToEdit !== null"
+        />
+
+        <!-- Add Event Modal -->
+        <EventComponent
+            v-if="showAddEventModal"
+            @closed="closeAddEventModal"
+            :show-hints="$page.props?.can?.show_hints"
+            :event-types="eventTypes"
+            :rooms="rooms"
+            :event="null"
+            :wanted-room-id="roomForEventAdd"
+            :wanted-date="dayForEventAdd"
+            :is-admin="hasAdminRole()"
+            :room-collisions="{}"
+            :first_project_calendar_tab_id="firstProjectShiftTabId"
+            :event-statuses="eventStatuses || []"
         />
 
         <!-- History Modal -->
@@ -280,6 +532,12 @@ const AddShiftModal = defineAsyncComponent({
     timeout: 5000,
 });
 
+const EventComponent = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/EventComponent.vue'),
+    delay: 200,
+    timeout: 5000,
+});
+
 const SingleShiftInDailyShiftView = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue'),
     delay: 200,
@@ -301,6 +559,7 @@ const props = defineProps({
     user_filters: Object,
     crafts: Array,
     eventTypes: Array,
+    eventStatuses: Array,
     filterOptions: Object,
     personalFilters: Array,
     shiftQualifications: Array,
@@ -356,12 +615,25 @@ const showAddShiftModal = ref(false);
 const shiftToEdit = ref(null);
 const roomForShiftAdd = ref(null);
 const dayForShiftAdd = ref(null);
+const shiftGroupForShiftAdd = ref(null);
+
+// Event add state
+const showAddEventModal = ref(false);
+const roomForEventAdd = ref(null);
+const dayForEventAdd = ref(null);
 
 // History modal
 const showHistoryModal = ref(false);
 
 // Delete confirm
 const showDeleteConfirm = ref(false);
+
+// Display option toggles
+const showAppointments = computed(() => !!props.listViewSettings?.show_appointments);
+const groupByShiftGroups = computed(() => !!props.listViewSettings?.group_by_shift_groups);
+const hideShiftRow = computed(() =>
+    !!props.listViewSettings?.hide_shift_row && !!props.listViewSettings?.detailed_shift_overview
+);
 
 // Normalize shift data: Laravel serializes serviceProvider relation as service_provider,
 // but SingleShiftInDailyShiftView expects serviceProviders
@@ -370,7 +642,7 @@ const normalizeShift = (shift) => ({
     serviceProviders: shift.service_provider || shift.serviceProvider || shift.serviceProviders || [],
 });
 
-const hasShifts = computed(() => {
+const hasContent = computed(() => {
     return props.groupedShifts && props.groupedShifts.length > 0;
 });
 
@@ -378,6 +650,15 @@ const formatDayHeader = (dateString) => {
     const date = new Date(dateString);
     const options = {weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit'};
     return date.toLocaleDateString(locale.value === 'de' ? 'de-DE' : 'en-US', options);
+};
+
+const formatEventTime = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
 };
 
 const getProject = (shift) => {
@@ -407,47 +688,139 @@ const hexToRgba = (hex, alpha = 0.12) => {
     }
 };
 
-// Worker count helpers
-const getMaxWorkerCount = (shift) => {
-    let count = 0;
-    shift.shifts_qualifications?.forEach((sq) => {
-        count += sq.value ?? 0;
+// Per-shift display data is pre-computed once and cached by shift.id, so
+// templates don't recompute worker counts / qualification rows / colors on
+// every render pass — important when many shifts are visible.
+const shiftDisplayCache = computed(() => {
+    const cache = new Map();
+    if (!props.groupedShifts) return cache;
+
+    for (const dayData of props.groupedShifts) {
+        for (const roomData of dayData.rooms || []) {
+            for (const shift of roomData.shifts || []) {
+                let used = (shift.users?.length || 0)
+                    + (shift.freelancer?.length || 0)
+                    + (shift.service_provider?.length
+                        || shift.serviceProvider?.length
+                        || shift.serviceProviders?.length
+                        || 0);
+
+                let max = 0;
+                const rows = [];
+                shift.shifts_qualifications?.forEach((sq) => {
+                    max += sq.value ?? 0;
+                    if (!sq.value || sq.value === 0) return;
+                    let assigned = 0;
+                    shift.users?.forEach((u) => {
+                        if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
+                    });
+                    shift.freelancer?.forEach((f) => {
+                        if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
+                    });
+                    (shift.service_provider || shift.serviceProvider || shift.serviceProviders || []).forEach((p) => {
+                        if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
+                    });
+                    rows.push({
+                        shift_qualification_id: sq.shift_qualification_id,
+                        maxWorkerCount: sq.value,
+                        workerCount: assigned,
+                    });
+                });
+
+                const craftColor = shift.craft?.color;
+                cache.set(shift.id, {
+                    used,
+                    max,
+                    rows,
+                    bgColor: hexToRgba(craftColor, 0.12),
+                    borderColor: craftColor || '#d1d5db',
+                    project: shift.project ?? shift.event?.project ?? null,
+                });
+            }
+        }
+    }
+    return cache;
+});
+
+const getShiftDisplay = (shift) => shiftDisplayCache.value.get(shift.id) || {
+    used: 0, max: 0, rows: [], bgColor: 'transparent', borderColor: '#d1d5db', project: null,
+};
+
+// Backwards-compatible thin helpers (used in places we don't want to touch).
+const getMaxWorkerCount = (shift) => getShiftDisplay(shift).max;
+const getUsedWorkerCount = (shift) => getShiftDisplay(shift).used;
+const getQualificationRows = (shift) => getShiftDisplay(shift).rows;
+
+// Shift-qualification icon lookup is hot in the template, so we build a Map once.
+const shiftQualificationIconMap = computed(() => {
+    const m = new Map();
+    (props.shiftQualifications || []).forEach((q) => m.set(q.id, q.icon ?? null));
+    return m;
+});
+
+const getShiftQualificationIcon = (id) => shiftQualificationIconMap.value.get(id) ?? null;
+
+// Sections per (day,room) are pre-computed once per groupedShifts change.
+// Templates read from the Map instead of calling renderShiftSections() inline,
+// which would re-run on every render tick.
+const sectionsByRoomKey = computed(() => {
+    const map = new Map();
+    if (!props.groupedShifts) return map;
+
+    for (const dayData of props.groupedShifts) {
+        for (const roomData of dayData.rooms || []) {
+            const shifts = roomData.shifts || [];
+            const sections = [];
+
+            if (groupByShiftGroups.value) {
+                const groups = groupShiftsByShiftGroup(shifts);
+                groups.forEach((g) => {
+                    sections.push({ type: 'group_bar', name: g.name, shiftGroupId: g.id });
+                    g.shifts.forEach((shift) => sections.push({ type: 'shift', shift }));
+                });
+                if (groups.length === 0) {
+                    sections.push({ type: 'add_button' });
+                }
+            } else {
+                shifts.forEach((shift) => sections.push({ type: 'shift', shift }));
+                sections.push({ type: 'add_button' });
+            }
+
+            map.set(`${dayData.day}|${roomData.room_id}`, sections);
+        }
+    }
+    return map;
+});
+
+const renderShiftSections = (roomData, day) =>
+    sectionsByRoomKey.value.get(`${day}|${roomData.room_id}`) || [];
+
+// Resolve shift group across Laravel serialization forms (snake_cased relation `shift_group`,
+// camelCased relation `shiftGroup`, or via column `shift_group_id`).
+const getShiftGroup = (s) => s?.shift_group ?? s?.shiftGroup ?? null;
+const getShiftGroupId = (s) => s?.shift_group_id ?? s?.shiftGroupId ?? getShiftGroup(s)?.id ?? null;
+
+const groupShiftsByShiftGroup = (shifts) => {
+    const map = new Map();
+    shifts.forEach((s) => {
+        const key = getShiftGroupId(s);
+        if (!map.has(key)) {
+            map.set(key, {
+                id: key,
+                name: getShiftGroup(s)?.name ?? $t('No shift group'),
+                firstStart: s.start || '99:99',
+                shifts: [],
+            });
+        }
+        const g = map.get(key);
+        g.shifts.push(s);
+        if ((s.start || '99:99') < g.firstStart) g.firstStart = s.start;
     });
-    return count;
-};
-
-const getUsedWorkerCount = (shift) => {
-    return (shift.users?.length || 0) +
-        (shift.freelancer?.length || 0) +
-        (shift.service_provider?.length || shift.serviceProvider?.length || shift.serviceProviders?.length || 0);
-};
-
-const getQualificationRows = (shift) => {
-    const rows = [];
-    shift.shifts_qualifications?.forEach((sq) => {
-        if (!sq.value || sq.value === 0) return;
-        let assigned = 0;
-        shift.users?.forEach((u) => {
-            if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-        });
-        shift.freelancer?.forEach((f) => {
-            if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-        });
-        (shift.service_provider || shift.serviceProvider || shift.serviceProviders || []).forEach((p) => {
-            if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-        });
-        rows.push({
-            shift_qualification_id: sq.shift_qualification_id,
-            maxWorkerCount: sq.value,
-            workerCount: assigned,
-        });
+    return Array.from(map.values()).sort((a, b) => {
+        if (a.id === null || a.id === undefined) return 1;
+        if (b.id === null || b.id === undefined) return -1;
+        return (a.firstStart || '').localeCompare(b.firstStart || '');
     });
-    return rows;
-};
-
-const getShiftQualificationIcon = (id) => {
-    const qual = props.shiftQualifications?.find((q) => q.id === id);
-    return qual?.icon ?? null;
 };
 
 // Navigation to shift plan (always weekly view) with highlight + scroll
@@ -483,14 +856,16 @@ const navigateToShiftPlan = async (shift, dayString) => {
 // Shift edit
 const openEditShift = (shift) => {
     shiftToEdit.value = shift;
+    shiftGroupForShiftAdd.value = null;
     showAddShiftModal.value = true;
 };
 
-// Add shift for room/day
-const openAddShiftForRoomAndDay = (day, roomId) => {
+// Add shift for room/day (optionally with shift group)
+const openAddShiftForRoomAndDay = (day, roomId, shiftGroupId = null) => {
     shiftToEdit.value = null;
     roomForShiftAdd.value = roomId;
     dayForShiftAdd.value = day;
+    shiftGroupForShiftAdd.value = shiftGroupId;
     showAddShiftModal.value = true;
 };
 
@@ -499,7 +874,22 @@ const closeAddShiftModal = () => {
     shiftToEdit.value = null;
     roomForShiftAdd.value = null;
     dayForShiftAdd.value = null;
-    router.reload();
+    shiftGroupForShiftAdd.value = null;
+    router.reload({ only: ['groupedShifts'], preserveScroll: true });
+};
+
+// Add event for room/day
+const openAddEventForRoomAndDay = (day, roomId) => {
+    roomForEventAdd.value = roomId;
+    dayForEventAdd.value = day;
+    showAddEventModal.value = true;
+};
+
+const closeAddEventModal = () => {
+    showAddEventModal.value = false;
+    roomForEventAdd.value = null;
+    dayForEventAdd.value = null;
+    router.reload({ only: ['groupedShifts'], preserveScroll: true });
 };
 
 // Multi-edit
@@ -524,7 +914,7 @@ const deleteSelectedShifts = () => {
     }).then(() => {
         selectedShiftIds.value = [];
         showDeleteConfirm.value = false;
-        router.reload();
+        router.reload({ only: ['groupedShifts'], preserveScroll: true });
     });
 };
 
@@ -533,7 +923,7 @@ const duplicateSelectedShifts = () => {
         shift_ids: selectedShiftIds.value,
     }).then(() => {
         selectedShiftIds.value = [];
-        router.reload();
+        router.reload({ only: ['groupedShifts'], preserveScroll: true });
     });
 };
 </script>

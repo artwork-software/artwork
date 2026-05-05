@@ -7,7 +7,7 @@
                     :style="{ backgroundColor: `${returnCraftColor}` }"
                     v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
                 >
-                    <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+                    <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold mr-1">{{ shift.craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -47,7 +47,7 @@
             :style="{ backgroundColor: `${returnCraftColor}` }"
             v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
         >
-            <p class="text-xs text-left font-lexend whitespace-nowrap">{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+            <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold mr-1">{{ shift.craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
     <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
@@ -241,6 +241,12 @@ const props = defineProps({
         default: null
     },
     forceShowNotes: {
+        type: Boolean,
+        default: false
+    },
+    // When true, prepend the shift's craft abbreviation in front of the time pill
+    // (used by ShiftPlanListView when "hide shift row" is active).
+    prependCraftAbbreviation: {
         type: Boolean,
         default: false
     },

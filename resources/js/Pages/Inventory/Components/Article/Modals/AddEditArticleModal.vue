@@ -1360,33 +1360,21 @@ const isDetailedArticleIncomplete = (da) => {
     return da.properties?.some(p => p.is_required && !getValue(p)) ?? false
 }
 
-const isButtonDisabled = computed(() => {
-    return !checkIfEveryPropertyWhereAreRequiredIsFilled.value || !selectedCategory.value ||
-        (articleForm.is_detailed_quantity && (calculateTotalQuantity.value !== articleForm.quantity)) ||
-        (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle.value !== articleForm.quantity)) || !canSaveWithTags.value
+const calculateTotalQuantity = computed(() => {
+    const total = (articleForm.detailed_article_quantities || []).reduce((sum, d) => {
+        const q = parseInt(d?.quantity, 10);
+        return sum + (isNaN(q) ? 0 : q)
+    }, 0)
+    articleForm.quantity = total
+    return total
 })
 
-const validationErrors = computed(() => {
-    if (!articleForm.is_detailed_quantity) return []
-    const errors = []
-    if (calculateTotalQuantity.value !== articleForm.quantity) {
-        errors.push($t('The specified total quantity does not match the specified individual quantities'))
-    }
-    if (!checkIfEveryPropertyWhereAreRequiredIsFilled.value) {
-        errors.push($t('A required field is missing'))
-    }
-    return errors
-})
-
-const onDisabledButtonClick = () => {
-    if (isButtonDisabled.value) {
-        showValidationHints.value = true
-    }
-}
-
-watch(isButtonDisabled, (disabled) => {
-    if (!disabled) showValidationHints.value = false
-})
+const calculateStatusQuantityInArticle = computed(() =>
+    articleForm.statusValues.reduce((t, s) => {
+        const q = parseInt(s.value, 10);
+        return t + (isNaN(q) ? 0 : q)
+    }, 0)
+)
 
 const formatQuantity = (q) => q?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 const addImage = () => articleImageInput.value?.click()
@@ -1661,21 +1649,6 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
     }
 })
 
-const calculateTotalQuantity = computed(() => {
-    const total = (articleForm.detailed_article_quantities || []).reduce((sum, d) => {
-        const q = parseInt(d?.quantity, 10);
-        return sum + (isNaN(q) ? 0 : q)
-    }, 0)
-    articleForm.quantity = total
-    return total
-})
-
-const calculateStatusQuantityInArticle = computed(() =>
-    articleForm.statusValues.reduce((t, s) => {
-        const q = parseInt(s.value, 10);
-        return t + (isNaN(q) ? 0 : q)
-    }, 0)
-)
 
 onMounted(() => {
     if (props.article) {
@@ -2030,6 +2003,34 @@ const forbiddenTags = computed(() =>
 
 // 🔹 darf gespeichert werden?
 const canSaveWithTags = computed(() => forbiddenTags.value.length === 0)
+
+const isButtonDisabled = computed(() => {
+    return !checkIfEveryPropertyWhereAreRequiredIsFilled.value || !selectedCategory.value ||
+        (articleForm.is_detailed_quantity && (calculateTotalQuantity.value !== articleForm.quantity)) ||
+        (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle.value !== articleForm.quantity)) || !canSaveWithTags.value
+})
+
+const validationErrors = computed(() => {
+    if (!articleForm.is_detailed_quantity) return []
+    const errors = []
+    if (calculateTotalQuantity.value !== articleForm.quantity) {
+        errors.push($t('The specified total quantity does not match the specified individual quantities'))
+    }
+    if (!checkIfEveryPropertyWhereAreRequiredIsFilled.value) {
+        errors.push($t('A required field is missing'))
+    }
+    return errors
+})
+
+const onDisabledButtonClick = () => {
+    if (isButtonDisabled.value) {
+        showValidationHints.value = true
+    }
+}
+
+watch(isButtonDisabled, (disabled) => {
+    if (!disabled) showValidationHints.value = false
+})
 
 // 🔹 kann Tag angeklickt werden?
 const canSelectTag = (tag) => userCanUseTag(tag)

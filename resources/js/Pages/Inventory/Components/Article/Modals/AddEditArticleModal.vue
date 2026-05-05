@@ -1181,6 +1181,7 @@ const articleForm = useForm({
         individual_value: !!p.individual_value,
     })) : [],
     detailed_article_quantities: props.article ? (props.article.detailed_article_quantities?.map(da => ({
+        id: da.id,
         name: da.name, description: da.description, quantity: da.quantity,
         properties: da.properties.map(p => ({
             id: p.id,
@@ -1701,6 +1702,7 @@ onMounted(() => {
                     const newCatProps = categoryProps.filter(cp => !daPropIds.has(cp.id))
 
                     return {
+                        id: da.id,
                         name: da.name,
                         description: da.description,
                         quantity: da.quantity,

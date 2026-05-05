@@ -21,7 +21,12 @@ class InventoryDetailedQuantityArticle extends Model
         'description',
         'quantity',
         'inventory_article_status_id',
-        'type_number'
+        'type_number',
+        'detail_number',
+    ];
+
+    protected $casts = [
+        'detail_number' => 'integer',
     ];
 
 

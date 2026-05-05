@@ -76,6 +76,12 @@
                                 {{ article.name }}
                             </h1>
                             <div
+                                v-if="article.type_number"
+                                class="font-mono text-xs text-gray-400 mt-0.5"
+                            >
+                                {{ article.type_number }}
+                            </div>
+                            <div
                                 v-if="article.category"
                                 class="font-lexend text-xs text-secondary mt-0.5 font-semibold"
                             >
@@ -291,9 +297,15 @@
                                         :class="open ? 'rounded-t-lg' : 'rounded-lg'"
                                     >
                                         <span
-                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']"
+                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary flex flex-col items-start']"
                                         >
-                                            {{ detailedArticle.name }}
+                                            <span>{{ detailedArticle.name }}</span>
+                                            <span
+                                                v-if="detailedArticle.type_number"
+                                                class="font-mono text-xs font-normal text-gray-400"
+                                            >
+                                                {{ detailedArticle.type_number }}
+                                            </span>
                                         </span>
                                         <span class="ml-6 flex items-center gap-x-3">
                                             <span

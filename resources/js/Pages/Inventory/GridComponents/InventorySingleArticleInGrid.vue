@@ -15,6 +15,10 @@
                 <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2" />
             </div>
 
+            <p v-if="item?.type_number" class="text-xs text-gray-400 font-mono">
+                {{ item.type_number }}
+            </p>
+
             <p class="text-xs text-gray-500 line-clamp-2">
                 {{ item.description }}
             </p>

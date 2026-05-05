@@ -23,6 +23,7 @@ use Laravel\Scout\Searchable;
  * @property int inventory_sub_category_id
  * @property int quantity
  * @property bool is_detailed_quantity
+ * @property string type_number
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleProperty[] properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
  * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
@@ -48,6 +49,7 @@ class InventoryArticle extends Model
         'inventory_sub_category_id',
         'quantity',
         'is_detailed_quantity',
+        'type_number',
     ];
 
     protected $casts = [
@@ -116,6 +118,7 @@ class InventoryArticle extends Model
         return [
             'id' => $this->id,
             'name' => $this->name ?? 'Name not found',
+            'type_number' => $this->type_number,
             'description' => $this->description,
             'category' => $this?->category?->name ?? null,
             'sub_category' => $this?->subCategory?->name ?? null,

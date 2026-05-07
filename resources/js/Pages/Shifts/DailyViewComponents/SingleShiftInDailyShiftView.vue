@@ -120,6 +120,7 @@
                         :shift-qualifications="shiftQualifications"
                         :has-collision="hasCollision"
                         :force-show-notes="detailsOnly"
+                        :prepend-craft-abbreviation="prependCraftAbbreviation"
                         @userRemoved="onChildUserRemoved"
                     />
                 </div>
@@ -137,6 +138,7 @@
                                     class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
                                     v-tooltip.bottom="{ value: $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                                 >
+                                    <span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold text-red-800 shrink-0">{{ shift.craft.abbreviation }}</span>
                                     <component :is="IconInfoTriangle" class="size-4 text-red-600 shrink-0" />
                                     <span class="truncate block">{{ $t('Unoccupied') }}</span>
                                 </div>
@@ -350,6 +352,12 @@ const props = defineProps({
     },
     // detailsOnly: nur Zuweisungsbereich ohne Header-Card anzeigen (für Listenansicht)
     detailsOnly: {
+        type: Boolean,
+        default: false
+    },
+    // Wenn true, wird in jeder User-Zeile das Gewerk-Kürzel vor die Uhrzeit gesetzt
+    // (genutzt im ShiftPlanListView, wenn "Schichtzeile ausblenden" aktiv ist).
+    prependCraftAbbreviation: {
         type: Boolean,
         default: false
     },
@@ -885,7 +893,10 @@ const checkAllShiftCollisions = (forceRefresh = false) => {
 };
 
 // Bei Komponenten-Initialisierung Kollisionen prüfen
+// Im detailsOnly-Modus (z.B. ShiftPlanListView) wird die Kollisionsprüfung
+// erst beim Klick auf das Drop-Menü ausgelöst, um Page-Loads massiv zu beschleunigen.
 onMounted(() => {
+    if (props.detailsOnly) return;
     // Force refresh on initial load to ensure we have the latest data
     checkAllShiftCollisions(true);
 });
@@ -923,6 +934,8 @@ watch(() => props.shift, () => {
     assignablePeopleCache.value = {};
     // Optimistische Deltas zurücksetzen – echte Werte kommen via Props
     globalQualificationDeltas.value = {}
+    // In detailsOnly-Mode wird der Cache lazy beim Menü-Open neu gefüllt
+    if (props.detailsOnly) return;
     // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
     checkAllShiftCollisions(true);
 }, { deep: true });

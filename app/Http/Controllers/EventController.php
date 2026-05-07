@@ -52,6 +52,7 @@ use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -344,7 +345,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
+            admins: $room->admins->pluck('id')->toArray(),
+            everyone_can_book: $room->everyone_can_book,
+            requestable_by: $room->requestableBy->pluck('id')->toArray(),
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -552,7 +555,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
+            admins: $room->admins->pluck('id')->toArray(),
+            everyone_can_book: $room->everyone_can_book,
+            requestable_by: $room->requestableBy->pluck('id')->toArray(),
         ));
 
         $dateValue = [
@@ -963,6 +968,7 @@ class EventController extends Controller
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
         ]);
     }
 
@@ -970,7 +976,16 @@ class EventController extends Controller
     {
         $user->shift_list_view_settings()->updateOrCreate(
             ['user_id' => $user->id],
-            $request->only(['show_qualifications', 'shift_notes', 'show_shift_group_tag', 'show_fully_staffed_shifts', 'detailed_shift_overview'])
+            $request->only([
+                'show_qualifications',
+                'shift_notes',
+                'show_shift_group_tag',
+                'show_fully_staffed_shifts',
+                'detailed_shift_overview',
+                'show_appointments',
+                'group_by_shift_groups',
+                'hide_shift_row',
+            ])
         );
     }
 
@@ -1174,6 +1189,32 @@ class EventController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
+
+        // Server-side enforcement: verify the user can actually book or request for this room
+        $user = auth()->user();
+        $roomId = $request->get('roomId');
+        $isOption = $request->get('isOption');
+
+        if ($roomId && !$user->hasRole('admin')) {
+            $room = Room::find($roomId);
+            if ($room) {
+                $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
+                $canRequestForRoom = $room->requestableBy()->where('user_id', $user->id)->exists();
+                $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+                $hasGlobalRequest = $user->can(PermissionEnum::EVENT_REQUEST->value);
+
+                // Direct booking (isOption=false): must be admin, room admin, everyone_can_book, or have global permission
+                if (!$isOption && !$hasGlobalCreate && !$isRoomAdmin && !$room->everyone_can_book) {
+                    abort(403);
+                }
+
+                // Request booking (isOption=true): must have global request permission or room-specific can_request
+                if ($isOption && !$hasGlobalCreate && !$hasGlobalRequest && !$isRoomAdmin && !$canRequestForRoom && !$room->everyone_can_book) {
+                    abort(403);
+                }
+            }
+        }
+
         /** @var Event $firstEvent */
         $firstEvent = Event::create($request->data());
         $firstEvent->eventProperties()->sync($request->input('event_properties', []));

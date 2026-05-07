@@ -60,6 +60,8 @@ const props = defineProps({
     // Optional direkt übergebene Datenquellen (Fallback zu usePage().props)
     shiftGroups: { type: [Array, Object], required: false, default: () => [] },
     globalQualifications: { type: [Array, Object], required: false, default: () => [] },
+    // Vorausgewählte Schichtgruppe beim Erstellen (z.B. aus Schichtgruppen-Balken im ListView)
+    defaultShiftGroupId: { type: [String, Number], required: false, default: null },
 })
 
 // Emits
@@ -157,11 +159,21 @@ const resolveInitialShiftGroups = (): any[] => {
 }
 const shiftGroups = ref<any[]>(resolveInitialShiftGroups())
 
+// Resolve shift_group_id across serialization forms: DTO uses shiftGroupId,
+// raw Eloquent JSON uses shift_group_id (column) or shift_group (snake_cased relation).
+const resolveShiftGroupId = (shift: any): number | string | null => {
+    if (!shift) return null
+    return shift.shiftGroupId
+        ?? shift.shift_group_id
+        ?? shift.shiftGroup?.id
+        ?? shift.shift_group?.id
+        ?? null
+}
+
+const initialShiftGroupId = resolveShiftGroupId(props.shift) ?? (props.edit ? null : props.defaultShiftGroupId)
 const selectedShiftGroup = ref<any | null>(
-    props.shift?.shiftGroupId
-        ? (shiftGroups as any).value?.find
-            ? (shiftGroups as any).value.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
-            : shiftGroups.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+    initialShiftGroupId
+        ? (shiftGroups.value.find((sg: any) => sg.id === initialShiftGroupId) ?? null)
         : null
 )
 
@@ -169,9 +181,10 @@ const selectedShiftGroup = ref<any | null>(
 watch(() => props.shiftGroups, (v) => {
     // @ts-ignore
     shiftGroups.value = normalizeToArray(v)
-    if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+    const sgId = resolveShiftGroupId(props.shift)
+    if (sgId && !selectedShiftGroup.value) {
         // @ts-ignore
-        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === sgId) || null
     }
 }, { deep: true })
 
@@ -180,9 +193,10 @@ watch(() => usePage().props.shiftGroups, (v: any) => {
     if (!props.shiftGroups || normalizeToArray(props.shiftGroups).length === 0) {
         // @ts-ignore
         shiftGroups.value = normalizeToArray(v)
-        if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+        const sgId = resolveShiftGroupId(props.shift)
+        if (sgId && !selectedShiftGroup.value) {
             // @ts-ignore
-            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === sgId) || null
         }
     }
 }, { deep: true })
@@ -220,7 +234,8 @@ const shiftForm = useForm({
         : (props.event && props.event.project
             ? props.event.project.id
             : (props.project ? props.project.id : null)),
-    shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
+    shift_group_id: resolveShiftGroupId(props.shift)
+        ?? (!props.edit && props.defaultShiftGroupId ? props.defaultShiftGroupId : null),
 })
 
 // Wenn ein Projekt ohne Zeitraumdaten ausgewählt wird (z.B. aus LastedProjects), Daten nachladen

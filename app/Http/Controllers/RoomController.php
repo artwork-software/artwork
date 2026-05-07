@@ -310,9 +310,21 @@ class RoomController extends Controller
             ->orWhereHas('area', function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->with(['area'])
+            ->with(['area', 'admins:id', 'requestableBy:id'])
             ->get();
 
-        return response()->json($rooms);
+        $normalized = $rooms->map(fn(Room $room) => [
+            'id' => $room->id,
+            'name' => $room->name,
+            'area' => $room->area,
+            'temporary' => $room->temporary,
+            'start_date' => $room->start_date,
+            'end_date' => $room->end_date,
+            'admins' => $room->admins->pluck('id')->toArray(),
+            'everyone_can_book' => $room->everyone_can_book,
+            'requestable_by' => $room->requestableBy->pluck('id')->toArray(),
+        ]);
+
+        return response()->json($normalized);
     }
 }

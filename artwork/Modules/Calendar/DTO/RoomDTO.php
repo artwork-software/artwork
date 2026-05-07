@@ -11,7 +11,9 @@ class RoomDTO extends Data
         public int $id,
         public string $name,
         public bool $has_events = false,
-        public array|null|Optional $admins
+        public array|null|Optional $admins = null,
+        public bool $everyone_can_book = false,
+        public array|null|Optional $requestable_by = null,
     ) {
     }
 }

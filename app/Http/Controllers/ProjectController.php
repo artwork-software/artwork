@@ -2677,7 +2677,9 @@ class ProjectController extends Controller
                 id: $room->id,
                 name: $room->name,
                 has_events: $room->events_count > 0,
-                admins: $room->admins->pluck('id')->toArray()
+                admins: $room->admins->pluck('id')->toArray(),
+                everyone_can_book: $room->everyone_can_book,
+                requestable_by: $room->requestableBy->pluck('id')->toArray(),
             ));
 
             $dateValue = [

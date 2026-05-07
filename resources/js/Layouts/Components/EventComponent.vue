@@ -690,12 +690,12 @@ function setEndFromDuration() {
 // Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
 const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
 const isRoomAdmin = computed(() => {
-    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
+    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.includes(page.props.auth.user.id) || false
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 
-const roomAdminIds = computed(() => selectedRoom.value?.room_admins?.map(a => a.id) ?? [])
+const roomAdminIds = computed(() => selectedRoom.value?.admins ?? [])
 
 const modalTitle = computed(() => {
     if (props.event?.id) {
@@ -737,10 +737,16 @@ const primaryButtonText = computed(() => {
     if (adminComment.value) return $t('Send message')
     return $t('Save')
 })
+const isRequestableForRoom = computed(() => {
+    return selectedRoom.value?.requestable_by?.includes(page.props.auth.user.id) || false
+})
+
 const requestDisabled = computed(() => {
     const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
-    if (!can('request room occupancy') && !props.isPlanning) return true
+    const canRequestGlobal = can('request room occupancy')
+    const canRequestRoom = isRequestableForRoom.value
+    if (!canRequestGlobal && !canRequestRoom && !props.isPlanning) return true
     if (!can('can see planning calendar') && props.isPlanning) return true
     return false
 })

@@ -963,6 +963,7 @@ class EventController extends Controller
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
         ]);
     }
 
@@ -970,7 +971,16 @@ class EventController extends Controller
     {
         $user->shift_list_view_settings()->updateOrCreate(
             ['user_id' => $user->id],
-            $request->only(['show_qualifications', 'shift_notes', 'show_shift_group_tag', 'show_fully_staffed_shifts', 'detailed_shift_overview'])
+            $request->only([
+                'show_qualifications',
+                'shift_notes',
+                'show_shift_group_tag',
+                'show_fully_staffed_shifts',
+                'detailed_shift_overview',
+                'show_appointments',
+                'group_by_shift_groups',
+                'hide_shift_row',
+            ])
         );
     }
 

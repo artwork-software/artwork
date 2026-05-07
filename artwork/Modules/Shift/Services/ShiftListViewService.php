@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\UserFilter;
@@ -108,12 +109,61 @@ readonly class ShiftListViewService
                     'room_id' => $roomId,
                     'room' => $shift->room,
                     'shifts' => [],
+                    'events' => [],
                 ];
             }
             $dayMap[$day][$roomId]['shifts'][] = $shift;
         }
 
+        if ($settings->show_appointments) {
+            $events = $this->getEventsForRange($startDate, $endDate, $userFilter);
+
+            foreach ($events as $event) {
+                // An event can span multiple days; emit it on each day in range
+                $eventStart = $event->start_time->copy()->startOfDay();
+                $eventEnd = $event->end_time->copy()->startOfDay();
+                $rangeStart = $startDate->copy()->startOfDay();
+                $rangeEnd = $endDate->copy()->startOfDay();
+
+                $loopStart = $eventStart->lt($rangeStart) ? $rangeStart : $eventStart;
+                $loopEnd = $eventEnd->gt($rangeEnd) ? $rangeEnd : $eventEnd;
+
+                for ($day = $loopStart->copy(); $day->lte($loopEnd); $day->addDay()) {
+                    $dayKey = $day->format('Y-m-d');
+                    $roomId = $event->room_id ?? 0;
+
+                    if (!isset($dayMap[$dayKey])) {
+                        $dayMap[$dayKey] = [];
+                    }
+                    if (!isset($dayMap[$dayKey][$roomId])) {
+                        $dayMap[$dayKey][$roomId] = [
+                            'room_id' => $roomId,
+                            'room' => $event->room,
+                            'shifts' => [],
+                            'events' => [],
+                        ];
+                    }
+                    $dayMap[$dayKey][$roomId]['events'][] = $event;
+                }
+            }
+        }
+
         ksort($dayMap);
+
+        // Sort rooms within each day by room.position; sort events within each room by start_time
+        foreach ($dayMap as $day => $rooms) {
+            uasort($rooms, function ($a, $b) {
+                return ($a['room']->position ?? 0) <=> ($b['room']->position ?? 0);
+            });
+            foreach ($rooms as $roomId => $roomData) {
+                if (!empty($roomData['events'])) {
+                    usort($rooms[$roomId]['events'], function (Event $a, Event $b) {
+                        return $a->start_time <=> $b->start_time;
+                    });
+                }
+            }
+            $dayMap[$day] = $rooms;
+        }
 
         // Load holidays for the date range
         $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
@@ -130,6 +180,64 @@ readonly class ShiftListViewService
         }
 
         return $result;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Event>
+     */
+    private function getEventsForRange(
+        Carbon $startDate,
+        Carbon $endDate,
+        ?UserFilter $userFilter
+    ): \Illuminate\Database\Eloquent\Collection {
+        // Note: only the relations actually rendered in the appointments column are eager-loaded.
+        // event_type → abbreviation+color, project → name, room → position for sort.
+        $query = Event::query()
+            ->with(['room:id,name,position', 'event_type', 'project:id,name'])
+            ->where(function (Builder $q) use ($startDate, $endDate): void {
+                $q->whereBetween('start_time', [$startDate, $endDate])
+                    ->orWhereBetween('end_time', [$startDate, $endDate])
+                    ->orWhere(function (Builder $nested) use ($startDate, $endDate): void {
+                        $nested->where('start_time', '<=', $startDate)
+                            ->where('end_time', '>=', $endDate);
+                    });
+            });
+
+        if ($userFilter) {
+            if (!empty($userFilter->room_ids)) {
+                $query->whereIn('room_id', $userFilter->room_ids);
+            }
+
+            if (!empty($userFilter->event_type_ids)) {
+                $query->whereIn('event_type_id', $userFilter->event_type_ids);
+            }
+
+            if (!empty($userFilter->area_ids)) {
+                $query->whereHas('room', function ($q) use ($userFilter) {
+                    $q->whereIn('area_id', $userFilter->area_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_category_ids)) {
+                $query->whereHas('room.categories', function ($q) use ($userFilter) {
+                    $q->whereIn('room_categories.id', $userFilter->room_category_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_attribute_ids)) {
+                $query->whereHas('room.attributes', function ($q) use ($userFilter) {
+                    $q->whereIn('room_attributes.id', $userFilter->room_attribute_ids);
+                });
+            }
+
+            if (!empty($userFilter->event_property_ids)) {
+                $query->whereHas('eventProperties', function ($q) use ($userFilter) {
+                    $q->whereIn('event_properties.id', $userFilter->event_property_ids);
+                });
+            }
+        }
+
+        return $query->get();
     }
 
     private function getHolidaysForRange(Carbon $start, Carbon $end): \Illuminate\Support\Collection

@@ -562,11 +562,6 @@ class DailyShiftPlanPdfBuilder
         $blocks = [];
 
         foreach ($events as $e) {
-            // Skip allDay events – they appear as event cards but should not influence timeline height
-            if ($e->allDay) {
-                continue;
-            }
-
             foreach (($e->timelines ?? []) as $t) {
                 // Obj + Array kompatibel
                 $startStr = trim((string)(is_array($t) ? ($t['start'] ?? '') : ($t->start ?? '')));

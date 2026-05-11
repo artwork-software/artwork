@@ -3,6 +3,8 @@
 namespace Database\Factories\Artwork\Modules\Inventory\Models;
 
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryCategory;
+use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,8 +25,8 @@ class InventoryArticleFactory extends Factory
             'name' => fake()->word(),
             'description' => fake()->sentence(),
             'quantity' => fake()->randomFloat(2, 0, 100),
-            'inventory_category_id' => null, // Wird im Seeder gesetzt
-            'inventory_sub_category_id' => null, // Wird im Seeder gesetzt
+            'inventory_category_id' => InventoryCategory::factory(),
+            'inventory_sub_category_id' => InventorySubCategory::factory(),
         ];
     }
 }

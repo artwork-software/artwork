@@ -804,8 +804,15 @@
                                             @keydown.enter.prevent="changeActiveDetailedArticleForEditing(item)"
                                             @keydown.space.prevent="changeActiveDetailedArticleForEditing(item)"
                                             :aria-pressed="isActiveDetailedArticle(item)">
-                                          <span class="text-sm font-medium truncate flex items-center gap-x-3">
-                                            {{ item.name }}
+                                          <span class="text-sm font-medium truncate flex flex-col items-start">
+                                            <template v-if="showInventoryNumberAsName && item.inventory_number">
+                                                <span>{{ formatInventoryNumber(item.inventory_number) }}</span>
+                                                <span class="text-xs font-normal text-gray-400">{{ item.name }}</span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ item.name }}</span>
+                                                <span v-if="item.inventory_number" class="font-mono text-xs font-normal text-gray-400">{{ formatInventoryNumber(item.inventory_number) }}</span>
+                                            </template>
                                           </span>
 
                                             <span class="flex items-center gap-x-2">
@@ -1085,6 +1092,9 @@ import {useTranslation} from "@/Composeables/Translation.js";
 const $t = useTranslation()
 const acrossValues = ref({})
 const detailedAlwaysOne = computed(() => usePage().props.inventoryDetailedArticlesAlwaysQuantityOne ?? false)
+const showInventoryNumberAsName = computed(() => usePage().props.inventoryShowInventoryNumberAsName ?? false)
+const inventoryNumberPrefix = computed(() => usePage().props.inventoryNumberPrefix ?? '')
+const formatInventoryNumber = (num) => num ? inventoryNumberPrefix.value + num : ''
 const props = defineProps({article: {type: Object, required: false, default: null}})
 
 const properties = inject('properties')
@@ -1118,10 +1128,22 @@ const showValidationHints = ref(false)
 
 
 const filteredPeople = computed(() => query.value ? rooms.filter(r => r.name.toLowerCase().includes(query.value.toLowerCase())) : rooms)
-const filteredDetailedArticles = computed(() =>
-  (articleForm.detailed_article_quantities || [])
-    .filter(d => (d?.name ?? '').toLowerCase().includes(searchDetailedArticleQuery.value.toLowerCase()))
-)
+const filteredDetailedArticles = computed(() => {
+  const q = searchDetailedArticleQuery.value.toLowerCase()
+  if (!q) return articleForm.detailed_article_quantities || []
+
+  return (articleForm.detailed_article_quantities || []).filter(d => {
+    if ((d?.name ?? '').toLowerCase().includes(q)) return true
+    if (d?.inventory_number) {
+      if (d.inventory_number.toLowerCase().includes(q)) return true
+      if (formatInventoryNumber(d.inventory_number).toLowerCase().includes(q)) return true
+    }
+    if ((d?.description ?? '').toLowerCase().includes(q)) return true
+    if ((d?.status?.name ?? '').toLowerCase().includes(q)) return true
+    if ((d?.properties ?? []).some(p => String(p?.value ?? '').toLowerCase().includes(q))) return true
+    return false
+  })
+})
 const filteredManufacturers = computed(() => queryManufacturer.value ? manufacturers.filter(m => m.name.toLowerCase().includes(queryManufacturer.value.toLowerCase())) : manufacturers)
 const itemsDetailed = computed(() => articleForm.detailed_article_quantities ?? [])
 
@@ -1181,7 +1203,8 @@ const articleForm = useForm({
         individual_value: !!p.individual_value,
     })) : [],
     detailed_article_quantities: props.article ? (props.article.detailed_article_quantities?.map(da => ({
-        name: da.name, description: da.description, quantity: da.quantity,
+        id: da.id,
+        name: da.name, description: da.description, quantity: da.quantity, inventory_number: da.inventory_number ?? null,
         properties: da.properties.map(p => ({
             id: p.id,
             name: p.name,
@@ -1198,6 +1221,26 @@ const articleForm = useForm({
     })) ?? []) : [],
     main_image_index: 0,
 })
+
+const getNextProvisionalDetailNumber = () => {
+    const articles = articleForm.detailed_article_quantities || []
+    let max = 0
+    for (const a of articles) {
+        if (a.inventory_number) {
+            const parts = a.inventory_number.split('-')
+            const num = parseInt(parts[parts.length - 1], 10)
+            if (!isNaN(num) && num > max) max = num
+        }
+    }
+    return max + 1
+}
+
+const generateProvisionalInventoryNumber = () => {
+    const parentNumber = props.article?.inventory_number
+    if (!parentNumber) return null
+    const next = getNextProvisionalDetailNumber()
+    return parentNumber + '-' + String(next).padStart(3, '0')
+}
 
 const removeOpenDetailedArticle = (idx) => {
     articleToDelete.value = idx
@@ -1427,7 +1470,8 @@ const addNewDetailedArticle = () => {
         description: '',
         quantity: detailedAlwaysOne.value ? 1 : 0,
         properties: baseProps,
-        status: defaultStatus()
+        status: defaultStatus(),
+        inventory_number: generateProvisionalInventoryNumber(),
     }
     articleForm.detailed_article_quantities.push(newItem)
     activeDetailedArticleForEditing.value = newItem
@@ -1471,7 +1515,8 @@ const copyDetailedArticle = (d) => {
         description: d.description,
         quantity: detailedAlwaysOne.value ? 1 : (d.quantity ?? 0),
         properties: copiedProps,
-        status: d.status
+        status: d.status,
+        inventory_number: generateProvisionalInventoryNumber(),
     }
     articleForm.detailed_article_quantities.push(newItem)
     activeDetailedArticleForEditing.value = newItem
@@ -1701,9 +1746,11 @@ onMounted(() => {
                     const newCatProps = categoryProps.filter(cp => !daPropIds.has(cp.id))
 
                     return {
+                        id: da.id,
                         name: da.name,
                         description: da.description,
                         quantity: da.quantity,
+                        inventory_number: da.inventory_number ?? null,
                         properties: [...existingDaProps, ...newCatProps],
                         status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
                     }

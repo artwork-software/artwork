@@ -2332,6 +2332,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/general/detailed-articles-always-quantity-one', [GeneralSettingsController::class, 'updateInventoryDetailedArticlesAlwaysQuantityOne'])
                 ->name('inventory-management.settings.general.update-detailed-articles-always-quantity-one');
 
+            Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
+                ->name('inventory-management.settings.general.update-inventory-display-settings');
+
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
 

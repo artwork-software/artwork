@@ -26,7 +26,7 @@ jobs:
       - name: Install PHP and Composer
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: gd zip bcmath pcntl
       - name: Install Dependencies
         run: composer install --no-progress --no-suggest --no-interaction
@@ -46,7 +46,7 @@ jobs:
       - name: Composer Setup
         uses: php-actions/composer@v6
         with:
-          php_version: 8.2
+          php_version: 8.4
           php_extensions: gd zip bcmath pcntl
       - name: PHPStan Static Analysis
         uses: php-actions/phpstan@v3
@@ -55,27 +55,24 @@ jobs:
           memory_limit: 1G
 
   tests:
-    name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+    name: PHP ${{ matrix.php }} - PHPUnit
     needs: [phpcs, phpstan]
     runs-on: ${{ matrix.operating-systems }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       COMPOSER_NO_INTERACTION: 1
       XDEBUG_MODE: coverage
     strategy:
       matrix:
-        php: [ 8.2]
-        laravel: [ ^10 ]
+        php: [ 8.4 ]
         dependency-version: [ prefer-stable ]
-        exclude:
-          - php: 8.0
         operating-systems: [ubuntu-latest]
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: artwork_tools
+          MYSQL_DATABASE: artwork_test
         ports:
           - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
@@ -86,27 +83,25 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl
+          php-version: ${{ matrix.php }}
+          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl, bcmath
       - name: Composer Install
         run: composer install
       - name: Set Testing Environment
         run: |
-          cp .env.example .env.testing
-          sed -i "s|^\(APP_ENV=\s*\).*$|\1testing|" .env.testing
-          sed -i "s|^\(DB_HOST=\s*\).*$|\1127.0.0.1|" .env.testing
-          sed -i "s|^\(DB_PORT=\s*\).*$|\1${{ job.services.mysql.ports['3306'] }}|" .env.testing
-          sed -i "s|^\(DB_DATABASE=\s*\).*$|\1artwork_tools|" .env.testing
-          sed -i "s|^\(DB_USERNAME=\s*\).*$|\1root|" .env.testing
-          sed -i "s|^\(DB_PASSWORD=\s*\).*$|\1root|" .env.testing
+          cp .env.testing .env.testing.ci
+          sed -i "s|^\(DB_HOST=\s*\).*$|\1127.0.0.1|" .env.testing.ci
+          sed -i "s|^\(DB_PORT=\s*\).*$|\1${{ job.services.mysql.ports['3306'] }}|" .env.testing.ci
+          sed -i "s|^\(DB_USERNAME=\s*\).*$|\1root|" .env.testing.ci
+          sed -i "s|^\(DB_PASSWORD=\s*\).*$|\1root|" .env.testing.ci
+          mv .env.testing .env.testing.local
+          mv .env.testing.ci .env.testing
       - name: Setup Application
         run: |
           php artisan key:generate --env=testing
-          php artisan optimize --env=testing
-          php artisan migrate:fresh --env=testing
-          php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
-      - name: Running Test
-        run: vendor/bin/pest --colors=always --coverage --min=20
+          php artisan migrate:fresh --env=testing --force
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always --coverage-clover=coverage.xml --coverage-text
 
   push_to_registry:
     name: Push Docker image to Docker Hub

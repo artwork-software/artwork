@@ -10,8 +10,7 @@ class TestDatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
-            SettingsSeeder::class,
-            AuthUserSeeder::class,
+            ShiftQualificationSeeder::class,
         ]);
     }
 }

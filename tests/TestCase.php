@@ -2,32 +2,28 @@
 
 namespace Tests;
 
-use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\EventType\Cache\EventTypeArrayCache;
-use Artwork\Modules\Project\Cache\ProjectTabArrayCache;
-use Artwork\Modules\Role\Enums\RoleEnum;
-use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Spatie\Permission\Models\Role;
+use Tests\Concerns\ActsAsRole;
+use Tests\Concerns\SilencesCaches;
 
 abstract class TestCase extends BaseTestCase
 {
+    use ActsAsRole;
+    use CreateAdminUser;
     use CreatesApplication;
     use DatabaseTransactions;
+    use SilencesCaches;
     use WithFaker;
-    use CreateAdminUser;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Tests sollen ohne externe Search-Services (Meilisearch) laufen.
         config(['scout.driver' => 'null']);
 
-        EventTypeArrayCache::forgetAll();
-        ProjectTabArrayCache::forgetAll();
+        $this->silenceCaches();
         $this->withoutVite();
 
         \Illuminate\Support\Facades\App::setLocale('en');

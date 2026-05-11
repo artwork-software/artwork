@@ -11,7 +11,7 @@ use Spatie\Permission\Models\Role;
 
 trait CreateAdminUser
 {
-    public function adminUser(User $user = null): User
+    public function adminUser(?User $user = null): User
     {
         // Ensure roles and permissions exist before assigning them
         if (!Role::where('name', RoleEnum::ARTWORK_ADMIN->value)->exists()) {

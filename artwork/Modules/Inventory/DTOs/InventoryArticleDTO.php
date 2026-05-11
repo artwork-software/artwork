@@ -7,7 +7,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 class InventoryArticleDTO
 {
     public int $id;
-    public ?string $type_number;
+    public ?string $inventory_number;
     public string $name;
     public ?string $description;
     public int $inventory_category_id;
@@ -31,7 +31,7 @@ class InventoryArticleDTO
     {
         $dto = new static();
         $dto->id = $article->id;
-        $dto->type_number = $article->type_number;
+        $dto->inventory_number = $article->inventory_number;
         $dto->name = $article->name;
         $dto->description = $article->description;
         $dto->inventory_category_id = $article->inventory_category_id;

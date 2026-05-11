@@ -37,12 +37,23 @@ class GeneralSettingsController extends Controller
         return Inertia::render('InventorySetting/General', [
             'inventoryDetailedArticlesAlwaysQuantityOne' =>
                 $generalSettings->inventory_detailed_articles_always_quantity_one,
+            'inventoryShowInventoryNumberAsName' =>
+                $generalSettings->inventory_show_inventory_number_as_name,
+            'inventoryNumberPrefix' =>
+                $generalSettings->inventory_number_prefix,
         ]);
     }
 
     public function updateInventoryDetailedArticlesAlwaysQuantityOne(Request $request): RedirectResponse
     {
         $this->generalSettingsService->updateInventoryDetailedArticlesAlwaysQuantityOne($request);
+
+        return Redirect::back();
+    }
+
+    public function updateInventoryDisplaySettings(Request $request): RedirectResponse
+    {
+        $this->generalSettingsService->updateInventoryDisplaySettings($request);
 
         return Redirect::back();
     }

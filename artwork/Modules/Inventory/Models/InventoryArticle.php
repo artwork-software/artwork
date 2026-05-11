@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 
@@ -23,7 +24,8 @@ use Laravel\Scout\Searchable;
  * @property int inventory_sub_category_id
  * @property int quantity
  * @property bool is_detailed_quantity
- * @property string type_number
+ * @property string external_id
+ * @property string inventory_number
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleProperty[] properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
  * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
@@ -49,7 +51,8 @@ class InventoryArticle extends Model
         'inventory_sub_category_id',
         'quantity',
         'is_detailed_quantity',
-        'type_number',
+        'external_id',
+        'inventory_number',
     ];
 
     protected $casts = [
@@ -64,6 +67,19 @@ class InventoryArticle extends Model
 
     protected $appends = ['room', 'manufacturer', 'category', 'subCategory'];
 
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (InventoryArticle $article) {
+            if (!$article->external_id) {
+                $article->external_id = TypeNumberGenerator::generateExternalId();
+            }
+            if (!$article->inventory_number) {
+                $article->inventory_number = TypeNumberGenerator::generateInventoryNumber();
+            }
+        });
+    }
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventoryCategory::class, 'inventory_category_id', 'id');
@@ -118,7 +134,7 @@ class InventoryArticle extends Model
         return [
             'id' => $this->id,
             'name' => $this->name ?? 'Name not found',
-            'type_number' => $this->type_number,
+            'inventory_number' => $this->inventory_number,
             'description' => $this->description,
             'category' => $this?->category?->name ?? null,
             'sub_category' => $this?->subCategory?->name ?? null,

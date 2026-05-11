@@ -56,8 +56,8 @@
             {{ item?.name }}
             <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" />
         </div>
-        <div v-if="item?.type_number" class="text-xs font-mono font-normal text-gray-400">
-            {{ item.type_number }}
+        <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-gray-400">
+            {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
         </div>
     </td>
     <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>

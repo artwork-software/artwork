@@ -4387,5 +4387,11 @@
     "Day of start month": "Tag des Startmonats",
     "Day of end month": "Tag des Endmonats",
     "Select a day of the month in which the export should start. The entire month of the selected day will be used for the export.": "Wähle einen Tag des Monats, in dem der Export starten soll. Es wird immer der gesamte Monat des gewählten Tages für den Export ausgewählt.",
-    "Select a day of the month in which the export should end. The entire month of the selected day will be used for the export.": "Wähle einen Tag des Monats, in dem der Export enden soll. Es wird immer der gesamte Monat des gewählten Tages für den Export ausgewählt."
+    "Select a day of the month in which the export should end. The entire month of the selected day will be used for the export.": "Wähle einen Tag des Monats, in dem der Export enden soll. Es wird immer der gesamte Monat des gewählten Tages für den Export ausgewählt.",
+    "Inventory number display": "Inventarnummer-Anzeige",
+    "Show inventory number as name": "Inventarnummer als Name anzeigen",
+    "If active, detailed articles display the inventory number instead of the name.": "Wenn aktiv, zeigen Einzelartikel die Inventarnummer anstelle des Namens an.",
+    "Inventory number prefix": "Inventarnummer-Präfix",
+    "e.g. INV-": "z.B. INV-",
+    "A prefix displayed before all inventory numbers (e.g. INV-). Does not change stored data.": "Ein Präfix, das vor allen Inventarnummern angezeigt wird (z.B. INV-). Ändert keine gespeicherten Daten."
 }

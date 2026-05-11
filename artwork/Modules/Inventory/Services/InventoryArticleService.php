@@ -8,6 +8,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryCategoryRepository;
@@ -321,7 +322,7 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ]);
 
-            $this->assignTypeNumber($article);
+            $this->assignInventoryNumber($article);
 
             $this->processArticleImages($article, $request);
             $this->processArticleProperties($article, $request);
@@ -335,16 +336,17 @@ class InventoryArticleService
     }
 
     /**
-     * Vergibt die menschenlesbare Typnummer (z. B. "aw-000430") basierend auf der Auto-Increment-ID.
+     * Vergibt die fortlaufende Inventarnummer (z. B. "00042").
+     * external_id wird automatisch im Model-Boot gesetzt.
      */
-    protected function assignTypeNumber(InventoryArticle $article): void
+    protected function assignInventoryNumber(InventoryArticle $article): void
     {
-        if (!empty($article->type_number)) {
+        if (!empty($article->inventory_number)) {
             return;
         }
 
         $article->update([
-            'type_number' => 'aw-' . str_pad((string) $article->id, 6, '0', STR_PAD_LEFT),
+            'inventory_number' => TypeNumberGenerator::generateInventoryNumber(),
         ]);
     }
 
@@ -654,7 +656,7 @@ class InventoryArticleService
     /**
      * Synchronisiert DetailArticles per ID:
      * - vorhandene IDs => Update + Property-Sync
-     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, type_number bleibt belegt)
+     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, inventory_number bleibt belegt)
      * - ohne ID => Neu anlegen mit nächster freier detail_number (max+1, inkl. trashed)
      */
     protected function syncDetailedArticles(InventoryArticle $article, SupportCollection $incoming): void
@@ -679,8 +681,6 @@ class InventoryArticleService
         $nextDetailNumber = (int) $article->detailedArticleQuantities()
             ->withTrashed()
             ->max('detail_number') + 1;
-
-        $paddedArticleId = str_pad((string) $article->id, 6, '0', STR_PAD_LEFT);
 
         foreach ($incoming as $detailData) {
             if (!empty($detailData['id'])) {
@@ -707,7 +707,8 @@ class InventoryArticleService
                     'quantity' => $detailData['quantity'],
                     'inventory_article_status_id' => $detailData['status']['id'] ?? null,
                     'detail_number' => $nextDetailNumber,
-                    'type_number' => 'aw-' . $paddedArticleId . '-' . $nextDetailNumber,
+                    'external_id' => TypeNumberGenerator::generateDetailExternalId($article->external_id, $nextDetailNumber),
+                    'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($article->inventory_number, $nextDetailNumber),
                 ]);
                 $nextDetailNumber++;
             }

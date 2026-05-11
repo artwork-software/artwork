@@ -12,6 +12,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 
 beforeEach(function (): void {
     $this->actingAs($this->adminUser());
@@ -36,13 +37,9 @@ beforeEach(function (): void {
         'quantity' => 3,
     ]);
 
-    $this->article->update([
-        'type_number' => 'aw-' . str_pad((string) $this->article->id, 6, '0', STR_PAD_LEFT),
-    ]);
-
-    // Drei DetailArticles per Hand mit known detail_number/type_number anlegen,
-    // damit die Tests reproduzierbar sind.
-    $padded = str_pad((string) $this->article->id, 6, '0', STR_PAD_LEFT);
+    // Both external_id and inventory_number are auto-generated via model boot
+    $mainExternalId = $this->article->external_id;
+    $mainInventoryNumber = $this->article->inventory_number;
 
     $this->detail1 = $this->article->detailedArticleQuantities()->create([
         'name' => 'Stuhl A',
@@ -50,7 +47,8 @@ beforeEach(function (): void {
         'quantity' => 1,
         'inventory_article_status_id' => $this->status->id,
         'detail_number' => 1,
-        'type_number' => "aw-{$padded}-1",
+        'external_id' => TypeNumberGenerator::generateDetailExternalId($mainExternalId, 1),
+        'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($mainInventoryNumber, 1),
     ]);
     $this->detail2 = $this->article->detailedArticleQuantities()->create([
         'name' => 'Stuhl B',
@@ -58,7 +56,8 @@ beforeEach(function (): void {
         'quantity' => 1,
         'inventory_article_status_id' => $this->status->id,
         'detail_number' => 2,
-        'type_number' => "aw-{$padded}-2",
+        'external_id' => TypeNumberGenerator::generateDetailExternalId($mainExternalId, 2),
+        'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($mainInventoryNumber, 2),
     ]);
     $this->detail3 = $this->article->detailedArticleQuantities()->create([
         'name' => 'Stuhl C',
@@ -66,7 +65,8 @@ beforeEach(function (): void {
         'quantity' => 1,
         'inventory_article_status_id' => $this->status->id,
         'detail_number' => 3,
-        'type_number' => "aw-{$padded}-3",
+        'external_id' => TypeNumberGenerator::generateDetailExternalId($mainExternalId, 3),
+        'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($mainInventoryNumber, 3),
     ]);
 });
 
@@ -124,7 +124,7 @@ function buildUpdateRequest(array $detailedArticleQuantities, array $overrides =
     return UpdateInventoryArticleRequest::create('/test', 'PATCH', $payload);
 }
 
-it('keeps existing detail article ids and type numbers when nothing about them changes', function (): void {
+it('keeps existing detail article ids and inventory numbers when nothing about them changes', function (): void {
     $service = app(InventoryArticleService::class);
 
     $request = buildUpdateRequest([
@@ -140,11 +140,11 @@ it('keeps existing detail article ids and type numbers when nothing about them c
     expect($fresh->detailedArticleQuantities)->toHaveCount(3);
     expect($fresh->detailedArticleQuantities->pluck('id')->all())
         ->toEqualCanonicalizing([$this->detail1->id, $this->detail2->id, $this->detail3->id]);
-    expect($fresh->detailedArticleQuantities->pluck('type_number')->all())
+    expect($fresh->detailedArticleQuantities->pluck('inventory_number')->all())
         ->toEqualCanonicalizing([
-            $this->detail1->type_number,
-            $this->detail2->type_number,
-            $this->detail3->type_number,
+            $this->detail1->inventory_number,
+            $this->detail2->inventory_number,
+            $this->detail3->inventory_number,
         ]);
     expect($fresh->detailedArticleQuantities->pluck('detail_number')->all())
         ->toEqualCanonicalizing([1, 2, 3]);
@@ -167,10 +167,10 @@ it('updates fields of existing detail articles by id', function (): void {
     expect($reloaded->description)->toBe('geändert');
     expect($reloaded->quantity)->toEqual(7);
     expect($reloaded->detail_number)->toBe(1);
-    expect($reloaded->type_number)->toBe($this->detail1->type_number);
+    expect($reloaded->inventory_number)->toBe($this->detail1->inventory_number);
 });
 
-it('soft-deletes detail articles missing from the request and keeps their type numbers locked', function (): void {
+it('soft-deletes detail articles missing from the request and keeps their inventory numbers locked', function (): void {
     $service = app(InventoryArticleService::class);
 
     // detail2 wird im Request weggelassen → muss soft-deleted werden
@@ -204,12 +204,12 @@ it('does not reuse detail numbers when soft-deleted detail articles exist', func
         detailPayload(null, 'Stuhl D', 'neu'),
     ]));
 
-    $padded = str_pad((string) $this->article->id, 6, '0', STR_PAD_LEFT);
     $newest = $this->article->detailedArticleQuantities()->where('name', 'Stuhl D')->first();
 
     expect($newest)->not->toBeNull();
     expect($newest->detail_number)->toBe(4);
-    expect($newest->type_number)->toBe("aw-{$padded}-4");
+    expect($newest->inventory_number)->toBe($this->article->inventory_number . '-004');
+    expect($newest->external_id)->toBe($this->article->external_id . '-4');
 });
 
 it('synchronizes detail article properties via pivot sync (add, update, remove)', function (): void {
@@ -260,15 +260,18 @@ it('creates new detail articles without an id and assigns the next free number',
         detailPayload(null, 'Stuhl Y', 'neu2'),
     ]));
 
-    $padded = str_pad((string) $this->article->id, 6, '0', STR_PAD_LEFT);
+    $mainInventoryNumber = $this->article->inventory_number;
+    $mainExternalId = $this->article->external_id;
 
     $stuhlX = $this->article->detailedArticleQuantities()->where('name', 'Stuhl X')->first();
     $stuhlY = $this->article->detailedArticleQuantities()->where('name', 'Stuhl Y')->first();
 
     expect($stuhlX->detail_number)->toBe(4);
-    expect($stuhlX->type_number)->toBe("aw-{$padded}-4");
+    expect($stuhlX->inventory_number)->toBe($mainInventoryNumber . '-004');
+    expect($stuhlX->external_id)->toBe($mainExternalId . '-4');
     expect($stuhlY->detail_number)->toBe(5);
-    expect($stuhlY->type_number)->toBe("aw-{$padded}-5");
+    expect($stuhlY->inventory_number)->toBe($mainInventoryNumber . '-005');
+    expect($stuhlY->external_id)->toBe($mainExternalId . '-5');
 });
 
 it('rejects detail article ids belonging to a different parent article via validation', function (): void {
@@ -279,17 +282,13 @@ it('rejects detail article ids belonging to a different parent article via valid
         'is_detailed_quantity' => true,
         'quantity' => 1,
     ]);
-    $otherArticle->update([
-        'type_number' => 'aw-' . str_pad((string) $otherArticle->id, 6, '0', STR_PAD_LEFT),
-    ]);
-
-    $otherPadded = str_pad((string) $otherArticle->id, 6, '0', STR_PAD_LEFT);
     $otherDetail = $otherArticle->detailedArticleQuantities()->create([
         'name' => 'Tisch A',
         'quantity' => 1,
         'inventory_article_status_id' => $this->status->id,
         'detail_number' => 1,
-        'type_number' => "aw-{$otherPadded}-1",
+        'external_id' => TypeNumberGenerator::generateDetailExternalId($otherArticle->external_id, 1),
+        'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($otherArticle->inventory_number, 1),
     ]);
 
     // Versuch, otherDetail-ID an unseren Artikel zu hängen

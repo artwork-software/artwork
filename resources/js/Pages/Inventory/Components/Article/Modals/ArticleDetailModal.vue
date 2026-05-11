@@ -76,6 +76,12 @@
                                 {{ article.name }}
                             </h1>
                             <div
+                                v-if="article.inventory_number"
+                                class="font-mono text-xs text-gray-400 mt-0.5"
+                            >
+                                {{ formatInventoryNumber(article.inventory_number) }}
+                            </div>
+                            <div
                                 v-if="article.category"
                                 class="font-lexend text-xs text-secondary mt-0.5 font-semibold"
                             >
@@ -291,9 +297,23 @@
                                         :class="open ? 'rounded-t-lg' : 'rounded-lg'"
                                     >
                                         <span
-                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']"
+                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary flex flex-col items-start']"
                                         >
-                                            {{ detailedArticle.name }}
+                                            <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
+                                                <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
+                                                <span class="text-xs font-normal text-gray-400">
+                                                    {{ detailedArticle.name }}
+                                                </span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ detailedArticle.name }}</span>
+                                                <span
+                                                    v-if="detailedArticle.inventory_number"
+                                                    class="font-mono text-xs font-normal text-gray-400"
+                                                >
+                                                    {{ formatInventoryNumber(detailedArticle.inventory_number) }}
+                                                </span>
+                                            </template>
                                         </span>
                                         <span class="ml-6 flex items-center gap-x-3">
                                             <span
@@ -430,6 +450,10 @@ import {
 } from '@tabler/icons-vue'
 
 const $t = useTranslation()
+
+const showInventoryNumberAsName = computed(() => usePage().props.inventoryShowInventoryNumberAsName ?? false)
+const inventoryNumberPrefix = computed(() => usePage().props.inventoryNumberPrefix ?? '')
+const formatInventoryNumber = (num) => num ? inventoryNumberPrefix.value + num : ''
 
 const props = defineProps({
     article: {

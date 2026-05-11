@@ -4,6 +4,7 @@ namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class BudgetManagementCostUnit extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [

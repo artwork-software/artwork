@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\QueryBuilders\ShiftsQualificationsBuilder;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,6 +21,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class ShiftsQualifications extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [

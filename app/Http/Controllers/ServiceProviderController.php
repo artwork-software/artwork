@@ -32,9 +32,14 @@ class ServiceProviderController extends Controller
     ) {
     }
 
-    public function store(): \Symfony\Component\HttpFoundation\Response
+    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        $serviceProvider = ServiceProvider::create();
+        $validated = $request->validate([
+            'provider_name' => 'required|string|max:255',
+        ]);
+
+        $serviceProvider = ServiceProvider::create($validated);
+        $serviceProvider->createCrmContact();
 
         return Inertia::location(route('service_provider.show', $serviceProvider->id));
     }
@@ -85,6 +90,17 @@ class ServiceProviderController extends Controller
 
     public function update(Request $request, ServiceProvider $serviceProvider): void
     {
+        $request->validate([
+            'provider_name' => 'required|string|max:255',
+            'email' => 'nullable|email',
+            'phone_number' => 'nullable|string',
+            'street' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'location' => 'nullable|string',
+            'note' => 'nullable|string',
+            'type_of_provider' => 'nullable|string',
+        ]);
+
         $serviceProvider->update($request->only([
             'provider_name',
             'email',

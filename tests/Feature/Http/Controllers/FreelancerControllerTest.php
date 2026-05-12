@@ -23,10 +23,26 @@ final class FreelancerControllerTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
 
-        $response = $this->post(route('freelancer.add'));
+        $response = $this->post(route('freelancer.add'), [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ]);
 
         $this->assertContains($response->getStatusCode(), [200, 302, 409]);
-        $this->assertGreaterThan(0, Freelancer::query()->count());
+        $this->assertDatabaseHas('freelancers', [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ]);
+    }
+
+    #[Test]
+    public function store_validates_required_fields(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->post(route('freelancer.add'), []);
+
+        $response->assertSessionHasErrors(['first_name', 'last_name']);
     }
 
     #[Test]
@@ -60,7 +76,7 @@ final class FreelancerControllerTest extends FeatureTestCase
 
         $response = $this->patch(route('freelancer.update', $fl), []);
 
-        $response->assertSessionHasErrors(['first_name', 'last_name', 'email']);
+        $response->assertSessionHasErrors(['first_name', 'last_name']);
     }
 
     #[Test]

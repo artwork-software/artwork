@@ -24,11 +24,25 @@ final class ServiceProviderControllerTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
 
-        $response = $this->post(route('service_provider.add'));
+        $response = $this->post(route('service_provider.add'), [
+            'provider_name' => 'Test Company GmbH',
+        ]);
 
         // Inertia::location returns a 409 Conflict with X-Inertia-Location header
         $this->assertContains($response->getStatusCode(), [200, 302, 409]);
-        $this->assertGreaterThan(0, ServiceProvider::query()->count());
+        $this->assertDatabaseHas('service_providers', [
+            'provider_name' => 'Test Company GmbH',
+        ]);
+    }
+
+    #[Test]
+    public function store_validates_required_fields(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->post(route('service_provider.add'), []);
+
+        $response->assertSessionHasErrors(['provider_name']);
     }
 
     #[Test]

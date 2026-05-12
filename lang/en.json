@@ -1033,7 +1033,9 @@
     "If a countdown is to be created, enter the percentage or remove the countdown.": "If a countdown is to be created, enter the percentage or remove the countdown.",
     "Creating a source of funding": "Creating a source of funding",
     "Which sources of funding belong to this group?": "Which sources of funding belong to this group?",
+    "Create freelancer": "Create freelancer",
     "Create funding source group": "Create funding source group",
+    "Create service provider": "Create service provider",
     "Single source": "Single source",
     "Group": "Group",
     "To be completed by?*": "To be completed by?*",
@@ -4388,5 +4390,7 @@
     "Already accepted by": "Already accepted by",
     "Already declined by": "Already declined by",
     "Event deleted by": "Event deleted by",
-    "modified": "modified"
+    "modified": "modified",
+    "Enter the name of the new freelancer. You can add more details later.": "Enter the name of the new freelancer. You can add more details later.",
+    "Enter the name of the new service provider. You can add more details later.": "Enter the name of the new service provider. You can add more details later."
 }

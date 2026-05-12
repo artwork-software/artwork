@@ -1033,7 +1033,9 @@
     "If a countdown is to be created, enter the percentage or remove the countdown.": "Wenn ein Countdown erstellt werden soll, gib den Prozentsatz ein oder entferne den Countdown.",
     "Creating a source of funding": "Finanzierungsquelle anlegen",
     "Which sources of funding belong to this group?": "Welche Finanzierungsquellen gehören zu dieser Gruppe?",
+    "Create freelancer": "Freelancer anlegen",
     "Create funding source group": "Finanzierungsquellengruppe anlegen",
+    "Create service provider": "Dienstleister anlegen",
     "Single source": "Einzelquelle",
     "Group": "Gruppe",
     "To be completed by?*": "Zu erledigen bis?*",
@@ -4424,5 +4426,7 @@
     "Already accepted by": "Bereits angenommen von",
     "Already declined by": "Bereits abgesagt von",
     "Event deleted by": "Termin gelöscht von",
-    "modified": "abgeändert"
+    "modified": "abgeändert",
+    "Enter the name of the new freelancer. You can add more details later.": "Gib den Namen des neuen Freelancers ein. Weitere Details kannst du später ergänzen.",
+    "Enter the name of the new service provider. You can add more details later.": "Gib den Namen des neuen Dienstleisters ein. Weitere Details kannst du später ergänzen."
 }

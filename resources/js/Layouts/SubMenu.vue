@@ -539,8 +539,8 @@ const navigation = ref([
                 name: 'Event Verifications',
                 href: route('event-verifications.index'),
                 icon: 'IconCalendarCheck',
-                current: route().current('event-verifications.index'),
-                has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+                current: route().current('event-verifications.index') || route().current('event-verifications.sent'),
+                has_permission: usePage().props.canSeeEventVerifications,
             },
         ]
     },

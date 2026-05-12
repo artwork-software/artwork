@@ -414,6 +414,7 @@
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
+                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                         <BaseMenuItem
                             white-menu-background
@@ -938,6 +939,7 @@ const emits = defineEmits([
     "openAddSubEventModal",
     "openConfirmModal",
     "showDeclineEventModal",
+    "acceptRoomRequest",
     "changedMultiEditCheckbox",
 ]);
 

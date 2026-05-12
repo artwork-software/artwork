@@ -18,7 +18,8 @@ class EventPolicy
             $user->can([PermissionEnum::EVENT_REQUEST->value]) ||
             $user->can([PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value]) ||
             $user->can([PermissionEnum::CAN_SEE_PLANNING_CALENDAR]) ||
-            $user->can([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR])
+            $user->can([PermissionEnum::CAN_EDIT_PLANNING_CALENDAR]) ||
+            $user->can([PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR])
         ) {
             return true;
         }

@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Events\BroadcastToReloadEventVerificationRequests;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventVerification;
@@ -19,8 +20,28 @@ class EventVerificationService
 {
 
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly ChangeService $changeService,
     ){
+    }
+
+    private function trackIsPlanningChange(Event $event, bool $newIsPlanning): void
+    {
+        if ((bool) $event->is_planning === $newIsPlanning) {
+            return;
+        }
+
+        $translationKey = $newIsPlanning
+            ? 'Event converted to planning event'
+            : 'Event confirmed';
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey($translationKey)
+        );
     }
 
     public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '') {
@@ -164,6 +185,7 @@ class EventVerificationService
 
         switch ($eventType->verification_mode) {
             case 'any':
+                $this->trackIsPlanningChange($event, false);
                 $event->update(['is_planning' => false, 'occupancy_option' => false]);
                 $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 $event->verifications()->where('status', 'pending')->delete();
@@ -176,6 +198,7 @@ class EventVerificationService
                     'name' => $verification->verifier->full_name,
                 ], $eventCreator->language);
                 if ($approvedCount === $totalCount) {
+                    $this->trackIsPlanningChange($event, false);
                     $event->update(['is_planning' => false, 'occupancy_option' => false]);
                     $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 }
@@ -184,6 +207,7 @@ class EventVerificationService
             case 'specific':
                 $specificVerifier = $eventType->specificVerifier;
                 if ($verification->verifier_id === $specificVerifier->id) {
+                    $this->trackIsPlanningChange($event, false);
                     $event->update(['is_planning' => false, 'occupancy_option' => false]);
                     $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 }
@@ -257,6 +281,7 @@ class EventVerificationService
             'status' => 'rejected',
             'rejection_reason' => $reason
         ]);
+        $this->trackIsPlanningChange($event, true);
         $verification->event->update(['is_planning' => true]);
 
         $this->notificationService->setIcon('red');
@@ -292,6 +317,7 @@ class EventVerificationService
         $uuid = Str::uuid()->toString();
 
         if ($eventType->verification_mode === 'none') {
+            $this->trackIsPlanningChange($event, false);
             $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
@@ -310,6 +336,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
+            $this->trackIsPlanningChange($event, false);
             $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
@@ -322,6 +349,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
+            $this->trackIsPlanningChange($event, false);
             $event->update(['is_planning' => false, 'occupancy_option' => false]);
             return;
         }
@@ -376,6 +404,7 @@ class EventVerificationService
 
     public function cancelVerification(Event $event): void
     {
+        $this->trackIsPlanningChange($event, true);
         $event->update(['is_planning' => true]);
         foreach ($event->verifications as $verification) {
             $verifier = $verification->verifier;

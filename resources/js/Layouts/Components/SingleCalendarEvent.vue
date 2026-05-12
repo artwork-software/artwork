@@ -18,6 +18,11 @@
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
+                <button v-if="event.occupancy_option && (isRoomAdmin || this.hasAdminRole())"
+                        @click="acceptRoomRequest(event)" type="button"
+                        class="rounded-full bg-green-600 p-1 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
+                </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
@@ -518,6 +523,12 @@ export default {
             }
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;
+        },
+        acceptRoomRequest(event) {
+            this.$inertia.put(route('events.accept', event.id), {}, {
+                preserveScroll: true,
+                preserveState: true,
+            });
         },
         deleteEvent() {
             if (this.type === 'main') {

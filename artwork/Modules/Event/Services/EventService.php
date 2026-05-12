@@ -878,10 +878,15 @@ readonly class EventService
                     })
                     // Only consider non-deleted events (explicit table name for whereHas context)
                     ->whereNull('events.deleted_at')
-                    // Filter planning events based on user settings
+                    // Filter planning events based on user settings and permission
                     ->where(function ($q) use ($userCalendarSettings) {
                         $q->where('is_planning', false);
-                        if ($userCalendarSettings?->show_planned_events) {
+                        $user = $this->authManager->user();
+                        if (
+                            $userCalendarSettings?->show_planned_events &&
+                            $user &&
+                            ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                        ) {
                             $q->orWhere('is_planning', true);
                         }
                     });
@@ -1883,6 +1888,9 @@ readonly class EventService
             }
         }
 
+        $newIsPlanning = $data['is_planning'] ?? $event->is_planning;
+        $oldIsPlanning = (bool) $event->is_planning;
+
         $this->eventRepository->update($event, [
             'eventName' => $data['name'],
             'name' => $data['name'],
@@ -1891,9 +1899,19 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
-            'is_planning' => $data['is_planning'] ?? $event->is_planning,
+            'is_planning' => $newIsPlanning,
         ]);
 
+        if ($oldIsPlanning !== (bool) $newIsPlanning) {
+            $changeService = app(ChangeService::class);
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey($newIsPlanning ? 'Event converted to planning event' : 'Event confirmed')
+            );
+        }
 
         // verschiebe schichten wenn event verschoben wird
         $shifts = $event->shifts;
@@ -1946,6 +1964,23 @@ readonly class EventService
             'eventName' => $data['eventName'] ?? null,
             'is_planning' => $data['is_planning'] ?? null,
         ]);
+
+        if (array_key_exists('is_planning', $updates)) {
+            $changeService = app(ChangeService::class);
+            $translationKey = $updates['is_planning'] ? 'Event converted to planning event' : 'Event confirmed';
+            $affectedEvents = Event::whereIn('id', $eventIds)
+                ->where('is_planning', '!=', $updates['is_planning'])
+                ->get();
+            foreach ($affectedEvents as $affectedEvent) {
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Event::class)
+                        ->setModelId($affectedEvent->id)
+                        ->setTranslationKey($translationKey)
+                );
+            }
+        }
 
         $selectedDay = $data['selectedDay'] ?? null;
         $selectedStartTime = $data['selectedStartTime'] ?? null;

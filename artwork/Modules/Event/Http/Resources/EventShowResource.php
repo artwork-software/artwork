@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Http\Resources;
 
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -38,6 +39,11 @@ class EventShowResource extends JsonResource
             'project' => $this->project,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
+            'declined_room_id' => $this->declined_room_id,
+            'declined_room_name' => $this->declined_room_id
+                ? Room::find($this->declined_room_id)?->name
+                : null,
+            'accepted' => $this->accepted,
         ];
     }
 }

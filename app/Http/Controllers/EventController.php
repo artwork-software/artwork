@@ -53,6 +53,7 @@ use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -1213,7 +1214,7 @@ class EventController extends Controller
         $roomId = $request->get('roomId');
         $isOption = $request->get('isOption');
 
-        if ($roomId && !$user->hasRole('admin')) {
+        if ($roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             $room = Room::find($roomId);
             if ($room) {
                 $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
@@ -4039,30 +4040,41 @@ class EventController extends Controller
         $eventIds = $request->collect('eventIds', []);
         /** @var User $currentUser */
         $currentUser = $this->authManager->user();
+        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
         foreach ($eventIds as $eventId) {
             $event = Event::find($eventId);
-            if ($event && $event->occupancy_option) {
-                $event->occupancy_option = false;
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Event::class)
-                        ->setModelId($event->id)
-                        ->setTranslationKey('Room confirmed')
-                );
-
-                $event->save();
-
-                $this->notificationService->updateRoomRequestNotificationStatus(
-                    $event->id,
-                    'accepted',
-                    $currentUser
-                );
-
-                broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+            if (!$event || !$event->occupancy_option) {
+                continue;
             }
+
+            if (!$isAdmin && !$hasGlobalCreate) {
+                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
+                if (!$isRoomAdmin) {
+                    continue;
+                }
+            }
+
+            $event->occupancy_option = false;
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey('Room confirmed')
+            );
+
+            $event->save();
+
+            $this->notificationService->updateRoomRequestNotificationStatus(
+                $event->id,
+                'accepted',
+                $currentUser
+            );
+
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
         }
 
         return redirect()->back();
@@ -4074,37 +4086,48 @@ class EventController extends Controller
         $comment = $request->get('comment', '');
         /** @var User $currentUser */
         $currentUser = $this->authManager->user();
+        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
 
         foreach ($eventIds as $eventId) {
             $event = Event::find($eventId);
-            if ($event && $event->occupancy_option) {
-                $roomId = $event->room_id;
-                $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
-
-                if (!empty($comment)) {
-                    $event->comments()->create([
-                        'user_id' => $currentUser->id,
-                        'comment' => $comment,
-                        'is_admin_comment' => true
-                    ]);
-                }
-
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
-                        ->createBuilder()
-                        ->setModelClass(Event::class)
-                        ->setModelId($event->id)
-                        ->setTranslationKey('Room declined')
-                );
-
-                $this->notificationService->updateRoomRequestNotificationStatus(
-                    $event->id,
-                    'declined',
-                    $currentUser
-                );
-
-                broadcast(new EventCreated($event, $roomId));
+            if (!$event || !$event->occupancy_option) {
+                continue;
             }
+
+            if (!$isAdmin && !$hasGlobalCreate) {
+                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
+                if (!$isRoomAdmin) {
+                    continue;
+                }
+            }
+
+            $roomId = $event->room_id;
+            $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+
+            if (!empty($comment)) {
+                $event->comments()->create([
+                    'user_id' => $currentUser->id,
+                    'comment' => $comment,
+                    'is_admin_comment' => true
+                ]);
+            }
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey('Room declined')
+            );
+
+            $this->notificationService->updateRoomRequestNotificationStatus(
+                $event->id,
+                'declined',
+                $currentUser
+            );
+
+            broadcast(new EventCreated($event, $roomId));
         }
 
         return redirect()->back();
@@ -4125,6 +4148,15 @@ class EventController extends Controller
 
     public function convertToPlanning(Event $event): RedirectResponse
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+
         $wasPlanning = $event->is_planning;
 
         // Set the event as a planning event

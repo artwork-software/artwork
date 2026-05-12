@@ -23,13 +23,13 @@
                         class="rounded-full bg-green-600 p-1 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
                     <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))" type="button"
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <PropertyIcon name="IconX" stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))"
                         @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <PropertyIcon name="IconTrash" stroke-width="1.5"

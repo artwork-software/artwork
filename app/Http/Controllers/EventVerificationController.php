@@ -17,6 +17,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -180,12 +181,26 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value) &&
+            $event->creator?->id !== $user->id
+        ) {
+            abort(403);
+        }
+
         $this->eventVerificationService->requestVerification($event, $user);
         broadcast(new EventCreated($event->fresh(), $event->room_id));
     }
 
     public function approved(EventVerification $eventVerification): void
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (!$this->canVerifyEvent($eventVerification->event, $user)) {
+            abort(403);
+        }
+
         $this->eventVerificationService->approveVerification($eventVerification);
         $event = $eventVerification->event;
         broadcast(new EventCreated($event, $event->room_id));
@@ -193,6 +208,12 @@ class EventVerificationController extends Controller
 
     public function rejected(EventVerification $eventVerification, Request $request): void
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (!$this->canVerifyEvent($eventVerification->event, $user)) {
+            abort(403);
+        }
+
         $this->eventVerificationService->rejectVerification($eventVerification, $request->get('rejection_reason', ''));
         $event = $eventVerification->event;
         broadcast(new EventCreated($event, $event->room_id));
@@ -200,6 +221,15 @@ class EventVerificationController extends Controller
 
     public function cancelVerification(Event $event): void
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            $event->creator?->id !== $user->id
+        ) {
+            abort(403);
+        }
+
         $this->eventVerificationService->cancelVerification($event);
         broadcast(new EventCreated($event, $event->room_id));
     }
@@ -258,6 +288,13 @@ class EventVerificationController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+
         $planningEvents = Event::where('project_id', $project)
             ->where('is_planning', true)
             ->get();
@@ -277,6 +314,15 @@ class EventVerificationController extends Controller
      */
     public function convertToPlanning(Request $request, $project): void
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+
         $events = Event::where('project_id', $project)->get();
         $eventIds = $events->pluck('id');
 
@@ -286,6 +332,21 @@ class EventVerificationController extends Controller
         foreach ($refreshedEvents as $event) {
             broadcast(new EventCreated($event, $event->room_id));
         }
+    }
+
+    private function canVerifyEvent(Event $event, User $user): bool
+    {
+        if ($user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            return true;
+        }
+
+        $eventType = $event->event_type;
+        if (!$eventType) {
+            return false;
+        }
+
+        return $eventType->specific_verifier_id === $user->id
+            || $eventType->verifiers()->where('user_id', $user->id)->exists();
     }
 
     public function redirectToCalendar(Event $event): \Illuminate\Http\RedirectResponse

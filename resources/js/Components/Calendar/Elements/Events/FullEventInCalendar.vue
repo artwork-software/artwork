@@ -423,11 +423,11 @@
                             :icon="IconCirclePlus"
                             title="Add Sub-Event"
                         />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
                         <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                         <BaseMenuItem white-menu-background v-if="event.hasTimelines && (can('create events without request') || hasAdminRole)" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" title="Save timeline as preset" />
                         <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" title="Import timeline preset" />
                     </BaseMenu>

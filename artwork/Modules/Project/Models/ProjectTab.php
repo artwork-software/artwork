@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class ProjectTab extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'name',

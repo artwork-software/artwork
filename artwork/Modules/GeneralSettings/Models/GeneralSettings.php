@@ -64,6 +64,10 @@ class GeneralSettings extends Settings
 
     public bool $inventory_detailed_articles_always_quantity_one = false;
 
+    public bool $inventory_show_inventory_number_as_name = false;
+
+    public string $inventory_number_prefix = '';
+
     public static function group(): string
     {
         return 'general';

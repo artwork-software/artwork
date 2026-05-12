@@ -109,6 +109,13 @@
              class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
             <FormButton :text="$t('Move events')"
                        @click="openMultiEditModal"/>
+            <FormButton v-if="hasCheckedOccupancyEvents"
+                       :text="$t('Accept selected requests')"
+                       @click="acceptSelectedRequests"/>
+            <FormButton v-if="hasCheckedOccupancyEvents"
+                       @click="openDeclineSelectedRequestsModal = true"
+                       class="!border-2 !border-red-600 bg-transparent !text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-transparent resize-none"
+                       :text="$t('Decline selected requests')"/>
             <FormButton @click="openDeleteSelectedEventsModal = true"
                        class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"
                        :text="$t('Delete events')"/>
@@ -124,6 +131,13 @@
             :title="$t('Delete assignments')"
             :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
 
+        <ConfirmDeleteModal
+            v-if="openDeclineSelectedRequestsModal"
+            @closed="openDeclineSelectedRequestsModal = false"
+            @delete="declineSelectedRequests"
+            :title="$t('Decline selected requests')"
+            :description="$t('Are you sure you want to decline all selected room booking requests?')"/>
+
     </div>
 </template>
 
@@ -138,6 +152,7 @@ import {Link, router} from "@inertiajs/vue3";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -174,6 +189,7 @@ export default {
             editEvents: [],
             showMultiEditModal: false,
             openDeleteSelectedEventsModal: false,
+            openDeclineSelectedRequestsModal: false,
             checkedEvents: [],
             isPageScrolled: false,
             dateValueCopy: this.dateValue ? this.dateValue : [],
@@ -210,6 +226,19 @@ export default {
                 fontSize,
                 lineHeight,
             };
+        },
+        hasCheckedOccupancyEvents() {
+            let found = false;
+            this.days.forEach((day) => {
+                this.calendarData.forEach((room) => {
+                    room[day.full_day]?.events?.forEach((event) => {
+                        if (event.clicked && event.occupancy_option) {
+                            found = true;
+                        }
+                    });
+                });
+            });
+            return found;
         },
         filteredEvents() {
             return this.eventsWithoutRoom?.filter((event) => {
@@ -308,6 +337,40 @@ export default {
             this.getCheckedEvents();
 
             this.showMultiEditModal = true;
+        },
+        acceptSelectedRequests() {
+            this.getCheckedEvents();
+            const occupancyEventIds = this.getCheckedOccupancyEventIds();
+            router.put(route('events.bulk-accept'), {
+                eventIds: occupancyEventIds
+            }, {
+                preserveScroll: true,
+            });
+        },
+        declineSelectedRequests() {
+            this.getCheckedEvents();
+            const occupancyEventIds = this.getCheckedOccupancyEventIds();
+            router.put(route('events.bulk-decline'), {
+                eventIds: occupancyEventIds,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.openDeclineSelectedRequestsModal = false;
+                }
+            });
+        },
+        getCheckedOccupancyEventIds() {
+            const ids = [];
+            this.days.forEach((day) => {
+                this.calendarData.forEach((room) => {
+                    room[day.full_day]?.events?.forEach((event) => {
+                        if (event.clicked && event.occupancy_option && !ids.includes(event.id)) {
+                            ids.push(event.id);
+                        }
+                    });
+                });
+            });
+            return ids;
         },
         getCheckedEvents() {
             this.editEvents = [];

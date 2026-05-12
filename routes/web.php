@@ -749,11 +749,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
-    Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
+    Route::get('/events/requests', function () {
+        return redirect()->route('event-verifications.index');
+    })->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
+    Route::put('/events/bulk-accept', [EventController::class, 'bulkAcceptEvents'])->name('events.bulk-accept');
+    Route::put('/events/bulk-decline', [EventController::class, 'bulkDeclineEvents'])->name('events.bulk-decline');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
@@ -2332,6 +2336,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/general/detailed-articles-always-quantity-one', [GeneralSettingsController::class, 'updateInventoryDetailedArticlesAlwaysQuantityOne'])
                 ->name('inventory-management.settings.general.update-detailed-articles-always-quantity-one');
 
+            Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
+                ->name('inventory-management.settings.general.update-inventory-display-settings');
+
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
 
@@ -2652,8 +2659,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [EventVerificationController::class, 'index'])
             ->name('event-verifications.index');
 
-        Route::get('/requests', [EventVerificationController::class, 'requests'])
-            ->name('event-verifications.requests');
+        Route::get('/sent', [EventVerificationController::class, 'sent'])
+            ->name('event-verifications.sent');
+
+        Route::get('/requests', function () {
+            return redirect()->route('event-verifications.index');
+        })->name('event-verifications.requests');
 
         Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
             ->name('event-verifications.approved');

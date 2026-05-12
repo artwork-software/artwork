@@ -2,11 +2,35 @@
 
 namespace Artwork\Modules\Crm\Traits;
 
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Models\CrmProperty;
 use Artwork\Modules\Crm\Models\CrmPropertyValue;
 
 trait HasCrmFields
 {
+    /**
+     * Create a CRM contact for this entity and link it via crm_contact_id.
+     */
+    public function createCrmContact(): void
+    {
+        $type = CrmContactType::where('slug', $this->getCrmContactTypeSlug())->first();
+
+        if (!$type) {
+            return;
+        }
+
+        $contact = CrmContact::create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => $this->getCrmDisplayName(),
+            'is_active' => true,
+            'entity_type' => $this->getMorphClass(),
+            'entity_id' => $this->getKey(),
+        ]);
+
+        $this->forceFill(['crm_contact_id' => $contact->id])->saveQuietly();
+    }
+
     /**
      * Sync all CRM-mapped field values from this entity to its CRM contact property values.
      * Also syncs the display_name on the CRM contact.
@@ -21,7 +45,7 @@ trait HasCrmFields
         }
 
         if (!$crmContact) {
-            $crmContact = \Artwork\Modules\Crm\Models\CrmContact::where('entity_type', $this->getMorphClass())
+            $crmContact = CrmContact::where('entity_type', $this->getMorphClass())
                 ->where('entity_id', $this->getKey())
                 ->first();
         }

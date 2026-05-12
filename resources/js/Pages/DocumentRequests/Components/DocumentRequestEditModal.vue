@@ -58,7 +58,10 @@
                                 <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
                                 <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
                                 <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
-                                <button type="button" @click="toggleCrmDetails" class="ml-auto text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                <a :href="route('crm.contacts.show', selectedCrmContact.id)" class="ml-auto text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                    {{ $t('View in CRM') }}
+                                </a>
+                                <button type="button" @click="toggleCrmDetails" class="text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
                                     <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
                                 <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">

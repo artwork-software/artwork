@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
@@ -199,7 +200,12 @@ readonly class CalendarDataService
                 ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
                 ->where(function ($q) use ($userCalendarSettings): void {
                     $q->where('events.is_planning', false);
-                    if ($userCalendarSettings?->show_planned_events) {
+                    $user = Auth::user();
+                    if (
+                        $userCalendarSettings?->show_planned_events &&
+                        $user &&
+                        ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                    ) {
                         $q->orWhere('events.is_planning', true);
                     }
                 });

@@ -20,6 +20,7 @@
             @openAddSubEventModal="openAddSubEventModal"
             @openConfirmModal="(e, type) => emit('open-confirm-modal', e, type)"
             @showDeclineEventModal="e => emit('show-decline-event-modal', e)"
+            @acceptRoomRequest="e => emit('accept-room-request', e)"
             @changedMultiEditCheckbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"
         />
     </div>
@@ -51,6 +52,7 @@ const emit = defineEmits([
     'openAddSubEventModal',
     'openConfirmModal',
     'showDeclineEventModal',
+    'acceptRoomRequest',
     'changedMultiEditCheckbox'
 ]);
 

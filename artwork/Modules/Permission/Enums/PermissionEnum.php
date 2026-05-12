@@ -56,6 +56,8 @@ enum PermissionEnum : string
 
     case CAN_EDIT_PLANNING_CALENDAR = 'can edit planning calendar';
 
+    case CAN_PLAN_FIXED_IN_PLANNING_CALENDAR = 'can plan fixed in planning calendar';
+
     case SET_CREATE_EDIT = 'set.create_edit';
     case SET_DELETE = 'set.delete';
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';

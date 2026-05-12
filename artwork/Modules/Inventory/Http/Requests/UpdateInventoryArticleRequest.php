@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInventoryArticleRequest extends FormRequest
 {
@@ -13,6 +14,8 @@ class UpdateInventoryArticleRequest extends FormRequest
 
     public function rules(): array
     {
+        $articleId = $this->route('inventoryArticle')?->id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -30,6 +33,13 @@ class UpdateInventoryArticleRequest extends FormRequest
             'properties.*.value' => ['nullable', 'max:255'],
 
             'detailed_article_quantities' => ['nullable', 'array'],
+            'detailed_article_quantities.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('inventory_detailed_quantity_articles', 'id')
+                    ->where(fn ($query) => $query->where('inventory_article_id', $articleId)
+                        ->whereNull('deleted_at')),
+            ],
             'detailed_article_quantities.*.name' => ['required', 'string', 'max:255'],
             'detailed_article_quantities.*.quantity' => ['required', 'integer', 'min:0'],
             'detailed_article_quantities.*.description' => ['nullable', 'string'],

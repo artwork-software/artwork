@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" cacheDirectory=".phpunit.cache">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" cacheDirectory=".phpunit.cache">
   <testsuites>
     <testsuite name="Unit">
       <directory suffix="Test.php">./tests/Unit</directory>
+      <exclude>./tests/Unit/Pure</exclude>
     </testsuite>
     <testsuite name="Feature">
       <directory suffix="Test.php">./tests/Feature</directory>
+    </testsuite>
+    <testsuite name="Integration">
+      <directory suffix="Test.php">./tests/Integration</directory>
+    </testsuite>
+    <testsuite name="Pure">
+      <directory suffix="Test.php">./tests/Unit/Pure</directory>
     </testsuite>
   </testsuites>
   <php>
@@ -16,11 +23,18 @@
     <env name="QUEUE_CONNECTION" value="sync"/>
     <env name="SESSION_DRIVER" value="array"/>
     <env name="TELESCOPE_ENABLED" value="false"/>
+    <env name="SCOUT_DRIVER" value="null"/>
+    <env name="BROADCAST_DRIVER" value="log"/>
+    <env name="DB_DATABASE" value="artwork_test"/>
   </php>
   <source>
     <include>
       <directory suffix=".php">./app</directory>
       <directory suffix=".php">./artwork</directory>
     </include>
+    <exclude>
+      <directory suffix=".php">./artwork/Modules/*/database/migrations</directory>
+      <directory suffix=".php">./artwork/Modules/*/database/seeders</directory>
+    </exclude>
   </source>
 </phpunit>

@@ -40,10 +40,26 @@
                 <p v-if="notification.data?.description[5]" class="mt-2 xxsLight">
                     {{ notification.data?.description[5]?.title }}
                 </p>
+                <span v-if="notification.data.isModified" class="text-orange-700 bg-orange-50 px-2 py-1 rounded text-xs font-medium">
+                    {{ $t('modified') }}
+                </span>
+                <div v-if="notification.data.handledStatus" class="mt-2 text-xs font-medium">
+                    <span v-if="notification.data.handledStatus === 'accepted'" class="text-green-700 bg-green-50 px-2 py-1 rounded">
+                        {{ $t('Already accepted by') }} {{ notification.data.handledBy?.name }}
+                    </span>
+                    <span v-else-if="notification.data.handledStatus === 'declined'" class="text-red-700 bg-red-50 px-2 py-1 rounded">
+                        {{ $t('Already declined by') }} {{ notification.data.handledBy?.name }}
+                    </span>
+                    <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-gray-700 bg-gray-50 px-2 py-1 rounded">
+                        {{ $t('Event deleted by') }} {{ notification.data.handledBy?.name }}
+                    </span>
+                </div>
                 <NotificationButtons v-if="!isArchive"
                                      :buttons="notification.data.buttons"
+                                     @showInCalendar="showInCalendar"
                                      @openDeclineModal="loadEventDataForDecline"
                                      @openEventEditAccept="loadEventDataForEditAndAccept"
+                                     @acceptRoomRequest="acceptRoomRequest"
                                      @openDialogModal="loadEventDataForDialog"
                                      @deleteEvent="showDeleteConfirmModal = true"
                                      @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
@@ -58,7 +74,7 @@
         </div>
         <img @click="setReadAt"
              v-show="notification.hovered"
-             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete'].includes(button)).length === 0"
+             v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar'].includes(button)).length === 0"
              src="/Svgs/IconSvgs/icon_archive_white.svg"
              class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
              aria-hidden="true"
@@ -373,10 +389,20 @@ export default {
             }
         },
         openProject(projectId) {
-            window.location.href = route('projects.tab', {
-                project: projectId,
-                projectTab: 1
-            });
+            // Use the project link from the notification description if available (contains correct tab)
+            const desc = this.notification.data?.description || [];
+            const projectLink = desc.find(d => d.type === 'link' && d.href);
+            if (projectLink?.href) {
+                window.location.href = projectLink.href;
+                return;
+            }
+            // Fallback: navigate to project main page
+            if (projectId) {
+                window.location.href = route('projects.tab', {
+                    project: projectId,
+                    projectTab: 1
+                });
+            }
         },
         openProjectShift(projectId, eventId, shiftId) {
             if (this.first_project_shift_tab_id) {
@@ -391,6 +417,29 @@ export default {
         },
         openProjectTasks(taskId){
             window.location.href = route('tasks.own') + '?taskId=' + taskId;
+        },
+        showInCalendar() {
+            if (this.notification.data?.eventId) {
+                window.location.href = route('event-verifications.redirect-to-calendar', this.notification.data.eventId);
+            }
+        },
+        acceptRoomRequest() {
+            if (this.notification.data?.eventId) {
+                router.put(
+                    route('events.accept', { event: this.notification.data.eventId }),
+                    { accepted: true },
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
+                                router.post(route('event.notification.delete', this.notification.data.notificationKey), {
+                                    notificationKey: this.notification.data.notificationKey
+                                }, { preserveScroll: true, preserveState: true });
+                            }
+                        }
+                    }
+                );
+            }
         }
     }
 }

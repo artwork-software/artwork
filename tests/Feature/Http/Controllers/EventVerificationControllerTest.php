@@ -25,11 +25,21 @@ final class EventVerificationControllerTest extends FeatureTestCase
     }
 
     #[Test]
-    public function admin_can_view_event_verifications_requests(): void
+    public function admin_can_view_event_verifications_requests_redirects_to_index(): void
     {
         $this->actingAsAdmin();
 
         $response = $this->get(route('event-verifications.requests'));
+
+        $response->assertRedirect(route('event-verifications.index'));
+    }
+
+    #[Test]
+    public function admin_can_view_event_verifications_sent(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->get(route('event-verifications.sent'));
 
         $response->assertOk();
     }

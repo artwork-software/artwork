@@ -368,30 +368,18 @@ class InventoryArticleService
             // Vorherige Werte sichern mit Null-Handling
             $oldQuantity = $article->quantity ?? null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
             $oldStatus1 = null;
-            if ($article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $oldStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
 
-            // Detailed Articles: Status 1 Werte sichern mit Null-Handling
+            // Detailed Articles: Einsatzbereit-Mengen sichern
             $oldDetailedStatus1 = [];
-            // Prüfe, ob detailedArticleQuantities existiert, bevor darauf zugegriffen wird
-            if ($article && isset($article->detailedArticleQuantities)) {
+            if ($article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Stelle sicher, dass detailed, status und id existieren
-                    if (
-                        $detailed && isset($detailed->status) && isset($detailed->status->id) &&
-                        $detailed->status->id == 1 && isset($detailed->id)
-                    ) {
-                        // Sicheres Zugreifen auf pivot und value
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->value;
-                        } else {
-                            $oldDetailedStatus1[$detailed->id] = null;
-                        }
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                        $oldDetailedStatus1[$detailed->id] = $detailed->quantity;
                     }
                 }
             }
@@ -426,26 +414,18 @@ class InventoryArticleService
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Nachherige Statuswerte prüfen — suche nach Name statt ID
             $newStatus1 = null;
-            if ($article && $article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $newStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article && $article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $newStatus1 = $readyStatus->pivot->value ?? null;
             }
 
             $detailedStatus1Changed = false;
-            // Ensure detailedArticleQuantities exists before iterating
             if ($article && $article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Ensure detailed and status objects exist and have required properties
-                    if ($detailed && $detailed->status && $detailed->status->id == 1 && isset($detailed->id)) {
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
                         $old = $oldDetailedStatus1[$detailed->id] ?? null;
-                        // Ensure pivot exists before accessing its properties
-                        $new = null;
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $new = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $new = $detailed->status->value;
-                        }
+                        $new = $detailed->quantity;
 
                         if (is_numeric($old) && is_numeric($new) && $new < $old) {
                             $detailedStatus1Changed = true;

@@ -16,6 +16,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
@@ -32,8 +33,11 @@ class SchedulingService
         int $userId,
         string $type,
         string $model,
-        int $modelId
+        int $modelId,
+        ?int $createdById = null
     ): bool {
+        $createdById = $createdById ?? Auth::id();
+
         /** @var Scheduling $scheduling */
         $scheduling = $this->schedulingRepository->getByUserIdAndTypeAndModelAndModelId(
             $userId,
@@ -44,6 +48,9 @@ class SchedulingService
 
         if ($scheduling instanceof Scheduling) {
             $scheduling->increment('count');
+            if ($createdById !== null) {
+                $scheduling->update(['created_by_id' => $createdById]);
+            }
             return true;
         }
 
@@ -54,7 +61,8 @@ class SchedulingService
                     'count' => 1,
                     'type' => $type,
                     'model' => $model,
-                    'model_id' => $modelId
+                    'model_id' => $modelId,
+                    'created_by_id' => $createdById,
                 ]
             )
         );
@@ -157,13 +165,27 @@ class SchedulingService
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
+                // Load the creator from the scheduling's created_by_id
+                $creatorId = $userSchedulings[0]->created_by_id;
+                $creator = $creatorId ? User::find($creatorId) : null;
+
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setIcon('green');
                 $notificationService->setPriority(3);
                 $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setDescription($notificationDescription);
-                $notificationService->setButtons(['show_project']);
+                $notificationService->setCreatedBy($creator?->withoutRelations());
+
+                // Set projectId and show_project button only when projects exist
+                $firstProjectId = array_key_first($projectLinks);
+                if ($firstProjectId !== null) {
+                    $notificationService->setProjectId($firstProjectId);
+                    $notificationService->setButtons(['show_project']);
+                } else {
+                    $notificationService->setButtons([]);
+                }
+
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();
 
@@ -189,6 +211,12 @@ class SchedulingService
                 }
 
                 $this->logger->debug('Attempt to send scheduling type: ' . $schedulings->type);
+
+                // Load creator from scheduling for correct created_by in notification
+                $schedulingCreatorId = $schedulings->created_by_id;
+                $schedulingCreator = $schedulingCreatorId ? User::find($schedulingCreatorId) : null;
+                $notificationService->setCreatedBy($schedulingCreator?->withoutRelations());
+
                 switch ($schedulings->type) {
                 case 'PROJECT_CHANGES':
                     $project = Project::query()->find($schedulings->model_id);

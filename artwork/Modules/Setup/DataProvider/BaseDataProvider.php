@@ -441,6 +441,17 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value,
+                'name_de' => "Im Planungskalender fest planen",
+                'translation_key' => "Plan fixed events in the planning calendar",
+                'group' => 'Event management',
+                'tooltipText' => 'Ein User mit diesem Recht darf im Planungskalender Termine direkt fest planen, ' .
+                    'ohne eine Belegungsanfrage stellen zu müssen. Im normalen Kalender hat dieses Recht keine Auswirkung.',
+                'tooltipKey' => 'A user with this permission can directly schedule fixed events in the planning calendar ' .
+                    'without having to submit a booking request. This permission has no effect in the normal calendar.',
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::SET_CREATE_EDIT->value,
                 'name_de' => "Sets anlegen & bearbeiten",
                 'translation_key' => "Create & edit sets",

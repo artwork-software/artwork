@@ -411,7 +411,7 @@ const props = defineProps({
 const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
-const hasCreateEventsPermission = ref(can('create events without request') || hasAdminRole());
+const hasCreateEventsPermission = ref(can('create events without request') || can('can edit planning calendar') || hasAdminRole());
 const roomCollisions = ref([]);
 const timeArray = ref(true);
 

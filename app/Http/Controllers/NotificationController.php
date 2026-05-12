@@ -105,7 +105,25 @@ class NotificationController extends Controller
         }
 
         if (request('openEditEvent')) {
-            $event = Event::find(request('eventId'));
+            $event = Event::with([
+                'room',
+                'creator',
+                'project',
+                'project.managerUsers',
+                'project.status',
+                'event_type',
+                'eventStatus',
+                'eventProperties',
+                'shifts',
+                'shifts.craft',
+                'shifts.users',
+                'shifts.freelancer',
+                'shifts.serviceProvider',
+                'shifts.shiftsQualifications',
+                'subEvents.event',
+                'subEvents.event.room',
+                'series',
+            ])->find(request('eventId'));
         }
 
         /** @var User $user */
@@ -124,9 +142,9 @@ class NotificationController extends Controller
         return inertia('Notifications/Show', [
             'historyObjects' => $historyObjects,
             'event' => $event !== null ? new CalendarEventResource($event) : null,
-            'project',
-            'wantedSplit',
-            'roomCollisions',
+            'project' => null,
+            'wantedSplit' => $event?->room_id,
+            'roomCollisions' => [],
             'notifications' => $output,
             'readNotifications' => $outputRead,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),

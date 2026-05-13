@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -18,17 +17,15 @@ class EventShiftPlanDTO extends Data
         public string $end,
         public ?string $eventName,
         public ?string $description,
-        public ?ProjectDTO $project,
-        public EventType|null $eventType,
+        public ?int $projectId,
+        public ?int $eventTypeId,
         public ?Collection $shifts,
         public bool $allDay,
         public ?int $roomId,
         public ?string $roomName,
-        public ?array $daysOfEvent,
         public MinimalCreatorDTO|Optional|null $created_by,
-        public ?array $formattedDates,
         public ?bool $is_series,
-        public Collection $eventProperties,
+        public ?array $eventProperties,
         public ?bool $occupancy_option,
         public ?string $option_string,
         public ?bool $isPlanning,
@@ -57,22 +54,20 @@ class EventShiftPlanDTO extends Data
             end: $endTime,
             eventName: $event->eventName,
             description: $event->description,
-            project: $project ? ProjectDTO::fromModelForCalendar($project) : null, // wichtig!
-            eventType: $event->event_type,
+            projectId: $project?->id,
+            eventTypeId: $event->event_type_id,
             shifts: collect([]),
             allDay: $event->allDay,
             roomId: $event->room_id,
             roomName: $event->room?->name,
-            daysOfEvent: $event->getAttribute('days_of_event') ?? [],
             created_by: $event->creator ? new MinimalCreatorDTO(
                 id: $event->creator->id,
                 first_name: $event->creator->first_name,
                 last_name: $event->creator->last_name,
                 profile_photo_url: $event->creator->getAttribute('profile_photo_url'),
             ) : null,
-            formattedDates: $event->getAttribute('formatted_dates') ?? [],
             is_series: $event->is_series,
-            eventProperties: $event->eventProperties,
+            eventProperties: self::serializeEventProperties($event),
             occupancy_option: $event->occupancy_option,
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
@@ -80,5 +75,18 @@ class EventShiftPlanDTO extends Data
             hasTimelines: (bool) $event->timelines_exists,
             timelines: $addTimeline ? ($event->getAttribute('timelines') ?? collect()) : collect(),
         );
+    }
+
+    private static function serializeEventProperties(Event $event): array
+    {
+        if (!$event->relationLoaded('eventProperties')) {
+            return [];
+        }
+
+        return $event->eventProperties->map(fn ($prop) => [
+            'id' => $prop->id,
+            'name' => $prop->name,
+            'icon' => $prop->icon,
+        ])->values()->all();
     }
 }

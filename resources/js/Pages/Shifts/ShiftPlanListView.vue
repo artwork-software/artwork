@@ -635,12 +635,8 @@ const hideShiftRow = computed(() =>
     !!props.listViewSettings?.hide_shift_row && !!props.listViewSettings?.detailed_shift_overview
 );
 
-// Normalize shift data: Laravel serializes serviceProvider relation as service_provider,
-// but SingleShiftInDailyShiftView expects serviceProviders
-const normalizeShift = (shift) => ({
-    ...shift,
-    serviceProviders: shift.service_provider || shift.serviceProvider || shift.serviceProviders || [],
-});
+// Normalize shift data for downstream components
+const normalizeShift = (shift) => shift;
 
 const hasContent = computed(() => {
     return props.groupedShifts && props.groupedShifts.length > 0;
@@ -698,28 +694,17 @@ const shiftDisplayCache = computed(() => {
     for (const dayData of props.groupedShifts) {
         for (const roomData of dayData.rooms || []) {
             for (const shift of roomData.shifts || []) {
-                let used = (shift.users?.length || 0)
-                    + (shift.freelancer?.length || 0)
-                    + (shift.service_provider?.length
-                        || shift.serviceProvider?.length
-                        || shift.serviceProviders?.length
-                        || 0);
+                const workers = shift.workers || [];
+                let used = workers.length;
 
                 let max = 0;
                 const rows = [];
                 shift.shifts_qualifications?.forEach((sq) => {
                     max += sq.value ?? 0;
                     if (!sq.value || sq.value === 0) return;
-                    let assigned = 0;
-                    shift.users?.forEach((u) => {
-                        if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
-                    shift.freelancer?.forEach((f) => {
-                        if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
-                    (shift.service_provider || shift.serviceProvider || shift.serviceProviders || []).forEach((p) => {
-                        if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
+                    let assigned = workers.filter(
+                        (w) => w.pivot?.shift_qualification_id === sq.shift_qualification_id
+                    ).length;
                     rows.push({
                         shift_qualification_id: sq.shift_qualification_id,
                         maxWorkerCount: sq.value,

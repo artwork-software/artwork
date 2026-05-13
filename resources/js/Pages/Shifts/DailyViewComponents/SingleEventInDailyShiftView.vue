@@ -17,7 +17,7 @@
                     </span>
                 </div>
                 <div class="whitespace-nowrap font-medium" :class="subtitleTextClass">
-                    {{ event.eventType?.abbreviation }}:
+                    {{ eventType?.abbreviation }}:
                 </div>
                 <span
                     :class="['truncate flex-1 min-w-0 cursor-pointer', titleTextClass]"
@@ -135,6 +135,10 @@ import {IconDeviceFloppy, IconEdit, IconFileImport, IconTrash, IconWand} from "@
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { router } from '@inertiajs/vue3'
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
+
+const { resolveEventType, resolveProject } = useShiftPlanLookups();
 
 const props = defineProps({
     event: {
@@ -170,17 +174,22 @@ const props = defineProps({
     },
 })
 
+// Resolve normalized data via lookups
+const eventType = computed(() => props.event.eventType ?? resolveEventType(props.event.eventTypeId) ?? {});
+const project = computed(() => props.event.project ?? resolveProject(props.event.projectId));
+const formattedDates = computed(() => props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end));
+
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
 
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
 const displayStartTime = computed(() => {
     if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
-    return props.event.formattedDates.startTime
+    return formattedDates.value.startTime
 })
 const displayEndTime = computed(() => {
     if (props.dayRole === 'middle') return '00:00'
-    return props.event.formattedDates.endTime
+    return formattedDates.value.endTime
 })
 
 // Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt anzeigen,
@@ -191,7 +200,7 @@ const showCreateTimelinePresetModal = ref(false);
 const showSearchTimelinePresetModal = ref(false);
 const showEventComponent = ref(false);
 const showConfirmDeleteModal = ref(false);
-const hexColor = computed(() => props.event.eventType.hex_code || '#cccccc');
+const hexColor = computed(() => eventType.value.hex_code || '#cccccc');
 const borderColor = computed(() => hexColor.value + 'A0')
 
 const wantedRoomId = ref(props.event.roomId);
@@ -260,7 +269,7 @@ const subtitleTextClass = computed(() => 'text-xs')
 
 // Titel: Eventname oder Projektname (gleiche Logik wie Anforderung)
 const eventTitle = computed(() => {
-    return props.event?.project?.name || props.event?.eventName || props.event?.eventType?.name || ''
+    return project.value?.name || props.event?.eventName || eventType.value?.name || ''
 })
 const eventTitleFull = computed(() => eventTitle.value)
 

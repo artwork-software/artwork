@@ -322,7 +322,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $p) {
-            $date  = Carbon::parse($p->withoutFormat);
+            if ($p->isExtraRow) {
+                continue;
+            }
+            $date  = Carbon::parse($p->date);
             $key   = $date->format('m.Y');
             $months[$key] ??= [
                 'first_day_in_period' => $date->format('Y-m-d'),
@@ -516,7 +519,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $periodObject) {
-            $date = Carbon::parse($periodObject->withoutFormat);
+            if ($periodObject->isExtraRow) {
+                continue;
+            }
+            $date = Carbon::parse($periodObject->date);
             $month = $date->format('m.Y');
             if (!array_key_exists($month, $months)) {
                 $months[$month] = [
@@ -682,7 +688,7 @@ class EventController extends Controller
             $user,
         );
 
-        $this->shiftCalendarService->filterRoomsEventsAndShifts(
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $rooms,
             $userCalendarFilter,
             $startDate,
@@ -691,6 +697,7 @@ class EventController extends Controller
             $project,
             true
         );
+        $rooms = $filterResult['rooms'];
 
         $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
             $rooms,
@@ -749,6 +756,11 @@ class EventController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    public function shiftPlanRoomsBatchAPI(Request $request): JsonResponse
+    {
+        return response()->json($this->shiftPlanService->getAllRoomsContent($request));
     }
 
     public function viewShiftPlan(?Project $project = null): Response

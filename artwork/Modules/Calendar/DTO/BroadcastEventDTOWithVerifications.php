@@ -4,15 +4,8 @@ namespace Artwork\Modules\Calendar\DTO;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Models\EventStatus;
-use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\Event\Models\SeriesEvents;
-use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarSettings;
 use Carbon\Carbon;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Spatie\LaravelData\Data;
 
 class BroadcastEventDTOWithVerifications extends Data
@@ -24,28 +17,25 @@ class BroadcastEventDTOWithVerifications extends Data
         public ?string $eventName,
         public ?string $description,
         public ?ProjectDTO $project,
-        public ?EventType $eventType,
-        public Collection|AnonymousResourceCollection $shifts,
+        public ?array $eventType,
+        public ?array $shifts,
         public bool $allDay,
         public ?int $roomId,
         public ?string $roomName,
-        public ?array $daysOfEvent,
         public ?int $startHour,
         public ?int $minutesFormStartHourToStart,
         public ?int $eventLengthInHours,
-        public ?User $created_by,
-        public ?array $formattedDates,
+        public ?MinimalCreatorDTO $created_by,
         public ?bool $is_series,
         public ?bool $occupancy_option,
         public ?int $declinedRoomId = null,
-        public ?EventStatus $eventStatus,
-        public Collection $eventProperties,
-        public Collection $subEvents,
-        public ?SeriesEvents $series,
+        public ?array $eventStatus,
+        public ?array $eventProperties,
+        public ?array $subEvents,
         public ?string $option_string,
         public ?bool $isPlanning = false,
         public ?bool $hasVerification = false,
-        public ?Collection $verifications = null,
+        public ?array $verifications = null,
         public ?Collection $timelines = null,
         public ?bool $hasTimelines = false,
     ) {
@@ -56,6 +46,8 @@ class BroadcastEventDTOWithVerifications extends Data
     public static function formModel(
         Event $event,
     ): BroadcastEventDTOWithVerifications {
+        $creator = $event->creator;
+
         return new self(
             id: $event->id,
             start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
@@ -63,34 +55,92 @@ class BroadcastEventDTOWithVerifications extends Data
             eventName: $event->eventName,
             description: $event->description,
             project: $event->project_id ? ProjectDTO::fromModel($event->project, null) : null,
-            eventType: $event->event_type ?? null,
-            shifts: MinimalShiftPlanShiftResource::collection($event->shifts),
+            eventType: $event->event_type ? [
+                'id' => $event->event_type->id,
+                'name' => $event->event_type->name,
+                'abbreviation' => $event->event_type->abbreviation,
+                'hex_code' => $event->event_type->hex_code,
+            ] : null,
+            shifts: MinimalShiftPlanShiftResource::collection($event->shifts)->resolve(),
             allDay: $event->allDay,
             roomId: $event->room_id,
             roomName: $event->room?->name,
-            daysOfEvent: $event->daysOfEvent,
             startHour: $event->startHour,
             minutesFormStartHourToStart: $event->minutesFormStartHourToStart,
             eventLengthInHours: $event->eventLengthInHours,
-            created_by: $event->creator,
-            formattedDates: $event->formattedDates,
+            created_by: $creator ? new MinimalCreatorDTO(
+                id: $creator->id,
+                first_name: $creator->first_name,
+                last_name: $creator->last_name,
+                profile_photo_url: $creator->profile_photo_url ?? null,
+            ) : null,
             is_series: $event->is_series,
             occupancy_option: $event->occupancy_option,
             declinedRoomId: $event->declined_room_id,
-            eventStatus: $event->eventStatus,
-            eventProperties: $event->eventProperties,
-            subEvents: $event->subEvents,
-            series: $event->is_series ? $event->series : null,
+            eventStatus: $event->eventStatus ? [
+                'id' => $event->eventStatus->id,
+                'color' => $event->eventStatus->color,
+            ] : null,
+            eventProperties: self::serializeEventProperties($event),
+            subEvents: self::serializeSubEvents($event),
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
             hasVerification: $event->getAttribute('has_verification') ?? false,
-            verifications: $event->verifications()
-                ->where('status', 'rejected')
-                ->orderBy('created_at', 'desc')
-                ->with('verifier')
-                ->get(),
+            verifications: self::serializeVerifications($event),
             timelines: $event->timelines ?? new Collection(),
             hasTimelines: $event->hasTimelines(),
         );
+    }
+
+    private static function serializeSubEvents(Event $event): array
+    {
+        if (!$event->relationLoaded('subEvents')) {
+            return [];
+        }
+
+        return $event->subEvents->map(fn ($sub) => [
+            'id' => $sub->id,
+            'eventName' => $sub->eventName,
+            'allDay' => $sub->allDay,
+            'formattedDates' => $sub->formattedDates,
+            'type' => $sub->type ? [
+                'hex_code' => $sub->type->hex_code,
+                'abbreviation' => $sub->type->abbreviation,
+                'name' => $sub->type->name,
+            ] : null,
+            'event_properties' => $sub->eventProperties->map(fn ($p) => ['id' => $p->id])->values()->all(),
+        ])->values()->all();
+    }
+
+    private static function serializeEventProperties(Event $event): array
+    {
+        if (!$event->relationLoaded('eventProperties')) {
+            return [];
+        }
+
+        return $event->eventProperties->map(fn ($p) => [
+            'id' => $p->id,
+            'icon' => $p->icon ?? null,
+        ])->values()->all();
+    }
+
+    private static function serializeVerifications(Event $event): array
+    {
+        $verifications = $event->verifications()
+            ->where('status', 'rejected')
+            ->orderBy('created_at', 'desc')
+            ->with('verifier')
+            ->get();
+
+        return $verifications->map(fn ($v) => [
+            'id' => $v->id,
+            'status' => $v->status,
+            'created_at' => $v->created_at?->toIso8601String(),
+            'verifier' => $v->verifier ? [
+                'id' => $v->verifier->id,
+                'first_name' => $v->verifier->first_name ?? null,
+                'last_name' => $v->verifier->last_name ?? null,
+            ] : null,
+        ])->values()->all();
     }
 }

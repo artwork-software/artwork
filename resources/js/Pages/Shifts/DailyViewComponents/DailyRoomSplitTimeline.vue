@@ -835,20 +835,15 @@ const TIMELINE_DESCRIPTION_BUFFER_PX = 16
 function estimateShiftExpandedMinPx(shift: any): number {
   if (!shift) return EXPANDED_MIN_SHIFT
   // Personen zählen
-  const usersCount = Array.isArray(shift.users) ? shift.users.length : 0
-  const freelancersCount = Array.isArray(shift.freelancer) ? shift.freelancer.length : 0
-  const serviceProvidersCount = Array.isArray(shift.serviceProviders) ? shift.serviceProviders.length : 0
-  const peopleCount = usersCount + freelancersCount + serviceProvidersCount
+  const workers = Array.isArray(shift.workers) ? shift.workers : []
+  const peopleCount = workers.length
 
   // Drop-Zeilen zählen (wie im Kind: eine Zeile pro Qualifikation mit Restbedarf)
   let dropRows = 0
   const sqs: any[] = Array.isArray(shift.shifts_qualifications) ? shift.shifts_qualifications : []
   for (const sq of sqs) {
     const qid = sq.shift_qualification_id
-    const assignedUsers = (Array.isArray(shift.users) ? shift.users : []).filter((u: any) => u?.pivot?.shift_qualification_id === qid).length
-    const assignedFreelancers = (Array.isArray(shift.freelancer) ? shift.freelancer : []).filter((f: any) => f?.pivot?.shift_qualification_id === qid).length
-    const assignedService = (Array.isArray(shift.serviceProviders) ? shift.serviceProviders : []).filter((s: any) => s?.pivot?.shift_qualification_id === qid).length
-    const totalAssigned = assignedUsers + assignedFreelancers + assignedService
+    const totalAssigned = workers.filter((w: any) => w?.pivot?.shift_qualification_id === qid).length
     const remaining = (sq?.value ?? 0) - totalAssigned
     if (remaining > 0) dropRows++
   }

@@ -8,7 +8,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Datum</label>
-                    <div class="mt-1 text-gray-900">{{ shift.start_of_shift ?? shift?.formatted_dates?.start }}</div>
+                    <div class="mt-1 text-gray-900">{{ shiftDate }}</div>
                 </div>
 
                 <div class="flex gap-6">
@@ -29,15 +29,15 @@
 
                 <div>
                     <label class="block font-medium text-gray-700 font-lexend">Firma</label>
-                    <div class="mt-1 text-gray-900" v-if="shift.craft">{{ shift.craft.name }} [{{ shift.craft.abbreviation }}]</div>
+                    <div class="mt-1 text-gray-900" v-if="craft?.id">{{ craft.name }} [{{ craft.abbreviation }}]</div>
                     <div class="mt-1 text-gray-900" v-else>-</div>
                 </div>
             </div>
 
-            <div v-if="shift.craft">
+            <div v-if="craft?.id">
                 <label class="block font-medium text-gray-700 mb-1 font-lexend">Zuständige Personen</label>
                 <ul class="space-y-2">
-                    <li v-for="person in shift.craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg shadow border border-gray-200">
+                    <li v-for="person in craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg shadow border border-gray-200">
                         <UserPopoverTooltip :user="person" width="10" height="10" />
                         <div>
                             <div class="font-semibold text-gray-800 font-lexend">{{ person.full_name }}</div>
@@ -77,6 +77,7 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -84,6 +85,10 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import dayjs from "dayjs";
+
+const { resolveCraft } = useShiftPlanLookups();
 
 const props = defineProps({
     shift: {
@@ -98,11 +103,14 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
+const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+const shiftDate = computed(() => props.shift.start_of_shift ?? props.shift.formatted_dates?.start ?? (props.shift.startDate ? dayjs(props.shift.startDate).format('DD.MM.YYYY') : '-'));
+
 const requestForm = useForm({
     request_start_time: props.shift.start || props.shift.start_time || '',
     request_end_time:  props.shift.end || props.shift.end_time || '',
     shift_id: props.shift.id,
-    craft_id: props.shift.craft?.id,
+    craft_id: props.shift.craft?.id ?? props.shift.craftId,
     request_comment: '',
     user_id: props.user?.id,
     requested_by: usePage().props.auth.user.id

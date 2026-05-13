@@ -747,6 +747,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
     Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');
     Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
+    Route::get('/response/shift-plan-rooms', [EventController::class, 'shiftPlanRoomsBatchAPI'])->name('shift.plan.rooms.batch');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', function () {

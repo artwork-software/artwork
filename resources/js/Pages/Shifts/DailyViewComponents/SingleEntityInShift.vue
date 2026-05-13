@@ -7,7 +7,7 @@
                     :style="{ backgroundColor: `${returnCraftColor}` }"
                     v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
                 >
-                    <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold mr-1">{{ shift.craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+                    <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -47,13 +47,13 @@
             :style="{ backgroundColor: `${returnCraftColor}` }"
             v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
         >
-            <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold mr-1">{{ shift.craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+            <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
         </div>
     </div>
     <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
         <!-- LINKS: Name (darf schrumpfen, nimmt aber nicht allen Platz ein) -->
         <div class="flex min-w-0 items-center gap-x-2">
-            <span v-if="person.pivot?.craft_abbreviation !== shift.craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
+            <span v-if="person.pivot?.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
                 [{{ person.pivot?.craft_abbreviation }}]
             </span>
 
@@ -215,6 +215,9 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+
+const { resolveCraft } = useShiftPlanLookups();
 
 const props = defineProps({
     person: {
@@ -252,6 +255,8 @@ const props = defineProps({
     },
 })
 
+
+const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
 
 // Normalisierte Liste der Qualifikationen (Array)
 const shiftQualificationsArray = computed(() =>
@@ -430,7 +435,9 @@ const saveShortDescription = (closePopover) => {
 }
 
 const isCurrentUserPlannerOfShiftCraft = computed(() => {
-    return props.shift.craft.craft_shift_planer.some(planner => planner.id === usePage().props.auth.user.id);
+    const planners = craft.value?.craft_shift_planer;
+    if (!Array.isArray(planners)) return false;
+    return planners.some(planner => planner.id === usePage().props.auth.user.id);
 });
 
 const returnCraftColor = computed(() => {

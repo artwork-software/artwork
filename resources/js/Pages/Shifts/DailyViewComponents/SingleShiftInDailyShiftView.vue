@@ -10,8 +10,8 @@
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
-                    <div v-if="shift.shiftGroup && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
-                        ({{ shift.shiftGroup.name }})
+                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                        ({{ shiftGroupResolved.name }})
                     </div>
                     <span
                         :class="['ml-1 block truncate text-gray-800 cursor-pointer', titleTextClass]"
@@ -138,7 +138,7 @@
                                     class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
                                     v-tooltip.bottom="{ value: $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                                 >
-                                    <span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold text-red-800 shrink-0">{{ shift.craft.abbreviation }}</span>
+                                    <span v-if="prependCraftAbbreviation && fullCraft?.abbreviation" class="font-semibold text-red-800 shrink-0">{{ fullCraft.abbreviation }}</span>
                                     <component :is="IconInfoTriangle" class="size-4 text-red-600 shrink-0" />
                                     <span class="truncate block">{{ $t('Unoccupied') }}</span>
                                 </div>
@@ -322,6 +322,10 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+
+const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
     delay: 200,
@@ -545,11 +549,14 @@ const computedShiftQualificationDropElements = computed(() => {
 const getEmptyShiftQualification = (id) =>
     computedShiftQualificationDropElements.value.find(drop => drop.shift_qualification_id === id);
 
-const shiftGroups = computed(() => [
-    { label: 'users', items: props.shift.users },
-    { label: 'freelancers', items: props.shift.freelancer },
-    { label: 'serviceProviders', items: props.shift.serviceProviders }
-]);
+const shiftGroups = computed(() => {
+    const workers = props.shift.workers || [];
+    return [
+        { label: 'users', items: workers.filter(w => w.type === 'user') },
+        { label: 'freelancers', items: workers.filter(w => w.type === 'freelancer') },
+        { label: 'serviceProviders', items: workers.filter(w => w.type === 'service_provider') },
+    ];
+});
 
 // Debounce time in milliseconds - prevent requests more frequently than this
 const DEBOUNCE_TIME = 2000; // 2 seconds
@@ -635,11 +642,10 @@ const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) =
 
 const getAssignablePeople = (shiftQualificationId) => {
     // Validate that the shift has the required properties
-    if (!props.shift || !props.shift.craft || !props.shift.craft.id) {
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId;
+    if (!props.shift || !shiftCraftId) {
         return [];
     }
-
-    const shiftCraftId = props.shift.craft.id;
 
     // IDs aller universell einsetzbaren Crafts sammeln
     const universalCraftIds = new Set(
@@ -652,16 +658,19 @@ const getAssignablePeople = (shiftQualificationId) => {
     const relevantCraftIds = new Set([shiftCraftId, ...universalCraftIds]);
 
     // IDs aller bereits zugewiesenen Personen pro Typ sammeln
-    const assigned = {
-        user: (props.shift.users || []).map(u => u.id),
-        freelancer: (props.shift.freelancer || []).map(f => f.id),
-        service_provider: (props.shift.serviceProviders || []).map(s => s.id),
-    };
+    const assigned = { user: [], freelancer: [], service_provider: [] };
+    const workers = props.shift.workers || [];
+    for (const w of workers) {
+        const t = w.type === 0 || w.type === 'user' ? 'user'
+            : w.type === 1 || w.type === 'freelancer' ? 'freelancer'
+            : 'service_provider';
+        assigned[t].push(w.id);
+    }
 
     const peopleWithCraft = [];
 
     Object.values(props.crafts).forEach(craft => {
-        // Nur Crafts verarbeiten, die zur Schicht passen (shift.craft.id oder universally_applicable)
+        // Nur Crafts verarbeiten, die zur Schicht passen (shiftCraftId oder universally_applicable)
         if (!relevantCraftIds.has(craft.id)) {
             return;
         }
@@ -902,22 +911,29 @@ onMounted(() => {
 });
 
 
+// Resolve shiftGroup from lookup
+const shiftGroupResolved = computed(() => props.shift.shiftGroup ?? resolveShiftGroup(props.shift.shiftGroupId));
+
 // Computed property to get full craft data with color from props.crafts
 const fullCraft = computed(() => {
-    const shiftCraftId = props.shift?.craft?.id
-    if (!shiftCraftId || !props.crafts) {
-        return props.shift?.craft || {}
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId
+    if (!shiftCraftId) {
+        return props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {}
     }
 
     // Look up craft in props.crafts (can be Array or Object)
-    const craftsArray = Array.isArray(props.crafts)
-        ? props.crafts
-        : Object.values(props.crafts || {})
+    if (props.crafts) {
+        const craftsArray = Array.isArray(props.crafts)
+            ? props.crafts
+            : Object.values(props.crafts || {})
+        const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
+        if (foundCraft) {
+            const baseCraft = props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
+            return { ...baseCraft, ...foundCraft }
+        }
+    }
 
-    const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
-
-    // Merge shift.craft with found craft data, prioritizing found craft
-    return foundCraft ? { ...props.shift.craft, ...foundCraft } : props.shift?.craft || {}
+    return props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
 })
 
 const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')

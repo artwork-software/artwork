@@ -55,8 +55,8 @@
     <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
         <!-- LINKS: Name (darf schrumpfen, nimmt aber nicht allen Platz ein) -->
         <div class="flex min-w-0 items-center gap-x-2">
-            <span v-if="person.pivot?.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
-                [{{ person.pivot?.craft_abbreviation }}]
+            <span v-if="person.pivot?.craft_abbreviation && person.pivot.craft_abbreviation !== craft?.abbreviation" class="shrink-0 text-[10px] text-gray-500">
+                [{{ person.pivot.craft_abbreviation }}]
             </span>
 
             <span

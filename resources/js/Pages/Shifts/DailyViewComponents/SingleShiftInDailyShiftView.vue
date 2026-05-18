@@ -871,30 +871,25 @@ const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
         adjustDeltaForUser(sourceUser, +1)
     }
 
-    router.post(
+    axios.post(
         route('shift.assignUserByType', {shift: props.shift.id}),
         {
             userId: droppedUser.value.id,
             userType: droppedUser.value.type,
             shiftQualificationId: shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            isShiftTab: true,
             craft_abbreviation: droppedUser.value.craft_abbreviation
         },
-        {
-            preserveScroll: true,
-            onError: () => {
-                // Bei Fehler: Delta zurücknehmen
-                shiftQualificationDeltas.value = {
-                    ...shiftQualificationDeltas.value,
-                    [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) - 1
-                }
-                if (sourceUser) {
-                    adjustDeltaForUser(sourceUser, -1)
-                }
-            }
-        },
-    )
+    ).catch(() => {
+        // Bei Fehler: Delta zurücknehmen
+        shiftQualificationDeltas.value = {
+            ...shiftQualificationDeltas.value,
+            [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) - 1
+        }
+        if (sourceUser) {
+            adjustDeltaForUser(sourceUser, -1)
+        }
+    })
 }
 
 const AddShiftModal = defineAsyncComponent({

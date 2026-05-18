@@ -260,6 +260,9 @@ readonly class ShiftListViewService
             $data = [
                 'id' => $worker->id,
                 'type' => $type,
+                'pivot' => $worker->pivot ? [
+                    'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
+                ] : null,
             ];
 
             if ($type === 'service_provider') {

@@ -14,11 +14,11 @@
                 <div class="flex gap-6">
                     <div class="flex-1">
                         <label class="block font-medium text-gray-700 font-lexend">Beginn</label>
-                        <div class="mt-1 text-gray-900">{{ shift.start }}</div>
+                        <div class="mt-1 text-gray-900">{{ normalizeTime(shift.start) }}</div>
                     </div>
                     <div class="flex-1">
                         <label class="block font-medium text-gray-700 font-lexend">Ende</label>
-                        <div class="mt-1 text-gray-900">{{ shift.end }}</div>
+                        <div class="mt-1 text-gray-900">{{ normalizeTime(shift.end) }}</div>
                     </div>
                 </div>
 
@@ -103,12 +103,22 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
+function normalizeTime(val) {
+    if (!val || typeof val !== 'string') return val
+    if (/^\d{2}:\d{2}$/.test(val)) return val
+    const m = val.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+    if (sp) return sp[1]
+    return val
+}
+
 const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
 const shiftDate = computed(() => props.shift.start_of_shift ?? props.shift.formatted_dates?.start ?? (props.shift.startDate ? dayjs(props.shift.startDate).format('DD.MM.YYYY') : '-'));
 
 const requestForm = useForm({
-    request_start_time: props.shift.start || props.shift.start_time || '',
-    request_end_time:  props.shift.end || props.shift.end_time || '',
+    request_start_time: normalizeTime(props.shift.start || props.shift.start_time) || '',
+    request_end_time:  normalizeTime(props.shift.end || props.shift.end_time) || '',
     shift_id: props.shift.id,
     craft_id: props.shift.craft?.id ?? props.shift.craftId,
     request_comment: '',

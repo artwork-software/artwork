@@ -244,7 +244,7 @@
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
-        :rooms="usePage().props.rooms"
+        :rooms="injectedRooms"
         :room="shift?.roomId ?? shift?.room_id ?? null"
     />
 
@@ -298,7 +298,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive, inject} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -325,6 +325,9 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+
+// Rooms provided by ShiftPlanDailyView for AddShiftModal
+const injectedRooms = inject("shiftPlanRooms", ref([]))
 
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
@@ -375,14 +378,28 @@ const props = defineProps({
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
 
+// Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
+function normalizeTime(val) {
+    if (!val || typeof val !== 'string') return val
+    // Already HH:MM
+    if (/^\d{2}:\d{2}$/.test(val)) return val
+    // ISO datetime — extract HH:MM from the time portion
+    const m = val.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    // Fallback: "YYYY-MM-DD HH:MM:SS" style
+    const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+    if (sp) return sp[1]
+    return val
+}
+
 // Angezeigte Zeiten anpassen wenn Schicht über Tagesgrenze geht
 const displayStartTime = computed(() => {
     if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
-    return props.shift.start
+    return normalizeTime(props.shift.start)
 })
 const displayEndTime = computed(() => {
     if (props.dayRole === 'middle') return '00:00'
-    return props.shift.end
+    return normalizeTime(props.shift.end)
 })
 
 // Initialize i18n
@@ -514,11 +531,14 @@ const getPersonGlobalQualificationIds = (person) => {
 // Lokale Deltas, um Zähler für globale Qualifikationen sofort (optimistisch) zu aktualisieren
 const globalQualificationDeltas = ref({})
 
+// Lokale Deltas für Shift-Qualifikationen (Besetzung "0/4" → "1/4" sofort aktualisieren)
+const shiftQualificationDeltas = ref({})
+
 const demandedGlobalQualificationIdsSet = computed(() => new Set(demandedGlobalQualifications.value.map(gq => gq.id)))
 
 const countAssignedForGlobalQualificationBase = (globalQualificationId) => {
-    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []];
-    return groups.reduce((acc, list) => acc + list.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0);
+    const workers = props.shift?.workers || []
+    return workers.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length
 }
 
 const countAssignedForGlobalQualification = (globalQualificationId) => {
@@ -537,11 +557,11 @@ const adjustDeltaForUser = (person, direction = 1) => {
 }
 
 const computedShiftQualificationDropElements = computed(() => {
-    return props.shift.shifts_qualifications.map(sq => {
-        const totalAssigned = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-            return acc + props.shift[group].filter(item => item.pivot.shift_qualification_id === sq.shift_qualification_id).length;
-        }, 0);
-        const remaining = sq.value - totalAssigned;
+    const workers = props.shift.workers || []
+    return (props.shift.shifts_qualifications || []).map(sq => {
+        const totalAssigned = workers.filter(w => w.pivot?.shift_qualification_id === sq.shift_qualification_id).length
+        const delta = shiftQualificationDeltas.value[sq.shift_qualification_id] ?? 0
+        const remaining = sq.value - totalAssigned - delta;
         return remaining > 0 ? { shift_qualification_id: sq.shift_qualification_id, requiredDropElementsCount: remaining } : null;
     }).filter(Boolean);
 });
@@ -842,6 +862,15 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
 
 const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
 
+    // Optimistisch Zähler sofort erhöhen (vor dem Request)
+    shiftQualificationDeltas.value = {
+        ...shiftQualificationDeltas.value,
+        [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) + 1
+    }
+    if (sourceUser) {
+        adjustDeltaForUser(sourceUser, +1)
+    }
+
     router.post(
         route('shift.assignUserByType', {shift: props.shift.id}),
         {
@@ -854,10 +883,14 @@ const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
         },
         {
             preserveScroll: true,
-            onSuccess: () => {
-                // Optimistisch Zähler erhöhen, falls Nutzer geforderte globale Qualifikationen besitzt
+            onError: () => {
+                // Bei Fehler: Delta zurücknehmen
+                shiftQualificationDeltas.value = {
+                    ...shiftQualificationDeltas.value,
+                    [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) - 1
+                }
                 if (sourceUser) {
-                    adjustDeltaForUser(sourceUser, +1)
+                    adjustDeltaForUser(sourceUser, -1)
                 }
             }
         },
@@ -901,14 +934,8 @@ const checkAllShiftCollisions = (forceRefresh = false) => {
     });
 };
 
-// Bei Komponenten-Initialisierung Kollisionen prüfen
-// Im detailsOnly-Modus (z.B. ShiftPlanListView) wird die Kollisionsprüfung
-// erst beim Klick auf das Drop-Menü ausgelöst, um Page-Loads massiv zu beschleunigen.
-onMounted(() => {
-    if (props.detailsOnly) return;
-    // Force refresh on initial load to ensure we have the latest data
-    checkAllShiftCollisions(true);
-});
+// Kollisionsprüfung wird lazy beim Öffnen des Zuweisungs-Dropdowns ausgelöst (MenuButton @click).
+// Kein onMounted-Check mehr — bei vielen Schichten verursachte das N parallele API-Requests.
 
 
 // Resolve shiftGroup from lookup
@@ -944,22 +971,23 @@ const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] bord
 const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
 const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
 
-// Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
+// Wenn sich die Schichtdaten ändern, Cache zurücksetzen.
+// Kollisionen werden lazy beim nächsten Dropdown-Open geprüft.
 watch(() => props.shift, () => {
-    // Cache zurücksetzen wenn sich die Schichtdaten ändern
     assignablePeopleCache.value = {};
-    // Optimistische Deltas zurücksetzen – echte Werte kommen via Props
     globalQualificationDeltas.value = {}
-    // In detailsOnly-Mode wird der Cache lazy beim Menü-Open neu gefüllt
-    if (props.detailsOnly) return;
-    // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
-    checkAllShiftCollisions(true);
+    shiftQualificationDeltas.value = {}
 }, { deep: true });
 
 // Event-Handler: Wenn Kind-Komponente meldet, dass ein User entfernt wurde, Zähler sofort dekrementieren
 const onChildUserRemoved = (payload) => {
     const person = payload?.person
     if (!person) return
+    // Shift-Qualifikation-Delta optimistisch dekrementieren
+    const sqId = person?.pivot?.shift_qualification_id
+    if (sqId != null) {
+        shiftQualificationDeltas.value[sqId] = (shiftQualificationDeltas.value[sqId] ?? 0) - 1
+    }
     adjustDeltaForUser(person, -1)
 }
 </script>

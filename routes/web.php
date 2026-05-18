@@ -808,6 +808,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.workers')
         ->can('can view shift plan');
 
+    Route::get('/shifts/worker-single', [EventController::class, 'getShiftPlanWorkerSingle'])
+        ->name('shifts.worker.single')
+        ->can('can view shift plan');
+
     Route::get('/shifts/crafts', [EventController::class, 'getShiftPlanCrafts'])
         ->name('shifts.crafts')
         ->can('can view shift plan');

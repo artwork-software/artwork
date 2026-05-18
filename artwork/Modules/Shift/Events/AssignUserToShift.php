@@ -42,16 +42,17 @@ class AssignUserToShift implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $this->shift->loadMissing([
+        $this->shift->load([
             'shiftsQualifications',
             'globalQualifications',
             'users.globalQualifications',
             'freelancer.globalQualifications',
             'serviceProvider.globalQualifications',
+            'project',
         ]);
 
         return [
-            'shift' => ShiftDTO::fromModel($this->shift),
+            'shift' => ShiftDTO::fromModel($this->shift, $this->shift->project),
             'roomId' => $this->roomId,
             'entity' => $this->entity,
             'entityType' => $this->entityType,

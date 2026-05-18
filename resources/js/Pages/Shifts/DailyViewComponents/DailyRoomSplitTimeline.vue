@@ -217,9 +217,22 @@ const startsOrEndsInCompressed = (startMin: number, endMin: number) => {
 
 
 // Helpers
+const normalizeTime = (val?: string | null): string | null => {
+  if (!val) return null
+  // Already HH:MM
+  if (/^\d{2}:\d{2}$/.test(val)) return val
+  // ISO datetime "2026-05-18T10:00:00.000000Z" — extract HH:MM
+  const iso = val.match(/T(\d{2}:\d{2})/)
+  if (iso) return iso[1]
+  // "YYYY-MM-DD HH:MM:SS" style
+  const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+  if (sp) return sp[1]
+  return val
+}
 const toMin = (hhmm?: string | null) => {
-  if (!hhmm) return null
-  const [h, m] = hhmm.split(':').map(n => parseInt(n, 10))
+  const normalized = normalizeTime(hhmm)
+  if (!normalized) return null
+  const [h, m] = normalized.split(':').map(n => parseInt(n, 10))
   if (Number.isNaN(h) || Number.isNaN(m)) return null
   return h * 60 + m
 }
@@ -402,6 +415,37 @@ function anyMinuteInCompressed(startMin: number, endMin: number): boolean {
 
 
 
+// Shared craft position lookup — used by shiftItems sort, assignLanes, and layoutBlocks
+const craftPosMap = computed(() => {
+    const map = new Map<number, number>()
+    const arr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    for (const c of arr) {
+        if ((c as any)?.id != null) map.set((c as any).id, (c as any).position ?? 0)
+    }
+    return map
+})
+
+const getCraftPos = (item: any): number => {
+    const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
+    if (craftId != null && craftPosMap.value.has(craftId)) return craftPosMap.value.get(craftId)!
+    return item?.payload?.craft?.position ?? 9999
+}
+
+// G3: Lookup maps for O(1) eventType/craft color resolution
+const eventTypeMap = computed(() => {
+    const map = new Map()
+    const arr = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes || {})
+    for (const t of arr) if (t?.id != null) map.set(t.id, t)
+    return map
+})
+
+const craftColorMap = computed(() => {
+    const map = new Map()
+    const arr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    for (const c of arr) if (c?.id != null) map.set(c.id, c)
+    return map
+})
+
 const shiftItems = computed<Item[]>(() => {
     const items: Item[] = []
     const dayYmd = currentDayYmd.value
@@ -488,18 +532,6 @@ const shiftItems = computed<Item[]>(() => {
                 dayRole,
             },
         })
-    }
-
-    // Craft-Position-Lookup für sekundäre Sortierung bei gleicher Startzeit
-    const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-    const craftPositionMap = new Map<number, number>()
-    for (const c of craftsArray) {
-        if ((c as any)?.id != null) craftPositionMap.set((c as any).id, (c as any).position ?? 0)
-    }
-    const getCraftPos = (item: any): number => {
-        const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
-        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
-        return item?.payload?.craft?.position ?? 9999
     }
 
     return items.sort((a, b) => {
@@ -634,18 +666,6 @@ function finalizeBlock(block: any) {
 function assignLanes(items: Item[]) {
   // Greedy interval partitioning for overlapping items
   const laneEnds: number[] = []
-  // Sort items: all-day events first (leftmost), then by earliest start time, then by longest duration
-  // Build craft position lookup for secondary sorting
-  const craftsArr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-  const craftPosMap = new Map<number, number>()
-  for (const c of craftsArr) {
-    if ((c as any)?.id != null) craftPosMap.set((c as any).id, (c as any).position ?? 0)
-  }
-  const getCraftPosForLane = (it: any): number => {
-    const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
-    if (craftId != null && craftPosMap.has(craftId)) return craftPosMap.get(craftId)!
-    return it?.payload?.craft?.position ?? 9999
-  }
 
   items.sort((a, b) => {
     // All-day events always come first (leftmost lanes)
@@ -655,8 +675,8 @@ function assignLanes(items: Item[]) {
     if (!aIsAllDay && bIsAllDay) return 1
 
     // Sort by craft position first
-    const aPos = getCraftPosForLane(a)
-    const bPos = getCraftPosForLane(b)
+    const aPos = getCraftPos(a)
+    const bPos = getCraftPos(b)
     if (aPos !== bPos) return aPos - bPos
 
     // Within same craft, sort by earliest start time
@@ -740,11 +760,11 @@ watch(eventItems, (list) => {
     const e = it.payload
     if (eventsExpanded.value[it.id] === undefined) {
       // Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt lassen
-      // (damit „Create new timeline“ sofort sichtbar ist).
+      // (damit „Create new timeline” sofort sichtbar ist).
       eventsExpanded.value[it.id] = true
     }
   }
-}, { immediate: true, deep: true })
+}, { immediate: true })
 
 watch(shiftItems, (list) => {
   for (const it of list) {
@@ -753,39 +773,54 @@ watch(shiftItems, (list) => {
       shiftsExpanded.value[it.id] = true
     }
   }
-}, { immediate: true, deep: true })
+}, { immediate: true })
 
 // Tatsächlich gerenderte Höhen pro Item per ResizeObserver tracken,
 // damit Lane-Berechnungen visuelle Überlappungen erkennen, wenn der
 // Karteninhalt (z.B. lange Timeline-Beschreibungen) die geschätzte
 // Höhe übersteigt.
 const measuredHeights = ref<Record<string, number>>({})
-const itemObservers = new Map<string, { el: HTMLElement, observer: ResizeObserver }>()
+
+// P3: Single shared ResizeObserver for all items in this timeline instance
+const itemElements = new Map<string, HTMLElement>()
+const sharedItemObserver = typeof ResizeObserver !== 'undefined'
+    ? new ResizeObserver((entries) => {
+        let dirty = false
+        const next = measuredHeights.value
+        for (const entry of entries) {
+            const key = (entry.target as any).__itemKey
+            if (!key) continue
+            const newH = Math.ceil(entry.contentRect.height)
+            const prevH = next[key] ?? 0
+            if (newH > 0 && Math.abs(prevH - newH) >= 2) {
+                if (!dirty) dirty = true
+            }
+        }
+        if (dirty) {
+            const updated: Record<string, number> = { ...measuredHeights.value }
+            for (const entry of entries) {
+                const key = (entry.target as any).__itemKey
+                if (!key) continue
+                const newH = Math.ceil(entry.contentRect.height)
+                if (newH > 0) updated[key] = newH
+            }
+            measuredHeights.value = updated
+        }
+    })
+    : null
 
 function setItemRef(el: any, key: string) {
   const target = el instanceof HTMLElement ? el : null
-  // Wichtig: Bei v-for mit inline arrow function ref ruft Vue auf jedem Render
-  // zuerst die alte Funktion mit null und dann die neue mit dem Element auf.
-  // Wir dürfen daher die Messung NICHT bei null-Aufrufen löschen, sonst flackert
-  // das Layout dauerhaft.
   if (!target) return
 
-  const existing = itemObservers.get(key)
-  if (existing && existing.el === target) return
+  const existing = itemElements.get(key)
+  if (existing === target) return
 
-  if (existing) existing.observer.disconnect()
+  if (existing) sharedItemObserver?.unobserve(existing)
 
-  const observer = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const newH = Math.ceil(entry.contentRect.height)
-      const prevH = measuredHeights.value[key] ?? 0
-      if (newH > 0 && Math.abs(prevH - newH) >= 2) {
-        measuredHeights.value = { ...measuredHeights.value, [key]: newH }
-      }
-    }
-  })
-  observer.observe(target)
-  itemObservers.set(key, { el: target, observer })
+  ;(target as any).__itemKey = key
+  itemElements.set(key, target)
+  sharedItemObserver?.observe(target)
 }
 
 // Verwaiste Messungen aufräumen, wenn Items aus dem Block verschwinden
@@ -804,16 +839,17 @@ watch([eventItems, shiftItems], () => {
   }
   if (dirty) measuredHeights.value = next
   const staleKeys: string[] = []
-  itemObservers.forEach((_, k) => { if (!validKeys.has(k)) staleKeys.push(k) })
+  itemElements.forEach((_, k) => { if (!validKeys.has(k)) staleKeys.push(k) })
   staleKeys.forEach((k) => {
-    itemObservers.get(k)?.observer.disconnect()
-    itemObservers.delete(k)
+    const el = itemElements.get(k)
+    if (el) sharedItemObserver?.unobserve(el)
+    itemElements.delete(k)
   })
 })
 
 onBeforeUnmount(() => {
-  itemObservers.forEach((entry) => entry.observer.disconnect())
-  itemObservers.clear()
+  sharedItemObserver?.disconnect()
+  itemElements.clear()
 })
 
 // Min-Höhen in Pixel (geschätzt): collapsed = Headerhöhe, expanded = Details sichtbar
@@ -1064,7 +1100,9 @@ const layoutBlocks = computed(() => {
     b.heightMode = mode
     b.compactSegments = buildCompactSegments(b, mode)
 
-      const computeVisualMetrics = (arr: any[], type: 'event' | 'shift') => {
+      // Compute visual metrics and maxBottom in a single pass per item type
+      const processItems = (arr: any[], type: 'event' | 'shift'): number => {
+          let maxBottom = 0
           for (const it of arr) {
               const top = getTopForItem(it, b)
               const vH = type === 'shift'
@@ -1073,28 +1111,20 @@ const layoutBlocks = computed(() => {
               ;(it as any)._vTop = top
               ;(it as any)._vHeight = vH
               ;(it as any)._vBottom = top + vH
+              if (it.payload?.allDay !== true) {
+                  maxBottom = Math.max(maxBottom, top + vH)
+              }
           }
+          return maxBottom
       }
-      computeVisualMetrics(b.eventItems || [], 'event')
-      computeVisualMetrics(b.shiftItems || [], 'shift')
-
+      const evMaxBottom = processItems(b.eventItems || [], 'event')
+      const shMaxBottom = processItems(b.shiftItems || [], 'shift')
 
       // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
-    const craftsArrForLanes = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-    const craftPosMapForLanes = new Map<number, number>()
-    for (const c of craftsArrForLanes) {
-      if ((c as any)?.id != null) craftPosMapForLanes.set((c as any).id, (c as any).position ?? 0)
-    }
-    const getCraftPosForVisualLane = (it: any): number => {
-      const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
-      if (craftId != null && craftPosMapForLanes.has(craftId)) return craftPosMapForLanes.get(craftId)!
-      return it?.payload?.craft?.position ?? 9999
-    }
-
     const assignVisualLanesByRect = (arr: any[]) => {
       const items = (arr || []).slice().sort((a, b) => {
-        const aCraftPos = getCraftPosForVisualLane(a)
-        const bCraftPos = getCraftPosForVisualLane(b)
+        const aCraftPos = getCraftPos(a)
+        const bCraftPos = getCraftPos(b)
         if (aCraftPos !== bCraftPos) return aCraftPos - bCraftPos
         const topDiff = (a._vTop ?? 0) - (b._vTop ?? 0)
         if (topDiff !== 0) return topDiff
@@ -1122,26 +1152,13 @@ const layoutBlocks = computed(() => {
     b.eventVisualLaneCount = assignVisualLanesByRect(b.eventItems || [])
     b.shiftVisualLaneCount = assignVisualLanesByRect(b.shiftItems || [])
 
-    // Gesamthöhe des Blocks: nur non-AllDay Items bestimmen die Blockhöhe
-    let maxBottom = 0
-    for (const it of b.eventItems || []) {
-      if (it.payload?.allDay === true) continue
-      const top = getTopForItem(it, b)
-      const h = getEventItemHeightPx(it, b)
-      maxBottom = Math.max(maxBottom, top + h)
-    }
-    for (const it of b.shiftItems || []) {
-      if (it.payload?.allDay === true) continue
-      const top = getTopForItem(it, b)
-      const h = getShiftItemHeightPx(it, b)
-      maxBottom = Math.max(maxBottom, top + h)
-    }
+    // Gesamthöhe des Blocks: pre-computed from processItems above
+    let maxBottom = Math.max(evMaxBottom, shMaxBottom)
 
     // AllDay-Events: content minimum kann die Blockhöhe erhöhen wenn nötig
     for (const it of b.eventItems || []) {
       if (it.payload?.allDay !== true) continue
-      const contentH = getEventItemHeightPx(it, b)
-      maxBottom = Math.max(maxBottom, contentH)
+      maxBottom = Math.max(maxBottom, (it as any)._vHeight ?? 0)
     }
 
     const blockHeight = Math.max(48, maxBottom)
@@ -1165,35 +1182,17 @@ const hasAny = computed(() => hasEvents.value || hasShifts.value)
 
 // style helpers
 function getEventItemStyle(item: any, block: any) {
-  // Breite/Position für Events: jedes Item kennt seine zugewiesene Lane und nutzt
-  // die Gesamt-Lane-Anzahl des Blocks. Damit weiß ein Termin in Spalte 1 immer, dass
-  // es Spalte 2 gibt (dort liegt z.B. ein hoher Termin) und nimmt nur seine Spalte ein.
-  const ensureVisualMetrics = (it: any) => {
-    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
-      const top = getTopForItem(it, block)
-      const vH = getEventItemHeightPx(it, block)
-      it._vTop = top
-      it._vHeight = vH
-      it._vBottom = top + vH
-    }
-  }
-  const arr: any[] = Array.isArray(block?.eventItems) ? block.eventItems : []
-  for (const it of arr) ensureVisualMetrics(it)
-  ensureVisualMetrics(item)
-
   const totalLanes = Math.max(1, block?.eventVisualLaneCount || 1)
   const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
   const widthPct = 100 / totalLanes
   const leftPct = widthPct * laneIndex
-  const topPx = getTopForItem(item, block)
-  const heightPx = getEventItemHeightPx(item, block)
-  // hasCollision an Kinder weitergeben (Dokumentation):
-  // SingleEventInDailyShiftView nutzt diese Prop, um kompaktes Design bei Überschneidungen zu aktivieren.
+  const topPx = item._vTop ?? 0
+  const heightPx = item._vHeight ?? 48
+
   if (item?.props) item.props.hasCollision = !!item.hasCollision
-  // Hintergrundfarbe gemäß EventType (mit schwacher Opacity)
+
   const eventTypeId = item?.payload?.eventType?.id || item?.props?.event?.eventType?.id
-  const eventTypesArray = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes || {})
-  const foundType = eventTypesArray.find((t: any) => t.id === eventTypeId)
+  const foundType = eventTypeMap.value.get(eventTypeId)
   const typeHex: string | undefined = foundType?.hex_code || item?.payload?.eventType?.hex_code || item?.props?.event?.eventType?.hex_code
   const bg = typeHex ? hexToRgba(typeHex, 0.12) : 'transparent'
   return {
@@ -1206,33 +1205,15 @@ function getEventItemStyle(item: any, block: any) {
 }
 
 function getShiftItemStyle(item: any, block: any) {
-  // Breite/Position für Schichten: jede Schicht kennt ihre zugewiesene Lane und nutzt
-  // die Gesamt-Lane-Anzahl des Blocks. Eine Schicht in Spalte 1 weiß damit, dass es
-  // Spalte 2 (mit hoher Schicht) gibt und nimmt nur ihre Spalte ein.
-  const ensureVisualMetrics = (it: any) => {
-    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
-      const top = getTopForItem(it, block)
-      const vH = getShiftItemHeightPx(it, block)
-      it._vTop = top
-      it._vHeight = vH
-      it._vBottom = top + vH
-    }
-  }
-  const arr: any[] = Array.isArray(block?.shiftItems) ? block.shiftItems : []
-  for (const it of arr) ensureVisualMetrics(it)
-  ensureVisualMetrics(item)
-
   const totalLanes = Math.max(1, block?.shiftVisualLaneCount || 1)
   const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
   const widthPct = 100 / totalLanes
   const leftPct = widthPct * laneIndex
-  const topPx = getTopForItem(item, block)
-  const heightPx = getShiftItemHeightPx(item, block)
-  // Wichtig laut Vorgabe: Schicht-Styling ändert sich nicht bei Kollisionen; daher kein hasCollision-Prop.
-  // Hintergrundfarbe gemäß Gewerk-Farbe (mit schwacher Opacity) – analog zu getEventItemStyle
+  const topPx = item._vTop ?? 0
+  const heightPx = item._vHeight ?? 48
+
   const craftId = item?.payload?.craft?.id || item?.props?.shift?.craft?.id
-  const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-  const foundCraft = craftsArray.find((c: any) => c.id === craftId)
+  const foundCraft = craftColorMap.value.get(craftId)
   const craftHex: string | undefined = foundCraft?.color || item?.payload?.craft?.color || item?.props?.shift?.craft?.color
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'
   return {

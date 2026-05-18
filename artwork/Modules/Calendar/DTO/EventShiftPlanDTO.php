@@ -64,7 +64,9 @@ class EventShiftPlanDTO extends Data
                 id: $event->creator->id,
                 first_name: $event->creator->first_name,
                 last_name: $event->creator->last_name,
-                profile_photo_url: $event->creator->getAttribute('profile_photo_url'),
+                profile_photo_url: $event->creator->profile_photo_path
+                    ? '/storage/' . $event->creator->profile_photo_path
+                    : null,
             ) : null,
             is_series: $event->is_series,
             eventProperties: self::serializeEventProperties($event),

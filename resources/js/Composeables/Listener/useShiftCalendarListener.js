@@ -1,6 +1,11 @@
 import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload } = {}) {
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged } = {}) {
+
+    function resolveWorkerType(entityType) {
+        const map = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider', 'service_provider': 'serviceProvider' }
+        return map[entityType] ?? entityType
+    }
 
     function getShiftDays(shift) {
         return shift.daysOfShift || getDaysInRange(shift.startDate, shift.endDate)
@@ -44,6 +49,10 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         }
     }
 
+    function bumpRoomVersion(room) {
+        room.__v = (room.__v ?? 0) + 1;
+    }
+
     function updateShiftInRoomAndEvents(data, roomId) {
         const room = findRoomById(roomId);
         if (!room) return;
@@ -79,8 +88,8 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             }
         }
 
-        if (updated && onWorkersNeedReload) {
-            onWorkersNeedReload();
+        if (updated) {
+            bumpRoomVersion(room);
         }
     }
 
@@ -125,6 +134,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 room.content[day].eventIds.push(eventData.id);
             }
         }
+        if (onEventsChanged) onEventsChanged();
         return true;
     }
 
@@ -176,6 +186,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             sortArrayByStartDateTimes(room.content[dayKey].events);
         }
 
+        if (onEventsChanged) onEventsChanged();
         return true;
     }
 
@@ -188,14 +199,20 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
             if (!room.shiftsById) room.shiftsById = {};
             room.shiftsById[shift.id] = shift;
+            let roomUpdated = false;
 
             for (const day of getShiftDays(shift)) {
                 if (!room.content[day]) continue;
                 if (!room.content[day].shiftIds) room.content[day].shiftIds = [];
                 if (!room.content[day].shiftIds.includes(shift.id)) {
                     room.content[day].shiftIds.push(shift.id);
-                    updated = true;
+                    roomUpdated = true;
                 }
+            }
+
+            if (roomUpdated) {
+                bumpRoomVersion(room);
+                updated = true;
             }
         }
         return updated;
@@ -206,9 +223,10 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         let updated = false;
 
         for (const room of newShiftPlanData.value) {
+            let roomUpdated = false;
             if (room.shiftsById && room.shiftsById[shift.id] !== undefined) {
                 room.shiftsById[shift.id] = shift;
-                updated = true;
+                roomUpdated = true;
             }
             if (room.eventsById) {
                 for (const eventId of Object.keys(room.eventsById)) {
@@ -217,10 +235,14 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                         const idx = event.shifts.findIndex((s) => s.id === shift.id);
                         if (idx !== -1) {
                             event.shifts[idx] = shift;
-                            updated = true;
+                            roomUpdated = true;
                         }
                     }
                 }
+            }
+            if (roomUpdated) {
+                bumpRoomVersion(room);
+                updated = true;
             }
         }
 
@@ -261,9 +283,19 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             }
         }
 
-        // Only reload if something was actually removed
-        if (updated && onWorkersNeedReload) {
-            onWorkersNeedReload();
+        if (updated) {
+            bumpRoomVersion(room);
+            if (onWorkerNeedReload && Array.isArray(shift.workers) && shift.workers.length > 0) {
+                const seen = new Set();
+                for (const w of shift.workers) {
+                    const key = `${w.type}:${w.id}`;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    onWorkerNeedReload(w.id, resolveWorkerType(w.type));
+                }
+            } else if (onWorkersNeedReload) {
+                onWorkersNeedReload();
+            }
         }
     }
 
@@ -283,13 +315,17 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 })
                 .listen('.shift-assign-entity', (data) => {
                     updateShiftInRoomAndEvents(data, data.roomId);
-                    if (onWorkersNeedReload) {
+                    if (onWorkerNeedReload && data.entity && data.entityType !== undefined) {
+                        onWorkerNeedReload(data.entity, resolveWorkerType(data.entityType));
+                    } else if (onWorkersNeedReload) {
                         onWorkersNeedReload();
                     }
                 })
                 .listen('.shift-remove-entity', (data) => {
                     updateShiftInRoomAndEvents(data, data.roomId);
-                    if (onWorkersNeedReload) {
+                    if (onWorkerNeedReload && data.entity && data.entityType !== undefined) {
+                        onWorkerNeedReload(data.entity, resolveWorkerType(data.entityType));
+                    } else if (onWorkersNeedReload) {
                         onWorkersNeedReload();
                     }
                 })
@@ -335,6 +371,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                             }
                         }
                     }
+                    if (onEventsChanged) onEventsChanged();
                 });
         }
 

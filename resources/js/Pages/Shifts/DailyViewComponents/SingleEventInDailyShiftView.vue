@@ -213,19 +213,19 @@ const hasAdminRole = () => is('artwork admin')
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue'),
     delay: 200,
-    timeout: 5000
+    timeout: 30000
 })
 
 const CreateTimelinePresetFormEvent = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
     delay: 200,
-    timeout: 5000
+    timeout: 30000
 })
 
 const SearchTimelinePresetModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
     delay: 200,
-    timeout: 5000
+    timeout: 30000
 })
 
 const ConfirmationComponent = defineAsyncComponent({

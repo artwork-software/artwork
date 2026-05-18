@@ -19,11 +19,13 @@ class DestroyShift implements ShouldBroadcastNow
 
     public Shift $shift;
     public int $roomId;
+    public array $affectedWorkers;
 
-    public function __construct(Shift $shift, int $roomId)
+    public function __construct(Shift $shift, int $roomId, array $affectedWorkers = [])
     {
         $this->shift = $shift;
         $this->roomId = $roomId;
+        $this->affectedWorkers = $affectedWorkers;
     }
 
     /**
@@ -41,16 +43,24 @@ class DestroyShift implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        $this->shift->loadMissing([
+        $this->shift->load([
             'shiftsQualifications',
             'globalQualifications',
             'users.globalQualifications',
             'freelancer.globalQualifications',
             'serviceProvider.globalQualifications',
+            'project',
         ]);
 
+        $shiftData = ShiftDTO::fromModel($this->shift, $this->shift->project);
+
+        // If workers were collected before detach, inject them into the DTO
+        if (!empty($this->affectedWorkers) && empty($shiftData->workers)) {
+            $shiftData->workers = $this->affectedWorkers;
+        }
+
         return [
-            'shift' => ShiftDTO::fromModel($this->shift),
+            'shift' => $shiftData,
             'roomId' => $this->roomId,
         ];
     }

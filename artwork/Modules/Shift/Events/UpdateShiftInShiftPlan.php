@@ -43,10 +43,11 @@ class UpdateShiftInShiftPlan implements ShouldBroadcastNow
             'users.globalQualifications',
             'freelancer.globalQualifications',
             'serviceProvider.globalQualifications',
+            'project',
         ]);
 
         return [
-            'shift' => ShiftDTO::fromModel($this->shift),
+            'shift' => ShiftDTO::fromModel($this->shift, $this->shift->project),
             'roomId' => $this->roomId,
         ];
     }

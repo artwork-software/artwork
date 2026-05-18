@@ -54,12 +54,14 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
             'users.globalQualifications',
             'freelancer.globalQualifications',
             'serviceProvider.globalQualifications',
+            'project',
         ];
 
         return [
-            'shifts' => $this->shifts->map(fn (Shift $shift) => ShiftDTO::fromModel(
-                $shift->fresh($relations)
-            )),
+            'shifts' => $this->shifts->map(function (Shift $shift) use ($relations) {
+                $freshShift = $shift->fresh($relations);
+                return ShiftDTO::fromModel($freshShift, $freshShift->project);
+            }),
         ];
     }
 }

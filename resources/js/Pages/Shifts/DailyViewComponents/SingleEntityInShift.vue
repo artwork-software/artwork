@@ -7,7 +7,7 @@
                     :style="{ backgroundColor: `${returnCraftColor}` }"
                     v-tooltip.bottom="{ value: 'Arbeitszeitänderung vornehmen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
                 >
-                    <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+                    <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
                 </div>
             </PopoverButton>
             <transition enter-active-class="transition ease-out duration-100"
@@ -26,12 +26,14 @@
                         <div class="flex items-center gap-x-2">
                             <BaseInput
                                 id="start" type="time" class="max-w-28 text-xs"
-                                v-model="person.pivot.start_time"
+                                :model-value="normalizeTime(person.pivot.start_time)"
+                                @update:model-value="person.pivot.start_time = $event"
                             />
 
                             <BaseInput
-                                id="start" type="time" class="max-w-28 text-xs"
-                                v-model="person.pivot.end_time"
+                                id="end" type="time" class="max-w-28 text-xs"
+                                :model-value="normalizeTime(person.pivot.end_time)"
+                                @update:model-value="person.pivot.end_time = $event"
                             />
                             <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>
                         </div>
@@ -47,7 +49,7 @@
             :style="{ backgroundColor: `${returnCraftColor}` }"
             v-tooltip.bottom="{ value: 'Arbeitszeitänderung anfragen', appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: false }"
         >
-            <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ person.pivot?.start_time ?? shift.start }} - {{ person.pivot?.end_time ?? shift.end }}</p>
+            <p class="text-xs text-left font-lexend whitespace-nowrap"><span v-if="prependCraftAbbreviation && craft?.abbreviation" class="font-semibold mr-1">{{ craft.abbreviation }}</span>{{ normalizeTime(person.pivot?.start_time ?? shift.start) }} - {{ normalizeTime(person.pivot?.end_time ?? shift.end) }}</p>
         </div>
     </div>
     <div ref="rowRef" class="flex w-full min-w-0 items-center gap-x-2 flex-nowrap">
@@ -207,6 +209,7 @@ import {
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import {router, usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import RequestWorkTimeChangeModal from "@/Pages/Shifts/Components/RequestWorkTimeChangeModal.vue";
 import {computed, ref, onMounted, onBeforeUnmount, watch, nextTick} from "vue";
 import {IconDeviceFloppy, IconNote, IconChevronDown, IconTrash} from "@tabler/icons-vue";
@@ -218,6 +221,19 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const { resolveCraft } = useShiftPlanLookups();
+
+// Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
+function normalizeTime(val) {
+    if (!val || typeof val !== 'string') return val
+    if (/^\d{2}:\d{2}$/.test(val)) return val
+    const m = val.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+    if (sp) return sp[1]
+    return val
+}
+
+defineEmits(['userRemoved'])
 
 const props = defineProps({
     person: {
@@ -388,50 +404,31 @@ const personGlobalQualificationsInDemand = computed(() => {
 });
 
 
-const saveIndividualShiftTime = (closePopover) => {
-    // Logic to save the individual shift time for the person, freelancer, or service provider
-    // This could involve making an API call to update the shift time in the database
-    router.post(route('shifts.updateIndividualShiftTime', {
-        entity: props.person,
-        shiftPivotId: props.person.pivot.id
-    }), {
-        start_time: props.person.pivot.start_time,
-        end_time: props.person.pivot.end_time
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Optionally, you can show a success message or perform any other action after saving
-            console.log('Shift time saved successfully');
-            if (typeof closePopover === 'function') closePopover();
-        },
-        onError: (error) => {
-            // Handle error if needed
-            console.error('Error saving shift time:', error);
-        }
-    });
+const saveIndividualShiftTime = async (closePopover) => {
+    try {
+        await axios.post(route('shifts.updateIndividualShiftTime'), {
+            entity: props.person,
+            shiftPivotId: props.person.pivot.id,
+            start_time: normalizeTime(props.person.pivot.start_time),
+            end_time: normalizeTime(props.person.pivot.end_time),
+        });
+        if (typeof closePopover === 'function') closePopover();
+    } catch (error) {
+        console.error('Error saving shift time:', error);
+    }
 }
 
-const saveShortDescription = (closePopover) => {
-    // Logic to save the short description for the person, freelancer, or service provider
-    // This could involve making an API call to update the short description in the database
-    router.post(route('shifts.updateShortDescription', {
-        entity: props.person,
-        shiftPivotId: props.person.pivot.id
-    }), {
-        short_description: props.person.pivot.short_description
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            // Optionally, you can show a success message or perform any other action after saving
-            console.log('Short description saved successfully');
-            // Close the popover after saving
-            if (typeof closePopover === 'function') closePopover();
-        },
-        onError: (error) => {
-            // Handle error if needed
-            console.error('Error saving short description:', error);
-        }
-    });
+const saveShortDescription = async (closePopover) => {
+    try {
+        await axios.post(route('shifts.updateShortDescription'), {
+            entity: props.person,
+            shiftPivotId: props.person.pivot.id,
+            short_description: props.person.pivot.short_description,
+        });
+        if (typeof closePopover === 'function') closePopover();
+    } catch (error) {
+        console.error('Error saving short description:', error);
+    }
 }
 
 const isCurrentUserPlannerOfShiftCraft = computed(() => {

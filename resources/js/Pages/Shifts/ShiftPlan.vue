@@ -122,7 +122,7 @@
                         :col-widths="shiftColWidths"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
-                        :no-virtualize="true"
+                        :no-virtualize="false"
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
@@ -281,7 +281,7 @@
                                     <div class="space-y-0.5">
                                         <template v-if="getRoomDayShifts(room, day.fullDay)?.length">
                                             <template
-                                                v-for="group in groupShiftsByProject(getRoomDayShifts(room, day.fullDay), day.fullDay)"
+                                                v-for="group in getGroupedShiftsForCell(room, day.fullDay)"
                                                 :key="group.projectId ?? `no-project-${day.fullDay}`"
                                             >
                                                 <div
@@ -852,49 +852,49 @@ defineOptions({
 const ShowUserShiftsModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShowUserShiftsModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftsQualificationsAssignmentModal = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const CellMultiEditModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/CellMultiEditModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteCalendarRoomShiftEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const AddShiftModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const IndividualTimeSeriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 type ShiftPlanProps = {
@@ -1057,6 +1057,52 @@ async function loadShiftPlanWorkers() {
             freelancersForShifts: [],
             serviceProvidersForShifts: [],
         }
+    }
+}
+
+function numericTypeToWorkerType(type: number|string): string {
+    const map: Record<number, string> = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider' }
+    return map[type as number] ?? type
+}
+
+const recentReloads = new Map<string, number>()
+
+async function reloadSingleWorker(workerId: number|string, workerType: string) {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end || !workerId || !workerType) {
+        return loadShiftPlanWorkers()
+    }
+
+    const key = `${workerType}:${workerId}`
+    const now = Date.now()
+    const lastReload = recentReloads.get(key)
+    if (lastReload && (now - lastReload) < 2000) return
+    recentReloads.set(key, now)
+
+    try {
+        const { data } = await axios.get(route('shifts.worker.single'), {
+            params: { worker_id: workerId, worker_type: workerType, start_date: start, end_date: end }
+        })
+        if (!data.worker) return
+
+        const targetKey = workerType === 'user' ? 'usersForShifts'
+            : workerType === 'freelancer' ? 'freelancersForShifts'
+            : 'serviceProvidersForShifts'
+        const workerKey = workerType === 'user' ? 'user'
+            : workerType === 'freelancer' ? 'freelancer'
+            : 'service_provider'
+
+        const arr = workersLoaded.value[targetKey]
+        const idx = arr.findIndex((w: any) => w[workerKey]?.id === Number(workerId))
+        if (idx >= 0) {
+            arr[idx] = data.worker
+        } else {
+            arr.push(data.worker)
+        }
+    } catch {
+        // Fallback to full reload on error
+        return loadShiftPlanWorkers()
     }
 }
 
@@ -1329,6 +1375,17 @@ type CellSummary = {
 }
 
 const cellSummaryCache = new Map<string, CellSummary>()
+const groupedShiftsCache = new Map<string, ShiftGroup[]>()
+
+function getGroupedShiftsForCell(room: any, dayKey: string): ShiftGroup[] {
+    const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
+    const roomVersion = room.__v ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
+    if (!groupedShiftsCache.has(cacheKey)) {
+        groupedShiftsCache.set(cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
+    }
+    return groupedShiftsCache.get(cacheKey)!
+}
 
 function summarizeCell(room: any, dayKey: string): CellSummary {
     const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
@@ -1474,6 +1531,7 @@ watch(
     ],
     () => {
         cellSummaryCache.clear()
+        groupedShiftsCache.clear()
         if (expandDays.value) {
             measureBaselineMetrics()
         } else {
@@ -1932,6 +1990,7 @@ onMounted(async () => {
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
         onWorkersNeedReload: loadShiftPlanWorkers,
+        onWorkerNeedReload: reloadSingleWorker,
     })
     ShiftCalendarListener.init()
 
@@ -2484,13 +2543,17 @@ function openShowUserShiftModal(user: any, day: any) {
 }
 
 async function handleWorkerReload() {
-    await loadShiftPlanWorkers()
-    if (userToShow.value && showUserShifts.value) {
-        const key = userToShow.value.key
-        const fresh = dropWorkers.value.find((w: any) => w.key === key)
-        if (fresh) {
-            userToShow.value = fresh
+    if (userToShow.value) {
+        await reloadSingleWorker(userToShow.value.element.id, numericTypeToWorkerType(userToShow.value.type))
+        if (showUserShifts.value) {
+            const key = userToShow.value.key
+            const fresh = dropWorkers.value.find((w: any) => w.key === key)
+            if (fresh) {
+                userToShow.value = fresh
+            }
         }
+    } else {
+        await loadShiftPlanWorkers()
     }
 }
 
@@ -2786,8 +2849,11 @@ function toggleMultiEditModeCalendar() {
 function closeMultiEditCellModal(eventData: any) {
     showCellMultiEditModal.value = false
     if (eventData && eventData.saved) {
+        const affectedWorkers = Object.values(multiEditCellByDayAndUser.value)
         multiEditCellByDayAndUser.value = {}
-        loadShiftPlanWorkers()
+        for (const w of affectedWorkers) {
+            reloadSingleWorker(w.id, numericTypeToWorkerType(w.type))
+        }
     }
 }
 
@@ -2990,7 +3056,7 @@ async function saveMultiEdit() {
         shiftsToHandle: shiftsToHandleOnMultiEdit,
     })
     resetMultiEditMode(false)
-    loadShiftPlanWorkers()
+    reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
 }
 
 function resetMultiEditMode(closeMultiEdit = true) {
@@ -3085,7 +3151,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
-                loadShiftPlanWorkers()
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     } else {
         const optimistic = new Set(oldIds)
@@ -3103,7 +3169,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
-                loadShiftPlanWorkers()
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     }
 }

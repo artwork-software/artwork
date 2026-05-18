@@ -83,7 +83,7 @@ class ShiftDTO extends Data
             }
 
             foreach ($collection as $worker) {
-                $data = [
+                $workers[] = [
                     'id' => $worker->id,
                     'type' => $type,
                     'pivot' => $worker->pivot ? [
@@ -94,40 +94,17 @@ class ShiftDTO extends Data
                         'start_time' => $worker->pivot->start_time ?? null,
                         'end_time' => $worker->pivot->end_time ?? null,
                     ] : null,
+                    'first_name' => $type === 'service_provider'
+                        ? ($worker->provider_name ?? '')
+                        : ($worker->first_name ?? ''),
+                    'last_name' => $type === 'service_provider' ? '' : ($worker->last_name ?? ''),
+                    'name' => $type === 'service_provider'
+                        ? ($worker->provider_name ?? '')
+                        : trim(($worker->first_name ?? '') . ' ' . ($worker->last_name ?? '')),
+                    'globalQualifications' => ($worker->relationLoaded('globalQualifications'))
+                        ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
+                        : [],
                 ];
-
-                if ($type === 'user') {
-                    $data['first_name'] = $worker->first_name;
-                    $data['last_name'] = $worker->last_name;
-                    $data['name'] = trim($worker->first_name . ' ' . $worker->last_name);
-                    $data['profile_photo_url'] = $worker->profile_photo_path
-                        ? '/storage/' . $worker->profile_photo_path
-                        : null;
-                    $data['pronouns'] = $worker->pronouns ?? null;
-                    $data['position'] = $worker->position ?? null;
-                } elseif ($type === 'freelancer') {
-                    $data['first_name'] = $worker->first_name;
-                    $data['last_name'] = $worker->last_name;
-                    $data['name'] = trim($worker->first_name . ' ' . $worker->last_name);
-                    $data['profile_photo_url'] = $worker->profile_image
-                        ? '/storage/' . $worker->profile_image
-                        : null;
-                    $data['position'] = $worker->position ?? null;
-                } else {
-                    $data['provider_name'] = $worker->provider_name;
-                    $data['first_name'] = $worker->provider_name;
-                    $data['last_name'] = '';
-                    $data['name'] = $worker->provider_name;
-                    $data['profile_photo_url'] = $worker->profile_image
-                        ? '/storage/' . $worker->profile_image
-                        : null;
-                }
-
-                $data['globalQualifications'] = ($worker->relationLoaded('globalQualifications'))
-                    ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
-                    : [];
-
-                $workers[] = $data;
             }
         }
 

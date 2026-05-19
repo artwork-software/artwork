@@ -40,6 +40,10 @@ class RemoveEntityFormShiftEvent implements ShouldBroadcastNow
         return new PrivateChannel('shift-plan.room.' . $this->roomId);
     }
 
+    /**
+     * Eager-load relations here (not in the controller) so that the broadcast
+     * payload is self-contained and the controller stays free of broadcast concerns.
+     */
     public function broadcastWith(): array
     {
         $this->shift->load([

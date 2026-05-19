@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
+use Artwork\Modules\Calendar\Traits\SerializesEventRelations;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
@@ -13,6 +14,7 @@ use Spatie\LaravelData\Optional;
 
 class EventDTO extends Data
 {
+    use SerializesEventRelations;
     public bool $isMinimal = false; // this is used by frontend, dont remove it
 
     public function __construct(
@@ -104,35 +106,4 @@ class EventDTO extends Data
         );
     }
 
-    private static function serializeSubEvents(Event $event): array
-    {
-        if (!$event->relationLoaded('subEvents')) {
-            return [];
-        }
-
-        return $event->subEvents->map(fn ($sub) => [
-            'id' => $sub->id,
-            'eventName' => $sub->eventName,
-            'allDay' => $sub->allDay,
-            'formattedDates' => $sub->formattedDates,
-            'type' => $sub->type ? [
-                'hex_code' => $sub->type->hex_code,
-                'abbreviation' => $sub->type->abbreviation,
-                'name' => $sub->type->name,
-            ] : null,
-            'event_properties' => $sub->eventProperties->map(fn ($p) => ['id' => $p->id])->values()->all(),
-        ])->values()->all();
-    }
-
-    private static function serializeEventProperties(Event $event): array
-    {
-        if (!$event->relationLoaded('eventProperties')) {
-            return [];
-        }
-
-        return $event->eventProperties->map(fn ($p) => [
-            'id' => $p->id,
-            'icon' => $p->icon ?? null,
-        ])->values()->all();
-    }
 }

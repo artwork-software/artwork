@@ -94,9 +94,6 @@ use Artwork\Modules\Worker\Services\WorkerService;
 use Artwork\Modules\Worker\Services\WorkerShiftPlanService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\Availability\Models\Availability;
-use Artwork\Modules\Shift\Models\CompensationDayOff;
-use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -159,6 +156,8 @@ class EventController extends Controller
         protected HelperService $helperService,
         private readonly ShiftListViewService $shiftListViewService,
         private readonly WorkingHourCacheService $workingHourCacheService,
+        private readonly WorkerService $workerService,
+        private readonly WorkerShiftPlanService $workerShiftPlanService,
     ) {
     }
 
@@ -4315,17 +4314,14 @@ class EventController extends Controller
             'serviceProvider' => ServiceProvider::class,
         };
 
-        $workerService = app(WorkerService::class);
-        $workerShiftPlanService = app(WorkerShiftPlanService::class);
-
-        $workers = $workerService->getWorkersForShiftPlanByIds($modelClass, [$workerId], $startDate, $endDate);
+        $workers = $this->workerService->getWorkersForShiftPlanByIds($modelClass, [$workerId], $startDate, $endDate);
 
         if ($workers->isEmpty()) {
             return new JsonResponse(['worker' => null, 'workerType' => $workerType]);
         }
 
-        $workers = $workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
-        $qualificationsCache = $workerService->buildQualificationsCache($workers);
+        $workers = $this->workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
+        $qualificationsCache = $this->workerService->buildQualificationsCache($workers);
 
         $worker = $workers->first();
 
@@ -4355,7 +4351,7 @@ class EventController extends Controller
             );
         }
 
-        $workerData = $workerShiftPlanService->buildWorkerData(
+        $workerData = $this->workerShiftPlanService->buildWorkerData(
             $worker,
             $resource,
             $qualificationsCache,
@@ -4366,33 +4362,9 @@ class EventController extends Controller
         );
 
         if ($workerType === 'user') {
-            $workerData['availabilities'] = Availability::query()
-                ->where('available_type', User::class)
-                ->where('available_id', $workerId)
-                ->betweenDates($startDate, $endDate)
-                ->get()
-                ->groupBy('formatted_date');
-
-            $workerData['violations'] = ShiftRuleViolation::query()
-                ->with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
-                ->where('user_id', $workerId)
-                ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
-                ->whereIn('status', ['active', 'resolved'])
-                ->get()
-                ->groupBy(fn ($v) => $v->violation_date->format('Y-m-d'));
-
-            $workerData['compensation_day_offs'] = CompensationDayOff::where('user_id', $workerId)
-                ->whereNotNull('granted_date')
-                ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
-                ->with([
-                    'violation:id,shift_rule_id',
-                    'violation.shiftRule:id,name',
-                    'grantedByUser:id,first_name,last_name',
-                ])
-                ->get()
-                ->groupBy(fn ($d) => $d->granted_date->format('Y-m-d'));
-
-            $workerData['compensation_period'] = $worker->activeWorkContract()?->compensation_period ?? 0;
+            $workerData = $this->workerShiftPlanService->enrichUserWorkerData(
+                $workerData, $workerId, $startDate, $endDate, $worker
+            );
         }
 
         return new JsonResponse([

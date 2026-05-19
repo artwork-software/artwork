@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\DTO;
 
 use App\Http\Resources\MinimalShiftPlanShiftResource;
+use Artwork\Modules\Calendar\Traits\SerializesEventRelations;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -10,6 +11,7 @@ use Spatie\LaravelData\Data;
 
 class BroadcastEventDTOWithVerifications extends Data
 {
+    use SerializesEventRelations;
     public function __construct(
         public int $id,
         public string $start,
@@ -90,38 +92,6 @@ class BroadcastEventDTOWithVerifications extends Data
             timelines: $event->timelines ?? new Collection(),
             hasTimelines: $event->hasTimelines(),
         );
-    }
-
-    private static function serializeSubEvents(Event $event): array
-    {
-        if (!$event->relationLoaded('subEvents')) {
-            return [];
-        }
-
-        return $event->subEvents->map(fn ($sub) => [
-            'id' => $sub->id,
-            'eventName' => $sub->eventName,
-            'allDay' => $sub->allDay,
-            'formattedDates' => $sub->formattedDates,
-            'type' => $sub->type ? [
-                'hex_code' => $sub->type->hex_code,
-                'abbreviation' => $sub->type->abbreviation,
-                'name' => $sub->type->name,
-            ] : null,
-            'event_properties' => $sub->eventProperties->map(fn ($p) => ['id' => $p->id])->values()->all(),
-        ])->values()->all();
-    }
-
-    private static function serializeEventProperties(Event $event): array
-    {
-        if (!$event->relationLoaded('eventProperties')) {
-            return [];
-        }
-
-        return $event->eventProperties->map(fn ($p) => [
-            'id' => $p->id,
-            'icon' => $p->icon ?? null,
-        ])->values()->all();
     }
 
     private static function serializeVerifications(Event $event): array

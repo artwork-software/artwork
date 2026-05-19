@@ -6,6 +6,7 @@ use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Serializers\ShiftListViewSerializer;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftListViewSettings;
 use Carbon\Carbon;
@@ -13,6 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 readonly class ShiftListViewService
 {
+    public function __construct(
+        private ShiftListViewSerializer $serializer,
+    ) {
+    }
     public function getGroupedShifts(
         Carbon $startDate,
         Carbon $endDate,
@@ -118,14 +123,14 @@ readonly class ShiftListViewService
                     'events' => [],
                 ];
             }
-            $dayMap[$day][$roomId]['shifts'][] = $this->serializeShift($shift);
+            $dayMap[$day][$roomId]['shifts'][] = $this->serializer->serializeShift($shift);
         }
 
         if ($settings->show_appointments) {
             $events = $this->getEventsForRange($startDate, $endDate, $userFilter);
 
             foreach ($events as $event) {
-                $serializedEvent = $this->serializeListViewEvent($event);
+                $serializedEvent = $this->serializer->serializeListViewEvent($event);
                 // An event can span multiple days; emit it on each day in range
                 $eventStart = $event->start_time->copy()->startOfDay();
                 $eventEnd = $event->end_time->copy()->startOfDay();
@@ -191,112 +196,6 @@ readonly class ShiftListViewService
         }
 
         return $result;
-    }
-
-    private function serializeShift(Shift $shift): array
-    {
-        return [
-            'id' => $shift->id,
-            'start' => (string) $shift->start,
-            'end' => (string) $shift->end,
-            'start_date' => (string) $shift->start_date,
-            'end_date' => (string) $shift->end_date,
-            'break_minutes' => $shift->break_minutes,
-            'description' => $shift->description,
-            'craft_id' => $shift->craft_id,
-            'room_id' => $shift->room_id,
-            'event_id' => $shift->event_id,
-            'is_committed' => $shift->is_committed,
-            'shift_group_id' => $shift->shift_group_id,
-            'craft' => $shift->craft ? [
-                'id' => $shift->craft->id,
-                'name' => $shift->craft->name,
-                'abbreviation' => $shift->craft->abbreviation,
-                'color' => $shift->craft->color,
-            ] : null,
-            'shift_group' => $shift->shiftGroup ? [
-                'id' => $shift->shiftGroup->id,
-                'name' => $shift->shiftGroup->name,
-            ] : null,
-            'project' => $shift->project ? [
-                'id' => $shift->project->id,
-                'name' => $shift->project->name,
-            ] : null,
-            'event' => $shift->event ? [
-                'id' => $shift->event->id,
-                'project' => $shift->event->project ? [
-                    'id' => $shift->event->project->id,
-                    'name' => $shift->event->project->name,
-                ] : null,
-            ] : null,
-            'workers' => [
-                ...$this->serializeListViewWorkers($shift->users, 'user'),
-                ...$this->serializeListViewWorkers($shift->freelancer, 'freelancer'),
-                ...$this->serializeListViewWorkers($shift->serviceProvider, 'service_provider'),
-            ],
-            'shifts_qualifications' => $shift->shiftsQualifications->map(fn ($sq) => [
-                'id' => $sq->id,
-                'shift_id' => $sq->shift_id,
-                'shift_qualification_id' => $sq->shift_qualification_id,
-                'value' => $sq->value,
-            ])->values()->all(),
-            'globalQualifications' => $shift->globalQualifications->map(fn ($gq) => [
-                'id' => $gq->id,
-                'pivot' => ['quantity' => $gq->pivot->quantity ?? 0],
-            ])->values()->all(),
-        ];
-    }
-
-    /**
-     * @param \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection $workers
-     */
-    private function serializeListViewWorkers($workers, string $type): array
-    {
-        if ($workers === null || $workers->isEmpty()) {
-            return [];
-        }
-
-        return $workers->map(function ($worker) use ($type) {
-            $data = [
-                'id' => $worker->id,
-                'type' => $type,
-                'pivot' => $worker->pivot ? [
-                    'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
-                ] : null,
-            ];
-
-            if ($type === 'service_provider') {
-                $data['provider_name'] = $worker->provider_name;
-                $data['name'] = $worker->provider_name;
-            } else {
-                $data['first_name'] = $worker->first_name;
-                $data['last_name'] = $worker->last_name;
-                $data['name'] = trim($worker->first_name . ' ' . $worker->last_name);
-            }
-
-            return $data;
-        })->values()->all();
-    }
-
-    private function serializeListViewEvent(Event $event): array
-    {
-        return [
-            'id' => $event->id,
-            'eventName' => $event->eventName,
-            'allDay' => (bool) $event->allDay,
-            'start_time' => (string) $event->start_time,
-            'end_time' => (string) $event->end_time,
-            'event_type' => $event->event_type ? [
-                'id' => $event->event_type->id,
-                'name' => $event->event_type->name,
-                'abbreviation' => $event->event_type->abbreviation,
-                'hex_code' => $event->event_type->hex_code,
-            ] : null,
-            'project' => $event->project ? [
-                'id' => $event->project->id,
-                'name' => $event->project->name,
-            ] : null,
-        ];
     }
 
     /**

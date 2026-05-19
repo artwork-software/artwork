@@ -90,6 +90,10 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\User\Services\WorkingHourService;
+use Artwork\Modules\Worker\Services\WorkerService;
+use Artwork\Modules\Worker\Services\WorkerShiftPlanService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -152,6 +156,8 @@ class EventController extends Controller
         protected HelperService $helperService,
         private readonly ShiftListViewService $shiftListViewService,
         private readonly WorkingHourCacheService $workingHourCacheService,
+        private readonly WorkerService $workerService,
+        private readonly WorkerShiftPlanService $workerShiftPlanService,
     ) {
     }
 
@@ -322,7 +328,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $p) {
-            $date  = Carbon::parse($p->withoutFormat);
+            if ($p->isExtraRow) {
+                continue;
+            }
+            $date  = Carbon::parse($p->date);
             $key   = $date->format('m.Y');
             $months[$key] ??= [
                 'first_day_in_period' => $date->format('Y-m-d'),
@@ -516,7 +525,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $periodObject) {
-            $date = Carbon::parse($periodObject->withoutFormat);
+            if ($periodObject->isExtraRow) {
+                continue;
+            }
+            $date = Carbon::parse($periodObject->date);
             $month = $date->format('m.Y');
             if (!array_key_exists($month, $months)) {
                 $months[$month] = [
@@ -682,7 +694,7 @@ class EventController extends Controller
             $user,
         );
 
-        $this->shiftCalendarService->filterRoomsEventsAndShifts(
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $rooms,
             $userCalendarFilter,
             $startDate,
@@ -691,6 +703,7 @@ class EventController extends Controller
             $project,
             true
         );
+        $rooms = $filterResult['rooms'];
 
         $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
             $rooms,
@@ -749,6 +762,11 @@ class EventController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    public function shiftPlanRoomsBatchAPI(Request $request): JsonResponse
+    {
+        return response()->json($this->shiftPlanService->getAllRoomsContent($request));
     }
 
     public function viewShiftPlan(?Project $project = null): Response
@@ -831,15 +849,17 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
+            'crafts' => Craft::query()
+                ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
+                ->with([
+                    'users',
+                    'managingUsers',
+                    'managingFreelancers',
+                    'managingServiceProviders',
+                ])
+                ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                ->orderBy('position')
+                ->get(),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
@@ -954,9 +974,9 @@ class EventController extends Controller
                 'users',
                 'freelancers',
                 'serviceProviders',
-                'qualifications',
-            ])->get(),
-            'eventTypes' => EventType::all(),
+                'qualifications:id,name,icon',
+            ])->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']),
+            'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
             'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
@@ -964,7 +984,7 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,
             'calendarWarningText' => $calendarWarningText,
-            'rooms' => Room::all(),
+            'rooms' => Room::select(['id', 'name', 'position', 'area_id'])->get(),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => $this->globalQualificationService->getAll(),
@@ -4251,19 +4271,106 @@ class EventController extends Controller
     /**
      * Return crafts for shift plan (loaded asynchronously by frontend).
      */
-    public function getShiftPlanCrafts(): JsonResponse
+    public function getShiftPlanCrafts(Request $request): JsonResponse
     {
-        $crafts = Craft::with([
-            'users',
-            'freelancers',
-            'serviceProviders',
-            'managingUsers',
-            'managingFreelancers',
-            'managingServiceProviders',
-            'qualifications'
-        ])->get();
+        $eagerLoad = [
+            'users:id,first_name,last_name,position,profile_photo_path',
+            'freelancers:id,first_name,last_name,position,profile_image',
+            'serviceProviders:id,provider_name,profile_image',
+            'qualifications:id,name,icon,available',
+        ];
+
+        if (!$request->boolean('lightweight')) {
+            $eagerLoad[] = 'managingUsers:id';
+            $eagerLoad[] = 'managingFreelancers:id';
+            $eagerLoad[] = 'managingServiceProviders:id';
+        }
+
+        $crafts = Craft::with($eagerLoad)->get();
 
         return new JsonResponse(['crafts' => $crafts]);
+    }
+
+    /**
+     * Reload a single worker for the shift plan (lightweight alternative to getShiftPlanWorkers).
+     */
+    public function getShiftPlanWorkerSingle(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'worker_id' => 'required|integer',
+            'worker_type' => 'required|string|in:user,freelancer,serviceProvider',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = IlluminateCarbon::parse($validated['start_date']);
+        $endDate = IlluminateCarbon::parse($validated['end_date']);
+        $workerId = (int) $validated['worker_id'];
+        $workerType = $validated['worker_type'];
+
+        $modelClass = match ($workerType) {
+            'user' => User::class,
+            'freelancer' => Freelancer::class,
+            'serviceProvider' => ServiceProvider::class,
+        };
+
+        $workers = $this->workerService->getWorkersForShiftPlanByIds($modelClass, [$workerId], $startDate, $endDate);
+
+        if ($workers->isEmpty()) {
+            return new JsonResponse(['worker' => null, 'workerType' => $workerType]);
+        }
+
+        $workers = $this->workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
+        $qualificationsCache = $this->workerService->buildQualificationsCache($workers);
+
+        $worker = $workers->first();
+
+        $resourceClass = match ($workerType) {
+            'user' => UserShiftPlanResource::class,
+            'freelancer' => FreelancerShiftPlanResource::class,
+            'serviceProvider' => ServiceProviderShiftPlanResource::class,
+        };
+
+        $resource = $resourceClass::make($worker);
+        $additionalData = [];
+
+        if ($workerType === 'user') {
+            $additionalData['workTimeBalance'] = $this->workingHourService->convertMinutesInHours(
+                $worker->work_time_balance ?? 0
+            );
+            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
+                $worker,
+                $startDate,
+                $endDate
+            );
+        } else {
+            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
+                $worker,
+                $startDate,
+                $endDate
+            );
+        }
+
+        $workerData = $this->workerShiftPlanService->buildWorkerData(
+            $worker,
+            $resource,
+            $qualificationsCache,
+            $startDate,
+            $endDate,
+            $workerType === 'user',
+            $additionalData
+        );
+
+        if ($workerType === 'user') {
+            $workerData = $this->workerShiftPlanService->enrichUserWorkerData(
+                $workerData, $workerId, $startDate, $endDate, $worker
+            );
+        }
+
+        return new JsonResponse([
+            'worker' => $workerData,
+            'workerType' => $workerType,
+        ]);
     }
 
     public function getTimelines(Event $event): JsonResponse

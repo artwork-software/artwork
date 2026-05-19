@@ -122,7 +122,7 @@
                         :col-widths="shiftColWidths"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
-                        :no-virtualize="true"
+                        :no-virtualize="false"
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
@@ -281,7 +281,7 @@
                                     <div class="space-y-0.5">
                                         <template v-if="getRoomDayShifts(room, day.fullDay)?.length">
                                             <template
-                                                v-for="group in groupShiftsByProject(getRoomDayShifts(room, day.fullDay), day.fullDay)"
+                                                v-for="group in getGroupedShiftsForCell(room, day.fullDay)"
                                                 :key="group.projectId ?? `no-project-${day.fullDay}`"
                                             >
                                                 <div
@@ -823,6 +823,8 @@ import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
+import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventFormattedDates, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
+import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
@@ -850,49 +852,49 @@ defineOptions({
 const ShowUserShiftsModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShowUserShiftsModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftsQualificationsAssignmentModal = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const CellMultiEditModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/CellMultiEditModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteCalendarRoomShiftEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const AddShiftModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const IndividualTimeSeriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 type ShiftPlanProps = {
@@ -1011,6 +1013,9 @@ const craftsResolved = computed(() =>
 // Provide crafts for child components (e.g. ShiftDropElement)
 provide('shiftPlanCrafts', craftsResolved)
 
+// Provide lookup maps for normalized DTO resolution
+const { setLookups, mergeLookups, resolveCraft, resolveEventType, resolveProject, resolveShiftGroup } = provideShiftPlanLookups()
+
 // Workers loaded asynchronously from API (craft-first)
 const workersLoaded = ref<{
     usersForShifts: any[]
@@ -1052,6 +1057,52 @@ async function loadShiftPlanWorkers() {
             freelancersForShifts: [],
             serviceProvidersForShifts: [],
         }
+    }
+}
+
+function numericTypeToWorkerType(type: number|string): string {
+    const map: Record<number, string> = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider' }
+    return map[type as number] ?? type
+}
+
+const recentReloads = new Map<string, number>()
+
+async function reloadSingleWorker(workerId: number|string, workerType: string) {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end || !workerId || !workerType) {
+        return loadShiftPlanWorkers()
+    }
+
+    const key = `${workerType}:${workerId}`
+    const now = Date.now()
+    const lastReload = recentReloads.get(key)
+    if (lastReload && (now - lastReload) < 2000) return
+    recentReloads.set(key, now)
+
+    try {
+        const { data } = await axios.get(route('shifts.worker.single'), {
+            params: { worker_id: workerId, worker_type: workerType, start_date: start, end_date: end }
+        })
+        if (!data.worker) return
+
+        const targetKey = workerType === 'user' ? 'usersForShifts'
+            : workerType === 'freelancer' ? 'freelancersForShifts'
+            : 'serviceProvidersForShifts'
+        const workerKey = workerType === 'user' ? 'user'
+            : workerType === 'freelancer' ? 'freelancer'
+            : 'service_provider'
+
+        const arr = workersLoaded.value[targetKey]
+        const idx = arr.findIndex((w: any) => w[workerKey]?.id === Number(workerId))
+        if (idx >= 0) {
+            arr[idx] = data.worker
+        } else {
+            arr.push(data.worker)
+        }
+    } catch {
+        // Fallback to full reload on error
+        return loadShiftPlanWorkers()
     }
 }
 
@@ -1324,6 +1375,17 @@ type CellSummary = {
 }
 
 const cellSummaryCache = new Map<string, CellSummary>()
+const groupedShiftsCache = new Map<string, ShiftGroup[]>()
+
+function getGroupedShiftsForCell(room: any, dayKey: string): ShiftGroup[] {
+    const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
+    const roomVersion = room.__v ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
+    if (!groupedShiftsCache.has(cacheKey)) {
+        groupedShiftsCache.set(cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
+    }
+    return groupedShiftsCache.get(cacheKey)!
+}
 
 function summarizeCell(room: any, dayKey: string): CellSummary {
     const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
@@ -1353,20 +1415,24 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     let totalEventHeight = 0
     for (const event of events) {
         if (!checkIfEventHasShiftsToDisplay(event)) {
+            // Resolve via lookups for normalized data
+            const evtType = event.eventType ?? resolveEventType(event.eventTypeId)
+            const evtProject = event.project ?? resolveProject(event.projectId)
+
             // Content area: py-2 (16px) + event name + mt-0.5 (2px) + time text-xs/5 (20px)
-            const nameText = `${event.eventType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
+            const nameText = `${evtType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
             const nameLines = expanded ? estimateTextLines(nameText, eventNameTextWidth) : 1
             let h = 16 + nameLines * 16 + 2 + 20
 
             // Project name bar: py-1 (8px) + text + border-b (1px)
-            if (event.project?.id) {
-                const projLines = expanded ? estimateTextLines(event.project?.name, projectBarTextWidth) : 1
+            if (evtProject?.id) {
+                const projLines = expanded ? estimateTextLines(evtProject?.name, projectBarTextWidth) : 1
                 h += 8 + projLines * 16 + 1
             }
 
             // Group bar inside event: py-1 (8px) + text + border-b (1px)
-            if (showProjectGroups && event.project?.isInGroup && event.project?.group?.length > 0 && !event.project?.isGroup) {
-                const grpLines = expanded ? estimateTextLines(event.project.group[0]?.name, groupBarTextWidth) : 1
+            if (showProjectGroups && evtProject?.isInGroup && evtProject?.group?.length > 0 && !evtProject?.isGroup) {
+                const grpLines = expanded ? estimateTextLines(evtProject.group[0]?.name, groupBarTextWidth) : 1
                 h += 8 + grpLines * 16 + 1
             }
 
@@ -1465,6 +1531,7 @@ watch(
     ],
     () => {
         cellSummaryCache.clear()
+        groupedShiftsCache.clear()
         if (expandDays.value) {
             measureBaselineMetrics()
         } else {
@@ -1563,10 +1630,10 @@ function getRoomDayShifts(room: any, day: string): any[] {
                 const capacity = q?.value ?? 0
                 const qualificationId = q?.shift_qualification_id
 
-                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-                    const items = shift[group] || []
-                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
-                }, 0)
+                const workers = shift.workers || []
+                const assignedCount = workers.filter(
+                    (item: any) => item?.pivot?.shift_qualification_id === qualificationId
+                ).length
 
                 return capacity > assignedCount
             })
@@ -1627,15 +1694,18 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     // 1) Gruppieren
     for (const shift of shifts) {
         // Nur am Starttag anzeigen, nicht an allen Tagen der Schicht
-        if (shift.startOfShift !== dayLabel) continue
+        // Compute startOfShift client-side from startDate
+        const startOfShift = shift.startOfShift ?? dayjs(shift.startDate).format('DD.MM.YYYY')
+        if (startOfShift !== dayLabel) continue
 
-        const hasProject = !!shift.project
-        const key = hasProject ? `project_${shift.project.id}` : PROJECTLESS_KEY
+        const project = shift.project ?? resolveProject(shift.projectId)
+        const hasProject = !!project
+        const key = hasProject ? `project_${project.id}` : PROJECTLESS_KEY
 
         if (!groupsMap.has(key)) {
             groupsMap.set(key, {
-                project: hasProject ? shift.project : null,
-                projectId: hasProject ? shift.project.id : null,
+                project: hasProject ? project : null,
+                projectId: hasProject ? project.id : null,
                 shifts: [],
             })
         }
@@ -1652,9 +1722,9 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
         if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
     }
     const getCraftPosition = (shift: any): number => {
-        const craftId = shift?.craft?.id ?? shift?.craft_id
+        const craftId = shift?.craftId ?? shift?.craft?.id ?? shift?.craft_id
         if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
-        return shift?.craft?.position ?? 9999
+        return 9999
     }
 
     for (const g of groups) {
@@ -1679,8 +1749,10 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     // 3) Gruppen nach frühester Startzeit sortieren (nicht A-Z)
     return groups.sort((a, b) => {
         // "ohne Projekt" ans Ende
-        if (a.project && !b.project) return -1
-        if (!a.project && b.project) return 1
+        const aProj = a.project ?? resolveProject(a.projectId)
+        const bProj = b.project ?? resolveProject(b.projectId)
+        if (aProj && !bProj) return -1
+        if (!aProj && bProj) return 1
 
         const aMin = getGroupEarliestStartMs(a)
         const bMin = getGroupEarliestStartMs(b)
@@ -1691,7 +1763,7 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
         const bId = b.projectId ?? Number.MAX_SAFE_INTEGER
         if (aId !== bId) return aId - bId
 
-        return (a.project?.name || '').localeCompare(b.project?.name || '')
+        return (aProj?.name || '').localeCompare(bProj?.name || '')
     })
 }
 
@@ -1757,7 +1829,9 @@ async function initializeShiftPlan() {
             params: baseParams,
         })
 
-        const loadedDays = metaData.days ?? []
+        // Enrich slim CalendarPeriodDTOs with computed display properties
+        clearDayPropsCache()
+        const loadedDays = enrichDays(metaData.days ?? [])
         const metaRooms = metaData.rooms ?? []
 
         days.value = loadedDays
@@ -1777,24 +1851,27 @@ async function initializeShiftPlan() {
             shiftGroupPresetsLocal.value = metaData.shiftGroupPresets
         }
 
-        const roomPayloads = await Promise.all(
-            metaRooms.map((r: any) =>
-                axios
-                    .get(route('shift.plan.room'), {
-                        params: { ...baseParams, room_id: r.roomId },
-                    })
-                    .then((res) => res.data.room),
-            ),
-        )
+        const { data: batchData } = await axios.get(route('shift.plan.rooms.batch'), {
+            params: baseParams,
+        })
 
-        newShiftPlanData.value = roomPayloads.filter(Boolean)
+        // Store lookup maps from batch response
+        if (batchData.lookups) {
+            setLookups(batchData.lookups)
+        }
+
+        newShiftPlanData.value = (batchData.rooms ?? []).filter(Boolean)
         rooms.value = normalizeShiftPlan(newShiftPlanData.value)
     } else {
+        // Enrich days from props (may already be enriched or slim)
         const initialDays = props.days ?? []
+        const enrichedDays = initialDays.length > 0 && initialDays[0]?.date !== undefined && initialDays[0]?.fullDay === undefined
+            ? enrichDays(initialDays)
+            : initialDays
         const initialShiftPlan = props.shiftPlan ?? []
 
-        days.value = initialDays
-        daysRef.value = initialDays
+        days.value = enrichedDays
+        daysRef.value = enrichedDays
 
         rooms.value = normalizeShiftPlan(initialShiftPlan)
         newShiftPlanData.value = initialShiftPlan
@@ -1913,6 +1990,7 @@ onMounted(async () => {
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
         onWorkersNeedReload: loadShiftPlanWorkers,
+        onWorkerNeedReload: reloadSingleWorker,
     })
     ShiftCalendarListener.init()
 
@@ -2465,13 +2543,17 @@ function openShowUserShiftModal(user: any, day: any) {
 }
 
 async function handleWorkerReload() {
-    await loadShiftPlanWorkers()
-    if (userToShow.value && showUserShifts.value) {
-        const key = userToShow.value.key
-        const fresh = dropWorkers.value.find((w: any) => w.key === key)
-        if (fresh) {
-            userToShow.value = fresh
+    if (userToShow.value) {
+        await reloadSingleWorker(userToShow.value.element.id, numericTypeToWorkerType(userToShow.value.type))
+        if (showUserShifts.value) {
+            const key = userToShow.value.key
+            const fresh = dropWorkers.value.find((w: any) => w.key === key)
+            if (fresh) {
+                userToShow.value = fresh
+            }
         }
+    } else {
+        await loadShiftPlanWorkers()
     }
 }
 
@@ -2556,7 +2638,7 @@ function checkIfEventHasShiftsToDisplay(event: any) {
 
     // Filter by crafts if set
     if (showCrafts && showCrafts.length > 0) {
-        shifts = shifts.filter((s: any) => showCrafts.includes(s.craft.id))
+        shifts = shifts.filter((s: any) => showCrafts.includes(s.craft?.id ?? s.craftId))
     }
 
     // Filter by not fully staffed if enabled
@@ -2566,17 +2648,14 @@ function checkIfEventHasShiftsToDisplay(event: any) {
                 ? shift.shifts_qualifications
                 : Object.values(shift?.shifts_qualifications || {})
 
-            // Check if at least one qualification has capacity (more slots than assigned users)
-            // Users are stored in shift.users, shift.freelancer, shift.serviceProviders with pivot.shift_qualification_id
+            // Check if at least one qualification has capacity (more slots than assigned workers)
             return qualifications.some((q: any) => {
                 const capacity = q?.value ?? 0
                 const qualificationId = q?.shift_qualification_id
 
-                // Count assigned people for this qualification
-                const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-                    const items = shift[group] || []
-                    return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
-                }, 0)
+                const assignedCount = (shift.workers || []).filter(
+                    (w: any) => w?.pivot?.shift_qualification_id === qualificationId
+                ).length
 
                 return capacity > assignedCount
             })
@@ -2770,8 +2849,11 @@ function toggleMultiEditModeCalendar() {
 function closeMultiEditCellModal(eventData: any) {
     showCellMultiEditModal.value = false
     if (eventData && eventData.saved) {
+        const affectedWorkers = Object.values(multiEditCellByDayAndUser.value)
         multiEditCellByDayAndUser.value = {}
-        loadShiftPlanWorkers()
+        for (const w of affectedWorkers) {
+            reloadSingleWorker(w.id, numericTypeToWorkerType(w.type))
+        }
     }
 }
 
@@ -2824,9 +2906,12 @@ function extractShiftUserIds(shift: any) {
             providerIds: [] as Array<number | string>,
         }
 
-    ;(Array.isArray(shift?.users) ? shift.users : []).forEach((u: any) => ids.userIds.push(u.id))
-    ;(Array.isArray(shift?.freelancer) ? shift.freelancer : (Array.isArray(shift?.freelancers) ? shift.freelancers : [])).forEach((f: any) => ids.freelancerIds.push(f.id))
-    ;(Array.isArray(shift?.serviceProviders) ? shift.serviceProviders : (Array.isArray(shift?.service_providers) ? shift.service_providers : [])).forEach((p: any) => ids.providerIds.push(p.id))
+    const workers = Array.isArray(shift?.workers) ? shift.workers : []
+    workers.forEach((w: any) => {
+        if (w.type === 'user') ids.userIds.push(w.id)
+        else if (w.type === 'freelancer') ids.freelancerIds.push(w.id)
+        else if (w.type === 'service_provider') ids.providerIds.push(w.id)
+    })
 
     return ids
 }
@@ -2971,7 +3056,7 @@ async function saveMultiEdit() {
         shiftsToHandle: shiftsToHandleOnMultiEdit,
     })
     resetMultiEditMode(false)
-    loadShiftPlanWorkers()
+    reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
 }
 
 function resetMultiEditMode(closeMultiEdit = true) {
@@ -3066,7 +3151,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
-                loadShiftPlanWorkers()
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     } else {
         const optimistic = new Set(oldIds)
@@ -3084,7 +3169,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
-                loadShiftPlanWorkers()
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     }
 }

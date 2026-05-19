@@ -49,8 +49,8 @@
 
             <div class="pb-10">
                 <template v-if="hasContent">
-                    <div v-for="dayData in groupedShifts" :key="dayData.day">
-                        <!-- Day header — black sticky bar -->
+                    <div v-for="dayData in localGroupedShifts" :key="dayData.day" :ref="el => setDayRef(dayData.day, el)">
+                        <!-- Day header — black sticky bar (always rendered) -->
                         <div
                             class="sticky z-30 bg-artwork-navigation-background text-white px-4 py-2.5 font-semibold text-base rounded-r-lg flex items-center gap-2"
                             :style="{ top: dayHeaderStickyTop + 'px' }"
@@ -90,6 +90,8 @@
                             </div>
                         </div>
 
+                        <!-- L2: Only render rooms/shifts when day is visible (or nearby via rootMargin) -->
+                        <template v-if="visibleDays.has(dayData.day)">
                         <div v-for="roomData in dayData.rooms" :key="roomData.room_id" class="mb-1">
                             <!-- ============ Mode B/D: vertical room bar layout (show_appointments active) ============ -->
                             <template v-if="showAppointments">
@@ -443,6 +445,8 @@
                                 </template>
                             </template>
                         </div>
+                        </template>
+                        <div v-else style="min-height: 100px" />
                     </div>
                 </template>
 
@@ -511,7 +515,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, onBeforeUnmount, nextTick, defineAsyncComponent} from 'vue';
+import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, onUnmounted, nextTick, defineAsyncComponent} from 'vue';
 import {Link, router, usePage} from '@inertiajs/vue3';
 import {useI18n} from 'vue-i18n';
 import {usePermission} from '@/Composeables/Permission.js';
@@ -573,6 +577,159 @@ const props = defineProps({
     currentUserCrafts: Array,
 });
 
+// --- L3: Local reactive copy of groupedShifts + WebSocket listeners ---
+const localGroupedShifts = shallowRef(props.groupedShifts || []);
+
+// Sync when Inertia reloads (date change, filter changes)
+watch(() => props.groupedShifts, (newVal) => {
+    localGroupedShifts.value = newVal || [];
+    shiftsVersion.value++;
+});
+
+// --- L4: Version counter for cache invalidation ---
+const shiftsVersion = ref(0);
+
+// --- L3b: WebSocket listeners ---
+const activeChannels = new Set();
+
+function setupListeners() {
+    cleanupListeners();
+    const roomIds = new Set();
+    for (const dayData of localGroupedShifts.value) {
+        for (const roomData of dayData.rooms || []) {
+            if (roomData.room_id) roomIds.add(roomData.room_id);
+        }
+    }
+    for (const roomId of roomIds) {
+        const shiftChannel = `shift-plan.room.${roomId}`;
+        const destroyChannel = `destroy.events.room.${roomId}`;
+        activeChannels.add(shiftChannel);
+        activeChannels.add(destroyChannel);
+        window.Echo.private(shiftChannel)
+            .listen('.shift-created', (data) => updateShiftLocally(data))
+            .listen('.shift-assign-entity', (data) => updateShiftLocally(data))
+            .listen('.shift-remove-entity', (data) => updateShiftLocally(data))
+            .listen('.shift-updated', (data) => updateShiftLocally(data))
+            .listen('.shift-updated.in.event', (data) => updateShiftLocally(data));
+        window.Echo.private(destroyChannel)
+            .listen('.shift-destroyed.in.event', (data) => removeShiftLocally(data));
+    }
+}
+
+function cleanupListeners() {
+    for (const ch of activeChannels) window.Echo.leave(ch);
+    activeChannels.clear();
+}
+
+function updateShiftLocally(data) {
+    if (!data?.shift) return;
+    const shiftData = data.shift;
+    const targetRoomId = data.roomId ?? shiftData.roomId;
+
+    for (const dayData of localGroupedShifts.value) {
+        for (const roomData of dayData.rooms || []) {
+            const idx = (roomData.shifts || []).findIndex(s => s.id === shiftData.id);
+            if (idx !== -1) {
+                const existing = roomData.shifts[idx];
+                existing.workers = shiftData.workers ?? existing.workers;
+                existing.shifts_qualifications = shiftData.shifts_qualifications ?? existing.shifts_qualifications;
+                existing.globalQualifications = shiftData.globalQualifications ?? existing.globalQualifications;
+                existing.description = shiftData.description ?? existing.description;
+                existing.start = shiftData.start ?? existing.start;
+                existing.end = shiftData.end ?? existing.end;
+                existing.is_committed = shiftData.isCommitted ?? shiftData.is_committed ?? existing.is_committed;
+                existing.break_minutes = shiftData.break_minutes ?? existing.break_minutes;
+
+                localGroupedShifts.value = [...localGroupedShifts.value];
+                shiftsVersion.value++;
+                return;
+            }
+        }
+    }
+
+    // Shift not found — it might be newly created, add it to the correct day/room
+    if (shiftData.startDate && targetRoomId) {
+        const shiftDay = shiftData.startDate;
+        for (const dayData of localGroupedShifts.value) {
+            if (dayData.day === shiftDay) {
+                for (const roomData of dayData.rooms || []) {
+                    if (roomData.room_id === targetRoomId) {
+                        roomData.shifts = roomData.shifts || [];
+                        roomData.shifts.push({
+                            id: shiftData.id,
+                            start: shiftData.start,
+                            end: shiftData.end,
+                            start_date: shiftData.startDate,
+                            end_date: shiftData.endDate,
+                            break_minutes: shiftData.break_minutes,
+                            description: shiftData.description,
+                            craft_id: shiftData.craftId,
+                            room_id: targetRoomId,
+                            event_id: shiftData.eventId,
+                            is_committed: shiftData.isCommitted ?? false,
+                            shift_group_id: shiftData.shiftGroupId,
+                            craft: shiftData.craft,
+                            shift_group: shiftData.shift_group,
+                            project: shiftData.project,
+                            event: shiftData.event,
+                            workers: shiftData.workers || [],
+                            shifts_qualifications: shiftData.shifts_qualifications || [],
+                            globalQualifications: shiftData.globalQualifications || [],
+                        });
+                        localGroupedShifts.value = [...localGroupedShifts.value];
+                        shiftsVersion.value++;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function removeShiftLocally(data) {
+    if (!data?.shift) return;
+    const shiftId = data.shift.id;
+
+    for (const dayData of localGroupedShifts.value) {
+        for (const roomData of dayData.rooms || []) {
+            const idx = (roomData.shifts || []).findIndex(s => s.id === shiftId);
+            if (idx !== -1) {
+                roomData.shifts.splice(idx, 1);
+                localGroupedShifts.value = [...localGroupedShifts.value];
+                shiftsVersion.value++;
+                return;
+            }
+        }
+    }
+}
+
+// --- L2: Lazy rendering via IntersectionObserver ---
+const visibleDays = ref(new Set());
+let dayObserver = null;
+
+function initDayObserver() {
+    dayObserver = new IntersectionObserver((entries) => {
+        let changed = false;
+        for (const entry of entries) {
+            const key = entry.target.__dayKey;
+            if (!key) continue;
+            if (entry.isIntersecting) {
+                if (!visibleDays.value.has(key)) { visibleDays.value.add(key); changed = true; }
+            } else {
+                if (visibleDays.value.has(key)) { visibleDays.value.delete(key); changed = true; }
+            }
+        }
+        if (changed) visibleDays.value = new Set(visibleDays.value);
+    }, { rootMargin: '400px 0px' });
+}
+
+const setDayRef = (dayKey, el) => {
+    if (el && dayObserver) {
+        el.__dayKey = dayKey;
+        dayObserver.observe(el);
+    }
+};
+
 // Sticky offset measurement
 const functionBarRef = ref(null);
 const multiEditBarRef = ref(null);
@@ -588,6 +745,8 @@ const dayHeaderStickyTop = computed(() => {
 });
 
 onMounted(() => {
+    initDayObserver();
+    setupListeners();
     nextTick(() => {
         const el = functionBarRef.value?.$el || functionBarRef.value;
         if (el) {
@@ -604,6 +763,11 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     resizeObserver?.disconnect();
+});
+
+onUnmounted(() => {
+    cleanupListeners();
+    dayObserver?.disconnect();
 });
 
 // Multi-edit state
@@ -635,15 +799,11 @@ const hideShiftRow = computed(() =>
     !!props.listViewSettings?.hide_shift_row && !!props.listViewSettings?.detailed_shift_overview
 );
 
-// Normalize shift data: Laravel serializes serviceProvider relation as service_provider,
-// but SingleShiftInDailyShiftView expects serviceProviders
-const normalizeShift = (shift) => ({
-    ...shift,
-    serviceProviders: shift.service_provider || shift.serviceProvider || shift.serviceProviders || [],
-});
+// Normalize shift data for downstream components
+const normalizeShift = (shift) => shift;
 
 const hasContent = computed(() => {
-    return props.groupedShifts && props.groupedShifts.length > 0;
+    return localGroupedShifts.value && localGroupedShifts.value.length > 0;
 });
 
 const formatDayHeader = (dateString) => {
@@ -692,34 +852,24 @@ const hexToRgba = (hex, alpha = 0.12) => {
 // templates don't recompute worker counts / qualification rows / colors on
 // every render pass — important when many shifts are visible.
 const shiftDisplayCache = computed(() => {
+    shiftsVersion.value; // dependency tracking for reactive invalidation
     const cache = new Map();
-    if (!props.groupedShifts) return cache;
+    if (!localGroupedShifts.value) return cache;
 
-    for (const dayData of props.groupedShifts) {
+    for (const dayData of localGroupedShifts.value) {
         for (const roomData of dayData.rooms || []) {
             for (const shift of roomData.shifts || []) {
-                let used = (shift.users?.length || 0)
-                    + (shift.freelancer?.length || 0)
-                    + (shift.service_provider?.length
-                        || shift.serviceProvider?.length
-                        || shift.serviceProviders?.length
-                        || 0);
+                const workers = shift.workers || [];
+                let used = workers.length;
 
                 let max = 0;
                 const rows = [];
                 shift.shifts_qualifications?.forEach((sq) => {
                     max += sq.value ?? 0;
                     if (!sq.value || sq.value === 0) return;
-                    let assigned = 0;
-                    shift.users?.forEach((u) => {
-                        if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
-                    shift.freelancer?.forEach((f) => {
-                        if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
-                    (shift.service_provider || shift.serviceProvider || shift.serviceProviders || []).forEach((p) => {
-                        if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++;
-                    });
+                    let assigned = workers.filter(
+                        (w) => w.pivot?.shift_qualification_id === sq.shift_qualification_id
+                    ).length;
                     rows.push({
                         shift_qualification_id: sq.shift_qualification_id,
                         maxWorkerCount: sq.value,
@@ -764,10 +914,11 @@ const getShiftQualificationIcon = (id) => shiftQualificationIconMap.value.get(id
 // Templates read from the Map instead of calling renderShiftSections() inline,
 // which would re-run on every render tick.
 const sectionsByRoomKey = computed(() => {
+    shiftsVersion.value; // dependency tracking for reactive invalidation
     const map = new Map();
-    if (!props.groupedShifts) return map;
+    if (!localGroupedShifts.value) return map;
 
-    for (const dayData of props.groupedShifts) {
+    for (const dayData of localGroupedShifts.value) {
         for (const roomData of dayData.rooms || []) {
             const shifts = roomData.shifts || [];
             const sections = [];

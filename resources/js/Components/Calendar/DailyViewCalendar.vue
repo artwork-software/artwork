@@ -113,6 +113,7 @@ import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInC
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import { getDaysInRange, computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 
@@ -268,8 +269,14 @@ const eventEndMinutesLocal = (event) => {
 };
 
 
+const getEventDays = (event) => {
+    return Array.isArray(event?.daysOfEvent) && event.daysOfEvent.length > 0
+        ? event.daysOfEvent
+        : getDaysInRange(event?.start, event?.end);
+};
+
 const dayPosOf = (event, fullDay) => {
-    const days = Array.isArray(event?.daysOfEvent) ? event.daysOfEvent : [];
+    const days = getEventDays(event);
     const idx = days.indexOf(fullDay);
     if (idx === -1) return 'none';
     if (days.length === 1) return 'single';
@@ -568,11 +575,12 @@ const getVisibleHourCount = (day) => {
 };
 
 const shouldRenderEvent = (event, day, hour) => {
-    const isStartDay = day.fullDay === event.daysOfEvent[0];
-    const isEndDay = day.fullDay === event.daysOfEvent[event.daysOfEvent.length - 1];
+    const days = getEventDays(event);
+    const isStartDay = day.fullDay === days[0];
+    const isEndDay = day.fullDay === days[days.length - 1];
     const isMiddleDay =
-        day.fullDay !== event.daysOfEvent[0] &&
-        day.fullDay !== event.daysOfEvent[event.daysOfEvent.length - 1];
+        day.fullDay !== days[0] &&
+        day.fullDay !== days[days.length - 1];
 
     // Normalize hour values to numeric hours (0-23) for robust comparison
     const toHourNumber = (h) => {
@@ -636,9 +644,10 @@ const getEventStyle = (event, day, hour, zoom_factor, roomEvents) => {
     const perMinutePx = perHourPx / 60;
     const BORDER_PX = 1; // matches border-b on each hour row div
 
-    // Parse start/end clock minutes from formattedDates (most reliable)
-    const startTimeStr = event?.formattedDates?.startTime; // "HH:mm"
-    const endTimeStr = event?.formattedDates?.endTime;     // "HH:mm"
+    // Parse start/end clock minutes from event start/end datetime
+    const resolvedDates = event?.formattedDates ?? computeEventFormattedDates(event?.start, event?.end);
+    const startTimeStr = resolvedDates?.startTime; // "HH:mm"
+    const endTimeStr = resolvedDates?.endTime;     // "HH:mm"
 
     const startClockMin = startTimeStr ? parseHHMM(startTimeStr)
         : (toClockMinutes(event?.startHour) + (parseInt(event?.minutesFormStartHourToStart, 10) || 0));
@@ -646,7 +655,8 @@ const getEventStyle = (event, day, hour, zoom_factor, roomEvents) => {
         : minutesFromDateString(event?.end);
 
     const pos = dayPosOf(event, day.fullDay);
-    const isMultiDay = (event?.daysOfEvent?.length ?? 1) > 1;
+    const eventDays = getEventDays(event);
+    const isMultiDay = eventDays.length > 1;
 
     // Compute column layout for overlapping events
     const layout = computeEventLayout(roomEvents || [], day);

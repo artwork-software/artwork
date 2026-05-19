@@ -2,31 +2,23 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
-use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
-use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventDTOWithVerifications;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
 use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
-use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
-
-use function PHPUnit\Framework\isFalse;
 
 class EventPlanningCalendarService
 {
     use MapRoomsToContentForCalendar;
 
     public function __construct(
-        // private AuthManager         $auth,
-        //private CalendarDataService $calendarDataService
     ) {
     }
 
@@ -99,6 +91,7 @@ class EventPlanningCalendarService
         $projectIds = $events->pluck('project_id')->unique();
         $userIds = $events->pluck('user_id')->unique();
         $eventStatusIds = $events->pluck('event_status_id')->unique();
+        $eventIds = $events->pluck('id');
 
         $users = User::whereIn('id', $userIds)
             ->select(['id', 'first_name', 'last_name', 'position', 'email'])
@@ -119,13 +112,22 @@ class EventPlanningCalendarService
             ->get()
             ->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => EventDTOWithVerifications::fromModel(
+        // Bulk-load rejected verifications to avoid N+1
+        $verificationsByEvent = EventVerification::whereIn('event_id', $eventIds)
+            ->where('status', 'rejected')
+            ->orderBy('created_at', 'desc')
+            ->with('verifier')
+            ->get()
+            ->groupBy('event_id');
+
+        $eventDTOs = $events->map(fn ($event) => EventDTOWithVerifications::fromModel(
             $event,
             $userCalendarSettings,
             $projects,
             $eventTypes,
             $users,
-            $eventStatuses
+            $eventStatuses,
+            $verificationsByEvent,
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
+use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 
@@ -18,9 +19,15 @@ trait MapRoomsToContentForCalendar
             $content = $period;
 
             $groupedEvents = $room->events->flatMap(
-                fn($eventDTO) => collect($eventDTO->daysOfEvent)->map(
-                    fn($date) => ['date' => $date, 'event' => $eventDTO]
-                )
+                fn($eventDTO) => collect(
+                    CarbonPeriod::create(
+                        Carbon::parse($eventDTO->start),
+                        Carbon::parse($eventDTO->end)
+                    )
+                )->map(fn($date) => [
+                    'date' => $date->format('d.m.Y'),
+                    'event' => $eventDTO,
+                ])
             )->groupBy('date');
 
             foreach ($groupedEvents as $date => $eventsOnDate) {

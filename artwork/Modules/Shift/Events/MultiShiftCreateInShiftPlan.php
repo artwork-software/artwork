@@ -48,8 +48,20 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
+        $relations = [
+            'shiftsQualifications',
+            'globalQualifications',
+            'users.globalQualifications',
+            'freelancer.globalQualifications',
+            'serviceProvider.globalQualifications',
+            'project',
+        ];
+
         return [
-            'shifts' => $this->shifts->map(fn(Shift $shift) => ShiftDTO::fromModel($shift->fresh())),
+            'shifts' => $this->shifts->map(function (Shift $shift) use ($relations) {
+                $freshShift = $shift->fresh($relations);
+                return ShiftDTO::fromModel($freshShift, $freshShift->project);
+            }),
         ];
     }
 }

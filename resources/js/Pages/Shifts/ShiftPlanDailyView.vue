@@ -127,10 +127,15 @@
             <div
                 v-for="day in daysLocal"
                 :key="day.withoutFormat"
+                :ref="el => setDayRef(day.withoutFormat, el)"
+                :style="!visibleDays.has(day.withoutFormat)
+                    ? { minHeight: (dayHeights.get(day.withoutFormat) ?? estimateDayHeight(day)) + 'px' }
+                    : undefined"
                 class="flex flex-col w-full h-full relative ml-1"
                 :class="props.isInProjectView ? 'mt-5' : ''"
             >
                 <div v-if="!day.isExtraRow">
+                    <!-- Day Header: always render (lightweight) -->
                     <div
                         class="flex items-center w-full bg-artwork-navigation-background text-white sticky ml-1 z-30"
                         :style="dayHeaderStyle"
@@ -196,49 +201,52 @@
                         </div>
                     </div>
 
-                    <div
-                        class="grid grid-cols-[3rem_1fr] ml-1"
-                        v-for="room in (roomsForDayMap.get(day.fullDay) || [])"
-                        :key="room.roomId ?? room.id ?? room.roomName"
-                    >
+                    <!-- Rooms Grid: only render when day is visible or nearby (P1 lazy rendering) -->
+                    <template v-if="visibleDays.has(day.withoutFormat)">
                         <div
-                            :ref="el => setRoomContainerRef(roomDayKey(day.fullDay, room), el)"
-                            class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed"
+                            class="grid grid-cols-[3rem_1fr] ml-1"
+                            v-for="room in getRoomsToRender(day)"
+                            :key="room.roomId ?? room.id ?? room.roomName"
                         >
-                            <div class="relative group text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4 overflow-visible">
-                                <span
-                                    :ref="el => setRoomNameRef(roomDayKey(day.fullDay, room), el)"
-                                    class="inline-block flex-none truncate"
-                                    :style="{ maxWidth: getRoomNameMaxWidth(roomDayKey(day.fullDay, room)) }"
-                                >{{ room.roomName }}</span>
-                                <div v-if="isRoomNameTruncated(roomDayKey(day.fullDay, room))" class="absolute hidden group-hover:block top-40 ml-22 z-9999 rotate-90">
-                                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                        {{ room.roomName }}
+                            <div
+                                :ref="el => setRoomContainerRef(roomDayKey(day.fullDay, room), el)"
+                                class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-white py-4 border-t-2 border-dashed"
+                            >
+                                <div class="relative group text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4 overflow-visible">
+                                    <span
+                                        :ref="el => setRoomNameRef(roomDayKey(day.fullDay, room), el)"
+                                        class="inline-block flex-none truncate"
+                                        :style="{ maxWidth: getRoomNameMaxWidth(roomDayKey(day.fullDay, room)) }"
+                                    >{{ room.roomName }}</span>
+                                    <div v-if="isRoomNameTruncated(roomDayKey(day.fullDay, room))" class="absolute hidden group-hover:block top-40 ml-22 z-9999 rotate-90">
+                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                            {{ room.roomName }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex items-stretch px-4 py-2">
-                            <div class="p-4 w-full relative">
-                                <DailyRoomSplitTimeline
-                                    :day="day.fullDay"
-                                    :events="getEventsForRoomDay(room, day.fullDay)"
-                                    :shifts="getFilteredShiftsForRoomDay(room, day.fullDay)"
-                                    :event-types="eventTypesResolved"
-                                    :rooms="roomsArray"
-                                    :first_project_calendar_tab_id="first_project_calendar_tab_idResolved"
-                                    :event-statuses="eventStatusesResolved"
-                                    :crafts="craftsResolved"
-                                    :shift-qualifications="shiftQualificationsArray"
-                                    :px-per-min="0.5"
-                                    :gap-threshold-min="90"
-                                    @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
-                                    @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
-                                    @addShiftByPresetOrGroup="openAddShiftByPresetOrGroup(day, room)"
-                                />
+                            <div class="flex items-stretch px-4 py-2">
+                                <div class="p-4 w-full relative">
+                                    <DailyRoomSplitTimeline
+                                        :day="day.fullDay"
+                                        :events="getEventsForRoomDay(room, day.fullDay)"
+                                        :shifts="getFilteredShiftsForRoomDay(room, day.fullDay)"
+                                        :event-types="eventTypesResolved"
+                                        :rooms="roomsArray"
+                                        :first_project_calendar_tab_id="first_project_calendar_tab_idResolved"
+                                        :event-statuses="eventStatusesResolved"
+                                        :crafts="craftsResolved"
+                                        :shift-qualifications="shiftQualificationsArray"
+                                        :px-per-min="0.5"
+                                        :gap-threshold-min="90"
+                                        @addEvent="openNewEventModalWithBaseData(day.withoutFormat, room.roomId)"
+                                        @addShift="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
+                                        @addShiftByPresetOrGroup="openAddShiftByPresetOrGroup(day, room)"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
                 </div>
             </div>
 
@@ -305,7 +313,7 @@
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import { ref, provide, onMounted, onUnmounted, watch, computed, nextTick, shallowRef } from "vue";
+import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -323,10 +331,12 @@ import {
     IconCalendarUser, IconFileTypeXls,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
+import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
+import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -339,7 +349,9 @@ type AnyRoom = any
 type AnyEvent = any
 
 const page = usePage()
-const pageProps = computed(() => page.props).value
+const pageProps = computed(() => page.props)
+
+const { mergeLookups } = provideShiftPlanLookups()
 
 
 const props = defineProps({
@@ -383,6 +395,10 @@ const shiftQualificationsResolved = computed(() => {
 
 // Crafts loaded asynchronously from API
 const craftsLoaded = ref<any[]>([])
+// G4a: Cache crafts source reference to avoid re-sorting identical arrays
+let _lastCraftsSource: any[] | null = null
+let _lastCraftsSorted: any[] = []
+
 const craftsResolved = computed(() => {
     let result: any[]
     if (craftsLoaded.value?.length) {
@@ -396,7 +412,10 @@ const craftsResolved = computed(() => {
             result = Array.isArray(fromPage) ? fromPage : Object.values(fromPage)
         }
     }
-    return result.slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+    if (result === _lastCraftsSource) return _lastCraftsSorted
+    _lastCraftsSource = result
+    _lastCraftsSorted = result.slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+    return _lastCraftsSorted
 })
 
 // Workers loaded asynchronously from API (craft-first), für spätere Nutzung vorbereitet
@@ -466,11 +485,12 @@ const filterOptionsResolved = computed(() => props.filterOptions && Object.keys(
 const personalFiltersResolved = computed(() => props.personalFilters && Object.keys(props.personalFilters).length ? props.personalFilters : (page.props.personalFilters ?? {}))
 const user_filtersResolved = computed(() => props.user_filters && Object.keys(props.user_filters).length ? props.user_filters : (page.props.user_filters ?? {}))
 
-provide("event_properties", computed(() => {
-    return (props.event_properties && Object.keys(props.event_properties).length)
+provide("event_properties",
+    (props.event_properties && Object.keys(props.event_properties).length)
         ? props.event_properties
         : (page.props.event_properties ?? {})
-}).value)
+)
+
 
 /**
  * Lokaler State
@@ -478,11 +498,15 @@ provide("event_properties", computed(() => {
 const showCalendarWarning = ref(props.calendarWarningText)
 const daysLocal = shallowRef<any[]>(props.days ?? [])
 
-// shiftPlanCopy
-// WICHTIG: muss tief reaktiv sein, da Websocket-Listener eventsById/shiftsById und content[day].eventIds/shiftIds mutiert.
-const shiftPlanCopy = ref<any[]>(
+// G4: Stable empty array to avoid creating new references
+const EMPTY_ARRAY: readonly any[] = Object.freeze([])
+
+// shiftPlanCopy — shallowRef because the WebSocket listener mutates nested data in-place.
+// We use eventsVersion to trigger rebuilds of the events index only when events change.
+const shiftPlanCopy = shallowRef<any[]>(
     Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
 )
+const eventsVersion = ref(0)
 
 const shiftToEdit = ref(null)
 const roomForShiftAdd = ref<number | null>(null)
@@ -541,6 +565,92 @@ const isPlanning = ref(false)
 const roomCollisions = ref<any[]>([])
 const dailyViewMode = ref<boolean>(page.props.auth.user.daily_view ?? false)
 
+// ── P1: Lazy Day-Section Rendering via IntersectionObserver ──
+const visibleDays = ref(new Set<string>())
+const dayHeights = new Map<string, number>()
+
+// G5: Estimated height for never-rendered days so they occupy realistic space
+const ESTIMATED_ROOM_HEIGHT_PX = 200
+const DAY_HEADER_HEIGHT_PX = 60
+
+function estimateDayHeight(day: any): number {
+    const roomCount = roomsForDayMap.value.get(day.fullDay)?.length
+        ?? (shiftPlanCopy.value?.length ?? 5)
+    return DAY_HEADER_HEIGHT_PX + roomCount * ESTIMATED_ROOM_HEIGHT_PX
+}
+
+// G2: Progressive room rendering — mount rooms in batches per frame
+const visibleRoomCounts = ref(new Map<string, number>())
+const INITIAL_ROOMS_BATCH = 4
+let _isUnmounted = false
+
+onBeforeUnmount(() => { _isUnmounted = true })
+
+function progressivelyRevealRooms(dayKey: string) {
+    if (_isUnmounted) return
+    const day = daysLocal.value.find(d => d.withoutFormat === dayKey)
+    if (!day) return
+    const totalRooms = roomsForDayMap.value.get(day.fullDay)?.length ?? 0
+    const current = visibleRoomCounts.value.get(dayKey) ?? 0
+    if (current >= totalRooms) return
+
+    requestAnimationFrame(() => {
+        if (_isUnmounted) return
+        const next = Math.min(current + 4, totalRooms)
+        const updated = new Map(visibleRoomCounts.value)
+        updated.set(dayKey, next)
+        visibleRoomCounts.value = updated
+        if (next < totalRooms) progressivelyRevealRooms(dayKey)
+    })
+}
+
+function getRoomsToRender(day: any): any[] {
+    const allRooms = roomsForDayMap.value.get(day.fullDay) || EMPTY_ARRAY
+    const maxCount = visibleRoomCounts.value.get(day.withoutFormat)
+    if (maxCount === undefined) return allRooms as any[]
+    return allRooms.slice(0, maxCount)
+}
+
+const dayObserver = typeof IntersectionObserver !== 'undefined'
+    ? new IntersectionObserver((entries) => {
+        let changed = false
+        for (const entry of entries) {
+            const key = (entry.target as any).__dayKey
+            if (!key) continue
+            if (entry.isIntersecting) {
+                if (!visibleDays.value.has(key)) { visibleDays.value.add(key); changed = true }
+            } else {
+                dayHeights.set(key, entry.target.getBoundingClientRect().height)
+                if (visibleDays.value.has(key)) { visibleDays.value.delete(key); changed = true }
+            }
+        }
+        if (changed) visibleDays.value = new Set(visibleDays.value)
+    }, { rootMargin: '300px 0px' })
+    : null
+
+const setDayRef = (dayKey: string, el: HTMLElement | null) => {
+    if (!dayObserver) return
+    if (el) {
+        (el as any).__dayKey = dayKey
+        dayObserver.observe(el)
+    } else if (el === null) {
+        // el is null on unmount — no-op (we can't unobserve without the element ref)
+    }
+}
+
+// G2: Watch visibleDays to progressively reveal rooms for newly visible days
+watch(visibleDays, (newSet, oldSet) => {
+    for (const dayKey of newSet) {
+        if (!oldSet?.has(dayKey)) {
+            visibleRoomCounts.value.set(dayKey, INITIAL_ROOMS_BATCH)
+            progressivelyRevealRooms(dayKey)
+        }
+    }
+    for (const [key] of visibleRoomCounts.value) {
+        if (!newSet.has(key)) visibleRoomCounts.value.delete(key)
+    }
+})
+
 // Key pro Tag+Raum (wichtig!)
 const roomDayKey = (dayLabel: string, room: any) => {
     const roomId = room?.roomId ?? room?.id
@@ -554,8 +664,15 @@ const roomContainerRefs = new Map<string, HTMLElement | null>()
 const roomNameTruncated = ref(new Map<string, boolean>())
 const roomContainerHeights = ref(new Map<string, number>())
 
-// ResizeObserver pro Zeile (damit Höhe mitwächst, wenn Timelines sich ändern)
-const roomResizeObservers = new Map<string, ResizeObserver>()
+// ── P3: Single shared ResizeObserver for all room containers ──
+const sharedRoomObserver = typeof ResizeObserver !== 'undefined'
+    ? new ResizeObserver((entries) => {
+        for (const entry of entries) {
+            const key = (entry.target as any).__roomDayKey
+            if (key) updateRoomContainerHeight(key)
+        }
+    })
+    : null
 
 const setRoomNameRef = (key: string, el: HTMLElement | null) => {
     if (el) {
@@ -567,24 +684,14 @@ const setRoomNameRef = (key: string, el: HTMLElement | null) => {
 }
 
 const setRoomContainerRef = (key: string, el: HTMLElement | null) => {
-    // alten Observer weg
-    const old = roomResizeObservers.get(key)
-    if (old) old.disconnect()
-    roomResizeObservers.delete(key)
-
     if (el) {
+        (el as any).__roomDayKey = key
         roomContainerRefs.set(key, el)
-
-        // direkt messen
         nextTick(() => updateRoomContainerHeight(key))
-
-        // bei jeder Größenänderung neu messen
-        if ("ResizeObserver" in window) {
-            const ro = new ResizeObserver(() => updateRoomContainerHeight(key))
-            ro.observe(el)
-            roomResizeObservers.set(key, ro)
-        }
+        sharedRoomObserver?.observe(el)
     } else {
+        const old = roomContainerRefs.get(key)
+        if (old) sharedRoomObserver?.unobserve(old)
         roomContainerRefs.delete(key)
     }
 }
@@ -673,24 +780,36 @@ function getRoomDayShifts(room: any, day: string): any[] {
     return shifts
 }
 
+// P4: Optimized event index builder — cached extractDate, native Date loop, dedup multi-day
 function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEvent[]>> {
     const index = new Map<any, Map<string, AnyEvent[]>>()
+    const dateCache = new Map<string, string | null>()
+
+    const extractDateCached = (raw: any): string | null => {
+        const key = String(raw ?? '')
+        let result = dateCache.get(key)
+        if (result === undefined) { result = extractDate(raw); dateCache.set(key, result) }
+        return result
+    }
 
     const push = (roomId: any, dayIso: string, ev: AnyEvent) => {
-        if (!index.has(roomId)) index.set(roomId, new Map())
-        const byDay = index.get(roomId)!
-        if (!byDay.has(dayIso)) byDay.set(dayIso, [])
-        const arr = byDay.get(dayIso)!
+        let byDay = index.get(roomId)
+        if (!byDay) { byDay = new Map(); index.set(roomId, byDay) }
+        let arr = byDay.get(dayIso)
+        if (!arr) { arr = []; byDay.set(dayIso, arr) }
         if (ev?.id != null && arr.some(x => x?.id === ev.id)) return
         arr.push(ev)
     }
 
+    const MS_PER_DAY = 86_400_000
+
     for (const room of rooms || []) {
         const roomId = room.roomId ?? room.id
         const content = room?.content || {}
+        const processedMultiDay = new Set<number>()
 
         for (const dayKey of Object.keys(content)) {
-            const dayIso = extractDate(dayKey)
+            const dayIso = extractDateCached(dayKey)
             const dayEvents: AnyEvent[] = getRoomDayEvents(room, dayKey)
 
             if (dayIso) {
@@ -698,17 +817,24 @@ function buildRoomDayEventsIndex(rooms: AnyRoom[]): Map<any, Map<string, AnyEven
             }
 
             for (const ev of dayEvents) {
-                const startIso = extractDate(ev.start || ev.startDate || ev.start_date)
-                const endIso   = extractDate(ev.end   || ev.endDate   || ev.end_date)
+                if (ev?.id != null && processedMultiDay.has(ev.id)) continue
+
+                const startIso = extractDateCached(ev.start || ev.startDate || ev.start_date)
+                const endIso   = extractDateCached(ev.end   || ev.endDate   || ev.end_date)
                 if (!startIso || !endIso || startIso === endIso) continue
 
-                let d = dayjs(startIso)
-                const end = dayjs(endIso)
-                if (!d.isValid() || !end.isValid()) continue
+                if (ev?.id != null) processedMultiDay.add(ev.id)
 
-                while (d.isBefore(end) || d.isSame(end, "day")) {
-                    push(roomId, d.format("YYYY-MM-DD"), ev)
-                    d = d.add(1, "day")
+                const startMs = new Date(startIso + 'T00:00:00').getTime()
+                const endMs = new Date(endIso + 'T00:00:00').getTime()
+                if (isNaN(startMs) || isNaN(endMs)) continue
+
+                for (let ms = startMs; ms <= endMs; ms += MS_PER_DAY) {
+                    const d = new Date(ms)
+                    const ymd = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0')
+                    push(roomId, ymd, ev)
                 }
             }
         }
@@ -739,8 +865,9 @@ const initializeDailyShiftPlan = async () => {
         })
 
         const metaRooms = metaData.rooms ?? []
-        daysLocal.value = metaData.days ?? []
+        daysLocal.value = enrichDays(metaData.days ?? [])
 
+        // Show skeleton rooms immediately while batch loads
         shiftPlanCopy.value = metaRooms.map((r: any) => ({
             roomId: r.roomId,
             roomName: r.roomName,
@@ -758,27 +885,26 @@ const initializeDailyShiftPlan = async () => {
                 : Object.values(metaData.shiftGroupPresets ?? {})
         }
 
-        const roomPayloads = await Promise.all(
-            metaRooms.map((r: any) =>
-                axios
-                    .get(route("shift.plan.room"), {
-                        params: { ...baseParams, room_id: r.roomId },
-                    })
-                    .then((res) => res.data.room),
-            ),
-        )
+        // Single batch request instead of N per-room requests — shares one buildShiftPlanContext
+        const { data: batchData } = await axios.get(route("shift.plan.rooms.batch"), {
+            params: baseParams,
+        })
 
-        shiftPlanCopy.value = roomPayloads.filter(Boolean)
+        if (batchData.lookups) mergeLookups(batchData.lookups)
+        shiftPlanCopy.value = (batchData.rooms ?? []).filter(Boolean)
+        triggerRef(shiftPlanCopy)
         return
     }
 
-    daysLocal.value = props.days ?? []
+    daysLocal.value = enrichDays(props.days ?? [])
     shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
+    triggerRef(shiftPlanCopy)
 }
 
 watch(() => props.days, (v) => { daysLocal.value = v ?? [] })
 watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
+    triggerRef(shiftPlanCopy)
 })
 
 /**
@@ -789,33 +915,92 @@ const craftIdSet = computed<Set<any>>(() => {
     return new Set(Array.isArray(ids) ? ids : [])
 })
 
-function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
-    const shiftsRaw: any[] = getRoomDayShifts(room, dayLabel)
-    const set = craftIdSet.value
-    const filtered = set.size === 0 ? shiftsRaw : shiftsRaw.filter(s => set.has(s?.craft?.id))
-
-    // Sortierung: primär nach Startzeit, sekundär nach Craft-Position aus Settings
-    const craftPositionMap = new Map<number, number>()
+const craftPositionMap = computed(() => {
+    const map = new Map<number, number>()
     for (const c of craftsResolved.value ?? []) {
-        if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
+        if (c?.id != null) map.set(c.id, c.position ?? 0)
     }
+    return map
+})
+
+// P2: Pre-computed index — filter + sort once, then O(1) lookup
+// Debounced to prevent rapid rebuilds during WebSocket bursts
+const filteredShiftsIndex = shallowRef(new Map<string, any[]>())
+
+function rebuildFilteredShiftsIndex() {
+    const map = new Map<string, any[]>()
+    const rooms = shiftPlanCopy.value || []
+    const set = craftIdSet.value
+    const posMap = craftPositionMap.value
+    const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings
+    const showOnlyNotFullyStaffed = (settings as any)?.show_only_not_fully_staffed_shifts
+
     const getCraftPos = (s: any): number => {
         const craftId = s?.craft?.id ?? s?.craft_id
-        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
-        return s?.craft?.position ?? 9999
+        return (craftId != null && posMap.has(craftId)) ? posMap.get(craftId)! : (s?.craft?.position ?? 9999)
     }
 
-    return filtered.slice().sort((a: any, b: any) => {
-        const aStart = (a.start ?? '').toString()
-        const bStart = (b.start ?? '').toString()
-        if (aStart !== bStart) return aStart.localeCompare(bStart)
+    for (const room of rooms) {
+        const roomId = room.roomId ?? room.id
+        const content = room?.content || {}
+        const shiftsById = room?.shiftsById || {}
 
-        const aPos = getCraftPos(a)
-        const bPos = getCraftPos(b)
-        if (aPos !== bPos) return aPos - bPos
+        for (const dayKey of Object.keys(content)) {
+            const dayData = content[dayKey]
+            if (!dayData?.shiftIds?.length) continue
 
-        return (a.id ?? 0) - (b.id ?? 0)
-    })
+            let shifts = dayData.shiftIds.map((id: number) => shiftsById[id]).filter(Boolean)
+
+            if (set.size > 0) shifts = shifts.filter((s: any) => set.has(s?.craft?.id))
+
+            if (showOnlyNotFullyStaffed) {
+                shifts = shifts.filter((shift: any) => {
+                    const qualifications = Array.isArray(shift?.shifts_qualifications)
+                        ? shift.shifts_qualifications
+                        : Object.values(shift?.shifts_qualifications || {})
+                    return qualifications.some((q: any) => {
+                        const capacity = q?.value ?? 0
+                        const qualificationId = q?.shift_qualification_id
+                        const assignedCount = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
+                            const items = shift[group] || []
+                            return acc + items.filter((item: any) => item?.pivot?.shift_qualification_id === qualificationId).length
+                        }, 0)
+                        return capacity > assignedCount
+                    })
+                })
+            }
+
+            shifts.sort((a: any, b: any) => {
+                const cmp = (a.start ?? '').toString().localeCompare((b.start ?? '').toString())
+                if (cmp !== 0) return cmp
+                const posCmp = getCraftPos(a) - getCraftPos(b)
+                return posCmp !== 0 ? posCmp : (a.id ?? 0) - (b.id ?? 0)
+            })
+
+            map.set(`${roomId}|${dayKey}`, shifts)
+        }
+    }
+    filteredShiftsIndex.value = map
+}
+
+let _shiftsRebuildTimer: ReturnType<typeof setTimeout> | null = null
+let _shiftsFirstRun = true
+watch([shiftPlanCopy, craftIdSet, craftPositionMap], () => {
+    if (_shiftsFirstRun) {
+        _shiftsFirstRun = false
+        rebuildFilteredShiftsIndex()
+        return
+    }
+    if (_shiftsRebuildTimer) clearTimeout(_shiftsRebuildTimer)
+    _shiftsRebuildTimer = setTimeout(() => {
+        rebuildFilteredShiftsIndex()
+        _shiftsRebuildTimer = null
+    }, 200)
+}, { immediate: true })
+
+function getFilteredShiftsForRoomDay(room: any, dayLabel: string): any[] {
+    const roomId = room?.roomId ?? room?.id
+    return filteredShiftsIndex.value.get(`${roomId}|${dayLabel}`) ?? EMPTY_ARRAY as any[]
 }
 
 /**
@@ -830,18 +1015,41 @@ const hideUnoccupiedRooms = computed<boolean>(() => {
  */
 const roomDayEventsIndex = shallowRef<Map<any, Map<string, AnyEvent[]>>>(new Map())
 
+// Rebuild events index — debounced to batch rapid WebSocket updates
+let _eventsRebuildTimer: ReturnType<typeof setTimeout> | null = null
+let _eventsFirstRun = true
 watch(
-    shiftPlanCopy,
-    () => { roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || []) },
-    // Deep nötig, damit Mutationen aus dem Websocket-Listener (push/splice in nested arrays) den Index neu bauen.
-    { immediate: true, deep: true }
+    [eventsVersion, shiftPlanCopy],
+    () => {
+        if (_eventsFirstRun) {
+            _eventsFirstRun = false
+            roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || [])
+            return
+        }
+        if (_eventsRebuildTimer) clearTimeout(_eventsRebuildTimer)
+        _eventsRebuildTimer = setTimeout(() => {
+            roomDayEventsIndex.value = buildRoomDayEventsIndex(shiftPlanCopy.value || [])
+            _eventsRebuildTimer = null
+        }, 150)
+    },
+    { immediate: true }
 )
+
+// P2: Pre-computed dayIso cache to avoid repeated extractDate calls
+const dayIsoCache = computed(() => {
+    const map = new Map<string, string>()
+    for (const d of daysLocal.value || []) {
+        const iso = extractDate(d.fullDay)
+        if (iso) map.set(d.fullDay, iso)
+    }
+    return map
+})
 
 function getEventsForRoomDay(room: any, targetDay: string): AnyEvent[] {
     const roomId = room?.roomId ?? room?.id
-    const dayIso = extractDate(targetDay)
+    const dayIso = dayIsoCache.value.get(targetDay) ?? extractDate(targetDay)
     if (!dayIso) return []
-    return roomDayEventsIndex.value.get(roomId)?.get(dayIso) ?? []
+    return roomDayEventsIndex.value.get(roomId)?.get(dayIso) ?? EMPTY_ARRAY as any[]
 }
 
 /**
@@ -887,6 +1095,9 @@ const roomsArray = computed(() => {
     return Array.from(m.values())
 })
 
+// Provide rooms for child components (e.g. SingleShiftInDailyShiftView's AddShiftModal)
+provide("shiftPlanRooms", roomsArray)
+
 const shiftQualificationsArray = computed(() =>
     Array.isArray(shiftQualificationsResolved.value)
         ? shiftQualificationsResolved.value
@@ -911,20 +1122,18 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
 
 const closeAddShiftModal = (success = false, shift = null) => {
     if (success && shift) {
-        for (const room of shiftPlanCopy.value) {
-            if (room.shiftsById && room.shiftsById[shift.id]) {
-                room.shiftsById[shift.id] = shift;
-            }
-            if (room.eventsById) {
-                for (const eventId of Object.keys(room.eventsById)) {
-                    const event = room.eventsById[eventId];
-                    if (Array.isArray(event.shifts)) {
-                        const idx = event.shifts.findIndex((s: any) => s.id === shift.id);
-                        if (idx !== -1) event.shifts[idx] = shift;
-                    }
+        const room = shiftPlanCopy.value.find((r: any) => (r.roomId ?? r.id) === shift.roomId)
+        if (room) {
+            if (room.shiftsById) room.shiftsById[shift.id] = shift
+            if (room.eventsById && shift.eventId && room.eventsById[shift.eventId]) {
+                const event = room.eventsById[shift.eventId]
+                if (Array.isArray(event.shifts)) {
+                    const idx = event.shifts.findIndex((s: any) => s.id === shift.id)
+                    if (idx !== -1) event.shifts[idx] = shift
                 }
             }
         }
+        triggerRef(shiftPlanCopy)
     }
     showAddShiftModal.value = false
     shiftToEdit.value = null
@@ -957,12 +1166,12 @@ const changeDailyViewMode = () => {
     )
 }
 
-const changeDailyViewModeValue = (newValue: boolean) => {
+const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => void) => {
     dailyViewMode.value = newValue
     router.patch(
         route("user.update.daily_view", page.props.auth.user.id),
         { daily_view: dailyViewMode.value },
-        { preserveScroll: false, preserveState: false }
+        { preserveScroll: false, preserveState: false, onSuccess: onSuccessCallback }
     )
 }
 
@@ -971,24 +1180,20 @@ const changeDailyViewModeValue = (newValue: boolean) => {
  */
 const jumpToToday = () => {
     const today = new Date().toISOString().slice(0, 10)
+    const patchDates = () => {
+        router.patch(
+            route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
+            { start_date: today, end_date: today, isDailyView: true },
+            { preserveScroll: true, preserveState: false }
+        )
+    }
 
     if (!dailyViewMode.value) {
-        changeDailyViewModeValue(true)
-        setTimeout(() => {
-            router.patch(
-                route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-                { start_date: today, end_date: today, isDailyView: true },
-                { preserveScroll: true, preserveState: false }
-            )
-        }, 100)
+        changeDailyViewModeValue(true, patchDates)
         return
     }
 
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        { start_date: today, end_date: today, isDailyView: true },
-        { preserveScroll: true, preserveState: false }
-    )
+    patchDates()
 }
 
 const jumpToCurrentWeek = () => {
@@ -1019,31 +1224,24 @@ const jumpToCurrentMonth = () => {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
+    const patchDates = () => {
+        router.patch(
+            route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
+            {
+                start_date: monthStart.toISOString().slice(0, 10),
+                end_date: monthEnd.toISOString().slice(0, 10),
+                isDailyView: true,
+            },
+            { preserveScroll: true, preserveState: false }
+        )
+    }
+
     if (dailyViewMode.value) {
-        changeDailyViewModeValue(false)
-        setTimeout(() => {
-            router.patch(
-                route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-                {
-                    start_date: monthStart.toISOString().slice(0, 10),
-                    end_date: monthEnd.toISOString().slice(0, 10),
-                    isDailyView: true,
-                },
-                { preserveScroll: true, preserveState: false }
-            )
-        }, 100)
+        changeDailyViewModeValue(false, patchDates)
         return
     }
 
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        {
-            start_date: monthStart.toISOString().slice(0, 10),
-            end_date: monthEnd.toISOString().slice(0, 10),
-            isDailyView: true,
-        },
-        { preserveScroll: true, preserveState: false }
-    )
+    patchDates()
 }
 
 const previousTimeRange = () => {
@@ -1152,19 +1350,18 @@ const downloadShiftPersonnelPlanXLSX = () => {
 onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
-    await initializeDailyShiftPlan()
+    // Load shift plan data, crafts, and workers in parallel
+    const [, , ] = await Promise.all([
+        initializeDailyShiftPlan(),
+        axios.get(route("shifts.crafts"), { params: { lightweight: 1 } }).then(({ data }) => {
+            craftsLoaded.value = data.crafts ?? []
+        }).catch(() => { craftsLoaded.value = [] }),
+        loadShiftPlanWorkers(),
+    ])
 
-    // Load crafts asynchronously for shift plan
-    try {
-        const { data } = await axios.get(route("shifts.crafts"))
-        craftsLoaded.value = data.crafts ?? []
-    } catch {
-        craftsLoaded.value = []
-    }
-
-    await loadShiftPlanWorkers()
-
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any)
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
+        onEventsChanged: () => { eventsVersion.value++ },
+    })
     ShiftCalendarListener.init()
 
     await nextTick()
@@ -1185,8 +1382,8 @@ onUnmounted(() => {
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)
     window.removeEventListener("resize", checkAllRoomNameTruncations)
-    roomResizeObservers.forEach(ro => ro.disconnect())
-    roomResizeObservers.clear()
+    sharedRoomObserver?.disconnect()
+    dayObserver?.disconnect()
 })
 
 

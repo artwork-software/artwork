@@ -150,7 +150,6 @@ readonly class EventCalendarService
                 start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
                 end:   Carbon::parse($event->end_time)->format('Y-m-d H:i'),
                 roomId: (int)$event->room_id,
-                daysOfEvent: $event->getAttribute('days_of_event') ?? [],
             );
         })->groupBy('roomId');
 
@@ -181,7 +180,6 @@ readonly class EventCalendarService
                 'shifts:id,event_id,start_date,end_date,craft_id',
                 'eventProperties',
                 'subEvents',
-                'series',
             ])
             ->withExists('timelines');
     }

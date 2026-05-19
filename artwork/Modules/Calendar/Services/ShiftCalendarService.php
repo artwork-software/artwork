@@ -25,6 +25,9 @@ use Illuminate\Support\Collection;
 
 class ShiftCalendarService
 {
+    /**
+     * @return array{rooms: Collection, lookups: array}
+     */
     public function filterRoomsEventsAndShifts(
         Collection $rooms,
         UserFilter $filter,
@@ -33,7 +36,7 @@ class ShiftCalendarService
         bool $addTimeline = false,
         ?Project $project = null,
         bool $minimalWorkerData = false
-    ): Collection {
+    ): array {
         $roomIds = $rooms->modelKeys();
 
         $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
@@ -95,20 +98,19 @@ class ShiftCalendarService
         $shiftWorkerWith = $minimalWorkerData
             ? [
                 'room:id,name',
-                'craft:id,name,abbreviation',
-                'craft.qualifications:id,name',
+                'craft:id,name,abbreviation,color',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
                 'shiftsQualifications',
                 'globalQualifications',
                 'users:id,first_name,last_name',
                 'freelancer:id,first_name,last_name,profile_image',
                 'serviceProvider:id,provider_name,profile_image',
                 'shiftGroup:id,name',
-                'craft.craftShiftPlaner',
             ]
             : [
                 'room:id,name',
-                'craft:id,name,abbreviation',
-                'craft.qualifications:id,name',
+                'craft:id,name,abbreviation,color',
+                'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
                 'shiftsQualifications',
                 'globalQualifications',
                 'users:id,first_name,last_name,pronouns,position,profile_photo_path',
@@ -118,7 +120,6 @@ class ShiftCalendarService
                 'serviceProvider:id,provider_name,profile_image',
                 'serviceProvider.globalQualifications:id',
                 'shiftGroup:id,name',
-                'craft.craftShiftPlaner',
             ];
 
         $shifts = Shift::query()
@@ -170,7 +171,91 @@ class ShiftCalendarService
             ->keyBy('id');
 
         // -------------------------
-        // 4) DTOs (ohne weitere Queries)
+        // 4) Build lookup maps for normalization
+        // -------------------------
+        $craftsById = [];
+        $eventTypesById = [];
+        $projectsById = [];
+        $shiftGroupsById = [];
+
+        // Collect crafts from shifts
+        foreach ($shifts as $shift) {
+            if ($shift->craft && !isset($craftsById[$shift->craft->id])) {
+                $craft = $shift->craft;
+                $craftsById[$craft->id] = [
+                    'id' => $craft->id,
+                    'name' => $craft->name,
+                    'abbreviation' => $craft->abbreviation,
+                    'color' => $craft->color,
+                    'craft_shift_planer' => $craft->relationLoaded('craftShiftPlaner')
+                        ? $craft->craftShiftPlaner->map(fn ($user) => [
+                            'id' => $user->id,
+                            'first_name' => $user->first_name,
+                            'last_name' => $user->last_name,
+                            'full_name' => trim($user->first_name . ' ' . $user->last_name),
+                            'position' => $user->position ?? null,
+                            'business' => $user->business ?? null,
+                            'profile_photo_url' => $user->profile_photo_path
+                                ? '/storage/' . $user->profile_photo_path
+                                : null,
+                        ])->values()->all()
+                        : [],
+                ];
+            }
+            if ($shift->shiftGroup && !isset($shiftGroupsById[$shift->shiftGroup->id])) {
+                $shiftGroupsById[$shift->shiftGroup->id] = [
+                    'id' => $shift->shiftGroup->id,
+                    'name' => $shift->shiftGroup->name,
+                ];
+            }
+        }
+
+        // Collect event types from events
+        foreach ($events as $event) {
+            if ($event->event_type && !isset($eventTypesById[$event->event_type->id])) {
+                $et = $event->event_type;
+                $eventTypesById[$et->id] = [
+                    'id' => $et->id,
+                    'name' => $et->name,
+                    'abbreviation' => $et->abbreviation,
+                    'hex_code' => $et->hex_code,
+                ];
+            }
+        }
+
+        // Collect projects
+        foreach ($projects as $project) {
+            $statusModel = $project->relationLoaded('status') ? $project->status : null;
+            $groups = $project->relationLoaded('groups') ? $project->groups : collect();
+            $projectsById[$project->id] = [
+                'id' => $project->id,
+                'name' => $project->name,
+                'color' => $project->color,
+                'icon' => $project->icon,
+                'is_group' => $project->is_group,
+                'isInGroup' => $groups->isNotEmpty(),
+                'group' => $groups->isNotEmpty() ? $groups->map(fn ($g) => [
+                    'id' => $g->id,
+                    'name' => $g->name,
+                    'color' => $g->color,
+                ])->values()->all() : null,
+                'status' => $statusModel ? [
+                    'id' => $statusModel->id,
+                    'name' => $statusModel->name,
+                    'color' => $statusModel->color,
+                ] : null,
+            ];
+        }
+
+        $lookups = [
+            'craftsById' => $craftsById,
+            'eventTypesById' => $eventTypesById,
+            'projectsById' => $projectsById,
+            'shiftGroupsById' => $shiftGroupsById,
+        ];
+
+        // -------------------------
+        // 5) DTOs (ohne weitere Queries) — now normalized with IDs only
         // -------------------------
         $eventDTOs = $events
             ->map(fn ($event) => EventShiftPlanDTO::fromModel(
@@ -192,7 +277,7 @@ class ShiftCalendarService
             $room->shifts = $shiftDTOs[$room->id] ?? collect();
         }
 
-        return $rooms;
+        return ['rooms' => $rooms, 'lookups' => $lookups];
     }
 
 
@@ -216,13 +301,17 @@ class ShiftCalendarService
                 $shiftsById[$shiftDTO->id] = $shiftDTO;
             }
 
-            $groupedEventIds = $room->events->flatMap(fn ($eventDTO) =>
-                collect($eventDTO->daysOfEvent)->map(fn ($date) => ['date' => $date, 'id' => $eventDTO->id])
-            )->groupBy('date');
+            // Compute days from start/end date ranges for events
+            $groupedEventIds = $room->events->flatMap(function ($eventDTO) {
+                $days = self::getDaysInRange($eventDTO->start, $eventDTO->end);
+                return collect($days)->map(fn ($date) => ['date' => $date, 'id' => $eventDTO->id]);
+            })->groupBy('date');
 
-            $groupedShiftIds = $room->shifts->flatMap(fn ($shiftDTO) =>
-                collect($shiftDTO->daysOfShift)->map(fn ($date) => ['date' => $date, 'id' => $shiftDTO->id])
-            )->groupBy('date');
+            // Compute days from start/end date ranges for shifts
+            $groupedShiftIds = $room->shifts->flatMap(function ($shiftDTO) {
+                $days = self::getDaysInRange($shiftDTO->startDate, $shiftDTO->endDate);
+                return collect($days)->map(fn ($date) => ['date' => $date, 'id' => $shiftDTO->id]);
+            })->groupBy('date');
 
             foreach ($groupedEventIds as $date => $eventsOnDate) {
                 if (isset($content[$date])) {
@@ -246,6 +335,23 @@ class ShiftCalendarService
         })->toArray();
 
         return new CalendarFrontendDataDTO(rooms: $roomsData);
+    }
+
+    /**
+     * Compute an array of day strings (dd.mm.YYYY) from a start/end datetime string.
+     *
+     * @return string[]
+     */
+    private static function getDaysInRange(string $start, string $end): array
+    {
+        $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+        $endDate = \Carbon\Carbon::parse($end)->startOfDay();
+        $days = [];
+        while ($startDate->lte($endDate)) {
+            $days[] = $startDate->format('d.m.Y');
+            $startDate->addDay();
+        }
+        return $days;
     }
 
     /**

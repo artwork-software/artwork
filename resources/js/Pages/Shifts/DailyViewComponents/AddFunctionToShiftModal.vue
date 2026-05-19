@@ -41,10 +41,9 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const availableQualifications = computed(() => {
-    const shiftCraftId = props.shift?.craft?.id;
+    const shiftCraftId = props.shift?.craftId ?? props.shift?.craft_id ?? props.shift?.craft?.id;
     if (!shiftCraftId || !props.crafts) return [];
 
-    // Look up the craft in props.crafts to find its associated qualifications
     const craftsArray = Array.isArray(props.crafts)
         ? props.crafts
         : Object.values(props.crafts || {});

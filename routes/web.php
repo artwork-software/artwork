@@ -373,6 +373,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
+        ->middleware('role:artwork admin')
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
@@ -408,7 +409,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             UserController::class,
             'updateUserPermissionsAndRoles'
         ]
-    )->name('user.update.permissions-and-roles');
+    )->middleware('role:artwork admin')
+    ->name('user.update.permissions-and-roles');
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');

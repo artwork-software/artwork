@@ -26,13 +26,13 @@
                         <div class="flex items-center gap-x-2">
                             <BaseInput
                                 id="start" type="time" class="max-w-28 text-xs"
-                                :model-value="normalizeTime(person.pivot.start_time)"
+                                :model-value="normalizeTime(person.pivot?.start_time ?? shift.start)"
                                 @update:model-value="person.pivot.start_time = $event"
                             />
 
                             <BaseInput
                                 id="end" type="time" class="max-w-28 text-xs"
-                                :model-value="normalizeTime(person.pivot.end_time)"
+                                :model-value="normalizeTime(person.pivot?.end_time ?? shift.end)"
                                 @update:model-value="person.pivot.end_time = $event"
                             />
                             <BaseUIButton label="Save" use-translation :icon="IconDeviceFloppy" icon-size="size-4" @click.stop="saveIndividualShiftTime(close)"/>

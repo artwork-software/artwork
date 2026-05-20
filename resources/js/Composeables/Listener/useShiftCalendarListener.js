@@ -1,6 +1,6 @@
 import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged } = {}) {
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged } = {}) {
 
     function resolveWorkerType(entityType) {
         const map = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider', 'service_provider': 'serviceProvider' }
@@ -90,6 +90,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         if (updated) {
             bumpRoomVersion(room);
+            if (onShiftDataChanged) onShiftDataChanged();
         }
     }
 
@@ -215,6 +216,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 updated = true;
             }
         }
+        if (updated && onShiftDataChanged) onShiftDataChanged();
         return updated;
     }
 
@@ -246,8 +248,9 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             }
         }
 
-        if (updated && onWorkersNeedReload) {
-            onWorkersNeedReload();
+        if (updated) {
+            if (onShiftDataChanged) onShiftDataChanged();
+            if (onWorkersNeedReload) onWorkersNeedReload();
         }
     }
 
@@ -285,6 +288,7 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         if (updated) {
             bumpRoomVersion(room);
+            if (onShiftDataChanged) onShiftDataChanged();
             if (onWorkerNeedReload && Array.isArray(shift.workers) && shift.workers.length > 0) {
                 const seen = new Set();
                 for (const w of shift.workers) {
@@ -382,6 +386,16 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
                 // If shifts were added, we might want to reload certain data
                 if (updated && onWorkersNeedReload) {
+                    onWorkersNeedReload();
+                }
+            });
+
+        // Individual times channel
+        Echo.channel('shift-plan.individual-times')
+            .listen('.individual-time.changed', (data) => {
+                if (onWorkerNeedReload) {
+                    onWorkerNeedReload(data.workerId, resolveWorkerType(data.workerType));
+                } else if (onWorkersNeedReload) {
                     onWorkersNeedReload();
                 }
             });

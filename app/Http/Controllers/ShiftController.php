@@ -944,6 +944,9 @@ class ShiftController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
     ): bool|RedirectResponse {
+        if (!auth()->user()?->can('can plan shifts') && !auth()->user()?->hasRole('artwork admin')) {
+            abort(403);
+        }
 
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($request->get('userType')) {

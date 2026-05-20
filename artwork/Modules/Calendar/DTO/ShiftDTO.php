@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
+use Carbon\Carbon;
 use Spatie\LaravelData\Data;
 
 class ShiftDTO extends Data
@@ -36,8 +37,8 @@ class ShiftDTO extends Data
 
         return new self(
             id: $shift->id,
-            startDate: (string) $shift->start_date,
-            endDate: (string) $shift->end_date,
+            startDate: $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : '',
+            endDate: $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : '',
             start: (string) $shift->start,
             end: (string) $shift->end,
             break_minutes: (int) $shift->break_minutes,

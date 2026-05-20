@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Serializers;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
+use Carbon\Carbon;
 
 readonly class ShiftListViewSerializer
 {
@@ -13,8 +14,8 @@ readonly class ShiftListViewSerializer
             'id' => $shift->id,
             'start' => (string) $shift->start,
             'end' => (string) $shift->end,
-            'start_date' => (string) $shift->start_date,
-            'end_date' => (string) $shift->end_date,
+            'start_date' => $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : '',
+            'end_date' => $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : '',
             'break_minutes' => $shift->break_minutes,
             'description' => $shift->description,
             'craft_id' => $shift->craft_id,

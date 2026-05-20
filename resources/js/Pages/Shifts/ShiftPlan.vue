@@ -2047,8 +2047,18 @@ function isSelectedMultiEditCell(row: any, day: any) {
     return entry.type === row.worker.type && entry.days?.includes(day.withoutFormat)
 }
 
+function canClickCell(worker: any) {
+    if (multiEditMode.value || dayServiceMode.value) return true
+    const isOwnCell = worker.type === 0 && worker.element.id === authUser.value.id
+    return isOwnCell || can('can plan shifts') || is('artwork admin')
+}
+
 function cellWrapperClass(row: any, day: any) {
     const classes: string[] = []
+
+    if (!day.isExtraRow && canClickCell(row.worker)) {
+        classes.push('cursor-pointer')
+    }
 
     if (highlightMode.value) {
         classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
@@ -2616,7 +2626,8 @@ function handleCellClick(user: any, day: any) {
         }
         return
     }
-    if(can('can plan shifts') || is('artwork admin')){
+    const isOwnCell = user.type === 0 && user.element.id === authUser.value.id
+    if(isOwnCell || can('can plan shifts') || is('artwork admin')){
         openShowUserShiftModal(user, day)
     }
 
@@ -2696,16 +2707,16 @@ function openFullscreen() {
 
 function previousTimeRange() {
     const dateDifference = calculateDateDifference()
-    props.dateValue[0] = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    props.dateValue[1] = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes()
+    const newStart = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    const newEnd = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    updateTimes(newStart, newEnd)
 }
 
 function nextTimeRange() {
     const dateDifference = calculateDateDifference()
-    props.dateValue[0] = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    props.dateValue[1] = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes()
+    const newStart = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    const newEnd = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    updateTimes(newStart, newEnd)
 }
 
 function calculateDateDifference() {
@@ -2715,10 +2726,10 @@ function calculateDateDifference() {
     return timeDifference / (1000 * 3600 * 24)
 }
 
-function updateTimes() {
+function updateTimes(startDate: string, endDate: string) {
     router.patch(
         route('update.user.shift.calendar.filter.dates', authUser.value.id),
-        {start_date: props.dateValue[0], end_date: props.dateValue[1]},
+        {start_date: startDate, end_date: endDate},
         {preserveScroll: true, preserveState: false},
     )
 }

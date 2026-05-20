@@ -39,6 +39,7 @@ class AvailabilityConflictService
             $shifts = $user->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $availabilities = $user
                 ->availabilities()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -46,6 +47,7 @@ class AvailabilityConflictService
             $shifts = $freelancer->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $availabilities = $freelancer
                 ->availabilities()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -131,20 +133,29 @@ class AvailabilityConflictService
         ?Freelancer $freelancer = null,
     ): void {
 
+        $shiftStartDate = $shift->event_start_day ?? Carbon::parse($shift->start_date)->toDateString();
+        $shiftEndDate = $shift->end_date
+            ? Carbon::parse($shift->end_date)->toDateString()
+            : $shiftStartDate;
+
         $availabilities = collect();
         if ($user) {
             $availabilities = $user
                 ->availabilities()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
         if ($freelancer) {
             $availabilities = $freelancer
                 ->availabilities()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
-        $shiftDate = $shift->event_start_day ?? $shift->start_date;
+        $shiftDate = $shiftStartDate;
 
         $shiftCommittedBy = $shift->committedBy()->first();
         if ($user) {

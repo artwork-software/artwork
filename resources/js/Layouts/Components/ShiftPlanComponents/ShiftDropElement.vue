@@ -328,11 +328,7 @@ function handleClickEvent() {
         return
     }
 
-    // Zugriff auf $can/hasAdminRole über Mixin (global am proxy)
-    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
-    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
-
-    if (canPlan || isAdmin) {
+    if (canPlanShifts()) {
         emit('clickOnEdit', props.shift)
     }
 }
@@ -461,12 +457,20 @@ function matchingUserQualisForShift(person: any, targetCraftId: number): any[] {
     })
 }
 
+function canPlanShifts(): boolean {
+    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
+    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
+    return canPlan || isAdmin
+}
+
 function onDragOver(event: DragEvent) {
+    if (!canPlanShifts()) return
     event.preventDefault()
 }
 
 function onDrop(event: DragEvent) {
     event.preventDefault()
+    if (!canPlanShifts()) return
 
     const raw =
         event.dataTransfer?.getData('application/json') ||

@@ -66,6 +66,7 @@ class UpdateArtwork extends Command
         $this->updateSagePermissions();
         $this->migrateToCrm();
         $this->syncCrmContacts();
+        $this->cleanupFalseConflicts();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -520,6 +521,12 @@ class UpdateArtwork extends Command
         }
 
         $this->call('artwork:migrate-to-crm');
+    }
+
+    private function cleanupFalseConflicts(): void
+    {
+        $this->section('Cleanup False Conflicts');
+        $this->call('artwork:cleanup-false-conflicts');
     }
 
     /**

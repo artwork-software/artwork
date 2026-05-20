@@ -1361,6 +1361,8 @@ onMounted(async () => {
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
         onEventsChanged: () => { eventsVersion.value++ },
+        onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
+        onWorkersNeedReload: loadShiftPlanWorkers,
     })
     ShiftCalendarListener.init()
 

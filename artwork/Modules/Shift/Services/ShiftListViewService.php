@@ -6,6 +6,7 @@ use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Serializers\ShiftListViewSerializer;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Models\UserShiftListViewSettings;
 use Carbon\Carbon;
@@ -13,6 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 readonly class ShiftListViewService
 {
+    public function __construct(
+        private ShiftListViewSerializer $serializer,
+    ) {
+    }
     public function getGroupedShifts(
         Carbon $startDate,
         Carbon $endDate,
@@ -21,15 +26,17 @@ readonly class ShiftListViewService
     ): array {
         $query = Shift::query()
             ->with([
-                'craft.qualifications',
-                'room',
-                'project',
-                'event.project',
-                'users',
-                'freelancer',
-                'serviceProvider',
-                'shiftsQualifications',
-                'shiftGroup',
+                'craft:id,name,abbreviation,color,position',
+                'craft.qualifications:id,name',
+                'room:id,name,position',
+                'project:id,name',
+                'event:id,event_type_id,project_id',
+                'event.project:id,name',
+                'users:id,first_name,last_name',
+                'freelancer:id,first_name,last_name',
+                'serviceProvider:id,provider_name',
+                'shiftsQualifications:id,shift_id,shift_qualification_id,value',
+                'shiftGroup:id,name',
                 'globalQualifications',
             ])
             ->eventStartDayAndEventEndDayBetween($startDate, $endDate);
@@ -107,18 +114,23 @@ readonly class ShiftListViewService
             if (!isset($dayMap[$day][$roomId])) {
                 $dayMap[$day][$roomId] = [
                     'room_id' => $roomId,
-                    'room' => $shift->room,
+                    'room' => [
+                        'id' => $roomId,
+                        'name' => $shift->room?->name,
+                        'position' => $shift->room?->position ?? 0,
+                    ],
                     'shifts' => [],
                     'events' => [],
                 ];
             }
-            $dayMap[$day][$roomId]['shifts'][] = $shift;
+            $dayMap[$day][$roomId]['shifts'][] = $this->serializer->serializeShift($shift);
         }
 
         if ($settings->show_appointments) {
             $events = $this->getEventsForRange($startDate, $endDate, $userFilter);
 
             foreach ($events as $event) {
+                $serializedEvent = $this->serializer->serializeListViewEvent($event);
                 // An event can span multiple days; emit it on each day in range
                 $eventStart = $event->start_time->copy()->startOfDay();
                 $eventEnd = $event->end_time->copy()->startOfDay();
@@ -138,12 +150,16 @@ readonly class ShiftListViewService
                     if (!isset($dayMap[$dayKey][$roomId])) {
                         $dayMap[$dayKey][$roomId] = [
                             'room_id' => $roomId,
-                            'room' => $event->room,
+                            'room' => [
+                                'id' => $roomId,
+                                'name' => $event->room?->name,
+                                'position' => $event->room?->position ?? 0,
+                            ],
                             'shifts' => [],
                             'events' => [],
                         ];
                     }
-                    $dayMap[$dayKey][$roomId]['events'][] = $event;
+                    $dayMap[$dayKey][$roomId]['events'][] = $serializedEvent;
                 }
             }
         }
@@ -153,12 +169,12 @@ readonly class ShiftListViewService
         // Sort rooms within each day by room.position; sort events within each room by start_time
         foreach ($dayMap as $day => $rooms) {
             uasort($rooms, function ($a, $b) {
-                return ($a['room']->position ?? 0) <=> ($b['room']->position ?? 0);
+                return ($a['room']['position'] ?? 0) <=> ($b['room']['position'] ?? 0);
             });
             foreach ($rooms as $roomId => $roomData) {
                 if (!empty($roomData['events'])) {
-                    usort($rooms[$roomId]['events'], function (Event $a, Event $b) {
-                        return $a->start_time <=> $b->start_time;
+                    usort($rooms[$roomId]['events'], function (array $a, array $b) {
+                        return $a['start_time'] <=> $b['start_time'];
                     });
                 }
             }
@@ -167,7 +183,7 @@ readonly class ShiftListViewService
 
         // Load holidays for the date range
         $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
-            ->groupBy(fn(CalendarHolidayDTO $h) => $h->date);
+            ->groupBy(fn (CalendarHolidayDTO $h) => $h->date);
 
         // Convert to sequential arrays so JS preserves insertion order
         $result = [];
@@ -193,7 +209,11 @@ readonly class ShiftListViewService
         // Note: only the relations actually rendered in the appointments column are eager-loaded.
         // event_type → abbreviation+color, project → name, room → position for sort.
         $query = Event::query()
-            ->with(['room:id,name,position', 'event_type', 'project:id,name'])
+            ->with([
+                'room:id,name,position',
+                'event_type:id,name,abbreviation,hex_code',
+                'project:id,name',
+            ])
             ->where(function (Builder $q) use ($startDate, $endDate): void {
                 $q->whereBetween('start_time', [$startDate, $endDate])
                     ->orWhereBetween('end_time', [$startDate, $endDate])
@@ -255,9 +275,9 @@ readonly class ShiftListViewService
                             ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
                     });
             })
-            ->with(['subdivisions' => fn($q) => $q->select('name')])
+            ->with(['subdivisions' => fn ($q) => $q->select('name')])
             ->get()
-            ->map(fn($holiday) => new CalendarHolidayDTO(
+            ->map(fn ($holiday) => new CalendarHolidayDTO(
                 name: $holiday->name,
                 date: $holiday->date->toDateString(),
                 end_date: $holiday->end_date->toDateString(),

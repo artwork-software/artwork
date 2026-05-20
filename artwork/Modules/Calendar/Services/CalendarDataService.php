@@ -141,26 +141,16 @@ readonly class CalendarDataService
         $periodArray = [];
         foreach ($calendarPeriod as $period) {
             if ($extraRow && $period->isMonday()) {
-                $periodArray[] = [
-                    'isExtraRow'  => true,
-                    'weekNumber'  => $period->weekOfYear,
-                ];
+                $periodArray[] = new CalendarPeriodDTO(
+                    date: $period->toDateString(),
+                    holidays: null,
+                    hoursOfDay: null,
+                    isExtraRow: true,
+                );
             }
 
             $periodArray[] = new CalendarPeriodDTO(
-                day: $period->format('d.m.'),
-                dayString: $period->shortDayName,
-                isWeekend: $period->isWeekend(),
-                fullDay: $period->format('d.m.Y'),
-                shortDay: $period->format('d.m'),
-                withoutFormat: $period->toDateString(),
-                fullDayDisplay: $period->format('d.m.y'),
-                weekNumber: $period->weekOfYear,
-                isMonday: $period->isMonday(),
-                monthNumber: $period->month,
-                isSunday: $period->isSunday(),
-                isFirstDayOfMonth: $period->isSameDay($period->copy()->firstOfMonth()),
-                addWeekSeparator: $period->isSunday(),
+                date: $period->toDateString(),
                 holidays: $holidaysByDate->get($period->toDateString(), collect())->values(),
                 hoursOfDay: $hoursOfDay,
                 isExtraRow: false,
@@ -396,19 +386,23 @@ readonly class CalendarDataService
             ];
         }
 
-        // 2) Perioden filtern: nur echte DTOs, deren ->fullDay im belegten Set liegt
+        // 2) Perioden filtern: nur echte DTOs, deren Datum im belegten Set liegt
         $filteredPeriod = array_values(array_filter(
             $period,
             static function ($d) use ($occupiedDays) {
-                if (!($d instanceof CalendarPeriodDTO)) {
-                    return false; // Arrays (Week-Separators/ExtraRows) raus
+                if (!($d instanceof CalendarPeriodDTO) || $d->isExtraRow) {
+                    return false;
                 }
-                return isset($occupiedDays[$d->fullDay]);
+                $fullDay = Carbon::parse($d->date)->format('d.m.Y');
+                return isset($occupiedDays[$fullDay]);
             }
         ));
 
         // 3) Räume-Content auf belegte Tage reduzieren & in Perioden-Reihenfolge sortieren
-        $orderedKeys = array_map(static fn (CalendarPeriodDTO $p) => $p->fullDay, $filteredPeriod);
+        $orderedKeys = array_map(
+            static fn (CalendarPeriodDTO $p) => Carbon::parse($p->date)->format('d.m.Y'),
+            $filteredPeriod
+        );
 
         foreach ($calendarData->rooms as &$room) {
             if (!isset($room['content']) || !is_array($room['content'])) {

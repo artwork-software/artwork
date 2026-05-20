@@ -759,17 +759,10 @@ class ShiftController extends Controller
                 $conflict->delete();
             });
         }
-        if ($shift->event_id) {
-            broadcast(new DestroyShift(
-                $shift,
-                $shift->event->room_id
-            ));
-        } else {
-            broadcast(new DestroyShift(
-                $shift,
-                $shift->room_id
-            ));
-        }
+        broadcast(new DestroyShift(
+            $shift,
+            $shift->event_id ? $shift->event->room_id : $shift->room_id
+        ));
         $this->shiftService->forceDelete($shift);
     }
 
@@ -863,13 +856,7 @@ class ShiftController extends Controller
             $shift = $shiftService->getById($shiftIdToRemove);
 
             broadcast(new RemoveEntityFormShiftEvent(
-                $shift->refresh()->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
+                $shift->refresh(),
                 $shift?->room_id ?? $shift?->event?->room_id,
                 $request->get('userTypeId'),
                 $request->get('userType')
@@ -913,13 +900,7 @@ class ShiftController extends Controller
                 );
 
                 broadcast(new AssignUserToShift(
-                    $shift->load([
-                        'craft',
-                        'users',
-                        'freelancer',
-                        'serviceProvider',
-                        'committedBy'
-                    ]),
+                    $shift,
                     $shift?->room_id ?? $shift?->event?->room_id,
                     $request->get('userTypeId'),
                     $request->get('userType')
@@ -941,13 +922,7 @@ class ShiftController extends Controller
             );
 
             broadcast(new AssignUserToShift(
-                $shift->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
+                $shift,
                 $shift?->room_id ?? $shift?->event?->room_id,
                 $request->get('userTypeId'),
                 $request->get('userType')
@@ -993,33 +968,12 @@ class ShiftController extends Controller
                 $request->get('seriesShiftData')
             );
 
-            if (!$shift->event_id) {
-                broadcast(new AssignUserToShift(
-                    $shift->load([
-                        'craft',
-                        'users',
-                        'freelancer',
-                        'serviceProvider',
-                        'committedBy'
-                    ]),
-                    $shift->room_id,
-                    $request->get('userId'),
-                    $request->get('userType')
-                ));
-            } else {
-                broadcast(new AssignUserToShift(
-                    $shift->load([
-                        'craft',
-                        'users',
-                        'freelancer',
-                        'serviceProvider',
-                        'committedBy'
-                    ]),
-                    $shift->event->room_id,
-                    $request->get('userId'),
-                    $request->get('userType')
-                ));
-            }
+            broadcast(new AssignUserToShift(
+                $shift,
+                $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                $request->get('userId'),
+                $request->get('userType')
+            ));
 
             return $isShiftTab ? $this->redirector->back() : true;
         }
@@ -1037,34 +991,12 @@ class ShiftController extends Controller
             $request->get('seriesShiftData')
         );
 
-
-        if (!$shift->event_id) {
-            broadcast(new AssignUserToShift(
-                $shift->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
-                $shift->room_id,
-                $request->get('userId'),
-                $request->get('userType')
-            ));
-        } else {
-            broadcast(new AssignUserToShift(
-                $shift->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
-                $shift->event->room_id,
-                $request->get('userId'),
-                $request->get('userType')
-            ));
-        }
+        broadcast(new AssignUserToShift(
+            $shift,
+            $shift->event_id ? $shift->event->room_id : $shift->room_id,
+            $request->get('userId'),
+            $request->get('userType')
+        ));
 
         return $isShiftTab ? $this->redirector->back() : true;
     }
@@ -1116,33 +1048,12 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            if (!$shift->event_id) {
-                broadcast(new RemoveEntityFormShiftEvent(
-                    $shift->load([
-                        'craft',
-                        'users',
-                        'freelancer',
-                        'serviceProvider',
-                        'committedBy'
-                    ]),
-                    $shift->room_id,
-                    $usersPivotId,
-                    $userType
-                ));
-            } else {
-                broadcast(new RemoveEntityFormShiftEvent(
-                    $shift->load([
-                        'craft',
-                        'users',
-                        'freelancer',
-                        'serviceProvider',
-                        'committedBy'
-                    ]),
-                    $shift->event->room_id,
-                    $usersPivotId,
-                    $userType
-                ));
-            }
+            broadcast(new RemoveEntityFormShiftEvent(
+                $shift,
+                $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                $usersPivotId,
+                $userType
+            ));
 
             return null;
         }
@@ -1157,36 +1068,12 @@ class ShiftController extends Controller
             $changeService
         );
 
-
-        // create broadcast event for shift plan update
-
-        if (!$shift->event_id) {
-            broadcast(new RemoveEntityFormShiftEvent(
-                $shift->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
-                $shift->room_id,
-                $usersPivotId,
-                $userType
-            ));
-        } else {
-            broadcast(new RemoveEntityFormShiftEvent(
-                $shift->load([
-                    'craft',
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'committedBy'
-                ]),
-                $shift->event->room_id,
-                $usersPivotId,
-                $userType
-            ));
-        }
+        broadcast(new RemoveEntityFormShiftEvent(
+            $shift,
+            $shift->event_id ? $shift->event->room_id : $shift->room_id,
+            $usersPivotId,
+            $userType
+        ));
 
 
         return $isShiftTab ? $this->redirector->back() : null;
@@ -1397,12 +1284,24 @@ class ShiftController extends Controller
             $roomShifts->each(function ($roomShift): void {
                 $this->workingHourCacheService->forgetForShift($roomShift);
 
+                // Collect affected workers before detaching so the broadcast can notify them
+                $affectedWorkers = collect();
+                foreach ($roomShift->users as $u) {
+                    $affectedWorkers->push(['id' => $u->id, 'type' => 'user']);
+                }
+                foreach ($roomShift->freelancer as $f) {
+                    $affectedWorkers->push(['id' => $f->id, 'type' => 'freelancer']);
+                }
+                foreach ($roomShift->serviceProvider as $sp) {
+                    $affectedWorkers->push(['id' => $sp->id, 'type' => 'service_provider']);
+                }
+
                 $roomShift->users()->detach();
                 $roomShift->freelancer()->detach();
                 $roomShift->serviceProvider()->detach();
                 $roomShift->shiftsQualifications()->delete();
 
-                broadcast(new DestroyShift($roomShift, $roomShift->room_id));
+                broadcast(new DestroyShift($roomShift, $roomShift->room_id, $affectedWorkers->all()));
 
                 $roomShift->delete();
             });
@@ -1466,9 +1365,17 @@ class ShiftController extends Controller
                 }
             }
 
-            // Batch load all ShiftWorkers for all people in one query
+            // Scope to shifts that could overlap the current shift's date range
+            $scopeStartDate = $currentStart->copy()->subDay()->toDateString();
+            $scopeEndDate = $currentEnd->copy()->addDay()->toDateString();
+
+            // Batch load ShiftWorkers scoped by date to avoid loading all historical data
             $allPivots = ShiftWorker::withoutTrashed()
                 ->with('shift.craft')
+                ->whereHas('shift', function ($q) use ($scopeStartDate, $scopeEndDate) {
+                    $q->where('start_date', '<=', $scopeEndDate)
+                      ->where('end_date', '>=', $scopeStartDate);
+                })
                 ->where(function ($query) use ($peopleByType) {
                     if (!empty($peopleByType['user'])) {
                         $query->orWhere(function ($q) use ($peopleByType) {
@@ -1688,6 +1595,23 @@ class ShiftController extends Controller
             WorkingHourCacheService::entityType($pivot->employable),
             $pivot->employable_id
         );
+
+        // Broadcast the updated shift so the frontend updates in real-time
+        $pivot->shift->load([
+            'shiftsQualifications',
+            'globalQualifications',
+            'users.globalQualifications',
+            'freelancer.globalQualifications',
+            'serviceProvider.globalQualifications',
+            'project',
+        ]);
+
+        if (!$pivot->shift->event_id) {
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
+        } else {
+            $pivot->shift->load('event');
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
+        }
     }
 
     public function updateShortDescription(Request $request): void

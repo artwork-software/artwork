@@ -4,8 +4,8 @@
         <div
             class="flex items-center justify-between gap-2 px-3 py-2"
             :style="{
-        backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : (shift?.craft?.color ? `${shift.craft.color}40` : '#e8e8e8'),
-        color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : getTextColorBasedOnBackground(shift?.craft?.color ? `${shift.craft.color}40` : '#e8e8e8')
+        backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : (resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8'),
+        color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : getTextColorBasedOnBackground(resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8')
       }"
         >
             <a
@@ -76,56 +76,20 @@
                         {{ $t('Colleagues') }}
                     </div>
                     <ul class="flex flex-wrap gap-1.5">
-                        <!-- Users -->
-                        <template v-for="user in shift.users" :key="'u-' + user.id">
+                        <template v-for="worker in (shift.workers || [])" :key="worker.type + '-' + worker.id">
                             <li
-                                v-if="(type === 'user' && user.id !== userToEditId) || type !== 'user'"
+                                v-if="worker.type !== type || worker.id !== userToEditId"
                                 class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-800"
                             >
                                 <UserPopoverTooltip
-                                    :user="user"
+                                    :user="worker"
                                     height="5"
                                     width="5"
                                     :use-slot-instead-of-icon="true"
                                     :dont-translate-popover-position="true"
                                 >
-                                    {{ user.first_name }}, {{ user.last_name }}
-                                </UserPopoverTooltip>
-                            </li>
-                        </template>
-
-                        <!-- Freelancer -->
-                        <template v-for="freelancer in shift.freelancer" :key="'f-' + freelancer.id">
-                            <li
-                                v-if="(type === 'freelancer' && freelancer.id !== userToEditId) || type !== 'freelancer'"
-                                class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-800"
-                            >
-                                <UserPopoverTooltip
-                                    :user="freelancer"
-                                    height="5"
-                                    width="5"
-                                    :use-slot-instead-of-icon="true"
-                                    :dont-translate-popover-position="true"
-                                >
-                                    {{ freelancer.first_name }}, {{ freelancer.last_name }}
-                                </UserPopoverTooltip>
-                            </li>
-                        </template>
-
-                        <!-- Dienstleister -->
-                        <template v-for="sp in shift.service_provider" :key="'sp-' + sp.id">
-                            <li
-                                v-if="(type === 'service_provider' && sp.id !== userToEditId) || type !== 'service_provider'"
-                                class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-800"
-                            >
-                                <UserPopoverTooltip
-                                    :user="sp"
-                                    height="5"
-                                    width="5"
-                                    :use-slot-instead-of-icon="true"
-                                    :dont-translate-popover-position="true"
-                                >
-                                    {{ sp.provider_name }}
+                                    <template v-if="worker.type === 'service_provider'">{{ worker.provider_name }}</template>
+                                    <template v-else>{{ worker.first_name }}, {{ worker.last_name }}</template>
                                 </UserPopoverTooltip>
                             </li>
                         </template>
@@ -162,7 +126,7 @@
     <!-- Anfrage Arbeitszeitänderung -->
     <RequestWorkTimeChangeModal
         v-if="showRequestWorkTimeChangeModal"
-        :user="shift.users?.find(u => u.id === userToEditId)"
+        :user="(shift.workers || []).find(w => w.type === 'user' && w.id === userToEditId)"
         :shift="{
             ...shift,
             start: getDisplayTime().split(' – ')[0],
@@ -183,6 +147,7 @@ import RequestWorkTimeChangeModal from '@/Pages/Shifts/Components/RequestWorkTim
 import { useColorHelper } from '@/Composeables/UseColorHelper.js'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from "@/Composeables/Permission.js";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const percentage = usePage().props.high_contrast_percent
 const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper()
@@ -196,6 +161,9 @@ const props = defineProps({
     firstProjectShiftTabId: { type: Number, required: true },
     userToEditId: { type: Number, required: true }
 })
+
+const { resolveCraft } = useShiftPlanLookups();
+const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});
 
 const showRequestWorkTimeChangeModal = ref(false)
 const hasIndivTime = ref(false)
@@ -222,14 +190,8 @@ const getDisplayTime = () => {
     let startTime = props.shift.start
     let endTime = props.shift.end
 
-    let currentUser = null
-    if (props.type === 'user' && props.shift?.users) {
-        currentUser = props.shift.users.find(u => u.id === props.userToEditId)
-    } else if (props.type === 'freelancer' && props.shift?.freelancer) {
-        currentUser = props.shift.freelancer.find(f => f.id === props.userToEditId)
-    } else if (props.type === 'service_provider' && props.shift?.service_provider) {
-        currentUser = props.shift.service_provider.find(sp => sp.id === props.userToEditId)
-    }
+    const workers = props.shift.workers || []
+    let currentUser = workers.find(w => w.type === props.type && w.id === props.userToEditId) || null
 
     if (currentUser?.pivot) {
         let pivotStart = null
@@ -256,8 +218,8 @@ const getDisplayTime = () => {
 }
 
 const hasColleaguesOnShift = (shift) => {
-    // Eigene Schicht ist immer in users enthalten – Kollegen = weitere Personen
-    return (shift.users?.length > 1) || (shift.freelancer?.length > 0) || (shift.service_provider?.length > 0)
+    const workers = shift.workers || []
+    return workers.length > 1 || workers.some(w => w.type !== props.type || w.id !== props.userToEditId)
 }
 
 const getCraftAndFunctionLabel = () => {
@@ -266,32 +228,16 @@ const getCraftAndFunctionLabel = () => {
     let functionName = null
 
     // Prioritize shift.craft.name for the full craft name
-    if (props.shift?.craft?.name) {
-        craftName = props.shift.craft.name
+    if (resolvedCraft.value?.name) {
+        craftName = resolvedCraft.value.name
     }
 
-    // Find the current user/freelancer/service_provider in the shift to get their function
-    if (props.type === 'user' && props.shift?.users) {
-        const currentUser = props.shift.users.find(u => u.id === props.userToEditId)
-        if (currentUser?.pivot) {
-            if (currentUser.pivot.short_description) {
-                functionName = currentUser.pivot.short_description
-            }
-        }
-    } else if (props.type === 'freelancer' && props.shift?.freelancer) {
-        const currentFreelancer = props.shift.freelancer.find(f => f.id === props.userToEditId)
-        if (currentFreelancer?.pivot) {
-            if (currentFreelancer.pivot.short_description) {
-                functionName = currentFreelancer.pivot.short_description
-            }
-        }
-    } else if (props.type === 'service_provider' && props.shift?.service_provider) {
-        const currentSP = props.shift.service_provider.find(sp => sp.id === props.userToEditId)
-        if (currentSP?.pivot) {
-            if (currentSP.pivot.short_description) {
-                functionName = currentSP.pivot.short_description
-            }
-        }
+    // Find the current worker in the shift to get their function
+    const currentWorker = (props.shift.workers || []).find(
+        w => w.type === props.type && w.id === props.userToEditId
+    )
+    if (currentWorker?.pivot?.short_description) {
+        functionName = currentWorker.pivot.short_description
     }
 
     // Build the label

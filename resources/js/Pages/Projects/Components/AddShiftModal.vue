@@ -18,8 +18,10 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js"
 
 const { t: $t } = useI18n()
+const { resolveProject: resolveProjectLookup } = useShiftPlanLookups()
 
 
 
@@ -116,7 +118,9 @@ watch(() => props.globalQualifications, () => {
 const selectedProject = ref(
     props.shift?.project
         ? props.shift.project
-        : (props.project ?? (props.event?.project ?? null))
+        : (props.shift?.projectId
+            ? (resolveProjectLookup(props.shift.projectId) ?? { id: props.shift.projectId, name: '...' })
+            : (props.project ?? (props.event?.project ?? null)))
 );
 
 // Warnung: Schicht liegt außerhalb des Projektzeitraumes
@@ -201,21 +205,42 @@ watch(() => usePage().props.shiftGroups, (v: any) => {
     }
 }, { deep: true })
 
-const selectedCraft = ref(props.shift ? props.shift.craft : null)
+// Support both old format (shift.craft object) and new ShiftDTO (shift.craftId integer)
+const selectedCraft = ref(
+    props.shift
+        ? (props.shift.craft ?? (props.shift.craftId != null
+            ? (props.crafts?.find((c: any) => c.id === props.shift.craftId) ?? null)
+            : null))
+        : null
+)
 
 const validationMessages = reactive({
     warnings: { shift_start: [], shift_end: [], break_length: [], craft: [] },
     errors: { shift_start: [], shift_end: [], break_length: [], craft: [] },
 })
 
+// Resolve start/end dates: support old format (formatted_dates.frontend_start) and new ShiftDTO (startDate)
+function resolveShiftStartDate(shift: any): string | null {
+    if (!shift) return null
+    if (shift.formatted_dates?.frontend_start) return shift.formatted_dates.frontend_start
+    if (shift.startDate) return shift.startDate.slice(0, 10)
+    return null
+}
+function resolveShiftEndDate(shift: any): string | null {
+    if (!shift) return null
+    if (shift.formatted_dates?.frontend_end) return shift.formatted_dates.frontend_end
+    if (shift.endDate) return shift.endDate.slice(0, 10)
+    return null
+}
+
 const shiftForm = useForm({
     id: props.shift ? props.shift.id : null,
-    start_date: props.shift ? props.shift.formatted_dates.frontend_start : null,
-    end_date: props.shift ? props.shift.formatted_dates.frontend_end : null,
+    start_date: resolveShiftStartDate(props.shift),
+    end_date: resolveShiftEndDate(props.shift),
     start: props.shift ? toHHMM(props.shift.start) : null,
     end: props.shift ? toHHMM(props.shift.end) : null,
     break_minutes: props.shift ? props.shift.break_minutes : null,
-    craft_id: props.shift ? props.shift.craft?.id : null,
+    craft_id: props.shift ? (props.shift.craft?.id ?? props.shift.craftId ?? null) : null,
     description: props.shift ? props.shift.description : '',
     event_id: props.event ? props.event.id : null,
     changeAll: false,
@@ -229,8 +254,8 @@ const shiftForm = useForm({
     globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
-    project_id: props.shift && props.shift.project
-        ? props.shift.project.id
+    project_id: props.shift
+        ? (props.shift.project?.id ?? props.shift.projectId ?? null)
         : (props.event && props.event.project
             ? props.event.project.id
             : (props.project ? props.project.id : null)),

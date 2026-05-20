@@ -10,8 +10,8 @@
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
-                    <div v-if="shift.shiftGroup && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
-                        ({{ shift.shiftGroup.name }})
+                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                        ({{ shiftGroupResolved.name }})
                     </div>
                     <span
                         :class="['ml-1 block truncate text-gray-800 cursor-pointer', titleTextClass]"
@@ -138,7 +138,7 @@
                                     class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
                                     v-tooltip.bottom="{ value: $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                                 >
-                                    <span v-if="prependCraftAbbreviation && shift.craft?.abbreviation" class="font-semibold text-red-800 shrink-0">{{ shift.craft.abbreviation }}</span>
+                                    <span v-if="prependCraftAbbreviation && fullCraft?.abbreviation" class="font-semibold text-red-800 shrink-0">{{ fullCraft.abbreviation }}</span>
                                     <component :is="IconInfoTriangle" class="size-4 text-red-600 shrink-0" />
                                     <span class="truncate block">{{ $t('Unoccupied') }}</span>
                                 </div>
@@ -244,7 +244,7 @@
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
-        :rooms="usePage().props.rooms"
+        :rooms="injectedRooms"
         :room="shift?.roomId ?? shift?.room_id ?? null"
     />
 
@@ -298,7 +298,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive, inject} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -322,6 +322,13 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+
+const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+
+// Rooms provided by ShiftPlanDailyView for AddShiftModal
+const injectedRooms = inject("shiftPlanRooms", ref([]))
+
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
     delay: 200,
@@ -371,14 +378,28 @@ const props = defineProps({
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
 
+// Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
+function normalizeTime(val) {
+    if (!val || typeof val !== 'string') return val
+    // Already HH:MM
+    if (/^\d{2}:\d{2}$/.test(val)) return val
+    // ISO datetime — extract HH:MM from the time portion
+    const m = val.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    // Fallback: "YYYY-MM-DD HH:MM:SS" style
+    const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+    if (sp) return sp[1]
+    return val
+}
+
 // Angezeigte Zeiten anpassen wenn Schicht über Tagesgrenze geht
 const displayStartTime = computed(() => {
     if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
-    return props.shift.start
+    return normalizeTime(props.shift.start)
 })
 const displayEndTime = computed(() => {
     if (props.dayRole === 'middle') return '00:00'
-    return props.shift.end
+    return normalizeTime(props.shift.end)
 })
 
 // Initialize i18n
@@ -510,11 +531,14 @@ const getPersonGlobalQualificationIds = (person) => {
 // Lokale Deltas, um Zähler für globale Qualifikationen sofort (optimistisch) zu aktualisieren
 const globalQualificationDeltas = ref({})
 
+// Lokale Deltas für Shift-Qualifikationen (Besetzung "0/4" → "1/4" sofort aktualisieren)
+const shiftQualificationDeltas = ref({})
+
 const demandedGlobalQualificationIdsSet = computed(() => new Set(demandedGlobalQualifications.value.map(gq => gq.id)))
 
 const countAssignedForGlobalQualificationBase = (globalQualificationId) => {
-    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []];
-    return groups.reduce((acc, list) => acc + list.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0);
+    const workers = props.shift?.workers || []
+    return workers.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length
 }
 
 const countAssignedForGlobalQualification = (globalQualificationId) => {
@@ -533,11 +557,11 @@ const adjustDeltaForUser = (person, direction = 1) => {
 }
 
 const computedShiftQualificationDropElements = computed(() => {
-    return props.shift.shifts_qualifications.map(sq => {
-        const totalAssigned = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-            return acc + props.shift[group].filter(item => item.pivot.shift_qualification_id === sq.shift_qualification_id).length;
-        }, 0);
-        const remaining = sq.value - totalAssigned;
+    const workers = props.shift.workers || []
+    return (props.shift.shifts_qualifications || []).map(sq => {
+        const totalAssigned = workers.filter(w => w.pivot?.shift_qualification_id === sq.shift_qualification_id).length
+        const delta = shiftQualificationDeltas.value[sq.shift_qualification_id] ?? 0
+        const remaining = sq.value - totalAssigned - delta;
         return remaining > 0 ? { shift_qualification_id: sq.shift_qualification_id, requiredDropElementsCount: remaining } : null;
     }).filter(Boolean);
 });
@@ -545,11 +569,14 @@ const computedShiftQualificationDropElements = computed(() => {
 const getEmptyShiftQualification = (id) =>
     computedShiftQualificationDropElements.value.find(drop => drop.shift_qualification_id === id);
 
-const shiftGroups = computed(() => [
-    { label: 'users', items: props.shift.users },
-    { label: 'freelancers', items: props.shift.freelancer },
-    { label: 'serviceProviders', items: props.shift.serviceProviders }
-]);
+const shiftGroups = computed(() => {
+    const workers = props.shift.workers || [];
+    return [
+        { label: 'users', items: workers.filter(w => w.type === 'user') },
+        { label: 'freelancers', items: workers.filter(w => w.type === 'freelancer') },
+        { label: 'serviceProviders', items: workers.filter(w => w.type === 'service_provider') },
+    ];
+});
 
 // Debounce time in milliseconds - prevent requests more frequently than this
 const DEBOUNCE_TIME = 2000; // 2 seconds
@@ -635,11 +662,10 @@ const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) =
 
 const getAssignablePeople = (shiftQualificationId) => {
     // Validate that the shift has the required properties
-    if (!props.shift || !props.shift.craft || !props.shift.craft.id) {
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId;
+    if (!props.shift || !shiftCraftId) {
         return [];
     }
-
-    const shiftCraftId = props.shift.craft.id;
 
     // IDs aller universell einsetzbaren Crafts sammeln
     const universalCraftIds = new Set(
@@ -652,16 +678,19 @@ const getAssignablePeople = (shiftQualificationId) => {
     const relevantCraftIds = new Set([shiftCraftId, ...universalCraftIds]);
 
     // IDs aller bereits zugewiesenen Personen pro Typ sammeln
-    const assigned = {
-        user: (props.shift.users || []).map(u => u.id),
-        freelancer: (props.shift.freelancer || []).map(f => f.id),
-        service_provider: (props.shift.serviceProviders || []).map(s => s.id),
-    };
+    const assigned = { user: [], freelancer: [], service_provider: [] };
+    const workers = props.shift.workers || [];
+    for (const w of workers) {
+        const t = w.type === 0 || w.type === 'user' ? 'user'
+            : w.type === 1 || w.type === 'freelancer' ? 'freelancer'
+            : 'service_provider';
+        assigned[t].push(w.id);
+    }
 
     const peopleWithCraft = [];
 
     Object.values(props.crafts).forEach(craft => {
-        // Nur Crafts verarbeiten, die zur Schicht passen (shift.craft.id oder universally_applicable)
+        // Nur Crafts verarbeiten, die zur Schicht passen (shiftCraftId oder universally_applicable)
         if (!relevantCraftIds.has(craft.id)) {
             return;
         }
@@ -833,26 +862,34 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
 
 const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
 
-    router.post(
+    // Optimistisch Zähler sofort erhöhen (vor dem Request)
+    shiftQualificationDeltas.value = {
+        ...shiftQualificationDeltas.value,
+        [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) + 1
+    }
+    if (sourceUser) {
+        adjustDeltaForUser(sourceUser, +1)
+    }
+
+    axios.post(
         route('shift.assignUserByType', {shift: props.shift.id}),
         {
             userId: droppedUser.value.id,
             userType: droppedUser.value.type,
             shiftQualificationId: shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            isShiftTab: true,
             craft_abbreviation: droppedUser.value.craft_abbreviation
         },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Optimistisch Zähler erhöhen, falls Nutzer geforderte globale Qualifikationen besitzt
-                if (sourceUser) {
-                    adjustDeltaForUser(sourceUser, +1)
-                }
-            }
-        },
-    )
+    ).catch(() => {
+        // Bei Fehler: Delta zurücknehmen
+        shiftQualificationDeltas.value = {
+            ...shiftQualificationDeltas.value,
+            [shiftQualificationId]: (shiftQualificationDeltas.value[shiftQualificationId] ?? 0) - 1
+        }
+        if (sourceUser) {
+            adjustDeltaForUser(sourceUser, -1)
+        }
+    })
 }
 
 const AddShiftModal = defineAsyncComponent({
@@ -892,32 +929,33 @@ const checkAllShiftCollisions = (forceRefresh = false) => {
     });
 };
 
-// Bei Komponenten-Initialisierung Kollisionen prüfen
-// Im detailsOnly-Modus (z.B. ShiftPlanListView) wird die Kollisionsprüfung
-// erst beim Klick auf das Drop-Menü ausgelöst, um Page-Loads massiv zu beschleunigen.
-onMounted(() => {
-    if (props.detailsOnly) return;
-    // Force refresh on initial load to ensure we have the latest data
-    checkAllShiftCollisions(true);
-});
+// Kollisionsprüfung wird lazy beim Öffnen des Zuweisungs-Dropdowns ausgelöst (MenuButton @click).
+// Kein onMounted-Check mehr — bei vielen Schichten verursachte das N parallele API-Requests.
 
+
+// Resolve shiftGroup from lookup
+const shiftGroupResolved = computed(() => props.shift.shiftGroup ?? resolveShiftGroup(props.shift.shiftGroupId));
 
 // Computed property to get full craft data with color from props.crafts
 const fullCraft = computed(() => {
-    const shiftCraftId = props.shift?.craft?.id
-    if (!shiftCraftId || !props.crafts) {
-        return props.shift?.craft || {}
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId
+    if (!shiftCraftId) {
+        return props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {}
     }
 
     // Look up craft in props.crafts (can be Array or Object)
-    const craftsArray = Array.isArray(props.crafts)
-        ? props.crafts
-        : Object.values(props.crafts || {})
+    if (props.crafts) {
+        const craftsArray = Array.isArray(props.crafts)
+            ? props.crafts
+            : Object.values(props.crafts || {})
+        const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
+        if (foundCraft) {
+            const baseCraft = props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
+            return { ...baseCraft, ...foundCraft }
+        }
+    }
 
-    const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
-
-    // Merge shift.craft with found craft data, prioritizing found craft
-    return foundCraft ? { ...props.shift.craft, ...foundCraft } : props.shift?.craft || {}
+    return props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
 })
 
 const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')
@@ -928,22 +966,23 @@ const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] bord
 const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
 const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
 
-// Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
+// Wenn sich die Schichtdaten ändern, Cache zurücksetzen.
+// Kollisionen werden lazy beim nächsten Dropdown-Open geprüft.
 watch(() => props.shift, () => {
-    // Cache zurücksetzen wenn sich die Schichtdaten ändern
     assignablePeopleCache.value = {};
-    // Optimistische Deltas zurücksetzen – echte Werte kommen via Props
     globalQualificationDeltas.value = {}
-    // In detailsOnly-Mode wird der Cache lazy beim Menü-Open neu gefüllt
-    if (props.detailsOnly) return;
-    // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
-    checkAllShiftCollisions(true);
+    shiftQualificationDeltas.value = {}
 }, { deep: true });
 
 // Event-Handler: Wenn Kind-Komponente meldet, dass ein User entfernt wurde, Zähler sofort dekrementieren
 const onChildUserRemoved = (payload) => {
     const person = payload?.person
     if (!person) return
+    // Shift-Qualifikation-Delta optimistisch dekrementieren
+    const sqId = person?.pivot?.shift_qualification_id
+    if (sqId != null) {
+        shiftQualificationDeltas.value[sqId] = (shiftQualificationDeltas.value[sqId] ?? 0) - 1
+    }
     adjustDeltaForUser(person, -1)
 }
 </script>

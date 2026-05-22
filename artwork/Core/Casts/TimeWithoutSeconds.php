@@ -18,6 +18,10 @@ class TimeWithoutSeconds implements CastsAttributes
 
     public function set($model, string $key, mixed $value, array $attributes): mixed
     {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('H:i:s');
+        }
+
         return $value;
     }
 }

@@ -67,8 +67,15 @@ class UpdateArtwork extends Command
         $this->migrateToCrm();
         $this->syncCrmContacts();
         $this->cleanupFalseConflicts();
+        $this->migrateChangesHistoryToActivityLog();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function migrateChangesHistoryToActivityLog(): void
+    {
+        $this->section('Changes History → Activity Log');
+        $this->call('changes:migrate-to-activity-log');
     }
 
     private function updateProjectManagementBuilder(): void

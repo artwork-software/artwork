@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Modules\Project\Services;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use Artwork\Modules\Change\Builders\ChangeBuilder;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Project\Models\Comment;
@@ -10,6 +9,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 final class CommentServiceTest extends TestCase
@@ -103,7 +103,7 @@ final class CommentServiceTest extends TestCase
     {
         return $this->mock(ChangeService::class, function ($m) {
             $m->shouldReceive('createBuilder')->andReturn(ChangeBuilder::newInstance());
-            $m->shouldReceive('saveFromBuilder')->andReturn(new Change());
+            $m->shouldReceive('saveFromBuilder')->andReturn(new Activity());
         });
     }
 }

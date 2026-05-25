@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Room\Models;
 
-use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
@@ -23,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -56,9 +57,18 @@ class Room extends Model
     use HasFactory;
     use SoftDeletes;
     use Prunable;
-    use HasChangesHistory;
+    use LogsActivity;
     use BelongsToArea;
     use BelongsToUser;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('room')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'name',

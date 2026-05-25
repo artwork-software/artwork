@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Vacation\Models;
 
-use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -28,9 +29,18 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Vacation extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
+    use LogsActivity;
 
     protected $table = 'vacations';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('vacation')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'start_time',

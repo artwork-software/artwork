@@ -2,14 +2,14 @@
 
 namespace Artwork\Modules\Change\Repositories;
 
-use Antonrom\ModelChangesHistory\Models\Change;
+use Spatie\Activitylog\Contracts\Activity;
 
 readonly class ChangeRepository
 {
-    public function save(Change $change): Change
+    public function save(Activity $activity): Activity
     {
-        $change->save();
+        $activity->save();
 
-        return $change;
+        return $activity;
     }
 }

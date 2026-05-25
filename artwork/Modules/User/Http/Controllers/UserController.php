@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\User\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\Controller;
+use Spatie\Activitylog\Models\Activity;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
@@ -1197,21 +1197,15 @@ class UserController extends Controller
             if ($user->contract) {
                 $user->contract->delete();
             }
-            Change::query()
-                ->where(function ($query) use ($user): void {
-                    $query->where('changer_id', $user->id)
-                        ->orWhere('changes', 'LIKE', '"changed_by": {"id": ' . $user->id . '%');
-                })
-                ->whereIn('changer_type', [User::class, LaravelUser::class])
-                ->each(function ($change) use ($user, $reassignUserId): void {
-                    $change->changer_id = $reassignUserId;
-                    $change->changes = str_replace(
-                        ' "changed_by": {"id": ' . $user->id,
-                        ' "changed_by": {"id": ' . $reassignUserId,
-                        $change->changes
-                    );
-                    $change->save();
-                });
+            // Reassign all logged activities authored by this user to the
+            // replacement user. `changed_by` data that the legacy Antonrom
+            // payload embedded in `properties` is rebuilt from `causer` at
+            // display time (see RoomCalendarResource and ChangeService),
+            // so we only need to fix `causer_id` here.
+            Activity::query()
+                ->where('causer_id', $user->id)
+                ->whereIn('causer_type', [User::class, LaravelUser::class])
+                ->update(['causer_id' => $reassignUserId]);
             SubEvent::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
             // Now delete the user
             $user->delete();

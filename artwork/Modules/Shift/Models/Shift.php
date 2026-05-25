@@ -65,9 +65,20 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Shift extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
+    use HasChangesHistory {
+        boot as private bootHasChangesHistoryTrait;
+    }
     use SoftDeletes;
     use LogsActivity;
+
+    // Laravel 13's bootIfNotBooted() throws when observe() is called from inside boot()
+    // (HasChangesHistory::boot() does `self::observe(ModelChangesHistoryObserver::class)`,
+    // and observe() does `new static`, which recursively re-enters boot()). Skip the
+    // trait's boot and register the observer from ShiftChangeServiceProvider instead.
+    public static function boot(): void
+    {
+        parent::boot();
+    }
 
 
     protected $fillable = [

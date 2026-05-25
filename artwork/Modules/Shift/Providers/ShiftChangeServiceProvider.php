@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Providers;
 
+use Antonrom\ModelChangesHistory\Observers\ModelChangesHistoryObserver;
 use Artwork\Modules\Shift\Models\GlobalQualification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
@@ -39,6 +40,9 @@ class ShiftChangeServiceProvider extends ServiceProvider
     {
         // Observer für Shift (Stammdaten)
         Shift::observe(ShiftObserver::class);
+        // HasChangesHistory::boot() is bypassed in Shift to avoid Laravel 13 boot recursion;
+        // register the package's observer here instead so changes history keeps working.
+        Shift::observe(ModelChangesHistoryObserver::class);
         ShiftsQualifications::observe(ShiftsQualificationsObserver::class);
         GlobalQualification::observe(ShiftGlobalQualificationObserver::class);
 

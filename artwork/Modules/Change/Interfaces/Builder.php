@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Change\Interfaces;
 
-use Antonrom\ModelChangesHistory\Models\Change;
+use Spatie\Activitylog\Contracts\Activity;
 
 interface Builder
 {
-    public function build(): Change;
+    public function build(): Activity;
 }

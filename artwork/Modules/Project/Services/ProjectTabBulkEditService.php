@@ -40,6 +40,7 @@ class ProjectTabBulkEditService
                 'shifts.freelancer',
                 'shifts.serviceProvider',
                 'shifts.shiftsQualifications',
+                'eventProperties',
             ])
             ->orderBy('start_time', 'asc')
             // Eventtypen filtern (nur diese zulassen, wenn gesetzt)

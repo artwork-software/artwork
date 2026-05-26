@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Models;
 
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Contracts\Employable;
@@ -23,8 +24,8 @@ class ShiftWorker extends MorphPivot
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        'start_time' => TimeWithoutSeconds::class,
+        'end_time' => TimeWithoutSeconds::class,
     ];
 
     public function shift(): BelongsTo

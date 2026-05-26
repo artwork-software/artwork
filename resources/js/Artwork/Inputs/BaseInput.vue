@@ -55,6 +55,7 @@
         <label v-if="label" :for="id" :class="[labelBaseClass, density.labelPositionFloated, density.labelTransitions]">
               <span class="block truncate">
                 {{ withoutTranslation ? label : $t(label) }}
+                <span v-if="required" class="text-red-500">*</span>
               </span>
         </label>
 

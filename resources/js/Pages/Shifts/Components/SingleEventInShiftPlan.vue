@@ -2,31 +2,31 @@
     <div>
         <div>
             <div class="text-secondary-hover rounded-lg flex flex-col"
-                 :class="[shiftPlanSettings.time_period_project_id === event?.project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, usePage().props.high_contrast_percent)),
-                 borderColor: event.eventType.hex_code}">
+                 :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
+                 :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent)),
+                 borderColor: eventType.hex_code}">
 
                 <!-- Projektgruppen-Balken (wie im FullEventInCalendar) -->
                 <div
-                    v-if="shiftPlanSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+                    v-if="shiftPlanSettings.display_project_groups && project?.isInGroup && project?.group && project?.group.length > 0 && !project?.isGroup"
                     class="w-full rounded-t-lg px-2 py-1 border-b border-black/15"
                     :style="{
-                        backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent'
+                        backgroundColor: project.group[0].color ? project.group[0].color + '40' : 'transparent'
                     }"
                 >
                     <div class="flex items-center gap-1.5 min-w-0">
                         <span :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs text-black']">
-                            {{ event.project.group[0].name }}
+                            {{ project.group[0].name }}
                         </span>
                     </div>
                 </div>
 
                 <!-- Projektname-Balken mit Trennstrich (wie im FullEventInCalendar) -->
                 <div
-                    v-if="event?.project?.id"
+                    v-if="project?.id"
                     class="w-full px-2 py-1 border-b border-black/15"
                     :style="{
-                        backgroundColor: event.project?.isGroup && event.project?.color ? event.project.color + '40' : 'transparent'
+                        backgroundColor: project?.isGroup && project?.color ? project.color + '40' : 'transparent'
                     }"
                 >
                     <div
@@ -34,10 +34,10 @@
                         @mouseenter="showProjectNameTooltipHandler"
                         @mouseleave="hideProjectNameTooltip"
                     >
-                        <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})"
+                        <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})"
                            class="relative flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200">
                             <span ref="projectNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs']">
-                                {{ event.project?.name }}
+                                {{ project?.name }}
                             </span>
                         </a>
                         <Teleport to="body">
@@ -47,7 +47,7 @@
                                 :style="{ top: projectNameTooltipPosition.top + 'px', left: projectNameTooltipPosition.left + 'px' }"
                             >
                                 <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                    {{ event.project?.name }}
+                                    {{ project?.name }}
                                 </div>
                             </div>
                         </Teleport>
@@ -56,23 +56,23 @@
 
                 <!-- Content-Bereich -->
                 <div class="flex items-stretch gap-x-2 px-2 py-2">
-                    <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.eventType.hex_code}" v-if="!shiftPlanSettings.high_contrast"></div>
-                    <div :class="[expandDays ? '' : 'max-w-40 w-40', 'min-w-0']" :style="{borderColor: event.eventType.hex_code}">
+                    <div class="p-1 rounded-lg w-1" :style="{backgroundColor: eventType.hex_code}" v-if="!shiftPlanSettings.high_contrast"></div>
+                    <div :class="[expandDays ? '' : 'max-w-40 w-40', 'min-w-0']" :style="{borderColor: eventType.hex_code}">
                         <!-- Eventtyp-Abbreviation: Eventname -->
                         <div
                             class="relative"
                             @mouseenter="showEventNameTooltipHandler"
                             @mouseleave="hideEventNameTooltip"
                         >
-                            <div v-if="event?.project?.id">
-                                <a :href="route('projects.tab', {project: event.project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                            <div v-if="project?.id">
+                                <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
                                     <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'w-40 max-w-40 truncate', 'block text-xs/4 font-semibold']">
-                                        {{ event.eventType?.abbreviation }}: {{ event.eventName }}
+                                        {{ eventType?.abbreviation }}: {{ event.eventName }}
                                     </span>
                                 </a>
                             </div>
                             <span v-else ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
-                                {{ event?.eventType?.abbreviation }}: {{ event?.eventName }}
+                                {{ eventType?.abbreviation }}: {{ event?.eventName }}
                             </span>
                             <Teleport to="body">
                                 <div
@@ -81,7 +81,7 @@
                                     :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
                                 >
                                     <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                        {{ event?.eventType?.abbreviation }}: {{ event?.eventName }}
+                                        {{ eventType?.abbreviation }}: {{ event?.eventName }}
                                     </div>
                                 </div>
                             </Teleport>
@@ -90,11 +90,11 @@
                             <div v-if="event.allDay">
                                 {{ $t('All day') }}
                             </div>
-                            <div v-else-if="event.daysOfEvent.length === 1">
-                                <span>{{ event?.formattedDates?.startTime }} - {{ event?.formattedDates?.endTime }}</span>
+                            <div v-else-if="daysOfEvent.length === 1">
+                                <span>{{ formattedDates?.startTime }} - {{ formattedDates?.endTime }}</span>
                             </div>
                             <div v-else>
-                                {{ event.formattedDates?.start }} - {{ event.formattedDates?.end }}
+                                {{ formattedDates?.start }} - {{ formattedDates?.end }}
                             </div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@
                             stroke-width="1.5"
                             :class="event.hasTimelines ? '' : 'text-gray-400'"
                             :style="event.hasTimelines ? {
-                                color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code, percentage))
+                                color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage))
                             } : {}"
                         />
                     </div>
@@ -134,12 +134,16 @@ import axios from "axios";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";
 import {IconTimeline} from "@tabler/icons-vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {getDaysInRange, computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
 
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import("@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue"),
     delay: 200,
     timeout: 3000,
 });
+
+const { resolveEventType, resolveProject } = useShiftPlanLookups();
 
 const percentage = usePage().props.high_contrast_percent;
 const shiftPlanSettings = computed(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings);
@@ -163,6 +167,12 @@ const props = defineProps({
         required: true
     }
 });
+
+// Resolve normalized event data via lookups
+const eventType = computed(() => props.event.eventType ?? resolveEventType(props.event.eventTypeId) ?? {});
+const project = computed(() => props.event.project ?? resolveProject(props.event.projectId));
+const daysOfEvent = computed(() => props.event.daysOfEvent ?? getDaysInRange(props.event.start, props.event.end));
+const formattedDates = computed(() => props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end));
 
 const showTimelineModal = ref(false);
 const timelineData = ref([]);

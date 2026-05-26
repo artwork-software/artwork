@@ -48,11 +48,15 @@ enum PermissionEnum : string
 
     case INVENTORY_PLANER = 'can plan inventory';
 
+    case INVENTORY_SETTINGS = 'inventory.settings';
+
     case CAN_VIEW_PRIVATE_USER_INFO = 'can view private user info';
 
     case CAN_SEE_PLANNING_CALENDAR = 'can see planning calendar';
 
     case CAN_EDIT_PLANNING_CALENDAR = 'can edit planning calendar';
+
+    case CAN_PLAN_FIXED_IN_PLANNING_CALENDAR = 'can plan fixed in planning calendar';
 
     case SET_CREATE_EDIT = 'set.create_edit';
     case SET_DELETE = 'set.delete';

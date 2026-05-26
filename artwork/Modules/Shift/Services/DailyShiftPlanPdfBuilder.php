@@ -17,7 +17,7 @@ class DailyShiftPlanPdfBuilder
     private int $gapProminentFromMinutes = 45;
 
     /** Zielhöhe Grid (px) – Dompdf-friendly */
-    private int $gridTargetHeightPx = 520;
+    private int $gridTargetHeightPx = 180;
 
     private int $gapRowHeightPx = 14;
     private int $activeRowMinHeightPx = 18;
@@ -302,6 +302,18 @@ class DailyShiftPlanPdfBuilder
 
         $allBlocksFlat = array_merge($timelineBlocks, $allShiftBlocksFlat);
 
+        // Height-mode detection: content-only (<=1 block), uniform (all same times), proportional
+        $heightMode = 'proportional';
+        if (count($allBlocksFlat) <= 1) {
+            $heightMode = 'content-only';
+        } elseif (count($allBlocksFlat) > 1) {
+            $starts = array_unique(array_column($allBlocksFlat, 'start'));
+            $ends = array_unique(array_column($allBlocksFlat, 'end'));
+            if (count($starts) === 1 && count($ends) === 1) {
+                $heightMode = 'uniform';
+            }
+        }
+
         if (empty($allBlocksFlat)) {
             $rows = [[
                 'i' => 0,
@@ -376,8 +388,11 @@ class DailyShiftPlanPdfBuilder
         $gapTotalHeight = $gapCount * $this->gapRowHeightPx;
         $availableForActive = max(120, $this->gridTargetHeightPx - $gapTotalHeight);
 
-        $pxPerMinute = $totalActiveMinutes > 0 ? ($availableForActive / $totalActiveMinutes) : 1.0;
-        $pxPerMinute = max(0.35, min(2.2, $pxPerMinute));
+        $pxPerMinute = $totalActiveMinutes > 0 ? ($availableForActive / $totalActiveMinutes) : 0.4;
+        // Bewusst niedrigere Bounds: weniger leerer Platz unter Schichten, ohne dass
+        // Timelines unlesbar werden. In Edge-Cases (z.B. 1h-Timeline mit viel Text)
+        // werden 1-2 Zeilen abgeschnitten – das ist akzeptiert.
+        $pxPerMinute = max(0.18, min(0.5, $pxPerMinute));
 
         $rows = [];
         foreach ($merged as $idx => $seg) {
@@ -392,9 +407,21 @@ class DailyShiftPlanPdfBuilder
 
             $label = $t1 . ' – ' . $t2;
 
-            $height = $isGap
-                ? $this->gapRowHeightPx
-                : (int)round(max($this->activeRowMinHeightPx, $dur * $pxPerMinute));
+            if ($isGap) {
+                $height = $this->gapRowHeightPx;
+            } elseif ($heightMode === 'content-only' || $heightMode === 'uniform') {
+                // Content-driven: estimate height from block content
+                $overlapping = array_filter($allBlocksFlat, fn($b) =>
+                    (int)$b['start'] < $to && (int)$b['end'] > $from
+                );
+                $maxContentH = $this->activeRowMinHeightPx;
+                foreach ($overlapping as $ob) {
+                    $maxContentH = max($maxContentH, $this->estimateBlockContentHeight($ob));
+                }
+                $height = $maxContentH;
+            } else {
+                $height = (int)round(max($this->activeRowMinHeightPx, $dur * $pxPerMinute));
+            }
 
             $rows[] = [
                 'i' => $idx,
@@ -888,7 +915,7 @@ class DailyShiftPlanPdfBuilder
 
             $map[$startIndex] = [
                 'rowspan'  => ($endIndex - $startIndex + 1),
-                'heightPx' => $spanHeight,
+                'heightPx' => max($spanHeight, $this->estimateBlockContentHeight($b)),
                 'data'     => $b,
             ];
 
@@ -917,6 +944,14 @@ class DailyShiftPlanPdfBuilder
         // Alle Chunks auf einer einzigen logischen "Seite" –
         // physische PDF-Seitenumbrüche werden per CSS gesteuert (.day)
         return [$chunks->values()->all()];
+    }
+
+    private function estimateBlockContentHeight(array $block): int
+    {
+        $base = 18;
+        $people = count($block['people'] ?? []);
+        $quals = count($block['qualSummary'] ?? []);
+        return max($this->activeRowMinHeightPx, $base + ($people * 14) + ($quals * 10));
     }
 
     /* ----------------------------- HELPERS ----------------------------- */

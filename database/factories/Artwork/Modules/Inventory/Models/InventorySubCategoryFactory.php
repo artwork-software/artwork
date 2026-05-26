@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\Inventory\Models;
 
+use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,6 +22,7 @@ class InventorySubCategoryFactory extends Factory
     {
         return [
             'name' => fake()->unique()->word(),
+            'inventory_category_id' => InventoryCategory::factory(),
         ];
     }
 }

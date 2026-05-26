@@ -122,17 +122,8 @@ class InventoryPlanningService
         foreach ($dates as $dateInfo) {
             $date = $dateInfo['date'];
             foreach ($articlesWithDetails as $article) {
-                if ($article->is_detailed_quantity) {
-                    $availableQuantity = $article->detailedArticleQuantities
-                        ->filter(function ($detailedArticle) {
-                            return $detailedArticle->status && $detailedArticle->status->id === 1;
-                        })
-                        ->sum('quantity');
-                } else {
-                    $availableStatus = $article->statusValues->firstWhere('inventory_article_status_id', 1);
-                    $availableQuantity = $availableStatus ? $availableStatus->pivot->value : $article->quantity;
-                }
-                $availability[$date][$article->id] = $availableQuantity ?? 0;
+                $availableQuantity = $this->getEinsatzbereitQuantity($article);
+                $availability[$date][$article->id] = $availableQuantity;
                 $usedFlag[$date][$article->id] = false;
             }
         }

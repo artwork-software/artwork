@@ -11,6 +11,7 @@ use Artwork\Core\Database\Models\Model;
  * @property int $id
  * @property int $count
  * @property int $user_id
+ * @property int|null $created_by_id
  * @property string $type
  * @property int $model_id
  * @property string $created_at
@@ -23,6 +24,7 @@ class Scheduling extends Model
     protected $fillable = [
         'count',
         'user_id',
+        'created_by_id',
         'type',
         'model',
         'model_id',

@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-auto h-screen' : ''">
         <!-- Topbar -->
-        <div class="w-full left-8 top-0 px-5 fixed z-[45]">
+        <div ref="topbarRef" class="fixed z-[45] top-14 lg:top-0 left-0 lg:left-16 right-0">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -29,13 +29,13 @@
             </div>
         </div>
         <!-- Grid -->
-        <div class="pt-20">
+        <div :style="{ paddingTop: topbarHeight + 'px' }">
             <!-- Monatsansicht -->
             <div v-if="!isDaily && !atAGlance">
                 <div class="w-max -ml-3">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
                         <!-- Kopfzeile soll exakt dieselbe Raumreihenfolge/-filterung nutzen wie das Grid -->
-                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" />
+                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" :sticky-top="topbarHeight" />
                         <div
                             class="w-fit events-by-days-container"
                             :class="[isFullscreen ? 'mt-4' : '']"
@@ -117,6 +117,7 @@
                                                                 @open-add-sub-event-modal="openAddSubEventModal"
                                                                 @open-confirm-modal="openDeleteEventModal"
                                                                 @show-decline-event-modal="openDeclineEventModal"
+                                                                @accept-room-request="acceptSingleRoomRequest"
                                                                 @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                                             />
                                                         </div>
@@ -183,6 +184,7 @@
                     @open-add-sub-event-modal="openAddSubEventModal"
                     @open-confirm-modal="openDeleteEventModal"
                     @show-decline-event-modal="openDeclineEventModal"
+                    @accept-room-request="acceptSingleRoomRequest"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                     :verifierForEventTypIds="verifierForEventTypIds"
                     :is-planning="isPlanning"
@@ -216,6 +218,7 @@
                                         @open-add-sub-event-modal="openAddSubEventModal"
                                         @open-confirm-modal="openDeleteEventModal"
                                         @show-decline-event-modal="openDeclineEventModal"
+                                        @accept-room-request="acceptSingleRoomRequest"
                                         @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                         :verifierForEventTypIds="verifierForEventTypIds"
                                         :is-planning="isPlanning"
@@ -229,66 +232,83 @@
         </div>
 
         <!-- Multi-Edit Bottom Bar -->
-        <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-[45] pointer-events-none" v-if="multiEdit">
-            <div class="flex items-center justify-center h-full gap-4" v-if="!isPlanning">
-                <div>
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="showMultiEditModal = true"
-                        :text="checkedCount + ' Termin(e) verschieben'"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="showMultiDuplicateModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Duplicate events')"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="openDeleteSelectedEventsModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Delete events')"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="cancelMultiEditDuplicateSelection"
-                        :disabled="checkedCount === 0"
-                        :text="$t('Cancel selection')"
-                    />
-                </div>
+        <div class="fixed bottom-0 w-full bg-artwork-navigation-background/30 z-[45] pointer-events-none py-3" v-if="multiEdit">
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="!isPlanning">
+                <FormButton
+                    :disabled="checkedCount === 0"
+                    @click="showMultiEditModal = true"
+                    :text="checkedCount + ' Termin(e) verschieben'"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showMultiDuplicateModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Duplicate events')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkAcceptRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Accept requests')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkDeclineRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Decline requests')"
+                />
+                <FormButton
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="openDeleteSelectedEventsModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Delete events')"
+                />
+                <FormButton
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="cancelMultiEditDuplicateSelection"
+                    :disabled="checkedCount === 0"
+                    :text="$t('Cancel selection')"
+                />
             </div>
-            <div class="flex items-center justify-center h-full gap-4" v-else>
-                <div v-if="can('can see planning calendar') || hasAdminRole()">
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="requestVerification"
-                        :text="checkedCount + ' ' + $t('request verification')"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div v-if="can('can edit planning calendar') || hasAdminRole()">
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="approveRequests"
-                        :text="checkedCount + ' ' + $t('Approve events')"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div v-if="can('can edit planning calendar') || hasAdminRole()">
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="showRejectEventVerificationModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Reject events')"
-                    />
-                </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-else>
+                <FormButton
+                    v-if="can('can see planning calendar') || hasAdminRole()"
+                    :disabled="checkedCount === 0"
+                    @click="requestVerification"
+                    :text="checkedCount + ' ' + $t('request verification')"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    v-if="can('can edit planning calendar') || hasAdminRole()"
+                    :disabled="checkedCount === 0"
+                    @click="approveRequests"
+                    :text="checkedCount + ' ' + $t('Approve events')"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    v-if="can('can edit planning calendar') || hasAdminRole()"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showRejectEventVerificationModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Reject events')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkAcceptRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Accept requests')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkDeclineRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Decline requests')"
+                />
             </div>
         </div>
 
@@ -446,6 +466,11 @@ const containerClass = computed(() => ['group/container border-t border-gray-300
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
 );
+
+// Dynamic topbar height measurement
+const topbarRef = ref(null);
+const topbarHeight = ref(80); // default fallback
+let topbarObserver = null;
 
 // State
 const multiEdit = ref(false);
@@ -939,6 +964,16 @@ onMounted(async () => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    // Observe topbar height for responsive layout
+    if (topbarRef.value) {
+        topbarObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                topbarHeight.value = entry.contentRect.height;
+            }
+        });
+        topbarObserver.observe(topbarRef.value);
+    }
 });
 
 onBeforeUnmount(() => {
@@ -952,10 +987,28 @@ onBeforeUnmount(() => {
     document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+
+    // Clean up topbar observer
+    if (topbarObserver) {
+        topbarObserver.disconnect();
+        topbarObserver = null;
+    }
 });
 
 // ---------- Multi-Edit etc. ----------
 const checkedCount = computed(() => editEvents.value.length);
+const hasSelectedRoomRequests = computed(() => {
+    if (!editEvents.value.length) return false;
+    const selectedIds = new Set(editEvents.value);
+    for (const room of newCalendarData.value) {
+        for (const slot of Object.values(room.content || {})) {
+            for (const evt of (slot.events ?? [])) {
+                if (selectedIds.has(evt.id) && evt.occupancy_option) return true;
+            }
+        }
+    }
+    return false;
+});
 
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
@@ -1019,6 +1072,15 @@ const cancelMultiEditDuplicateSelection = () => {
 };
 
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
+const acceptSingleRoomRequest = (event) => {
+    router.put(route('events.accept', { event: event.id }), { accepted: true }, { preserveScroll: true });
+};
+const bulkAcceptRoomRequests = () => {
+    router.put(route('events.bulk-accept'), { eventIds: editEvents.value }, { preserveScroll: true });
+};
+const bulkDeclineRoomRequests = () => {
+    router.put(route('events.bulk-decline'), { eventIds: editEvents.value }, { preserveScroll: true });
+};
 const openDeleteEventModal = (event, type) => {
     deleteType.value = type;
     if (type === "main") {

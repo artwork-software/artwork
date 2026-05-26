@@ -35,6 +35,16 @@ class WorkerEagerLoadConfig
                     'shifts.room_id',
                     'shifts.event_id',
                     'shifts.shift_group_id',
+                ])->withPivot([
+                    'id',
+                    'shift_qualification_id',
+                    'shift_count',
+                    'craft_abbreviation',
+                    'short_description',
+                    'start_date',
+                    'end_date',
+                    'start_time',
+                    'end_time',
                 ])->with([
                     'craft:id,name,abbreviation',
                     'shiftGroup:id,name',

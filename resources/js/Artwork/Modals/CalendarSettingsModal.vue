@@ -17,6 +17,7 @@
                                 <div class="group grid size-4 grid-cols-1">
                                     <input
                                         v-model="userCalendarSettings.detailed_shift_overview"
+                                        @change="onDetailedShiftOverviewChange"
                                         id="lv_detailed_shift_overview"
                                         aria-describedby="lv_detailed_shift_overview-description"
                                         name="lv_detailed_shift_overview"
@@ -33,6 +34,33 @@
                                 <label for="lv_detailed_shift_overview" class="font-medium text-gray-900">{{ $t('Detailed function overview per shift') }}</label>
                                 <p id="lv_detailed_shift_overview-description" class="text-gray-500 text-xs">
                                     {{ $t('Shows assigned persons and unoccupied slots directly under each shift in the list view.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Hide shift row (only available when detailed_shift_overview is on) -->
+                        <div class="flex gap-3 pl-6" :class="{ 'opacity-50': !userCalendarSettings.detailed_shift_overview }">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.hide_shift_row"
+                                        :disabled="!userCalendarSettings.detailed_shift_overview"
+                                        id="lv_hide_shift_row"
+                                        aria-describedby="lv_hide_shift_row-description"
+                                        name="lv_hide_shift_row"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_hide_shift_row" class="font-medium text-gray-900">{{ $t('Hide shift row') }}</label>
+                                <p id="lv_hide_shift_row-description" class="text-gray-500 text-xs">
+                                    {{ $t('Hides the shift header row and shows the craft abbreviation in front of each user row time.') }}
                                 </p>
                             </div>
                         </div>
@@ -59,6 +87,58 @@
                                 <label for="lv_show_fully_staffed_shifts" class="font-medium text-gray-900">{{ $t('Show fully staffed shifts') }}</label>
                                 <p id="lv_show_fully_staffed_shifts-description" class="text-gray-500 text-xs">
                                     {{ $t('Also displays shifts that are already fully staffed in the list view.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Show appointments -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.show_appointments"
+                                        id="lv_show_appointments"
+                                        aria-describedby="lv_show_appointments-description"
+                                        name="lv_show_appointments"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_show_appointments" class="font-medium text-gray-900">{{ $t('Show appointments') }}</label>
+                                <p id="lv_show_appointments-description" class="text-gray-500 text-xs">
+                                    {{ $t('Shows appointments alongside shifts in a separate column.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Group by shift groups -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.group_by_shift_groups"
+                                        id="lv_group_by_shift_groups"
+                                        aria-describedby="lv_group_by_shift_groups-description"
+                                        name="lv_group_by_shift_groups"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_group_by_shift_groups" class="font-medium text-gray-900">{{ $t('Sort by shift groups') }}</label>
+                                <p id="lv_group_by_shift_groups-description" class="text-gray-500 text-xs">
+                                    {{ $t('Groups shifts by their shift group within each room.') }}
                                 </p>
                             </div>
                         </div>
@@ -210,6 +290,35 @@
                             <label for="hide_unoccupied_rooms" class="font-medium text-gray-900">{{ $t('Hide unoccupied rooms') }}</label>
                             <p id="hide_unoccupied_rooms-description" class="text-gray-500 text-xs">
                                 {{ $t('Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Show planned events (nicht Schichtplan, nicht Planungsansicht, mit Permission) -->
+                    <div
+                        class="flex gap-3"
+                        v-if="!isPlanning && !inShiftPlan && (can('can see planning calendar') || can('can edit planning calendar') || is('artwork admin'))"
+                    >
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_planned_events"
+                                    id="show_planned_events"
+                                    aria-describedby="show_planned_events-description"
+                                    name="show_planned_events"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show planned events') }}</label>
+                            <p id="show_planned_events-description" class="text-gray-500 text-xs">
+                                {{ $t('Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.') }}
                             </p>
                         </div>
                     </div>
@@ -677,34 +786,6 @@
                         </div>
                     </div>
 
-                    <!-- Show planned events (außerhalb Planning, nicht Schichtplan, mit Permission) -->
-                    <div
-                        class="flex gap-3"
-                        v-if="!isPlanning && !inShiftPlan && (can('can see planning calendar | can edit planning calendar') || is('artwork admin'))"
-                    >
-                        <div class="flex h-6 shrink-0 items-center">
-                            <div class="group grid size-4 grid-cols-1">
-                                <input
-                                    v-model="userCalendarSettings.show_planned_events"
-                                    id="show_planned_events"
-                                    aria-describedby="show_planned_events-description"
-                                    name="show_planned_events"
-                                    type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
-                                />
-                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
-                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="text-sm/6">
-                            <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show planned events') }}</label>
-                            <p id="show_planned_events-description" class="text-gray-500 text-xs">
-                                {{ $t('Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.') }}
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -768,6 +849,9 @@ const userCalendarSettings = props.isListView
         show_shift_group_tag: activeSettings ? activeSettings.show_shift_group_tag : false,
         show_fully_staffed_shifts: activeSettings ? activeSettings.show_fully_staffed_shifts : false,
         detailed_shift_overview: activeSettings ? activeSettings.detailed_shift_overview : false,
+        show_appointments: activeSettings ? activeSettings.show_appointments : false,
+        group_by_shift_groups: activeSettings ? activeSettings.group_by_shift_groups : false,
+        hide_shift_row: activeSettings ? activeSettings.hide_shift_row : false,
     })
     : useForm({
         is_daily_view: props.isDailyView,
@@ -799,6 +883,12 @@ const userCalendarSettings = props.isListView
 const onStatusColorChange = () => {
     if (userCalendarSettings.use_event_status_color) {
         userCalendarSettings.use_main_category_color = false;
+    }
+};
+
+const onDetailedShiftOverviewChange = () => {
+    if (!userCalendarSettings.detailed_shift_overview) {
+        userCalendarSettings.hide_shift_row = false;
     }
 };
 

@@ -38,6 +38,7 @@ function closeEditScopeModal() { showEditScope.value = false }
 function removeComponentFromTab() {
     router.delete(route("tab.remove.component", { projectTab: props.tab.id }), {
         data: { component_id: props.element.id },
+        preserveScroll: true,
     });
 }
 

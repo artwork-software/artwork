@@ -201,6 +201,11 @@
                         <h3 class="ui-card-title">{{ $t('Room') }}</h3>
                     </header>
 
+                    <div v-if="declinedRoomId" class="flex items-center gap-2 text-[12px] text-red-600 mb-1">
+                        <span>{{ $t('Previously declined from') }}:</span>
+                        <span class="font-medium line-through">{{ declinedRoomName }}</span>
+                    </div>
+
                     <div class="mb-1 flex items-center justify-between">
                         <span class="ui-hint">{{ $t('Pick a room for this event.') }}</span>
                         <div v-if="selectedRoom && roomCollisionArray?.[selectedRoom.id] > 0" class="text-[12px] text-amber-600">
@@ -528,13 +533,14 @@
             :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [event?.title ?? ''])"
             @closed="afterConfirm"
         />
-        <ChangeAllSubmitModal
-            v-if="showSeriesEdit"
-            @closed="closeSeriesEditModal"
-            @all="saveAllSeriesEvents"
-            @single="singleSaveEvent"
-        />
     </ArtworkBaseModal>
+
+    <ChangeAllSubmitModal
+        v-if="showSeriesEdit"
+        @close-modal="closeSeriesEditModal"
+        @allEvents="saveAllSeriesEvents"
+        @single="singleSaveEvent"
+    />
 
     <!-- Bestätigungsdialog beim Schließen -->
     <ArtworkBaseModal
@@ -609,6 +615,7 @@ const props = defineProps({
     eventStatuses: { type: Array, default: () => [] },
     isPlanning: { type: Boolean, default: false },
     wantedDate: { type: String, default: null },
+    declinedRoomId: { type: [Number, String], default: null },
 })
 const emit = defineEmits(['closed'])
 
@@ -689,12 +696,16 @@ function setEndFromDuration() {
 // Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
 const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
 const isRoomAdmin = computed(() => {
-    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
+    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.includes(page.props.auth.user.id) || false
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 
-const roomAdminIds = computed(() => selectedRoom.value?.room_admins?.map(a => a.id) ?? [])
+const roomAdminIds = computed(() => selectedRoom.value?.admins ?? [])
+const declinedRoomName = computed(() => {
+    if (!declinedRoomId.value) return null
+    return roomsList.value.find(r => r.id === Number(declinedRoomId.value))?.name ?? null
+})
 
 const modalTitle = computed(() => {
     if (props.event?.id) {
@@ -719,7 +730,7 @@ const modalDescription = computed(() => {
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
 const canCreateDirect = computed(
-    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || can('create events without request')
+    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || can('create events without request') || (props.isPlanning && can('can plan fixed in planning calendar'))
 )
 
 const isPrimaryDisabled = computed(() => {
@@ -736,10 +747,16 @@ const primaryButtonText = computed(() => {
     if (adminComment.value) return $t('Send message')
     return $t('Save')
 })
+const isRequestableForRoom = computed(() => {
+    return selectedRoom.value?.requestable_by?.includes(page.props.auth.user.id) || false
+})
+
 const requestDisabled = computed(() => {
     const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
-    if (!can('request room occupancy') && !props.isPlanning) return true
+    const canRequestGlobal = can('request room occupancy')
+    const canRequestRoom = isRequestableForRoom.value
+    if (!canRequestGlobal && !canRequestRoom && !props.isPlanning) return true
     if (!can('can see planning calendar') && props.isPlanning) return true
     return false
 })
@@ -875,6 +892,7 @@ function openModal() {
     }
 
     initialRoomId.value = selectedRoom.value?.id ?? null
+    declinedRoomId.value = props.declinedRoomId ?? props.event.declinedRoomId ?? null
     description.value = props.event.description ?? ''
 
     ;(event_properties ?? []).forEach(ep => {
@@ -1153,7 +1171,6 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
-    isLoading.value = true
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -1164,6 +1181,12 @@ async function updateOrCreateEvent(isOptionParam = false) {
         isOption.value = true
     }
 
+    // Normales Bearbeiten: immer nur diesen einen Termin speichern
+    allSeriesEvents.value = false
+    await doSaveEvent()
+}
+async function doSaveEvent() {
+    isLoading.value = true
     const data = payload()
 
     if (!props.requiresAxiosRequests &&
@@ -1211,29 +1234,14 @@ async function updateOrCreateEvent(isOptionParam = false) {
     }
 }
 async function singleSaveEvent() {
-    isLoading.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    allSeriesEvents.value = false
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 async function saveAllSeriesEvents() {
-    isLoading.value = true
     allSeriesEvents.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 function closeSeriesEditModal() {
     showSeriesEdit.value = false

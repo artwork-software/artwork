@@ -122,6 +122,12 @@ class Room extends Model
             ->wherePivot('is_admin', true);
     }
 
+    public function requestableBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+            ->wherePivot('can_request', true);
+    }
+
     //@todo: fix phpcs error - refactor function name to roomFiles
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function room_files(): HasMany

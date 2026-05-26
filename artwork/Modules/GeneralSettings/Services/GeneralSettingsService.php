@@ -115,4 +115,13 @@ class GeneralSettingsService
             (bool) $request->get('enabled');
         $this->generalSettings->save();
     }
+
+    public function updateInventoryDisplaySettings(Request $request): void
+    {
+        $this->generalSettings->inventory_show_inventory_number_as_name =
+            (bool) $request->get('inventory_show_inventory_number_as_name');
+        $this->generalSettings->inventory_number_prefix =
+            (string) $request->get('inventory_number_prefix', '');
+        $this->generalSettings->save();
+    }
 }

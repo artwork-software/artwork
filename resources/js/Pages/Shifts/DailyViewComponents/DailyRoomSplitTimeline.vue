@@ -16,7 +16,7 @@
               <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getEventBlockStyle(block)">
                 <template v-for="item in block.eventItems" :key="item.key">
 
-                    <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)">
+                    <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
                     <SingleEventInDailyShiftView
                       v-bind="item.props"
                       @toggle="onEventToggle(item.id, $event)"
@@ -43,7 +43,7 @@
             <div v-for="(block, bIdx) in layoutBlocks" :key="'sh-block-' + bIdx" class="">
               <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getShiftBlockStyle(block)">
                 <template v-for="item in block.shiftItems" :key="item.key">
-                  <div class="absolute rounded-b-lg" :style="getShiftItemStyle(item, block)">
+                  <div class="absolute rounded-b-lg" :style="getShiftItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
                     <SingleShiftInDailyShiftView v-bind="item.props" @toggle="onShiftToggle(item.id, $event)" />
                   </div>
                 </template>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import SingleEventInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleEventInDailyShiftView.vue'
 import SingleShiftInDailyShiftView from '@/Pages/Shifts/DailyViewComponents/SingleShiftInDailyShiftView.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
@@ -190,7 +190,11 @@ function compressMinute(minute: number): number {
     const s = calStartMin.value
     const e = calEndMin.value
     if (s === e) return minute
-    if (!isInVisibleSegment(minute)) return 0
+    // Grenzfall: Minute liegt genau an der oberen Grenze des sichtbaren Bereichs (calStartMin).
+    // isInVisibleSegment nutzt strikte <-Prüfung und schließt diese Grenze aus.
+    // Für Endzeiten von Schichten/Events muss sie aber als "Ende des sichtbaren Bereichs" behandelt werden,
+    // sonst wird die Endzeit auf 0 gemappt und die Dauer wird negativ/winzig.
+    if (!isInVisibleSegment(minute) && minute !== s) return 0
     if (minute >= e) return minute - e
     return (1440 - e) + minute
 }
@@ -213,9 +217,22 @@ const startsOrEndsInCompressed = (startMin: number, endMin: number) => {
 
 
 // Helpers
+const normalizeTime = (val?: string | null): string | null => {
+  if (!val) return null
+  // Already HH:MM
+  if (/^\d{2}:\d{2}$/.test(val)) return val
+  // ISO datetime "2026-05-18T10:00:00.000000Z" — extract HH:MM
+  const iso = val.match(/T(\d{2}:\d{2})/)
+  if (iso) return iso[1]
+  // "YYYY-MM-DD HH:MM:SS" style
+  const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+  if (sp) return sp[1]
+  return val
+}
 const toMin = (hhmm?: string | null) => {
-  if (!hhmm) return null
-  const [h, m] = hhmm.split(':').map(n => parseInt(n, 10))
+  const normalized = normalizeTime(hhmm)
+  if (!normalized) return null
+  const [h, m] = normalized.split(':').map(n => parseInt(n, 10))
   if (Number.isNaN(h) || Number.isNaN(m)) return null
   return h * 60 + m
 }
@@ -398,6 +415,37 @@ function anyMinuteInCompressed(startMin: number, endMin: number): boolean {
 
 
 
+// Shared craft position lookup — used by shiftItems sort, assignLanes, and layoutBlocks
+const craftPosMap = computed(() => {
+    const map = new Map<number, number>()
+    const arr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    for (const c of arr) {
+        if ((c as any)?.id != null) map.set((c as any).id, (c as any).position ?? 0)
+    }
+    return map
+})
+
+const getCraftPos = (item: any): number => {
+    const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
+    if (craftId != null && craftPosMap.value.has(craftId)) return craftPosMap.value.get(craftId)!
+    return item?.payload?.craft?.position ?? 9999
+}
+
+// G3: Lookup maps for O(1) eventType/craft color resolution
+const eventTypeMap = computed(() => {
+    const map = new Map()
+    const arr = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes || {})
+    for (const t of arr) if (t?.id != null) map.set(t.id, t)
+    return map
+})
+
+const craftColorMap = computed(() => {
+    const map = new Map()
+    const arr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
+    for (const c of arr) if (c?.id != null) map.set(c.id, c)
+    return map
+})
+
 const shiftItems = computed<Item[]>(() => {
     const items: Item[] = []
     const dayYmd = currentDayYmd.value
@@ -486,18 +534,6 @@ const shiftItems = computed<Item[]>(() => {
         })
     }
 
-    // Craft-Position-Lookup für sekundäre Sortierung bei gleicher Startzeit
-    const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-    const craftPositionMap = new Map<number, number>()
-    for (const c of craftsArray) {
-        if ((c as any)?.id != null) craftPositionMap.set((c as any).id, (c as any).position ?? 0)
-    }
-    const getCraftPos = (item: any): number => {
-        const craftId = item?.payload?.craft?.id ?? item?.payload?.craft_id
-        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
-        return item?.payload?.craft?.position ?? 9999
-    }
-
     return items.sort((a, b) => {
         const aPos = getCraftPos(a)
         const bPos = getCraftPos(b)
@@ -538,9 +574,32 @@ function isInVisibleSegment(minute: number): boolean {
 
 // Build unified blocks from both lists to keep vertical alignment between columns
 function buildBlocks(evItems: Item[], shItems: Item[]) {
-  const all = [...evItems, ...shItems].sort((a, b) => a.startMin - b.startMin)
+  // Separate AllDay items – they should not influence block boundaries
+  const allDayItems: Item[] = []
+  const nonAllDayItems: Item[] = []
+  for (const it of [...evItems, ...shItems]) {
+    if (it.payload?.allDay === true) {
+      allDayItems.push(it)
+    } else {
+      nonAllDayItems.push(it)
+    }
+  }
+
+  const all = nonAllDayItems.sort((a, b) => a.startMin - b.startMin)
   const blocks: any[] = []
-  if (!all.length) return blocks
+
+  // If only AllDay items exist, create a single block for them
+  if (!all.length) {
+    if (!allDayItems.length) return blocks
+    const block: any = {
+      startMin: allDayItems[0].startMin,
+      endMin: allDayItems[0].endMin,
+      items: [...allDayItems],
+    }
+    finalizeBlock(block)
+    blocks.push(block)
+    return blocks
+  }
 
   let current: any = { startMin: all[0].startMin, endMin: all[0].endMin, items: [all[0]] }
 
@@ -560,6 +619,16 @@ function buildBlocks(evItems: Item[], shItems: Item[]) {
 
   finalizeBlock(current)
   blocks.push(current)
+
+  // Insert AllDay items into the first non-gap block
+  if (allDayItems.length) {
+    const firstBlock = blocks.find((b: any) => b.type !== 'gap')
+    if (firstBlock) {
+      firstBlock.items.push(...allDayItems)
+      firstBlock.eventItems.push(...allDayItems.filter((it: any) => it.type === 'event'))
+      firstBlock.shiftItems.push(...allDayItems.filter((it: any) => it.type === 'shift'))
+    }
+  }
 
   // move gaps into previous blocks as property
   const compact: any[] = []
@@ -597,18 +666,6 @@ function finalizeBlock(block: any) {
 function assignLanes(items: Item[]) {
   // Greedy interval partitioning for overlapping items
   const laneEnds: number[] = []
-  // Sort items: all-day events first (leftmost), then by earliest start time, then by longest duration
-  // Build craft position lookup for secondary sorting
-  const craftsArr = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-  const craftPosMap = new Map<number, number>()
-  for (const c of craftsArr) {
-    if ((c as any)?.id != null) craftPosMap.set((c as any).id, (c as any).position ?? 0)
-  }
-  const getCraftPosForLane = (it: any): number => {
-    const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
-    if (craftId != null && craftPosMap.has(craftId)) return craftPosMap.get(craftId)!
-    return it?.payload?.craft?.position ?? 9999
-  }
 
   items.sort((a, b) => {
     // All-day events always come first (leftmost lanes)
@@ -618,8 +675,8 @@ function assignLanes(items: Item[]) {
     if (!aIsAllDay && bIsAllDay) return 1
 
     // Sort by craft position first
-    const aPos = getCraftPosForLane(a)
-    const bPos = getCraftPosForLane(b)
+    const aPos = getCraftPos(a)
+    const bPos = getCraftPos(b)
     if (aPos !== bPos) return aPos - bPos
 
     // Within same craft, sort by earliest start time
@@ -654,6 +711,23 @@ function maxLaneIndex(items: Item[]) {
   return items.reduce((m: number, it: any) => Math.max(m, it.laneIndex ?? 0), 0)
 }
 
+type HeightMode = 'proportional' | 'content-only' | 'uniform'
+
+function detectHeightMode(block: any): HeightMode {
+  const nonAllDay = [...(block.eventItems || []), ...(block.shiftItems || [])]
+    .filter((it: any) => it.payload?.allDay !== true)
+
+  if (nonAllDay.length <= 1) return 'content-only'
+
+  const first = nonAllDay[0]
+  const allSameTime = nonAllDay.every(
+    (it: any) => it.startMin === first.startMin && it.endMin === first.endMin
+  )
+  if (allSameTime) return 'uniform'
+
+  return 'proportional'
+}
+
 const blocks = computed(() => buildBlocks(eventItems.value, shiftItems.value))
 
 // Expand/Collapse-State der Kindkarten tracken
@@ -662,9 +736,22 @@ const shiftsExpanded = ref<Record<number, boolean>>({})
 
 function onEventToggle(id: number, state: boolean) {
   eventsExpanded.value[id] = state
+  // Stale Messung entfernen, damit ResizeObserver die neue Höhe meldet
+  const key = `event-${id}`
+  if (measuredHeights.value[key] !== undefined) {
+    const next = { ...measuredHeights.value }
+    delete next[key]
+    measuredHeights.value = next
+  }
 }
 function onShiftToggle(id: number, state: boolean) {
   shiftsExpanded.value[id] = state
+  const key = `shift-${id}`
+  if (measuredHeights.value[key] !== undefined) {
+    const next = { ...measuredHeights.value }
+    delete next[key]
+    measuredHeights.value = next
+  }
 }
 
 // Initialzustände anhand der Kind-Defaults ableiten
@@ -673,11 +760,11 @@ watch(eventItems, (list) => {
     const e = it.payload
     if (eventsExpanded.value[it.id] === undefined) {
       // Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt lassen
-      // (damit „Create new timeline“ sofort sichtbar ist).
+      // (damit „Create new timeline” sofort sichtbar ist).
       eventsExpanded.value[it.id] = true
     }
   }
-}, { immediate: true, deep: true })
+}, { immediate: true })
 
 watch(shiftItems, (list) => {
   for (const it of list) {
@@ -686,7 +773,84 @@ watch(shiftItems, (list) => {
       shiftsExpanded.value[it.id] = true
     }
   }
-}, { immediate: true, deep: true })
+}, { immediate: true })
+
+// Tatsächlich gerenderte Höhen pro Item per ResizeObserver tracken,
+// damit Lane-Berechnungen visuelle Überlappungen erkennen, wenn der
+// Karteninhalt (z.B. lange Timeline-Beschreibungen) die geschätzte
+// Höhe übersteigt.
+const measuredHeights = ref<Record<string, number>>({})
+
+// P3: Single shared ResizeObserver for all items in this timeline instance
+const itemElements = new Map<string, HTMLElement>()
+const sharedItemObserver = typeof ResizeObserver !== 'undefined'
+    ? new ResizeObserver((entries) => {
+        let dirty = false
+        const next = measuredHeights.value
+        for (const entry of entries) {
+            const key = (entry.target as any).__itemKey
+            if (!key) continue
+            const newH = Math.ceil(entry.contentRect.height)
+            const prevH = next[key] ?? 0
+            if (newH > 0 && Math.abs(prevH - newH) >= 2) {
+                if (!dirty) dirty = true
+            }
+        }
+        if (dirty) {
+            const updated: Record<string, number> = { ...measuredHeights.value }
+            for (const entry of entries) {
+                const key = (entry.target as any).__itemKey
+                if (!key) continue
+                const newH = Math.ceil(entry.contentRect.height)
+                if (newH > 0) updated[key] = newH
+            }
+            measuredHeights.value = updated
+        }
+    })
+    : null
+
+function setItemRef(el: any, key: string) {
+  const target = el instanceof HTMLElement ? el : null
+  if (!target) return
+
+  const existing = itemElements.get(key)
+  if (existing === target) return
+
+  if (existing) sharedItemObserver?.unobserve(existing)
+
+  ;(target as any).__itemKey = key
+  itemElements.set(key, target)
+  sharedItemObserver?.observe(target)
+}
+
+// Verwaiste Messungen aufräumen, wenn Items aus dem Block verschwinden
+watch([eventItems, shiftItems], () => {
+  const validKeys = new Set<string>([
+    ...eventItems.value.map((it: any) => it.key),
+    ...shiftItems.value.map((it: any) => it.key),
+  ])
+  let dirty = false
+  const next = { ...measuredHeights.value }
+  for (const k of Object.keys(next)) {
+    if (!validKeys.has(k)) {
+      delete next[k]
+      dirty = true
+    }
+  }
+  if (dirty) measuredHeights.value = next
+  const staleKeys: string[] = []
+  itemElements.forEach((_, k) => { if (!validKeys.has(k)) staleKeys.push(k) })
+  staleKeys.forEach((k) => {
+    const el = itemElements.get(k)
+    if (el) sharedItemObserver?.unobserve(el)
+    itemElements.delete(k)
+  })
+})
+
+onBeforeUnmount(() => {
+  sharedItemObserver?.disconnect()
+  itemElements.clear()
+})
 
 // Min-Höhen in Pixel (geschätzt): collapsed = Headerhöhe, expanded = Details sichtbar
 const COLLAPSED_MIN_EVENT = 56
@@ -700,24 +864,22 @@ const LANE_MIN_WIDTH_PX = 256
 // Heuristik: geschätzte Zeilenhöhe für eine Entity/Drop-Zeile in der aufgeklappten Schicht
 const SHIFT_ROW_PX = 36
 const SHIFT_ROW_GAP_PX = 4 // space-y-1 bzw. mt-1
+const EVENT_TIMELINE_BUTTON_PX = 40
+const EVENT_CARD_PADDING_PX = 12
+const TIMELINE_DESCRIPTION_BUFFER_PX = 16
 
 function estimateShiftExpandedMinPx(shift: any): number {
   if (!shift) return EXPANDED_MIN_SHIFT
   // Personen zählen
-  const usersCount = Array.isArray(shift.users) ? shift.users.length : 0
-  const freelancersCount = Array.isArray(shift.freelancer) ? shift.freelancer.length : 0
-  const serviceProvidersCount = Array.isArray(shift.serviceProviders) ? shift.serviceProviders.length : 0
-  const peopleCount = usersCount + freelancersCount + serviceProvidersCount
+  const workers = Array.isArray(shift.workers) ? shift.workers : []
+  const peopleCount = workers.length
 
   // Drop-Zeilen zählen (wie im Kind: eine Zeile pro Qualifikation mit Restbedarf)
   let dropRows = 0
   const sqs: any[] = Array.isArray(shift.shifts_qualifications) ? shift.shifts_qualifications : []
   for (const sq of sqs) {
     const qid = sq.shift_qualification_id
-    const assignedUsers = (Array.isArray(shift.users) ? shift.users : []).filter((u: any) => u?.pivot?.shift_qualification_id === qid).length
-    const assignedFreelancers = (Array.isArray(shift.freelancer) ? shift.freelancer : []).filter((f: any) => f?.pivot?.shift_qualification_id === qid).length
-    const assignedService = (Array.isArray(shift.serviceProviders) ? shift.serviceProviders : []).filter((s: any) => s?.pivot?.shift_qualification_id === qid).length
-    const totalAssigned = assignedUsers + assignedFreelancers + assignedService
+    const totalAssigned = workers.filter((w: any) => w?.pivot?.shift_qualification_id === qid).length
     const remaining = (sq?.value ?? 0) - totalAssigned
     if (remaining > 0) dropRows++
   }
@@ -739,9 +901,10 @@ function estimateEventExpandedMinPx(event: any): number {
   if (!event) return EXPANDED_MIN_EVENT
   const timelines = Array.isArray(event?.timelines) ? event.timelines.length : 0
   const headerPx = COLLAPSED_MIN_EVENT
-  const rowsPx = timelines * SHIFT_ROW_PX
+  const rowsPx = timelines * (SHIFT_ROW_PX + TIMELINE_DESCRIPTION_BUFFER_PX)
   const gapsPx = Math.max(0, timelines - 1) * SHIFT_ROW_GAP_PX + SHIFT_ROW_GAP_PX
-  const estimated = headerPx + rowsPx + gapsPx
+  const buttonPx = EVENT_TIMELINE_BUTTON_PX + EVENT_CARD_PADDING_PX
+  const estimated = headerPx + rowsPx + gapsPx + buttonPx
   return Math.max(EXPANDED_MIN_EVENT, estimated)
 }
 
@@ -755,29 +918,40 @@ function getDailyTimeHeight(item: any): number {
 
 
 function getEventItemHeightPx(item: any, block: any) {
+    const measured = measuredHeights.value[item.key] ?? 0
+
+    // AllDay events: nur Inhaltsmindesthöhe, NICHT zeitproportional strecken.
+    // Die tatsächliche Höhe wird im layoutBlocks auf die Blockhöhe angepasst.
+    if (item.payload?.allDay === true) {
+        const expanded = !!eventsExpanded.value[item.id]
+        const estimated = expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
+        return Math.max(estimated, measured)
+    }
+
     const timeHeight = getDailyTimeHeight(item)
 
     // Multi-Day: keine riesigen Expanded-Höhen erzwingen,
     // nur mind. Headerhöhe
     if (item.isMultiDay) {
-        return Math.max(timeHeight, COLLAPSED_MIN_EVENT)
+        return Math.max(timeHeight, COLLAPSED_MIN_EVENT, measured)
     }
 
     const expanded = !!eventsExpanded.value[item.id]
-    const minH = expanded ? EXPANDED_MIN_EVENT : COLLAPSED_MIN_EVENT
-    return Math.max(timeHeight, minH)
+    const minH = expanded ? estimateEventExpandedMinPx(item?.payload) : COLLAPSED_MIN_EVENT
+    return Math.max(timeHeight, minH, measured)
 }
 
 function getShiftItemHeightPx(item: any, block: any) {
+    const measured = measuredHeights.value[item.key] ?? 0
     const timeHeight = getDailyTimeHeight(item)
 
     if (item.isMultiDay) {
-        return Math.max(timeHeight, COLLAPSED_MIN_SHIFT)
+        return Math.max(timeHeight, COLLAPSED_MIN_SHIFT, measured)
     }
 
     const expanded = !!shiftsExpanded.value[item.id]
     const minH = expanded ? estimateShiftExpandedMinPx(item?.payload) : COLLAPSED_MIN_SHIFT
-    return Math.max(timeHeight, minH)
+    return Math.max(timeHeight, minH, measured)
 }
 
 
@@ -799,12 +973,21 @@ type CompactSegment = {
   shiftStack?: Record<number, number>,
 }
 
-function buildCompactSegments(block: any): CompactSegment[] {
+function buildCompactSegments(block: any, mode: HeightMode = 'proportional'): CompactSegment[] {
   const items: any[] = Array.isArray(block?.items) ? block.items : []
   if (!items.length) return []
   const intervals = items
+    .filter(it => it.payload?.allDay !== true)
     .map(it => ({ s: Math.max(0, it.startMin), e: Math.max(0, it.endMin) }))
     .sort((a, b) => a.s - b.s)
+
+  // If all items are allDay, use their intervals as fallback
+  if (!intervals.length) {
+    const allDayIntervals = items
+      .map(it => ({ s: Math.max(0, it.startMin), e: Math.max(0, it.endMin) }))
+      .sort((a, b) => a.s - b.s)
+    intervals.push(...allDayIntervals)
+  }
 
   // Merge zu aktiven Segmenten
   const merged: { s: number, e: number }[] = []
@@ -821,14 +1004,41 @@ function buildCompactSegments(block: any): CompactSegment[] {
     }
   }
 
+  // Estimate content height for items within a time range
+  const estimateContentHeight = (startMin: number, endMin: number): number => {
+    const nonAllDayItems = items.filter((it: any) => it.payload?.allDay !== true)
+    const overlapping = nonAllDayItems.filter((it: any) =>
+      it.startMin < endMin && it.endMin > startMin
+    )
+    let maxH = 0
+    for (const it of overlapping) {
+      const h = it.type === 'shift'
+        ? estimateShiftExpandedMinPx(it.payload)
+        : estimateEventExpandedMinPx(it.payload)
+      maxH = Math.max(maxH, h)
+    }
+    return maxH || EXPANDED_MIN_SHIFT
+  }
+
   // In Pixelhöhen und Basistops umrechnen
   const segments: CompactSegment[] = []
   let y = 0
   for (let i = 0; i < merged.length; i++) {
     const m = merged[i]
-    // Ab jetzt IMMER zeitproportionale Segmente, damit zeitliche Relativität erhalten bleibt
-    const heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
-    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: true })
+
+    let heightPx: number
+    let isProportional = true
+
+    if (mode === 'content-only' || mode === 'uniform') {
+      // Content-driven: use estimated content height instead of time-proportional
+      heightPx = estimateContentHeight(m.s, m.e)
+      isProportional = false
+    } else {
+      // Proportional: time-based
+      heightPx = Math.max(1, Math.round((m.e - m.s) * props.pxPerMin))
+    }
+
+    segments.push({ startMin: m.s, endMin: m.e, baseTopPx: y, heightPx, proportional: isProportional })
     y += heightPx
     if (i < merged.length - 1) y += SEGMENT_GAP_PX
   }
@@ -871,6 +1081,9 @@ function getSegmentForMinute(block: any, minute: number): CompactSegment | null 
 }
 
 function getTopForItem(item: any, block: any): number {
+  // AllDay items always start at the top of the block
+  if (item.payload?.allDay === true) return 0
+
   const seg = getSegmentForMinute(block, item.startMin)
   if (!seg) return 0
   // In proportionalen Segmenten: rein zeitbasierter Top-Offset
@@ -882,10 +1095,14 @@ function getTopForItem(item: any, block: any): number {
 // Blöcke um Layout-Höhe erweitern (Pixelhöhe = max Bottom beider Spalten)
 const layoutBlocks = computed(() => {
   return (blocks.value || []).map((b: any) => {
-    // Kompakt-Segmente vorbereiten (immer neu berechnen, da Min-Höhen dynamisch sind)
-    b.compactSegments = buildCompactSegments(b)
+    // Height-Mode erkennen und Kompakt-Segmente vorbereiten
+    const mode = detectHeightMode(b)
+    b.heightMode = mode
+    b.compactSegments = buildCompactSegments(b, mode)
 
-      const computeVisualMetrics = (arr: any[], type: 'event' | 'shift') => {
+      // Compute visual metrics and maxBottom in a single pass per item type
+      const processItems = (arr: any[], type: 'event' | 'shift'): number => {
+          let maxBottom = 0
           for (const it of arr) {
               const top = getTopForItem(it, b)
               const vH = type === 'shift'
@@ -894,28 +1111,20 @@ const layoutBlocks = computed(() => {
               ;(it as any)._vTop = top
               ;(it as any)._vHeight = vH
               ;(it as any)._vBottom = top + vH
+              if (it.payload?.allDay !== true) {
+                  maxBottom = Math.max(maxBottom, top + vH)
+              }
           }
+          return maxBottom
       }
-      computeVisualMetrics(b.eventItems || [], 'event')
-      computeVisualMetrics(b.shiftItems || [], 'shift')
-
+      const evMaxBottom = processItems(b.eventItems || [], 'event')
+      const shMaxBottom = processItems(b.shiftItems || [], 'shift')
 
       // Visuelle Lanes pro Spalte (Events/Schichten) basierend auf Rechteck-Überlappung zuweisen
-    const craftsArrForLanes = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-    const craftPosMapForLanes = new Map<number, number>()
-    for (const c of craftsArrForLanes) {
-      if ((c as any)?.id != null) craftPosMapForLanes.set((c as any).id, (c as any).position ?? 0)
-    }
-    const getCraftPosForVisualLane = (it: any): number => {
-      const craftId = it?.payload?.craft?.id ?? it?.payload?.craft_id
-      if (craftId != null && craftPosMapForLanes.has(craftId)) return craftPosMapForLanes.get(craftId)!
-      return it?.payload?.craft?.position ?? 9999
-    }
-
     const assignVisualLanesByRect = (arr: any[]) => {
       const items = (arr || []).slice().sort((a, b) => {
-        const aCraftPos = getCraftPosForVisualLane(a)
-        const bCraftPos = getCraftPosForVisualLane(b)
+        const aCraftPos = getCraftPos(a)
+        const bCraftPos = getCraftPos(b)
         if (aCraftPos !== bCraftPos) return aCraftPos - bCraftPos
         const topDiff = (a._vTop ?? 0) - (b._vTop ?? 0)
         if (topDiff !== 0) return topDiff
@@ -943,19 +1152,26 @@ const layoutBlocks = computed(() => {
     b.eventVisualLaneCount = assignVisualLanesByRect(b.eventItems || [])
     b.shiftVisualLaneCount = assignVisualLanesByRect(b.shiftItems || [])
 
-    // Gesamthöhe des Blocks auf Basis der tatsächlich verwendeten Tops/Höhen berechnen
-    let maxBottom = 0
+    // Gesamthöhe des Blocks: pre-computed from processItems above
+    let maxBottom = Math.max(evMaxBottom, shMaxBottom)
+
+    // AllDay-Events: content minimum kann die Blockhöhe erhöhen wenn nötig
     for (const it of b.eventItems || []) {
-      const top = getTopForItem(it, b)
-      const h = getEventItemHeightPx(it, b)
-      maxBottom = Math.max(maxBottom, top + h)
+      if (it.payload?.allDay !== true) continue
+      maxBottom = Math.max(maxBottom, (it as any)._vHeight ?? 0)
     }
-    for (const it of b.shiftItems || []) {
-      const top = getTopForItem(it, b)
-      const h = getShiftItemHeightPx(it, b)
-      maxBottom = Math.max(maxBottom, top + h)
+
+    const blockHeight = Math.max(48, maxBottom)
+
+    // AllDay-Events passen sich an die Blockhöhe an
+    for (const it of b.eventItems || []) {
+      if (it.payload?.allDay !== true) continue
+      ;(it as any)._vTop = 0
+      ;(it as any)._vHeight = blockHeight
+      ;(it as any)._vBottom = blockHeight
     }
-    return { ...b, pixelHeight: Math.max(48, maxBottom) }
+
+    return { ...b, pixelHeight: blockHeight }
   })
 })
 
@@ -966,43 +1182,22 @@ const hasAny = computed(() => hasEvents.value || hasShifts.value)
 
 // style helpers
 function getEventItemStyle(item: any, block: any) {
-  // Breite/Position für Events basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
-  // Dadurch werden Events nebeneinander dargestellt, wenn ihre ausgeklappten Höhen kollidieren –
-  // auch ohne direkte Zeitüberschneidung.
-  const ensureVisualMetrics = (it: any) => {
-    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
-      const top = getTopForItem(it, block)
-      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
-      const vH = Math.max(timeH, EXPANDED_MIN_EVENT)
-      it._vTop = top
-      it._vHeight = vH
-      it._vBottom = top + vH
-    }
-  }
-  const arr: any[] = Array.isArray(block?.eventItems) ? block.eventItems : []
-  for (const it of arr) ensureVisualMetrics(it)
-  ensureVisualMetrics(item)
-  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
-  const overlapping = arr.filter(it => overlapsRect(it, item))
-  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
-  const activeCount = Math.max(1, activeLaneIndices.length)
-  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
-  const widthPct = 100 / activeCount
-  const leftPct = widthPct * rank
-  const topPx = getTopForItem(item, block)
-  const heightPx = getEventItemHeightPx(item, block)
-  // hasCollision an Kinder weitergeben (Dokumentation):
-  // SingleEventInDailyShiftView nutzt diese Prop, um kompaktes Design bei Überschneidungen zu aktivieren.
+  const totalLanes = Math.max(1, block?.eventVisualLaneCount || 1)
+  const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
+  const widthPct = 100 / totalLanes
+  const leftPct = widthPct * laneIndex
+  const topPx = item._vTop ?? 0
+  const heightPx = item._vHeight ?? 48
+
   if (item?.props) item.props.hasCollision = !!item.hasCollision
-  // Hintergrundfarbe gemäß EventType (mit schwacher Opacity)
+
   const eventTypeId = item?.payload?.eventType?.id || item?.props?.event?.eventType?.id
-  const eventTypesArray = Array.isArray(props.eventTypes) ? props.eventTypes : Object.values(props.eventTypes || {})
-  const foundType = eventTypesArray.find((t: any) => t.id === eventTypeId)
+  const foundType = eventTypeMap.value.get(eventTypeId)
   const typeHex: string | undefined = foundType?.hex_code || item?.payload?.eventType?.hex_code || item?.props?.event?.eventType?.hex_code
   const bg = typeHex ? hexToRgba(typeHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',
-    height: heightPx + 'px',
+    minHeight: heightPx + 'px',
     left: `calc(${leftPct}% + 2px)`,
     width: `calc(${widthPct}% - 4px)`,
     backgroundColor: bg,
@@ -1010,39 +1205,20 @@ function getEventItemStyle(item: any, block: any) {
 }
 
 function getShiftItemStyle(item: any, block: any) {
-  // Breite/Position für Schichten basierend auf VISUELLER Überlappung (Rechtecke schneiden sich?).
-  const ensureVisualMetrics = (it: any) => {
-    if (it._vTop === undefined || it._vHeight === undefined || it._vBottom === undefined) {
-      const top = getTopForItem(it, block)
-      const timeH = Math.max(24, Math.round((it.endMin - it.startMin) * props.pxPerMin))
-      const vH = Math.max(timeH, estimateShiftExpandedMinPx(it?.payload))
-      it._vTop = top
-      it._vHeight = vH
-      it._vBottom = top + vH
-    }
-  }
-  const arr: any[] = Array.isArray(block?.shiftItems) ? block.shiftItems : []
-  for (const it of arr) ensureVisualMetrics(it)
-  ensureVisualMetrics(item)
-  const overlapsRect = (a: any, b: any) => (a._vTop < b._vBottom) && (a._vBottom > b._vTop)
-  const overlapping = arr.filter(it => overlapsRect(it, item))
-  const activeLaneIndices = Array.from(new Set(overlapping.map(it => (it._vLaneIndex ?? 0)))).sort((a,b)=>a-b)
-  const activeCount = Math.max(1, activeLaneIndices.length)
-  const rank = Math.max(0, activeLaneIndices.indexOf(item._vLaneIndex ?? 0))
-  const widthPct = 100 / activeCount
-  const leftPct = widthPct * rank
-  const topPx = getTopForItem(item, block)
-  const heightPx = getShiftItemHeightPx(item, block)
-  // Wichtig laut Vorgabe: Schicht-Styling ändert sich nicht bei Kollisionen; daher kein hasCollision-Prop.
-  // Hintergrundfarbe gemäß Gewerk-Farbe (mit schwacher Opacity) – analog zu getEventItemStyle
+  const totalLanes = Math.max(1, block?.shiftVisualLaneCount || 1)
+  const laneIndex = Math.max(0, Math.min(totalLanes - 1, item._vLaneIndex ?? 0))
+  const widthPct = 100 / totalLanes
+  const leftPct = widthPct * laneIndex
+  const topPx = item._vTop ?? 0
+  const heightPx = item._vHeight ?? 48
+
   const craftId = item?.payload?.craft?.id || item?.props?.shift?.craft?.id
-  const craftsArray = Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {})
-  const foundCraft = craftsArray.find((c: any) => c.id === craftId)
+  const foundCraft = craftColorMap.value.get(craftId)
   const craftHex: string | undefined = foundCraft?.color || item?.payload?.craft?.color || item?.props?.shift?.craft?.color
   const bg = craftHex ? hexToRgba(craftHex, 0.12) : 'transparent'
   return {
     top: topPx + 'px',
-    height: heightPx + 'px',
+    minHeight: heightPx + 'px',
     left: `calc(${leftPct}% + 2px)`,
     width: `calc(${widthPct}% - 4px)`,
     backgroundColor: bg,

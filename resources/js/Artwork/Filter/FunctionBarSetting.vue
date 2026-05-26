@@ -84,7 +84,13 @@ const checkIfAnySettingIsActive = computed(() => {
     if (!settings) return false;
 
     if (props.isListView) {
-        const listViewKeys = ['detailed_shift_overview', 'show_fully_staffed_shifts'];
+        const listViewKeys = [
+            'detailed_shift_overview',
+            'show_fully_staffed_shifts',
+            'show_appointments',
+            'group_by_shift_groups',
+            'hide_shift_row',
+        ];
         return listViewKeys.some(setting => settings[setting]);
     }
 

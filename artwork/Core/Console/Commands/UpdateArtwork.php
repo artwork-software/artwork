@@ -2,8 +2,11 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
@@ -62,6 +65,8 @@ class UpdateArtwork extends Command
         $this->migrateShiftsWorkers();
         $this->updateSagePermissions();
         $this->migrateToCrm();
+        $this->syncCrmContacts();
+        $this->cleanupFalseConflicts();
 
         $this->info('--- Artwork Update Finished ---');
     }
@@ -516,5 +521,77 @@ class UpdateArtwork extends Command
         }
 
         $this->call('artwork:migrate-to-crm');
+    }
+
+    private function cleanupFalseConflicts(): void
+    {
+        $this->section('Cleanup False Conflicts');
+        $this->call('artwork:cleanup-false-conflicts');
+    }
+
+    /**
+     * Backfill crm_contact_id on entities and create missing CRM contacts.
+     */
+    private function syncCrmContacts(): void
+    {
+        $this->section('CRM Contact Sync');
+
+        $entityClasses = [
+            Freelancer::class,
+            ServiceProvider::class,
+            User::class,
+        ];
+
+        foreach ($entityClasses as $class) {
+            $table = (new $class)->getTable();
+
+            $morphClass = (new $class)->getMorphClass();
+
+            // Bulk-update: backfill crm_contact_id where non-deleted CRM contact exists via entity_type/entity_id
+            $updated = DB::table($table)
+                ->whereNull('crm_contact_id')
+                ->whereExists(function ($query) use ($table, $morphClass) {
+                    $query->select(DB::raw(1))
+                        ->from('crm_contacts')
+                        ->where('crm_contacts.entity_type', $morphClass)
+                        ->whereNull('crm_contacts.deleted_at')
+                        ->whereColumn('crm_contacts.entity_id', "$table.id");
+                })
+                ->update([
+                    'crm_contact_id' => DB::raw(
+                        '(SELECT crm_contacts.id FROM crm_contacts ' .
+                        'WHERE crm_contacts.entity_type = ' . DB::getPdo()->quote($morphClass) .
+                        " AND crm_contacts.entity_id = $table.id" .
+                        ' AND crm_contacts.deleted_at IS NULL LIMIT 1)'
+                    ),
+                ]);
+
+            if ($updated > 0) {
+                $this->info("Backfilled $updated $table crm_contact_id(s).");
+            }
+
+            // Create CRM contacts for entities that have none at all
+            $missing = $class::whereNull('crm_contact_id')
+                ->whereNotExists(function ($query) use ($table, $morphClass) {
+                    $query->select(DB::raw(1))
+                        ->from('crm_contacts')
+                        ->where('crm_contacts.entity_type', $morphClass)
+                        ->whereNull('crm_contacts.deleted_at')
+                        ->whereColumn('crm_contacts.entity_id', "$table.id");
+                })
+                ->get();
+
+            foreach ($missing as $entity) {
+                $entity->createCrmContact();
+            }
+
+            if ($missing->count() > 0) {
+                $this->info("Created {$missing->count()} CRM contact(s) for $table.");
+            }
+
+            if ($updated === 0 && $missing->isEmpty()) {
+                $this->info("$table: all synced.");
+            }
+        }
     }
 }

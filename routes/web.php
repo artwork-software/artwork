@@ -379,6 +379,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
+        ->middleware('role:artwork admin')
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
@@ -414,7 +415,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             UserController::class,
             'updateUserPermissionsAndRoles'
         ]
-    )->name('user.update.permissions-and-roles');
+    )->middleware('role:artwork admin')
+    ->name('user.update.permissions-and-roles');
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
@@ -753,13 +755,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
     Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');
     Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
+    Route::get('/response/shift-plan-rooms', [EventController::class, 'shiftPlanRoomsBatchAPI'])->name('shift.plan.rooms.batch');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
-    Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
+    Route::get('/events/requests', function () {
+        return redirect()->route('event-verifications.index');
+    })->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
 
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
+    Route::put('/events/bulk-accept', [EventController::class, 'bulkAcceptEvents'])->name('events.bulk-accept');
+    Route::put('/events/bulk-decline', [EventController::class, 'bulkDeclineEvents'])->name('events.bulk-decline');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
         ->name('event.update.description');
@@ -807,6 +814,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
         ->name('shifts.workers')
+        ->can('can view shift plan');
+
+    Route::get('/shifts/worker-single', [EventController::class, 'getShiftPlanWorkerSingle'])
+        ->name('shifts.worker.single')
         ->can('can view shift plan');
 
     Route::get('/shifts/crafts', [EventController::class, 'getShiftPlanCrafts'])
@@ -2271,6 +2282,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Import routes (before contacts to avoid {crmContact} param conflict)
         Route::get('/import', [CrmImportController::class, 'showUpload'])->name('crm.import');
         Route::post('/import/upload', [CrmImportController::class, 'upload'])->name('crm.import.upload');
+        Route::post('/import/map-types', [CrmImportController::class, 'mapTypes'])->name('crm.import.map-types');
+        Route::get('/import/column-values/{columnIndex}', [CrmImportController::class, 'columnValues'])->name('crm.import.column-values');
         Route::post('/import/execute', [CrmImportController::class, 'execute'])->name('crm.import.execute');
         Route::delete('/import', [CrmImportController::class, 'cancel'])->name('crm.import.cancel');
 
@@ -2286,6 +2299,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/contacts/{crmContact}/profile-image', [CrmContactController::class, 'updateProfileImage'])->name('crm.contacts.profile-image');
         Route::post('/contacts/{crmContact}/property-file', [CrmContactController::class, 'uploadPropertyFile'])->name('crm.contacts.property-file.upload');
         Route::delete('/contacts/{crmContact}/property-file', [CrmContactController::class, 'deletePropertyFile'])->name('crm.contacts.property-file.delete');
+        Route::patch('/contacts/{crmContact}/room-types', [CrmContactController::class, 'updateRoomTypes'])->name('crm.contacts.room-types.update');
+        Route::post('/contacts/{crmContact}/room-types', [CrmContactController::class, 'storeRoomType'])->name('crm.contacts.room-types.store');
+        Route::patch('/room-types/{roomType}/name', [CrmContactController::class, 'updateRoomTypeName'])->name('crm.contacts.room-types.update-name');
+        Route::delete('/contacts/{crmContact}/room-types/{roomType}', [CrmContactController::class, 'destroyRoomType'])->name('crm.contacts.room-types.destroy');
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');
@@ -2331,6 +2348,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::patch('/general/detailed-articles-always-quantity-one', [GeneralSettingsController::class, 'updateInventoryDetailedArticlesAlwaysQuantityOne'])
                 ->name('inventory-management.settings.general.update-detailed-articles-always-quantity-one');
+
+            Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
+                ->name('inventory-management.settings.general.update-inventory-display-settings');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');
@@ -2652,8 +2672,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [EventVerificationController::class, 'index'])
             ->name('event-verifications.index');
 
-        Route::get('/requests', [EventVerificationController::class, 'requests'])
-            ->name('event-verifications.requests');
+        Route::get('/sent', [EventVerificationController::class, 'sent'])
+            ->name('event-verifications.sent');
+
+        Route::get('/requests', function () {
+            return redirect()->route('event-verifications.index');
+        })->name('event-verifications.requests');
 
         Route::post('/verification-request/{eventVerification}/approved', [EventVerificationController::class, 'approved'])
             ->name('event-verifications.approved');

@@ -7,6 +7,7 @@ use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -17,6 +18,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -132,6 +134,16 @@ class HandleInertiaRequests extends Middleware
                 || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
             );
 
+        $canSeeIncomingRequests = $user && (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+            || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
+            || DB::table('event_type_user')->where('user_id', $user->id)->exists()
+            || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
+        );
+
+        $canSeeEventVerifications = (bool) $user;
+
         return array_merge(
             parent::share($request),
             [
@@ -161,6 +173,8 @@ class HandleInertiaRequests extends Middleware
                 'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
+                'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
+                'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
                 'permissionsArray' => $permissionsArray,
@@ -197,6 +211,8 @@ class HandleInertiaRequests extends Middleware
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,
                 'canSeeShiftPlanRequestedPlans' => $canSeeShiftPlanRequestedPlans,
+                'canSeeEventVerifications'      => $canSeeEventVerifications,
+                'canSeeIncomingRequests'         => $canSeeIncomingRequests,
             ]
         );
     }

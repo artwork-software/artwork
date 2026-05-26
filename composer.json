@@ -37,8 +37,6 @@
         "maatwebsite/excel": "^3.1",
         "meilisearch/meilisearch-php": "^v1.13.0",
         "noahnxt/laravel-open-holidays-api": "dev-main",
-        "pestphp/pest": "^v4.0",
-        "pestphp/pest-plugin-laravel": "^v4",
         "sentry/sentry-laravel": "^4.2",
         "spatie/browsershot": "^5.0.8",
         "spatie/icalendar-generator": "^2.9.1",
@@ -50,7 +48,8 @@
         "spatie/laravel-settings": "^3.4.4",
         "symfony/event-dispatcher": "^v8",
         "symfony/http-client": "^v8",
-        "symfony/mailgun-mailer": "^v8"
+        "symfony/mailgun-mailer": "^v8",
+        "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
         "fakerphp/faker": "^v1.20.0",
@@ -61,7 +60,6 @@
         "laravel/sail": "^v1.16.2",
         "mockery/mockery": "^1.5.1",
         "nunomaduro/collision": "^v8.1",
-        "pestphp/pest-plugin-faker": "^4",
         "phpstan/phpstan": "^2",
         "phpunit/phpunit": "^12.0",
         "slevomat/coding-standard": "^8.14",
@@ -103,6 +101,24 @@
         ],
         "phpcbf": [
             "php vendor/bin/phpcbf"
+        ],
+        "test": [
+            "@php vendor/bin/phpunit"
+        ],
+        "test:unit": [
+            "@php vendor/bin/phpunit --testsuite=Unit"
+        ],
+        "test:feature": [
+            "@php vendor/bin/phpunit --testsuite=Feature"
+        ],
+        "test:integration": [
+            "@php vendor/bin/phpunit --testsuite=Integration"
+        ],
+        "test:pure": [
+            "@php vendor/bin/phpunit --testsuite=Pure --no-coverage"
+        ],
+        "test:coverage": [
+            "@php vendor/bin/phpunit --coverage-html=coverage --coverage-clover=coverage.xml"
         ]
     },
     "scripts-descriptions": {
@@ -126,7 +142,6 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
             "php-http/discovery": true,
             "dealerdirect/phpcodesniffer-composer-installer": true
         }

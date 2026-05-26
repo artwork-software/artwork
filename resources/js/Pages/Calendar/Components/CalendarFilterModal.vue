@@ -22,7 +22,7 @@
                 </div>
 
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
-                    <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex items-center gap-4 mt-3">
+                    <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
                         <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
                                 <div class="mx-2" @click="activateFilter(filter)">

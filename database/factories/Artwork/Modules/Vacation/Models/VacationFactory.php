@@ -3,6 +3,7 @@
 namespace Database\Factories\Artwork\Modules\Vacation\Models;
 
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationEnum;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,6 +22,7 @@ class VacationFactory extends Factory
             'date' => today(),
             'full_day' => $this->faker->boolean(),
             'is_series' => $this->faker->boolean(),
+            'type' => VacationEnum::NOT_AVAILABLE,
         ];
     }
 }

@@ -6,7 +6,6 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class InventoryArticleRepository
 {
@@ -196,27 +195,6 @@ class InventoryArticleRepository
         $article->statusValues()->detach();
     }
 
-    public function addDetailedArticles(InventoryArticle $article, Collection $detailedArticles): void
-    {
-        foreach ($detailedArticles as $detailedArticleData) {
-            $detailedArticle = $article->detailedArticleQuantities()->create([
-                'name' => $detailedArticleData['name'],
-                'quantity' => $detailedArticleData['quantity'],
-                'description' => $detailedArticleData['description'],
-                'inventory_article_status_id' => $detailedArticleData['status']['id'] ?? null,
-                'type_number' => Str::uuid()->toString(),
-            ]);
-
-            if(array_key_exists('properties', $detailedArticleData)) {
-                foreach ($detailedArticleData['properties'] as $property) {
-                    $detailedArticle->properties()->attach((int)$property['id'], [
-                        'value' => (string)$property['value']
-                    ]);
-                }
-            }
-        }
-    }
-
     public function update(InventoryArticle $article, array $data): void
     {
         $article->update($data);
@@ -225,18 +203,6 @@ class InventoryArticleRepository
     public function detachAllProperties(InventoryArticle $article): void
     {
         $article->properties()->detach();
-    }
-
-    public function detachAllDetailedArticleProperties(InventoryArticle $article): void
-    {
-        foreach ($article->detailedArticleQuantities as $detailedArticle) {
-            $detailedArticle->properties()->detach();
-        }
-    }
-
-    public function deleteAllDetailedArticles(InventoryArticle $article): void
-    {
-        $article->detailedArticleQuantities()->delete();
     }
 
 

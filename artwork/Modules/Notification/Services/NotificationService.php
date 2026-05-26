@@ -72,6 +72,8 @@ class NotificationService
 
     public string|null $positionVerifyRequestType = null;
 
+    public ?User $createdBy = null;
+
     public function __construct(
         private readonly EventService $eventService,
         private readonly UserService $userService,
@@ -306,6 +308,16 @@ class NotificationService
         return $this;
     }
 
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?User $createdBy): void
+    {
+        $this->createdBy = $createdBy;
+    }
+
     public function clearNotificationData(): void
     {
         $this->setTitle('');
@@ -327,6 +339,7 @@ class NotificationService
         $this->setShiftId(null);
         $this->setPositionVerifyRequestId(null);
         $this->setPositionVerifyRequestType(null);
+        $this->setCreatedBy(null);
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
@@ -354,7 +367,7 @@ class NotificationService
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();
-        $body->created_by = Auth::user() ? Auth::user()->withoutRelations() : null;
+        $body->created_by = $this->createdBy ?? (Auth::user() ? Auth::user()->withoutRelations() : null);
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
@@ -597,6 +610,57 @@ class NotificationService
         }
 
         return $notificationObj;
+    }
+
+    public function updateExistingRoomRequestNotification(int $eventId, int $recipientUserId, array $newDescription): bool
+    {
+        $existingNotification = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->where('notifiable_id', $recipientUserId)
+            ->whereNull('data->handledStatus')
+            ->first();
+
+        if (!$existingNotification) {
+            return false;
+        }
+
+        $data = json_decode($existingNotification->data, true);
+        $data['isModified'] = true;
+        $data['modifiedAt'] = now()->translatedFormat('d.m.Y H:i');
+        $data['modifiedCount'] = ($data['modifiedCount'] ?? 0) + 1;
+        $data['description'] = $newDescription;
+
+        DB::table('notifications')
+            ->where('id', $existingNotification->id)
+            ->update([
+                'data' => json_encode($data),
+                'updated_at' => now(),
+                'read_at' => null,
+            ]);
+
+        return true;
+    }
+
+    public function updateRoomRequestNotificationStatus(int $eventId, string $status, ?User $handledBy = null): void
+    {
+        $notifications = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $data = json_decode($notification->data, true);
+            $data['handledStatus'] = $status;
+            $data['handledBy'] = $handledBy
+                ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                : null;
+            $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+            $data['buttons'] = [];
+            DB::table('notifications')
+                ->where('id', $notification->id)
+                ->update(['data' => json_encode($data)]);
+        }
     }
 
     public function deleteUpsertRoomRequestNotificationByEventId(int $eventId): void

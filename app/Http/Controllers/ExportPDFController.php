@@ -218,11 +218,16 @@ class ExportPDFController extends Controller
                 $rowHeights = [];
             }
         } else {
-            // New export mode: dynamic segment height based on event text length
-            $baseSegmentHeight = 52; // px minimum per slot
-            $charsPerLine = 10;
-            $lineHeight = 11;
-            $paddingPx = 8;
+            // Compact stacking mode: Events werden kompakt gestapelt, nicht zeit-proportional.
+            // Slot-Höhe = Summe der Event-Höhen in der vollsten Lane + Gaps.
+            $baseSegmentHeight = 40;  // px minimum per slot
+            $maxSegmentHeight  = 400; // px cap to prevent absurdly tall rows
+            $baseCharsPerLine  = 14;  // chars per line at full column width (single lane)
+            $titleLineH        = 14;  // .event-title: 11px * 1.2 + spacing
+            $projectLineH      = 14;  // .event-sub:   10px * 1.2 + margin
+            $timeLineH         = 12;  // .event-time:   8px * 1.15 + margin
+            $paddingPx         = 14;  // .event-inner padding + borders + extra breathing room
+            $GAP_PX            = 4;   // gap between non-consecutive events
 
             $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 
@@ -239,26 +244,73 @@ class ExportPDFController extends Controller
                 if ($roomContent) {
                     foreach ($allDayStrings as $dayDisplay) {
                         $events = $roomContent[$dayDisplay]['events'] ?? [];
+                        if (empty($events)) {
+                            continue;
+                        }
+
+                        // Count events per slot and determine lane count
+                        $slotCounts = ['morning' => 0, 'noon' => 0, 'evening' => 0];
                         foreach ($events as $event) {
-                            $tz = config('app.timezone');
-                            $start = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
-                            $end = \Illuminate\Support\Carbon::parse($event->end)->timezone($tz);
-                            $startMin = ((int)$start->format('H')) * 60 + ((int)$start->format('i'));
-                            $endMin = ((int)$end->format('H')) * 60 + ((int)$end->format('i'));
+                            foreach (['morning', 'noon', 'evening'] as $slot) {
+                                if (self::eventOverlapsSlot($event, $dayDisplay, $slot)) {
+                                    $slotCounts[$slot]++;
+                                }
+                            }
+                        }
+                        $laneCount = max(1, max($slotCounts['morning'], $slotCounts['noon'], $slotCounts['evening']));
 
-                            // Determine which slot this event falls into
-                            $startMin = max(360, min(1440, $startMin));
-                            $slot = $startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening');
+                        $effectiveCharsPerLine = max(4, (int) floor($baseCharsPerLine / $laneCount));
 
-                            // Calculate required height based on text
-                            $name = $event->eventName ?? '';
+                        // Collect content heights per slot
+                        $slotContentHeights = ['morning' => [], 'noon' => [], 'evening' => []];
+                        $tz = config('app.timezone');
+                        foreach ($events as $event) {
+                            $start    = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
+                            $startMin = max(360, min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i'))));
+                            $allDay   = (bool) ($event->allDay ?? false);
+
+                            $slot = $allDay ? 'morning' : ($startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening'));
+
+                            $name        = $event->eventName ?? '';
+                            $abbr        = $event->eventType?->abbreviation ?? '';
                             $projectName = $event->project->name ?? '';
-                            $titleLines = max(1, ceil(mb_strlen($name) / $charsPerLine));
-                            $projectLines = !empty($projectName) ? max(1, ceil(mb_strlen($projectName) / $charsPerLine)) : 0;
-                            $neededHeight = ($titleLines + $projectLines + 1) * $lineHeight + $paddingPx;
 
-                            if ($neededHeight > $slotMaxHeight[$slot]) {
-                                $slotMaxHeight[$slot] = (int)$neededHeight;
+                            $titleText    = ($abbr !== '' ? $abbr . ': ' : '') . $name;
+                            $titleLines   = max(1, (int) ceil(mb_strlen($titleText) / $effectiveCharsPerLine));
+                            $projectLines = $projectName !== '' ? max(1, (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)) : 0;
+                            $contentHeight = max(40,
+                                $titleLines * $titleLineH
+                                + $projectLines * $projectLineH
+                                + $timeLineH
+                                + $paddingPx
+                            );
+
+                            $slotContentHeights[$slot][] = $contentHeight;
+                        }
+
+                        // Compute required slot heights based on compact stacking
+                        foreach (['morning', 'noon', 'evening'] as $slot) {
+                            $heights = $slotContentHeights[$slot];
+                            $n = count($heights);
+                            if ($n === 0) {
+                                continue;
+                            }
+
+                            // Approximate events per lane (worst case for tallest lane)
+                            $lanesInSlot = min($slotCounts[$slot], $laneCount);
+                            $eventsPerLane = (int) ceil($n / max(1, $lanesInSlot));
+
+                            // Use largest content heights for tallest lane estimate
+                            rsort($heights);
+                            $stackHeight = 0;
+                            for ($i = 0; $i < min($eventsPerLane, $n); $i++) {
+                                $stackHeight += $heights[$i];
+                            }
+                            $stackHeight += max(0, min($eventsPerLane, $n) - 1) * $GAP_PX;
+                            $stackHeight = min($stackHeight, $maxSegmentHeight);
+
+                            if ($stackHeight > $slotMaxHeight[$slot]) {
+                                $slotMaxHeight[$slot] = $stackHeight;
                             }
                         }
                     }

@@ -5,8 +5,10 @@ namespace Artwork\Modules\Inventory\Services;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryCategoryRepository;
@@ -16,6 +18,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
@@ -319,6 +322,8 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ]);
 
+            $this->assignInventoryNumber($article);
+
             $this->processArticleImages($article, $request);
             $this->processArticleProperties($article, $request);
             $this->processStatusValues($article, $request->get('statusValues', []));
@@ -328,6 +333,21 @@ class InventoryArticleService
 
             return $article->load(['properties', 'images', 'statusValues', 'tags']);
         });
+    }
+
+    /**
+     * Vergibt die fortlaufende Inventarnummer (z. B. "00042").
+     * external_id wird automatisch im Model-Boot gesetzt.
+     */
+    protected function assignInventoryNumber(InventoryArticle $article): void
+    {
+        if (!empty($article->inventory_number)) {
+            return;
+        }
+
+        $article->update([
+            'inventory_number' => TypeNumberGenerator::generateInventoryNumber(),
+        ]);
     }
 
     /**
@@ -348,30 +368,18 @@ class InventoryArticleService
             // Vorherige Werte sichern mit Null-Handling
             $oldQuantity = $article->quantity ?? null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
             $oldStatus1 = null;
-            if ($article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $oldStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
 
-            // Detailed Articles: Status 1 Werte sichern mit Null-Handling
+            // Detailed Articles: Einsatzbereit-Mengen sichern
             $oldDetailedStatus1 = [];
-            // Prüfe, ob detailedArticleQuantities existiert, bevor darauf zugegriffen wird
-            if ($article && isset($article->detailedArticleQuantities)) {
+            if ($article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Stelle sicher, dass detailed, status und id existieren
-                    if (
-                        $detailed && isset($detailed->status) && isset($detailed->status->id) &&
-                        $detailed->status->id == 1 && isset($detailed->id)
-                    ) {
-                        // Sicheres Zugreifen auf pivot und value
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->value;
-                        } else {
-                            $oldDetailedStatus1[$detailed->id] = null;
-                        }
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                        $oldDetailedStatus1[$detailed->id] = $detailed->quantity;
                     }
                 }
             }
@@ -406,26 +414,18 @@ class InventoryArticleService
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Nachherige Statuswerte prüfen — suche nach Name statt ID
             $newStatus1 = null;
-            if ($article && $article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $newStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article && $article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $newStatus1 = $readyStatus->pivot->value ?? null;
             }
 
             $detailedStatus1Changed = false;
-            // Ensure detailedArticleQuantities exists before iterating
             if ($article && $article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Ensure detailed and status objects exist and have required properties
-                    if ($detailed && $detailed->status && $detailed->status->id == 1 && isset($detailed->id)) {
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
                         $old = $oldDetailedStatus1[$detailed->id] ?? null;
-                        // Ensure pivot exists before accessing its properties
-                        $new = null;
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $new = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $new = $detailed->status->value;
-                        }
+                        $new = $detailed->quantity;
 
                         if (is_numeric($old) && is_numeric($new) && $new < $old) {
                             $detailedStatus1Changed = true;
@@ -621,7 +621,7 @@ class InventoryArticleService
     }
 
     /**
-     * Process and store article properties and detailed articles
+     * Process and store article properties and detailed articles.
      *
      * @param InventoryArticle $article
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
@@ -630,7 +630,93 @@ class InventoryArticleService
     protected function processArticleProperties(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
     {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
-        $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+    }
+
+    /**
+     * Synchronisiert DetailArticles per ID:
+     * - vorhandene IDs => Update + Property-Sync
+     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, inventory_number bleibt belegt)
+     * - ohne ID => Neu anlegen mit nächster freier detail_number (max+1, inkl. trashed)
+     */
+    protected function syncDetailedArticles(InventoryArticle $article, SupportCollection $incoming): void
+    {
+        $incomingIds = $incoming
+            ->pluck('id')
+            ->filter(static fn ($id): bool => $id !== null && $id !== '')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        // 1) Fehlende DetailArticles soft-deleten (deren Properties detachen)
+        $toDelete = $article->detailedArticleQuantities()
+            ->when(!empty($incomingIds), static fn ($q) => $q->whereNotIn('id', $incomingIds))
+            ->get();
+
+        foreach ($toDelete as $detail) {
+            $detail->properties()->detach();
+            $detail->delete();
+        }
+
+        // 2) Vorhandene updaten / neue anlegen
+        $nextDetailNumber = (int) $article->detailedArticleQuantities()
+            ->withTrashed()
+            ->max('detail_number') + 1;
+
+        foreach ($incoming as $detailData) {
+            if (!empty($detailData['id'])) {
+                /** @var InventoryDetailedQuantityArticle|null $detail */
+                $detail = $article->detailedArticleQuantities()
+                    ->whereKey((int) $detailData['id'])
+                    ->first();
+
+                if ($detail === null) {
+                    continue;
+                }
+
+                $detail->update([
+                    'name' => $detailData['name'],
+                    'description' => $detailData['description'] ?? null,
+                    'quantity' => $detailData['quantity'],
+                    'inventory_article_status_id' => $detailData['status']['id'] ?? null,
+                ]);
+            } else {
+                /** @var InventoryDetailedQuantityArticle $detail */
+                $detail = $article->detailedArticleQuantities()->create([
+                    'name' => $detailData['name'],
+                    'description' => $detailData['description'] ?? null,
+                    'quantity' => $detailData['quantity'],
+                    'inventory_article_status_id' => $detailData['status']['id'] ?? null,
+                    'detail_number' => $nextDetailNumber,
+                    'external_id' => TypeNumberGenerator::generateDetailExternalId($article->external_id, $nextDetailNumber),
+                    'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($article->inventory_number, $nextDetailNumber),
+                ]);
+                $nextDetailNumber++;
+            }
+
+            $this->syncDetailedArticleProperties($detail, $detailData['properties'] ?? []);
+        }
+    }
+
+    /**
+     * Synchronisiert die Property-Pivot-Werte eines DetailArticles per Property-ID.
+     *
+     * @param array<int, array<string, mixed>> $properties
+     */
+    protected function syncDetailedArticleProperties(InventoryDetailedQuantityArticle $detail, array $properties): void
+    {
+        $syncData = [];
+
+        foreach ($properties as $property) {
+            if (!isset($property['id'])) {
+                continue;
+            }
+
+            $syncData[(int) $property['id']] = [
+                'value' => isset($property['value']) ? (string) $property['value'] : '',
+            ];
+        }
+
+        $detail->properties()->sync($syncData);
     }
 
     /**
@@ -649,16 +735,13 @@ class InventoryArticleService
     }
 
     /**
-     * Reset all article relations before re-attaching
-     *
-     * @param InventoryArticle $article
-     * @return void
+     * Reset article relations before re-attaching.
+     * DetailArticles werden NICHT mehr hier gelöscht – sie werden in syncDetailedArticles()
+     * per ID gematcht (Match-and-Update), damit Typnummern und Auto-Increment-IDs stabil bleiben.
      */
     protected function resetArticleRelations(InventoryArticle $article): void
     {
         $this->articleRepository->detachAllProperties($article);
-        $this->articleRepository->detachAllDetailedArticleProperties($article);
-        $this->articleRepository->deleteAllDetailedArticles($article);
         $this->articleRepository->detachAllStatusValues($article);
     }
 

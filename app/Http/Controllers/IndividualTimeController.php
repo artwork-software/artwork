@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -23,6 +24,15 @@ class IndividualTimeController extends Controller
         private ShiftPlanCommentService $shiftPlanCommentService,
         private WorkingHourCacheService $workingHourCacheService,
     ) {
+    }
+
+    private function resolveWorkerType(Model $model): int
+    {
+        return match ($model::class) {
+            Freelancer::class => 1,
+            ServiceProvider::class => 2,
+            default => 0,
+        };
     }
 
     /**
@@ -112,6 +122,8 @@ class IndividualTimeController extends Controller
             );
         }
 
+        broadcast(new IndividualTimeChanged($modelInstance->id, $this->resolveWorkerType($modelInstance)));
+
         return response()->json([
             'individual_times' => $modelInstance->individualTimes()->get(),
             'shift_comment' => $modelInstance->shiftPlanComments()
@@ -184,6 +196,7 @@ class IndividualTimeController extends Controller
                 WorkingHourCacheService::entityType($owner),
                 $owner->id
             );
+            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
         }
 
         return redirect()->back()->with('success', 'Individual time updated successfully.');
@@ -202,6 +215,7 @@ class IndividualTimeController extends Controller
                 WorkingHourCacheService::entityType($owner),
                 $owner->id
             );
+            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
         }
     }
 }

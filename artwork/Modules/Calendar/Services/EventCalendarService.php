@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\MinimalEventDTO;
@@ -149,7 +150,6 @@ readonly class EventCalendarService
                 start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
                 end:   Carbon::parse($event->end_time)->format('Y-m-d H:i'),
                 roomId: (int)$event->room_id,
-                daysOfEvent: $event->getAttribute('days_of_event') ?? [],
             );
         })->groupBy('roomId');
 
@@ -180,7 +180,6 @@ readonly class EventCalendarService
                 'shifts:id,event_id,start_date,end_date,craft_id',
                 'eventProperties',
                 'subEvents',
-                'series',
             ])
             ->withExists('timelines');
     }
@@ -216,10 +215,15 @@ readonly class EventCalendarService
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $q->whereHas('eventProperties', fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids));
             })
-            // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv
+            // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv UND Berechtigung vorhanden
             ->where(function ($query) use ($userCalendarSettings): void {
                 $query->where('is_planning', false);
-                if ($userCalendarSettings?->show_planned_events) {
+                $user = Auth::user();
+                if (
+                    $userCalendarSettings?->show_planned_events &&
+                    $user &&
+                    ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                ) {
                     $query->orWhere('is_planning', true);
                 }
             })

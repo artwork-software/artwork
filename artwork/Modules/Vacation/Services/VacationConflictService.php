@@ -43,6 +43,7 @@ readonly class VacationConflictService
             $shifts = $user->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $vacations = $user
                 ->vacations()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -50,6 +51,7 @@ readonly class VacationConflictService
             $shifts = $freelancer->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $vacations = $freelancer
                 ->vacations()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -146,8 +148,10 @@ readonly class VacationConflictService
         ?Freelancer $freelancer = null,
     ): void {
 
-        $shiftStartDate = $shift?->event_start_day ?? $shift->start_date;
-        $shiftEndDate = $shift?->event_end_day ?? $shift->end_date;
+        $shiftStartDate = $shift->event_start_day ?? Carbon::parse($shift->start_date)->toDateString();
+        $shiftEndDate = $shift->end_date
+            ? Carbon::parse($shift->end_date)->toDateString()
+            : $shiftStartDate;
 
         $vacations = collect();
         if ($user) {

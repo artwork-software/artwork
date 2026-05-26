@@ -295,8 +295,8 @@ class MigrateToCrmCommand extends Command
             $this->setPropertyValue($contact, $propertyName, $value);
         }
 
-        // crm_contact_id auf dem Source-Model setzen
-        $entity->updateQuietly(['crm_contact_id' => $contact->id]);
+        // crm_contact_id auf dem Source-Model setzen (forceFill, da crm_contact_id nicht in $fillable)
+        $entity->forceFill(['crm_contact_id' => $contact->id])->saveQuietly();
 
         return $contact;
     }

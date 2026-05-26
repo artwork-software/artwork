@@ -280,30 +280,30 @@
                                 <!-- gleicher Tag -->
                                 <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance">
                                     <span v-if="event.allDay">{{ $t('Full day') }}</span>
-                                    <span v-else>{{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}</span>
+                                    <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                 </template>
 
                                 <!-- mehrtägig -->
                                 <template v-else>
                                   <span v-if="event.allDay">
                                     <template v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
-                                      {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }}
+                                      {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }}
                                     </template>
                                     <template v-else>
-                                      {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }} - {{ event.formattedDates.end_without_year }}
+                                      {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
                                     </template>
                                   </span>
                                                     <span v-else>
                                     <template v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
                                       <span class="text-error pr-0.5">!</span>
-                                      {{ event.formattedDates.startDateTime_without_year  + ' - ' +  event.formattedDates.endDateTime_without_year }}
+                                      {{ resolvedFormattedDates.startDateTime_without_year  + ' - ' +  resolvedFormattedDates.endDateTime_without_year }}
                                     </template>
                                     <template v-else>
                                       <template v-if="atAGlance">
-                                        {{ event.formattedDates.startDateTime_without_year + ' - ' + event.formattedDates.endTime }}
+                                        {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endTime }}
                                       </template>
                                       <template v-else>
-                                        {{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}
+                                        {{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}
                                       </template>
                                     </template>
                                   </span>
@@ -414,6 +414,7 @@
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="showRejectEventVerificationModal = true" :icon="IconCircleX" title="Reject verification" />
 
+                        <BaseMenuItem white-menu-background v-if="event.occupancy_option && (isRoomAdmin || hasAdminRole)" @click="$emit('acceptRoomRequest', event)" :icon="IconChecks" title="Accept room request" />
                         <BaseMenuItem white-menu-background @click="$emit('editEvent', event)" :icon="IconEdit" title="edit" />
                         <BaseMenuItem
                             white-menu-background
@@ -422,11 +423,11 @@
                             :icon="IconCirclePlus"
                             title="Add Sub-Event"
                         />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
-                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))" @click="$emit('showDeclineEventModal', event)" :icon="IconX" title="Decline event" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))) && (event.is_series || event.series_id)" @click="deleteSeriesEvents" :icon="IconTrash" title="Delete all series events" />
+                        <BaseMenuItem white-menu-background v-if="(isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))) && (event.is_series || event.series_id)" @click="showEditSeriesModal = true" :icon="IconEdit" title="Edit all series events" />
                         <BaseMenuItem white-menu-background v-if="(can('can edit planning calendar') || hasAdminRole) && !event.isPlanning" @click="showConvertToPlanningModal = true" :icon="IconCalendarPlus" title="Convert to planned event" />
-                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
+                        <BaseMenuItem white-menu-background v-if="isRoomAdmin || isCreator || hasAdminRole || can('create events without request') || (event.isPlanning && can('can edit planning calendar'))" @click="$emit('openConfirmModal', event, 'main')" :icon="IconTrash" title="Delete" />
                         <BaseMenuItem white-menu-background v-if="event.hasTimelines && (can('create events without request') || hasAdminRole)" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" title="Save timeline as preset" />
                         <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" title="Import timeline preset" />
                     </BaseMenu>
@@ -628,15 +629,15 @@
                                                 <div class="subpixel-antialiased">
                                                     <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()">
                                                         <span v-if="event.allDay">{{ $t('Full day') }}</span>
-                                                        <span v-else>{{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}</span>
+                                                        <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                                     </template>
                                                     <template v-else>
                                                         <span v-if="event.allDay">
-                                                            {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }} - {{ event.formattedDates.end_without_year }}
+                                                            {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
                                                         </span>
                                                         <span v-else>
                                                             <span class="text-error pr-0.5">!</span>
-                                                            {{ event.formattedDates.startDateTime_without_year + ' - ' + event.formattedDates.endDateTime_without_year }}
+                                                            {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endDateTime_without_year }}
                                                         </span>
                                                     </template>
                                                 </div>
@@ -918,6 +919,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
+import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
@@ -938,6 +940,7 @@ const emits = defineEmits([
     "openAddSubEventModal",
     "openConfirmModal",
     "showDeclineEventModal",
+    "acceptRoomRequest",
     "changedMultiEditCheckbox",
 ]);
 
@@ -981,6 +984,10 @@ const props = defineProps({
     verifierForEventTypIds: { type: Array, default: [] },
     isPlanning: { type: Boolean, default: false },
 });
+
+const resolvedFormattedDates = computed(() =>
+    props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
+);
 
 const isHighlighted = computed(() => {
     const highlightEventId = usePage().props.urlParameters.highlightEventId;

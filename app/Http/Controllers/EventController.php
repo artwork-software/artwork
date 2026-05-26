@@ -52,6 +52,8 @@ use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -88,6 +90,10 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\User\Services\WorkingHourService;
+use Artwork\Modules\Worker\Services\WorkerService;
+use Artwork\Modules\Worker\Services\WorkerShiftPlanService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -150,6 +156,8 @@ class EventController extends Controller
         protected HelperService $helperService,
         private readonly ShiftListViewService $shiftListViewService,
         private readonly WorkingHourCacheService $workingHourCacheService,
+        private readonly WorkerService $workerService,
+        private readonly WorkerShiftPlanService $workerShiftPlanService,
     ) {
     }
 
@@ -320,7 +328,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $p) {
-            $date  = Carbon::parse($p->withoutFormat);
+            if ($p->isExtraRow) {
+                continue;
+            }
+            $date  = Carbon::parse($p->date);
             $key   = $date->format('m.Y');
             $months[$key] ??= [
                 'first_day_in_period' => $date->format('Y-m-d'),
@@ -344,7 +355,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
+            admins: $room->admins->pluck('id')->toArray(),
+            everyone_can_book: $room->everyone_can_book,
+            requestable_by: $room->requestableBy->pluck('id')->toArray(),
         ));
 
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
@@ -512,7 +525,10 @@ class EventController extends Controller
 
         $months = [];
         foreach ($period as $periodObject) {
-            $date = Carbon::parse($periodObject->withoutFormat);
+            if ($periodObject->isExtraRow) {
+                continue;
+            }
+            $date = Carbon::parse($periodObject->date);
             $month = $date->format('m.Y');
             if (!array_key_exists($month, $months)) {
                 $months[$month] = [
@@ -552,7 +568,9 @@ class EventController extends Controller
             id: $room->id,
             name: $room->name,
             has_events: $room->events_count > 0,
-            admins: $room->admins->pluck('id')->toArray()
+            admins: $room->admins->pluck('id')->toArray(),
+            everyone_can_book: $room->everyone_can_book,
+            requestable_by: $room->requestableBy->pluck('id')->toArray(),
         ));
 
         $dateValue = [
@@ -676,7 +694,7 @@ class EventController extends Controller
             $user,
         );
 
-        $this->shiftCalendarService->filterRoomsEventsAndShifts(
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $rooms,
             $userCalendarFilter,
             $startDate,
@@ -685,6 +703,7 @@ class EventController extends Controller
             $project,
             true
         );
+        $rooms = $filterResult['rooms'];
 
         $calendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
             $rooms,
@@ -743,6 +762,11 @@ class EventController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    public function shiftPlanRoomsBatchAPI(Request $request): JsonResponse
+    {
+        return response()->json($this->shiftPlanService->getAllRoomsContent($request));
     }
 
     public function viewShiftPlan(?Project $project = null): Response
@@ -825,15 +849,17 @@ class EventController extends Controller
 
         return Inertia::render($renderViewName, [
             'history' => [],
-            'crafts' => Craft::with([
-                'users',
-                'freelancers',
-                'serviceProviders',
-                'managingUsers',
-                'managingFreelancers',
-                'managingServiceProviders',
-                'qualifications'
-            ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
+            'crafts' => Craft::query()
+                ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
+                ->with([
+                    'users',
+                    'managingUsers',
+                    'managingFreelancers',
+                    'managingServiceProviders',
+                ])
+                ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                ->orderBy('position')
+                ->get(),
             'eventTypes' => EventType::all(),
             'eventStatuses' => EventStatus::orderBy('order')->get(),
             'event_properties' => EventProperty::all(),
@@ -948,9 +974,9 @@ class EventController extends Controller
                 'users',
                 'freelancers',
                 'serviceProviders',
-                'qualifications',
-            ])->get(),
-            'eventTypes' => EventType::all(),
+                'qualifications:id,name,icon',
+            ])->get(['id', 'name', 'abbreviation', 'color', 'position', 'universally_applicable']),
+            'eventTypes' => EventType::select(['id', 'name', 'abbreviation', 'hex_code'])->get(),
             'filterOptions' => $this->filterService->getCalendarFilterDefinitions(),
             'personalFilters' => $this->filterService->getPersonalFilter($user, $shiftFilterType),
             'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
@@ -958,11 +984,12 @@ class EventController extends Controller
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'filterType' => $shiftFilterType,
             'calendarWarningText' => $calendarWarningText,
-            'rooms' => Room::all(),
+            'rooms' => Room::select(['id', 'name', 'position', 'area_id'])->get(),
             'shiftTimePresets' => $this->shiftTimePresetService->getAll(),
             'shiftGroups' => $this->shiftGroupService->getAllShiftGroups(),
             'globalQualifications' => $this->globalQualificationService->getAll(),
             'currentUserCrafts' => $this->getCurrentUserCrafts($user),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
         ]);
     }
 
@@ -970,7 +997,16 @@ class EventController extends Controller
     {
         $user->shift_list_view_settings()->updateOrCreate(
             ['user_id' => $user->id],
-            $request->only(['show_qualifications', 'shift_notes', 'show_shift_group_tag', 'show_fully_staffed_shifts', 'detailed_shift_overview'])
+            $request->only([
+                'show_qualifications',
+                'shift_notes',
+                'show_shift_group_tag',
+                'show_fully_staffed_shifts',
+                'detailed_shift_overview',
+                'show_appointments',
+                'group_by_shift_groups',
+                'hide_shift_row',
+            ])
         );
     }
 
@@ -1084,7 +1120,25 @@ class EventController extends Controller
             ->orderBy('created_at', 'desc');
 
         if (request('openEditEvent')) {
-            $event = Event::find(request('eventId'));
+            $event = Event::with([
+                'room',
+                'creator',
+                'project',
+                'project.managerUsers',
+                'project.status',
+                'event_type',
+                'eventStatus',
+                'eventProperties',
+                'shifts',
+                'shifts.craft',
+                'shifts.users',
+                'shifts.freelancer',
+                'shifts.serviceProvider',
+                'shifts.shiftsQualifications',
+                'subEvents.event',
+                'subEvents.event.room',
+                'series',
+            ])->find(request('eventId'));
         }
 
         $historyObjects = [];
@@ -1174,9 +1228,37 @@ class EventController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
+
+        // Server-side enforcement: verify the user can actually book or request for this room
+        $user = auth()->user();
+        $roomId = $request->get('roomId');
+        $isOption = $request->get('isOption');
+
+        if ($roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $room = Room::find($roomId);
+            if ($room) {
+                $isRoomAdmin = $room->admins()->where('user_id', $user->id)->exists();
+                $canRequestForRoom = $room->requestableBy()->where('user_id', $user->id)->exists();
+                $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+                $hasGlobalRequest = $user->can(PermissionEnum::EVENT_REQUEST->value);
+                $isPlanning = $request->get('isPlanning');
+                $canPlanFixed = $isPlanning && $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value);
+
+                // Direct booking (isOption=false): must be admin, room admin, everyone_can_book, global permission, or planning calendar fixed permission
+                if (!$isOption && !$hasGlobalCreate && !$canPlanFixed && !$isRoomAdmin && !$room->everyone_can_book) {
+                    abort(403);
+                }
+
+                // Request booking (isOption=true): must have global request permission or room-specific can_request
+                if ($isOption && !$hasGlobalCreate && !$hasGlobalRequest && !$isRoomAdmin && !$canRequestForRoom && !$room->everyone_can_book) {
+                    abort(403);
+                }
+            }
+        }
+
         /** @var Event $firstEvent */
         $firstEvent = Event::create($request->data());
-        $firstEvent->eventProperties()->sync($request->get('event_properties'));
+        $firstEvent->eventProperties()->sync($request->input('event_properties', []));
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
             $this->associateProject(
@@ -1314,10 +1396,11 @@ class EventController extends Controller
             'project_id' => $projectId ?: null,
             'is_series' => true,
             'series_id' => $series->id,
-            'allDay' => $sourceEvent?->allDay ?? $request->allDay
+            'allDay' => $sourceEvent?->allDay ?? $request->allDay,
+            'is_planning' => $sourceEvent?->is_planning ?? $request->get('isPlanning', false),
         ]);
         $event->eventProperties()
-            ->sync($request->get('event_properties', []));
+            ->sync($request->input('event_properties', []));
 
         broadcast(new EventCreated(
             $event->fresh(),
@@ -1585,7 +1668,7 @@ class EventController extends Controller
         $this->notificationService->setRoomId($room->id);
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
 
-        $this->notificationService->setButtons(['accept', 'decline']);
+        $this->notificationService->setButtons(['show_in_calendar', 'accept', 'decline']);
         if (!empty($admins)) {
             foreach ($admins as $admin) {
                 // notification.event.new_room_request
@@ -1628,12 +1711,18 @@ class EventController extends Controller
                         'href' => null
                     ]
                 ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey(Str::random(15));
-                $this->notificationService->setNotificationTo($admin);
-                $this->notificationService->createNotification();
+                if (!$this->notificationService->updateExistingRoomRequestNotification(
+                    $event->id,
+                    $admin->id,
+                    $notificationDescription
+                )) {
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setDescription($notificationDescription);
+                    $this->notificationService->setNotificationKey(Str::random(15));
+                    $this->notificationService->setNotificationTo($admin);
+                    $this->notificationService->createNotification();
+                }
             }
         } else {
             $user = User::find($room->user_id);
@@ -1680,12 +1769,18 @@ class EventController extends Controller
                     'href' => null
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey(Str::random(15));
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
+            if (!$this->notificationService->updateExistingRoomRequestNotification(
+                $event->id,
+                $user->id,
+                $notificationDescription
+            )) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setNotificationKey(Str::random(15));
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
         }
     }
 
@@ -1965,7 +2060,7 @@ class EventController extends Controller
         // remove is_series and series_id from data to prevent overwriting
         unset($data['is_series'], $data['series_id']);
         $event->fill($data);
-        $event->eventProperties()->sync(($newEventPropertyIds = $request->get('event_properties', [])));
+        $event->eventProperties()->sync(($newEventPropertyIds = $request->input('event_properties', [])));
         $this->eventService->save($event);
 
         // Projekt ggf. anlegen & zuordnen (dein Original)
@@ -1985,6 +2080,33 @@ class EventController extends Controller
                     ->setModelId($event->project->id)
                     ->setTranslationKey('Schedule modified')
             );
+        }
+
+        // If room changed and new room requires approval, create a room request notification
+        $roomRequestNotificationSent = false;
+        if ($event->room_id && $oldEventRoom !== $event->room_id) {
+            $newRoom = Room::find($event->room_id);
+            if ($newRoom && !$newRoom->everyone_can_book) {
+                $user = Auth::user();
+                $isAdmin = $user->hasRole('artwork admin');
+                $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+                $isRoomAdmin = $newRoom->admins()->where('user_id', $user->id)->exists();
+
+                if (!$isAdmin && !$hasGlobalCreate && !$isRoomAdmin) {
+                    $event->update([
+                        'occupancy_option' => true,
+                        'declined_room_id' => null,
+                        'accepted' => false,
+                    ]);
+                    $this->createRequestNotification($request, $event);
+                    $roomRequestNotificationSent = true;
+                }
+            }
+        }
+
+        // Update existing room request notifications if event details changed while request is still pending
+        if (!$roomRequestNotificationSent && $event->occupancy_option && $event->room_id) {
+            $this->createRequestNotification($request, $event);
         }
 
         $newEventDescription = $event->description;
@@ -2104,7 +2226,7 @@ class EventController extends Controller
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
-        $this->notificationService->setButtons(['accept', 'decline']);
+        $this->notificationService->setButtons(['show_in_calendar', 'accept', 'decline']);
         if ($admins->count() > 0) {
             foreach ($admins as $admin) {
                 $notificationTitle = __('notification.event.new_message', [], $admin->language);
@@ -2359,6 +2481,12 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
+        /** @var User $currentUser */
+        $currentUser = $this->authManager->user();
+        $this->notificationService->updateRoomRequestNotificationStatus($event->id, 'accepted', $currentUser);
+
+        broadcast(new EventUpdated($event->fresh(), $event->room_id));
+
         return Redirect::back();
     }
 
@@ -2367,7 +2495,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): void
+    public function declineEvent(Request $request, Event $event): RedirectResponse
     {
         $this->authorize('update', $event);
 
@@ -2625,10 +2753,16 @@ class EventController extends Controller
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
 
+        /** @var User $currentUser */
+        $currentUser = $this->authManager->user();
+        $this->notificationService->updateRoomRequestNotificationStatus($event->id, 'declined', $currentUser);
+
         broadcast(new EventCreated(
             $event,
             $roomId
         ));
+
+        return Redirect::back();
     }
 
     /**
@@ -2699,6 +2833,14 @@ class EventController extends Controller
             $oldEnd       = Carbon::parse($series->end_date)->startOfDay();
             $freq         = (int) ($newFrequency ?: $oldFrequency);
             $seriesEndStr = $newSeriesEnd ?: $oldEnd->toDateString();
+
+            $frequencyChanged = $freq !== $oldFrequency;
+            $endDateChanged   = $seriesEndStr !== $oldEnd->toDateString();
+
+            // Wenn weder Turnus noch Enddatum geändert wurde, Serie nicht neu generieren
+            if (!$frequencyChanged && !$endDateChanged) {
+                return;
+            }
 
             $series->update([
                 'frequency_id' => $freq,
@@ -2787,8 +2929,9 @@ class EventController extends Controller
             // Aktuelles Event aus der Serie lösen
             $event->update(['is_series' => false, 'series_id' => null]);
 
-            // Optionales Aufräumen: Wenn KEIN Event mehr auf diese Serie verweist, Serie-Datensatz löschen
-            $stillReferenced = Event::where('series_id', $series->id)->exists();
+            // Optionales Aufräumen: Serie nur löschen, wenn KEIN Event mehr darauf verweist.
+            // withTrashed(), da auch soft-deleted Events die FK-Zeile halten und das Löschen sonst fehlschlägt.
+            $stillReferenced = Event::withTrashed()->where('series_id', $series->id)->exists();
             if (!$stillReferenced) {
                 $series->delete();
             }
@@ -3913,6 +4056,104 @@ class EventController extends Controller
         }
     }
 
+    public function bulkAcceptEvents(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $eventIds = $request->collect('eventIds', []);
+        /** @var User $currentUser */
+        $currentUser = $this->authManager->user();
+        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+
+        foreach ($eventIds as $eventId) {
+            $event = Event::find($eventId);
+            if (!$event || !$event->occupancy_option) {
+                continue;
+            }
+
+            if (!$isAdmin && !$hasGlobalCreate) {
+                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
+                if (!$isRoomAdmin) {
+                    continue;
+                }
+            }
+
+            $event->occupancy_option = false;
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey('Room confirmed')
+            );
+
+            $event->save();
+
+            $this->notificationService->updateRoomRequestNotificationStatus(
+                $event->id,
+                'accepted',
+                $currentUser
+            );
+
+            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+        }
+
+        return redirect()->back();
+    }
+
+    public function bulkDeclineEvents(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $eventIds = $request->collect('eventIds', []);
+        $comment = $request->get('comment', '');
+        /** @var User $currentUser */
+        $currentUser = $this->authManager->user();
+        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+
+        foreach ($eventIds as $eventId) {
+            $event = Event::find($eventId);
+            if (!$event || !$event->occupancy_option) {
+                continue;
+            }
+
+            if (!$isAdmin && !$hasGlobalCreate) {
+                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
+                if (!$isRoomAdmin) {
+                    continue;
+                }
+            }
+
+            $roomId = $event->room_id;
+            $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+
+            if (!empty($comment)) {
+                $event->comments()->create([
+                    'user_id' => $currentUser->id,
+                    'comment' => $comment,
+                    'is_admin_comment' => true
+                ]);
+            }
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey('Room declined')
+            );
+
+            $this->notificationService->updateRoomRequestNotificationStatus(
+                $event->id,
+                'declined',
+                $currentUser
+            );
+
+            broadcast(new EventCreated($event, $roomId));
+        }
+
+        return redirect()->back();
+    }
+
     public function standardEventValues()
     {
         return Inertia::render('Settings/StandardEventValues', []);
@@ -3928,8 +4169,29 @@ class EventController extends Controller
 
     public function convertToPlanning(Event $event): RedirectResponse
     {
+        /** @var User $user */
+        $user = $this->authManager->user();
+        if (
+            !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+
+        $wasPlanning = $event->is_planning;
+
         // Set the event as a planning event
         $event->update(['is_planning' => true]);
+
+        if (!$wasPlanning) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($event->id)
+                    ->setTranslationKey('Event converted to planning event')
+            );
+        }
 
         // Broadcast the event update
         $freshEvent = $event->fresh()->load(['event_type', 'project']);
@@ -4010,19 +4272,106 @@ class EventController extends Controller
     /**
      * Return crafts for shift plan (loaded asynchronously by frontend).
      */
-    public function getShiftPlanCrafts(): JsonResponse
+    public function getShiftPlanCrafts(Request $request): JsonResponse
     {
-        $crafts = Craft::with([
-            'users',
-            'freelancers',
-            'serviceProviders',
-            'managingUsers',
-            'managingFreelancers',
-            'managingServiceProviders',
-            'qualifications'
-        ])->get();
+        $eagerLoad = [
+            'users:id,first_name,last_name,position,profile_photo_path',
+            'freelancers:id,first_name,last_name,position,profile_image',
+            'serviceProviders:id,provider_name,profile_image',
+            'qualifications:id,name,icon,available',
+        ];
+
+        if (!$request->boolean('lightweight')) {
+            $eagerLoad[] = 'managingUsers:id';
+            $eagerLoad[] = 'managingFreelancers:id';
+            $eagerLoad[] = 'managingServiceProviders:id';
+        }
+
+        $crafts = Craft::with($eagerLoad)->get();
 
         return new JsonResponse(['crafts' => $crafts]);
+    }
+
+    /**
+     * Reload a single worker for the shift plan (lightweight alternative to getShiftPlanWorkers).
+     */
+    public function getShiftPlanWorkerSingle(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'worker_id' => 'required|integer',
+            'worker_type' => 'required|string|in:user,freelancer,serviceProvider',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = IlluminateCarbon::parse($validated['start_date']);
+        $endDate = IlluminateCarbon::parse($validated['end_date']);
+        $workerId = (int) $validated['worker_id'];
+        $workerType = $validated['worker_type'];
+
+        $modelClass = match ($workerType) {
+            'user' => User::class,
+            'freelancer' => Freelancer::class,
+            'serviceProvider' => ServiceProvider::class,
+        };
+
+        $workers = $this->workerService->getWorkersForShiftPlanByIds($modelClass, [$workerId], $startDate, $endDate);
+
+        if ($workers->isEmpty()) {
+            return new JsonResponse(['worker' => null, 'workerType' => $workerType]);
+        }
+
+        $workers = $this->workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
+        $qualificationsCache = $this->workerService->buildQualificationsCache($workers);
+
+        $worker = $workers->first();
+
+        $resourceClass = match ($workerType) {
+            'user' => UserShiftPlanResource::class,
+            'freelancer' => FreelancerShiftPlanResource::class,
+            'serviceProvider' => ServiceProviderShiftPlanResource::class,
+        };
+
+        $resource = $resourceClass::make($worker);
+        $additionalData = [];
+
+        if ($workerType === 'user') {
+            $additionalData['workTimeBalance'] = $this->workingHourService->convertMinutesInHours(
+                $worker->work_time_balance ?? 0
+            );
+            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
+                $worker,
+                $startDate,
+                $endDate
+            );
+        } else {
+            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
+                $worker,
+                $startDate,
+                $endDate
+            );
+        }
+
+        $workerData = $this->workerShiftPlanService->buildWorkerData(
+            $worker,
+            $resource,
+            $qualificationsCache,
+            $startDate,
+            $endDate,
+            $workerType === 'user',
+            $additionalData
+        );
+
+        if ($workerType === 'user') {
+            $workerData = $this->workerShiftPlanService->enrichUserWorkerData(
+                $workerData, $workerId, $startDate, $endDate, $worker
+            );
+        }
+
+        return new JsonResponse([
+            'worker' => $workerData,
+            'workerType' => $workerType,
+        ]);
     }
 
     public function getTimelines(Event $event): JsonResponse

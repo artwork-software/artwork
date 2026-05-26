@@ -401,6 +401,19 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::INVENTORY_SETTINGS->value,
+                'name_de' => "Inventareinstellungen verwalten",
+                'translation_key' => "Manage inventory settings",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt den Zugriff auf und die Verwaltung aller Inventareinstellungen ' .
+                    '(Kategorien, Eigenschaften, Status, Tags, Allgemein) sowie die Sichtbarkeit ' .
+                    'von „Inventar" im Systemmenü',
+                'tooltipKey' => 'Allows access to and management of all inventory settings ' .
+                    '(categories, properties, status, tags, general) as well as the visibility ' .
+                    'of "Inventory" in the system menu',
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
                 'name_de' => "Private Kontaktdaten einsehen",
                 'translation_key' => "View private contact details",
@@ -425,6 +438,17 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Event management',
                 'tooltipText' => "Ein User mit diesem Recht kann geplante Termine bearbeiten, löschen und bestätigen",
                 'tooltipKey' => "A user with this permission can edit, delete and confirm scheduled events",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value,
+                'name_de' => "Im Planungskalender fest planen",
+                'translation_key' => "Plan fixed events in the planning calendar",
+                'group' => 'Event management',
+                'tooltipText' => 'Ein User mit diesem Recht darf im Planungskalender Termine direkt fest planen, ' .
+                    'ohne eine Belegungsanfrage stellen zu müssen. Im normalen Kalender hat dieses Recht keine Auswirkung.',
+                'tooltipKey' => 'A user with this permission can directly schedule fixed events in the planning calendar ' .
+                    'without having to submit a booking request. This permission has no effect in the normal calendar.',
                 'checked' => false
             ],
             [

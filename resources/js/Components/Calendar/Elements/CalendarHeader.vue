@@ -1,7 +1,7 @@
 <template>
     <header
-        class="sticky top-[71px] z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-16"
-        :style="{'--col-w': zoomColWidth + 'px','--lead-w': leadWidth + 'px'}"
+        class="sticky z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-16"
+        :style="{'--col-w': zoomColWidth + 'px','--lead-w': leadWidth + 'px', top: stickyTop + 'px'}"
         role="row">
         <!-- linker Spacer -->
         <div class="lead shrink-0" aria-hidden="true"></div>
@@ -26,12 +26,16 @@ const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1)
 
 const props = defineProps({
     rooms: {
-        type: Array, // war: Object
+        type: Array,
         required: true
     },
     filteredEventsLength: {
         type: Number,
         default: 0
+    },
+    stickyTop: {
+        type: Number,
+        default: 71
     }
 })
 

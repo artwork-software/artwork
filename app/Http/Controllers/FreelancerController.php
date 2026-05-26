@@ -38,9 +38,15 @@ class FreelancerController extends Controller
     ) {
     }
 
-    public function store(): \Symfony\Component\HttpFoundation\Response
+    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        $freelancer = Freelancer::create();
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+        ]);
+
+        $freelancer = Freelancer::create($validated);
+        $freelancer->createCrmContact();
 
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
@@ -118,7 +124,7 @@ class FreelancerController extends Controller
         $request->validate([
             'first_name' => 'required|string',
             'last_name' => 'required|string',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'position' => 'nullable|string',
             'business' => 'nullable|string',
             'phone_number' => 'nullable|string',
@@ -140,6 +146,8 @@ class FreelancerController extends Controller
                 'location',
                 'note',
             ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -153,6 +161,8 @@ class FreelancerController extends Controller
             'salary_per_hour',
             'salary_description',
         ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -167,6 +177,8 @@ class FreelancerController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
+        $freelancer->syncToCrm();
+
         return Redirect::back();
     }
 
@@ -180,6 +192,8 @@ class FreelancerController extends Controller
         $freelancer->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        $freelancer->syncToCrm();
 
         return Redirect::back();
     }

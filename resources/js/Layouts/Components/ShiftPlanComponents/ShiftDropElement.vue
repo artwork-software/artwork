@@ -25,7 +25,7 @@
                 <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
 
-                        <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
+                        <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
                             <PropertyIcon name="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
                             <ToolTipComponent
@@ -38,7 +38,7 @@
                                 black-icon
                             />
                             <span>
-                                {{ shift.craft.abbreviation }}
+                                {{ resolvedCraft.abbreviation }}
                                 {{ shift.start }} - {{ shift.end }}
                             </span>
                         </div>
@@ -127,6 +127,7 @@ import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({
@@ -184,6 +185,10 @@ const page = usePage()
 const { proxy } = getCurrentInstance() || {}
 const expandDays = computed(() => page.props.auth.user.calendar_settings?.expand_days ?? false)
 
+const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});
+const resolvedShiftGroup = computed(() => props.shift?.shiftGroup ?? resolveShiftGroup(props.shift?.shiftGroupId));
+
 /* ---------------- Computed ---------------- */
 // Meta-Infos zu globalen Qualifikationen (Icon/Name)
 const globalQualificationsMeta = computed(() => {
@@ -220,8 +225,9 @@ function getPersonGlobalQualificationIds(person: any): number[] {
 
 // Basiszählung: Wie viele aktuell zugewiesene Personen besitzen eine bestimmte GQ?
 function countAssignedForGlobalQualificationBase(globalQualificationId: number): number {
-    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []]
-    return groups.reduce((acc, list: any[]) => acc + list.filter((p: any) => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0)
+    return shiftWorkers.value.filter(
+        (w: any) => getPersonGlobalQualificationIds(w).includes(globalQualificationId)
+    ).length
 }
 
 // Zählung direkt aus dem Shift-Objekt (ohne Delta-System)
@@ -236,28 +242,18 @@ const computedMaxWorkerCount = computed(() => {
     return maxWorkerCount
 })
 
-const computedUsedWorkerCount = computed(() => {
-    return (props.shift.users?.length || 0) +
-        (props.shift.freelancer?.length || 0) +
-        (props.shift.serviceProviders?.length || 0)
-})
+const shiftWorkers = computed(() => props.shift.workers || [])
+
+const computedUsedWorkerCount = computed(() => shiftWorkers.value.length)
 
 const computedShiftsQualificationsWithWorkerCount = computed(() => {
     const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number }> = []
     props.shift?.shifts_qualifications?.forEach((sq: any) => {
         if (sq.value === null || sq.value === 0) return
 
-        let assigned = 0
-
-        props.shift.users?.forEach((u: any) => {
-            if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
-        props.shift.freelancer?.forEach((f: any) => {
-            if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
-        props.shift.serviceProviders?.forEach((p: any) => {
-            if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
+        const assigned = shiftWorkers.value.filter(
+            (w: any) => w.pivot?.shift_qualification_id === sq.shift_qualification_id
+        ).length
 
         rows.push({
             shift_qualification_id: sq.shift_qualification_id,
@@ -274,16 +270,18 @@ const shiftUserIds = computed(() => {
         freelancerIds: [] as Array<number | string>,
         providerIds: [] as Array<number | string>
     }
-    props.shift.users?.forEach((u: any) => ids.userIds.push(u.id))
-    props.shift.freelancer?.forEach((f: any) => ids.freelancerIds.push(f.id))
-    props.shift.serviceProviders?.forEach((p: any) => ids.providerIds.push(p.id))
+    shiftWorkers.value.forEach((w: any) => {
+        if (w.type === 'user') ids.userIds.push(w.id)
+        else if (w.type === 'freelancer') ids.freelancerIds.push(w.id)
+        else if (w.type === 'service_provider') ids.providerIds.push(w.id)
+    })
     return ids
 })
 
 
 const checkIfUserIsInCraft = computed(() => {
     const u = props.userForMultiEdit
-    const craftId = props.shift?.craft?.id
+    const craftId = props.shift?.craft?.id ?? props.shift?.craftId
     if (!u || craftId == null) return false
     if (isUniversallyApplicablePerson(u)) return true
 
@@ -330,11 +328,7 @@ function handleClickEvent() {
         return
     }
 
-    // Zugriff auf $can/hasAdminRole über Mixin (global am proxy)
-    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
-    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
-
-    if (canPlan || isAdmin) {
+    if (canPlanShifts()) {
         emit('clickOnEdit', props.shift)
     }
 }
@@ -463,12 +457,20 @@ function matchingUserQualisForShift(person: any, targetCraftId: number): any[] {
     })
 }
 
+function canPlanShifts(): boolean {
+    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
+    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
+    return canPlan || isAdmin
+}
+
 function onDragOver(event: DragEvent) {
+    if (!canPlanShifts()) return
     event.preventDefault()
 }
 
 function onDrop(event: DragEvent) {
     event.preventDefault()
+    if (!canPlanShifts()) return
 
     const raw =
         event.dataTransfer?.getData('application/json') ||
@@ -501,7 +503,7 @@ function setSeriesShiftData(data: any) {
 function droppedUserHasQualificationForCraft(user: any) {
     if (user?.craft_universally_applicable) return true
     if (!user?.shift_qualifications?.length) return false
-    const cid = props.shift?.craft?.id ?? props.craftId
+    const cid = props.shift?.craft?.id ?? props.shift?.craftId ?? props.craftId
     return user.shift_qualifications.some((q: any) => q.pivot && (q.pivot.craft_id === cid))
 }
 

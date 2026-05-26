@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
@@ -153,6 +154,83 @@ class CrmContactController extends Controller
         $this->authorizePropertyEdits([$propertyId]);
 
         $this->contactService->savePropertyValue($crmContact, $propertyId, null);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Resolve the accommodation_id from a CRM contact's polymorphic entity.
+     */
+    private function resolveAccommodationId(CrmContact $crmContact): int
+    {
+        $entity = $crmContact->entity;
+
+        if (!$entity || !($entity instanceof \Artwork\Modules\Accommodation\Models\Accommodation)) {
+            abort(422, 'CRM contact is not linked to an accommodation.');
+        }
+
+        return $entity->id;
+    }
+
+    public function updateRoomTypes(Request $request, CrmContact $crmContact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'room_types' => 'array',
+            'room_types.*' => 'integer|exists:accommodation_room_types,id',
+            'room_type_costs' => 'array',
+            'room_type_costs.*' => 'nullable|numeric|min:0',
+        ]);
+
+        $accommodationId = $this->resolveAccommodationId($crmContact);
+        $roomTypeIds = $validated['room_types'] ?? [];
+        $costs = $validated['room_type_costs'] ?? [];
+
+        $syncData = [];
+        foreach ($roomTypeIds as $roomTypeId) {
+            $syncData[$roomTypeId] = [
+                'accommodation_id' => $accommodationId,
+                'cost_per_night' => $costs[$roomTypeId] ?? 0,
+            ];
+        }
+
+        $crmContact->roomTypes()->sync($syncData);
+
+        return redirect()->back();
+    }
+
+    public function storeRoomType(Request $request, CrmContact $crmContact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'cost_per_night' => 'nullable|numeric|min:0',
+        ]);
+
+        $accommodationId = $this->resolveAccommodationId($crmContact);
+
+        $roomType = AccommodationRoomType::create(['name' => $validated['name']]);
+
+        $crmContact->roomTypes()->attach($roomType->id, [
+            'accommodation_id' => $accommodationId,
+            'cost_per_night' => $validated['cost_per_night'] ?? 0,
+        ]);
+
+        return redirect()->back();
+    }
+
+    public function updateRoomTypeName(Request $request, AccommodationRoomType $roomType): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $roomType->update(['name' => $validated['name']]);
+
+        return redirect()->back();
+    }
+
+    public function destroyRoomType(CrmContact $crmContact, AccommodationRoomType $roomType): RedirectResponse
+    {
+        $crmContact->roomTypes()->detach($roomType->id);
 
         return redirect()->back();
     }

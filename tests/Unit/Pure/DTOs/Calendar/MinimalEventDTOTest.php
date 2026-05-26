@@ -16,27 +16,25 @@ final class MinimalEventDTOTest extends TestCase
             'start' => '2026-05-10 09:00',
             'end' => '2026-05-10 11:00',
             'roomId' => 3,
-            'daysOfEvent' => ['2026-05-10'],
         ]);
 
         $this->assertSame(5, $dto->id);
         $this->assertSame('2026-05-10 09:00', $dto->start);
         $this->assertSame('2026-05-10 11:00', $dto->end);
         $this->assertSame(3, $dto->roomId);
-        $this->assertSame(['2026-05-10'], $dto->daysOfEvent);
     }
 
     #[Test]
     public function is_minimal_defaults_to_true(): void
     {
-        $dto = new MinimalEventDTO(1, '2026-01-01 00:00', '2026-01-01 23:59', 1, []);
+        $dto = new MinimalEventDTO(1, '2026-01-01 00:00', '2026-01-01 23:59', 1);
         $this->assertTrue($dto->isMinimal);
     }
 
     #[Test]
     public function to_array_includes_is_minimal_flag(): void
     {
-        $dto = new MinimalEventDTO(1, '2026-01-01 00:00', '2026-01-01 23:59', 1, []);
+        $dto = new MinimalEventDTO(1, '2026-01-01 00:00', '2026-01-01 23:59', 1);
         $array = $dto->toArray();
         $this->assertArrayHasKey('isMinimal', $array);
         $this->assertTrue($array['isMinimal']);

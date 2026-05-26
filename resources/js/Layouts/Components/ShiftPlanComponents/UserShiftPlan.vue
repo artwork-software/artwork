@@ -151,6 +151,7 @@ import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUser
 import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
 
 const showEditIndividualTimeModal = ref(false)
 const selectedIndividualTime = ref(null)
@@ -178,6 +179,23 @@ const props = defineProps({
 
 const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
+
+// Provide shiftPlanLookups so child components (e.g. SingleUserEventShift) can inject them
+const { setLookups } = provideShiftPlanLookups()
+
+function buildCraftsLookup(crafts) {
+    if (!Array.isArray(crafts)) return {}
+    const craftsById = {}
+    for (const craft of crafts) {
+        if (craft?.id != null) craftsById[craft.id] = craft
+    }
+    return { craftsById }
+}
+
+setLookups(buildCraftsLookup(props.crafts))
+watch(() => props.crafts, (newCrafts) => {
+    setLookups(buildCraftsLookup(newCrafts))
+})
 
 /** ---------- Zeitraum / Helpers ---------- **/
 const range = computed(() => {

@@ -4,6 +4,7 @@ namespace Artwork\Modules\IndividualTimes\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\IndividualTimes\Http\Requests\StoreIndividualTimeSeriesRequest;
 use Artwork\Modules\IndividualTimes\Http\Requests\UpdateIndividualTimeSeriesRequest;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
@@ -61,8 +62,13 @@ class IndividualTimeSeriesController extends Controller
 
         $series = $this->individualTimeSeriesService->createSeriesForTimeables($data, $timeables);
 
+        foreach ($subjectsInput as $subject) {
+            broadcast(new IndividualTimeChanged(
+                $subject['id'],
+                $this->resolveWorkerTypeFromSubjectType($subject['type']),
+            ));
+        }
 
-        // Beispiel: Redirect zurück mit Flash
         return back()->with('success', __('Individual time series created successfully.'));
     }
 
@@ -147,6 +153,12 @@ class IndividualTimeSeriesController extends Controller
             data: $data
         );
 
+        foreach ($data['subjects'] as $subject) {
+            broadcast(new IndividualTimeChanged(
+                $subject['id'],
+                $this->resolveWorkerTypeFromSubjectType($subject['type']),
+            ));
+        }
     }
 
     /**
@@ -154,10 +166,25 @@ class IndividualTimeSeriesController extends Controller
      */
     public function destroy(IndividualTimeSeries $series): void
     {
+        // Collect affected workers before deleting
+        $affectedWorkers = $series->individualTimes()
+            ->select('timeable_id', 'timeable_type')
+            ->distinct()
+            ->get();
+
         // Alle IndividualTimes der Serie löschen
         $series->individualTimes()->delete();
         // Serie selbst löschen
         $series->delete();
+
+        foreach ($affectedWorkers as $worker) {
+            $workerType = match ($worker->timeable_type) {
+                Freelancer::class => 1,
+                ServiceProvider::class => 2,
+                default => 0,
+            };
+            broadcast(new IndividualTimeChanged($worker->timeable_id, $workerType));
+        }
     }
 
     protected function resolveTimeables(Collection $subjects): Collection
@@ -350,6 +377,15 @@ class IndividualTimeSeriesController extends Controller
             'freelancer'      => Freelancer::class,
             'service_provider'=> ServiceProvider::class,
             default           => User::class, // Fallback, sollte eigentlich nie passieren
+        };
+    }
+
+    private function resolveWorkerTypeFromSubjectType(string $subjectType): int
+    {
+        return match ($subjectType) {
+            'freelancer' => 1,
+            'service_provider' => 2,
+            default => 0,
         };
     }
 

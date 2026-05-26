@@ -28,8 +28,8 @@
                   <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs">
                     <span class="font-medium">{{ $t('Shift') }}</span>
                     <span>•</span>
-                    <span>{{ currentShiftToAssign.shift.craft.name }}</span>
-                    <span class="opacity-60">({{ currentShiftToAssign.shift.craft.abbreviation }})</span>
+                    <span>{{ (currentShiftToAssign.shift.craft ?? resolveCraft(currentShiftToAssign.shift.craftId))?.name }}</span>
+                    <span class="opacity-60">({{ (currentShiftToAssign.shift.craft ?? resolveCraft(currentShiftToAssign.shift.craftId))?.abbreviation }})</span>
                   </span>
 
                     <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs">
@@ -82,6 +82,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 type Craft = {
     id: number
@@ -121,6 +122,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'close', closedForAssignment: boolean, shiftsToAssign: { shiftId: number; shiftQualificationId?: number }[]): void
 }>()
+
+const { resolveCraft } = useShiftPlanLookups();
 
 // --- State ---
 const state = reactive({

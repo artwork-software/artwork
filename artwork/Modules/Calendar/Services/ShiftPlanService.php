@@ -56,7 +56,7 @@ class ShiftPlanService
         $useDailyView = (bool)$shiftPlanContext['currentProject']
             || (bool)$shiftPlanContext['currentUser']->getAttribute('daily_view');
 
-        $this->shiftCalendarService->filterRoomsEventsAndShifts(
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $roomsForRequestedRoom,
             $shiftPlanContext['userCalendarFilter'],
             $shiftPlanContext['calendarStartDate'],
@@ -64,6 +64,7 @@ class ShiftPlanService
             $useDailyView,
             $shiftPlanContext['currentProject']
         );
+        $roomsForRequestedRoom = $filterResult['rooms'];
 
         $roomsCalendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
             $roomsForRequestedRoom,
@@ -73,7 +74,44 @@ class ShiftPlanService
 
         $roomContent = $roomsCalendarData->rooms[0] ?? null;
 
-        return ['room' => $roomContent];
+        return [
+            'room' => $roomContent,
+            'lookups' => $filterResult['lookups'],
+        ];
+    }
+
+    public function getAllRoomsContent(Request $request): array
+    {
+        $shiftPlanContext = $this->buildShiftPlanContext($request);
+        $filteredRooms = $shiftPlanContext['filteredRooms'];
+
+        if ($filteredRooms->isEmpty()) {
+            return ['rooms' => []];
+        }
+
+        $useDailyView = (bool)$shiftPlanContext['currentProject']
+            || (bool)$shiftPlanContext['currentUser']->getAttribute('daily_view');
+
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
+            $filteredRooms,
+            $shiftPlanContext['userCalendarFilter'],
+            $shiftPlanContext['calendarStartDate'],
+            $shiftPlanContext['calendarEndDate'],
+            $useDailyView,
+            $shiftPlanContext['currentProject']
+        );
+        $filteredRooms = $filterResult['rooms'];
+
+        $roomsCalendarData = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $filteredRooms,
+            $shiftPlanContext['calendarStartDate'],
+            $shiftPlanContext['calendarEndDate'],
+        );
+
+        return [
+            'rooms' => $roomsCalendarData->rooms,
+            'lookups' => $filterResult['lookups'],
+        ];
     }
 
     private function buildShiftPlanContext(Request $request): array

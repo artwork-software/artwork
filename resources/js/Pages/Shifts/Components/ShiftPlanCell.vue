@@ -1,6 +1,6 @@
 <template>
     <div
-        class="shiftCell h-full cursor-pointer overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100 relative"
+        class="shiftCell h-full overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100 relative"
         :class="[
       hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
     ]"

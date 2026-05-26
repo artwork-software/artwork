@@ -280,30 +280,30 @@
                                 <!-- gleicher Tag -->
                                 <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance">
                                     <span v-if="event.allDay">{{ $t('Full day') }}</span>
-                                    <span v-else>{{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}</span>
+                                    <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                 </template>
 
                                 <!-- mehrtägig -->
                                 <template v-else>
                                   <span v-if="event.allDay">
                                     <template v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
-                                      {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }}
+                                      {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }}
                                     </template>
                                     <template v-else>
-                                      {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }} - {{ event.formattedDates.end_without_year }}
+                                      {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
                                     </template>
                                   </span>
                                                     <span v-else>
                                     <template v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
                                       <span class="text-error pr-0.5">!</span>
-                                      {{ event.formattedDates.startDateTime_without_year  + ' - ' +  event.formattedDates.endDateTime_without_year }}
+                                      {{ resolvedFormattedDates.startDateTime_without_year  + ' - ' +  resolvedFormattedDates.endDateTime_without_year }}
                                     </template>
                                     <template v-else>
                                       <template v-if="atAGlance">
-                                        {{ event.formattedDates.startDateTime_without_year + ' - ' + event.formattedDates.endTime }}
+                                        {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endTime }}
                                       </template>
                                       <template v-else>
-                                        {{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}
+                                        {{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}
                                       </template>
                                     </template>
                                   </span>
@@ -629,15 +629,15 @@
                                                 <div class="subpixel-antialiased">
                                                     <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()">
                                                         <span v-if="event.allDay">{{ $t('Full day') }}</span>
-                                                        <span v-else>{{ event.formattedDates.startTime + ' - ' + event.formattedDates.endTime }}</span>
+                                                        <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                                     </template>
                                                     <template v-else>
                                                         <span v-if="event.allDay">
-                                                            {{ $t('Full day') }}, {{ event.formattedDates.start_without_year }} - {{ event.formattedDates.end_without_year }}
+                                                            {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
                                                         </span>
                                                         <span v-else>
                                                             <span class="text-error pr-0.5">!</span>
-                                                            {{ event.formattedDates.startDateTime_without_year + ' - ' + event.formattedDates.endDateTime_without_year }}
+                                                            {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endDateTime_without_year }}
                                                         </span>
                                                     </template>
                                                 </div>
@@ -919,6 +919,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
+import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
 
 const { t } = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
@@ -983,6 +984,10 @@ const props = defineProps({
     verifierForEventTypIds: { type: Array, default: [] },
     isPlanning: { type: Boolean, default: false },
 });
+
+const resolvedFormattedDates = computed(() =>
+    props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
+);
 
 const isHighlighted = computed(() => {
     const highlightEventId = usePage().props.urlParameters.highlightEventId;

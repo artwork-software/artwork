@@ -373,6 +373,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
+        ->middleware('role:artwork admin')
         ->name('user.edit.permissions');
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
@@ -408,7 +409,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             UserController::class,
             'updateUserPermissionsAndRoles'
         ]
-    )->name('user.update.permissions-and-roles');
+    )->middleware('role:artwork admin')
+    ->name('user.update.permissions-and-roles');
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
@@ -747,6 +749,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/all/shift-plan-events', [EventController::class, 'shiftPlanEventAPI'])->name('shift.plan.all');
     Route::get('/response/shift-plan-meta', [EventController::class, 'shiftPlanMetaAPI'])->name('shift.plan.meta');
     Route::get('/response/shift-plan-room', [EventController::class, 'shiftPlanRoomAPI'])->name('shift.plan.room');
+    Route::get('/response/shift-plan-rooms', [EventController::class, 'shiftPlanRoomsBatchAPI'])->name('shift.plan.rooms.batch');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', function () {
@@ -805,6 +808,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shifts/workers', [EventController::class, 'getShiftPlanWorkers'])
         ->name('shifts.workers')
+        ->can('can view shift plan');
+
+    Route::get('/shifts/worker-single', [EventController::class, 'getShiftPlanWorkerSingle'])
+        ->name('shifts.worker.single')
         ->can('can view shift plan');
 
     Route::get('/shifts/crafts', [EventController::class, 'getShiftPlanCrafts'])

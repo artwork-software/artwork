@@ -35,6 +35,12 @@
             :label="$t('Visitors')"
             @updated="$emit('updated')"
         />
+
+        <BiModeSwitchModal
+            v-if="showModeModal"
+            @confirm="confirmModeSwitch"
+            @close="showModeModal = false"
+        />
     </div>
 </template>
 
@@ -43,6 +49,7 @@ import { ref, watch } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BiPerEventDataTable from "@/Pages/Projects/Components/BiComponents/BiPerEventDataTable.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
+import BiModeSwitchModal from "@/Pages/Projects/Components/BiComponents/BiModeSwitchModal.vue";
 
 const props = defineProps({
     biData: { type: Object, default: null },
@@ -56,6 +63,8 @@ const emit = defineEmits(['updated']);
 
 const currentMode = ref('total');
 const visitorsTotal = ref(null);
+const showModeModal = ref(false);
+const pendingMode = ref(null);
 
 watch(() => props.biData, (val) => {
     if (val) {
@@ -64,16 +73,14 @@ watch(() => props.biData, (val) => {
     }
 }, { immediate: true });
 
-const onToggleChange = async (isPerEvent) => {
-    const newMode = isPerEvent ? 'per_event' : 'total';
-    const message = isPerEvent
-        ? 'Switching to per-event mode will clear the total value. Continue?'
-        : 'Switching to total mode will clear per-event visitor values. Continue?';
+const onToggleChange = (isPerEvent) => {
+    pendingMode.value = isPerEvent ? 'per_event' : 'total';
+    showModeModal.value = true;
+};
 
-    if (!confirm(message)) {
-        return;
-    }
-
+const confirmModeSwitch = async () => {
+    const newMode = pendingMode.value;
+    showModeModal.value = false;
     currentMode.value = newMode;
     try {
         await axios.put(route('projects.bi.switch-visitor-mode', props.projectId), { mode: newMode });

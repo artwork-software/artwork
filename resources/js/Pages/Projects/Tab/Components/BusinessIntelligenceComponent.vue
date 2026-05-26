@@ -73,6 +73,7 @@
                 :snapshots="snapshots"
                 :can-edit="canEditComponent"
                 :project-id="project.id"
+                :current="{ bi_data: biData, derived_values: derivedValues, tag_counts: tagCounts }"
                 @updated="fetchData"
             />
 

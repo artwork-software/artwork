@@ -3,6 +3,8 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\BiComponentSettingsController;
+use App\Http\Controllers\BiDashboardController;
+use App\Http\Controllers\BiExportPresetController;
 use App\Http\Controllers\BiEventTypeTagController;
 use App\Http\Controllers\BiExportController;
 use App\Http\Controllers\BiProjectDataController;
@@ -3096,9 +3098,20 @@ Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () 
 });
 
 // BI Export
+Route::middleware(['auth'])->prefix('bi/dashboard')->group(function () {
+    Route::get('/', [BiDashboardController::class, 'index'])->name('bi.dashboard');
+});
+
 Route::middleware(['auth'])->prefix('bi/export')->group(function () {
+    Route::get('/', [BiExportController::class, 'index'])->name('bi.export.index');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
+    Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])->name('bi.export.status');
     Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])->name('bi.export.download');
+
+    Route::get('/presets', [BiExportPresetController::class, 'index'])->name('bi.export.presets.index');
+    Route::post('/presets', [BiExportPresetController::class, 'store'])->name('bi.export.presets.store');
+    Route::delete('/presets/{biExportPreset}', [BiExportPresetController::class, 'destroy'])
+        ->name('bi.export.presets.destroy');
 });
 
 // BI Component Settings (Custom Fields)

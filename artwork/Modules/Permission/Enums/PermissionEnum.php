@@ -73,4 +73,6 @@ enum PermissionEnum : string
     case CRM_MANAGER = 'crm manager';
 
     case BI_EXPORT = 'can export bi data';
+
+    case BI_DASHBOARD = 'can view bi dashboard';
 }

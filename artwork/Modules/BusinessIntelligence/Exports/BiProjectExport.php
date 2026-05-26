@@ -16,6 +16,7 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles
     public function __construct(
         private readonly array $rows,
         private readonly array $columns,
+        private readonly array $labels = [],
     ) {
     }
 
@@ -24,6 +25,7 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles
         return view('exports.biProjects', [
             'rows' => $this->rows,
             'columns' => $this->columns,
+            'labels' => $this->labels,
         ]);
     }
 

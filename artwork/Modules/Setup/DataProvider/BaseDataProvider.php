@@ -541,6 +541,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Allows exporting business intelligence data from projects as an Excel file.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::BI_DASHBOARD->value,
+                'name_de' => "BI-Dashboard ansehen",
+                'translation_key' => "View BI dashboard",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Zugriff auf mandantenweite Business-Intelligence-Übersichten.",
+                'tooltipKey' => "Allows access to tenant-wide business intelligence overviews.",
+                'checked' => false
+            ],
         ];
     }
 

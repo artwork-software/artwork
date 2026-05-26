@@ -83,6 +83,12 @@ export default defineComponent({
                     current: route().current('bi.settings.index'),
                     permission: true
                 },
+                {
+                    name: this.$t('BI Export'),
+                    href: route('bi.export.index'),
+                    current: route().current('bi.export.index'),
+                    permission: true
+                },
             ]
         }
     }

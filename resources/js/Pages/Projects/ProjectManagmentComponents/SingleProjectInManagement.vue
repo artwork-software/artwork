@@ -134,6 +134,7 @@ import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderCompo
 import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
 import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
 import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
+import BuilderBiKeyFiguresDisplay from "@/Pages/Projects/BuilderComponents/BuilderBiKeyFiguresDisplay.vue";
 import { computed, nextTick, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
@@ -180,6 +181,7 @@ const componentMapping = {
     BuilderCheckbox,
     BuilderDropDown,
     BuilderLink,
+    BuilderBiKeyFiguresDisplay,
 };
 
 const page = ref(route().params.page ?? 1);

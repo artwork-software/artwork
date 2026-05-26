@@ -21,6 +21,45 @@
             <BaseUIButton @click="createSnapshot" :label="$t('Create')" is-add-button :disabled="!newName || !newDate" />
         </div>
 
+        <div v-if="snapshots.length > 0" class="mb-5 rounded-lg border border-gray-200 p-3 bg-gray-50/60">
+            <div class="flex items-end gap-3 max-w-md">
+                <ArtworkBaseListbox
+                    class="flex-1"
+                    :model-value="compareSnapshot"
+                    @update:model-value="value => compareId = value?.id ?? null"
+                    :items="snapshots"
+                    by="id"
+                    :option-label="snapshotLabel"
+                    :label="$t('Compare snapshot with current values')"
+                    :placeholder="$t('Select snapshot')"
+                />
+                <button v-if="compareId" @click="compareId = null" class="text-xs text-gray-500 hover:text-gray-700 pb-2">
+                    {{ $t('Reset') }}
+                </button>
+            </div>
+
+            <table v-if="comparison.length > 0" class="min-w-full text-xs mt-4">
+                <thead>
+                    <tr class="text-left text-gray-500 border-b border-gray-200">
+                        <th class="px-2 py-1">{{ $t('Metric') }}</th>
+                        <th class="px-2 py-1 text-right">{{ $t('Snapshot') }}</th>
+                        <th class="px-2 py-1 text-right">{{ $t('Current') }}</th>
+                        <th class="px-2 py-1 text-right">{{ $t('Difference') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="metric in comparison" :key="metric.label" class="border-b border-gray-100">
+                        <td class="px-2 py-1 text-gray-700">{{ $t(metric.label) }}</td>
+                        <td class="px-2 py-1 text-right text-gray-500">{{ formatNumber(metric.snapshotValue) }}</td>
+                        <td class="px-2 py-1 text-right text-gray-900">{{ formatNumber(metric.currentValue) }}</td>
+                        <td :class="['px-2 py-1 text-right font-medium', metric.delta > 0 ? 'text-emerald-600' : (metric.delta < 0 ? 'text-rose-600' : 'text-gray-400')]">
+                            {{ metric.delta > 0 ? '+' : '' }}{{ formatNumber(metric.delta) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="space-y-3" v-if="snapshots.length > 0">
             <div
                 v-for="snapshot in snapshots"
@@ -52,14 +91,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 
 const props = defineProps({
     snapshots: { type: Array, default: () => [] },
     canEdit: { type: Boolean, default: false },
     projectId: { type: Number, required: true },
+    current: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['updated']);
@@ -67,6 +108,53 @@ const emit = defineEmits(['updated']);
 const newName = ref('');
 const newDate = ref('');
 const expandedId = ref(null);
+const compareId = ref(null);
+
+const formatNumber = (value) => {
+    const n = Number(value ?? 0);
+    if (Number.isNaN(n)) return '0';
+    return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(n);
+};
+
+const snapshotLabel = (snapshot) => `${snapshot.name} (${formatDate(snapshot.snapshot_date)})`;
+
+const compareSnapshot = computed(() => props.snapshots.find(s => s.id === compareId.value) ?? null);
+
+const flatten = (data) => {
+    const num = (v) => {
+        const n = Number(v ?? 0);
+        return Number.isNaN(n) ? 0 : n;
+    };
+    const bd = data?.bi_data ?? {};
+    const dv = data?.derived_values ?? {};
+    const map = {
+        'Total visitors': num(bd.visitors_total),
+        'Total sold tickets': num(bd.sold_tickets_total),
+        'Revenue': num(bd.revenue_total),
+        'Contracts': num(dv.contract_count),
+        'Events': num(dv.event_count),
+        'Bookings': num(dv.booking_count),
+        'Tasks total': num(dv.task_total),
+        'Tasks open': num(dv.task_open),
+        'Documents': num(dv.document_count),
+    };
+    (data?.tag_counts ?? []).forEach((t) => {
+        map[t.tag_name_de || t.tag_name] = num(t.count);
+    });
+    return map;
+};
+
+const comparison = computed(() => {
+    if (!compareSnapshot.value) return [];
+    const snap = flatten(compareSnapshot.value.data);
+    const cur = flatten(props.current);
+    const labels = [...new Set([...Object.keys(snap), ...Object.keys(cur)])];
+    return labels.map((label) => {
+        const snapshotValue = snap[label] ?? 0;
+        const currentValue = cur[label] ?? 0;
+        return { label, snapshotValue, currentValue, delta: currentValue - snapshotValue };
+    });
+});
 
 const formatDate = (value) => {
     if (!value) return '-';

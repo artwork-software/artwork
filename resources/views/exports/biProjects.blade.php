@@ -2,7 +2,7 @@
     <thead>
         <tr>
             @foreach($columns as $column)
-                <th style="background-color: #cccccc; font-weight: bold;">{{ __($column) }}</th>
+                <th style="background-color: #cccccc; font-weight: bold;">{{ $labels[$column] ?? __($column) }}</th>
             @endforeach
         </tr>
     </thead>

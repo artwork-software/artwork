@@ -15,6 +15,12 @@
             <BaseUIButton @click="createTag" :label="$t('Add')" is-add-button :disabled="!newTag.name || !newTag.name_de" />
         </div>
 
+        <!-- Warning: tags without linked event types -->
+        <div v-if="tagsWithoutEventTypes.length > 0" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {{ $t('The following tags are not linked to any event type yet, so they will not be counted in the dashboard and exports:') }}
+            <span class="font-medium">{{ tagsWithoutEventTypes.map(t => t.name_de).join(', ') }}</span>
+        </div>
+
         <!-- Tags list -->
         <div class="space-y-4" v-if="tags.length > 0">
             <div v-for="tag in tags" :key="tag.id" class="border border-gray-200 rounded-lg p-4">
@@ -51,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
@@ -61,6 +67,8 @@ const props = defineProps({
 });
 
 const tags = ref([]);
+
+const tagsWithoutEventTypes = computed(() => tags.value.filter(tag => !(tag.event_types && tag.event_types.length)));
 const newTag = ref({ name: '', name_de: '', color: '#6366f1' });
 
 const fetchTags = async () => {

@@ -2742,6 +2742,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/{internalIssue}/destroy', 'destroy')->name('issue-of-material.destroy');
         // issue-of-material.set-special-items-done
         Route::post('/{internalIssue}/set-special-items-done', 'setSpecialItemsDone')->name('issue-of-material.set-special-items-done');
+        Route::get('/{internalIssue}/print', 'print')->name('issue-of-material.print');
     });
 
     Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {

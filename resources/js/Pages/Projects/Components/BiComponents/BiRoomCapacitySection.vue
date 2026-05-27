@@ -7,7 +7,17 @@
                     <tr>
                         <th class="py-2 pr-3 text-left font-semibold text-gray-900">{{ $t('Room') }}</th>
                         <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Default capacity') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Project-specific capacity') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-gray-900">
+                            <div class="flex items-center gap-1">
+                                {{ $t('Project-specific capacity') }}
+                                <ToolTipComponent
+                                    direction="top"
+                                    :tooltip-text="$t('Enter project-specific room capacities here if the room has a different capacity for events in this project.')"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-4 w-4"
+                                />
+                            </div>
+                        </th>
                         <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Effective capacity') }}</th>
                     </tr>
                 </thead>
@@ -34,7 +44,7 @@
                                 class="w-28 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
                                 :min="0"
                                 :value="getOverride(room.id)"
-                                :placeholder="$t('Room default')"
+                                placeholder=""
                                 @change="saveOverride(room.id, $event.target.value)"
                             />
                             <span v-else class="text-gray-700">{{ getOverride(room.id) ?? '–' }}</span>
@@ -54,6 +64,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { IconExternalLink } from '@tabler/icons-vue';
 import { usePermission } from '@/Composeables/Permission.js';
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 
 const props = defineProps({
     roomCapacities: { type: Array, default: () => [] },

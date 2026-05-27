@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Leihschein</title>
+    <title>Interne Materialausgabe</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 13px; color: #1f2937; }
         .font-bold { font-weight: bold; }
@@ -33,29 +33,46 @@
 </div>
 
 <div class="text-center mb-6">
-    <h2 class="font-bold text-xl">Leihschein Nr. {{ $issue->id }}</h2>
-    <p class="text-sm">Ausgabe: {{ $issue->issue_date->format('d.m.Y') }} | Rückgabe: {{ $issue->return_date->format('d.m.Y') }}</p>
+    <h2 class="font-bold text-xl">Interne Materialausgabe Nr. {{ $issue->id }}</h2>
 </div>
 
 <div class="mb-4">
-    <p class="font-bold">Externe Person/Firma:</p>
-    <p>{{ $issue->external_name }}<br>
-        {{ $issue->external_address }}<br>
-        {{ $issue->external_email }} | {{ $issue->external_phone }}</p>
+    @if($issue->project)
+        <p><span class="font-bold">Projekt:</span> {{ $issue->project->name }}</p>
+    @endif
 </div>
 
 <div class="mb-4">
-    @if($issue->issuedBy)
-        <p><span class="font-bold">Ausgabe durch:</span> {{ $issue->issuedBy->full_name }}</p>
-    @endif
-    @if($issue->receivedBy)
-        <p><span class="font-bold">Zurückgenommen durch:</span> {{ $issue->receivedBy->full_name }}</p>
+    <p><span class="font-bold">Zeitraum:</span>
+        {{ $issue->start_date ? $issue->start_date->format('d.m.Y') : '' }}{{ $issue->start_time ? ' ' . \Carbon\Carbon::parse($issue->start_time)->format('H:i') : '' }}
+        –
+        {{ $issue->end_date ? $issue->end_date->format('d.m.Y') : '' }}{{ $issue->end_time ? ' ' . \Carbon\Carbon::parse($issue->end_time)->format('H:i') : '' }}
+    </p>
+</div>
+
+<div class="mb-4">
+    @if($issue->room)
+        <p><span class="font-bold">Raum:</span> {{ $issue->room->name }}</p>
     @endif
 </div>
 
-<div class="mb-6">
-    <p><span class="font-bold">Materialwert:</span> {{ number_format($issue->material_value, 2, ',', '.') }} €</p>
-</div>
+@if($issue->responsibleUsers->count())
+    <div class="mb-4">
+        <p class="font-bold">Verantwortliche:</p>
+        <ul>
+            @foreach($issue->responsibleUsers as $user)
+                <li>{{ $user->full_name }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+@if($issue->notes)
+    <div class="mb-4">
+        <p class="font-bold">Bemerkungen:</p>
+        <p class="text-sm">{!! nl2br(e($issue->notes)) !!}</p>
+    </div>
+@endif
 
 <div class="mb-6">
     <p class="font-bold mb-2">Artikel:</p>
@@ -83,7 +100,7 @@
 
 @if($issue->specialItems->count())
     <div class="mb-6">
-        <p class="font-bold mb-2">Sonderartikel:</p>
+        <p class="font-bold mb-2">Sonderartikel – {{ $issue->special_items_done ? 'abgeschlossen' : 'nicht abgeschlossen' }}</p>
         <table class="w-full border border-collapse text-sm">
             <thead class="bg-gray-100">
             <tr>
@@ -109,11 +126,6 @@
     </div>
 @endif
 
-<div class="mb-6">
-    <p class="font-bold mb-2">Mängel nach Rückgabe:</p>
-    <p class="text-sm">{!! nl2br(e($issue->return_remarks)) !!}</p>
-</div>
-
 <div class="mt-4 text-sm">
     <table class="w-full text-center">
         <tr>
@@ -123,11 +135,11 @@
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift EmpfängerIn</div>
+                <div class="label">Unterschrift Ausgabe</div>
             </td>
             <td class="w-1-3">
                 <div class="line"></div>
-                <div class="label">Unterschrift zurücknehmend</div>
+                <div class="label">Unterschrift Empfang</div>
             </td>
         </tr>
     </table>

@@ -137,6 +137,7 @@ import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
 import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/ProjectMaterialIssueComponent.vue";
 import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
 import ProjectContractsDocumentsComponent from "@/Pages/Projects/Components/ProjectContractsDocumentsComponent.vue";
+import BusinessIntelligenceComponent from "@/Pages/Projects/Tab/Components/BusinessIntelligenceComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -180,7 +181,8 @@ const componentMapping = {
     ProjectCostCenterDisplayComponent,
     ProjectMaterialIssueComponent,
     LinkList: LinkListComponent,
-    ProjectContractsDocumentsComponent
+    ProjectContractsDocumentsComponent,
+    BusinessIntelligenceComponent,
 };
 
 const props = defineProps({

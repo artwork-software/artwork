@@ -1223,7 +1223,10 @@ const deleteSelectedEvents = () => {
 };
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
-    if (dayElement) window.scrollTo({ top: dayElement.offsetTop - 130, behavior: "smooth" });
+    if (dayElement) {
+        dayElement.style.scrollMarginTop = (topbarHeight.value + 64) + 'px';
+        dayElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 };
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {

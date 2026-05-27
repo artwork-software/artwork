@@ -1224,9 +1224,8 @@ const deleteSelectedEvents = () => {
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
     if (dayElement) {
-        const headerOffset = topbarHeight.value + 64; // topbar + room header (h-16)
-        const top = dayElement.getBoundingClientRect().top + window.scrollY - headerOffset;
-        window.scrollTo({ top, behavior: "smooth" });
+        dayElement.style.scrollMarginTop = (topbarHeight.value + 64) + 'px';
+        dayElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 };
 const approveRequests = () => {

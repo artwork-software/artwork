@@ -222,12 +222,18 @@ import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 const { resolveCraft } = useShiftPlanLookups();
 
-// Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
+// Normalize time values that may arrive as "HH:MM", "HH:MM:SS" or ISO datetime
 function normalizeTime(val) {
     if (!val || typeof val !== 'string') return val
     if (/^\d{2}:\d{2}$/.test(val)) return val
-    const m = val.match(/T(\d{2}:\d{2})/)
-    if (m) return m[1]
+    // ISO datetime (e.g. "2026-05-18T08:30:00.000000Z") → convert to local time
+    if (val.includes('T')) {
+        const d = new Date(val)
+        if (!isNaN(d.getTime())) {
+            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
+        }
+    }
+    // Plain time with seconds "HH:MM:SS"
     const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
     if (sp) return sp[1]
     return val

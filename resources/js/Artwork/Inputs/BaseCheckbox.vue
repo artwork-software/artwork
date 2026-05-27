@@ -48,8 +48,8 @@ const props = withDefaults(defineProps<{
     required?: boolean
 }>(), {
     modelValue: false,
-    label: 'Comments',
-    description: 'Get notified when someone posts a comment on a posting.',
+    label: '',
+    description: undefined,
     disabled: false,
     required: false,
 });
@@ -65,7 +65,7 @@ const inputEl = ref<HTMLInputElement | null>(null);
 const uid = Math.random().toString(36).slice(2);
 const computedId = computed(() => props.id || `chk-${uid}`);
 const descriptionId = `desc-${computedId.value}`;
-const hasDescription = computed(() => !!(props.description || (typeof (undefined) !== 'undefined')));
+const hasDescription = computed(() => !!props.description);
 
 // Browser-Property für "indeterminate" zuverlässig setzen
 const syncIndeterminate = () => {

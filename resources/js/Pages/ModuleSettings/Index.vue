@@ -4,14 +4,17 @@
              class="mt-4 w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ usePage().props.flash.success }}
         </div>
+        <p class="mt-2 text-sm text-secondary">
+            {{ $t('Choose which modules should be displayed actively. If a module is unchecked, the respective entry in the main navigation (left sidebar) will be hidden for all users until the checkbox is activated again here.') }}
+        </p>
         <div class="flex flex-col mt-4 gap-y-2">
-            <div v-for="moduleSetting in computedModuleSettings" class="flex flex-row gap-x-4">
-                <label :for="'cb-'+moduleSetting.value.menu">{{  $t(moduleSetting.value.menu) }}</label>
-                <input :id="'cb-'+moduleSetting.value.menu"
-                       type="checkbox"
-                       v-model="moduleSetting.value.enabled"
-                       @update:model-value="(enabled) => onCheckboxChange(enabled, moduleSetting.value.menu)"
-                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded-full"/>
+            <div v-for="moduleSetting in computedModuleSettings" :key="moduleSetting.value.menu">
+                <BaseCheckbox
+                    :id="'cb-'+moduleSetting.value.menu"
+                    :model-value="moduleSetting.value.enabled"
+                    :label="$t(moduleSetting.value.menu)"
+                    @update:model-value="(enabled) => onCheckboxChange(enabled, moduleSetting.value.menu)"
+                />
             </div>
         </div>
     </ToolSettingsHeader>
@@ -19,6 +22,7 @@
 
 <script setup>
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import {computed, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";

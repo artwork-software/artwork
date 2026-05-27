@@ -4,19 +4,17 @@
             <h3 class="text-sm font-semibold text-gray-900">{{ $t('Snapshots') }}</h3>
         </div>
 
-        <div v-if="canEdit" class="flex items-end gap-3 mb-4 max-w-xl">
+        <div v-if="canEdit" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end max-w-2xl">
             <BaseInput
                 id="snapshot_name"
                 v-model="newName"
                 :label="$t('Name')"
-                class="flex-1"
             />
             <BaseInput
                 type="date"
                 id="snapshot_date"
                 v-model="newDate"
                 :label="$t('Date')"
-                class="w-44"
             />
             <BaseUIButton @click="createSnapshot" :label="$t('Create')" is-add-button :disabled="!newName || !newDate" />
         </div>

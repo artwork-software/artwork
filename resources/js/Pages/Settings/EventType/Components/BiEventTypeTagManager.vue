@@ -8,11 +8,21 @@
         </div>
 
         <!-- Add new tag form -->
-        <div class="flex items-end gap-3 mb-6 max-w-2xl">
-            <BaseInput id="tag_name" v-model="newTag.name" :label="$t('Internal name')" class="flex-1" />
-            <BaseInput id="tag_name_de" v-model="newTag.name_de" :label="$t('Display name (DE)')" class="flex-1" />
-            <BaseInput id="tag_color" v-model="newTag.color" :label="$t('Color')" type="color" class="w-20" />
-            <BaseUIButton @click="createTag" :label="$t('Add')" is-add-button :disabled="!newTag.name || !newTag.name_de" />
+        <div class="mb-6 rounded-lg border border-gray-200 p-4">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:items-end">
+                <BaseInput id="tag_name" v-model="newTag.name" :label="$t('Internal name')" />
+                <BaseInput id="tag_name_de" v-model="newTag.name_de" :label="$t('Display name (DE)')" />
+                <div class="flex flex-col gap-1">
+                    <label for="tag_color" class="text-xs text-gray-500">{{ $t('Color') }}</label>
+                    <input
+                        id="tag_color"
+                        type="color"
+                        v-model="newTag.color"
+                        class="h-11 w-16 cursor-pointer rounded-md border border-gray-200 bg-white p-1"
+                    />
+                </div>
+                <BaseUIButton @click="createTag" :label="$t('Add')" is-add-button :disabled="!newTag.name || !newTag.name_de" />
+            </div>
         </div>
 
         <!-- Warning: tags without linked event types -->

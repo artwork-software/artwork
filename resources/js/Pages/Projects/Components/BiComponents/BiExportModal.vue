@@ -29,32 +29,37 @@
             <div>
                 <h4 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Columns') }}</h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                    <label
+                    <BaseCheckbox
                         v-for="col in availableColumns"
                         :key="col.key"
-                        class="flex items-center gap-2 text-sm cursor-pointer"
-                    >
-                        <input type="checkbox" v-model="selectedColumns" :value="col.key" class="rounded border-gray-300" />
-                        {{ $t(col.label) }}
-                    </label>
+                        :model-value="selectedColumns.includes(col.key)"
+                        @update:model-value="v => toggleColumn(col.key, v)"
+                        :label="$t(col.label)"
+                        description=""
+                    />
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <BaseInput
-                    type="date"
-                    id="export_date_from"
-                    v-model="dateFrom"
-                    :label="$t('From')"
-                    class="w-44"
-                />
-                <BaseInput
-                    type="date"
-                    id="export_date_to"
-                    v-model="dateTo"
-                    :label="$t('To')"
-                    class="w-44"
-                />
+            <div>
+                <div class="flex items-center gap-4">
+                    <BaseInput
+                        type="date"
+                        id="export_date_from"
+                        v-model="dateFrom"
+                        :label="$t('From')"
+                        class="w-44"
+                    />
+                    <BaseInput
+                        type="date"
+                        id="export_date_to"
+                        v-model="dateTo"
+                        :label="$t('To')"
+                        class="w-44"
+                    />
+                </div>
+                <p class="mt-1.5 text-xs text-gray-500">
+                    {{ $t('Defaults to the project period. Limits which events count towards per-event and count metrics.') }}
+                </p>
             </div>
 
             <div class="flex justify-end gap-3 pt-4">
@@ -75,18 +80,21 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 
 const props = defineProps({
     project: { type: Object, required: true },
     tagCounts: { type: Array, default: () => [] },
     biCustomFields: { type: Array, default: () => [] },
+    defaultDateFrom: { type: String, default: null },
+    defaultDateTo: { type: String, default: null },
 });
 
 const emit = defineEmits(['close']);
 
 const isExporting = ref(false);
-const dateFrom = ref('');
-const dateTo = ref('');
+const dateFrom = ref(props.defaultDateFrom ?? '');
+const dateTo = ref(props.defaultDateTo ?? '');
 
 const staticColumns = [
     { key: 'project_name', label: 'Project name' },
@@ -134,6 +142,16 @@ const customFieldColumns = props.biCustomFields.map(f => ({
 const availableColumns = [...staticColumns, ...tagColumns, ...customFieldColumns];
 
 const selectedColumns = ref(availableColumns.map(c => c.key));
+
+const toggleColumn = (key, checked) => {
+    if (checked) {
+        if (!selectedColumns.value.includes(key)) {
+            selectedColumns.value.push(key);
+        }
+    } else {
+        selectedColumns.value = selectedColumns.value.filter(k => k !== key);
+    }
+};
 
 const presets = ref([]);
 const selectedPreset = ref(null);
@@ -198,7 +216,7 @@ const pollAndDownload = (token) => new Promise((resolve) => {
         try {
             const { data } = await axios.get(route('bi.export.status', token));
             if (data.status === 'ready') {
-                window.open(route('bi.export.download', token), '_blank');
+                window.location.href = route('bi.export.download', token);
                 return resolve();
             }
             if (data.status === 'failed' || data.status === 'unknown') {

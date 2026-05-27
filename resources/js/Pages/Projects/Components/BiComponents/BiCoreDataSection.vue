@@ -2,22 +2,34 @@
     <div class="mb-8 border-b border-dashed border-gray-400 pb-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Production data') }}</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" v-model="localData.is_new_production" :disabled="!canEdit" @change="save" class="rounded border-gray-300" />
-                {{ $t('New production') }}
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" v-model="localData.is_co_production" :disabled="!canEdit" @change="save" class="rounded border-gray-300" />
-                {{ $t('Co-production') }}
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" v-model="localData.is_own_production" :disabled="!canEdit" @change="save" class="rounded border-gray-300" />
-                {{ $t('Own production') }}
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-                <input type="checkbox" v-model="localData.is_germany_premiere" :disabled="!canEdit" @change="save" class="rounded border-gray-300" />
-                {{ $t('Germany premiere') }}
-            </label>
+            <BaseCheckbox
+                :model-value="localData.is_new_production"
+                @update:model-value="v => onToggle('is_new_production', v)"
+                :label="$t('New production')"
+                description=""
+                :disabled="!canEdit"
+            />
+            <BaseCheckbox
+                :model-value="localData.is_co_production"
+                @update:model-value="v => onToggle('is_co_production', v)"
+                :label="$t('Co-production')"
+                description=""
+                :disabled="!canEdit"
+            />
+            <BaseCheckbox
+                :model-value="localData.is_own_production"
+                @update:model-value="v => onToggle('is_own_production', v)"
+                :label="$t('Own production')"
+                description=""
+                :disabled="!canEdit"
+            />
+            <BaseCheckbox
+                :model-value="localData.is_germany_premiere"
+                @update:model-value="v => onToggle('is_germany_premiere', v)"
+                :label="$t('Germany premiere')"
+                description=""
+                :disabled="!canEdit"
+            />
         </div>
         <div class="max-w-xs">
             <BaseInput
@@ -35,6 +47,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 
 const props = defineProps({
     biData: { type: Object, default: null },
@@ -63,6 +76,11 @@ watch(() => props.biData, (val) => {
         };
     }
 }, { immediate: true });
+
+const onToggle = (key, value) => {
+    localData.value[key] = value;
+    save();
+};
 
 const save = async () => {
     try {

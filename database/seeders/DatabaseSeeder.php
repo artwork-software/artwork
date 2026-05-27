@@ -36,5 +36,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         \Illuminate\Support\Facades\Artisan::call('artwork:add-bi-event-type-tags');
+        \Illuminate\Support\Facades\Artisan::call('artwork:add-bi-export-presets');
     }
 }

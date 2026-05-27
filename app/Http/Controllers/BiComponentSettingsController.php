@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -18,12 +19,18 @@ class BiComponentSettingsController extends Controller
             ->orderBy('bi_order')
             ->get();
 
-        $allowedTypes = [
-            'TextField' => ProjectTabComponentEnum::TEXT_FIELD->value,
-            'TextArea' => ProjectTabComponentEnum::TEXT_AREA->value,
-            'Checkbox' => ProjectTabComponentEnum::CHECKBOX->value,
-            'DropDown' => ProjectTabComponentEnum::DROPDOWN->value,
+        // Reuse the canonical type definitions ({name, availableFields}) so the shared
+        // ComponentModal receives objects (not plain strings) and its type listbox works.
+        $allowedKeys = [
+            ProjectTabComponentEnum::TEXT_FIELD->value,
+            ProjectTabComponentEnum::TEXT_AREA->value,
+            ProjectTabComponentEnum::CHECKBOX->value,
+            ProjectTabComponentEnum::DROPDOWN->value,
         ];
+        $allowedTypes = array_intersect_key(
+            ProjectTabComponentEnum::getValues(),
+            array_flip($allowedKeys)
+        );
 
         return Inertia::render('Settings/BiSettings/Index', [
             'biFields' => $biFields,
@@ -31,7 +38,7 @@ class BiComponentSettingsController extends Controller
         ]);
     }
 
-    public function store(Request $request): void
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -63,9 +70,11 @@ class BiComponentSettingsController extends Controller
         }
 
         $this->clearCaches();
+
+        return redirect()->back();
     }
 
-    public function update(Request $request, Component $component): void
+    public function update(Request $request, Component $component): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -86,9 +95,11 @@ class BiComponentSettingsController extends Controller
         $component->update($request->only('name', 'data', 'permission_type'));
 
         $this->clearCaches();
+
+        return redirect()->back();
     }
 
-    public function destroy(Component $component): void
+    public function destroy(Component $component): RedirectResponse
     {
         $component->users()->detach();
         $component->departments()->detach();
@@ -100,9 +111,11 @@ class BiComponentSettingsController extends Controller
         $component->delete();
 
         $this->clearCaches();
+
+        return redirect()->back();
     }
 
-    public function updateOrder(Request $request): void
+    public function updateOrder(Request $request): RedirectResponse
     {
         $request->validate([
             'ordered_ids' => ['required', 'array'],
@@ -114,6 +127,8 @@ class BiComponentSettingsController extends Controller
         }
 
         $this->clearCaches();
+
+        return redirect()->back();
     }
 
     private function clearCaches(): void

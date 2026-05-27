@@ -9,10 +9,10 @@
         <template v-else>
             <div class="sm:flex sm:items-center mb-6">
                 <div class="sm:flex-auto">
-                    <span class="componentLabel">{{ $t('Business Intelligence') }}</span>
+                    <span class="block text-2xl font-bold text-gray-900">{{ $t('Business Intelligence') }}</span>
                 </div>
                 <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden" v-if="canEditComponent">
-                    <BaseUIButton @click="showExportModal = true" :label="$t('Export')" v-if="canExport || hasAdminRole()"/>
+                    <BaseUIButton @click="showExportModal = true" :label="$t('Export')" icon="IconFileExport" v-if="canExport || hasAdminRole()"/>
                 </div>
             </div>
 
@@ -90,6 +90,8 @@
                 :project="project"
                 :tag-counts="tagCounts"
                 :bi-custom-fields="biCustomFields"
+                :default-date-from="projectPeriod?.from ?? null"
+                :default-date-to="projectPeriod?.to ?? null"
                 @close="showExportModal = false"
             />
         </template>
@@ -136,6 +138,7 @@ const projectEvents = ref([]);
 const projectRooms = ref([]);
 const biCustomFields = ref([]);
 const biCustomFieldValues = ref({});
+const projectPeriod = ref(null);
 
 const fetchData = async () => {
     try {
@@ -151,6 +154,7 @@ const fetchData = async () => {
         projectRooms.value = response.data.project_rooms;
         biCustomFields.value = response.data.bi_custom_fields || [];
         biCustomFieldValues.value = response.data.bi_custom_field_values || {};
+        projectPeriod.value = response.data.project_period || null;
         loadError.value = null;
     } catch (error) {
         loadError.value = 'Error loading BI data.';

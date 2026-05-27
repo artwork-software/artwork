@@ -1223,7 +1223,11 @@ const deleteSelectedEvents = () => {
 };
 const jumpToDayOfMonth = (day) => {
     const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
-    if (dayElement) window.scrollTo({ top: dayElement.offsetTop - 130, behavior: "smooth" });
+    if (dayElement) {
+        const headerOffset = topbarHeight.value + 64; // topbar + room header (h-16)
+        const top = dayElement.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top, behavior: "smooth" });
+    }
 };
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {

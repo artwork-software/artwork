@@ -85,14 +85,14 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
-                    <label
+                    <BaseCheckbox
                         v-for="col in availableColumns"
                         :key="col.key"
-                        class="flex items-center gap-2 text-sm cursor-pointer"
-                    >
-                        <input type="checkbox" v-model="selectedColumns" :value="col.key" class="rounded border-gray-300" />
-                        {{ $t(col.label) }}
-                    </label>
+                        :model-value="selectedColumns.includes(col.key)"
+                        @update:model-value="v => toggleColumn(col.key, v)"
+                        :label="$t(col.label)"
+                        description=""
+                    />
                 </div>
             </div>
 
@@ -115,6 +115,7 @@ import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHe
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 
 defineOptions({ name: 'BiSettingsExport' });
 
@@ -181,6 +182,16 @@ const selectAllColumns = () => {
     selectedColumns.value = availableColumns.map(c => c.key);
 };
 
+const toggleColumn = (key, checked) => {
+    if (checked) {
+        if (!selectedColumns.value.includes(key)) {
+            selectedColumns.value.push(key);
+        }
+    } else {
+        selectedColumns.value = selectedColumns.value.filter(k => k !== key);
+    }
+};
+
 const doExport = async () => {
     if (!canExport.value) return;
     isExporting.value = true;
@@ -209,7 +220,7 @@ const pollAndDownload = (token) => new Promise((resolve) => {
         try {
             const { data } = await axios.get(route('bi.export.status', token));
             if (data.status === 'ready') {
-                window.open(route('bi.export.download', token), '_blank');
+                window.location.href = route('bi.export.download', token);
                 return resolve();
             }
             if (data.status === 'failed' || data.status === 'unknown') {

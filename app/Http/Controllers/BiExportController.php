@@ -71,7 +71,10 @@ class BiExportController extends Controller
     {
         $token = $this->biExportService->cacheExportConfiguration($request->validated());
 
-        GenerateBiExportJob::dispatch($token);
+        // Run synchronously so the export is reliably generated even without a running
+        // queue worker. Switch to ::dispatch() for true async once a worker processes
+        // the configured ("database") queue.
+        GenerateBiExportJob::dispatchSync($token);
 
         return response()->json(['token' => $token]);
     }

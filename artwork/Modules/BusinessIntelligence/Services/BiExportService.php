@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Services;
 
+use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
 use Artwork\Modules\BusinessIntelligence\Exports\BiProjectExport;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
@@ -358,7 +359,13 @@ class BiExportService
     private function formatTimeEfforts(Project $project): string
     {
         return $project->biTimeEfforts
-            ->map(fn($effort) => $effort->label . ' (' . $effort->effort_bucket . ')')
+            ->map(function ($effort): string {
+                $bucket = $effort->effort_bucket instanceof BiEffortBucketEnum
+                    ? $effort->effort_bucket->value
+                    : (string) $effort->effort_bucket;
+
+                return $effort->label . ' (' . $bucket . ')';
+            })
             ->implode(', ');
     }
 

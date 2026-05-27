@@ -116,7 +116,7 @@ const sizeClasses = computed(() => {
         knob: 'h-4 w-4',
         knobTranslateOn: 'translate-x-7',
         knobTranslateOff: 'translate-x-0',
-        icon: 'h-4 w-4'
+        icon: 'h-3 w-3'
     }
 })
 </script>

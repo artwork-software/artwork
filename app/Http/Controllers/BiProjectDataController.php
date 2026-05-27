@@ -12,6 +12,7 @@ use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Room\Models\Room;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -74,6 +75,16 @@ class BiProjectDataController extends Controller
             ->get()
             ->keyBy('component_id');
 
+        $period = $project->events()
+            ->selectRaw('MIN(start_time) as min_start, MAX(end_time) as max_end')
+            ->first();
+        $projectPeriod = ($period && $period->min_start)
+            ? [
+                'from' => Carbon::parse($period->min_start)->toDateString(),
+                'to' => Carbon::parse($period->max_end ?? $period->min_start)->toDateString(),
+            ]
+            : null;
+
         return response()->json([
             'bi_data' => $biData,
             'event_data' => $eventData,
@@ -86,6 +97,7 @@ class BiProjectDataController extends Controller
             'project_rooms' => $projectRooms,
             'bi_custom_fields' => $biCustomFields,
             'bi_custom_field_values' => $biCustomFieldValues,
+            'project_period' => $projectPeriod,
         ]);
     }
 

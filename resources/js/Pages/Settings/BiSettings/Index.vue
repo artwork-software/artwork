@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import { IconPlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
@@ -99,6 +99,11 @@ const props = defineProps({
 });
 
 const orderedFields = ref([...props.biFields]);
+
+// Keep the list in sync when Inertia refreshes the biFields prop (e.g. after create/edit/delete)
+watch(() => props.biFields, (value) => {
+    orderedFields.value = [...value];
+});
 const showModal = ref(false);
 const modalMode = ref('create');
 const editingFieldId = ref(null);

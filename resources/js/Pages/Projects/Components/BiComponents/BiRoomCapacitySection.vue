@@ -7,24 +7,37 @@
                     <tr>
                         <th class="py-2 pr-3 text-left font-semibold text-gray-900">{{ $t('Room') }}</th>
                         <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Default capacity') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Override') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Project-specific capacity') }}</th>
                         <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Effective capacity') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     <tr v-for="room in projectRooms" :key="room.id">
-                        <td class="py-2 pr-3 text-gray-700">{{ room.name }}</td>
+                        <td class="py-2 pr-3 text-gray-700">
+                            <div class="flex items-center gap-2">
+                                <span>{{ room.name }}</span>
+                                <Link
+                                    v-if="canEditRooms"
+                                    :href="route('rooms.show', { room: room.id })"
+                                    class="text-gray-400 hover:text-artwork-buttons-create transition"
+                                    v-tooltip.top="{ value: $t('Open room'), appendTo: 'body', class: 'aw-tooltip' }"
+                                >
+                                    <IconExternalLink class="size-4" />
+                                </Link>
+                            </div>
+                        </td>
                         <td class="py-2 px-3 text-gray-500">{{ room.default_capacity ?? '-' }}</td>
                         <td class="py-2 px-3">
                             <input
+                                v-if="canEdit"
                                 type="number"
-                                class="w-28 rounded border-gray-300 text-sm"
+                                class="w-28 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
                                 :min="0"
                                 :value="getOverride(room.id)"
-                                :disabled="!canEdit"
                                 :placeholder="$t('Room default')"
                                 @change="saveOverride(room.id, $event.target.value)"
                             />
+                            <span v-else class="text-gray-700">{{ getOverride(room.id) ?? '–' }}</span>
                         </td>
                         <td class="py-2 px-3 font-medium text-gray-900">
                             {{ getEffectiveCapacity(room) ?? '-' }}
@@ -38,6 +51,10 @@
 </template>
 
 <script setup>
+import { Link, usePage } from '@inertiajs/vue3';
+import { IconExternalLink } from '@tabler/icons-vue';
+import { usePermission } from '@/Composeables/Permission.js';
+
 const props = defineProps({
     roomCapacities: { type: Array, default: () => [] },
     projectRooms: { type: Array, default: () => [] },
@@ -46,6 +63,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['updated']);
+
+const { can, hasAdminRole } = usePermission(usePage().props);
+const canEditRooms = can('create, delete and update rooms') || hasAdminRole();
 
 const getOverride = (roomId) => {
     const entry = props.roomCapacities.find(c => c.room_id === roomId);

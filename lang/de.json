@@ -4528,6 +4528,8 @@
     "Project name": "Projektname",
     "Project status": "Projektstatus",
     "Export BI data": "BI-Daten exportieren",
+    "Allows exporting business intelligence data from projects as an Excel file.": "Erlaubt den Export von Business-Intelligence-Daten aus Projekten als Excel-Datei.",
+    "Allows access to tenant-wide business intelligence overviews.": "Erlaubt den Zugriff auf mandantenweite Business-Intelligence-Übersichten.",
     "BI Tags": "BI-Tags",
     "Define tags for BI counting of event types.": "Definiere Tags für die BI-Zählung von Terminarten.",
     "Internal name": "Interner Name",

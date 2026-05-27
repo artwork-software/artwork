@@ -4492,6 +4492,8 @@
     "Project name": "Project name",
     "Project status": "Project status",
     "Export BI data": "Export BI data",
+    "Allows exporting business intelligence data from projects as an Excel file.": "Allows exporting business intelligence data from projects as an Excel file.",
+    "Allows access to tenant-wide business intelligence overviews.": "Allows access to tenant-wide business intelligence overviews.",
     "BI Tags": "BI Tags",
     "Define tags for BI counting of event types.": "Define tags for BI counting of event types.",
     "Internal name": "Internal name",

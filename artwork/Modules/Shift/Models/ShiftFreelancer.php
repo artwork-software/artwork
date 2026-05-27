@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Models;
 
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -34,8 +35,8 @@ class ShiftFreelancer extends Pivot
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        'start_time' => TimeWithoutSeconds::class,
+        'end_time' => TimeWithoutSeconds::class,
     ];
 
     public function shift(): BelongsTo

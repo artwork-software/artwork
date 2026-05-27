@@ -2929,8 +2929,9 @@ class EventController extends Controller
             // Aktuelles Event aus der Serie lösen
             $event->update(['is_series' => false, 'series_id' => null]);
 
-            // Optionales Aufräumen: Wenn KEIN Event mehr auf diese Serie verweist, Serie-Datensatz löschen
-            $stillReferenced = Event::where('series_id', $series->id)->exists();
+            // Optionales Aufräumen: Serie nur löschen, wenn KEIN Event mehr darauf verweist.
+            // withTrashed(), da auch soft-deleted Events die FK-Zeile halten und das Löschen sonst fehlschlägt.
+            $stillReferenced = Event::withTrashed()->where('series_id', $series->id)->exists();
             if (!$stillReferenced) {
                 $series->delete();
             }

@@ -66,6 +66,10 @@
                                         <input v-model="showOnlyMyProjects" type="checkbox" class="size-4 accent-emerald-600" />
                                         <span class="text-sm text-zinc-700 ">{{ $t('Only projects where you are in the project team') }}</span>
                                     </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyWithBiData" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Only productions with BI data') }}</span>
+                                    </label>
                                 </div>
 
                                 <!-- States -->
@@ -383,6 +387,7 @@ const showExpiredProjects = ref(userProjectManagementSetting?.project_filters.sh
 const showFutureProjects = ref(userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
 const hideProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.hideProjectsWithoutEvents);
 const showOnlyProjectsWithoutGroup = ref(userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
+const showOnlyWithBiData = ref(userProjectManagementSetting?.project_filters.showOnlyWithBiData);
 const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : userProjectManagementSetting?.sort_by);
 
 const showProjectStateFilter = ref(true);
@@ -395,6 +400,7 @@ const hasActiveFilters = computed(() => {
         || !!showFutureProjects.value
         || !!hideProjectsWithoutEvents.value
         || !!showOnlyProjectsWithoutGroup.value
+        || !!showOnlyWithBiData.value
         || props.states.some((s) => s.clicked);
 });
 
@@ -459,6 +465,7 @@ const applyFiltersAndSort = (resetPage = true) => {
                 showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
                 hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
                 showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+                showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
             },
             sort: sortBy.value,
         },
@@ -479,6 +486,7 @@ const resetFilter = () => {
     showFutureProjects.value = false;
     hideProjectsWithoutEvents.value = false;
     showOnlyProjectsWithoutGroup.value = false;
+    showOnlyWithBiData.value = false;
 
     props.states.forEach((s) => (s.clicked = false));
 

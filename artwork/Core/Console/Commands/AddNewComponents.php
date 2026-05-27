@@ -114,6 +114,34 @@ class AddNewComponents extends Command
             $this->info('Component Project cost center display component already exists');
         }
 
+        if (!Component::query()->where('type', ProjectTabComponentEnum::BUSINESS_INTELLIGENCE)->first()) {
+            Component::create([
+                'name' => 'Business Intelligence',
+                'type' => ProjectTabComponentEnum::BUSINESS_INTELLIGENCE,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_SOME_EDIT->value
+            ]);
+            $this->info('Business Intelligence component added');
+        } else {
+            $this->info('Business Intelligence component already exists');
+        }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::BI_KEY_FIGURES)->first()) {
+            Component::create([
+                'name' => 'BI key figures',
+                'type' => ProjectTabComponentEnum::BI_KEY_FIGURES,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('BI key figures component added');
+        } else {
+            $this->info('BI key figures component already exists');
+        }
+
         $contractsDocumentsComponent = Component::query()->where('type', ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS)->first();
         if (!$contractsDocumentsComponent) {
             Component::create([

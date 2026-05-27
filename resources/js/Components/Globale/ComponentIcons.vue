@@ -57,6 +57,8 @@ export default {
     <PropertyIcon name="IconPalette" class="w-6 h-6" v-if="type === 'ArtistNameDisplayComponent'" />
     <PropertyIcon name="IconLink" class="w-6 h-6" v-if="type === 'LinkList'" />
     <PropertyIcon name="IconFileText" class="w-6 h-6" v-if="type === 'ProjectContractsDocumentsComponent'" />
+    <PropertyIcon name="IconChartHistogram" class="w-6 h-6" v-if="type === 'BusinessIntelligenceComponent'" />
+    <PropertyIcon name="IconChartBar" class="w-6 h-6" v-if="type === 'BiKeyFiguresDisplay'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

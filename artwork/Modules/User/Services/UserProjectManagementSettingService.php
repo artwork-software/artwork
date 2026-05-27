@@ -24,6 +24,7 @@ class UserProjectManagementSettingService
                 'showProjectGroups' => true,
                 'showProjects' => true,
                 'showFutureProjects' => true,
+                'showOnlyWithBiData' => false,
             ],
             'project_state_ids' => [],
         ];

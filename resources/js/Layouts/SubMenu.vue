@@ -512,6 +512,16 @@ const navigation = ref([
         prefetch: ['projects']
     },
     {
+        name: 'BI Dashboard',
+        href: route('bi.dashboard'),
+        icon: 'IconChartHistogram',
+        current: route().current('bi.dashboard'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: usePage().props.canViewBiDashboard,
+        prefetch: false
+    },
+    {
         name: 'Calendar',
         href: '#',
         icon: 'IconCalendarClock',

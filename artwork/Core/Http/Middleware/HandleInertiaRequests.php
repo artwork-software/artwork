@@ -144,6 +144,11 @@ class HandleInertiaRequests extends Middleware
 
         $canSeeEventVerifications = (bool) $user;
 
+        $canViewBiDashboard = $user && (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::BI_DASHBOARD->value)
+        );
+
         return array_merge(
             parent::share($request),
             [
@@ -213,6 +218,7 @@ class HandleInertiaRequests extends Middleware
                 'canSeeShiftPlanRequestedPlans' => $canSeeShiftPlanRequestedPlans,
                 'canSeeEventVerifications'      => $canSeeEventVerifications,
                 'canSeeIncomingRequests'         => $canSeeIncomingRequests,
+                'canViewBiDashboard'             => $canViewBiDashboard,
             ]
         );
     }

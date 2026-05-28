@@ -469,6 +469,7 @@ const eventsWithoutRoomLen = computed(() =>
 
 // Dynamic topbar height measurement
 const topbarRef = ref(null);
+const calendarRef = ref(null);
 const topbarHeight = ref(80); // default fallback
 let topbarObserver = null;
 
@@ -1221,9 +1222,77 @@ const deleteSelectedEvents = () => {
             newCalendarData.value = next;
         });
 };
-const jumpToDayOfMonth = (day) => {
-    const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
-    if (dayElement) window.scrollTo({ top: dayElement.offsetTop - 130, behavior: "smooth" });
+const jumpToDayOfMonth = async (day) => {
+    // Globales `html { scroll-behavior: smooth }` (siehe app.blade.php) zwingt
+    // sonst alle programmatischen Scrolls in eine Animation. Während des
+    // Sprungs temporär abschalten, damit Korrektur-Scrolls instant wirken und
+    // sich nicht gegenseitig abbrechen.
+    const htmlEl = document.documentElement;
+    const previousScrollBehavior = htmlEl.style.scrollBehavior;
+    htmlEl.style.scrollBehavior = 'auto';
+
+    try {
+        // Zielmonat (und Nachbarn) vorab laden, damit Tagehöhen final stehen,
+        // bevor wir die Scroll-Position berechnen (wichtig bei expand_days).
+        const targetMonthKey = (day || '').slice(0, 7);
+        if (targetMonthKey && monthIndexByKey.value.has(targetMonthKey)) {
+            focusedMonthKey.value = targetMonthKey;
+            await ensureAroundInternal(targetMonthKey);
+            await nextTick();
+            await new Promise(r => requestAnimationFrame(r));
+        }
+
+        const computeOffset = () => {
+            const calendarHeader = document.querySelector('header.sticky');
+            const headerHeight = calendarHeader ? (calendarHeader as HTMLElement).offsetHeight : 64;
+            return topbarHeight.value + headerHeight;
+        };
+
+        const scrollOnce = () => {
+            const dayElement = document.querySelector<HTMLElement>(`.day-container[data-day-to-jump="${day}"]`);
+            if (!dayElement) return false;
+            const totalOffset = computeOffset();
+            const calendarEl = calendarRef.value as HTMLElement | null;
+
+            if (isFullscreen.value && calendarEl) {
+                const elementTop = dayElement.getBoundingClientRect().top
+                    - calendarEl.getBoundingClientRect().top
+                    + calendarEl.scrollTop;
+                calendarEl.scrollTo({ top: Math.max(elementTop - totalOffset, 0), behavior: 'auto' });
+            } else {
+                const elementTop = dayElement.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: Math.max(elementTop - totalOffset, 0), behavior: 'auto' });
+            }
+            return true;
+        };
+
+        if (!scrollOnce()) return;
+
+        // Nachkorrektur: IntersectionObserver kann während/nach dem Sprung weitere
+        // Monate triggern, deren Events bei expand_days die Zeilenhöhe ändern und
+        // damit die finale Y-Position des Zieltages verschieben. Mehrfach
+        // korrigieren, bis die Position stabil ist (max. ~600ms).
+        for (let i = 0; i < 4; i++) {
+            await new Promise(r => setTimeout(r, 150));
+            const dayElement = document.querySelector<HTMLElement>(`.day-container[data-day-to-jump="${day}"]`);
+            if (!dayElement) continue;
+            const totalOffset = computeOffset();
+            const calendarEl = calendarRef.value as HTMLElement | null;
+            const rect = dayElement.getBoundingClientRect();
+            const currentTop = (isFullscreen.value && calendarEl)
+                ? rect.top - calendarEl.getBoundingClientRect().top
+                : rect.top;
+            const diff = currentTop - totalOffset;
+            if (Math.abs(diff) <= 1) break;
+            if (isFullscreen.value && calendarEl) {
+                calendarEl.scrollBy({ top: diff, behavior: 'auto' });
+            } else {
+                window.scrollBy({ top: diff, behavior: 'auto' });
+            }
+        }
+    } finally {
+        htmlEl.style.scrollBehavior = previousScrollBehavior;
+    }
 };
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {

@@ -24,6 +24,8 @@ class ModuleSettings extends Settings
 
     public bool $crm;
 
+    public bool $planning_calendar;
+
     public static function group(): string
     {
         return 'module_settings';

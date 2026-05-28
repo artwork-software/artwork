@@ -77,6 +77,18 @@ export default defineComponent({
                     current: route().current('project-management-builder.index'),
                     permission: true
                 },
+                {
+                    name: this.$t('BI Field Settings'),
+                    href: route('bi.settings.index'),
+                    current: route().current('bi.settings.index'),
+                    permission: true
+                },
+                {
+                    name: this.$t('BI Export'),
+                    href: route('bi.export.index'),
+                    current: route().current('bi.export.index'),
+                    permission: true
+                },
             ]
         }
     }

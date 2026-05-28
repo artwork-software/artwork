@@ -8,6 +8,8 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
+use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryPlanningService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
@@ -259,6 +261,71 @@ class InventoryArticleController extends Controller
             'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties', 'tags'])
                 ->paginate(15)
         ]);
+    }
+
+    public function updateField(Request $request, InventoryArticle $inventoryArticle)
+    {
+        $allowedFields = ['name', 'description', 'quantity', 'inventory_category_id', 'inventory_sub_category_id'];
+        $requiredFields = ['name', 'quantity', 'inventory_category_id'];
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        if (!in_array($field, $allowedFields, true)) {
+            return response()->json(['error' => 'Invalid field.'], 422);
+        }
+
+        if (in_array($field, $requiredFields, true) && ($value === null || $value === '')) {
+            return response()->json(['error' => 'This field must not be empty.'], 422);
+        }
+
+        $inventoryArticle->update([$field => $value]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateDetailedArticleField(Request $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    {
+        $allowedFields = ['name', 'description', 'quantity', 'inventory_article_status_id'];
+        $requiredFields = ['name'];
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        if (!in_array($field, $allowedFields, true)) {
+            return response()->json(['error' => 'Invalid field.'], 422);
+        }
+
+        if (in_array($field, $requiredFields, true) && ($value === null || $value === '')) {
+            return response()->json(['error' => 'This field must not be empty.'], 422);
+        }
+
+        $inventoryDetailedQuantityArticle->update([$field => $value]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateDetailedArticlePropertyValue(
+        Request $request,
+        InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle
+    ) {
+        $propertyId = $request->input('property_id');
+        $value = $request->input('value');
+
+        if (!$propertyId) {
+            return response()->json(['error' => 'Property ID required.'], 422);
+        }
+
+        InventoryPropertyValue::updateOrCreate(
+            [
+                'inventory_propertyable_type' => InventoryDetailedQuantityArticle::class,
+                'inventory_propertyable_id' => $inventoryDetailedQuantityArticle->id,
+                'inventory_article_property_id' => $propertyId,
+            ],
+            ['value' => $value ?? '']
+        );
+
+        return response()->json(['success' => true]);
     }
 
     /**

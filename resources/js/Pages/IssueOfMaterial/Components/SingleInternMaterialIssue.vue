@@ -67,17 +67,23 @@
         {{ $t('Completed') }}
       </span>
 
-            <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
-                <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
-                <BaseMenuItem
-                    white-menu-background
-                    :title="$t('Special items closed')"
-                    :icon="IconCheck"
-                    @click="setSpecialItemsDone"
-                    v-if="checkIfStatusOrHasAnySpecialItem"
-                />
-                <BaseMenuItem white-menu-background :title="$t('Delete')" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
-            </BaseMenu>
+            <div class="flex items-center gap-2">
+                <button class="cursor-pointer" :title="$t('Print')" @click="printInternal()">
+                    <component :is="IconPrinter" class="size-5" stroke-width="1.5" />
+                </button>
+
+                <BaseMenu white-menu-background has-no-offset menu-width="w-fit">
+                    <BaseMenuItem white-menu-background :title="$t('Edit')" :icon="IconEdit" @click="showIssueOfMaterialModal = true" />
+                    <BaseMenuItem
+                        white-menu-background
+                        :title="$t('Special items closed')"
+                        :icon="IconCheck"
+                        @click="setSpecialItemsDone"
+                        v-if="checkIfStatusOrHasAnySpecialItem"
+                    />
+                    <BaseMenuItem white-menu-background :title="$t('Delete')" :icon="IconTrash" @click="showIssueOfMaterialConfirmDeleteModal = true" />
+                </BaseMenu>
+            </div>
         </div>
     </div>
 
@@ -113,7 +119,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import DetailModalInternMaterialModal from "@/Pages/IssueOfMaterial/Components/DetailModalInternMaterialModal.vue";
-import { IconAlertTriangle, IconCheck, IconEdit, IconTrash } from "@tabler/icons-vue";
+import { IconAlertTriangle, IconCheck, IconEdit, IconPrinter, IconTrash } from "@tabler/icons-vue";
 import { computed, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 
@@ -156,6 +162,10 @@ const setSpecialItemsDone = () => {
     router.post(route('issue-of-material.set-special-items-done', props.issueOfMaterial.id), {
         preserveState: true, preserveScroll: true
     });
+};
+
+const printInternal = () => {
+    window.open(route('issue-of-material.print', props.issueOfMaterial.id), '_blank');
 };
 
 const checkIfStatusOrHasAnySpecialItem = computed(() => {

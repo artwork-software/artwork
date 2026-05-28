@@ -6,7 +6,7 @@
             :placeholder="focused ? placeholder : (hasLabel ? ' ' : placeholder)"
             @input="$emit('update:modelValue', $event.target.value)"
             @focus="focused = true"
-            @blur="focused = !!modelValue"
+            @blur="($event) => { focused = !!modelValue; emit('focusout', $event) }"
             :disabled="disabled"
             :required="required"
             :rows="rows"
@@ -55,7 +55,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'focusout'])
 
 const focused = ref(false)
 

@@ -1991,6 +1991,7 @@ onMounted(async () => {
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
         onWorkersNeedReload: loadShiftPlanWorkers,
         onWorkerNeedReload: reloadSingleWorker,
+        onLookupsReceived: mergeLookups,
     })
     ShiftCalendarListener.init()
 

@@ -26,7 +26,7 @@
                   : ''
             ]"
             @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
-            @blur="maybeAutofillTime"
+            @blur="($event) => { maybeAutofillTime($event); emit('focusout', $event) }"
             @change="maybeAutofillTime"
             @keydown.enter="handleEnter"
         />
@@ -69,6 +69,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+const emit = defineEmits(['focusout'])
 
 /** v-model */
 const model = defineModel({ default: '' })

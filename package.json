@@ -30,6 +30,7 @@
         "@tato30/vue-pdf": "^1.11.5",
         "@vuepic/vue-datepicker": "^11.0.3",
         "axios": "1.12.2",
+        "chart.js": "^4.5.1",
         "dayjs": "^1.11.18",
         "laravel-permission-to-vuejs": "^3.0.8",
         "lodash.debounce": "^4.0.8",

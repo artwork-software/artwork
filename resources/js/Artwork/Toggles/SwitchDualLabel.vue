@@ -3,7 +3,7 @@
         <!-- Left Label -->
         <span
             class="model-title cursor-pointer"
-            :class="model ? 'text-gray-300' : ''"
+            :class="model ? 'text-gray-300 font-normal' : 'font-semibold'"
             role="button"
             tabindex="0"
             @click="set(false)"
@@ -50,7 +50,7 @@
         <!-- Right Label -->
         <span
             class="model-title cursor-pointer"
-            :class="model ? '' : 'text-gray-300'"
+            :class="model ? 'font-semibold' : 'text-gray-300 font-normal'"
             role="button"
             tabindex="0"
             @click="set(true)"
@@ -116,7 +116,7 @@ const sizeClasses = computed(() => {
         knob: 'h-4 w-4',
         knobTranslateOn: 'translate-x-7',
         knobTranslateOff: 'translate-x-0',
-        icon: 'h-4 w-4'
+        icon: 'h-3 w-3'
     }
 })
 </script>

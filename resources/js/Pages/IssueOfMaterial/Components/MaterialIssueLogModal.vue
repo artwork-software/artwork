@@ -48,7 +48,7 @@
                     </div>
 
                     <!-- Date range -->
-                    <div class="md:col-span-6">
+                    <div class="md:col-span-6" @focusout="onDateBlur">
                         <BaseInput
                             v-model="startDate"
                             id="log-start"
@@ -57,7 +57,7 @@
                             :disabled="loading"
                         />
                     </div>
-                    <div class="md:col-span-6">
+                    <div class="md:col-span-6" @focusout="onDateBlur">
                         <BaseInput
                             v-model="endDate"
                             id="log-end"
@@ -337,12 +337,20 @@ const fetchLogs = async (reset: boolean) => {
     }
 }
 
-// Auto-refresh
-let timer: number | null = null
-watch([projectId, startDate, endDate], () => {
-    if (timer) window.clearTimeout(timer)
-    timer = window.setTimeout(() => fetchLogs(true), 250)
-})
+// Auto-refresh on project change only; dates reload via button or blur
+watch(projectId, () => fetchLogs(true))
+
+// Track last-fetched dates to avoid redundant reloads
+let lastFetchedStart = startDate.value
+let lastFetchedEnd = endDate.value
+
+const onDateBlur = () => {
+    if (startDate.value !== lastFetchedStart || endDate.value !== lastFetchedEnd) {
+        lastFetchedStart = startDate.value
+        lastFetchedEnd = endDate.value
+        fetchLogs(true)
+    }
+}
 
 onMounted(() => fetchLogs(true))
 

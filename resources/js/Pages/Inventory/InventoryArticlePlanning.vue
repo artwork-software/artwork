@@ -17,10 +17,16 @@
               <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
             </span>
                         <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <component :is="IconRouteSquare" class="size-3" />{{ $t('Used in period') }}
+              <IconRouteSquare class="size-3" />{{ $t('Used in period') }}
             </span>
                         <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
               <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
+            </span>
+                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
+              <span class="inline-block h-1 w-3 rounded-sm bg-emerald-500"></span>{{ $t('Internal issue') }}
+            </span>
+                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
+              <span class="inline-block h-1 w-3 rounded-sm bar-stripe-legend"></span>{{ $t('External issue') }}
             </span>
                     </div>
 
@@ -60,9 +66,9 @@
                                 v-for="date in dates"
                                 :key="date.date"
                                 class="px-4 py-2 text-center font-lexend text-[11px] min-w-24 max-w-24 w-24 flex items-center justify-center border-r border-zinc-200"
-                                :class="isToday(date.date) ? 'bg-indigo-50 text-indigo-700 font-semibold' : ''"
+                                :class="date.date === todayIso ? 'bg-indigo-50 text-indigo-700 font-semibold' : ''"
                             >
-                                {{ formatDate(date.date) }}
+                                {{ formattedDates[date.date] }}
                             </div>
                         </div>
 
@@ -93,41 +99,19 @@
 
                                 <!-- Articles without subcategory -->
                                 <template v-if="isCatOpen(group.category)">
-                                    <div
+                                    <ArticleRow
                                         v-for="article in group.articles"
                                         :key="article.id"
-                                        class="flex border-b border-zinc-200"
-                                    >
-                                        <div
-                                            class="sticky left-0 z-20 bg-white px-4 py-2 text-xs text-zinc-900 font-medium border-r border-zinc-200 w-[220px] min-w-[220px]"
-                                        >
-                                            {{ article.name }}
-                                        </div>
-                                        <div
-                                            v-for="date in dates"
-                                            :key="date.date"
-                                            @click="openDetailModal(article.id, date.date)"
-                                            class="text-xs px-2 py-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition"
-                                            :class="[
-                        date.isWeekend ? 'bg-zinc-50' : 'bg-white',
-                        isToday(date.date) ? 'ring-1 ring-indigo-300 ring-inset' : 'hover:bg-zinc-50'
-                      ]"
-                                        >
-                                            <div class="inline-flex items-center gap-1">
-                        <span
-                            class="tabular-nums"
-                            :class="{ 'text-red-600 font-semibold': (availability.availability?.[date.date]?.[article.id] ?? 0) < 0 }"
-                        >
-                          {{ availability.availability?.[date.date]?.[article.id] ?? 0 }}
-                        </span>
-                                                <component
-                                                    :is="IconRouteSquare"
-                                                    v-if="availability.usedFlag?.[date.date]?.[article.id]"
-                                                    class="size-3 text-zinc-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                        :article="article"
+                                        :dates="dates"
+                                        :availability="availability"
+                                        :issues-for-article="issuesByArticle[article.id] || []"
+                                        :highlighted-project-ids="highlightedProjectIds"
+                                        @cellClick="openCellPanel"
+                                        @barClick="openBarPanel"
+                                        @barHover="onBarHover"
+                                        @barLeave="onBarLeave"
+                                    />
 
                                     <!-- Subcategories -->
                                     <template v-for="sub in group.subcategories" :key="sub.name">
@@ -153,41 +137,19 @@
 
                                         <!-- Subcategory articles (only if both: cat open + sub open) -->
                                         <template v-if="isSubOpen(group.category, sub.name)">
-                                            <div
+                                            <ArticleRow
                                                 v-for="article in sub.articles"
                                                 :key="article.id"
-                                                class="flex border-b border-zinc-200"
-                                            >
-                                                <div
-                                                    class="sticky left-0 z-20 bg-white px-4 py-2 text-xs text-zinc-900 font-medium border-r border-zinc-200 w-[220px] min-w-[220px]"
-                                                >
-                                                    {{ article.name }}
-                                                </div>
-                                                <div
-                                                    v-for="date in dates"
-                                                    :key="date.date"
-                                                    @click="openDetailModal(article.id, date.date)"
-                                                    class="text-xs px-2 py-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition"
-                                                    :class="[
-                            date.isWeekend ? 'bg-zinc-50' : 'bg-white',
-                            isToday(date.date) ? 'ring-1 ring-indigo-300 ring-inset' : 'hover:bg-zinc-50'
-                          ]"
-                                                >
-                                                    <div class="inline-flex items-center gap-1">
-                            <span
-                                class="tabular-nums"
-                                :class="{ 'text-red-600 font-semibold': (availability.availability?.[date.date]?.[article.id] ?? 0) < 0 }"
-                            >
-                              {{ availability.availability?.[date.date]?.[article.id] ?? 0 }}
-                            </span>
-                                                        <component
-                                                            :is="IconRouteSquare"
-                                                            v-if="availability.usedFlag?.[date.date]?.[article.id]"
-                                                            class="size-3 text-zinc-500"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                :article="article"
+                                                :dates="dates"
+                                                :availability="availability"
+                                                :issues-for-article="issuesByArticle[article.id] || []"
+                                                :highlighted-project-ids="highlightedProjectIds"
+                                                @cellClick="openCellPanel"
+                                                @barClick="openBarPanel"
+                                                @barHover="onBarHover"
+                                                @barLeave="onBarLeave"
+                                            />
                                         </template>
                                     </template>
                                 </template>
@@ -197,12 +159,35 @@
             </div>
         </div>
 
-        <!-- Usage Modal -->
-        <ArticleUsageModal
-            :details-for-modal="detailsForModal"
-            @close="showArticleUsageModal = false"
-            @refreshData="refreshModalData"
-            v-if="showArticleUsageModal"
+        <!-- Floating Tooltip -->
+        <div
+            v-if="tooltip.visible"
+            class="fixed z-50 pointer-events-none rounded-md bg-zinc-900 text-white text-[11px] px-2.5 py-1.5 shadow-lg"
+            :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+        >
+            <div class="font-semibold mb-0.5">{{ tooltip.issue?.name }}</div>
+            <div class="text-zinc-300">{{ formatDateTooltip(tooltip.issue?.start) }} – {{ formatDateTooltip(tooltip.issue?.end) }}</div>
+            <div v-if="tooltip.issue?.type === 'intern' && tooltip.issue?.project_name" class="text-zinc-300">
+                {{ $t('Project') }}: {{ tooltip.issue.project_name }}
+            </div>
+            <div v-else-if="tooltip.issue?.type === 'extern' && tooltip.issue?.receiver_name" class="text-zinc-300">
+                {{ $t('Recipient') }}: {{ tooltip.issue.receiver_name }}
+            </div>
+            <div class="text-zinc-400 mt-0.5">
+                <span v-if="tooltip.issue?.type === 'intern'">{{ $t('Internal issue') }}</span>
+                <span v-else>{{ $t('External issue') }}</span>
+            </div>
+        </div>
+
+        <!-- Side Panel (replaces modal) -->
+        <ArticleUsageSidePanel
+            :visible="showSidePanel"
+            :details-for-modal="panelDetails ?? detailsForModal"
+            :focus-issue-id="focusIssueId"
+            :focus-issue-type="focusIssueType"
+            :loading="panelLoading"
+            @close="closeSidePanel"
+            @refreshData="refreshPanelData"
         />
     </AppLayout>
 </template>
@@ -210,54 +195,102 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from "@inertiajs/vue3";
-import {ref, reactive, onMounted, watch, computed, defineAsyncComponent} from "vue";
-import {IconCategory2, IconCategoryFilled, IconChevronRight, IconRouteSquare} from "@tabler/icons-vue";
+import { ref, reactive, onMounted, watch, computed, defineAsyncComponent, provide } from "vue";
+import { IconCategory2, IconCategoryFilled, IconChevronRight, IconRouteSquare } from "@tabler/icons-vue";
+import debounce from "lodash.debounce";
+import axios from "axios";
+import ArticleRow from "@/Pages/Inventory/Components/Planning/ArticleRow.vue";
+import ArticleUsageSidePanel from "@/Pages/Inventory/Components/Planning/ArticleUsageSidePanel.vue";
 
 const props = defineProps({
     groupedArticles: { type: Array, required: true, default: () => [] },
     availability: { type: Object, required: true, default: () => ({}) },
     dates: { type: Array, required: true, default: () => [] },
     dataArray: { type: Array, required: true, default: () => [] },
-    detailsForModal: { type: Object, required: false, default: () => ({}) }
+    detailsForModal: { type: Object, required: false, default: () => ({}) },
+    issues: { type: Array, required: false, default: () => [] },
+    projects: { type: Array, required: false, default: () => [] },
 });
 
-const showArticleUsageModal = ref(false);
-const currentModalArticleId = ref(null);
-const currentModalDate = ref(null);
+// Side panel state
+const showSidePanel = ref(false);
+const currentArticleId = ref(null);
+const currentDate = ref(null);
+const focusIssueId = ref(null);
+const focusIssueType = ref(null);
 
-// Search filter
+// Search filter — `searchFilter` is bound to the input; `debouncedSearch` is
+// what the (potentially expensive) `filteredGroupedArticles` reads, so typing
+// fast does not trigger the full filter pipeline per keystroke. (F2)
 const searchFilter = ref('');
+const debouncedSearch = ref('');
+const updateDebouncedSearch = debounce((value) => {
+    debouncedSearch.value = value;
+}, 200);
+watch(searchFilter, (value) => {
+    updateDebouncedSearch(value);
+});
 
-// Filtered grouped articles based on search input
+// Project highlight filter (frontend-only)
+const highlightedProjectIds = ref([]);
+
+// Provide highlight state for the InventoryFilterModal section
+provide('inventoryPlanningProjectHighlight', {
+    projects: computed(() => props.projects || []),
+    selected: highlightedProjectIds,
+});
+
+// F4: Compute the date-index map ONCE at the page level and provide it to all
+// ArticleRow instances. Previously each row built its own identical Map.
+const planningDateIndex = computed(() => {
+    const map = new Map();
+    (props.dates ?? []).forEach((d, idx) => map.set(d.date, idx));
+    return map;
+});
+const planningRangeBounds = computed(() => ({
+    first: props.dates?.[0]?.date ?? null,
+    last:  props.dates?.[props.dates.length - 1]?.date ?? null,
+}));
+provide('planningDateIndex', planningDateIndex);
+provide('planningRangeBounds', planningRangeBounds);
+
+// Group issues by article id once for fast lookup
+const issuesByArticle = computed(() => {
+    const map = {};
+    for (const issue of props.issues || []) {
+        for (const articleId of issue.article_ids || []) {
+            (map[articleId] ||= []).push(issue);
+        }
+    }
+    return map;
+});
+
+// Filtered grouped articles based on debounced search input
 const filteredGroupedArticles = computed(() => {
-    if (!searchFilter.value.trim()) {
+    if (!debouncedSearch.value.trim()) {
         return props.groupedArticles;
     }
 
-    const searchTerm = searchFilter.value.trim().toLowerCase();
+    const searchTerm = debouncedSearch.value.trim().toLowerCase();
     const filtered = [];
 
     for (const group of props.groupedArticles) {
         const categoryName = group.category.toLowerCase();
 
-        // If search matches category name, include entire category
         if (categoryName.includes(searchTerm)) {
             filtered.push(group);
             continue;
         }
 
-        // Check if search matches any subcategory name
         const matchingSubcategories = (group.subcategories || []).filter(sub =>
             sub.name.toLowerCase().includes(searchTerm)
         );
 
         if (matchingSubcategories.length > 0) {
-            // Include entire category if any subcategory matches
             filtered.push(group);
             continue;
         }
 
-        // Otherwise, filter articles by name
         const filteredArticles = (group.articles || []).filter(article =>
             article.name.toLowerCase().includes(searchTerm)
         );
@@ -269,7 +302,6 @@ const filteredGroupedArticles = computed(() => {
             )
         })).filter(sub => sub.articles.length > 0);
 
-        // Include category if it has matching articles or subcategories with matching articles
         if (filteredArticles.length > 0 || filteredSubcategories.length > 0) {
             filtered.push({
                 ...group,
@@ -283,8 +315,8 @@ const filteredGroupedArticles = computed(() => {
 });
 
 /** --- Collapsible state --- */
-const catOpen = reactive({}); // key: category -> boolean
-const subOpen = reactive({}); // key: `${category}:::${sub}` -> boolean
+const catOpen = reactive({});
+const subOpen = reactive({});
 const keyFor = (cat, sub) => `${cat}:::${sub}`;
 
 const ensureInitialState = () => {
@@ -297,7 +329,16 @@ const ensureInitialState = () => {
     }
 };
 onMounted(ensureInitialState);
-watch(() => filteredGroupedArticles.value, ensureInitialState, { deep: true });
+
+// F3: Watch only the flat structure (category/sub names), not the entire
+// filtered tree. `ensureInitialState` is idempotent — it only needs to run
+// when categories/sub-categories actually appear or disappear.
+const structureKey = computed(() => {
+    return (filteredGroupedArticles.value ?? [])
+        .map(g => `${g.category}|${(g.subcategories ?? []).map(s => s.name).join(',')}`)
+        .join(';');
+});
+watch(structureKey, ensureInitialState);
 
 const isCatOpen = (cat) => catOpen[cat] ?? true;
 const toggleCategory = (cat) => (catOpen[cat] = !isCatOpen(cat));
@@ -305,62 +346,125 @@ const toggleCategory = (cat) => (catOpen[cat] = !isCatOpen(cat));
 const isSubOpen = (cat, sub) => subOpen[keyFor(cat, sub)] ?? true;
 const toggleSub = (cat, sub) => (subOpen[keyFor(cat, sub)] = !isSubOpen(cat, sub));
 
-/** Small helpers */
+/** Helpers */
 const countGroup = (group) => {
     const base = (group.articles?.length ?? 0);
     const sub = (group.subcategories ?? []).reduce((n, s) => n + (s.articles?.length ?? 0), 0);
     return base + sub;
 };
 
-const formatDate = (date) =>
-    new Date(date).toLocaleDateString("de-DE", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-    });
+const headerDateFormatter = new Intl.DateTimeFormat("de-DE", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+});
 
-const isToday = (date) => {
-    const d = new Date(date);
+// F11: Pre-format every date string in the visible range ONCE. The grid
+// header iterates over `formattedDates` instead of calling `formatDate()`
+// per cell render.
+const formattedDates = computed(() => {
+    const map = {};
+    for (const d of props.dates ?? []) {
+        map[d.date] = headerDateFormatter.format(new Date(d.date));
+    }
+    return map;
+});
+
+const formatDate = (date) => formattedDates.value[date] ?? headerDateFormatter.format(new Date(date));
+
+const formatDateTooltip = (date) => {
+    if (!date) return '';
+    const [year, month, day] = date.split('-');
+    return `${day}.${month}.${year}`;
+};
+
+// F5/F11: Compute today's ISO string ONCE per mount, then do string-equals
+// in the template instead of constructing a Date and comparing fields per cell.
+const todayIso = (() => {
     const t = new Date();
-    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+})();
+
+const isToday = (date) => date === todayIso;
+
+// --- Side panel interactions ---
+// B8: We fetch cell details via a thin JSON endpoint instead of an Inertia
+// partial reload — the page-level prop `detailsForModal` is now optional
+// (only used as a hydration fallback on initial render with query params).
+const panelDetails = ref(null);
+const panelLoading = ref(false);
+
+const fetchPanelDetails = async (articleId, date) => {
+    panelLoading.value = true;
+    try {
+        const response = await axios.get(route('inventory.articles.planning-cell'), {
+            params: { article_id: articleId, date },
+        });
+        panelDetails.value = response.data?.data ?? null;
+    } catch (error) {
+        console.error('Failed to load cell details:', error);
+        panelDetails.value = null;
+    } finally {
+        panelLoading.value = false;
+    }
 };
 
-const openDetailModal = (articleId, date) => {
-    currentModalArticleId.value = articleId;
-    currentModalDate.value = date;
-    router.reload({
-        data: { article_id: articleId, date },
-        preserveState: true,
-        preserveScroll: true,
-        only: ["detailsForModal"],
-        onSuccess: () => {
-            showArticleUsageModal.value = true;
-        }
-    });
+const openCellPanel = ({ articleId, date }) => {
+    currentArticleId.value = articleId;
+    currentDate.value = date;
+    focusIssueId.value = null;
+    focusIssueType.value = null;
+    showSidePanel.value = true;          // open immediately for snappy UX
+    fetchPanelDetails(articleId, date);
 };
 
-const refreshModalData = () => {
-    if (currentModalArticleId.value && currentModalDate.value) {
+const openBarPanel = ({ articleId, issue, date }) => {
+    currentArticleId.value = articleId;
+    currentDate.value = date;
+    focusIssueId.value = issue.id;
+    focusIssueType.value = issue.type;
+    showSidePanel.value = true;
+    fetchPanelDetails(articleId, date);
+};
+
+const closeSidePanel = () => {
+    showSidePanel.value = false;
+    focusIssueId.value = null;
+    focusIssueType.value = null;
+    panelDetails.value = null;
+};
+
+const refreshPanelData = () => {
+    if (currentArticleId.value && currentDate.value) {
+        // Re-fetch panel detail (fast JSON endpoint)…
+        fetchPanelDetails(currentArticleId.value, currentDate.value);
+        // …and pull a fresh availability/issues snapshot for the grid.
         router.reload({
-            data: {
-                article_id: currentModalArticleId.value,
-                date: currentModalDate.value
-            },
             preserveState: true,
             preserveScroll: true,
-            only: ["detailsForModal", "availability"]
+            only: ["availability", "issues", "projects"],
         });
     }
 };
 
+// --- Tooltip ---
+const tooltip = reactive({ visible: false, x: 0, y: 0, issue: null });
+
+const onBarHover = ({ event, issue }) => {
+    tooltip.issue = issue;
+    tooltip.x = event.clientX + 12;
+    tooltip.y = event.clientY + 12;
+    tooltip.visible = true;
+};
+
+const onBarLeave = () => {
+    tooltip.visible = false;
+    tooltip.issue = null;
+};
+
 const DatePickerComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
-    delay: 200,
-});
-
-const ArticleUsageModal = defineAsyncComponent({
-    loader: () => import('@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue'),
     delay: 200,
 });
 
@@ -376,5 +480,15 @@ const InventoryFunctionBarFilter = defineAsyncComponent({
     position: sticky;
     position: -webkit-sticky;
     box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.bar-stripe-legend {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgb(16 185 129) 0,
+        rgb(16 185 129) 2px,
+        rgba(16, 185, 129, 0.35) 2px,
+        rgba(16, 185, 129, 0.35) 4px
+    );
 }
 </style>

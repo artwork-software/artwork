@@ -3,7 +3,9 @@
         <div
             v-for="issue in issues"
             :key="issue.id"
-            class="rounded-lg border border-gray-300 p-4 shadow-sm bg-white flex justify-between"
+            :ref="(el) => registerIssueRef(issue.id, el)"
+            class="rounded-lg border p-4 shadow-sm bg-white flex justify-between transition-colors"
+            :class="highlightIssueId === issue.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-300'"
         >
             <div>
                 <div class="font-medium text-gray-800">{{ issue.name }}</div>
@@ -57,7 +59,7 @@
 <script setup>
 
 import { IconEdit, IconLoader2 } from '@tabler/icons-vue';
-import {defineAsyncComponent, ref} from 'vue';
+import {defineAsyncComponent, ref, watch, nextTick} from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -80,8 +82,30 @@ const props = defineProps({
     planningDate: {
         type: String,
         default: null
+    },
+    highlightIssueId: {
+        type: Number,
+        default: null
     }
 });
+
+const issueRefs = new Map();
+const registerIssueRef = (id, el) => {
+    if (el) {
+        issueRefs.set(id, el);
+    } else {
+        issueRefs.delete(id);
+    }
+};
+
+watch(() => props.highlightIssueId, async (id) => {
+    if (!id) return;
+    await nextTick();
+    const el = issueRefs.get(id);
+    if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}, { immediate: true });
 
 const emit = defineEmits(['dataChanged', 'quantityUpdated']);
 

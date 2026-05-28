@@ -342,4 +342,26 @@ class InventoryArticleController extends Controller
         $details = $this->inventoryPlanningService->getDetailsForModalRange($articleId, $startDate, $endDate);
         return response()->json(['data' => $details]);
     }
+
+    /**
+     * JSON variant of `getDetailsForModal` (single date).
+     *
+     * B8: Used by the planning side-panel so cell/bar clicks no longer trigger
+     * a full Inertia partial-reload. Returns the same payload shape as the
+     * `detailsForModal` prop served by `index()`.
+     */
+    public function planningCellDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'article_id' => ['required', 'integer', 'exists:inventory_articles,id'],
+            'date'       => ['required', 'date'],
+        ]);
+
+        return response()->json([
+            'data' => $this->inventoryPlanningService->getDetailsForModal(
+                (int) $validated['article_id'],
+                $validated['date']
+            ),
+        ]);
+    }
 }

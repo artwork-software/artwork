@@ -4559,5 +4559,13 @@
     "Change saved successfully": "Änderung erfolgreich gespeichert",
     "This field must not be empty": "Dieses Feld darf nicht leer sein",
     "Bulk create": "Mehrfach erstellen",
-    "Create items": "Erstellen"
+    "Create items": "Erstellen",
+    "Internal issue": "Interne Materialausgabe",
+    "External issue": "Externe Materialausgabe (Leihschein)",
+    "Recipient": "Empfänger",
+    "Highlight projects": "Projekte hervorheben",
+    "Highlight bars by project": "Balken nach Projekt hervorheben",
+    "Non-matching bars are dimmed. Empty selection means all bars are highlighted.": "Nicht-zutreffende Balken werden ausgegraut. Leere Auswahl = alle Balken hervorgehoben.",
+    "More issues in this cell": "Weitere Materialausgaben in dieser Zelle",
+    "Stock": "Bestand"
 }

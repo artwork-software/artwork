@@ -4392,6 +4392,7 @@
     "Quantity changed": "Menge geändert",
     "Issue type": "Ausgabeart",
     "Internal": "Intern",
+    "Internal Material Issue No.": "Interne Materialausgabe Nr.",
     "External": "Extern",
     "Issue date": "Ausgabedatum",
     "Return date": "Rückgabedatum",
@@ -4458,6 +4459,7 @@
     "Snapshot": "Snapshot",
     "Difference": "Differenz",
     "Tenant-wide business intelligence overview.": "Mandantenweite Business-Intelligence-Übersicht.",
+    "Business intelligence overview": "Business-Intelligence-Übersicht",
     "vs. previous year": "ggü. Vorjahr",
     "Revenue by category": "Erlös nach Sparte",
     "Visitors by category": "Besucher nach Sparte",
@@ -4502,6 +4504,7 @@
     "Override": "Überschreibung",
     "Effective capacity": "Effektive Kapazität",
     "Room default": "Raum-Standard",
+    "Enter project-specific room capacities here if the room has a different capacity for events in this project.": "Gebe hier für dieses Projekt individuell abweichende Raumkapazitäten an, wenn der Raum bei Terminen zu diesem Projekt eine andere Kapazität besitzt.",
     "No rooms with events in this project.": "Keine Räume mit Terminen in diesem Projekt.",
     "Tag-based counts": "Tag-basierte Zählungen",
     "days": "Tage",
@@ -4552,5 +4555,9 @@
     "Delete BI field": "BI-Feld löschen",
     "Custom fields": "Benutzerdefinierte Felder",
     "Are you sure you want to delete this BI field?": "Möchtest du dieses BI-Feld wirklich löschen?",
-    "No BI fields created yet.": "Noch keine BI-Felder erstellt."
+    "No BI fields created yet.": "Noch keine BI-Felder erstellt.",
+    "Change saved successfully": "Änderung erfolgreich gespeichert",
+    "This field must not be empty": "Dieses Feld darf nicht leer sein",
+    "Bulk create": "Mehrfach erstellen",
+    "Create items": "Erstellen"
 }

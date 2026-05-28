@@ -14,13 +14,13 @@
         </svg>
         <!-- Icon -->
         <PropertyIcon
-            v-else-if="typeof iconResolved === 'string'"
+            v-else-if="!hideIcon && typeof iconResolved === 'string'"
             :name="iconResolved"
             :class="iconSizeClass"
             :stroke-width="strokeWidthResolved"
         />
         <component
-            v-else
+            v-else-if="!hideIcon"
             :is="iconResolved"
             :class="iconSizeClass"
             :stroke-width="strokeWidthResolved"
@@ -60,6 +60,8 @@ const props = withDefaults(defineProps<{
     type?: string;
     /** Processing/Loading state */
     processing?: boolean;
+    /** Icon komplett ausblenden */
+    hideIcon?: boolean;
 }>(), {
     disabled: false,
     icon: undefined,
@@ -72,6 +74,7 @@ const props = withDefaults(defineProps<{
     isSmall: false,
     type: 'button',
     processing: false,
+    hideIcon: false,
 });
 
 const emit = defineEmits<{

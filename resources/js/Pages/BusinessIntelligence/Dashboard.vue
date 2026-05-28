@@ -5,14 +5,14 @@
                 :icon="IconChartHistogram"
                 :title="$t('BI Dashboard')"
                 icon-bg-class="bg-indigo-600/10 text-indigo-700"
-                :description="$t('Tenant-wide business intelligence overview.')"
+                :description="$t('Business intelligence overview')"
                 :search-enabled="false"
             >
                 <template #actions>
                     <div class="flex items-end gap-3">
                         <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40" />
                         <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40" />
-                        <BaseUIButton :label="$t('Apply')" @click="reload" :disabled="loading" />
+                        <BaseUIButton :label="$t('Apply')" @click="reload" :disabled="loading" hide-icon />
                     </div>
                 </template>
             </ToolbarHeader>

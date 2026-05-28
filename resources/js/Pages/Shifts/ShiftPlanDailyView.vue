@@ -1363,6 +1363,7 @@ onMounted(async () => {
         onEventsChanged: () => { eventsVersion.value++ },
         onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
         onWorkersNeedReload: loadShiftPlanWorkers,
+        onLookupsReceived: mergeLookups,
     })
     ShiftCalendarListener.init()
 

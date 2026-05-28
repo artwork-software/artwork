@@ -2207,6 +2207,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
             ->name('inventory-management.articles.update');
 
+        // patch inventory-management.articles.update-field (inline autosave)
+        Route::patch('/articles/{inventoryArticle}/update-field', [InventoryArticleController::class, 'updateField'])
+            ->name('inventory-management.articles.update-field');
+
+        // patch inventory-management.articles.detailed.update-field (inline autosave for detailed articles)
+        Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-field', [InventoryArticleController::class, 'updateDetailedArticleField'])
+            ->name('inventory-management.articles.detailed.update-field');
+
+        // patch inventory-management.articles.detailed.update-property (inline autosave for detailed article properties)
+        Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [InventoryArticleController::class, 'updateDetailedArticlePropertyValue'])
+            ->name('inventory-management.articles.detailed.update-property');
+
         // delete articles.destroy
         Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
             ->name('articles.destroy');

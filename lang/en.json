@@ -4519,5 +4519,9 @@
     "Delete BI field": "Delete BI field",
     "Custom fields": "Custom fields",
     "Are you sure you want to delete this BI field?": "Are you sure you want to delete this BI field?",
-    "No BI fields created yet.": "No BI fields created yet."
+    "No BI fields created yet.": "No BI fields created yet.",
+    "Change saved successfully": "Change saved successfully",
+    "This field must not be empty": "This field must not be empty",
+    "Bulk create": "Bulk create",
+    "Create items": "Create items"
 }

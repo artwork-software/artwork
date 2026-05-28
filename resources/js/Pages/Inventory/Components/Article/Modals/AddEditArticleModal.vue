@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
+    <ArtworkBaseModal @close="handleClose" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
                       full-modal :title="article ? $t('Edit article') : $t('Add Article')"
                       :description="article ? $t('Edit the article details') : $t('Add a new article')">
         <form @submit.prevent="submit">
@@ -48,7 +48,10 @@
                             id="name" v-model="articleForm.name"
                             :label="$t('Name*')"
                             required
+                            @focusout="onFieldSave('name', articleForm.name)"
                         />
+                        <p v-if="fieldStatus.name === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                     </div>
 
                     <div class="col-span-full">
@@ -56,7 +59,9 @@
                             id="description"
                             v-model="articleForm.description"
                             :label="$t('Description')"
+                            @focusout="onFieldSave('description', articleForm.description)"
                         />
+                        <p v-if="fieldStatus.description === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                     </div>
                 </div>
             </div>
@@ -155,7 +160,9 @@
                         option-key="id"
                         :label="$t('Select Category')"
                         :placeholder="$t('Please select a Category')"
+                        @update:model-value="val => onCategorySave('inventory_category_id', val?.id ?? null)"
                     />
+                    <p v-if="fieldStatus.inventory_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                 </div>
                 <div class="pb-4" v-if="selectedCategory && selectedCategory.subcategories.length > 0">
                     <ArtworkBaseListbox
@@ -167,7 +174,9 @@
                         :label="$t('Select Sub-Category')"
                         :placeholder="$t('Please select a Sub-Category')"
                         @change="val => updateSelectedSubCategory(val)"
+                        @update:model-value="val => onCategorySave('inventory_sub_category_id', val?.id ?? null)"
                     />
+                    <p v-if="fieldStatus.inventory_sub_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                     <div class="flex items-center justify-end mt-3" v-if="selectedSubCategory">
                         <div
                             class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
@@ -187,7 +196,10 @@
                             :max="10000000"
                             :maxlength="1000000"
                             required
+                            @focusout="onFieldSave('quantity', articleForm.quantity)"
                         />
+                        <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                         <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
                             <span class="text-xs text-red-500 font-lexend">{{ $t('Sum of detailed articles') }}: </span>
                             <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
@@ -856,14 +868,128 @@
                             </ul>
 
                             <!-- Footer / Add -->
-                            <div class="p-4">
-                                <button
-                                    type="button"
-                                    class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
-                                    @click="addNewDetailedArticle">
-                                    <component :is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
-                                    <span>{{ $t('Add Detailed Article') }}</span>
-                                </button>
+                            <div class="p-4 space-y-2">
+                                <div class="flex items-center gap-x-3">
+                                    <button
+                                        type="button"
+                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        @click="addNewDetailedArticle">
+                                        <component :is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
+                                        <span>{{ $t('Add Detailed Article') }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        @click="initBulkCreate">
+                                        <component :is="IconCopyPlus" class="h-5 w-5" aria-hidden="true"/>
+                                        <span>{{ $t('Bulk create') }}</span>
+                                    </button>
+                                </div>
+
+                                <!-- Bulk Create Panel -->
+                                <div v-if="showBulkCreatePanel" class="border border-gray-200 rounded-md bg-white p-3 space-y-3">
+                                    <BaseInput
+                                        type="number"
+                                        id="bulk_create_count"
+                                        v-model.number="bulkCreateData.count"
+                                        :label="$t('Count')"
+                                        :min="1"
+                                        :max="100"
+                                    />
+                                    <div
+                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                        <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                            {{ $t('Status') }}
+                                        </label>
+                                        <select class="focus:outline-hidden w-full" v-model="bulkCreateData.status">
+                                            <option v-for="status in statusList" :value="status" :key="status.id">
+                                                {{ status.name }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Property-Vorbelegung -->
+                                    <template v-for="prop in bulkCreateData.properties" :key="prop.id">
+                                        <div>
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-xs font-medium text-gray-600">
+                                                    {{ prop.name }} <span v-if="prop.is_required">*</span>
+                                                </span>
+                                                <ToolTipComponent
+                                                    v-if="prop.tooltip_text"
+                                                    :tooltip-text="prop.tooltip_text"
+                                                    :icon="IconInfoCircle" icon-size="size-4"
+                                                    direction="left"
+                                                />
+                                            </div>
+
+                                            <InventoryCombobox
+                                                v-if="prop.type === 'room'"
+                                                v-model="prop.value"
+                                                :items="rooms"
+                                                :return-object="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Room')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <InventoryCombobox
+                                                v-else-if="prop.type === 'manufacturer'"
+                                                v-model="prop.value"
+                                                :items="manufacturers"
+                                                :return-object="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Manufacturer')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <div v-else-if="prop.type === 'selection'">
+                                                <select
+                                                    v-model="prop.value"
+                                                    class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
+                                                    <option value="">{{ $t('Please select') }}</option>
+                                                    <option v-for="val in prop.select_values" :value="val" :key="val">
+                                                        {{ val }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div v-else-if="prop.type === 'checkbox'" class="px-1">
+                                                <input type="checkbox"
+                                                       :checked="booleanValue(prop.value)"
+                                                       @change="prop.value = $event.target.checked"
+                                                       class="aw-checklist-input" />
+                                            </div>
+
+                                            <BaseInput
+                                                v-else-if="prop.type !== 'file'"
+                                                :id="'bulk-prop-' + prop.id"
+                                                :type="prop.type"
+                                                v-model="prop.value"
+                                                :label="prop.is_required ? $t('Value*') : $t('Value')"
+                                            />
+                                        </div>
+                                    </template>
+
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button"
+                                                class="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                                                @click="showBulkCreatePanel = false">
+                                            {{ $t('Cancel') }}
+                                        </button>
+                                        <button type="button"
+                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                @click="executeBulkCreate">
+                                            {{ $t('Create items') }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -878,7 +1004,10 @@
                                     v-model="activeDetailedArticleForEditing.name"
                                     :label="$t('Name*')"
                                     required
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'name', activeDetailedArticleForEditing.name)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                             </div>
 
                             <div class="col-span-full">
@@ -886,7 +1015,9 @@
                                     :id="'description-' + activeDetailedArticleForEditing.name"
                                     v-model="activeDetailedArticleForEditing.description"
                                     :label="$t('Description')"
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'description', activeDetailedArticleForEditing.description)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_description'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <div v-if="!detailedAlwaysOne" class="col-span-full">
@@ -898,7 +1029,9 @@
                                     :max="10000000"
                                     :maxlength="1000000"
                                     required
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'quantity', activeDetailedArticleForEditing.quantity)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_quantity'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <div class="col-span-full">
@@ -908,13 +1041,15 @@
                                         {{ $t('Status*') }}
                                     </label>
                                     <select id="location" name="location" class=" focus:outline-hidden"
-                                            v-model="activeDetailedArticleForEditing.status" required>
+                                            v-model="activeDetailedArticleForEditing.status" required
+                                            @change="onDetailedStatusSave(activeDetailedArticleForEditing, activeDetailedArticleForEditing.status)">
                                         <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
                                         <option v-for="status in statusList" :value="status" :key="status.id">
                                             {{ status.name }}
                                         </option>
                                     </select>
                                 </div>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_inventory_article_status_id'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <!-- Vorher: v-for und v-if auf demselben Element -->
@@ -946,6 +1081,7 @@
                                         :placeholder="$t('Please select a Room')"
                                         :search-fields="['name']"
                                         coerce="number"
+                                        @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
                                     />
 
                                     <InventoryCombobox
@@ -959,6 +1095,7 @@
                                         :placeholder="$t('Please select a Manufacturer')"
                                         :search-fields="['name']"
                                         coerce="number"
+                                        @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
                                     />
 
                                     <BaseInput
@@ -967,6 +1104,7 @@
                                         :type="property.type" v-model="property.value"
                                         :required="property.is_required"
                                         :label="property.is_required ? $t('Value*') : $t('Value')"
+                                        @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 
                                     <div v-else-if="property.type === 'file'">
@@ -990,7 +1128,7 @@
 
                                     <div v-else-if="property.type === 'checkbox'" class="px-3 items-center flex">
                                         <input type="checkbox" :checked="booleanValue(property.value)"
-                                               @change="property.value = $event.target.checked"
+                                               @change="($event) => { property.value = $event.target.checked; onDetailedPropertySave(activeDetailedArticleForEditing, property.id, $event.target.checked) }"
                                                class="input-checklist"/>
                                     </div>
 
@@ -998,6 +1136,7 @@
                                         <div class="relative w-full">
                                             <select id="location" name="location" v-model="property.value"
                                                     :required="property.is_required"
+                                                    @change="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                                     class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
                                                 <option v-if="property.is_required" disabled selected>
                                                     {{ $t('Please select') }}*
@@ -1008,6 +1147,9 @@
                                             </select>
                                         </div>
                                     </div>
+
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                                 </div>
                             </template>
                         </div>
@@ -1055,7 +1197,8 @@
 
 <script setup>
 
-import {useForm, usePage} from '@inertiajs/vue3'
+import axios from 'axios'
+import {useForm, usePage, router} from '@inertiajs/vue3'
 import {usePermission} from '@/Composeables/Permission.js'
 import {computed, inject, onMounted, ref, watch, nextTick} from 'vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
@@ -1075,6 +1218,7 @@ import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import {
     IconClick,
     IconCopy,
+    IconCopyPlus,
     IconInfoCircle,
     IconPhoto,
     IconPhotoPlus,
@@ -1090,6 +1234,15 @@ import {useTranslation} from "@/Composeables/Translation.js";
 
 
 const $t = useTranslation()
+
+// === Inline-Autosave state ===
+const fieldStatus = ref({})
+const detailedFieldStatus = ref({})
+const originalValues = ref({})
+const originalDetailedValues = ref({})
+const isEditMode = computed(() => !!props.article)
+const hasInlineSaved = ref(false)
+
 const acrossValues = ref({})
 const detailedAlwaysOne = computed(() => usePage().props.inventoryDetailedArticlesAlwaysQuantityOne ?? false)
 const showInventoryNumberAsName = computed(() => usePage().props.inventoryShowInventoryNumberAsName ?? false)
@@ -1108,6 +1261,14 @@ const tagGroups = inject('tagGroups', [])
 const tags = inject('tags', [])
 
 const emits = defineEmits(['close'])
+
+const handleClose = () => {
+    if (hasInlineSaved.value) {
+        router.reload({ preserveScroll: true, onFinish: () => emits('close') })
+    } else {
+        emits('close')
+    }
+}
 
 const articleImageInput = ref(null)
 const articleToDelete = ref(null)
@@ -1797,6 +1958,32 @@ onMounted(() => {
         // NEU: Auswahl initial leeren
         clearSelection()
     }
+
+    // Inline-Autosave: Original-Werte merken
+    if (props.article) {
+        originalValues.value = {
+            name: props.article.name ?? '',
+            description: props.article.description ?? '',
+            quantity: props.article.quantity ?? 0,
+            inventory_category_id: props.article.inventory_category_id ?? null,
+            inventory_sub_category_id: props.article.inventory_sub_category_id ?? null,
+        }
+        // Original-Werte der Detailed Articles merken
+        const dv = {}
+        for (const da of (props.article.detailed_article_quantities || [])) {
+            if (da.id) {
+                dv[`${da.id}_name`] = da.name ?? ''
+                dv[`${da.id}_description`] = da.description ?? ''
+                dv[`${da.id}_quantity`] = da.quantity ?? 0
+                dv[`${da.id}_inventory_article_status_id`] = da.status?.id ?? null
+                // Property-Werte merken
+                for (const p of (da.properties || [])) {
+                    dv[`${da.id}_prop_${p.id}`] = p.pivot?.value ?? p.value ?? ''
+                }
+            }
+        }
+        originalDetailedValues.value = dv
+    }
 })
 
 // NEU: Auswahl- und Bulk-Edit-States
@@ -2091,6 +2278,178 @@ const toggleTag = (tag) => {
         ids.add(tag.id)
     }
     selectedTagIds.value = Array.from(ids)
+}
+
+// === Inline-Autosave Logik (nur Edit-Modus) ===
+const articleRequiredFields = ['name', 'quantity']
+
+const onFieldSave = async (field, value) => {
+    if (!isEditMode.value) return
+    if (value === originalValues.value[field]) return
+    if (articleRequiredFields.includes(field) && (value === null || value === '')) {
+        fieldStatus.value[field] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        fieldStatus.value[field] = 'success'
+        hasInlineSaved.value = true
+        originalValues.value[field] = value
+        setTimeout(() => { fieldStatus.value[field] = null }, 3000)
+    } catch {
+        fieldStatus.value[field] = 'error'
+    }
+}
+
+const onCategorySave = async (field, value) => {
+    if (!isEditMode.value) return
+    if (value === originalValues.value[field]) return
+    if (field === 'inventory_category_id' && (value === null || value === '')) {
+        fieldStatus.value[field] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        fieldStatus.value[field] = 'success'
+        hasInlineSaved.value = true
+        originalValues.value[field] = value
+        setTimeout(() => { fieldStatus.value[field] = null }, 3000)
+    } catch {
+        fieldStatus.value[field] = 'error'
+    }
+}
+
+const detailedRequiredFields = ['name']
+
+const onDetailedFieldSave = async (detailedArticle, field, value) => {
+    if (!isEditMode.value || !detailedArticle?.id) return
+    const key = `${detailedArticle.id}_${field}`
+    if (value === originalDetailedValues.value[key]) return
+    if (detailedRequiredFields.includes(field) && (value === null || value === '')) {
+        detailedFieldStatus.value[key] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-field', detailedArticle.id), { field, value })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = value
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+const onDetailedStatusSave = async (detailedArticle, statusObj) => {
+    if (!isEditMode.value || !detailedArticle?.id || !statusObj?.id) return
+    const key = `${detailedArticle.id}_inventory_article_status_id`
+    if (statusObj.id === originalDetailedValues.value[key]) return
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-field', detailedArticle.id), {
+            field: 'inventory_article_status_id',
+            value: statusObj.id
+        })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = statusObj.id
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+const onDetailedPropertySave = async (detailedArticle, propertyId, value) => {
+    if (!isEditMode.value || !detailedArticle?.id) return
+    const key = `${detailedArticle.id}_prop_${propertyId}`
+    if (value === originalDetailedValues.value[key]) return
+    const prop = detailedArticle.properties?.find(p => p.id === propertyId)
+    if (prop?.is_required && (value === null || value === '')) {
+        detailedFieldStatus.value[key] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-property', detailedArticle.id), {
+            property_id: propertyId,
+            value: value ?? ''
+        })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = value
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+// === Mehrfach-Einzelinventar-Erstellung ===
+const showBulkCreatePanel = ref(false)
+const bulkCreateData = ref({
+    count: 1,
+    status: null,
+    properties: [],
+})
+
+// Properties die im Bulk-Create-Panel bearbeitet werden können (nicht across_articles)
+const bulkCreateProperties = computed(() => {
+    const first = articleForm.detailed_article_quantities?.[0]
+    if (!first?.properties?.length) return []
+    return first.properties.filter(p => !p.across_articles)
+})
+
+const initBulkCreate = () => {
+    bulkCreateData.value = {
+        count: 1,
+        status: defaultStatus(),
+        properties: bulkCreateProperties.value.map(p => ({
+            id: p.id,
+            name: p.name,
+            tooltip_text: p.tooltip_text,
+            type: p.type,
+            value: '',
+            is_required: p.is_required,
+            select_values: p.select_values,
+        })),
+    }
+    showBulkCreatePanel.value = true
+}
+
+const executeBulkCreate = () => {
+    const count = Math.min(Math.max(parseInt(bulkCreateData.value.count, 10) || 1, 1), 100)
+    const baseProps = articleForm.detailed_article_quantities?.[0]?.properties?.map(p => ({
+        id: p.id, name: p.name, tooltip_text: p.tooltip_text, type: p.type, value: '', is_required: p.is_required,
+        categoryProperty: getIsDeletable(p.id), select_values: p.select_values,
+        across_articles: p.across_articles ?? false, individual_value: p.individual_value ?? false,
+    })) ?? []
+
+    // Vorausgefüllte Werte aus dem Bulk-Panel übernehmen
+    const prefillMap = new Map()
+    for (const bp of (bulkCreateData.value.properties || [])) {
+        if (bp.value !== '' && bp.value != null) {
+            prefillMap.set(bp.id, bp.value)
+        }
+    }
+
+    const currentLength = articleForm.detailed_article_quantities.length
+    for (let i = 0; i < count; i++) {
+        const newItem = {
+            _key: uid(),
+            name: (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article') + ' ' + (currentLength + i + 1),
+            description: '',
+            quantity: 1,
+            properties: baseProps.map(p => {
+                const copy = {...p}
+                if (!copy.across_articles && prefillMap.has(copy.id)) {
+                    copy.value = prefillMap.get(copy.id)
+                }
+                return copy
+            }),
+            status: bulkCreateData.value.status || defaultStatus(),
+            inventory_number: generateProvisionalInventoryNumber(),
+        }
+        articleForm.detailed_article_quantities.push(newItem)
+    }
+    syncAcrossValuesToDetailedArticles()
+    showBulkCreatePanel.value = false
 }
 </script>
 

@@ -8,6 +8,7 @@ use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventShiftPlanDTO;
 use Artwork\Modules\Calendar\DTO\ShiftDTO;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
@@ -181,26 +182,7 @@ class ShiftCalendarService
         // Collect crafts from shifts
         foreach ($shifts as $shift) {
             if ($shift->craft && !isset($craftsById[$shift->craft->id])) {
-                $craft = $shift->craft;
-                $craftsById[$craft->id] = [
-                    'id' => $craft->id,
-                    'name' => $craft->name,
-                    'abbreviation' => $craft->abbreviation,
-                    'color' => $craft->color,
-                    'craft_shift_planer' => $craft->relationLoaded('craftShiftPlaner')
-                        ? $craft->craftShiftPlaner->map(fn ($user) => [
-                            'id' => $user->id,
-                            'first_name' => $user->first_name,
-                            'last_name' => $user->last_name,
-                            'full_name' => trim($user->first_name . ' ' . $user->last_name),
-                            'position' => $user->position ?? null,
-                            'business' => $user->business ?? null,
-                            'profile_photo_url' => $user->profile_photo_path
-                                ? '/storage/' . $user->profile_photo_path
-                                : null,
-                        ])->values()->all()
-                        : [],
-                ];
+                $craftsById[$shift->craft->id] = self::buildCraftLookupEntry($shift->craft);
             }
             if ($shift->shiftGroup && !isset($shiftGroupsById[$shift->shiftGroup->id])) {
                 $shiftGroupsById[$shift->shiftGroup->id] = [
@@ -225,26 +207,7 @@ class ShiftCalendarService
 
         // Collect projects
         foreach ($projects as $project) {
-            $statusModel = $project->relationLoaded('status') ? $project->status : null;
-            $groups = $project->relationLoaded('groups') ? $project->groups : collect();
-            $projectsById[$project->id] = [
-                'id' => $project->id,
-                'name' => $project->name,
-                'color' => $project->color,
-                'icon' => $project->icon,
-                'is_group' => $project->is_group,
-                'isInGroup' => $groups->isNotEmpty(),
-                'group' => $groups->isNotEmpty() ? $groups->map(fn ($g) => [
-                    'id' => $g->id,
-                    'name' => $g->name,
-                    'color' => $g->color,
-                ])->values()->all() : null,
-                'status' => $statusModel ? [
-                    'id' => $statusModel->id,
-                    'name' => $statusModel->name,
-                    'color' => $statusModel->color,
-                ] : null,
-            ];
+            $projectsById[$project->id] = self::buildProjectLookupEntry($project);
         }
 
         $lookups = [
@@ -335,6 +298,65 @@ class ShiftCalendarService
         })->toArray();
 
         return new CalendarFrontendDataDTO(rooms: $roomsData);
+    }
+
+    /**
+     * Build the normalized project lookup entry used in the shift plan `projectsById` map.
+     * Shared by the initial calendar load and the broadcast events so the shape stays in sync.
+     *
+     * @return array<string, mixed>
+     */
+    public static function buildProjectLookupEntry(Project $project): array
+    {
+        $statusModel = $project->relationLoaded('status') ? $project->status : null;
+        $groups = $project->relationLoaded('groups') ? $project->groups : collect();
+
+        return [
+            'id' => $project->id,
+            'name' => $project->name,
+            'color' => $project->color,
+            'icon' => $project->icon,
+            'is_group' => $project->is_group,
+            'isInGroup' => $groups->isNotEmpty(),
+            'group' => $groups->isNotEmpty() ? $groups->map(fn ($g) => [
+                'id' => $g->id,
+                'name' => $g->name,
+                'color' => $g->color,
+            ])->values()->all() : null,
+            'status' => $statusModel ? [
+                'id' => $statusModel->id,
+                'name' => $statusModel->name,
+                'color' => $statusModel->color,
+            ] : null,
+        ];
+    }
+
+    /**
+     * Build the normalized craft lookup entry used in the shift plan `craftsById` map.
+     *
+     * @return array<string, mixed>
+     */
+    public static function buildCraftLookupEntry(Craft $craft): array
+    {
+        return [
+            'id' => $craft->id,
+            'name' => $craft->name,
+            'abbreviation' => $craft->abbreviation,
+            'color' => $craft->color,
+            'craft_shift_planer' => $craft->relationLoaded('craftShiftPlaner')
+                ? $craft->craftShiftPlaner->map(fn ($user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'full_name' => trim($user->first_name . ' ' . $user->last_name),
+                    'position' => $user->position ?? null,
+                    'business' => $user->business ?? null,
+                    'profile_photo_url' => $user->profile_photo_path
+                        ? '/storage/' . $user->profile_photo_path
+                        : null,
+                ])->values()->all()
+                : [],
+        ];
     }
 
     /**

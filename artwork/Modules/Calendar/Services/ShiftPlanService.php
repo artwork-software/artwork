@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Shift\Models\SingleShiftPreset;
 use Artwork\Modules\Shift\Models\ShiftPresetGroup;
 use Artwork\Modules\Shift\Services\SingleShiftPresetService;
 use Artwork\Modules\User\Enums\UserFilterTypes;
@@ -10,6 +11,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ShiftPlanService
 {
@@ -30,11 +32,22 @@ class ShiftPlanService
             'roomName' => $room->name,
         ])->values()->all();
 
+        // Presets are global config (not user/date/filter specific) and change
+        // rarely. Cache them with a TTL ceiling; direct mutations bust the keys
+        // via model events (see SingleShiftPreset/ShiftPresetGroup::booted).
         return [
             'days' => $shiftPlanContext['calendarPeriod'],
             'rooms' => $roomsList,
-            'singleShiftPresets' => $this->singleShiftPresetService->getAllPresets(),
-            'shiftGroupPresets' => $this->loadShiftGroupPresets(),
+            'singleShiftPresets' => Cache::remember(
+                SingleShiftPreset::SHIFT_PLAN_CACHE_KEY,
+                now()->addHours(12),
+                fn () => $this->singleShiftPresetService->getAllPresets()
+            ),
+            'shiftGroupPresets' => Cache::remember(
+                ShiftPresetGroup::SHIFT_PLAN_CACHE_KEY,
+                now()->addHours(12),
+                fn () => $this->loadShiftGroupPresets()
+            ),
         ];
     }
 

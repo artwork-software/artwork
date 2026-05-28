@@ -4555,5 +4555,9 @@
     "Delete BI field": "BI-Feld löschen",
     "Custom fields": "Benutzerdefinierte Felder",
     "Are you sure you want to delete this BI field?": "Möchtest du dieses BI-Feld wirklich löschen?",
-    "No BI fields created yet.": "Noch keine BI-Felder erstellt."
+    "No BI fields created yet.": "Noch keine BI-Felder erstellt.",
+    "Change saved successfully": "Änderung erfolgreich gespeichert",
+    "This field must not be empty": "Dieses Feld darf nicht leer sein",
+    "Bulk create": "Mehrfach erstellen",
+    "Create items": "Erstellen"
 }

@@ -935,8 +935,12 @@ function rebuildFilteredShiftsIndex() {
     const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings
     const showOnlyNotFullyStaffed = (settings as any)?.show_only_not_fully_staffed_shifts
 
+    const getShiftCraftId = (s: any): number | null => {
+        return s?.craftId ?? s?.craft_id ?? s?.craft?.id ?? null
+    }
+
     const getCraftPos = (s: any): number => {
-        const craftId = s?.craft?.id ?? s?.craft_id
+        const craftId = getShiftCraftId(s)
         return (craftId != null && posMap.has(craftId)) ? posMap.get(craftId)! : (s?.craft?.position ?? 9999)
     }
 
@@ -951,7 +955,10 @@ function rebuildFilteredShiftsIndex() {
 
             let shifts = dayData.shiftIds.map((id: number) => shiftsById[id]).filter(Boolean)
 
-            if (set.size > 0) shifts = shifts.filter((s: any) => set.has(s?.craft?.id))
+            if (set.size > 0) shifts = shifts.filter((s: any) => {
+                const cid = getShiftCraftId(s)
+                return cid != null && set.has(cid)
+            })
 
             if (showOnlyNotFullyStaffed) {
                 shifts = shifts.filter((shift: any) => {

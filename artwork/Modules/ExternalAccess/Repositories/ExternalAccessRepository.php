@@ -33,4 +33,17 @@ class ExternalAccessRepository extends BaseRepository
 
         return $external;
     }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function create(array $attributes): ExternalAccess
+    {
+        /** @var ExternalAccess $external */
+        $external = $this->getNewModelInstance();
+        $external->fill($attributes);
+        $this->save($external);
+
+        return $external;
+    }
 }

@@ -1,6 +1,20 @@
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
+            <div v-if="can('can invite externals')" class="flex justify-end mb-4">
+                <button class="ui-button flex items-center gap-1.5" @click="showInviteModal = true">
+                    <IconUserPlus stroke-width="1" class="size-5" />
+                    {{ $t('Invite external to this tab') }}
+                </button>
+            </div>
+            <InviteExternalModal
+                v-if="showInviteModal"
+                source="project_tab"
+                :project="project"
+                :available-tabs="headerObject.tabs ?? []"
+                :preselected-tab-id="currentTab.id"
+                @close="showInviteModal = false"
+            />
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="removeML(component.component?.type)">
                 <Component
                     v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
@@ -138,11 +152,18 @@ import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/Pro
 import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
 import ProjectContractsDocumentsComponent from "@/Pages/Projects/Components/ProjectContractsDocumentsComponent.vue";
 import BusinessIntelligenceComponent from "@/Pages/Projects/Tab/Components/BusinessIntelligenceComponent.vue";
+import InviteExternalModal from "@/Pages/CRM/Components/InviteExternalModal.vue";
+import { IconUserPlus } from "@tabler/icons-vue";
+import { useTranslation } from "@/Composeables/Translation.js";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
 
-const { canSeeComponent, canEditComponent } = usePermission(usePage().props);
+const $t = useTranslation();
+
+const { canSeeComponent, canEditComponent, can } = usePermission(usePage().props);
+
+const showInviteModal = ref(false);
 
 const componentMapping = {
     TextField,

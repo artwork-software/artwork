@@ -149,6 +149,26 @@ class UpdateArtwork extends Command
                 ]
             );
         }
+
+        // External access notifications should reach the inviter immediately.
+        $externalNotificationTypes = [
+            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
+        ];
+
+        foreach ($externalNotificationTypes as $enum) {
+            $user->notificationSettings()->updateOrCreate(
+                ['type' => $enum->value],
+                [
+                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]
+            );
+        }
     }
 
     private function addProjectGroupColumn(): void

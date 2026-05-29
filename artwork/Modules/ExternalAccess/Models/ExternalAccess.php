@@ -84,6 +84,11 @@ class ExternalAccess extends Model implements AuthenticatableContract, Authoriza
         return $this->hasMany(ExternalInvitation::class, 'external_access_id');
     }
 
+    public function pendingSubmissions(): HasMany
+    {
+        return $this->hasMany(ExternalPendingSubmission::class, 'external_access_id');
+    }
+
     public function isCrmAccessActive(): bool
     {
         if ($this->revoked_at !== null) {

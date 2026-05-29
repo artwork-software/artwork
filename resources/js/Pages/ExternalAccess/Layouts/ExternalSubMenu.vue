@@ -91,8 +91,10 @@ function logout() {
 }
 
 function onTabClick(scope) {
-    // Tab-Routen werden im Tab-Sharing-Paket nachgeliefert. Vorerst kein Navigations-Ziel.
-    console.info('External tab clicked (route not yet implemented):', scope)
+    router.visit(route('external.project.tab.show', {
+        project: scope.project.id,
+        tab: scope.tab.id,
+    }))
 }
 
 function navItemClasses(isCurrent) {

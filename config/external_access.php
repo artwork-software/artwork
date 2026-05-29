@@ -11,6 +11,13 @@ return [
         'lifetime_minutes' => 15,
     ],
 
+    // Default access durations applied when an invitation does not specify them.
+    // These are hardcoded for now; a later package adds an admin UI to configure them.
+    'defaults' => [
+        'crm_access_months' => 12,
+        'tab_access_months' => 3,
+    ],
+
     'absolute_session_lifetime_minutes' => 480,
 
     'rate_limits' => [

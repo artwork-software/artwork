@@ -153,6 +153,8 @@ use Artwork\Modules\Crm\Http\Controllers\CrmImportController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
+use App\Http\Controllers\ExternalSubmissionReviewController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
@@ -2321,6 +2323,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/contacts/{crmContact}/room-types', [CrmContactController::class, 'storeRoomType'])->name('crm.contacts.room-types.store');
         Route::patch('/room-types/{roomType}/name', [CrmContactController::class, 'updateRoomTypeName'])->name('crm.contacts.room-types.update-name');
         Route::delete('/contacts/{crmContact}/room-types/{roomType}', [CrmContactController::class, 'destroyRoomType'])->name('crm.contacts.room-types.destroy');
+
+        // External access invitations (requires the "invite externals" permission, enforced in the request)
+        Route::post('/externals/invitations', [ExternalInvitationController::class, 'store'])
+            ->name('crm.externals.invitations.store');
+        Route::get('/externals/contact-types', [ExternalInvitationController::class, 'contactTypes'])
+            ->name('crm.externals.contact-types.index');
+        Route::get('/externals/contact-types/{crmContactType}/requirements', [
+            ExternalInvitationController::class, 'showContactTypeRequirements',
+        ])->name('crm.externals.contact-types.requirements');
+
+        // External self-edit submission review (Inviter/Admin authorization enforced in service)
+        Route::prefix('contacts/{contact}/external-submissions')
+            ->name('crm.contacts.external-submissions.')
+            ->group(function (): void {
+                Route::get('/', [ExternalSubmissionReviewController::class, 'index'])->name('index');
+                Route::get('{submission}', [ExternalSubmissionReviewController::class, 'show'])->name('show');
+                Route::post('{submission}/approve-all', [ExternalSubmissionReviewController::class, 'approveAll'])
+                    ->name('approve-all');
+                Route::post('{submission}/reject-all', [ExternalSubmissionReviewController::class, 'rejectAll'])
+                    ->name('reject-all');
+                Route::post('{submission}/partial-decisions', [ExternalSubmissionReviewController::class, 'partialDecisions'])
+                    ->name('partial-decisions');
+            });
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');

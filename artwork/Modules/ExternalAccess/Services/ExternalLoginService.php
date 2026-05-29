@@ -6,9 +6,12 @@ use Artwork\Core\Str\StrService;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalInvitation;
 use Artwork\Modules\ExternalAccess\Models\ExternalLoginToken;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalInvitationNotification;
 use Artwork\Modules\ExternalAccess\Notifications\ExternalLoginLinkNotification;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalAccessRepository;
 use Artwork\Modules\ExternalAccess\Repositories\ExternalLoginTokenRepository;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -24,8 +27,14 @@ class ExternalLoginService
     ) {
     }
 
-    public function requestLoginLink(string $email, ?string $ip, ?string $userAgent): void
-    {
+    public function requestLoginLink(
+        string $email,
+        ?string $ip,
+        ?string $userAgent,
+        bool $isInvitation = false,
+        ?User $invitedBy = null,
+        ?Project $invitedFromProject = null,
+    ): void {
         $external = $this->externalAccessRepository->findByEmail($email);
 
         if ($external === null || $external->revoked_at !== null || !$external->hasAnyActiveAccess()) {
@@ -44,8 +53,12 @@ class ExternalLoginService
             'user_agent' => $userAgent,
         ]);
 
+        $notification = $isInvitation
+            ? new ExternalInvitationNotification($plainToken, $invitedBy, $invitedFromProject)
+            : new ExternalLoginLinkNotification($plainToken);
+
         Notification::route('mail', $external->routeNotificationForMail())
-            ->notify(new ExternalLoginLinkNotification($plainToken));
+            ->notify($notification);
     }
 
     public function redeemToken(string $plainToken): ?ExternalAccess

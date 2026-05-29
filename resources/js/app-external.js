@@ -86,6 +86,19 @@ createInertiaApp({
 
     router.on('invalid', (event) => {
         const status = event.detail.response?.status
+
+        // 403 auf einer Tab-Route: der Gesamt-Zugang ist noch gueltig, aber der
+        // Tab-Scope ist abgelaufen/entzogen. Zurueck aufs Dashboard (zeigt die
+        // verbleibenden freigegebenen Tabs). Die guest-only Access-Expired-Seite
+        // wuerde authentifizierte Externe ohnehin aufs Dashboard umleiten.
+        if (status === 403) {
+            event.preventDefault()
+            if (isHandlingExpiry) return
+            isHandlingExpiry = true
+            window.location.href = '/external/dashboard'
+            return
+        }
+
         if (status !== 401 && status !== 419 && status !== 409) {
             return
         }

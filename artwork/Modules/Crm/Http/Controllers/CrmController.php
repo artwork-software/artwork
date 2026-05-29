@@ -95,6 +95,33 @@ class CrmController extends Controller
         return Inertia::render('CRM/Show', [
             'contact' => $crmContact,
             'propertyGroups' => $propertyGroups,
+            'externalAccessStatus' => $this->resolveExternalAccessStatus($crmContact),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveExternalAccessStatus(CrmContact $crmContact): ?array
+    {
+        $external = $crmContact->externalAccess()->first();
+
+        if ($external === null) {
+            return null;
+        }
+
+        $pending = $external->pendingSubmissions()
+            ->where('status', \Artwork\Modules\ExternalAccess\Enums\ExternalSubmissionStatus::PENDING)
+            ->latest('submitted_at')
+            ->first();
+
+        return [
+            'id' => $external->id,
+            'crm_access_expires_at' => $external->crm_access_expires_at?->toIso8601String(),
+            'revoked_at' => $external->revoked_at?->toIso8601String(),
+            'last_login_at' => $external->last_login_at?->toIso8601String(),
+            'has_pending_submission' => $pending !== null,
+            'pending_submission_id' => $pending?->id,
+        ];
     }
 }

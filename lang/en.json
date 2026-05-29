@@ -2781,6 +2781,7 @@
     "External Phone": "External Phone",
     "External Address": "External Address",
     "Defects after return": "Defects after return",
+    "Material issue": "Material issue",
     "Material Issues": "Material Issues",
     "Search for Articles": "Search for Articles",
     "This article comes from the category {0}.": "This article comes from the category {0}.",
@@ -3179,6 +3180,7 @@
     "Overbooked (< 0)": "Overbooked (< 0)",
     "Used in period": "Used in period",
     "Weekend": "Weekend",
+    "Legend": "Legend",
     "Planning timeline": "Planning timeline",
     "Click a cell to open usage details": "Click a cell to open usage details",
     "Status distribution and stock levels": "Status distribution and stock levels",
@@ -4523,5 +4525,14 @@
     "Change saved successfully": "Change saved successfully",
     "This field must not be empty": "This field must not be empty",
     "Bulk create": "Bulk create",
-    "Create items": "Create items"
+    "Create items": "Create items",
+    "Internal issue": "Internal issue",
+    "External issue": "External issue",
+    "Recipient": "Recipient",
+    "Highlight projects": "Highlight projects",
+    "Highlight bars by project": "Highlight bars by project",
+    "Non-matching bars are dimmed. Empty selection means all bars are highlighted.": "Non-matching bars are dimmed. Empty selection means all bars are highlighted.",
+    "More issues in this cell": "More issues in this cell",
+    "Stock": "Stock",
+    "Changing the craft will remove all assigned employees from this shift.": "Changing the craft will remove all assigned employees from this shift."
 }

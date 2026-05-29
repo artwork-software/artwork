@@ -432,6 +432,55 @@
       </div>
     </div>
 
+    <!-- Project highlight (only on planning page) -->
+    <div
+      v-if="planningHighlight && planningHighlight.projects.value.length > 0"
+      class="px-5"
+    >
+      <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+        {{ $t('Highlight projects') }}
+      </div>
+      <div class="card white px-4 mt-2">
+        <div
+          class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
+          @click="projectHighlightOpen = !projectHighlightOpen"
+        >
+          <div class="text-sm text-gray-900">
+            {{ $t('Highlight bars by project') }}
+          </div>
+          <div class="flex items-center gap-5">
+            <span
+              class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+              :class="planningHighlight.selected.value.length > 0 ? 'visible' : 'invisible'"
+            >
+              {{ planningHighlight.selected.value.length }} {{ $t('selected') }}
+            </span>
+            <component
+              :is="IconChevronDown"
+              class="w-4 h-4 text-gray-400"
+              :class="projectHighlightOpen ? 'rotate-180' : ''"
+            />
+          </div>
+        </div>
+        <div v-if="projectHighlightOpen" class="grid grid-cols-1 md:grid-cols-3 gap-2 my-3">
+          <div v-for="project in planningHighlight.projects.value" :key="`hl-project-${project.id}`">
+            <label class="flex items-center gap-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="planningHighlight.selected.value.includes(project.id)"
+                @change="toggleProjectHighlight(project.id)"
+                class="size-4 rounded-sm border border-gray-300 checked:bg-blue-600 checked:border-blue-600"
+              />
+              <span class="text-sm text-gray-900 truncate">{{ project.name }}</span>
+            </label>
+          </div>
+        </div>
+        <div class="pb-3 text-[11px] text-gray-500">
+          {{ $t('Non-matching bars are dimmed. Empty selection means all bars are highlighted.') }}
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
     <div class="px-5 py-4">
       <div class="flex items-center justify-between">
@@ -452,7 +501,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
@@ -466,6 +515,20 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const emits = defineEmits(['close'])
 const page = usePage()
+
+// Optional planning-page injection (project highlight section)
+const planningHighlight = inject('inventoryPlanningProjectHighlight', null)
+const projectHighlightOpen = ref(true)
+
+const toggleProjectHighlight = (projectId) => {
+  if (!planningHighlight) return
+  const current = planningHighlight.selected.value
+  if (current.includes(projectId)) {
+    planningHighlight.selected.value = current.filter((id) => id !== projectId)
+  } else {
+    planningHighlight.selected.value = [...current, projectId]
+  }
+}
 
 /**
  * Eingehende Daten aus Inertia::share (siehe InventoryUserFilterShareService)

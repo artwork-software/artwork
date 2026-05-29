@@ -38,6 +38,7 @@ class UpdateEventShiftInShiftPlan implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         $this->shift->loadMissing([
+            'craft:id,name,abbreviation,color',
             'shiftsQualifications',
             'globalQualifications',
             'users.globalQualifications',

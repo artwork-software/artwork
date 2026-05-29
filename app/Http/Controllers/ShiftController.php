@@ -326,7 +326,23 @@ class ShiftController extends Controller
             'room_id',
         ]));
 
+        $craftChanged = $shift->isDirty('craft_id');
+
         $this->shiftService->save($shift);
+
+        // When the craft changes, remove all assigned workers since they may not
+        // be qualified for the new craft, and reload the craft relation for the broadcast.
+        if ($craftChanged) {
+            ShiftWorker::where('shift_id', $shift->id)->forceDelete();
+            ShiftUser::where('shift_id', $shift->id)->forceDelete();
+            ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
+            ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
+
+            $shift->unsetRelation('users');
+            $shift->unsetRelation('freelancer');
+            $shift->unsetRelation('serviceProvider');
+            $shift->load('craft:id,name,abbreviation,color');
+        }
 
         if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
             ShiftWorker::where('shift_id', $shift->id)->forceDelete();

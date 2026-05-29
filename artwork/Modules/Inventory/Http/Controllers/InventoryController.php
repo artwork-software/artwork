@@ -69,6 +69,7 @@ class InventoryController extends Controller
             $startDate,
             $endDate,
             $userService->getAuthUser()->userFilters()->calendarFilter()->first(),
+            $user,
             null,
             null,
             true

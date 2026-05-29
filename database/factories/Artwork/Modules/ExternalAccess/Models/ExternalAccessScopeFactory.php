@@ -44,4 +44,12 @@ class ExternalAccessScopeFactory extends Factory
             'valid_to' => now()->subDay(),
         ]);
     }
+
+    public function notYetValid(): self
+    {
+        return $this->state([
+            'valid_from' => now()->addDay(),
+            'valid_to' => now()->addMonths(3),
+        ]);
+    }
 }

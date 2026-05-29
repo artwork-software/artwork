@@ -532,6 +532,20 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Allows managing contact types, property groups, and properties in the CRM.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::INVITE_EXTERNAL->value,
+                'name_de' => "Externen Zugriff geben",
+                'translation_key' => "Grant external access",
+                'group' => 'CRM',
+                'tooltipText' => 'Nutzer*in darf externe Personen (Künstler*innen, Dozent*innen, ' .
+                    'Dienstleister*innen) einladen, damit diese ihre eigenen CRM-Daten pflegen und/oder ' .
+                    'Zugriff auf freigegebene Projekttabs bekommen. Diese Einladung bedeutet potenzielle ' .
+                    'Datenweitergabe nach außen.',
+                'tooltipKey' => 'User can invite external persons (artists, lecturers, service providers) ' .
+                    'to maintain their own CRM data and/or access shared project tabs. This invitation ' .
+                    'means potential data disclosure to external parties.',
+                'checked' => false
+            ],
         ];
     }
 

@@ -2,6 +2,13 @@
 
 namespace Artwork\Modules\ExternalAccess\Providers;
 
+use Artwork\Modules\Accommodation\Models\Accommodation;
+use Artwork\Modules\ArtistResidency\Models\Artist;
+use Artwork\Modules\ExternalAccess\DTOs\InviteExternalCommand;
+use Artwork\Modules\ExternalAccess\Services\SourceEntityFactoryRegistry;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider as ServiceProviderModel;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,11 +22,74 @@ class ExternalAccessServiceProvider extends ServiceProvider
             dirname(__DIR__, 4) . '/config/external_access.php',
             'external_access'
         );
+
+        $this->app->singleton(SourceEntityFactoryRegistry::class);
     }
 
     public function boot(): void
     {
         $this->registerRateLimiters();
+        $this->registerSourceEntityFactories();
+    }
+
+    /**
+     * Explicit whitelist of invitable contact types. Each factory builds and persists the
+     * source entity from the inviter-supplied public fields. Slugs match the entities'
+     * getCrmContactTypeSlug() so createCrmContact() resolves the same CRM contact type.
+     */
+    private function registerSourceEntityFactories(): void
+    {
+        /** @var SourceEntityFactoryRegistry $registry */
+        $registry = $this->app->make(SourceEntityFactoryRegistry::class);
+
+        $registry->register(
+            'freelancer',
+            fn (InviteExternalCommand $cmd): Freelancer => Freelancer::create([
+                'first_name' => $cmd->publicFieldValues['first_name'] ?? '',
+                'last_name' => $cmd->publicFieldValues['last_name'] ?? '',
+                'email' => $cmd->normalizedEmail(),
+            ]),
+            ['first_name', 'last_name'],
+        );
+
+        $registry->register(
+            'service_provider',
+            fn (InviteExternalCommand $cmd): ServiceProviderModel => ServiceProviderModel::create([
+                'provider_name' => $cmd->publicFieldValues['provider_name'] ?? '',
+                'email' => $cmd->normalizedEmail(),
+            ]),
+            ['provider_name'],
+        );
+
+        $registry->register(
+            'artist',
+            // Artist has no email column; the email lives only on ExternalAccess.
+            fn (InviteExternalCommand $cmd): Artist => Artist::create([
+                'name' => $cmd->publicFieldValues['name'] ?? '',
+                'first_name' => $cmd->publicFieldValues['first_name'] ?? null,
+                'last_name' => $cmd->publicFieldValues['last_name'] ?? null,
+            ]),
+            ['name'],
+        );
+
+        $registry->register(
+            'manufacturer',
+            fn (InviteExternalCommand $cmd): Manufacturer => Manufacturer::create([
+                'name' => $cmd->publicFieldValues['name'] ?? '',
+                'email' => $cmd->normalizedEmail(),
+                'contact_person' => $cmd->publicFieldValues['contact_person'] ?? null,
+            ]),
+            ['name'],
+        );
+
+        $registry->register(
+            'accommodation',
+            fn (InviteExternalCommand $cmd): Accommodation => Accommodation::create([
+                'name' => $cmd->publicFieldValues['name'] ?? '',
+                'email' => $cmd->normalizedEmail(),
+            ]),
+            ['name'],
+        );
     }
 
     private function registerRateLimiters(): void

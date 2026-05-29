@@ -53,6 +53,53 @@ enum ProjectTabComponentEnum: string
     case PROJECT_CONTRACTS_DOCUMENTS = 'ProjectContractsDocumentsComponent';
 
     /**
+     * Component types that may be rendered in the external tab view.
+     * Internal visibility settings (ComponentUser/ComponentDepartment) are
+     * deliberately ignored for external users — this is the only filter that
+     * decides whether the external renderer can show a component at all.
+     */
+    private const EXTERNALLY_READABLE = [
+        // Custom components (user-configurable) — all readable
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::TITLE,
+        self::LINK,
+        self::LINK_LIST,
+        self::SEPARATOR,
+        self::DISCLOSURE_COMPONENT,
+        // Default components that make sense to expose read-only to externals
+        self::PROJECT_TITLE,
+        self::PROJECT_BASIC_DATA_DISPLAY,
+        self::ARTIST_NAME_DISPLAY,
+    ];
+
+    /**
+     * Component types an external user with a write scope may edit. Only custom
+     * components — no default/system components (layout-only or side-effect heavy).
+     */
+    private const EXTERNALLY_WRITABLE = [
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::LINK,
+        self::LINK_LIST,
+        self::DISCLOSURE_COMPONENT,
+    ];
+
+    public function isExternallyReadable(): bool
+    {
+        return in_array($this, self::EXTERNALLY_READABLE, true);
+    }
+
+    public function isExternallyWritable(): bool
+    {
+        return in_array($this, self::EXTERNALLY_WRITABLE, true);
+    }
+
+    /**
      * Get all available values
      * @return array<string, mixed>
      */

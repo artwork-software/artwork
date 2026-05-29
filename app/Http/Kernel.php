@@ -120,5 +120,6 @@ class Kernel extends HttpKernel
         'role' => RoleMiddleware::class,
         'permission' => PermissionMiddleware::class,
         'role_or_permission' => RoleOrPermissionMiddleware::class,
+        'external.scoped' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureScopedAccess::class,
     ];
 }

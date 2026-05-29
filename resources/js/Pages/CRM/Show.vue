@@ -9,6 +9,23 @@
                 </Link>
             </div>
 
+            <!-- External access status -->
+            <div v-if="externalAccessStatus" class="mb-4 flex flex-wrap items-center gap-3">
+                <span
+                    v-if="externalAccessStatus.crm_access_expires_at && !externalAccessStatus.revoked_at"
+                    class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
+                >
+                    {{ $t('External access active until {date}', { date: new Date(externalAccessStatus.crm_access_expires_at).toLocaleDateString() }) }}
+                </span>
+                <Link
+                    v-if="externalAccessStatus.has_pending_submission"
+                    :href="route('crm.contacts.external-submissions.show', [contact.id, externalAccessStatus.pending_submission_id])"
+                    class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-amber-200"
+                >
+                    {{ $t('There is a data update request to review') }}
+                </Link>
+            </div>
+
             <Transition
                 enter-active-class="transition ease-out duration-200"
                 enter-from-class="opacity-0 -translate-y-1"
@@ -197,6 +214,7 @@ import { useTranslation } from '@/Composeables/Translation.js'
 const props = defineProps({
     contact: { type: Object, required: true },
     propertyGroups: { type: Array, required: true },
+    externalAccessStatus: { type: Object, default: null },
 })
 
 const $t = useTranslation()

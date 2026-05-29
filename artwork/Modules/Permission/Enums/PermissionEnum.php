@@ -71,4 +71,6 @@ enum PermissionEnum : string
 
     case CRM_VIEW = 'can view crm';
     case CRM_MANAGER = 'crm manager';
+
+    case INVITE_EXTERNAL = 'can invite externals';
 }

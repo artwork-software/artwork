@@ -20,6 +20,7 @@ class ComponentController extends Controller
         // Performance-Optimierung: $with-Array im Component Model wurde geleert, daher kein ->without() mehr nötig
         $components = Cache::remember('settings_components_not_special', 600, static function () {
             return Component::notSpecial()
+                ->where('is_bi_field', false)
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
                 ->orderBy('type')
                 ->orderBy('name')

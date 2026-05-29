@@ -201,6 +201,7 @@ class ProjectController extends Controller
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly FilterService $filterService,
         private readonly \Artwork\Modules\Inventory\Services\InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService,
     ) {
     }
 
@@ -338,6 +339,15 @@ class ProjectController extends Controller
                         break;
                     case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
                         $projectData->artist_name = $project->artists;
+                        break;
+                    case ProjectTabComponentEnum::BI_KEY_FIGURES->value:
+                        $tickets = $this->biProjectMetricsService->soldTickets($project);
+                        $capacity = $this->biProjectMetricsService->seatsCapacity($project);
+                        $projectData->bi_key_figures = [
+                            'visitors' => $this->biProjectMetricsService->visitors($project),
+                            'revenue' => $this->biProjectMetricsService->revenue($project),
+                            'occupancy' => $this->biProjectMetricsService->occupancyRate($tickets, $capacity),
+                        ];
                         break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
                         $projectData->state = $projectStates->get($project->state);

@@ -790,6 +790,14 @@
                             }}</span>
                     </div>
                 </div>
+                <BaseInput
+                    type="number"
+                    id="new_room_capacity"
+                    v-model.number="newRoomForm.capacity"
+                    :label="$t('Capacity')"
+                    :min="0"
+                    :step="1"
+                />
                 <div class="w-full items-center text-center">
                     <BaseUIButton
                         type="submit"
@@ -1033,6 +1041,14 @@
                             }}</span>
                     </div>
                 </div>
+                <BaseInput
+                    type="number"
+                    id="edit_room_capacity"
+                    v-model.number="editRoomForm.capacity"
+                    :label="$t('Capacity')"
+                    :min="0"
+                    :step="1"
+                />
 
                 <div class="w-full items-center text-center">
                     <BaseUIButton
@@ -1218,6 +1234,7 @@ export default defineComponent({
                 user_id: this.$page.props.auth.user.id,
                 relevant_for_disposition: false,
                 everyone_can_book: false,
+                capacity: null,
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: [],
@@ -1238,6 +1255,7 @@ export default defineComponent({
                 user_id: null,
                 everyone_can_book: false,
                 relevant_for_disposition: false,
+                capacity: null,
                 room_categories: [],
                 room_attributes: [],
                 adjoining_rooms: [],
@@ -1509,6 +1527,7 @@ export default defineComponent({
             this.showEditRoomModal = true;
             this.editRoomForm.everyone_can_book = room.everyone_can_book
             this.editRoomForm.relevant_for_disposition = room.relevant_for_disposition
+            this.editRoomForm.capacity = room.capacity
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;

@@ -96,7 +96,11 @@ class ProjectService
                 'status',
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-                }
+                },
+                'biData',
+                'biEventData.event',
+                'biRoomCapacities',
+                'events.room',
             ])
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
@@ -161,6 +165,19 @@ class ProjectService
                         // The creator (user_id) must be ignored completely for this filter.
                         $builder->whereHas('users', function ($query) use ($userId) {
                             $query->where('user_id', $userId);
+                        });
+                    }
+                )
+                // Only show productions that actually carry BI key figures
+                ->when(
+                    $projectFilters?->contains('showOnlyWithBiData'),
+                    function (Builder $builder): void {
+                        $builder->where(function (Builder $query): void {
+                            $query->whereHas('biData', function (Builder $biQuery): void {
+                                $biQuery->whereNotNull('visitors_total')
+                                    ->orWhereNotNull('sold_tickets_total')
+                                    ->orWhereNotNull('revenue_total');
+                            })->orWhereHas('biEventData');
                         });
                     }
                 )

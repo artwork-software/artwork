@@ -5,6 +5,11 @@ namespace Artwork\Modules\Project\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\BusinessIntelligence\Models\BiEventData;
+use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
+use Artwork\Modules\BusinessIntelligence\Models\BiProjectRoomCapacity;
+use Artwork\Modules\BusinessIntelligence\Models\BiSnapshot;
+use Artwork\Modules\BusinessIntelligence\Models\BiTimeEffort;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Contract\Models\Contract;
@@ -349,6 +354,31 @@ class Project extends Model
         }
 
         return null;
+    }
+
+    public function biData(): HasOne
+    {
+        return $this->hasOne(BiProjectData::class, 'project_id', 'id');
+    }
+
+    public function biEventData(): HasMany
+    {
+        return $this->hasMany(BiEventData::class, 'project_id', 'id');
+    }
+
+    public function biRoomCapacities(): HasMany
+    {
+        return $this->hasMany(BiProjectRoomCapacity::class, 'project_id', 'id');
+    }
+
+    public function biSnapshots(): HasMany
+    {
+        return $this->hasMany(BiSnapshot::class, 'project_id', 'id');
+    }
+
+    public function biTimeEfforts(): HasMany
+    {
+        return $this->hasMany(BiTimeEffort::class, 'project_id', 'id');
     }
 
     public function scopeWhereNotDeleted(Builder $builder): Builder

@@ -51,6 +51,8 @@ enum ProjectTabComponentEnum: string
     case PROJECT_COST_CENTER_DISPLAY = 'ProjectCostCenterDisplayComponent';
     case PROJECT_MATERIAL_ISSUE_COMPONENT = 'ProjectMaterialIssueComponent';
     case PROJECT_CONTRACTS_DOCUMENTS = 'ProjectContractsDocumentsComponent';
+    case BUSINESS_INTELLIGENCE = 'BusinessIntelligenceComponent';
+    case BI_KEY_FIGURES = 'BiKeyFiguresDisplay';
 
     /**
      * Get all available values

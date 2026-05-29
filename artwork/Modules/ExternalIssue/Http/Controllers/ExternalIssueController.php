@@ -16,6 +16,7 @@ use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ExternalIssueController extends Controller
@@ -155,8 +156,31 @@ class ExternalIssueController extends Controller
     {
         $externalIssue->load(['articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory', 'files', 'issuedBy', 'receivedBy']);
 
-        $pdf = SnappyPdf::loadView('pdf.external_issue', ['issue' => $externalIssue]);
-        return $pdf->download('leihschein_' . $externalIssue->id . '.pdf');
+        $createdAt = now()->format('d.m.Y');
+        $createdBy = $this->auth->user()->full_name;
+
+        $pdf = SnappyPdf::loadView('pdf.external_issue', [
+            'issue' => $externalIssue,
+            'createdAt' => $createdAt,
+            'createdBy' => $createdBy,
+        ]);
+
+        $pdfContent = $pdf->output();
+        $fileName = 'ext._Materialausgabe_Nr._' . $externalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
+        $storagePath = 'external_material_issues/' . $fileName;
+
+        Storage::disk('public')->put($storagePath, $pdfContent);
+
+        ExternalIssueFile::create([
+            'external_issue_id' => $externalIssue->id,
+            'file_path' => $storagePath,
+            'original_name' => $fileName,
+        ]);
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
     }
 
     public function fileDelete(ExternalIssueFile $externalIssueFile): \Illuminate\Http\JsonResponse

@@ -1,6 +1,6 @@
 import { getDaysInRange } from '@/Composeables/calendarDateUtils.js'
 
-export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged } = {}) {
+export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload, onWorkerNeedReload, onEventsChanged, onShiftDataChanged, onLookupsReceived } = {}) {
 
     function resolveWorkerType(entityType) {
         const map = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider', 'service_provider': 'serviceProvider' }
@@ -382,6 +382,12 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
         // Multi-shifts channel
         Echo.channel('shift-plan.multi-shifts')
             .listen('.multi-shifts-created', (data) => {
+                // Merge project/craft/group lookups first so newly assigned projects
+                // render immediately instead of only after a full reload.
+                if (data.lookups && onLookupsReceived) {
+                    onLookupsReceived(data.lookups);
+                }
+
                 const updated = addShiftsToRoomAndDay(data.shifts);
 
                 // If shifts were added, we might want to reload certain data

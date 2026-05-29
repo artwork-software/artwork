@@ -82,7 +82,8 @@ class Room extends Model
         'everyone_can_book',
         'position',
         'created_at',
-        'relevant_for_disposition'
+        'relevant_for_disposition',
+        'capacity',
     ];
 
     protected $with = [

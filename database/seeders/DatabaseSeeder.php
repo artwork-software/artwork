@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
             SubdivisionSeeder::class,
             ShiftQualificationIconsSeeder::class,
         ]);
+
+        \Illuminate\Support\Facades\Artisan::call('artwork:add-bi-event-type-tags');
+        \Illuminate\Support\Facades\Artisan::call('artwork:add-bi-export-presets');
     }
 }

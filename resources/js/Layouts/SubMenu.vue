@@ -512,6 +512,16 @@ const navigation = ref([
         prefetch: ['projects']
     },
     {
+        name: 'BI Dashboard',
+        href: route('bi.dashboard'),
+        icon: 'IconChartHistogram',
+        current: route().current('bi.dashboard'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: usePage().props.canViewBiDashboard,
+        prefetch: false
+    },
+    {
         name: 'Calendar',
         href: '#',
         icon: 'IconCalendarClock',
@@ -533,7 +543,7 @@ const navigation = ref([
                 href: route('planning-event-calendar.index'),
                 icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
-                has_permission: can('can see planning calendar') || is('artwork admin'),
+                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || is('artwork admin')),
             },
             {
                 name: 'Event Verifications',

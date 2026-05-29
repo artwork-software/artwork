@@ -532,6 +532,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Allows managing contact types, property groups, and properties in the CRM.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::BI_EXPORT->value,
+                'name_de' => "BI-Daten exportieren",
+                'translation_key' => "Export BI data",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Export von Business-Intelligence-Daten aus Projekten als Excel-Datei.",
+                'tooltipKey' => "Allows exporting business intelligence data from projects as an Excel file.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::BI_DASHBOARD->value,
+                'name_de' => "BI-Dashboard ansehen",
+                'translation_key' => "View BI dashboard",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Zugriff auf mandantenweite Business-Intelligence-Übersichten.",
+                'tooltipKey' => "Allows access to tenant-wide business intelligence overviews.",
+                'checked' => false
+            ],
         ];
     }
 

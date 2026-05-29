@@ -140,6 +140,17 @@
                             </div>
                         </div>
 
+                        <div class="mt-4">
+                            <BaseInput
+                                type="number"
+                                id="room_capacity"
+                                v-model.number="editRoomForm.capacity"
+                                :label="$t('Capacity')"
+                                :min="0"
+                                :step="1"
+                            />
+                        </div>
+
                         <div class="flex justify-center pt-8">
                             <BaseUIButton
                                 :disabled="editRoomForm.name.length === 0 || editRoomForm.processing"
@@ -559,7 +570,8 @@ export default {
                 area_id: null,
                 user_id: null,
                 everyone_can_book: this.room.everyone_can_book,
-                relevant_for_disposition: this.room.relevant_for_disposition
+                relevant_for_disposition: this.room.relevant_for_disposition,
+                capacity: this.room.capacity,
             }),
             documentForm: useForm({
                 file: null

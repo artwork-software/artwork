@@ -102,6 +102,7 @@ import BuilderDropDown from "@/Pages/Projects/BuilderComponents/PrintLayoutBuild
 import BuilderTitle from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTitle.vue";
 import EventTable from "@/Pages/Projects/PrintComponents/EventTable.vue";
 import BuilderArtistResidenciesComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistResidenciesComponent.vue";
+import BuilderBusinessIntelligenceComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBusinessIntelligenceComponent.vue";
 import BuilderProjectAllDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectAllDocumentsComponent.vue";
 import BuilderCommentAllTabComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCommentAllTabComponent.vue";
 import ChecklistTable from "@/Pages/Projects/PrintComponents/ChecklistTable.vue";
@@ -227,7 +228,8 @@ const componentMapping = {
     BuilderProjectMaterialIssueComponent,
     BuilderProjectContractsDocumentsComponent,
     BuilderLink: BuilderLinkComponent,
-    BuilderLinkList: BuilderLinkListComponent
+    BuilderLinkList: BuilderLinkListComponent,
+    BuilderBusinessIntelligenceComponent,
 };
 
 const hasHeaderContent = computed(() => {

@@ -220,6 +220,9 @@ class ProjectPrintLayoutController extends Controller
                         $projectData->artist_residencies = $project->artistResidencies()
                             ->with(['accommodation'])->get();
                         break;
+                    case ProjectTabComponentEnum::BUSINESS_INTELLIGENCE->value:
+                        $projectData->bi_data = $project->biData;
+                        break;
                     case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
                         $projectData->project_files_all = $project->project_files;
                         break;

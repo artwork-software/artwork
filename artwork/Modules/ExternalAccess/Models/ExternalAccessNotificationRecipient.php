@@ -4,6 +4,8 @@ namespace Artwork\Modules\ExternalAccess\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -29,6 +31,11 @@ class ExternalAccessNotificationRecipient extends Model
     public function recipient(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function listensFor(NotificationEnum $type): bool

@@ -96,10 +96,12 @@ class ExternalAccessServiceProvider extends ServiceProvider
     {
         RateLimiter::for('external-request-link', function (Request $request) {
             $email = strtolower((string) $request->input('email'));
+            $limits = app(\Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver::class)
+                ->rateLimits();
             return [
-                Limit::perHour((int) config('external_access.rate_limits.request_link_per_email_per_hour'))
+                Limit::perHour($limits['request_link_per_email_per_hour'])
                     ->by('external-link:email:' . $email),
-                Limit::perHour((int) config('external_access.rate_limits.request_link_per_ip_per_hour'))
+                Limit::perHour($limits['request_link_per_ip_per_hour'])
                     ->by('external-link:ip:' . $request->ip()),
             ];
         });

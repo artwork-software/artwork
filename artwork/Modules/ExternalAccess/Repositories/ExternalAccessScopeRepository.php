@@ -10,6 +10,7 @@ use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
 use Artwork\Modules\ExternalAccess\Models\ExternalAccessScope;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -59,5 +60,18 @@ class ExternalAccessScopeRepository extends BaseRepository
         );
 
         return $scope;
+    }
+
+    /**
+     * All scopes of an access (active and past), newest validity first.
+     *
+     * @return Collection<int, ExternalAccessScope>
+     */
+    public function findByAccess(ExternalAccess $access): Collection
+    {
+        return $access->scopes()
+            ->with(['project:id,name', 'projectTab:id,name', 'grantedBy:id,first_name,last_name'])
+            ->orderByDesc('valid_to')
+            ->get();
     }
 }

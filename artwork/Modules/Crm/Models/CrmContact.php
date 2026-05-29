@@ -65,6 +65,11 @@ class CrmContact extends Model
         return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
     }
 
+    public function externalAccesses(): HasMany
+    {
+        return $this->hasMany(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
+    }
+
     public function roomTypes(): BelongsToMany
     {
         return $this->belongsToMany(

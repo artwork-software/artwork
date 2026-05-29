@@ -153,7 +153,10 @@ use Artwork\Modules\Crm\Http\Controllers\CrmImportController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
+use App\Http\Controllers\ExternalAccessManagementController;
 use App\Http\Controllers\ExternalSubmissionReviewController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalAccessSettingsController;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
@@ -2295,6 +2298,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ]
     );
 
+    // External access global settings (admin only)
+    Route::middleware('role:' . \Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)
+        ->prefix('settings/external-access')
+        ->name('settings.external-access.')
+        ->group(function (): void {
+            Route::get('/', [ExternalAccessSettingsController::class, 'index'])->name('index');
+            Route::patch('/', [ExternalAccessSettingsController::class, 'update'])->name('update');
+            Route::post('recipients', [ExternalAccessSettingsController::class, 'addRecipient'])
+                ->name('recipients.add');
+            Route::patch('recipients/{recipient}', [ExternalAccessSettingsController::class, 'updateRecipient'])
+                ->name('recipients.update');
+            Route::delete('recipients/{recipient}', [ExternalAccessSettingsController::class, 'removeRecipient'])
+                ->name('recipients.remove');
+        });
+
     // CRM Routes
     Route::group(['prefix' => 'crm'], function (): void {
         Route::get('/', [CrmController::class, 'index'])->name('crm.index');
@@ -2346,6 +2364,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 Route::post('{submission}/partial-decisions', [ExternalSubmissionReviewController::class, 'partialDecisions'])
                     ->name('partial-decisions');
             });
+
+        // External access management UI (CRM_VIEW to view; manage/relink enforced via policy)
+        Route::prefix('external-access')->name('crm.external-access.')->group(function (): void {
+            Route::get('/', [ExternalAccessManagementController::class, 'index'])
+                ->middleware('can:' . PermissionEnum::CRM_VIEW->value)
+                ->name('index');
+            Route::get('{access}', [ExternalAccessManagementController::class, 'show'])->name('show');
+            Route::patch('{access}/crm-access', [ExternalAccessManagementController::class, 'extendCrmAccess'])
+                ->name('extend-crm-access');
+            Route::post('{access}/revoke', [ExternalAccessManagementController::class, 'revoke'])->name('revoke');
+            Route::post('{access}/reactivate', [ExternalAccessManagementController::class, 'reactivate'])
+                ->name('reactivate');
+            Route::patch('{access}/scopes/{scope}', [ExternalAccessManagementController::class, 'updateScope'])
+                ->name('scope.update');
+            Route::post('{access}/scopes/{scope}/end', [ExternalAccessManagementController::class, 'endScope'])
+                ->name('scope.end');
+            Route::post('{access}/relink', [ExternalAccessManagementController::class, 'relink'])->name('relink');
+        });
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');

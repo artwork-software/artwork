@@ -39,7 +39,8 @@ class ExternalLoginLinkNotification extends Notification implements ShouldQueue
             ? $settings->business_email
             : $fallbackSenderMail;
 
-        $lifetimeMinutes = (int) config('external_access.login_token.lifetime_minutes', 15);
+        $lifetimeMinutes = app(\Artwork\Modules\ExternalAccess\Services\ExternalAccessSettingsResolver::class)
+            ->loginTokenLifetimeMinutes();
         $url = route('external.login.redeem', ['token' => $this->plainToken]);
 
         return (new MailMessage())

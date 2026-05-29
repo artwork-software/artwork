@@ -275,8 +275,8 @@ class ExternalAccessService
             return $command->crmAccessExpiresAt;
         }
 
-        $months = (int) config('external_access.defaults.crm_access_months', 12);
-
-        return CarbonImmutable::now()->addMonths($months);
+        return CarbonImmutable::instance(
+            app(ExternalAccessSettingsResolver::class)->defaultCrmAccessExpiry()->toDateTime()
+        );
     }
 }

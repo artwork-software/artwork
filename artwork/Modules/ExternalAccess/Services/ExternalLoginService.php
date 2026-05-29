@@ -24,6 +24,7 @@ class ExternalLoginService
         private readonly ExternalAccessRepository $externalAccessRepository,
         private readonly ExternalLoginTokenRepository $externalLoginTokenRepository,
         private readonly StrService $strService,
+        private readonly ExternalAccessSettingsResolver $settingsResolver,
     ) {
     }
 
@@ -43,7 +44,7 @@ class ExternalLoginService
 
         $plainToken = $this->strService->random(64);
         $tokenHash = hash('sha256', $plainToken);
-        $lifetimeMinutes = (int) config('external_access.login_token.lifetime_minutes', 15);
+        $lifetimeMinutes = $this->settingsResolver->loginTokenLifetimeMinutes();
 
         ExternalLoginToken::query()->create([
             'external_access_id' => $external->id,

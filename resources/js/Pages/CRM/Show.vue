@@ -24,6 +24,13 @@
                 >
                     {{ $t('There is a data update request to review') }}
                 </Link>
+                <Link
+                    v-if="externalAccessStatus.id"
+                    :href="route('crm.external-access.show', externalAccessStatus.id)"
+                    class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-200"
+                >
+                    {{ $t('Manage external access') }}
+                </Link>
             </div>
 
             <Transition

@@ -26,6 +26,8 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Policies\DepartmentPolicy;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Policies\EventPolicy;
+use Artwork\Modules\ExternalAccess\Models\ExternalAccess;
+use Artwork\Modules\ExternalAccess\Policies\ExternalAccessPolicy;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -86,7 +88,8 @@ class AuthServiceProvider extends ServiceProvider
         BudgetManagementAccount::class => BudgetManagementAccountPolicy::class,
         BudgetManagementCostUnit::class => BudgetManagementCostUnitPolicy::class,
         Event::class => EventPolicy::class,
-        ModuleSettings::class => ModuleSettingsPolicy::class
+        ModuleSettings::class => ModuleSettingsPolicy::class,
+        ExternalAccess::class => ExternalAccessPolicy::class,
     ];
 
     public function boot(): void

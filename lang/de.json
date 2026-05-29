@@ -2786,6 +2786,7 @@
     "External Phone": "Externe Telefonnummer",
     "External Address": "Externe Adresse",
     "Defects after return": "Mängel nach Rückgabe",
+    "Material issue": "Materialausgabe",
     "Material Issues": "Materialausgaben",
     "Search for Articles": "Artikel suchen",
     "This article comes from the category {0}.": "Dieser Artikel stammt aus der Kategorie {0}.",
@@ -3185,6 +3186,7 @@
     "Overbooked (< 0)": "Überbucht (< 0)",
     "Used in period": "In Zeitraum verwendet",
     "Weekend": "Wochenende",
+    "Legend": "Legende",
     "Planning timeline": "Planungszeitachse",
     "Click a cell to open usage details": "Klicke auf eine Zelle, um Verwendungsdetails zu öffnen",
     "Status distribution and stock levels": "Statusverteilung und Bestandsniveaus",
@@ -4559,5 +4561,13 @@
     "Change saved successfully": "Änderung erfolgreich gespeichert",
     "This field must not be empty": "Dieses Feld darf nicht leer sein",
     "Bulk create": "Mehrfach erstellen",
-    "Create items": "Erstellen"
+    "Create items": "Erstellen",
+    "Internal issue": "Interne Materialausgabe",
+    "External issue": "Externe Materialausgabe (Leihschein)",
+    "Recipient": "Empfänger",
+    "Highlight projects": "Projekte hervorheben",
+    "Highlight bars by project": "Balken nach Projekt hervorheben",
+    "Non-matching bars are dimmed. Empty selection means all bars are highlighted.": "Nicht-zutreffende Balken werden ausgegraut. Leere Auswahl = alle Balken hervorgehoben.",
+    "More issues in this cell": "Weitere Materialausgaben in dieser Zelle",
+    "Stock": "Bestand"
 }

@@ -43,14 +43,161 @@ class InventoryPlanningService
             ])
             ->get();
 
+        $articleIds = $articles->pluck('id')->all();
+        $rangeStart = $dates->first()['date'];
+        $rangeEnd   = $dates->last()['date'];
+
+        // Issues nur EINMAL laden — werden für Availability-Berechnung
+        // UND für die Bar-Darstellung im Frontend genutzt.
+        $internalIssues = $this->loadInternalIssuesInRange($articleIds, $rangeStart, $rangeEnd);
+        $externalIssues = $this->loadExternalIssuesInRange($articleIds, $rangeStart, $rangeEnd);
+
         $grouped = $this->groupArticles($articles);
-        $availability = $this->calculateAvailabilityWithFlag($articles, $dates);
+        $availability = $this->calculateAvailabilityWithFlag(
+            $articles,
+            $dates,
+            $internalIssues,
+            $externalIssues
+        );
+        $issuesData = $this->collectIssuesForRange($internalIssues, $externalIssues);
 
         return [
             'groupedArticles' => array_values($grouped),
             'availability'    => $availability,
             'dates'           => $dates,
             'dataArray'       => [$start->format('Y-m-d'), $end->format('Y-m-d')],
+            'issues'          => $issuesData['issues'],
+            'projects'        => $issuesData['projects'],
+        ];
+    }
+
+    /**
+     * Load internal issues overlapping with [rangeStart, rangeEnd], eager-loading
+     * only the articles the user can actually see.
+     *
+     * @param array<int, int> $articleIds
+     * @return Collection<int, InternalIssue>
+     */
+    protected function loadInternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
+    {
+        return InternalIssue::with([
+            'articles' => function ($query) use ($articleIds) {
+                $query->whereIn('inventory_articles.id', $articleIds);
+            },
+            'project:id,name',
+        ])
+            // B11: columns are date-typed; using plain comparisons keeps the
+            // index usable (whereDate wraps in DATE() which kills index scans).
+            ->where('start_date', '<=', $rangeEnd)
+            ->where('end_date', '>=', $rangeStart)
+            ->get();
+    }
+
+    /**
+     * Load external issues overlapping with [rangeStart, rangeEnd], eager-loading
+     * only the articles the user can actually see.
+     *
+     * @param array<int, int> $articleIds
+     * @return Collection<int, ExternalIssue>
+     */
+    protected function loadExternalIssuesInRange(array $articleIds, string $rangeStart, string $rangeEnd): Collection
+    {
+        return ExternalIssue::with([
+            'articles' => function ($query) use ($articleIds) {
+                $query->whereIn('inventory_articles.id', $articleIds);
+            },
+            'receivedBy:id,first_name,last_name',
+        ])
+            // B11: date-typed columns — plain comparison enables index usage.
+            ->where('issue_date', '<=', $rangeEnd)
+            ->where('return_date', '>=', $rangeStart)
+            ->get();
+    }
+
+    /**
+     * Project the already-loaded internal and external issues into a flat
+     * structure for the planning bars.
+     *
+     * @param Collection<int, InternalIssue> $internalIssues
+     * @param Collection<int, ExternalIssue> $externalIssues
+     * @return array{issues: array<int, array<string, mixed>>, projects: array<int, array{id:int,name:string}>}
+     */
+    protected function collectIssuesForRange(Collection $internalIssues, Collection $externalIssues): array
+    {
+        $issues = [];
+        $projects = [];
+
+        foreach ($internalIssues as $issue) {
+            if ($issue->articles->isEmpty()) {
+                continue;
+            }
+
+            $articleQuantities = [];
+            foreach ($issue->articles as $article) {
+                $articleQuantities[(int) $article->id] = (int) ($article->pivot->quantity ?? 0);
+            }
+
+            $projectName = $issue->project?->name;
+            $projectId   = $issue->project?->id;
+            if ($projectId !== null && $projectName !== null && !isset($projects[$projectId])) {
+                $projects[$projectId] = ['id' => $projectId, 'name' => $projectName];
+            }
+
+            $issues[] = [
+                'id'                 => $issue->id,
+                'type'               => 'intern',
+                'name'               => $issue->name,
+                'start'              => Carbon::parse($issue->start_date)->toDateString(),
+                'end'                => Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString(),
+                'project_id'         => $projectId,
+                'project_name'       => $projectName,
+                'receiver_name'      => null,
+                'article_ids'        => array_keys($articleQuantities),
+                'article_quantities' => $articleQuantities,
+            ];
+        }
+
+        foreach ($externalIssues as $issue) {
+            if ($issue->articles->isEmpty()) {
+                continue;
+            }
+
+            $articleQuantities = [];
+            foreach ($issue->articles as $article) {
+                $articleQuantities[(int) $article->id] = (int) ($article->pivot->quantity ?? 0);
+            }
+
+            $receiverName = $issue->external_name;
+            if (empty($receiverName) && $issue->receivedBy !== null) {
+                $receiverName = trim(
+                    ($issue->receivedBy->first_name ?? '') . ' ' . ($issue->receivedBy->last_name ?? '')
+                );
+            }
+
+            $issues[] = [
+                'id'                 => $issue->id,
+                'type'               => 'extern',
+                'name'               => $issue->name ?? $receiverName ?? ('Leihschein #' . $issue->id),
+                'start'              => Carbon::parse($issue->issue_date)->toDateString(),
+                'end'                => Carbon::parse($issue->return_date ?? $issue->issue_date)->toDateString(),
+                'project_id'         => null,
+                'project_name'       => null,
+                'receiver_name'      => $receiverName !== '' ? $receiverName : null,
+                'article_ids'        => array_keys($articleQuantities),
+                'article_quantities' => $articleQuantities,
+            ];
+        }
+
+        usort($issues, static function (array $a, array $b): int {
+            return strcmp($a['start'], $b['start']) ?: ($a['id'] <=> $b['id']);
+        });
+
+        $projectsList = array_values($projects);
+        usort($projectsList, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
+
+        return [
+            'issues'   => $issues,
+            'projects' => $projectsList,
         ];
     }
 
@@ -71,7 +218,10 @@ class InventoryPlanningService
     }
 
     /**
-     * Group articles by category and subcategory
+     * Group articles by category and subcategory.
+     *
+     * B5: Uses a dictionary index for sub-category lookup (O(1) per insert)
+     * instead of `array_search(array_column(...))` which made grouping O(N²).
      *
      * @param Collection<int, InventoryArticle> $articles
      * @return array<string, mixed>
@@ -79,19 +229,24 @@ class InventoryPlanningService
     protected function groupArticles(Collection $articles): array
     {
         $grouped = [];
+        $subIndex = []; // [category][subName] => int (position in $grouped[category]['subcategories'])
 
         foreach ($articles as $article) {
             $category = $article->category->name ?? 'Sonstige';
             $subCategory = $article->subCategory->name ?? null;
 
-            $grouped[$category] ??= ['category' => $category, 'articles' => [], 'subcategories' => []];
+            if (!isset($grouped[$category])) {
+                $grouped[$category] = ['category' => $category, 'articles' => [], 'subcategories' => []];
+                $subIndex[$category] = [];
+            }
 
             if ($subCategory) {
-                $foundIndex = array_search($subCategory, array_column($grouped[$category]['subcategories'], 'name'), true);
-                if ($foundIndex === false) {
+                if (!isset($subIndex[$category][$subCategory])) {
                     $grouped[$category]['subcategories'][] = ['name' => $subCategory, 'articles' => [$article]];
+                    $subIndex[$category][$subCategory] = count($grouped[$category]['subcategories']) - 1;
                 } else {
-                    $grouped[$category]['subcategories'][$foundIndex]['articles'][] = $article;
+                    $idx = $subIndex[$category][$subCategory];
+                    $grouped[$category]['subcategories'][$idx]['articles'][] = $article;
                 }
             } else {
                 $grouped[$category]['articles'][] = $article;
@@ -102,85 +257,121 @@ class InventoryPlanningService
     }
 
     /**
-     * Calculate article availability and usage flag for each date
+     * Calculate article availability for each date in a COMPACT representation.
+     *
+     * Output shape:
+     *   [
+     *     'base'   => [articleId => einsatzbereitQuantity, ...],
+     *     'deltas' => [date => [articleId => actualValue, ...], ...]
+     *   ]
+     *
+     * Only cells that DEVIATE from `base[articleId]` are stored in `deltas`.
+     * The frontend falls back to `base[articleId]` for any missing entry —
+     * which is the typical case (no issue overlap) and used to balloon the
+     * JSON payload to N_articles × N_dates entries (B7).
+     *
+     * Performance notes:
+     *  - B1: Issues are passed in (loaded once in the caller) instead of re-queried.
+     *  - B2: Re-uses the articles already loaded by `getAvailabilityData()`.
+     *  - B3: For each issue we compute the start/end date-index ONCE and then
+     *        iterate only over the relevant slice of `$dateList`.
+     *  - B4: "Einsatzbereit" quantity is computed once per article.
+     *  - B7: Compact representation; `usedFlag` removed entirely (the FE can
+     *        derive "used" from the per-article issues array we already ship).
      *
      * @param Collection<int, InventoryArticle> $articles
      * @param SupportCollection $dates
-     * @return array{0: array<string, array<int, int>>, 1: array<string, array<int, bool>>}
+     * @param Collection<int, InternalIssue> $internalIssues
+     * @param Collection<int, ExternalIssue> $externalIssues
+     * @return array{base: array<int, int>, deltas: array<string, array<int, int>>}
      */
-    protected function calculateAvailabilityWithFlag(Collection $articles, SupportCollection $dates): array
-    {
-        $availability = [];
-        $usedFlag = [];
-
-        // Eager load detailed article quantities with their statuses
-        $articlesWithDetails = InventoryArticle::with(['detailedArticleQuantities', 'detailedArticleQuantities.status', 'statusValues'])
-            ->whereIn('id', $articles->pluck('id'))
-            ->get();
-
-        // Initialize availability and usedFlag
-        foreach ($dates as $dateInfo) {
-            $date = $dateInfo['date'];
-            foreach ($articlesWithDetails as $article) {
-                $availableQuantity = $this->getEinsatzbereitQuantity($article);
-                $availability[$date][$article->id] = $availableQuantity;
-                $usedFlag[$date][$article->id] = false;
-            }
+    protected function calculateAvailabilityWithFlag(
+        Collection $articles,
+        SupportCollection $dates,
+        Collection $internalIssues,
+        Collection $externalIssues
+    ): array {
+        // Pre-compute "Einsatzbereit" quantity per article (date-independent).
+        $base = [];
+        foreach ($articles as $article) {
+            $base[$article->id] = $this->getEinsatzbereitQuantity($article);
         }
 
-        // Process internal issues
-        InternalIssue::with(['articles' => function($query) use ($articles) {
-            $query->whereIn('inventory_articles.id', $articles->pluck('id'));
-        }])
-            ->where(function($query) use ($dates) {
-                $query->whereDate('start_date', '<=', $dates->last()['date'])
-                      ->whereDate('end_date', '>=', $dates->first()['date']);
-            })
-            ->get()
-            ->each(function ($issue) use (&$availability, &$usedFlag, $dates) {
-                foreach ($dates as $dateInfo) {
-                    $date = $dateInfo['date'];
-                    $dateCarbon = Carbon::parse($date);
-                    $startDate = Carbon::parse($issue->start_date)->startOfDay();
-                    $endDate = Carbon::parse($issue->end_date)->endOfDay();
+        // Build a flat list of date strings + lookup index for O(1) bounds resolution.
+        $dateList = [];
+        $dateIndex = [];
+        foreach ($dates as $i => $dateInfo) {
+            $dateList[$i] = $dateInfo['date'];
+            $dateIndex[$dateInfo['date']] = $i;
+        }
+        $rangeStart = $dateList[0] ?? null;
+        $rangeEnd   = $dateList[count($dateList) - 1] ?? null;
 
-                    if ($dateCarbon->between($startDate, $endDate)) {
-                        foreach ($issue->articles as $article) {
-                            $availability[$date][$article->id] -= $article->pivot->quantity;
-                            $usedFlag[$date][$article->id] = true;
-                        }
+        // `deltas[$date][$articleId]` holds the ACTUAL value (already adjusted).
+        // We create entries lazily — only when an issue actually subtracts.
+        $deltas = [];
+
+        if ($rangeStart === null || $rangeEnd === null) {
+            return ['base' => $base, 'deltas' => $deltas];
+        }
+
+        $applyIssue = function (
+            string $startDate,
+            string $endDate,
+            iterable $issueArticles
+        ) use (&$deltas, $base, $dateList, $dateIndex, $rangeStart, $rangeEnd): void {
+            $effectiveStart = $startDate < $rangeStart ? $rangeStart : $startDate;
+            $effectiveEnd   = $endDate   > $rangeEnd   ? $rangeEnd   : $endDate;
+
+            if ($effectiveStart > $rangeEnd || $effectiveEnd < $rangeStart) {
+                return;
+            }
+
+            $startIdx = $dateIndex[$effectiveStart] ?? null;
+            $endIdx   = $dateIndex[$effectiveEnd]   ?? null;
+            if ($startIdx === null || $endIdx === null) {
+                return;
+            }
+
+            $impact = [];
+            foreach ($issueArticles as $article) {
+                $impact[$article->id] = (int) ($article->pivot->quantity ?? 0);
+            }
+            if (empty($impact)) {
+                return;
+            }
+
+            for ($i = $startIdx; $i <= $endIdx; $i++) {
+                $date = $dateList[$i];
+                foreach ($impact as $articleId => $qty) {
+                    // Initialize delta with base on first touch.
+                    if (!isset($deltas[$date][$articleId])) {
+                        $deltas[$date][$articleId] = $base[$articleId] ?? 0;
                     }
+                    $deltas[$date][$articleId] -= $qty;
                 }
-            });
+            }
+        };
 
-        // Process external issues
-        ExternalIssue::with(['articles' => function($query) use ($articles) {
-            $query->whereIn('inventory_articles.id', $articles->pluck('id'));
-        }])
-            ->where(function($query) use ($dates) {
-                $query->whereDate('issue_date', '<=', $dates->last()['date'])
-                      ->whereDate('return_date', '>=', $dates->first()['date']);
-            })
-            ->get()
-            ->each(function ($issue) use (&$availability, &$usedFlag, $dates) {
-                foreach ($dates as $dateInfo) {
-                    $date = $dateInfo['date'];
-                    $dateCarbon = Carbon::parse($date);
-                    $issueDate = Carbon::parse($issue->issue_date)->startOfDay();
-                    $returnDate = Carbon::parse($issue->return_date)->endOfDay();
+        foreach ($internalIssues as $issue) {
+            $applyIssue(
+                Carbon::parse($issue->start_date)->toDateString(),
+                Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString(),
+                $issue->articles
+            );
+        }
 
-                    if ($dateCarbon->between($issueDate, $returnDate)) {
-                        foreach ($issue->articles as $article) {
-                            $availability[$date][$article->id] -= $article->pivot->quantity;
-                            $usedFlag[$date][$article->id] = true;
-                        }
-                    }
-                }
-            });
+        foreach ($externalIssues as $issue) {
+            $applyIssue(
+                Carbon::parse($issue->issue_date)->toDateString(),
+                Carbon::parse($issue->return_date ?? $issue->issue_date)->toDateString(),
+                $issue->articles
+            );
+        }
 
         return [
-            'availability' => $availability,
-            'usedFlag' => $usedFlag
+            'base'   => $base,
+            'deltas' => $deltas,
         ];
     }
 
@@ -199,15 +390,16 @@ class InventoryPlanningService
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
         }, 'project', 'specialItems', 'files', 'responsibleUsers'])
-            ->whereDate('start_date', '<=', $date)
-            ->whereDate('end_date', '>=', $date)
+            // B11: date-typed columns — plain comparison uses the index.
+            ->where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
             ->get();
 
         $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
         }, 'issuedBy', 'receivedBy', 'files', 'specialItems'])
-            ->whereDate('issue_date', '<=', $date)
-            ->whereDate('return_date', '>=', $date)
+            ->where('issue_date', '<=', $date)
+            ->where('return_date', '>=', $date)
             ->get();
 
         // Calculate status counts
@@ -443,9 +635,10 @@ class InventoryPlanningService
         $internal = InternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
         }, 'project'])
-            ->whereDate('start_date', '<=', $endDate)
+            // B11: date-typed columns — plain comparison uses the index.
+            ->where('start_date', '<=', $endDate)
             ->where(function ($q) use ($startDate) {
-                $q->whereDate('end_date', '>=', $startDate)
+                $q->where('end_date', '>=', $startDate)
                     ->orWhereNull('end_date');
             })
             ->get();
@@ -453,9 +646,9 @@ class InventoryPlanningService
         $external = ExternalIssue::with(['articles' => function ($query) use ($articleId) {
             $query->where('inventory_article_id', $articleId);
         }])
-            ->whereDate('issue_date', '<=', $endDate)
+            ->where('issue_date', '<=', $endDate)
             ->where(function ($q) use ($startDate) {
-                $q->whereDate('return_date', '>=', $startDate)
+                $q->where('return_date', '>=', $startDate)
                     ->orWhereNull('return_date');
             })
             ->get();

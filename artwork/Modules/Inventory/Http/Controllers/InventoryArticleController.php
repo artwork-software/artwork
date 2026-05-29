@@ -14,6 +14,8 @@ use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryPlanningService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
@@ -31,6 +33,7 @@ class InventoryArticleController extends Controller
         protected InventoryPlanningService $inventoryPlanningService,
         private readonly InventoryUserFilterService $inventoryUserFilterService,
         private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly ProjectTabService $projectTabService,
     ){
     }
 
@@ -51,6 +54,12 @@ class InventoryArticleController extends Controller
                 request('date')
             );
         }
+
+        $data['projectMaterialIssueTabId'] = $this->projectTabService
+            ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT
+            );
+
         return Inertia::render('Inventory/InventoryArticlePlanning', $data);
     }
 
@@ -341,5 +350,27 @@ class InventoryArticleController extends Controller
         }
         $details = $this->inventoryPlanningService->getDetailsForModalRange($articleId, $startDate, $endDate);
         return response()->json(['data' => $details]);
+    }
+
+    /**
+     * JSON variant of `getDetailsForModal` (single date).
+     *
+     * B8: Used by the planning side-panel so cell/bar clicks no longer trigger
+     * a full Inertia partial-reload. Returns the same payload shape as the
+     * `detailsForModal` prop served by `index()`.
+     */
+    public function planningCellDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'article_id' => ['required', 'integer', 'exists:inventory_articles,id'],
+            'date'       => ['required', 'date'],
+        ]);
+
+        return response()->json([
+            'data' => $this->inventoryPlanningService->getDetailsForModal(
+                (int) $validated['article_id'],
+                $validated['date']
+            ),
+        ]);
     }
 }

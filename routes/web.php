@@ -2249,6 +2249,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/articles/usage', [InventoryArticleController::class, 'usageData'])
             ->name('inventory.articles.usage');
 
+        // Side-panel cell-detail JSON endpoint (B8: replaces Inertia partial reload)
+        Route::get('/articles/planning-cell', [InventoryArticleController::class, 'planningCellDetails'])
+            ->name('inventory.articles.planning-cell');
+
         // Update user's inventory grid layout preference
         Route::post('/update-grid-layout', [InventoryCategoryController::class, 'updateInventoryGridLayout'])
             ->name('inventory.update-grid-layout');

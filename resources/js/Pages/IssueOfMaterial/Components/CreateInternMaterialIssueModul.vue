@@ -81,7 +81,10 @@
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
-                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
+                            <a
+                                :href="route('projects.tab', {project: selectedProject.id, projectTab: props.projectTabId})"
+                                class="text-sm font-semibold text-blue-800 hover:underline"
+                            >{{ selectedProject.name }}</a>
                             <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
                                 {{ $t('Remove assignment') }}
                             </button>
@@ -571,6 +574,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: null,
+    },
+    projectTabId: {
+        type: Number,
+        required: false,
+        default: 1,
     },
 });
 

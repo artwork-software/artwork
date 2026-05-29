@@ -36,7 +36,7 @@
                 <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
@@ -146,6 +146,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: null,
+    },
+    projectTabId: {
+        type: Number,
+        required: false,
+        default: 1,
     },
 })
 

@@ -95,6 +95,11 @@ class AuthServiceProvider extends ServiceProvider
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
         Gate::before(function ($user) {
+            // Type-check so that ExternalAccess (or any non-User identity) does not slip into
+            // the admin bypass — external identities run normally through policies.
+            if (!$user instanceof User) {
+                return null;
+            }
             return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ? true : null;
         });
     }

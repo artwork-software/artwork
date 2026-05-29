@@ -28,6 +28,10 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            // External-access routes carry their own middleware groups (declared per-group in the files).
+            Route::group([], base_path('routes/external-guest.php'));
+            Route::group([], base_path('routes/external.php'));
         });
 
         Route::bind('projects', function ($value) {

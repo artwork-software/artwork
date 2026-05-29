@@ -214,22 +214,35 @@ const selectedCraft = ref(
         : null
 )
 
+// Track original craft to detect changes during editing
+const originalCraftId = props.edit
+    ? (props.shift?.craft?.id ?? props.shift?.craftId ?? null)
+    : null
+
+const craftHasChanged = computed(() => {
+    if (!props.edit || originalCraftId === null) return false
+    return selectedCraft.value?.id !== originalCraftId
+})
+
 const validationMessages = reactive({
     warnings: { shift_start: [], shift_end: [], break_length: [], craft: [] },
     errors: { shift_start: [], shift_end: [], break_length: [], craft: [] },
 })
 
-// Resolve start/end dates: support old format (formatted_dates.frontend_start) and new ShiftDTO (startDate)
+// Resolve start/end dates: support old format (formatted_dates.frontend_start),
+// ShiftDTO (startDate, camelCase) and ListView serializer (start_date, snake_case)
 function resolveShiftStartDate(shift: any): string | null {
     if (!shift) return null
     if (shift.formatted_dates?.frontend_start) return shift.formatted_dates.frontend_start
     if (shift.startDate) return shift.startDate.slice(0, 10)
+    if (shift.start_date) return shift.start_date.slice(0, 10)
     return null
 }
 function resolveShiftEndDate(shift: any): string | null {
     if (!shift) return null
     if (shift.formatted_dates?.frontend_end) return shift.formatted_dates.frontend_end
     if (shift.endDate) return shift.endDate.slice(0, 10)
+    if (shift.end_date) return shift.end_date.slice(0, 10)
     return null
 }
 
@@ -851,23 +864,33 @@ function saveShift() {
     }
 
     if (shiftForm.id) {
-        shiftForm.patch(route('event.shift.update', props.shift.id), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: (page) => {
-                shiftForm.reset()
-                // Im Shift-Plan (Daily View) per WebSockets aktualisieren – kein Reload nötig
-                if (!props.shiftPlanModal) {
+        if (props.shiftPlanModal) {
+            // In the shift plan list/daily view, use axios instead of Inertia to avoid
+            // the redirect response overwriting localGroupedShifts with filtered data
+            // (e.g. craft filter excludes the shift after a craft change).
+            // The WebSocket broadcast handles the real-time UI update.
+            axios.patch(route('event.shift.update', props.shift.id), {
+                ...shiftForm.data(),
+                updateOrCreateInShiftPlan: true,
+            })
+                .catch((e) => console.log(e))
+                .finally(() => {
+                    shiftForm.reset()
+                    closeModal(true)
+                })
+        } else {
+            shiftForm.patch(route('event.shift.update', props.shift.id), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    shiftForm.reset()
                     router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
-                } else if (page.props.shift) {
-                    // Update the shift in the parent if it was provided
-                    emit('closed', true, page.props.shift)
-                }
-                closeModal(true)
-            },
-            onError: (e) => console.log(e),
-            onFinish: () => { shiftForm.reset(); closeModal(true) },
-        })
+                    closeModal(true)
+                },
+                onError: (e) => console.log(e),
+                onFinish: () => { shiftForm.reset(); closeModal(true) },
+            })
+        }
     } else {
         shiftForm.post(route('event.shift.store', props.event.id), {
             preserveScroll: true,
@@ -1370,6 +1393,13 @@ const lockOrUnlockShift = (commit = false) => {
                                 :options="selectableCrafts"
                                 selected-property-to-display="name"
                                 :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                            />
+                            <AlertComponent
+                                v-if="craftHasChanged"
+                                type="warning"
+                                show-icon
+                                :text="$t('Changing the craft will remove all assigned employees from this shift.')"
+                                class="mt-2"
                             />
                         </div>
                         <!-- Craft -->

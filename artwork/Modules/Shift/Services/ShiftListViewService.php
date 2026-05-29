@@ -90,6 +90,12 @@ readonly class ShiftListViewService
                     + $shift->serviceProvider->count();
                 $requiredCount = $shift->shiftsQualifications->sum('value');
 
+                // Always show shifts that have no staffing requirements set (0/0),
+                // since they are not "fully staffed" but simply unconfigured.
+                if ($requiredCount === 0) {
+                    return true;
+                }
+
                 return $assignedCount < $requiredCount;
             });
         }

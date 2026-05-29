@@ -4569,5 +4569,6 @@
     "Highlight bars by project": "Balken nach Projekt hervorheben",
     "Non-matching bars are dimmed. Empty selection means all bars are highlighted.": "Nicht-zutreffende Balken werden ausgegraut. Leere Auswahl = alle Balken hervorgehoben.",
     "More issues in this cell": "Weitere Materialausgaben in dieser Zelle",
-    "Stock": "Bestand"
+    "Stock": "Bestand",
+    "Changing the craft will remove all assigned employees from this shift.": "Beim Ändern des Gewerks werden alle zugewiesenen Mitarbeiter*innen von dieser Schicht entfernt."
 }

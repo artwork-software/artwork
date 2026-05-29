@@ -27,6 +27,7 @@ class ShiftDTO extends Data
         public ?int $projectId = null,
         public ?array $globalQualifications = null,
         public ?int $shiftGroupId = null,
+        public ?array $craft = null,
     ) {
     }
 
@@ -53,6 +54,7 @@ class ShiftDTO extends Data
             projectId: $resolvedProject?->id,
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
+            craft: self::serializeCraft($shift),
         );
     }
 
@@ -110,6 +112,22 @@ class ShiftDTO extends Data
         }
 
         return $workers;
+    }
+
+    private static function serializeCraft(Shift $shift): ?array
+    {
+        $craft = $shift->relationLoaded('craft') ? $shift->craft : null;
+
+        if ($craft === null) {
+            return null;
+        }
+
+        return [
+            'id' => $craft->id,
+            'name' => $craft->name,
+            'abbreviation' => $craft->abbreviation,
+            'color' => $craft->color,
+        ];
     }
 
     private static function serializeGlobalQualifications(Shift $shift): array

@@ -17,7 +17,7 @@
             />
             <div
                 v-if="eventsWithoutRoomLen > 0"
-                class="w-full h-8 px-4 py-2 bg-error cursor-pointer rounded-lg ml-4 -mt-1"
+                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
                 @click="showEventsWithoutRoomComponent = true"
             >
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
@@ -66,13 +66,9 @@
                                             :class="[
                     'group/container relative',                 // Basis
                     'border-dashed',                            // Linienoptik wie zuvor
-                    // Dünne Standard-Linie:
-                    'border-t border-gray-400',
+                    'border-t border-gray-500',
 
-                    // -> Hervorhebung bei >2 Terminen (nur wenn nicht expand_days):
-                    (!settings.expand_days && eventsCount(day, room) > 1)
-                      ? 'ring-2 ring-blue-300 rounded-lg'                  // klarer, ohne Schatten
-                      : ''
+                    ''
                   ]"
                                         >
                                             <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
@@ -82,7 +78,7 @@
                                                     :class="[
                                                         'events-scroll',
                                                         settings.expand_days ? '' : 'h-full',
-                                                        settings.expand_days ? 'overflow-visible flex flex-col' : ((!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden')
+                                                        settings.expand_days ? 'overflow-visible flex flex-col' : 'overflow-auto cell'
                                                       ]"
                                                     :style="cellStyle"
                                                 >
@@ -99,11 +95,11 @@
                                                             @click="onEventClick(evt, $event)"
                                                         >
                                                             <AsyncSingleEventInCalendar
-                                                                v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                v-memo="[evt.id, evt.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
                                                                 :event="evt"
                                                                 :multi-edit="multiEdit"
-                                                                :font-size="textStyle.fontSize"
-                                                                :line-height="textStyle.lineHeight"
+                                                                :font-size="fontSizeCalc"
+                                                                :line-height="lineHeightCalc"
                                                                 :rooms="rooms"
                                                                 :has-admin-role="hasAdminRole()"
                                                                 :width="cardWidthNum"
@@ -121,10 +117,9 @@
                                                                 @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                                             />
                                                         </div>
+                                                        <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
+                                                        <div v-if="eventsInCell(day, room).length <= 1 && !settings.expand_days" class="h-2"></div>
                                                     </template>
-
-                                                    <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
-                                                    <div v-if="eventsCount(day, room) <= 1 && !settings.expand_days" class="h-2"></div>
                                                 </div>
 
                                                 <!-- "+"-Button: jetzt OBEN RECHTS, außerhalb des Scrollbereichs -->
@@ -140,23 +135,6 @@
                                                     <component :is="IconPlus" class="size-4" />
                                                 </button>
 
-                                                <!-- Scroll-to-next: unten rechts, ebenfalls außerhalb des Scrollbereichs -->
-                                                <div
-                                                    v-if="(eventsCount(day, room) > 1) && !settings.expand_days"
-                                                    class="pointer-events-none absolute bottom-1 right-9 z-20"
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        class="pointer-events-auto inline-flex items-center justify-center cursor-pointer gap-1
-                               rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-gray-50/90
-                               focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
-                                                        :aria-label="$t('Scroll to next event')"
-                                                        @click="scrollToNextEvent(day, room)"
-                                                        @keydown.enter.prevent="scrollToNextEvent(day, room)"
-                                                    >
-                                                        <component :is="IconChevronDown" class="size-4" />
-                                                    </button>
-                                                </div>
                                             </div>
                                         </section>
                                     </template>
@@ -388,10 +366,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconAlertTriangle, IconChevronDown, IconPlus} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconPlus} from "@tabler/icons-vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
@@ -460,8 +438,6 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
-const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative overflow-scroll', (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden")]);
-
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
@@ -502,11 +478,8 @@ const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
 const first_project_tab_id = inject("first_project_tab_id");
 const eventTypes = inject("eventTypes");
 
-const textStyle = computed(() => {
-    const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-    const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-    return { fontSize, lineHeight };
-});
+const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);
+const lineHeightCalc = computed(() => `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`);
 
 const toGermanDate = (iso) => {
     if (!iso || iso.length < 10) return iso;
@@ -518,33 +491,6 @@ type DayLike = { withoutFormat: string };
 type RoomLike = { id?: number|string; roomId?: number|string };
 
 const cellRefs = ref<Map<string, HTMLElement>>(new Map());
-
-/*function scrollToNextEvent(day: DayLike, room: RoomLike) {
-    const key = cellKey(day, room);
-    let container = cellRefs.value.get(key) as HTMLElement | undefined;
-
-    const roomId = String(room.roomId ?? room.id);
-
-    // Fallback: über DOM ermitteln, falls Map (noch) leer ist
-    if (!container) {
-        const sel = `section[data-room-id="${roomId}"]#scroll_container-${day.withoutFormat}-${roomId}`;
-        container = document.querySelector<HTMLElement>(sel) ?? undefined;
-        if (container) cellRefs.value.set(key, container);
-        else return; // keine Zelle gefunden
-    }
-
-    const selector = `[id^="event_scroll-"][id$="-day-${day.withoutFormat}-room-${roomId}"]`;
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>(selector));
-    if (!nodes.length) return;
-
-    const pad = 6;
-    const currentTop = container.scrollTop;
-
-    const next = nodes.find(n => n.offsetTop > currentTop + pad);
-    const targetTop = next ? Math.max(next.offsetTop - pad, 0) : 0;
-
-    container.scrollTo({ top: targetTop, behavior: 'smooth' });
-}*/
 
 const dayKey = (day) => day.fullDay ?? toGermanDate(day.withoutFormat);
 const monthKeyFromDay = (day) => (day.withoutFormat || "").slice(0, 7);
@@ -569,7 +515,7 @@ function ensureCalendarShape() {
 
 function useCellVisibility(options = {}) {
     const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
-    const visibleKeys = ref(new Set());
+    const visibleKeys = shallowRef(new Set<string>());
     let io: IntersectionObserver | null = null;
     const map = new Map<Element, string>();
 
@@ -584,22 +530,12 @@ function useCellVisibility(options = {}) {
                     const k = map.get(entry.target);
                     if (!k) continue;
                     if (entry.isIntersecting) {
-                        if (!visibleKeys.value.has(k)) {
-                            const next = new Set(visibleKeys.value);
-                            next.add(k);
-                            visibleKeys.value = next;
-                            changed = true;
-                        }
+                        if (!visibleKeys.value.has(k)) { visibleKeys.value.add(k); changed = true; }
                     } else {
-                        if (visibleKeys.value.has(k)) {
-                            const next = new Set(visibleKeys.value);
-                            next.delete(k);
-                            visibleKeys.value = next;
-                            changed = true;
-                        }
+                        if (visibleKeys.value.has(k)) { visibleKeys.value.delete(k); changed = true; }
                     }
                 }
-                if (changed) {}
+                if (changed) triggerRef(visibleKeys);
             }, { root, rootMargin, threshold });
         }
         map.set(el, key);
@@ -994,6 +930,7 @@ onBeforeUnmount(() => {
         topbarObserver.disconnect();
         topbarObserver = null;
     }
+
 });
 
 // ---------- Multi-Edit etc. ----------
@@ -1355,39 +1292,6 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
 const eventsInCell = (day: any, room: any) =>
     (room.content?.[dayKey(day)]?.events ?? []);
 
-const eventsCount = (day: any, room: any) =>
-    eventsInCell(day, room).length;
-
-// 🔧 scrollToNextEvent: sucht jetzt explizit den INNEREN Scroll-Container (.events-scroll)
-function scrollToNextEvent(day: DayLike, room: RoomLike) {
-    const key = cellKey(day, room);
-    let section = cellRefs.value.get(key) as HTMLElement | undefined;
-
-    const roomId = String(room.roomId ?? room.id);
-    if (!section) {
-        const sel = `section[data-room-id="${roomId}"]#scroll_container-${day.withoutFormat}`;
-        section = document.querySelector<HTMLElement>(sel) ?? undefined;
-        if (section) cellRefs.value.set(key, section);
-        else return;
-    }
-
-    // 👉 Inneren Scroll-Container greifen:
-    const container = section.querySelector<HTMLElement>('.events-scroll');
-    if (!container) return;
-
-    const selector = `[id^="event_scroll-"][id$="-day-${day.withoutFormat}-room-${roomId}"]`;
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>(selector));
-    if (!nodes.length) return;
-
-    const pad = 6;
-    const currentTop = container.scrollTop;
-
-    const next = nodes.find(n => n.offsetTop > currentTop + pad);
-    const targetTop = next ? Math.max(next.offsetTop - pad, 0) : 0;
-
-    container.scrollTo({ top: targetTop, behavior: 'smooth' });
-}
-
 // When multi-edit is enabled, clicking an event toggles its selection
 const onEventClick = (evt: any, e?: MouseEvent) => {
     if (!multiEdit.value) return;
@@ -1398,14 +1302,14 @@ const onEventClick = (evt: any, e?: MouseEvent) => {
 </script>
 
 <style scoped>
-/* bleibt wie gehabt; wirkt jetzt auf den inneren .events-scroll Container, wenn >1 Event */
 .cell {
     overflow: auto;
-    scrollbar-color: #d4d4d4 #f3f3f3; /* Firefox */
+    scrollbar-color: rgba(156,163,175,0.5) transparent; /* Firefox */
     scrollbar-width: thin;
 }
 /* WebKit */
-.cell::-webkit-scrollbar { width: 2px !important; height: 2px !important; }
-.cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
-.cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
+.cell::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
+.cell::-webkit-scrollbar-thumb { background-color: rgba(156,163,175,0.5); border-radius: 3px; }
+.cell::-webkit-scrollbar-thumb:hover { background-color: rgba(107,114,128,0.7); }
+.cell::-webkit-scrollbar-track { background-color: transparent; }
 </style>

@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
@@ -65,10 +64,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Shift extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
     use SoftDeletes;
     use LogsActivity;
-
 
     protected $fillable = [
         'event_id',
@@ -270,7 +267,7 @@ class Shift extends Model
 
     public function getHistoryAttribute(): Collection
     {
-        return $this->historyChanges()->sortByDesc('created_at');
+        return $this->activities()->latest()->get();
     }
 
     public function getBreakFormattedAttribute(): string

@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Http\Resources;
 
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Contract\Http\Resources\ContractResource;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
@@ -23,17 +24,7 @@ class ProjectShowResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $historyArray = [];
-        $historyComplete = $this->historyChanges()->all();
-
-        foreach ($historyComplete as $history) {
-            $historyArray[] = [
-                'changes' => json_decode($history->changes),
-                'created_at' => $history->created_at->diffInHours() < 24
-                    ? $history->created_at->diffForHumans()
-                    : $history->created_at->format('d.m.Y, H:i'),
-            ];
-        }
+        $historyArray = app(ChangeService::class)->historyForFrontend($this->resource);
 
         return [
             'id' => $this->id,

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Antonrom\ModelChangesHistory\Models\Change;
+use Spatie\Activitylog\Models\Activity;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
@@ -381,18 +381,23 @@ class ShiftCalendarService
      */
     public function getEventShiftsHistoryChanges(): array
     {
-        $q = Change::query();
-        $q->where('model_type', Shift::class);
-        $q->orderBy('created_at', 'desc');
         $historyArray = [];
-        $q->get()->each(function (Change $history) use (&$historyArray): void {
-            $historyArray[] = [
-                'changes' => json_decode($history->changes),
-                'created_at' => $history->created_at->diffInHours() < 24
-                    ? $history->created_at->diffForHumans()
-                    : $history->created_at->format('d.m.Y, H:i'),
-            ];
-        });
+
+        Activity::query()
+            ->where('subject_type', Shift::class)
+            ->orderByDesc('created_at')
+            ->get()
+            ->each(function (Activity $activity) use (&$historyArray): void {
+                $properties = $activity->properties;
+                $historyArray[] = [
+                    'changes' => $properties instanceof \Illuminate\Support\Collection
+                        ? $properties->all()
+                        : ($properties ?? null),
+                    'created_at' => $activity->created_at->diffInHours() < 24
+                        ? $activity->created_at->diffForHumans()
+                        : $activity->created_at->format('d.m.Y, H:i'),
+                ];
+            });
 
         return $historyArray;
     }

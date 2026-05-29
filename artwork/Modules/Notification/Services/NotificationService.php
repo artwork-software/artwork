@@ -12,6 +12,8 @@ use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\Room\Notifications\RoomRequestNotification;
@@ -511,6 +513,22 @@ class NotificationService
                     Notification::send(
                         $this->getNotificationTo(),
                         new BudgetVerified($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
+            case NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ExternalCrmSubmissionNotification($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
+            case NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ExternalTabComponentUpdatedNotification($body, $this->getBroadcastMessage())
                     );
                 }
                 break;

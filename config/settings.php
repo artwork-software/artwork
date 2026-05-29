@@ -1,6 +1,7 @@
 <?php
 
 use App\Settings\GeneralCalendarSettings;
+use Artwork\Modules\ExternalAccess\Settings\ExternalAccessSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
@@ -15,7 +16,8 @@ return [
         GeneralSettings::class,
         ProjectCreateSettings::class,
         ModuleSettings::class,
-        GeneralCalendarSettings::class
+        GeneralCalendarSettings::class,
+        ExternalAccessSettings::class,
     ],
 
     /*

@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Event\Models;
 
-use Artwork\Core\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;
@@ -27,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -72,10 +73,19 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
-    use HasChangesHistory;
+    use LogsActivity;
     use HasFactory;
     use SoftDeletes;
     use Prunable;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('event')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $with = [
         //'series',

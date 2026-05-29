@@ -2592,17 +2592,18 @@ class ProjectController extends Controller
 
         $headerObject->project->project_managers = $project->managerUsers;
 
-        $latestHistory = $project->historyChanges()->first();
+        $latestActivity = $project->activities()->latest()->first();
         $latestChange  = [];
-        if ($latestHistory !== null) {
+        if ($latestActivity !== null) {
+            $properties = $latestActivity->properties;
             $latestChange = [[
-                'changes'    => $latestHistory->changes
-                    ? json_decode($latestHistory->changes, false, 512, JSON_THROW_ON_ERROR)
-                    : null,
-                'created_at' => $latestHistory->created_at->diffInHours() < 24
-                    ? $latestHistory->created_at->diffForHumans()
-                    : $latestHistory->created_at->format('d.m.Y, H:i'),
-                'changer'    => $latestHistory->changer()
+                'changes'    => $properties instanceof \Illuminate\Support\Collection
+                    ? $properties->all()
+                    : ($properties ?? null),
+                'created_at' => $latestActivity->created_at->diffInHours() < 24
+                    ? $latestActivity->created_at->diffForHumans()
+                    : $latestActivity->created_at->format('d.m.Y, H:i'),
+                'changer'    => $latestActivity->causer()
                     ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
                     ->first(),
             ]];
@@ -2747,21 +2748,22 @@ class ProjectController extends Controller
 
     public function history(Project $project): JsonResponse
     {
-        $historyComplete = $project->historyChanges()->all();
-        $history = array_map(
-            static function ($history) {
-                return [
-                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                    'changer'    => $history->changer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first(),
-                ];
-            },
-            $historyComplete
-        );
+        $activities = $project->activities()->latest()->get();
+        $history = $activities->map(static function ($activity) {
+            $properties = $activity->properties;
+
+            return [
+                'changes'    => $properties instanceof \Illuminate\Support\Collection
+                    ? $properties->all()
+                    : ($properties ?? null),
+                'created_at' => $activity->created_at->diffInHours() < 24
+                    ? $activity->created_at->diffForHumans()
+                    : $activity->created_at->format('d.m.Y, H:i'),
+                'changer'    => $activity->causer()
+                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                    ->first(),
+            ];
+        })->all();
 
          $access_budget = $project->access_budget;
 

@@ -67,8 +67,15 @@ class UpdateArtwork extends Command
         $this->migrateToCrm();
         $this->syncCrmContacts();
         $this->cleanupFalseConflicts();
+        $this->migrateChangesHistoryToActivityLog();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function migrateChangesHistoryToActivityLog(): void
+    {
+        $this->section('Changes History → Activity Log');
+        $this->call('changes:migrate-to-activity-log');
     }
 
     private function updateProjectManagementBuilder(): void
@@ -134,6 +141,26 @@ class UpdateArtwork extends Command
                 ['type' => $enum->value],
                 [
                     'frequency' => NotificationFrequencyEnum::DAILY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]
+            );
+        }
+
+        // External access notifications should reach the inviter immediately.
+        $externalNotificationTypes = [
+            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
+        ];
+
+        foreach ($externalNotificationTypes as $enum) {
+            $user->notificationSettings()->updateOrCreate(
+                ['type' => $enum->value],
+                [
+                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
                     'group_type' => $enum->groupType(),
                     'title' => $enum->title(),
                     'description' => $enum->description(),

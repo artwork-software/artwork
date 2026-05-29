@@ -1,16 +1,8 @@
 <template>
     <Teleport to="body">
         <div
-            class="fixed inset-y-0 right-0 z-40 flex"
-            :class="{ 'pointer-events-none': !visible }"
+            class="fixed inset-y-0 right-0 z-40 flex pointer-events-none"
         >
-            <!-- Backdrop click catcher (transparent, planning table stays visible) -->
-            <div
-                v-if="visible"
-                class="fixed inset-0 z-0"
-                @click="$emit('close')"
-            ></div>
-
             <Transition
                 enter-active-class="transition-transform duration-200 ease-out"
                 enter-from-class="translate-x-full"
@@ -21,7 +13,8 @@
             >
                 <aside
                     v-if="visible"
-                    class="relative z-10 h-full w-[400px] max-w-[90vw] bg-white shadow-2xl border-l border-zinc-200 flex flex-col"
+                    ref="panelRef"
+                    class="relative z-10 h-full w-[400px] max-w-[90vw] bg-white shadow-2xl border-l border-zinc-200 flex flex-col pointer-events-auto"
                 >
                     <header class="flex items-start gap-2 border-b border-zinc-100 px-4 py-3 sticky top-0 bg-white z-10">
                         <div class="flex-1 min-w-0">
@@ -157,7 +150,7 @@
 <script setup>
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue';
 import UsageTable from './UsageTable.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { IconX } from '@tabler/icons-vue';
 import axios from 'axios';
 
@@ -172,6 +165,35 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'refreshData']);
+
+const panelRef = ref(null);
+
+const onClickOutside = (e) => {
+    if (panelRef.value && !panelRef.value.contains(e.target)) {
+        emit('close');
+    }
+};
+
+const onEscape = (e) => {
+    if (e.key === 'Escape') {
+        emit('close');
+    }
+};
+
+watch(() => props.visible, (val) => {
+    if (val) {
+        document.addEventListener('mousedown', onClickOutside);
+        document.addEventListener('keydown', onEscape);
+    } else {
+        document.removeEventListener('mousedown', onClickOutside);
+        document.removeEventListener('keydown', onEscape);
+    }
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('mousedown', onClickOutside);
+    document.removeEventListener('keydown', onEscape);
+});
 
 const isRefreshing = ref(false);
 

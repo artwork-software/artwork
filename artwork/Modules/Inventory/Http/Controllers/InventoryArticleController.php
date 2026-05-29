@@ -14,6 +14,8 @@ use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryPlanningService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
@@ -31,6 +33,7 @@ class InventoryArticleController extends Controller
         protected InventoryPlanningService $inventoryPlanningService,
         private readonly InventoryUserFilterService $inventoryUserFilterService,
         private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly ProjectTabService $projectTabService,
     ){
     }
 
@@ -51,6 +54,12 @@ class InventoryArticleController extends Controller
                 request('date')
             );
         }
+
+        $data['projectMaterialIssueTabId'] = $this->projectTabService
+            ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT
+            );
+
         return Inertia::render('Inventory/InventoryArticlePlanning', $data);
     }
 

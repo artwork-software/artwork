@@ -2,33 +2,54 @@
     <AppLayout :title="$t('Inventory Article Planning')">
         <div class="-ml-4">
             <!-- Topbar -->
-            <div class="sticky top-0 z-40 border-b ">
+            <div class="sticky top-0 z-40 border-b bg-white">
                 <div class="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
           <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-800 ring-1 ring-inset ring-sky-200">
             {{ $t('Planning timeline') }}
           </span>
                     <span class="mx-1 inline-block size-1 rounded-full bg-zinc-300"></span>
 
-                    <div class="flex items-center gap-2 text-[11px] text-zinc-600">
-            <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <span class="inline-block size-2 rounded-full bg-red-600"></span>{{ $t('Overbooked (< 0)') }}
-            </span>
-                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
-            </span>
-                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <IconRouteSquare class="size-3" />{{ $t('Used in period') }}
-            </span>
-                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
-            </span>
-                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <span class="inline-block h-1 w-3 rounded-sm bg-emerald-500"></span>{{ $t('Internal issue') }}
-            </span>
-                        <span class="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white/80 px-2 py-0.5">
-              <span class="inline-block h-1 w-3 rounded-sm bar-stripe-legend"></span>{{ $t('External issue') }}
-            </span>
+                    <div class="relative" data-legend-wrapper ref="legendBtnRef">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                            @click="toggleLegend"
+                        >
+                            <IconInfoCircle class="size-3.5" />
+                            {{ $t('Legend') }}
+                            <IconChevronDown class="size-3 transition-transform" :class="showLegend ? 'rotate-180' : ''" />
+                        </button>
                     </div>
+
+                    <teleport to="body">
+                        <div
+                            v-if="showLegend"
+                            data-legend-wrapper
+                            class="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-lg p-3 min-w-[200px]"
+                            :style="{ left: legendPos.x + 'px', top: legendPos.y + 'px' }"
+                        >
+                            <div class="flex flex-col gap-2 text-[11px] text-zinc-600">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="inline-block size-2 rounded-full bg-red-600"></span>{{ $t('Overbooked (< 0)') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <IconRouteSquare class="size-3" />{{ $t('Used in period') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="inline-block h-1 w-3 rounded-sm bg-emerald-500"></span>{{ $t('Internal issue') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <span class="inline-block h-1 w-3 rounded-sm bar-stripe-legend-dropdown"></span>{{ $t('External issue') }}
+                                </span>
+                            </div>
+                        </div>
+                    </teleport>
 
                     <div class="flex-1"></div>
 
@@ -189,18 +210,71 @@
             @close="closeSidePanel"
             @refreshData="refreshPanelData"
         />
+
+        <!-- Edit modal (bar click with edit permission) -->
+        <IssueOfMaterialModal
+            v-if="showBarIssueModal"
+            :issue-of-material="!barIssueIsExtern ? barIssueForModal : null"
+            :is-extern-or-intern="barIssueIsExtern"
+            :extern-material-issue="barIssueIsExtern ? barIssueForModal : null"
+            :project="barIssueForModal?.project || null"
+            :project-tab-id="props.projectMaterialIssueTabId"
+            @close="closeBarIssueModal"
+            @saved="closeBarIssueModal"
+        />
+
+        <!-- Read-only info modal (bar click without edit permission) -->
+        <ArtworkBaseModal
+            v-if="showBarIssueInfo && barIssueForModal"
+            @close="closeBarIssueModal"
+            modal-size="sm:max-w-lg"
+            :title="barIssueForModal.name || $t('Material issue')"
+            :description="barIssueIsExtern ? $t('External issue') : $t('Internal issue')"
+        >
+            <div class="space-y-3 text-sm text-zinc-700 mt-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="text-zinc-500">{{ $t('Period') }}</div>
+                    <div>{{ formatDateTooltip(barIssueForModal.start) }} – {{ formatDateTooltip(barIssueForModal.end) }}</div>
+                </div>
+                <div v-if="barIssueForModal.project_name" class="grid grid-cols-2 gap-2">
+                    <div class="text-zinc-500">{{ $t('Project') }}</div>
+                    <div>
+                        <a
+                            v-if="barIssueForModal.project_id"
+                            :href="route('projects.tab', {project: barIssueForModal.project_id, projectTab: props.projectMaterialIssueTabId})"
+                            class="text-indigo-600 hover:underline"
+                        >{{ barIssueForModal.project_name }}</a>
+                        <span v-else>{{ barIssueForModal.project_name }}</span>
+                    </div>
+                </div>
+                <div v-if="barIssueForModal.receiver_name" class="grid grid-cols-2 gap-2">
+                    <div class="text-zinc-500">{{ $t('Recipient') }}</div>
+                    <div>{{ barIssueForModal.receiver_name }}</div>
+                </div>
+            </div>
+        </ArtworkBaseModal>
     </AppLayout>
 </template>
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { router } from "@inertiajs/vue3";
-import { ref, reactive, onMounted, watch, computed, defineAsyncComponent, provide } from "vue";
-import { IconCategory2, IconCategoryFilled, IconChevronRight, IconRouteSquare } from "@tabler/icons-vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { ref, reactive, onMounted, onUnmounted, watch, computed, defineAsyncComponent, provide } from "vue";
+import { IconCategory2, IconCategoryFilled, IconChevronDown, IconChevronRight, IconInfoCircle, IconRouteSquare } from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import ArticleRow from "@/Pages/Inventory/Components/Planning/ArticleRow.vue";
 import ArticleUsageSidePanel from "@/Pages/Inventory/Components/Planning/ArticleUsageSidePanel.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import { usePermission } from "@/Composeables/Permission.js";
+
+const { can, hasAdminRole } = usePermission(usePage().props);
+const canEditIssues = computed(() => can('inventory.disposition') || hasAdminRole());
+
+const IssueOfMaterialModal = defineAsyncComponent({
+    loader: () => import('@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue'),
+    delay: 200,
+});
 
 const props = defineProps({
     groupedArticles: { type: Array, required: true, default: () => [] },
@@ -210,7 +284,30 @@ const props = defineProps({
     detailsForModal: { type: Object, required: false, default: () => ({}) },
     issues: { type: Array, required: false, default: () => [] },
     projects: { type: Array, required: false, default: () => [] },
+    projectMaterialIssueTabId: { type: Number, required: false, default: 1 },
 });
+
+// Legend popover
+const showLegend = ref(false);
+const legendBtnRef = ref(null);
+const legendPos = reactive({ x: 0, y: 0 });
+
+const toggleLegend = () => {
+    if (!showLegend.value && legendBtnRef.value) {
+        const rect = legendBtnRef.value.getBoundingClientRect();
+        legendPos.x = rect.left;
+        legendPos.y = rect.bottom + 4;
+    }
+    showLegend.value = !showLegend.value;
+};
+
+const onClickOutsideLegend = (e) => {
+    if (showLegend.value && !e.target.closest('[data-legend-wrapper]')) {
+        showLegend.value = false;
+    }
+};
+onMounted(() => document.addEventListener('click', onClickOutsideLegend));
+onUnmounted(() => document.removeEventListener('click', onClickOutsideLegend));
 
 // Side panel state
 const showSidePanel = ref(false);
@@ -419,13 +516,49 @@ const openCellPanel = ({ articleId, date }) => {
     fetchPanelDetails(articleId, date);
 };
 
-const openBarPanel = ({ articleId, issue, date }) => {
-    currentArticleId.value = articleId;
-    currentDate.value = date;
-    focusIssueId.value = issue.id;
-    focusIssueType.value = issue.type;
-    showSidePanel.value = true;
-    fetchPanelDetails(articleId, date);
+// --- Bar click: open issue modal directly ---
+const showBarIssueModal = ref(false);
+const barIssueForModal = ref(null);
+const barIssueIsExtern = ref(false);
+const barIssueLoading = ref(false);
+const showBarIssueInfo = ref(false);
+
+const openBarPanel = async ({ articleId, issue, date }) => {
+    const isExtern = issue.type === 'extern';
+
+    if (canEditIssues.value) {
+        barIssueLoading.value = true;
+        barIssueIsExtern.value = isExtern;
+        try {
+            if (!isExtern) {
+                const response = await axios.get(route('issue-of-material.show', issue.id));
+                barIssueForModal.value = response.data;
+            } else {
+                barIssueForModal.value = issue;
+            }
+            showBarIssueModal.value = true;
+        } catch (error) {
+            console.error('Failed to fetch issue data:', error);
+        } finally {
+            barIssueLoading.value = false;
+        }
+    } else {
+        barIssueIsExtern.value = isExtern;
+        barIssueForModal.value = issue;
+        showBarIssueInfo.value = true;
+    }
+};
+
+const closeBarIssueModal = () => {
+    showBarIssueModal.value = false;
+    showBarIssueInfo.value = false;
+    barIssueForModal.value = null;
+    // Refresh grid data
+    router.reload({
+        preserveState: true,
+        preserveScroll: true,
+        only: ["availability", "issues", "projects"],
+    });
 };
 
 const closeSidePanel = () => {
@@ -482,7 +615,8 @@ const InventoryFunctionBarFilter = defineAsyncComponent({
     box-shadow: 2px 0 4px -1px rgba(0, 0, 0, 0.1);
 }
 
-.bar-stripe-legend {
+.bar-stripe-legend,
+.bar-stripe-legend-dropdown {
     background-image: repeating-linear-gradient(
         45deg,
         rgb(16 185 129) 0,

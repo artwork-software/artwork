@@ -211,7 +211,7 @@
                                       :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
+                    <ToolTipComponent v-if="can('can subscribe shift calendar') || hasAdminRole()" direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"

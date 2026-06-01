@@ -1077,6 +1077,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanFilters']
     )->name('update.user.inventory.article-plan.filters.update');
 
+    // Ref 1.18: persist planning view settings (only-planned toggle + collapse state)
+    Route::patch(
+        '/user/{user}/inventory/article-plan/view-settings/update',
+        [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanViewSettings']
+    )->name('update.user.inventory.article-plan.view-settings.update');
+
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
         ->name('user.update.zoom_factor');
@@ -2102,7 +2108,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
-            ->name('user.operationPlan');
+            ->name('user.operationPlan')
+            ->can('can view own roster');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
         Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
@@ -2143,6 +2150,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
+        // (DP-16: nur der Abonnier-Button wird per Recht ausgeblendet; bestehende
+        // Abos bleiben unberührt, daher KEIN serverseitiges Gating der Abo-Routen.)
         Route::post(
             '/shift/calendar/abo/create',
             [UserShiftCalendarAboController::class, 'store']
@@ -2440,6 +2449,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
                 ->name('inventory.article-status.update');
 
+            Route::post('/status/reorder', [InventoryArticleStatusController::class, 'reorder'])
+                ->name('inventory.article-status.reorder');
+
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');
 
@@ -2454,6 +2466,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // patch inventory-management.settings.properties.update
             Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
                 ->name('inventory-management.settings.properties.update');
+
+            // reorder global property order (Ref 1.41)
+            Route::post('/properties/reorder', [InventoryArticlePropertiesController::class, 'reorder'])
+                ->name('inventory-management.settings.properties.reorder');
 
             // inventory-management.settings.categories.create
             Route::post('/categories/create', [InventoryCategoryController::class, 'store'])

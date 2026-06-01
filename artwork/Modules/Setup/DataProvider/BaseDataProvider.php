@@ -309,6 +309,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::CAN_VIEW_OWN_ROSTER->value,
+                'name_de' => "Mein Einsatzplan sehen",
+                'translation_key' => "View own roster",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf den eigenen Einsatzplan („Mein Einsatzplan") einsehen.',
+                'tooltipKey' => "User can view their own roster (\"My roster\").",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR->value,
+                'name_de' => "Dienstplan-Kalender abonnieren",
+                'translation_key' => "Subscribe to shift calendar",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf den eigenen Einsatzplan als Kalender-Abo (ICS) abonnieren.',
+                'tooltipKey' => "User can subscribe to their roster as a calendar feed (ICS).",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::CAN_COMMIT_SHIFTS->value,
                 'name_de' => "Dienstpläne festschreiben",
                 'translation_key' => "Lock shift plans",

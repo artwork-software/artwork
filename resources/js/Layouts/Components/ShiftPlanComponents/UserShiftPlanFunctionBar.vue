@@ -23,7 +23,7 @@
                     classesButton="ui-button"
                 />
             </div>
-            <div class="flex items-center" v-if="checkIfThisIsMe">
+            <div class="flex items-center" v-if="checkIfThisIsMe && ($can('can subscribe shift calendar') || hasAdminRole())">
                 <div @click="showCalendarAboSettingModal = true"
                      class="flex items-center gap-x-1 text-sm group cursor-pointer">
                     <PropertyIcon name="IconCalendarStar"

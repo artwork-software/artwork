@@ -20,6 +20,7 @@ class InventoryArticleProperties extends Model
         'is_deletable',
         'across_articles',
         'individual_value',
+        'order',
     ];
 
     /**
@@ -33,11 +34,17 @@ class InventoryArticleProperties extends Model
         'select_values' => 'array',
         'across_articles' => 'boolean',
         'individual_value' => 'boolean',
+        'order' => 'integer',
     ];
 
 
     public function scopeFilterable($query)
     {
         return $query->where('is_filterable', true);
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order')->orderBy('id');
     }
 }

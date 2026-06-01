@@ -20,7 +20,8 @@
                                     <table class="min-w-full divide-y divide-gray-300 flex-grow">
                                         <thead>
                                         <tr class="divide-x divide-gray-200">
-                                            <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">{{ $t('Name') }}</th>
+                                            <th scope="col" class="w-8 py-3.5 pl-4 sm:pl-0"></th>
+                                            <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-gray-900">{{ $t('Name') }}</th>
                                             <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Tooltip Text') }}</th>
                                             <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
                                             <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Filterable') }}</th>
@@ -28,11 +29,24 @@
                                             <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Required field') }}</th>
                                         </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200 bg-white">
-                                        <tr v-for="property in properties.data" :key="property?.id" class="divide-x divide-gray-200">
-                                            <SinglePropertyInSettings :property="property" :show-actions="false" />
-                                        </tr>
-                                        </tbody>
+                                        <draggable
+                                            tag="tbody"
+                                            v-model="localProperties"
+                                            item-key="id"
+                                            handle=".drag-handle"
+                                            ghost-class="opacity-50"
+                                            class="divide-y divide-gray-200 bg-white"
+                                            @end="persistOrder"
+                                        >
+                                            <template #item="{ element: property }">
+                                                <tr :key="property?.id" class="divide-x divide-gray-200">
+                                                    <td class="py-4 pl-4 sm:pl-0 text-gray-400 align-middle">
+                                                        <component :is="IconGripVertical" class="size-4 cursor-grab drag-handle" />
+                                                    </td>
+                                                    <SinglePropertyInSettings :property="property" :show-actions="false" />
+                                                </tr>
+                                            </template>
+                                        </draggable>
                                     </table>
 
                                     <!-- Fixed Actions Column -->
@@ -44,7 +58,7 @@
                                             </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200 bg-white">
-                                            <tr v-for="property in properties.data" :key="property?.id">
+                                            <tr v-for="property in localProperties" :key="property?.id">
                                                 <SinglePropertyInSettings :property="property" :show-only-actions="true" />
                                             </tr>
                                             </tbody>
@@ -75,10 +89,12 @@
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import {ref} from "vue";
+import {ref, watch} from "vue";
+import {router} from "@inertiajs/vue3";
+import draggable from "vuedraggable";
 import AddEditArticlePropertyModal from "@/Pages/InventorySetting/Components/AddEditArticlePropertyModal.vue";
 import SinglePropertyInSettings from "@/Pages/InventorySetting/Components/SinglePropertyInSettings.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconPlus, IconGripVertical} from "@tabler/icons-vue";
 
 const props = defineProps({
     properties: {
@@ -88,6 +104,24 @@ const props = defineProps({
 })
 
 const showAddEditPropertyModal = ref(false);
+
+// Local, drag-sortable copy of the current page. Re-synced on fresh server data.
+const localProperties = ref([...(props.properties?.data ?? [])])
+watch(() => props.properties, (value) => {
+    localProperties.value = [...(value?.data ?? [])]
+})
+
+// Ref 1.41: persist the new global property order. `start` keeps the order
+// values globally consistent across paginated pages.
+const persistOrder = () => {
+    router.post(route('inventory-management.settings.properties.reorder'), {
+        ids: localProperties.value.map((property) => property.id),
+        start: (props.properties?.from ?? 1) - 1,
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    })
+}
 
 </script>
 

@@ -71,14 +71,14 @@ class InventoryCategoryController extends Controller
         if ($inventoryCategory) {
             $filterableProperties = $inventoryCategory->properties()
                 ->filterable()
-                ->orderBy('name')
+                ->orderBy('inventory_article_properties.order')
                 ->get();
         }
 
         if ($inventorySubCategory) {
             $subProperties = $inventorySubCategory->properties()
                 ->filterable()
-                ->orderBy('name')
+                ->orderBy('inventory_article_properties.order')
                 ->get();
 
             $filterableProperties = $filterableProperties
@@ -92,6 +92,7 @@ class InventoryCategoryController extends Controller
 
         $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
         $statusId = request()->integer('status_id') ?: null;
+        $searchPropertyId = request()->integer('search_property_id') ?: null;
 
         $articles = $this->articleService->getArticleList(
             $inventoryCategory,
@@ -100,6 +101,7 @@ class InventoryCategoryController extends Controller
             $resolved['filters'],
             $resolved['tag_ids'],
             $statusId,
+            $searchPropertyId,
         );
 
         $articles->appends([
@@ -107,6 +109,7 @@ class InventoryCategoryController extends Controller
             'tag_ids' => $resolved['tag_ids'],
             'filter_preset_id' => $resolved['filter_preset_id'],
             'status_id' => $statusId,
+            'search_property_id' => $searchPropertyId,
         ]);
 
         return Inertia::render('Inventory/Index', [
@@ -130,6 +133,7 @@ class InventoryCategoryController extends Controller
                 request('search'),
                 $resolved['filters'],
                 $resolved['tag_ids'],
+                $searchPropertyId,
             ),
             'activeStatusId' => $statusId,
             'productBaskets' => $this->productBasketService->getUserBasket(),

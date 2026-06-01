@@ -19,6 +19,51 @@ class InventoryArticleRepository
         return InventoryArticle::search($term)->get();
     }
 
+    /**
+     * Ref 1.28: SQL-based search across all property values (incl. serial number),
+     * name, inventory number and category. Supports wildcard syntax (`*158`) and an
+     * optional scope to a single property. Used when Meilisearch cannot express the
+     * query (wildcard or attribute-scoped search).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
+     */
+    public function searchAdvanced(string $term, ?int $propertyId = null)
+    {
+        // Translate wildcard `*` to SQL `%`; a plain term matches as substring.
+        $pattern = str_contains($term, '*')
+            ? str_replace('*', '%', $term)
+            : '%' . $term . '%';
+
+        return InventoryArticle::query()
+            ->withoutTrashed()
+            ->where(function ($q) use ($pattern, $propertyId): void {
+                // Main article property values
+                $q->whereHas('properties', function ($pq) use ($pattern, $propertyId): void {
+                    $pq->where('inventory_property_values.value', 'like', $pattern);
+                    if ($propertyId) {
+                        $pq->where('inventory_article_properties.id', $propertyId);
+                    }
+                });
+
+                // Detailed article (single inventory) property values
+                $q->orWhereHas('detailedArticleQuantities.properties', function ($pq) use ($pattern, $propertyId): void {
+                    $pq->where('inventory_property_values.value', 'like', $pattern);
+                    if ($propertyId) {
+                        $pq->where('inventory_article_properties.id', $propertyId);
+                    }
+                });
+
+                // When not scoped to a single property, also match the basics.
+                if (!$propertyId) {
+                    $q->orWhere('inventory_articles.name', 'like', $pattern)
+                        ->orWhere('inventory_articles.inventory_number', 'like', $pattern)
+                        ->orWhereHas('category', fn ($c) => $c->where('name', 'like', $pattern))
+                        ->orWhereHas('subCategory', fn ($c) => $c->where('name', 'like', $pattern));
+                }
+            })
+            ->get(['inventory_articles.id']);
+    }
+
     public function baseQuery()
     {
         return InventoryArticle::query();

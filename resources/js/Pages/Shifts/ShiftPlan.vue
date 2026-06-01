@@ -286,7 +286,11 @@
                                             >
                                                 <div
                                                     class="rounded-lg border duration-200 ease-in-out"
-                                                    :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'"
+                                                    :class="[
+                                                        group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50',
+                                                        isGroupProjectHighlighted(group) ? '!border-2 !border-pink-500' : '',
+                                                        isGroupProjectDimmed(group) ? 'opacity-30' : ''
+                                                    ]"
                                                 >
                                                     <div
                                                         v-if="group.project"
@@ -975,6 +979,18 @@ const showHistoryModal = ref(false)
 const showUserShifts = ref(false)
 const userToShow = ref<any | null>(null)
 const dayToShow = ref<any | null>(null)
+
+/* DP-07/2.20: Projektmodus — der ganze Projektblock (Tag+Raum+Projekt) wird pink
+   umrandet, fremde/projektlose Blöcke abgedimmt. */
+const shiftPlanSettings = computed<any>(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
+const projectModeActive = computed(() =>
+    !!shiftPlanSettings.value?.use_project_time_period && !!shiftPlanSettings.value?.time_period_project_id
+)
+const isGroupProjectHighlighted = (group: any): boolean =>
+    projectModeActive.value && group?.projectId != null && group.projectId === shiftPlanSettings.value.time_period_project_id
+const isGroupProjectDimmed = (group: any): boolean =>
+    projectModeActive.value && !isGroupProjectHighlighted(group)
+
 const highlightMode = ref(false)
 const idToHighlight = ref<number | string | null>(null)
 const typeToHighlight = ref<number | null>(null)

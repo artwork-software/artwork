@@ -583,7 +583,7 @@ const navigation = ref([
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
-                has_permission: moduleIsVisible('shift_plan'),
+                has_permission: moduleIsVisible('shift_plan') && (can('can view own roster') || is('artwork admin')),
             },
             /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {

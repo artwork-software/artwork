@@ -70,11 +70,6 @@ function resolveTablerIcon(nameLike: unknown): Component {
             }
         },
         delay: 0,
-        timeout: 8000,
-        onError(err, _retry, fail, attempts) {
-            // nach 2 Fehlversuchen abbrechen
-            if (attempts > 1) fail(err)
-        }
     })
 
     cache.set(exportName, Comp)

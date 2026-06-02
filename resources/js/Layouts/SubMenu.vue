@@ -767,13 +767,14 @@ const navigation = ref([
                 current: route().current('crm.settings.*'),
                 has_permission: can('crm manager') || is('artwork admin')
             },
-            {
-                name: 'External access settings',
-                href: route('settings.external-access.index'),
-                icon: 'IconAddressBook',
-                current: route().current('settings.external-access.*'),
-                has_permission: is('artwork admin')
-            },
+            // Externe-Zugriff-Feature vorerst ausgeblendet (noch nicht ausgereift)
+            // {
+            //     name: 'External access settings',
+            //     href: route('settings.external-access.index'),
+            //     icon: 'IconAddressBook',
+            //     current: route().current('settings.external-access.*'),
+            //     has_permission: is('artwork admin')
+            // },
             {
                 name: 'Inventory',
                 href: route('inventory-management.settings.category'),

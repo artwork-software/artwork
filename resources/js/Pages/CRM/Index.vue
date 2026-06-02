@@ -18,6 +18,7 @@
                         {{ $t('Export') }}
                     </button>
                     -->
+                    <!-- TODO: Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
                     <button
                         v-if="can('can invite externals')"
                         class="ui-button flex items-center gap-1.5"
@@ -26,6 +27,7 @@
                         <component :is="IconUserPlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite external') }}
                     </button>
+                    -->
                     <div v-if="hasFilterableProperties" class="relative inline-flex">
                         <ToolTipComponent
                             direction="bottom"
@@ -211,7 +213,7 @@
             @close="showExportModal = false"
         />
 
-        <!-- Invite External Modal -->
+        <!-- Invite External Modal — vorerst ausgeblendet (noch nicht ausgereift)
         <InviteExternalModal
             v-if="showInviteModal"
             source="crm_index"
@@ -219,6 +221,7 @@
             @close="showInviteModal = false"
             @success="showSuccess($t('Invitation sent.'))"
         />
+        -->
     </AppLayout>
 </template>
 
@@ -227,7 +230,8 @@ import { ref, watch, computed, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { usePermission } from '@/Composeables/Permission.js'
-import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
+// Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
+// import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseTable from '@/Artwork/Table/BaseTable.vue'

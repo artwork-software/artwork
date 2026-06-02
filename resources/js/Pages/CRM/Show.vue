@@ -9,7 +9,7 @@
                 </Link>
             </div>
 
-            <!-- External access status -->
+            <!-- External access status — Feature vorerst ausgeblendet (noch nicht ausgereift)
             <div v-if="externalAccessStatus" class="mb-4 flex flex-wrap items-center gap-3">
                 <span
                     v-if="externalAccessStatus.crm_access_expires_at && !externalAccessStatus.revoked_at"
@@ -32,6 +32,7 @@
                     {{ $t('Manage external access') }}
                 </Link>
             </div>
+            -->
 
             <Transition
                 enter-active-class="transition ease-out duration-200"

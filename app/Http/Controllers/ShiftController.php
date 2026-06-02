@@ -11,7 +11,10 @@ use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
+use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -46,6 +49,7 @@ use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
@@ -326,7 +330,23 @@ class ShiftController extends Controller
             'room_id',
         ]));
 
+        $craftChanged = $shift->isDirty('craft_id');
+
         $this->shiftService->save($shift);
+
+        // When the craft changes, remove all assigned workers since they may not
+        // be qualified for the new craft, and reload the craft relation for the broadcast.
+        if ($craftChanged) {
+            ShiftWorker::where('shift_id', $shift->id)->forceDelete();
+            ShiftUser::where('shift_id', $shift->id)->forceDelete();
+            ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
+            ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
+
+            $shift->unsetRelation('users');
+            $shift->unsetRelation('freelancer');
+            $shift->unsetRelation('serviceProvider');
+            $shift->load('craft:id,name,abbreviation,color');
+        }
 
         if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
             ShiftWorker::where('shift_id', $shift->id)->forceDelete();
@@ -1080,6 +1100,190 @@ class ShiftController extends Controller
 
 
         return $isShiftTab ? $this->redirector->back() : null;
+    }
+
+    /**
+     * Authoritative list of a worker's active shift assignments and individual times that cover
+     * the given day. Read straight from the database so it is correct regardless of the (possibly
+     * stale) shift-plan frontend state — used to decide whether the availability-status warning
+     * must be shown and to drive its list / removal.
+     */
+    public function dayAssignments(Request $request): JsonResponse
+    {
+        abort_unless(
+            $request->user()?->can(PermissionEnum::SHIFT_PLANNER->value) === true,
+            403,
+        );
+
+        $validated = $request->validate([
+            'model_type' => ['required', 'integer', 'in:0,1,2'],
+            'model_id' => ['required', 'integer'],
+            'date' => ['required', 'date'],
+        ]);
+
+        $modelClass = match ((int) $validated['model_type']) {
+            1 => Freelancer::class,
+            2 => ServiceProvider::class,
+            default => User::class,
+        };
+        $modelId = (int) $validated['model_id'];
+        $date = Carbon::parse($validated['date'])->toDateString();
+
+        $shifts = ShiftWorker::query()
+            ->with(['shift.event', 'shift.craft'])
+            ->where('employable_type', $modelClass)
+            ->where('employable_id', $modelId)
+            ->whereHas('shift', function ($query) use ($date): void {
+                $query->whereDate('start_date', '<=', $date)
+                    ->whereDate('end_date', '>=', $date);
+            })
+            ->get()
+            ->map(function (ShiftWorker $pivot): ?array {
+                $shift = $pivot->shift;
+                if ($shift === null) {
+                    return null;
+                }
+
+                return [
+                    'pivot_id' => $pivot->id,
+                    'shift_id' => $shift->id,
+                    'start' => $shift->start ? Carbon::parse((string) $shift->start)->format('H:i') : null,
+                    'end' => $shift->end ? Carbon::parse((string) $shift->end)->format('H:i') : null,
+                    'event_name' => $shift->event?->name ?? $shift->event?->eventName,
+                    'craft_abbreviation' => $shift->craft?->abbreviation,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $individualTimes = IndividualTime::query()
+            ->where('timeable_type', $modelClass)
+            ->where('timeable_id', $modelId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->get()
+            ->map(fn (IndividualTime $time): array => [
+                'id' => $time->id,
+                'title' => $time->title,
+                'start_time' => $time->start_time ? Carbon::parse((string) $time->start_time)->format('H:i') : null,
+                'end_time' => $time->end_time ? Carbon::parse((string) $time->end_time)->format('H:i') : null,
+            ])
+            ->values();
+
+        return response()->json([
+            'shifts' => $shifts,
+            'individual_times' => $individualTimes,
+        ]);
+    }
+
+    /**
+     * Removes a worker (User/Freelancer/ServiceProvider) from the given shift assignments and
+     * deletes the given individual times — used when an availability status of "free"/"not
+     * available" is set for a day on which the person still starts shifts or has individual times.
+     * Only the explicitly listed pivots/times that actually belong to the worker are touched.
+     */
+    public function removeWorkerFromDay(
+        Request $request,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService,
+        WorkingHourCacheService $workingHourCacheService
+    ): JsonResponse {
+        abort_unless(
+            $request->user()?->can(PermissionEnum::SHIFT_PLANNER->value) === true,
+            403,
+        );
+
+        $validated = $request->validate([
+            'model_type' => ['required', 'integer', 'in:0,1,2'],
+            'model_id' => ['required', 'integer'],
+            'shift_pivot_ids' => ['array'],
+            'shift_pivot_ids.*' => ['integer'],
+            'individual_time_ids' => ['array'],
+            'individual_time_ids.*' => ['integer'],
+        ]);
+
+        $modelType = (int) $validated['model_type'];
+        $modelId = (int) $validated['model_id'];
+
+        $modelClass = match ($modelType) {
+            1 => Freelancer::class,
+            2 => ServiceProvider::class,
+            default => User::class,
+        };
+        $serviceToUse = match ($modelType) {
+            1 => $shiftFreelancerService,
+            2 => $shiftServiceProviderService,
+            default => $shiftUserService,
+        };
+
+        foreach ($validated['shift_pivot_ids'] ?? [] as $pivotId) {
+            $pivot = ShiftWorker::query()
+                ->where('id', $pivotId)
+                ->where('employable_type', $modelClass)
+                ->where('employable_id', $modelId)
+                ->first();
+
+            if ($pivot === null) {
+                // Already gone or does not belong to this worker — skip silently.
+                continue;
+            }
+
+            $shift = $pivot->shift;
+
+            if ($serviceToUse instanceof ShiftServiceProviderService) {
+                $serviceToUse->removeFromShift($pivot->id, true, $shiftCountService, $changeService);
+            } else {
+                $serviceToUse->removeFromShift(
+                    $pivot->id,
+                    true,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService,
+                );
+            }
+
+            if ($shift !== null) {
+                broadcast(new RemoveEntityFormShiftEvent(
+                    $shift,
+                    $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                    $pivotId,
+                    $modelType,
+                ));
+            }
+        }
+
+        foreach ($validated['individual_time_ids'] ?? [] as $individualTimeId) {
+            $individualTime = IndividualTime::query()
+                ->where('id', $individualTimeId)
+                ->where('timeable_type', $modelClass)
+                ->where('timeable_id', $modelId)
+                ->first();
+
+            if ($individualTime === null) {
+                continue;
+            }
+
+            $owner = $individualTime->timeable;
+            $individualTime->delete();
+
+            if ($owner) {
+                $workingHourCacheService->forgetForEntity(
+                    WorkingHourCacheService::entityType($owner),
+                    $owner->id,
+                );
+                broadcast(new IndividualTimeChanged($owner->id, $modelType));
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function removeAllShiftUsers(

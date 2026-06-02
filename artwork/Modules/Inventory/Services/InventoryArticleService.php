@@ -51,9 +51,10 @@ class InventoryArticleService
         ?string $search = '',
         ?array $resolvedFilters = null,
         ?array $resolvedTagIds = null,
-        ?int $statusId = null
+        ?int $statusId = null,
+        ?int $searchPropertyId = null
     ): LengthAwarePaginator {
-        $query = $this->buildArticleQuery($category, $subCategory, $search);
+        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
 
         $query->with([
             'category.properties',
@@ -141,7 +142,8 @@ class InventoryArticleService
     protected function buildArticleQuery(
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
-        ?string $search = ''
+        ?string $search = '',
+        ?int $searchPropertyId = null
     ): Builder {
         $query = $this->articleRepository->baseQuery()->withoutTrashed();
 
@@ -156,7 +158,12 @@ class InventoryArticleService
 
         // Search anwenden (innerhalb der gewählten Kategorie/Subkategorie)
         if (!empty($search)) {
-            $ids = $this->articleRepository->search($search)->pluck('id');
+            // Ref 1.28: Wildcard- oder attribut-scoped Suche per SQL, sonst Meilisearch.
+            if ($searchPropertyId !== null || str_contains($search, '*')) {
+                $ids = $this->articleRepository->searchAdvanced($search, $searchPropertyId)->pluck('id');
+            } else {
+                $ids = $this->articleRepository->search($search)->pluck('id');
+            }
             $query->whereIn('inventory_articles.id', $ids);
         }
 
@@ -237,8 +244,9 @@ class InventoryArticleService
         ?string $search = '',
         ?array $resolvedFilters = null,
         ?array $resolvedTagIds = null,
+        ?int $searchPropertyId = null,
     ): array {
-        $query = $this->buildArticleQuery($category, $subCategory, $search);
+        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
 
         $filters = $resolvedFilters ?? [];
         $query = $this->articleRepository->applyFilters($query, $filters);
@@ -254,11 +262,12 @@ class InventoryArticleService
         $main = DB::table('inventory_article_status_values as sv')
             ->join('inventory_article_statuses as s', 's.id', '=', 'sv.inventory_article_status_id')
             ->whereIn('sv.inventory_article_id', $articleIds)
-            ->groupBy('s.id', 's.name', 's.color')
+            ->groupBy('s.id', 's.name', 's.color', 's.order')
             ->select([
                 's.id',
                 's.name',
                 's.color',
+                's.order',
                 DB::raw('COALESCE(SUM(sv.value), 0) as total'),
             ])
             ->get()
@@ -269,11 +278,12 @@ class InventoryArticleService
             ->join('inventory_article_statuses as s', 's.id', '=', 'dq.inventory_article_status_id')
             ->whereIn('dq.inventory_article_id', $articleIds)
             ->whereNotNull('dq.inventory_article_status_id')
-            ->groupBy('s.id', 's.name', 's.color')
+            ->groupBy('s.id', 's.name', 's.color', 's.order')
             ->select([
                 's.id',
                 's.name',
                 's.color',
+                's.order',
                 DB::raw('COALESCE(SUM(dq.quantity), 0) as total'),
             ])
             ->get()
@@ -285,17 +295,25 @@ class InventoryArticleService
             $merged[$id] = [
                 'name'  => $row->name,
                 'color' => $row->color ?? '#ccc',
+                'order' => (int) ($row->order ?? 0),
                 'count' => (int) $row->total,
             ];
         }
         foreach ($detail as $id => $row) {
             if (!isset($merged[$id])) {
-                $merged[$id] = ['name' => $row->name, 'color' => $row->color ?? '#ccc', 'count' => 0];
+                $merged[$id] = [
+                    'name'  => $row->name,
+                    'color' => $row->color ?? '#ccc',
+                    'order' => (int) ($row->order ?? 0),
+                    'count' => 0,
+                ];
             }
             $merged[$id]['count'] += (int) $row->total;
         }
 
-        ksort($merged, SORT_NUMERIC);
+        // Ref 1.29: nach konfigurierbarer Status-Reihenfolge (`order`) sortieren,
+        // Schlüssel (Status-IDs) bleiben erhalten.
+        uasort($merged, fn($a, $b) => ($a['order'] <=> $b['order']));
         return $merged;
     }
 

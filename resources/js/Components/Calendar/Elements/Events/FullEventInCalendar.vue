@@ -2,16 +2,16 @@
     <div
         :style="{
       minHeight: isHeightFull ? '100%' : (totalHeight - heightSubtraction(event)) * zoom_factor + 'px',
-      backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent),
+      backgroundColor: eventBgColor,
       fontsize: fontSize,
       lineHeight: lineHeight
     }"
         class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
         :class="[
       event.occupancy_option ? 'event-disabled' : '',
-      usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
+      calSettings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
-      usePage().props.auth.user.daily_view ? 'overflow-y-auto' : '',
+      pageProps.auth.user.daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
     ]"
     >
@@ -48,7 +48,7 @@
 
         <!-- Projektgruppen-Balken (nur wenn display_project_groups aktiv UND Projekt einer Gruppe zugeordnet ist) -->
         <div
-            v-if="usePage().props.auth.user.calendar_settings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+            v-if="calSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
             class="w-full rounded-t-lg px-2 py-1 border-b border-black/15"
             :style="{
                 backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent'
@@ -90,14 +90,12 @@
             <div
                 class="flex items-center gap-1.5 min-w-0"
                 :style="{
-                  color: event.project?.isGroup ? 'black' : getTextColorBasedOnBackground(
-                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                  )
+                  color: event.project?.isGroup ? 'black' : eventTextColor
                 }"
             >
                 <!-- Projekt-Status Punkt (fixe Größe) -->
                 <div
-                    v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
+                    v-if="calSettings.project_status && event.project?.status"
                     class="group relative shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
                     :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
                     title=""
@@ -137,29 +135,18 @@
         <div v-if="zoom_factor > 0.6" class="grid grid-cols-1 md:grid-cols-3 gap-x-3 px-2.5 py-2">
             <!-- Linke 2/3 Spalte -->
             <div class="col-span-2">
-                <div class="flex items-start gap-2">
-                    <!-- Schmaler Typ-Streifen -->
-                    <div
-                        v-if="!usePage().props.auth.user.calendar_settings.high_contrast"
-                        class="w-[4px] rounded-sm mt-[2px] self-stretch"
-                        :style="{ backgroundColor: getColorBasedOnUserSettings }"
-                    ></div>
-
+                <div class="flex items-start">
                     <!-- Text-Block -->
                     <div
                         class="min-w-0 flex-1"
-                        :style="{
-                          color: getTextColorBasedOnBackground(
-                            backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                          )
-                        }"
+                        :style="{ color: eventTextColor }"
                     >
                         <!-- Kopfzeile -->
                         <div class="relative space-y-0.5">
                             <div v-if="false" class="flex items-center gap-1.5 min-w-0">
                                 <!-- Projekt-Status Punkt -->
                                 <div
-                                    v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
+                                    v-if="calSettings.project_status && event.project?.status"
                                     class="group relative shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
                                     :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
                                     title=""
@@ -189,13 +176,13 @@
                             </div>
 
                             <!-- Artists -->
-                            <div v-if="usePage().props.auth.user.calendar_settings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90']">
+                            <div v-if="calSettings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90']">
                                 {{ event.project?.artistNames }}
                             </div>
 
                             <!-- Eventname -->
                             <div
-                                v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName"
+                                v-if="calSettings.event_name && event.eventName"
                                 :class="[expandDays ? 'break-words' : 'truncate', 'relative text-xs/4 font-semibold']"
                                 @mouseenter="showEventNameTooltipHandler"
                                 @mouseleave="hideEventNameTooltip"
@@ -238,47 +225,35 @@
                                         </div>
                                     </Teleport>
                                 </div>
-                                <div v-if="usePage().props.auth.user.calendar_settings.project_status && event.projectStateColor" class="ml-2">
+                                <div v-if="calSettings.project_status && event.projectStateColor" class="ml-2">
                                     <div :class="[event.projectStateColor, zoom_factor <= 0.8 ? 'border-2' : 'border-4']" class="rounded-full"></div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Zeit/Optionen Zeile -->
-                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5" :class="[(new Date(event.start).toDateString() === new Date(event.end).toDateString()) && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
+                        <div class="mt-0.5 flex items-center gap-1.5 text-xs/5" :class="[isSameDay && !project && !atAGlance ? 'flex-nowrap' : 'flex-wrap']">
                             <component
                                 :is="IconRepeat"
-                                v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
+                                v-if="calSettings.repeating_events && event.is_series"
                                 class="size-3.5 shrink-0"
                                 stroke-width="2"
-                                :style="{
-                                    color: getTextColorBasedOnBackground(
-                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                                    )
-                                }"
+                                :style="{ color: eventTextColor }"
                             />
                             <component
                                 :is="IconClock"
-                                v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
+                                v-if="!event.allDay && isSameDay"
                                 class="size-3.5 shrink-0"
                                 stroke-width="2"
-                                :style="{
-                                    color: getTextColorBasedOnBackground(
-                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                                    )
-                                }"
+                                :style="{ color: eventTextColor }"
                             />
                             <div
                                 class="subpixel-antialiased"
-                                :class="[zoom_factor === 1 ? 'eventTime' : '', (new Date(event.start).toDateString() === new Date(event.end).toDateString()) && !project && !atAGlance ? 'whitespace-nowrap' : '']"
-                                :style="{
-                                      color: getTextColorBasedOnBackground(
-                                        backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)
-                                      )
-                                    }"
+                                :class="[zoom_factor === 1 ? 'eventTime' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
+                                :style="{ color: eventTypeTextColor }"
                             >
                                 <!-- gleicher Tag -->
-                                <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance">
+                                <template v-if="isSameDay && !project && !atAGlance">
                                     <span v-if="event.allDay">{{ $t('Full day') }}</span>
                                     <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                 </template>
@@ -286,7 +261,7 @@
                                 <!-- mehrtägig -->
                                 <template v-else>
                                   <span v-if="event.allDay">
-                                    <template v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
+                                    <template v-if="atAGlance && isSameDay">
                                       {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }}
                                     </template>
                                     <template v-else>
@@ -294,7 +269,7 @@
                                     </template>
                                   </span>
                                                     <span v-else>
-                                    <template v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
+                                    <template v-if="!isSameDay">
                                       <span class="text-error pr-0.5">!</span>
                                       {{ resolvedFormattedDates.startDateTime_without_year  + ' - ' +  resolvedFormattedDates.endDateTime_without_year }}
                                     </template>
@@ -311,9 +286,9 @@
                             </div>
 
                             <!-- Options -->
-                            <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class=" text-xs/5">
+                            <div v-if="event.option_string && calSettings.options" class=" text-xs/5">
                                 <span
-                                    v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
+                                    v-if="!atAGlance && isSameDay"
                                     class="eventTime font-medium subpixel-antialiased"
                                     :style="{ lineHeight: lineHeight, fontSize: fontSize }"
                                 >
@@ -328,7 +303,7 @@
 
                         <!-- Projektleiter -->
                         <div
-                            v-if="usePage().props.auth.user.calendar_settings.project_management && event?.project?.leaders?.length > 0"
+                            v-if="calSettings.project_management && event?.project?.leaders?.length > 0"
                             class="mt-2 -ml-1.5"
                         >
                             <div v-if="event?.project?.leaders && !project && zoom_factor >= 0.8" class="ml-2 flex flex-wrap items-center gap-1">
@@ -373,13 +348,9 @@
 
                         <!-- Beschreibung -->
                         <div
-                            v-if="usePage().props.auth.user.calendar_settings.description"
+                            v-if="calSettings.description"
                             class="mt-2"
-                            :style="{
-                color: getTextColorBasedOnBackground(
-                  backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)
-                )
-              }"
+                            :style="{ color: eventTypeTextColor }"
                         >
                             <EventNoteComponent :event="event" />
                         </div>
@@ -387,7 +358,7 @@
 
                     <!-- Schichten kompakt rechts daneben -->
                     <div
-                        v-if="usePage().props.auth.user.calendar_settings.work_shifts"
+                        v-if="calSettings.work_shifts"
                         class="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-0.5 text-xs pt-0.5"
                     >
                         <a
@@ -408,7 +379,7 @@
             <div class="pt-1 flex flex-col justify-start items-end">
                 <!-- Kontext-Menü -->
                 <div class="opacity-0 group-hover/singleEvent:opacity-100 transition-opacity duration-150">
-                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
+                    <BaseMenu has-no-offset :dots-color="calSettings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && !event.hasVerification" @click="SendEventToVerification" :icon="IconLock" title="Request verification" />
                         <BaseMenuItem white-menu-background v-if="event?.isPlanning && event.hasVerification" @click="cancelVerification" :icon="IconLockOpen" title="Withdraw verification request" />
                         <BaseMenuItem white-menu-background v-if="event.hasVerification && verifierForEventTypIds?.includes(event.eventType.id)" @click="approveRequest" :icon="IconChecks" title="Approve verification" />
@@ -439,11 +410,7 @@
                         <PropertyIcon
                             :name="property.icon"
                             class="size-3.5 opacity-90"
-                            :style="{
-                                color: getTextColorBasedOnBackground(
-                                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                                )
-                            }"
+                            :style="{ color: eventTextColor }"
                         />
                         <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
                             <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
@@ -455,7 +422,7 @@
 
                 <!-- Timeline Icon -->
                 <div
-                    v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                    v-if="calSettings.show_timeline"
                     class="mt-2 cursor-pointer"
                     @click="openTimelineModal"
                 >
@@ -465,16 +432,12 @@
                         stroke-width="1.5"
                         :style="{
                             color: event.hasTimelines
-                                ? getTextColorBasedOnBackground(
-                                    backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                                  )
-                                : (usePage().props.auth.user.calendar_settings.high_contrast
-                                    ? getTextColorBasedOnBackground(
-                                        backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)
-                                      ) + '80'
+                                ? eventTextColor
+                                : (calSettings.high_contrast
+                                    ? eventTextColor + '80'
                                     : undefined)
                         }"
-                        :class="!event.hasTimelines && !usePage().props.auth.user.calendar_settings.high_contrast ? 'text-gray-400' : ''"
+                        :class="!event.hasTimelines && !calSettings.high_contrast ? 'text-gray-400' : ''"
                     />
                 </div>
             </div>
@@ -495,7 +458,7 @@
                     @click.stop="toggleSmallZoomTooltip"
                 />
                 <div class="w-16 max-w-16 text-left" v-if="zoom_factor > 0.4">
-                    <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate text-xs">
+                    <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs">
                         {{ event.eventName }}
                     </div>
                     <a
@@ -522,7 +485,7 @@
                         <!-- Vollständiges Event-Rendering wie bei normalem Zoom -->
                         <div
                             :style="{
-                                backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent),
+                                backgroundColor: eventBgColor,
                             }"
                             class="rounded-lg border border-black/5"
                         >
@@ -536,7 +499,7 @@
 
                             <!-- Projektgruppen-Balken -->
                             <div
-                                v-if="usePage().props.auth.user.calendar_settings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
+                                v-if="calSettings.display_project_groups && event.project?.isInGroup && event.project?.group && event.project?.group.length > 0 && !event.project?.isGroup"
                                 class="w-full px-2 py-1 border-b border-black/15"
                                 :style="{ backgroundColor: event.project.group[0].color ? event.project.group[0].color + '40' : 'transparent' }"
                             >
@@ -560,7 +523,7 @@
                             >
                                 <div class="flex items-center gap-1.5 min-w-0">
                                     <div
-                                        v-if="usePage().props.auth.user.calendar_settings.project_status && event.project?.status"
+                                        v-if="calSettings.project_status && event.project?.status"
                                         class="shrink-0 flex-none size-3.5 rounded-full border"
                                         :style="{ backgroundColor: event?.project?.status?.color + '33', borderColor: event?.project?.status?.color }"
                                     ></div>
@@ -578,21 +541,21 @@
                                 <div class="col-span-2">
                                     <div class="flex items-start gap-2">
                                         <div
-                                            v-if="!usePage().props.auth.user.calendar_settings.high_contrast"
+                                            v-if="!calSettings.high_contrast"
                                             class="w-[4px] rounded-sm mt-[2px] self-stretch"
                                             :style="{ backgroundColor: getColorBasedOnUserSettings }"
                                         ></div>
                                         <div
                                             class="min-w-0 flex-1"
-                                            :style="{ color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)) }"
+                                            :style="{ color: eventTextColor }"
                                         >
                                             <div class="relative space-y-0.5">
                                                 <!-- Artists -->
-                                                <div v-if="usePage().props.auth.user.calendar_settings.project_artists && event.project?.artistNames" class="truncate text-xs/5 opacity-90">
+                                                <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 opacity-90">
                                                     {{ event.project?.artistNames }}
                                                 </div>
                                                 <!-- Eventname -->
-                                                <div v-if="usePage().props.auth.user.calendar_settings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
+                                                <div v-if="calSettings.event_name && event.eventName" class="truncate text-xs/4 font-semibold">
                                                     {{ event.eventName }}
                                                 </div>
                                                 <!-- Eventtyp -->
@@ -606,7 +569,7 @@
                                                             {{ event?.eventType?.name }}
                                                         </span>
                                                     </div>
-                                                    <div v-if="usePage().props.auth.user.calendar_settings.project_status && event.projectStateColor" class="ml-2">
+                                                    <div v-if="calSettings.project_status && event.projectStateColor" class="ml-2">
                                                         <div :class="[event.projectStateColor, 'border-2']" class="rounded-full"></div>
                                                     </div>
                                                 </div>
@@ -616,18 +579,18 @@
                                             <div class="mt-0.5 flex items-center gap-1.5 text-xs/5 flex-wrap">
                                                 <component
                                                     :is="IconRepeat"
-                                                    v-if="usePage().props.auth.user.calendar_settings.repeating_events && event.is_series"
+                                                    v-if="calSettings.repeating_events && event.is_series"
                                                     class="size-3.5 shrink-0"
                                                     stroke-width="2"
                                                 />
                                                 <component
                                                     :is="IconClock"
-                                                    v-if="!event.allDay && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
+                                                    v-if="!event.allDay && isSameDay"
                                                     class="size-3.5 shrink-0"
                                                     stroke-width="2"
                                                 />
                                                 <div class="subpixel-antialiased">
-                                                    <template v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()">
+                                                    <template v-if="isSameDay">
                                                         <span v-if="event.allDay">{{ $t('Full day') }}</span>
                                                         <span v-else>{{ resolvedFormattedDates.startTime + ' - ' + resolvedFormattedDates.endTime }}</span>
                                                     </template>
@@ -641,13 +604,13 @@
                                                         </span>
                                                     </template>
                                                 </div>
-                                                <div v-if="event.option_string && usePage().props.auth.user.calendar_settings.options" class="text-xs/5">
+                                                <div v-if="event.option_string && calSettings.options" class="text-xs/5">
                                                     , {{ event.option_string }}
                                                 </div>
                                             </div>
 
                                             <!-- Projektleiter -->
-                                            <div v-if="usePage().props.auth.user.calendar_settings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
+                                            <div v-if="calSettings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
                                                 <div class="ml-2 flex flex-wrap items-center gap-1">
                                                     <UserPopoverTooltip
                                                         v-for="user in event?.project?.leaders?.slice(0,3)"
@@ -663,13 +626,13 @@
                                             </div>
 
                                             <!-- Beschreibung -->
-                                            <div v-if="usePage().props.auth.user.calendar_settings.description" class="mt-2">
+                                            <div v-if="calSettings.description" class="mt-2">
                                                 <EventNoteComponent :event="event" />
                                             </div>
                                         </div>
 
                                         <!-- Schichten -->
-                                        <div v-if="usePage().props.auth.user.calendar_settings.work_shifts" class="grid grid-cols-1 gap-y-0.5 text-xs pt-0.5">
+                                        <div v-if="calSettings.work_shifts" class="grid grid-cols-1 gap-y-0.5 text-xs pt-0.5">
                                             <a
                                                 v-if="firstProjectShiftTabId"
                                                 v-for="shift in event.shifts"
@@ -691,13 +654,13 @@
                                             <PropertyIcon
                                                 :name="property.icon"
                                                 class="size-3.5 opacity-90"
-                                                :style="{ color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent)) }"
+                                                :style="{ color: eventTextColor }"
                                             />
                                         </div>
                                     </div>
                                     <!-- Timeline Icon -->
                                     <div
-                                        v-if="usePage().props.auth.user.calendar_settings.show_timeline"
+                                        v-if="calSettings.show_timeline"
                                         class="mt-2 cursor-pointer"
                                         @click.stop="openTimelineModal"
                                     >
@@ -729,7 +692,7 @@
             <div v-for="subEvent in event.subEvents" :key="'sub-'+subEvent.id" class="rounded-lg">
                 <div
                     class="relative rounded-lg border-l-[6px]"
-                    :style="{ borderColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent) }"
+                    :style="{ borderColor: eventBgColor }"
                 >
                     <!-- Hover-Aktionen -->
                     <div class="absolute inset-0 hidden items-center justify-center rounded-lg bg-indigo-500/40 group-hover/singleEvent:flex">
@@ -759,7 +722,7 @@
                         :class="[subEvent.class]"
                         :style="{
               height: (totalHeight - heightSubtraction(subEvent)) * zoom_factor + 10 + 'px',
-              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, usePage().props.high_contrast_percent)
+              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, highContrastPercent)
             }"
                         class="rounded-r-lg px-2 py-1.5"
                     >
@@ -810,9 +773,9 @@
 
                         <!-- Schichten -->
                         <div
-                            v-if="usePage().props.auth.user.calendar_settings.work_shifts"
+                            v-if="calSettings.work_shifts"
                             class="mt-1 text-xs"
-                            :style="{ color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent)) }"
+                            :style="{ color: eventTypeTextColor }"
                         >
                             <div v-for="shift in subEvent.shifts" :key="'subs-'+shift.id">
                                 <span class="font-medium">{{ shift.craft.abbreviation }}</span>
@@ -922,9 +885,13 @@ import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSer
 import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
 
 const { t } = useI18n(), $t = t;
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
-const expandDays = computed(() => usePage().props.auth.user.calendar_settings?.expand_days ?? false);
-const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
+const pageProps = usePage().props;
+const calSettings = computed(() => pageProps.auth.user.calendar_settings);
+const highContrastPercent = computed(() => pageProps.high_contrast_percent);
+const currentUserId = computed(() => pageProps.auth.user.id);
+const zoom_factor = ref(pageProps.auth.user.zoom_factor ?? 1);
+const expandDays = computed(() => calSettings.value?.expand_days ?? false);
+const atAGlance = ref(pageProps.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
 const showConvertToPlanningModal = ref(false);
 const showDeleteSeriesModal = ref(false);
@@ -989,8 +956,13 @@ const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
 );
 
+const isSameDay = computed(() => {
+    if (!props.event.start || !props.event.end) return false;
+    return new Date(props.event.start).toDateString() === new Date(props.event.end).toDateString();
+});
+
 const isHighlighted = computed(() => {
-    const highlightEventId = usePage().props.urlParameters.highlightEventId;
+    const highlightEventId = pageProps.urlParameters.highlightEventId;
     return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
 });
 
@@ -1129,31 +1101,32 @@ const handleClickOutside = (e) => {
     }
 };
 
+const onResize = () => {
+    nextTick(() => {
+        checkTruncation();
+        checkEventNameTruncation();
+        checkProjectGroupNameTruncation();
+        checkEventTypeTruncation();
+    });
+};
+
 onMounted(() => {
-    nextTick(checkTruncation);
-    nextTick(checkEventNameTruncation);
-    nextTick(checkProjectGroupNameTruncation);
-    window.addEventListener('resize', checkTruncation);
-    window.addEventListener('resize', checkEventNameTruncation);
-    window.addEventListener('resize', checkProjectGroupNameTruncation);
-    nextTick(checkEventTypeTruncation);
-    window.addEventListener('resize', checkEventTypeTruncation);
+    nextTick(onResize);
+    window.addEventListener('resize', onResize);
     document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', checkTruncation);
-    window.removeEventListener('resize', checkEventNameTruncation);
-    window.removeEventListener('resize', checkProjectGroupNameTruncation);
-    window.removeEventListener('resize', checkEventTypeTruncation);
+    window.removeEventListener('resize', onResize);
     document.removeEventListener('click', handleClickOutside);
 });
 
-// Re-check when name or width/zoom changes
-watch(() => [props.event?.project?.name, props.width, zoom_factor.value], () => nextTick(checkTruncation));
-watch(() => [props.event?.eventName, props.width, zoom_factor.value], () => nextTick(checkEventNameTruncation));
-watch(() => [props.event?.project?.group, props.width, zoom_factor.value], () => nextTick(checkProjectGroupNameTruncation));
-watch(() => [props.event?.eventType?.name, props.width, zoom_factor.value], () => nextTick(checkEventTypeTruncation));
+// Re-check truncation when width or zoom changes (event data doesn't change during lifetime)
+watch(
+    () => [props.width, zoom_factor.value],
+    () => nextTick(onResize),
+    { flush: 'post' }
+);
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
@@ -1161,7 +1134,7 @@ const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, even
 };
 
 const isRoomAdmin = computed(() => {
-    return props.rooms?.find((room) => room.id === props.event.roomId)?.admins.some((admin) => admin.id === usePage().props.auth.user.id) || false;
+    return props.rooms?.find((room) => room.id === props.event.roomId)?.admins.some((admin) => admin.id === currentUserId.value) || false;
 });
 
 const checkIfMultiEditIsEnabled = computed(() => {
@@ -1177,7 +1150,7 @@ const checkIfMultiEditIsEnabled = computed(() => {
     return false;
 });
 
-const isCreator = computed(() => props.event.created_by.id === usePage().props.auth.user.id);
+const isCreator = computed(() => props.event.created_by.id === currentUserId.value);
 
 const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
@@ -1193,7 +1166,7 @@ const textColorWithDarken = computed(() => {
 });
 
 const getColorBasedOnUserSettings = computed(() => {
-    const settings = usePage().props.auth.user.calendar_settings;
+    const settings = calSettings.value;
     if (settings.use_main_category_color) {
         if (!props.event?.project) {
             return '#9E9E9E'; // grey for events without project
@@ -1209,25 +1182,34 @@ const getColorBasedOnUserSettings = computed(() => {
     return props.event.eventType.hex_code;
 });
 
+const eventBgColor = computed(() =>
+    backgroundColorWithOpacity(getColorBasedOnUserSettings.value, highContrastPercent.value)
+);
+const eventTextColor = computed(() => getTextColorBasedOnBackground(eventBgColor.value));
+const eventTypeBgColor = computed(() =>
+    backgroundColorWithOpacity(props.event.event_type_color, highContrastPercent.value)
+);
+const eventTypeTextColor = computed(() => getTextColorBasedOnBackground(eventTypeBgColor.value));
+
 const totalHeight = computed(() => {
     let height = 42;
-    if (usePage().props.auth.user.calendar_settings.project_status) height += 0;
-    if (usePage().props.auth.user.calendar_settings.options) height += 0;
-    if (usePage().props.auth.user.calendar_settings.project_management) height += 17;
-    if (usePage().props.auth.user.calendar_settings.repeating_events) height += 20;
-    if (usePage().props.auth.user.calendar_settings.work_shifts) height += 18;
+    if (calSettings.value.project_status) height += 0;
+    if (calSettings.value.options) height += 0;
+    if (calSettings.value.project_management) height += 17;
+    if (calSettings.value.repeating_events) height += 20;
+    if (calSettings.value.work_shifts) height += 18;
     return height;
 });
 
 const heightSubtraction = (event) => {
     let heightSubtraction = 0;
-    if (usePage().props.auth.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
+    if (calSettings.value.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
         heightSubtraction += 17;
     }
-    if (usePage().props.auth.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
+    if (calSettings.value.repeating_events && (!event.is_series || event.is_series === false)) {
         heightSubtraction += 20;
     }
-    if (usePage().props.auth.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
+    if (calSettings.value.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
         heightSubtraction += 18;
     }
     return heightSubtraction;

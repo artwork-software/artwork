@@ -18,6 +18,16 @@
                         {{ $t('Export') }}
                     </button>
                     -->
+                    <!-- TODO: Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
+                    <button
+                        v-if="can('can invite externals')"
+                        class="ui-button flex items-center gap-1.5"
+                        @click="showInviteModal = true"
+                    >
+                        <component :is="IconUserPlus" stroke-width="1" class="size-5" />
+                        {{ $t('Invite external') }}
+                    </button>
+                    -->
                     <div v-if="hasFilterableProperties" class="relative inline-flex">
                         <ToolTipComponent
                             direction="bottom"
@@ -202,13 +212,26 @@
             :contact-types="contactTypes"
             @close="showExportModal = false"
         />
+
+        <!-- Invite External Modal — vorerst ausgeblendet (noch nicht ausgereift)
+        <InviteExternalModal
+            v-if="showInviteModal"
+            source="crm_index"
+            :contact-types="contactTypes"
+            @close="showInviteModal = false"
+            @success="showSuccess($t('Invitation sent.'))"
+        />
+        -->
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link, usePage } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { usePermission } from '@/Composeables/Permission.js'
+// Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
+// import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
@@ -220,7 +243,7 @@ import CreateContactModal from '@/Pages/CRM/Components/CreateContactModal.vue'
 import CrmFilterModal from '@/Pages/CRM/Components/CrmFilterModal.vue'
 import CrmExportModal from '@/Pages/CRM/Components/CrmExportModal.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload } from '@tabler/icons-vue'
+import { IconAddressBook, IconCirclePlus, IconEye, IconTrash, IconUpload, IconDownload, IconUserPlus } from '@tabler/icons-vue'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({
@@ -232,6 +255,7 @@ const props = defineProps({
 })
 
 const $t = useTranslation()
+const { can } = usePermission(usePage().props)
 
 const mirroredSlugs = ['user', 'freelancer', 'service_provider']
 
@@ -249,6 +273,7 @@ const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const showFilterModal = ref(false)
 const showExportModal = ref(false)
+const showInviteModal = ref(false)
 const showSkipped = ref(false)
 const contactToDelete = ref(null)
 const activeFilters = ref({})

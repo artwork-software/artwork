@@ -2,12 +2,12 @@
 
 namespace Tests\Unit\Modules\Change\Services;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use Artwork\Modules\Change\Builders\ChangeBuilder;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Activitylog\Contracts\Activity;
 use Tests\TestCase;
 
 final class ChangeServiceTest extends TestCase
@@ -40,12 +40,12 @@ final class ChangeServiceTest extends TestCase
             ->setModelId($user->id)
             ->setTranslationKey('something.changed');
 
-        $change = $this->service->saveFromBuilder($builder);
+        $activity = $this->service->saveFromBuilder($builder);
 
-        $this->assertInstanceOf(Change::class, $change);
-        $this->assertTrue($change->exists);
-        $this->assertSame(User::class, $change->model_type);
-        $this->assertSame($user->id, $change->model_id);
+        $this->assertInstanceOf(Activity::class, $activity);
+        $this->assertTrue($activity->exists);
+        $this->assertSame(User::class, $activity->subject_type);
+        $this->assertSame($user->id, $activity->subject_id);
     }
 
     #[Test]

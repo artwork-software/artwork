@@ -81,7 +81,10 @@
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
-                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
+                            <a
+                                :href="route('projects.tab', {project: selectedProject.id, projectTab: props.projectTabId})"
+                                class="text-sm font-semibold text-blue-800 hover:underline"
+                            >{{ selectedProject.name }}</a>
                             <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
                                 {{ $t('Remove assignment') }}
                             </button>
@@ -572,6 +575,11 @@ const props = defineProps({
         required: false,
         default: null,
     },
+    projectTabId: {
+        type: Number,
+        required: false,
+        default: 1,
+    },
 });
 
 // Inject materialSets from parent and provide to children
@@ -950,6 +958,9 @@ const getArticleDataForUsage = async (article) => {
                 article_id: article.id,
                 start_date: startDate,
                 end_date: endDate,
+                // exclude the issue currently being edited from the availability math
+                issue_id: internMaterialIssue?.id || null,
+                type: 'intern',
             }
         });
         // Die Nutzungsdaten werden im Modal angezeigt
@@ -1154,8 +1165,11 @@ const submit = () => {
 };
 
 const checkAvailableStock = async () => {
-    const startDate = props.planningDate || internMaterialIssue.start_date;
-    const endDate = props.planningDate || internMaterialIssue.end_date;
+    // Prefer the issue's own window so availability is computed over the booking's
+    // real time span (e.g. 00:00–11:00), not the whole day. planningDate is only a
+    // fallback for brand-new issues that have no dates yet.
+    const startDate = internMaterialIssue.start_date || props.planningDate;
+    const endDate = internMaterialIssue.end_date || props.planningDate;
 
     if (
         !startDate ||
@@ -1175,14 +1189,15 @@ const checkAvailableStock = async () => {
         article.overbooked = false;
     }
 
-    // Nur Uhrzeiten mitsenden, wenn sie wirklich gesetzt wurden (nicht Default-Ganztag)
-    // Bei planningDate keine Uhrzeiten verwenden (ganzer Tag)
+    // Uhrzeiten mitsenden, außer die Buchung umfasst den ganzen Tag (00:00–23:59).
+    // So begrenzt z.B. eine Ausgabe von 00:00–11:00 die Verfügbarkeit nur in diesem
+    // Fenster (Buchungen ab 12:00 zählen dann nicht dagegen).
+    const startTime = internMaterialIssue.start_time;
+    const endTime = internMaterialIssue.end_time;
     const hasExplicitTimes =
-        !props.planningDate &&
-        !!internMaterialIssue.start_time &&
-        !!internMaterialIssue.end_time &&
-        internMaterialIssue.start_time !== "00:00" &&
-        internMaterialIssue.end_time !== "23:59";
+        !!startTime &&
+        !!endTime &&
+        !(startTime === "00:00" && endTime === "23:59");
 
     try {
         const payload = {
@@ -1246,11 +1261,11 @@ const checkFoundArticlesAvailability = async () => {
         article.periodAvailability = null;
     }
 
+    // Times count unless the booking spans the whole day (00:00–23:59).
     const hasExplicitTimes =
         !!internMaterialIssue.start_time &&
         !!internMaterialIssue.end_time &&
-        internMaterialIssue.start_time !== "00:00" &&
-        internMaterialIssue.end_time !== "23:59";
+        !(internMaterialIssue.start_time === "00:00" && internMaterialIssue.end_time === "23:59");
 
     try {
         const payload = {

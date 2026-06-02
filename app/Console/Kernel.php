@@ -16,6 +16,7 @@ use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
 use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
+use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Command;
@@ -54,6 +55,9 @@ class Kernel extends ConsoleKernel
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+        $schedule->command(CleanupExpiredLoginTokensCommand::class)
+            ->dailyAt('03:00')
+            ->runInBackground();
         
         // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
@@ -88,6 +92,8 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Workflow/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Crm/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Budget/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Change/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

@@ -441,6 +441,9 @@ const fetchHistory = async (reset: boolean) => {
                 end_date: endDate.value,
                 per_page: meta.value.per_page,
                 page: nextPage,
+                // Serverseitige Suche: stellt sicher, dass auch Treffer auf späteren Seiten
+                // gefunden werden (nicht nur in der aktuell geladenen Seite).
+                search: search.value?.trim() || undefined,
             },
         })
 
@@ -458,9 +461,10 @@ const fetchHistory = async (reset: boolean) => {
     }
 }
 
-// Auto-refresh (debounced)
+// Auto-refresh (debounced) – inkl. Suchbegriff, damit die Suche serverseitig über alle
+// Seiten läuft und nicht nur die aktuell geladene Seite clientseitig filtert.
 let timer: number | null = null
-watch([craftId, startDate, endDate], () => {
+watch([craftId, startDate, endDate, search], () => {
     if (timer) window.clearTimeout(timer)
     timer = window.setTimeout(() => fetchHistory(true), 250)
 })
@@ -484,6 +488,7 @@ type NormalizedLogEntry = {
     level: 'default' | 'success' | 'warning' | 'danger'
     changes: NormalizedChange[]
     shiftId: number | null
+    haystack: string
 }
 
 const getCauserName = (log: RawShiftActivity) => {
@@ -565,9 +570,26 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 (log.subject_id as number | null | undefined) ??
                 null
 
+            const message = messageForLog(log)
+
+            // Such-Haystack enthält neben der gerenderten Nachricht auch die rohen
+            // Platzhalterwerte (z.B. zugewiesene Mitarbeiternamen) und die Beschreibung,
+            // damit die clientseitige Suche keinen serverseitigen Treffer ausblendet.
+            const placeholderValues = Array.isArray(log.properties?.translation_key_placeholder_values)
+                ? log.properties!.translation_key_placeholder_values!.map((v) => String(v ?? '')).join(' ')
+                : ''
+            const haystack = [
+                message,
+                log.description ?? '',
+                placeholderValues,
+                causerName ?? '',
+                contextLabel ?? '',
+                shiftId ? shiftLabelById(shiftId) : '',
+            ].join(' ').toLowerCase()
+
             return {
                 id: log.id,
-                message: messageForLog(log),
+                message,
                 createdAt,
                 createdAtFormatted,
                 context,
@@ -578,6 +600,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 level,
                 changes: normalizeChanges(log),
                 shiftId,
+                haystack,
             }
         })
 })
@@ -594,14 +617,7 @@ const filteredLogs = computed(() => {
         if (shiftId && e.shiftId !== shiftId) return false
 
         if (q) {
-            const hay = [
-                e.message,
-                e.causerName ?? '',
-                e.contextLabel ?? '',
-                e.shiftId ? shiftLabelById(e.shiftId) : '',
-            ].join(' ').toLowerCase()
-
-            if (!hay.includes(q)) return false
+            if (!e.haystack.includes(q)) return false
         }
         return true
     })

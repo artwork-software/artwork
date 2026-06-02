@@ -27,10 +27,12 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent, defineComponent } from 'vue'
+import { defineComponent } from 'vue'
 
-// Async laden (Original-Datei vorhanden)
-const FullEventInCalendar = defineAsyncComponent(() => import("@/Components/Calendar/Elements/Events/FullEventInCalendar.vue"))
+// Synchron importieren – der äußere defineAsyncComponent in BaseCalendar
+// sorgt bereits für Code-Splitting. Ein zweiter Async-Layer erzeugt eine
+// Waterfall (2–3 Frames Verzögerung pro Event → Events "poppen" einzeln auf).
+import FullEventInCalendar from "@/Components/Calendar/Elements/Events/FullEventInCalendar.vue"
 
 // Minimale Inline-Variante, falls event.isMinimal true ist
 const MinimalEventInCalendar = defineComponent({

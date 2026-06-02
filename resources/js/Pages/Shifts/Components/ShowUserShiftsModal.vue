@@ -650,6 +650,67 @@
             @close="showGrantCompensationModal = false"
             @granted="handleCompensationGranted"
         />
+
+        <!-- Warnung: Person aus startenden Schichten entfernen / individuelle Zeiten löschen -->
+        <ArtworkBaseModal
+            v-if="showAvailabilityCleanupModal"
+            :title="t('Change availability status')"
+            :description="t('Should the person also be removed from all shifts on this day and their individual times deleted?')"
+            @close="showAvailabilityCleanupModal = false"
+        >
+            <div class="mt-4 space-y-4">
+                <div v-if="cleanupShifts.length">
+                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                        {{ t('Assigned shifts') }}
+                    </h3>
+                    <ul class="space-y-1.5">
+                        <li
+                            v-for="shift in cleanupShifts"
+                            :key="`shift-${shift.pivot_id}`"
+                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                        >
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                            <span class="font-medium">{{ shift.start }} - {{ shift.end }}</span>
+                            <span v-if="shift.event_name" class="text-zinc-500 truncate">· {{ shift.event_name }}</span>
+                            <span v-if="shift.craft_abbreviation" class="text-zinc-400">· {{ shift.craft_abbreviation }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div v-if="cleanupIndividualTimes.length">
+                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                        {{ t('Individual times') }}
+                    </h3>
+                    <ul class="space-y-1.5">
+                        <li
+                            v-for="it in cleanupIndividualTimes"
+                            :key="`it-${it.id}`"
+                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                        >
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                            <span v-if="it.title" class="font-medium truncate">{{ it.title }}</span>
+                            <span v-if="it.start_time || it.end_time" class="text-zinc-500">
+                                · {{ it.start_time }} - {{ it.end_time }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button type="button" class="ui-button-cancel" @click="keepShiftsAndSetStatus">
+                    {{ t('No, only change status') }}
+                </button>
+                <button
+                    type="button"
+                    class="ui-button-add"
+                    :disabled="cleanupProcessing"
+                    @click="confirmCleanupAndSetStatus"
+                >
+                    {{ t('Yes, remove') }}
+                </button>
+            </div>
+        </ArtworkBaseModal>
     </ArtworkBaseModal>
 </template>
 
@@ -727,6 +788,13 @@ const originalIndividualTimes = ref(
 const showConfirmDeleteModal = ref(false);
 const wantedShiftId = ref(null);
 const wantedUserId = ref(null);
+
+// Warnung beim Setzen von "Frei"/"Nicht Verfügbar" trotz aktiver Schichtzuweisung/Zeiten.
+// Die Listen werden autoritativ vom Backend befüllt (nicht aus dem evtl. veralteten Frontend-State).
+const showAvailabilityCleanupModal = ref(false);
+const cleanupProcessing = ref(false);
+const cleanupShifts = ref([]);
+const cleanupIndividualTimes = ref([]);
 
 const showRequestWorkTimeChangeModal = ref(false);
 const selectedShift = ref(null);
@@ -955,6 +1023,11 @@ const shiftsForDay = computed(() => {
     );
 });
 
+// "Frei"/"Nicht Verfügbar" sind die Status, die eine Bereinigung erfordern können.
+function isBlockingAvailabilityStatus() {
+    return checked.value?.type === 'FREE_WORK' || checked.value?.type === 'NOT_AVAILABLE';
+}
+
 function addIndividualTime() {
     if (!props.user.individual_times) {
         props.user.individual_times = [];
@@ -1078,6 +1151,9 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
             },
             {
                 preserveScroll: true,
@@ -1096,6 +1172,9 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
             },
             {
                 preserveScroll: true,
@@ -1114,6 +1193,9 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
             },
             {
                 preserveScroll: true,
@@ -1152,7 +1234,86 @@ function checkVacation() {
         }
     }
 
+    // Bei "Frei"/"Nicht Verfügbar" autoritativ im Backend prüfen, ob an dem Tag aktive
+    // Schichtzuweisungen oder individuelle Zeiten existieren. Falls ja -> Rückfrage.
+    if (isBlockingAvailabilityStatus()) {
+        cleanupProcessing.value = true;
+        axios
+            .get(route('shift.dayAssignments'), {
+                params: {
+                    model_type: props.user.type,
+                    model_id: props.user.element.id,
+                    date: props.day.withoutFormat,
+                },
+            })
+            .then(({ data }) => {
+                cleanupProcessing.value = false;
+                cleanupShifts.value = data.shifts ?? [];
+                cleanupIndividualTimes.value = data.individual_times ?? [];
+
+                if (cleanupShifts.value.length || cleanupIndividualTimes.value.length) {
+                    showAvailabilityCleanupModal.value = true;
+                } else {
+                    sendIndividualTimes();
+                }
+            })
+            .catch(() => {
+                // Prüfung fehlgeschlagen: Status trotzdem setzen statt zu blockieren.
+                cleanupProcessing.value = false;
+                sendIndividualTimes();
+            });
+        return;
+    }
+
     sendIndividualTimes();
+}
+
+// "Nein, nur Status ändern": Schichten/Zeiten bleiben erhalten, regulärer Speicherablauf.
+function keepShiftsAndSetStatus() {
+    showAvailabilityCleanupModal.value = false;
+    sendIndividualTimes();
+}
+
+// "Ja, entfernen": Person aus den startenden Schichten entfernen und die startenden
+// individuellen Zeiten löschen, danach den Status setzen.
+function confirmCleanupAndSetStatus() {
+    cleanupProcessing.value = true;
+
+    const shiftPivotIds = cleanupShifts.value
+        .map((shift) => shift.pivot_id)
+        .filter((id) => id != null);
+    const individualTimeIds = cleanupIndividualTimes.value
+        .map((it) => it.id)
+        .filter((id) => id != null);
+
+    axios
+        .post(route('shift.removeWorkerFromDay'), {
+            model_type: props.user.type,
+            model_id: props.user.element.id,
+            shift_pivot_ids: shiftPivotIds,
+            individual_time_ids: individualTimeIds,
+        })
+        .then(() => {
+            // Lokalen Zustand bereinigen, damit das Zurücksetzen beim Schließen die gelöschten
+            // Zeiten nicht wiederherstellt.
+            const deletedIds = new Set(individualTimeIds);
+            props.user.individual_times = (props.user.individual_times || []).filter(
+                (it) => !deletedIds.has(it.id),
+            );
+            originalIndividualTimes.value = JSON.parse(
+                JSON.stringify(props.user.individual_times),
+            );
+            props.user.element.shifts = (props.user.element.shifts || []).filter(
+                (shift) => !shiftPivotIds.includes(shift.pivotId),
+            );
+
+            showAvailabilityCleanupModal.value = false;
+            cleanupProcessing.value = false;
+            sendCheckVacation();
+        })
+        .catch(() => {
+            cleanupProcessing.value = false;
+        });
 }
 
 function openRequestWorkTimeChangeModal(shift) {

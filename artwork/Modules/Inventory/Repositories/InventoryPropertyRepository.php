@@ -8,12 +8,13 @@ class InventoryPropertyRepository
 {
     public function all()
     {
-        return InventoryArticleProperties::all();
+        // Ref 1.41: globale Eigenschafts-Reihenfolge anwenden.
+        return InventoryArticleProperties::ordered()->get();
     }
 
     public function filterable()
     {
-        return InventoryArticleProperties::filterable()->get();
+        return InventoryArticleProperties::filterable()->ordered()->get();
     }
 
     public function find(int $id)

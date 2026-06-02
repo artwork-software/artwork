@@ -1,16 +1,36 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleArticleStatus from "@/Pages/InventorySetting/Components/SingleArticleStatus.vue";
+import draggable from "vuedraggable";
+import { ref, watch } from "vue";
+import { router } from "@inertiajs/vue3";
+import { IconGripVertical } from "@tabler/icons-vue";
 
 const props = defineProps({
     statuses: {
-        type: Object,
+        type: [Array, Object],
         required: true
     }
 })
+
+const toArray = (value) => Array.isArray(value) ? [...value] : Object.values(value ?? {})
+
+// Local, drag-sortable copy. Kept in sync when the server sends fresh data.
+const localStatuses = ref(toArray(props.statuses))
+watch(() => props.statuses, (value) => {
+    localStatuses.value = toArray(value)
+})
+
+// Ref 1.29: persist the new status order after a drag.
+const persistOrder = () => {
+    router.post(route('inventory.article-status.reorder'), {
+        ids: localStatuses.value.map((status) => status.id),
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+    })
+}
 </script>
 
 <template>
@@ -27,7 +47,8 @@ const props = defineProps({
                         <table class="min-w-full divide-y divide-gray-300 dark:divide-white/15">
                             <thead>
                             <tr class="divide-x divide-gray-200 dark:divide-white/10">
-                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0 dark:text-white">Name</th>
+                                <th scope="col" class="w-8 py-3.5 pl-4 sm:pl-0"></th>
+                                <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
                                 <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
                                     {{ $t('Color') }}
                                 </th>
@@ -36,11 +57,24 @@ const props = defineProps({
                                 </th>
                             </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
-                            <tr v-for="status in statuses" :key="status.id" class="divide-x divide-gray-200 dark:divide-white/10">
-                                <SingleArticleStatus :status="status" />
-                            </tr>
-                            </tbody>
+                            <draggable
+                                tag="tbody"
+                                v-model="localStatuses"
+                                item-key="id"
+                                handle=".drag-handle"
+                                ghost-class="opacity-50"
+                                class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900"
+                                @end="persistOrder"
+                            >
+                                <template #item="{ element: status }">
+                                    <tr :key="status.id" class="divide-x divide-gray-200 dark:divide-white/10">
+                                        <td class="py-4 pl-4 sm:pl-0 text-gray-400 align-middle">
+                                            <component :is="IconGripVertical" class="size-4 cursor-grab drag-handle" />
+                                        </td>
+                                        <SingleArticleStatus :status="status" />
+                                    </tr>
+                                </template>
+                            </draggable>
                         </table>
                     </div>
                 </div>

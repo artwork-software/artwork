@@ -143,9 +143,13 @@ class VacationController extends Controller
             $this->workingHourCacheService->forgetForEntity('user', $user->id);
         }
 
-        $shifts = $user->shifts()->where('event_start_day', $day)->get();
-        foreach ($shifts as $shift) {
-            $shift->users()->detach($user->id);
+        // Shift assignments are detached automatically unless the caller handles removal itself
+        // (e.g. the shift-plan modal, which asks the planner first and may keep the assignments).
+        if ($request->boolean('remove_from_shifts', true)) {
+            $shifts = $user->shifts()->where('event_start_day', $day)->get();
+            foreach ($shifts as $shift) {
+                $shift->users()->detach($user->id);
+            }
         }
     }
 
@@ -196,9 +200,11 @@ class VacationController extends Controller
             $this->workingHourCacheService->forgetForEntity('freelancer', $freelancer->id);
         }
 
-        $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
-        foreach ($shifts as $shift) {
-            $shift->freelancer()->detach($freelancer->id);
+        if ($request->boolean('remove_from_shifts', true)) {
+            $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
+            foreach ($shifts as $shift) {
+                $shift->freelancer()->detach($freelancer->id);
+            }
         }
     }
 
@@ -249,9 +255,11 @@ class VacationController extends Controller
             $this->workingHourCacheService->forgetForEntity('service_provider', $serviceProvider->id);
         }
 
-        $shifts = $serviceProvider->shifts()->where('event_start_day', $day)->get();
-        foreach ($shifts as $shift) {
-            $shift->serviceProvider()->detach($serviceProvider->id);
+        if ($request->boolean('remove_from_shifts', true)) {
+            $shifts = $serviceProvider->shifts()->where('event_start_day', $day)->get();
+            foreach ($shifts as $shift) {
+                $shift->serviceProvider()->detach($serviceProvider->id);
+            }
         }
     }
 

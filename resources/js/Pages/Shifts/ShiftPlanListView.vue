@@ -640,6 +640,31 @@ function updateShiftLocally(data) {
                 existing.is_committed = shiftData.isCommitted ?? shiftData.is_committed ?? existing.is_committed;
                 existing.break_minutes = shiftData.break_minutes ?? existing.break_minutes;
 
+                // Update craft data so craft changes are reflected in real-time
+                if (shiftData.craftId != null) {
+                    existing.craft_id = shiftData.craftId;
+                    existing.craftId = shiftData.craftId;
+                }
+                if (shiftData.craft) {
+                    existing.craft = shiftData.craft;
+                } else if (shiftData.craftId != null && shiftData.craftId !== (existing.craft?.id ?? existing.craft_id)) {
+                    // Craft changed but no craft object in broadcast — look up from props
+                    const craftFromProps = props.crafts?.find(c => c.id === shiftData.craftId);
+                    if (craftFromProps) {
+                        existing.craft = {
+                            id: craftFromProps.id,
+                            name: craftFromProps.name,
+                            abbreviation: craftFromProps.abbreviation,
+                            color: craftFromProps.color,
+                        };
+                    }
+                }
+
+                if (shiftData.shiftGroupId !== undefined) {
+                    existing.shift_group_id = shiftData.shiftGroupId;
+                    existing.shiftGroupId = shiftData.shiftGroupId;
+                }
+
                 localGroupedShifts.value = [...localGroupedShifts.value];
                 shiftsVersion.value++;
                 return;

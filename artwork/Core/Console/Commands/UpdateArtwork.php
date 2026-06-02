@@ -67,8 +67,24 @@ class UpdateArtwork extends Command
         $this->migrateToCrm();
         $this->syncCrmContacts();
         $this->cleanupFalseConflicts();
+        $this->migrateChangesHistoryToActivityLog();
+        $this->backfillShiftPlanRequestShifts();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function backfillShiftPlanRequestShifts(): void
+    {
+        $this->section('Shift Plan Request Backfill');
+        // Einmaliger Reparatur-Lauf für Anfragen, die unter dem alten Auswahl-Bug erstellt wurden.
+        // --once stellt sicher, dass der Lauf nur einmal pro Umgebung erfolgt (nicht bei jedem Deploy).
+        $this->call('shift-plan-requests:backfill', ['--once' => true]);
+    }
+
+    private function migrateChangesHistoryToActivityLog(): void
+    {
+        $this->section('Changes History → Activity Log');
+        $this->call('changes:migrate-to-activity-log');
     }
 
     private function updateProjectManagementBuilder(): void
@@ -134,6 +150,26 @@ class UpdateArtwork extends Command
                 ['type' => $enum->value],
                 [
                     'frequency' => NotificationFrequencyEnum::DAILY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]
+            );
+        }
+
+        // External access notifications should reach the inviter immediately.
+        $externalNotificationTypes = [
+            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
+        ];
+
+        foreach ($externalNotificationTypes as $enum) {
+            $user->notificationSettings()->updateOrCreate(
+                ['type' => $enum->value],
+                [
+                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
                     'group_type' => $enum->groupType(),
                     'title' => $enum->title(),
                     'description' => $enum->description(),

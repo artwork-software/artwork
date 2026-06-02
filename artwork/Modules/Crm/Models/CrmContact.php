@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -57,6 +58,16 @@ class CrmContact extends Model
     public function propertyValues(): HasMany
     {
         return $this->hasMany(CrmPropertyValue::class, 'crm_contact_id');
+    }
+
+    public function externalAccess(): HasOne
+    {
+        return $this->hasOne(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
+    }
+
+    public function externalAccesses(): HasMany
+    {
+        return $this->hasMany(\Artwork\Modules\ExternalAccess\Models\ExternalAccess::class, 'crm_contact_id');
     }
 
     public function roomTypes(): BelongsToMany

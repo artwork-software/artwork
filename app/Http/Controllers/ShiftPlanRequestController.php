@@ -154,111 +154,10 @@ class ShiftPlanRequestController extends Controller
             $shiftPlanRequest = $service->createRequestWithShifts($data, [], true);
         }
 
-        // 3. Start/Ende der KW holen
-        [$start, $end] = $this->helperService->getDateRangeByCalendarWeekAndYear(
-            $shiftPlanRequest->week_number,
-            $shiftPlanRequest->year
-        );
-
-        // 4. Schichten für dieses Gewerk in diesem Zeitraum,
-        //    die NOCH NICHT im Workflow sind ODER aus einem abgelehnten Request stammen
-        $shiftsQuery = Shift::query()
-            ->where('craft_id', $shiftPlanRequest->craft_id)
-            ->startAndEndDateOverlap($start->toDateString(), $end->toDateString())
-            ->where('in_workflow', false)
-            ->where(function ($q): void {
-                $q
-                    // komplett "freie" Schichten
-                    ->whereNull('current_request_id')
-                    // oder Schichten, die einem abgelehnten Request zugeordnet waren
-                    ->orWhereHas('currentRequest', function ($sub): void {
-                        $sub->where('status', 'rejected');
-                    });
-            });
-
-        // optional: nur nicht festgeschriebene Schichten hinzufügen
-        // $shiftsQuery->where('is_committed', false);
-
-        // 5. Relevante Schichten vor dem Update holen (für Activity Log)
-        $shifts = $shiftsQuery
-            ->with('currentRequest') // wichtig für History-Log
-            ->get();
-
-        $shiftIdsToAttach = [];
-
-        foreach ($shifts as $shift) {
-            $previousRequest = null;
-            // Falls die Schicht aus einem abgelehnten Request kommt, merken wir uns diesen
-            if ($shift->currentRequest && $shift->currentRequest->status === 'rejected') {
-                $previousRequest = $shift->currentRequest;
-            }
-
-            $activity = activity()
-                ->performedOn($shift)
-                ->causedBy($user)
-                ->useLog('shift')
-                ->event('shift_added_to_request')
-                ->withProperties([
-                    'old' => [
-                        'in_workflow'        => $shift->in_workflow,
-                    ],
-                    'attributes' => [
-                        'in_workflow'        => true,
-                    ],
-                    'shift_plan_request_id'           => $shiftPlanRequest->id,
-                    'previous_shift_plan_request_id'  => $previousRequest?->id,
-                ]);
-
-            // Zusatz-History, wenn aus abgelehntem Request übernommen
-            if ($previousRequest) {
-                $activity->tap(function (Activity $activity) use ($previousRequest, $shiftPlanRequest): void {
-                    $props = $activity->properties ?? collect();
-
-                    $props = $props->merge([
-                        'translation_key' => 'Shift rejected in request from {0} with reason "{1}", now added to {2}',
-                        'translation_key_placeholder_values' => [
-                            // {0} = Datum des alten Requests
-                            optional($previousRequest->created_at)->format('d.m.Y'),
-                            // {1} = Ablehnungsgrund (Feldnamen ggf. anpassen)
-                            $previousRequest->rejection_reason ?? '',
-                            // {2} = Datum des neuen Requests
-                            optional($shiftPlanRequest->created_at)->format('d.m.Y'),
-                        ],
-                    ]);
-
-                    $activity->properties = $props;
-                });
-            }
-
-            $activity->log('Shift added to shift plan request');
-
-            $shiftIdsToAttach[] = $shift->id;
-        }
-
-        // 6. Performantes Massenupdate (nachdem geloggt wurde)
-        if (! empty($shiftIdsToAttach)) {
-            // Attach shifts to request (history pivot)
-            $service->attachShiftsToRequest($shiftPlanRequest, $shiftIdsToAttach, true);
-
-            $shiftsQuery->update([
-                'current_request_id' => $shiftPlanRequest->id,
-                'in_workflow'        => true,
-                'workflow_rejection_reason' => null,
-            ]);
-
-            DB::table('shift_workers')
-                ->whereIn('shift_id', $shiftIdsToAttach)
-                ->update(['workflow_rejection_reason' => null]);
-        }
-
-        // 7. Websockets: Alle betroffenen Schichten updaten
-        foreach ($shifts as $shift) {
-            $freshedShift = $shift->fresh(); // sicherstellen, dass wir aktuelle Daten haben
-            broadcast(new UpdateShiftInShiftPlan(
-                $freshedShift,
-                $freshedShift->room_id ?? $freshedShift->event->room_id
-            ));
-        }
+        // 3. Freie Schichten des Gewerks/der KW an die Anfrage anhängen (Auswahl, Activity-Log,
+        //    Pivot-Historie, Workflow-Flags). Gemeinsame Logik in ShiftPlanRequestService, damit
+        //    der Backfill-Command exakt dasselbe Verhalten nutzt.
+        $service->attachFreeShiftsToRequest($shiftPlanRequest, $user, true);
 
         return back()->with(
             'success',
@@ -395,6 +294,11 @@ class ShiftPlanRequestController extends Controller
             $shift->workflow_rejection_reason = null;
             $shift->is_committed = true;
             $shift->in_workflow = false;
+            // Den Live-Zeiger auf die Anfrage lösen: Sobald eine Schicht genehmigt/festgeschrieben
+            // ist, gehört sie keiner aktiven Anfrage mehr an und muss bei einer erneuten
+            // "Alle Schichten festsetzen"-Aktion wieder auswählbar sein. Die Historie bleibt über
+            // die Pivot-Tabelle shift_plan_request_shifts (requestedShifts) erhalten.
+            $shift->current_request_id = null;
             $shift->committing_user_id = $this->auth->id();
             $shift->save();
 
@@ -434,10 +338,29 @@ class ShiftPlanRequestController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * Wichtig: Bevor die Anfrage gelöscht wird, müssen ihre Schichten freigegeben werden
+     * (in_workflow = false, current_request_id = null). Andernfalls bleiben die Schichten mit
+     * einem Zeiger auf eine nicht mehr existierende Anfrage zurück und wären über die
+     * "Alle Schichten festsetzen"-Auswahl nicht mehr erreichbar.
      */
-    public function destroy(ShiftPlanRequest $shiftPlanRequest): void
+    public function destroy(ShiftPlanRequest $shiftPlanRequest): \Illuminate\Http\RedirectResponse
     {
-        //
+        DB::transaction(function () use ($shiftPlanRequest): void {
+            Shift::query()
+                ->where('current_request_id', $shiftPlanRequest->id)
+                ->update([
+                    'in_workflow' => false,
+                    'current_request_id' => null,
+                    'workflow_rejection_reason' => null,
+                ]);
+
+            // Pivot-Historie der Anfrage entfernen und Anfrage löschen
+            $shiftPlanRequest->requestedShifts()->detach();
+            $shiftPlanRequest->delete();
+        });
+
+        return back()->with('success', __('Shift plan request deleted successfully.'));
     }
 
     public function reject(\Artwork\Modules\Shift\Models\ShiftPlanRequest $shiftPlanRequest, \Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
@@ -1163,8 +1086,13 @@ class ShiftPlanRequestController extends Controller
             ]);
         }
 
-        // Optionaler Sicherheitscheck: Change gehört zu diesem Request?
-        if ((int) $shift->current_request_id !== (int) $shiftPlanRequest->id) {
+        // Sicherheitscheck: Gehört die Schicht zu diesem Request? Der Live-Zeiger
+        // current_request_id wird nach Genehmigung gelöst (=null), daher zusätzlich die
+        // erhaltene Zuordnung über die Pivot-Tabelle (requestedShifts) prüfen.
+        $belongsToRequest = (int) $shift->current_request_id === (int) $shiftPlanRequest->id
+            || $shiftPlanRequest->requestedShifts()->where('shift_id', $shift->id)->exists();
+
+        if (! $belongsToRequest) {
             return back()->withErrors([
                 'message' => 'The specified change does not belong to the provided shift plan request.',
             ]);

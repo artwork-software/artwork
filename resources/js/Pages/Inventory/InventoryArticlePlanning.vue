@@ -51,6 +51,16 @@
                         </div>
                     </teleport>
 
+                    <!-- Ref 1.18: only show planned articles -->
+                    <label class="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-600 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            v-model="onlyPlanned"
+                            class="size-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        {{ $t('Only planned articles') }}
+                    </label>
+
                     <div class="flex-1"></div>
 
                     <!-- Search Input Field -->
@@ -75,9 +85,19 @@
                 </div>
             </div>
 
+            <!-- Always-visible synchronized horizontal scrollbar (Ref 1.20) -->
+            <div
+                ref="topScrollbar"
+                class="overflow-x-auto overflow-y-hidden sticky top-0 z-40"
+                style="height: 14px;"
+                @scroll="onTopScroll"
+            >
+                <div :style="{ width: contentWidth + 'px', height: '1px' }"></div>
+            </div>
+
             <!-- Grid wrapper -->
-            <div class="overflow-auto text-sm relative" style="height: calc(100vh - 100px);">
-                <div class="min-w-max">
+            <div ref="gridWrapper" class="overflow-auto text-sm relative" style="height: calc(100vh - 114px);" @scroll="onGridScroll">
+                <div ref="gridContent" class="min-w-max">
                     <!-- Timeline header row -->
                     <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-zinc-700">
                             <div class="sticky left-0 z-20 bg-white/90 px-4 py-2 font-medium w-[220px] min-w-[220px] flex items-center border-r border-zinc-200">
@@ -259,7 +279,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
-import { ref, reactive, onMounted, onUnmounted, watch, computed, defineAsyncComponent, provide } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watch, computed, defineAsyncComponent, provide, nextTick } from "vue";
 import { IconCategory2, IconCategoryFilled, IconChevronDown, IconChevronRight, IconInfoCircle, IconRouteSquare } from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
@@ -285,6 +305,11 @@ const props = defineProps({
     issues: { type: Array, required: false, default: () => [] },
     projects: { type: Array, required: false, default: () => [] },
     projectMaterialIssueTabId: { type: Number, required: false, default: 1 },
+    planningSettings: {
+        type: Object,
+        required: false,
+        default: () => ({ only_planned: false, open_categories: [], open_subcategories: [] }),
+    },
 });
 
 // Legend popover
@@ -308,6 +333,45 @@ const onClickOutsideLegend = (e) => {
 };
 onMounted(() => document.addEventListener('click', onClickOutsideLegend));
 onUnmounted(() => document.removeEventListener('click', onClickOutsideLegend));
+
+// Ref 1.20: synchronized, always-visible horizontal scrollbar pinned above the
+// grid. The top scrollbar and the grid wrapper mirror each other's scrollLeft;
+// `scrollSyncing` guards against the feedback loop the two @scroll handlers
+// would otherwise create.
+const topScrollbar = ref(null);
+const gridWrapper = ref(null);
+const gridContent = ref(null);
+const contentWidth = ref(0);
+let scrollSyncing = false;
+
+const onTopScroll = () => {
+    if (scrollSyncing || !gridWrapper.value || !topScrollbar.value) return;
+    scrollSyncing = true;
+    gridWrapper.value.scrollLeft = topScrollbar.value.scrollLeft;
+    scrollSyncing = false;
+};
+const onGridScroll = () => {
+    if (scrollSyncing || !gridWrapper.value || !topScrollbar.value) return;
+    scrollSyncing = true;
+    topScrollbar.value.scrollLeft = gridWrapper.value.scrollLeft;
+    scrollSyncing = false;
+};
+
+const measureContentWidth = () => {
+    if (gridContent.value) {
+        contentWidth.value = gridContent.value.scrollWidth;
+    }
+};
+const remeasureContentWidth = () => nextTick(measureContentWidth);
+
+onMounted(() => {
+    measureContentWidth();
+    window.addEventListener('resize', measureContentWidth);
+});
+onUnmounted(() => window.removeEventListener('resize', measureContentWidth));
+
+// Column count is driven by `dates`; remeasure whenever the visible range changes.
+watch(() => props.dates, remeasureContentWidth, { deep: false });
 
 // Side panel state
 const showSidePanel = ref(false);
@@ -362,8 +426,12 @@ const issuesByArticle = computed(() => {
     return map;
 });
 
+// Ref 1.18: "nur verplante" toggle (persisted per user).
+const onlyPlanned = ref(props.planningSettings?.only_planned ?? false);
+const isArticlePlanned = (article) => (issuesByArticle.value[article.id]?.length ?? 0) > 0;
+
 // Filtered grouped articles based on debounced search input
-const filteredGroupedArticles = computed(() => {
+const searchFilteredGroups = computed(() => {
     if (!debouncedSearch.value.trim()) {
         return props.groupedArticles;
     }
@@ -411,21 +479,67 @@ const filteredGroupedArticles = computed(() => {
     return filtered;
 });
 
+// Ref 1.18: apply the "only planned" filter on top of the search result.
+const filteredGroupedArticles = computed(() => {
+    const groups = searchFilteredGroups.value;
+    if (!onlyPlanned.value) {
+        return groups;
+    }
+
+    const result = [];
+    for (const group of groups) {
+        const articles = (group.articles || []).filter(isArticlePlanned);
+        const subcategories = (group.subcategories || []).map(sub => ({
+            ...sub,
+            articles: (sub.articles || []).filter(isArticlePlanned),
+        })).filter(sub => sub.articles.length > 0);
+
+        if (articles.length > 0 || subcategories.length > 0) {
+            result.push({ ...group, articles, subcategories });
+        }
+    }
+    return result;
+});
+
 /** --- Collapsible state --- */
 const catOpen = reactive({});
 const subOpen = reactive({});
 const keyFor = (cat, sub) => `${cat}:::${sub}`;
 
+// Ref 1.18: grouping is collapsed by default; the user's previously expanded
+// categories/subcategories are restored from the persisted settings.
+const persistedOpenCategories = new Set(props.planningSettings?.open_categories ?? []);
+const persistedOpenSubcategories = new Set(props.planningSettings?.open_subcategories ?? []);
+
 const ensureInitialState = () => {
     for (const g of filteredGroupedArticles.value ?? []) {
-        if (catOpen[g.category] === undefined) catOpen[g.category] = true;
+        if (catOpen[g.category] === undefined) {
+            catOpen[g.category] = persistedOpenCategories.has(g.category);
+        }
         for (const s of g.subcategories ?? []) {
             const k = keyFor(g.category, s.name);
-            if (subOpen[k] === undefined) subOpen[k] = true;
+            if (subOpen[k] === undefined) {
+                subOpen[k] = persistedOpenSubcategories.has(k);
+            }
         }
     }
 };
 onMounted(ensureInitialState);
+
+// Ref 1.18: persist the view settings (only-planned + expanded groups) per user.
+const persistViewSettings = debounce(() => {
+    const openCategories = Object.keys(catOpen).filter((cat) => catOpen[cat]);
+    const openSubcategories = Object.keys(subOpen).filter((k) => subOpen[k]);
+    router.patch(route('update.user.inventory.article-plan.view-settings.update', usePage().props.auth.user.id), {
+        only_planned: onlyPlanned.value,
+        open_categories: openCategories,
+        open_subcategories: openSubcategories,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        only: [],
+    });
+}, 600);
 
 // F3: Watch only the flat structure (category/sub names), not the entire
 // filtered tree. `ensureInitialState` is idempotent — it only needs to run
@@ -437,11 +551,20 @@ const structureKey = computed(() => {
 });
 watch(structureKey, ensureInitialState);
 
-const isCatOpen = (cat) => catOpen[cat] ?? true;
-const toggleCategory = (cat) => (catOpen[cat] = !isCatOpen(cat));
+const isCatOpen = (cat) => catOpen[cat] ?? false;
+const toggleCategory = (cat) => {
+    catOpen[cat] = !isCatOpen(cat);
+    persistViewSettings();
+};
 
-const isSubOpen = (cat, sub) => subOpen[keyFor(cat, sub)] ?? true;
-const toggleSub = (cat, sub) => (subOpen[keyFor(cat, sub)] = !isSubOpen(cat, sub));
+const isSubOpen = (cat, sub) => subOpen[keyFor(cat, sub)] ?? false;
+const toggleSub = (cat, sub) => {
+    subOpen[keyFor(cat, sub)] = !isSubOpen(cat, sub);
+    persistViewSettings();
+};
+
+// Persist the toggle whenever it changes.
+watch(onlyPlanned, persistViewSettings);
 
 /** Helpers */
 const countGroup = (group) => {

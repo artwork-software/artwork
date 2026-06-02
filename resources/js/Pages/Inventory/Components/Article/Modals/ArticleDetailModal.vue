@@ -390,17 +390,17 @@
                                         </div>
                                     </dl>
                                     <div v-else>
-                                        <div class="rounded-md bg-red-50 p-4">
+                                        <div class="rounded-md bg-blue-50 p-4">
                                             <div class="flex">
                                                 <div class="shrink-0">
                                                     <component
                                                         :is="IconAlertSquareRoundedFilled"
-                                                        class="size-5 text-red-400"
+                                                        class="size-5 text-blue-400"
                                                         aria-hidden="true"
                                                     />
                                                 </div>
                                                 <div class="ml-3">
-                                                    <p class="text-sm font-medium text-red-800">
+                                                    <p class="text-sm font-medium text-blue-800">
                                                         {{
                                                             $t(
                                                                 'No properties were specified for this article'
@@ -468,6 +468,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'openArticleEditModal'])
 
+// Ref 1.41: apply the global property order (`order`) so the display reflects the
+// drag & drop order from the properties settings, with id as a stable fallback.
+const byGlobalOrder = (a, b) => ((a?.order ?? 0) - (b?.order ?? 0)) || ((a?.id ?? 0) - (b?.id ?? 0))
+
 // Merged properties for simple articles (includes new category/subcategory properties)
 const mergedProperties = computed(() => {
     const articleProps = props.article.properties || []
@@ -481,7 +485,7 @@ const mergedProperties = computed(() => {
     const newProps = allCatProps.filter(cp => !articlePropIds.has(cp.id))
         .map(p => ({ ...p, pivot: { value: '' } }))
 
-    return [...articleProps, ...newProps]
+    return [...articleProps, ...newProps].sort(byGlobalOrder)
 })
 
 // Merged properties for detailed articles
@@ -496,7 +500,7 @@ const getMergedDetailedProperties = (detailedArticle) => {
     const newProps = allCatProps.filter(cp => !daPropIds.has(cp.id))
         .map(p => ({ ...p, pivot: { value: '' } }))
 
-    return [...daProps, ...newProps]
+    return [...daProps, ...newProps].sort(byGlobalOrder)
 }
 
 const showConfirmDelete = ref(false)
@@ -583,6 +587,11 @@ const formatProperty = (article, property) => {
         if (!v) return $t('No date set')
         const d = new Date(v)
         return isNaN(d.getTime()) ? v : d.toLocaleString()
+    }
+
+    if (property.type === 'year') {
+        const v = property.pivot.value
+        return v === null || v === '' ? $t('No year set') : String(v)
     }
 
     if (property.type === 'checkbox') {

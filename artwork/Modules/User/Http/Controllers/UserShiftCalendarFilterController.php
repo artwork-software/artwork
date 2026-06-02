@@ -52,6 +52,27 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
+    /**
+     * Ref 1.18: persist the article planning view settings (only-planned toggle
+     * and which categories/subcategories the user has expanded).
+     */
+    public function updateInventoryArticlePlanViewSettings(Request $request, User $user): void
+    {
+        $validated = $request->validate([
+            'only_planned' => ['boolean'],
+            'open_categories' => ['array'],
+            'open_categories.*' => ['string'],
+            'open_subcategories' => ['array'],
+            'open_subcategories.*' => ['string'],
+        ]);
+
+        $user->inventoryArticlePlanFilter()->updateOrCreate([], [
+            'only_planned' => $validated['only_planned'] ?? false,
+            'open_categories' => $validated['open_categories'] ?? [],
+            'open_subcategories' => $validated['open_subcategories'] ?? [],
+        ]);
+    }
+
     public function updateListViewDates(Request $request, User $user): void
     {
         $user->userFilters()->updateOrCreate(

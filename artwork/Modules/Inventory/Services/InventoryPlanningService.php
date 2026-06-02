@@ -27,7 +27,13 @@ class InventoryPlanningService
 
     public function getAvailabilityData(User $user): array
     {
-        $filter = $user->inventoryArticlePlanFilter ?? (object)['start_date' => null, 'end_date' => null];
+        $filter = $user->inventoryArticlePlanFilter ?? (object)[
+            'start_date' => null,
+            'end_date' => null,
+            'only_planned' => false,
+            'open_categories' => [],
+            'open_subcategories' => [],
+        ];
 
         $start = $filter->start_date ? Carbon::parse($filter->start_date) : Carbon::now()->startOfMonth();
         $end   = $filter->end_date   ? Carbon::parse($filter->end_date)   : Carbon::now()->endOfMonth();
@@ -68,6 +74,12 @@ class InventoryPlanningService
             'dataArray'       => [$start->format('Y-m-d'), $end->format('Y-m-d')],
             'issues'          => $issuesData['issues'],
             'projects'        => $issuesData['projects'],
+            // Ref 1.18: persistierte Planungs-View-Einstellungen pro User.
+            'planningSettings' => [
+                'only_planned'       => (bool) ($filter->only_planned ?? false),
+                'open_categories'    => $filter->open_categories ?? [],
+                'open_subcategories' => $filter->open_subcategories ?? [],
+            ],
         ];
     }
 
@@ -315,11 +327,19 @@ class InventoryPlanningService
             return ['base' => $base, 'deltas' => $deltas];
         }
 
-        $applyIssue = function (
+        // Ref 1.19: collect per-day demand intervals so that several time-separated
+        // bookings on the same day are NOT counted as a clash. Only the peak
+        // simultaneous demand per day reduces availability.
+        // intervals[$date][$articleId] = [[startMin, endMin, qty], ...]
+        $intervals = [];
+
+        $addIssue = function (
             string $startDate,
             string $endDate,
+            int $startMin,
+            int $endMin,
             iterable $issueArticles
-        ) use (&$deltas, $base, $dateList, $dateIndex, $rangeStart, $rangeEnd): void {
+        ) use (&$intervals, $dateList, $dateIndex, $rangeStart, $rangeEnd): void {
             $effectiveStart = $startDate < $rangeStart ? $rangeStart : $startDate;
             $effectiveEnd   = $endDate   > $rangeEnd   ? $rangeEnd   : $endDate;
 
@@ -333,46 +353,119 @@ class InventoryPlanningService
                 return;
             }
 
-            $impact = [];
+            $quantities = [];
             foreach ($issueArticles as $article) {
-                $impact[$article->id] = (int) ($article->pivot->quantity ?? 0);
+                $qty = (int) ($article->pivot->quantity ?? 0);
+                if ($qty > 0) {
+                    $quantities[$article->id] = ($quantities[$article->id] ?? 0) + $qty;
+                }
             }
-            if (empty($impact)) {
+            if (empty($quantities)) {
                 return;
             }
 
             for ($i = $startIdx; $i <= $endIdx; $i++) {
                 $date = $dateList[$i];
-                foreach ($impact as $articleId => $qty) {
-                    // Initialize delta with base on first touch.
-                    if (!isset($deltas[$date][$articleId])) {
-                        $deltas[$date][$articleId] = $base[$articleId] ?? 0;
-                    }
-                    $deltas[$date][$articleId] -= $qty;
+                // Boundary days respect the booking's time window; inner days are full.
+                $s = ($date === $startDate) ? $startMin : 0;
+                $e = ($date === $endDate)   ? $endMin   : 1440;
+                if ($e <= $s) {
+                    continue;
+                }
+                foreach ($quantities as $articleId => $qty) {
+                    $intervals[$date][$articleId][] = [$s, $e, $qty];
                 }
             }
         };
 
         foreach ($internalIssues as $issue) {
-            $applyIssue(
+            $addIssue(
                 Carbon::parse($issue->start_date)->toDateString(),
                 Carbon::parse($issue->end_date ?? $issue->start_date)->toDateString(),
+                $this->timeToMinutes($issue->start_time ?? null, 0),
+                $this->timeToMinutes($issue->end_time ?? null, 1440),
                 $issue->articles
             );
         }
 
+        // External issues currently carry no time information → treated as full-day.
         foreach ($externalIssues as $issue) {
-            $applyIssue(
+            $addIssue(
                 Carbon::parse($issue->issue_date)->toDateString(),
                 Carbon::parse($issue->return_date ?? $issue->issue_date)->toDateString(),
+                0,
+                1440,
                 $issue->articles
             );
+        }
+
+        // Reduce each (date, article) to its peak simultaneous demand.
+        foreach ($intervals as $date => $byArticle) {
+            foreach ($byArticle as $articleId => $list) {
+                $peak = $this->peakConcurrency($list);
+                if ($peak > 0) {
+                    $deltas[$date][$articleId] = ($base[$articleId] ?? 0) - $peak;
+                }
+            }
         }
 
         return [
             'base'   => $base,
             'deltas' => $deltas,
         ];
+    }
+
+    /**
+     * Ref 1.19: convert a time string ("HH:MM", "HH:MM:SS" or a full datetime) to
+     * minutes since midnight, clamped to [0, 1440].
+     */
+    private function timeToMinutes(?string $time, int $default): int
+    {
+        if ($time === null || $time === '') {
+            return $default;
+        }
+        if (str_contains($time, ' ')) {
+            $time = substr($time, strpos($time, ' ') + 1);
+        }
+        if (str_contains($time, 'T')) {
+            $time = substr($time, strpos($time, 'T') + 1);
+        }
+        $parts = explode(':', $time);
+        if (count($parts) < 2) {
+            return $default;
+        }
+        $minutes = ((int) $parts[0]) * 60 + ((int) $parts[1]);
+        return max(0, min(1440, $minutes));
+    }
+
+    /**
+     * Ref 1.19: peak simultaneous quantity across the given [startMin, endMin, qty]
+     * intervals via a sweep line. Time-separated intervals never sum up.
+     *
+     * @param array<int, array{0:int,1:int,2:int}> $intervals
+     */
+    private function peakConcurrency(array $intervals): int
+    {
+        $events = [];
+        foreach ($intervals as [$start, $end, $qty]) {
+            $events[] = [$start, $qty];
+            $events[] = [$end, -$qty];
+        }
+
+        // At equal timestamps, process decrements before increments so a booking
+        // ending exactly when another starts is not treated as overlapping.
+        usort($events, fn($a, $b) => ($a[0] <=> $b[0]) ?: ($a[1] <=> $b[1]));
+
+        $current = 0;
+        $peak = 0;
+        foreach ($events as [, $delta]) {
+            $current += $delta;
+            if ($current > $peak) {
+                $peak = $current;
+            }
+        }
+
+        return $peak;
     }
 
     /**
@@ -425,6 +518,43 @@ class InventoryPlanningService
             }
         }
 
+        // Ref 1.19: time-aware availability for the clicked day (single-day range),
+        // so "available after usage" in the side panel respects the booking times
+        // instead of naively summing all quantities.
+        $einsatzbereit = $this->getEinsatzbereitQuantity($article);
+
+        $internalForSweep = collect();
+        foreach ($internal as $issue) {
+            foreach ($issue->articles as $a) {
+                $internalForSweep->push((object) [
+                    'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
+                    'start_time' => $issue->start_time,
+                    'end_date' => $issue->end_date ? CarbonCarbon::parse($issue->end_date)->format('Y-m-d') : null,
+                    'end_time' => $issue->end_time,
+                    'pivot' => (object) ['quantity' => $a->pivot->quantity],
+                ]);
+            }
+        }
+
+        $externalForSweep = collect();
+        foreach ($external as $issue) {
+            foreach ($issue->articles as $a) {
+                $externalForSweep->push((object) [
+                    'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
+                    'return_date' => $issue->return_date ? CarbonCarbon::parse($issue->return_date)->format('Y-m-d') : null,
+                    'pivot' => (object) ['quantity' => $a->pivot->quantity],
+                ]);
+            }
+        }
+
+        $timeline = $this->calculateAvailabilityTimeline(
+            $einsatzbereit,
+            $internalForSweep,
+            $externalForSweep,
+            $date,
+            $date
+        );
+
         return [
             'article' => [
                 'id' => $article->id,
@@ -442,6 +572,9 @@ class InventoryPlanningService
             'date' => $date,
             'internal' => $internal->filter(fn($i) => $i->articles->isNotEmpty())->values(),
             'external' => $external->filter(fn($e) => $e->articles->isNotEmpty())->values(),
+            'peak_usage' => $timeline['peak_usage'],
+            'min_available' => $timeline['min_available'],
+            'availability_timeline' => $timeline['segments'],
         ];
     }
 
@@ -463,124 +596,92 @@ class InventoryPlanningService
         string $rangeStart,
         string $rangeEnd
     ): array {
-        $events = [];
+        // Ref 1.19: time-aware per-day peak usage — consistent with the planning
+        // grid and `InventoryArticle::calculatePeakConcurrentUsage`. Several
+        // time-separated bookings on the same day no longer stack.
+        // dayIntervals[$date] = [[startMin, endMin, qty], ...]
+        $dayIntervals = [];
+
+        $collect = function (?string $startDate, ?string $endDate, int $startMin, int $endMin, int $qty) use (&$dayIntervals, $rangeStart, $rangeEnd): void {
+            if ($qty <= 0 || $startDate === null) {
+                return;
+            }
+            $endDate = $endDate ?? $startDate;
+
+            $cursor = CarbonCarbon::parse(max($startDate, $rangeStart));
+            $last   = CarbonCarbon::parse(min($endDate, $rangeEnd));
+            if ($cursor->gt($last)) {
+                return;
+            }
+
+            while ($cursor->lte($last)) {
+                $date = $cursor->toDateString();
+                $s = ($date === $startDate) ? $startMin : 0;
+                $e = ($date === $endDate)   ? $endMin   : 1440;
+                if ($e > $s) {
+                    $dayIntervals[$date][] = [$s, $e, $qty];
+                }
+                $cursor->addDay();
+            }
+        };
 
         foreach ($internalIssues as $issue) {
-            $qty = (int) ($issue->pivot->quantity ?? 0);
-            if ($qty <= 0) {
-                continue;
-            }
-
-            $start = CarbonCarbon::parse($issue->start_date)->startOfDay();
-            $end = CarbonCarbon::parse($issue->end_date ?? $issue->start_date)->endOfDay();
-
-            $events[] = ['ts' => $start->timestamp, 'delta' => $qty, 'date' => $start->toDateString()];
-            $events[] = ['ts' => $end->timestamp + 1, 'delta' => -$qty, 'date' => $end->copy()->addDay()->toDateString()];
+            $collect(
+                $issue->start_date ? CarbonCarbon::parse($issue->start_date)->toDateString() : null,
+                $issue->end_date ? CarbonCarbon::parse($issue->end_date)->toDateString() : null,
+                $this->timeToMinutes($issue->start_time ?? null, 0),
+                $this->timeToMinutes($issue->end_time ?? null, 1440),
+                (int) ($issue->pivot->quantity ?? 0)
+            );
         }
 
+        // External issues carry no time information → treated as full-day.
         foreach ($externalIssues as $issue) {
-            $qty = (int) ($issue->pivot->quantity ?? 0);
-            if ($qty <= 0) {
-                continue;
-            }
-
-            $start = CarbonCarbon::parse($issue->issue_date)->startOfDay();
-            $end = CarbonCarbon::parse($issue->return_date ?? $issue->issue_date)->endOfDay();
-
-            $events[] = ['ts' => $start->timestamp, 'delta' => $qty, 'date' => $start->toDateString()];
-            $events[] = ['ts' => $end->timestamp + 1, 'delta' => -$qty, 'date' => $end->copy()->addDay()->toDateString()];
+            $collect(
+                $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->toDateString() : null,
+                $issue->return_date ? CarbonCarbon::parse($issue->return_date)->toDateString() : null,
+                0,
+                1440,
+                (int) ($issue->pivot->quantity ?? 0)
+            );
         }
 
-        // If no issues, return a single segment covering the entire range
-        if (empty($events)) {
-            return [
-                'segments' => [[
-                    'start' => $rangeStart,
-                    'end' => $rangeEnd,
-                    'usage' => 0,
-                    'available' => $totalAvailable,
-                    'days' => CarbonCarbon::parse($rangeStart)->diffInDays(CarbonCarbon::parse($rangeEnd)) + 1,
-                ]],
-                'min_available' => $totalAvailable,
-                'peak_usage' => 0,
-            ];
+        // Per-day peak usage (time-aware).
+        $usageByDay = [];
+        foreach ($dayIntervals as $date => $list) {
+            $usageByDay[$date] = $this->peakConcurrency($list);
         }
 
-        // Sort by timestamp; on tie, process removals before additions
-        usort($events, function ($a, $b) {
-            if ($a['ts'] !== $b['ts']) {
-                return $a['ts'] <=> $b['ts'];
-            }
-            return $a['delta'] <=> $b['delta'];
-        });
-
-        // Build segments from event-driven changes
+        // Walk every day in range and merge consecutive days with equal usage.
         $segments = [];
-        $currentUsage = 0;
         $peakUsage = 0;
         $minAvailable = $totalAvailable;
 
-        // Collect unique boundary dates
-        $boundaries = [$rangeStart];
-        foreach ($events as $event) {
-            $boundaries[] = $event['date'];
-        }
-        // Add one day after range end as final boundary
-        $boundaries[] = CarbonCarbon::parse($rangeEnd)->addDay()->toDateString();
-        $boundaries = array_unique($boundaries);
-        sort($boundaries);
+        $cursor = CarbonCarbon::parse($rangeStart);
+        $end    = CarbonCarbon::parse($rangeEnd);
+        while ($cursor->lte($end)) {
+            $date = $cursor->toDateString();
+            $usage = $usageByDay[$date] ?? 0;
+            $available = $totalAvailable - $usage;
 
-        // Build a map: date -> total delta at that date
-        $deltaMap = [];
-        foreach ($events as $event) {
-            $deltaMap[$event['date']] = ($deltaMap[$event['date']] ?? 0) + $event['delta'];
-        }
+            $peakUsage    = max($peakUsage, $usage);
+            $minAvailable = min($minAvailable, $available);
 
-        // Sweep through boundaries to create segments
-        $currentUsage = 0;
-        for ($i = 0; $i < count($boundaries) - 1; $i++) {
-            $segStart = $boundaries[$i];
-            // Apply any deltas at this boundary
-            if (isset($deltaMap[$segStart])) {
-                $currentUsage += $deltaMap[$segStart];
-            }
-
-            $segEnd = CarbonCarbon::parse($boundaries[$i + 1])->subDay()->toDateString();
-
-            // Skip segments outside our range
-            if ($segEnd < $rangeStart || $segStart > $rangeEnd) {
-                continue;
-            }
-
-            // Clamp to range
-            $segStart = max($segStart, $rangeStart);
-            $segEnd = min($segEnd, $rangeEnd);
-
-            if ($segStart > $segEnd) {
-                continue;
-            }
-
-            $available = $totalAvailable - $currentUsage;
-            $days = CarbonCarbon::parse($segStart)->diffInDays(CarbonCarbon::parse($segEnd)) + 1;
-
-            // Merge with previous segment if same usage
-            if (!empty($segments) && $segments[count($segments) - 1]['usage'] === $currentUsage) {
+            if (!empty($segments) && $segments[count($segments) - 1]['usage'] === $usage) {
                 $lastIdx = count($segments) - 1;
-                $segments[$lastIdx]['end'] = $segEnd;
-                $segments[$lastIdx]['days'] = CarbonCarbon::parse($segments[$lastIdx]['start'])
-                        ->diffInDays(CarbonCarbon::parse($segEnd)) + 1;
+                $segments[$lastIdx]['end'] = $date;
+                $segments[$lastIdx]['days']++;
             } else {
                 $segments[] = [
-                    'start' => $segStart,
-                    'end' => $segEnd,
-                    'usage' => $currentUsage,
+                    'start' => $date,
+                    'end' => $date,
+                    'usage' => $usage,
                     'available' => $available,
-                    'days' => $days,
+                    'days' => 1,
                 ];
             }
 
-            $peakUsage = max($peakUsage, $currentUsage);
-            $minAvailable = min($minAvailable, $available);
+            $cursor->addDay();
         }
 
         // Ensure we have at least one segment
@@ -625,8 +726,13 @@ class InventoryPlanningService
      * @param string $endDate
      * @return array<string, mixed>
      */
-    public function getDetailsForModalRange(int $articleId, string $startDate, string $endDate): array
-    {
+    public function getDetailsForModalRange(
+        int $articleId,
+        string $startDate,
+        string $endDate,
+        ?int $excludeIssueId = null,
+        ?string $excludeType = null
+    ): array {
         $article = InventoryArticle::with([
             'category', 'subCategory', 'statusValues',
             'detailedArticleQuantities', 'detailedArticleQuantities.status',
@@ -676,10 +782,20 @@ class InventoryPlanningService
         $filteredInternal = $internal->filter(fn($i) => $i->articles->isNotEmpty())->values();
         $filteredExternal = $external->filter(fn($e) => $e->articles->isNotEmpty())->values();
 
+        // When editing an existing issue, exclude it from the availability math so
+        // "available after usage" reflects the stock WITHOUT the issue being edited.
+        // The displayed usage list (internal/external below) stays complete.
+        $availabilityInternal = ($excludeIssueId && $excludeType === 'intern')
+            ? $filteredInternal->reject(fn($i) => (int) $i->id === (int) $excludeIssueId)
+            : $filteredInternal;
+        $availabilityExternal = ($excludeIssueId && $excludeType === 'extern')
+            ? $filteredExternal->reject(fn($e) => (int) $e->id === (int) $excludeIssueId)
+            : $filteredExternal;
+
         // Collect article pivot data for sweep-line (from filtered issues)
         // Format dates as Y-m-d strings to avoid Carbon double-time parsing issues
         $internalForSweep = collect();
-        foreach ($filteredInternal as $issue) {
+        foreach ($availabilityInternal as $issue) {
             foreach ($issue->articles as $a) {
                 $internalForSweep->push((object) [
                     'start_date' => $issue->start_date ? CarbonCarbon::parse($issue->start_date)->format('Y-m-d') : null,
@@ -692,7 +808,7 @@ class InventoryPlanningService
         }
 
         $externalForSweep = collect();
-        foreach ($filteredExternal as $issue) {
+        foreach ($availabilityExternal as $issue) {
             foreach ($issue->articles as $a) {
                 $externalForSweep->push((object) [
                     'issue_date' => $issue->issue_date ? CarbonCarbon::parse($issue->issue_date)->format('Y-m-d') : null,
@@ -701,9 +817,6 @@ class InventoryPlanningService
                 ]);
             }
         }
-
-        // Calculate peak concurrent usage (sweep-line)
-        $peakUsage = InventoryArticle::calculatePeakConcurrentUsage($internalForSweep, $externalForSweep);
 
         // Calculate "Einsatzbereit" total
         $einsatzbereit = $this->getEinsatzbereitQuantity($article);
@@ -749,7 +862,9 @@ class InventoryPlanningService
             'internal' => $filteredInternal,
             'external' => $filteredExternal,
             'issued_quantity' => $issuedQuantity,
-            'peak_usage' => $peakUsage,
+            // peak_usage & min_available stammen aus derselben zeit-bewussten Timeline,
+            // damit min_available = total - peak_usage konsistent ist (Ref 1.19).
+            'peak_usage' => $timeline['peak_usage'],
             'min_available' => $timeline['min_available'],
             'availability_timeline' => $timeline['segments'],
         ];

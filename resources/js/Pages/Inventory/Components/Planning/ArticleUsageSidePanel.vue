@@ -169,6 +169,13 @@ const emit = defineEmits(['close', 'refreshData']);
 const panelRef = ref(null);
 
 const onClickOutside = (e) => {
+    // Ignore clicks inside a modal/dialog opened on top of the panel (e.g. the
+    // material-issue edit modal). It is portaled outside the panel's DOM, so a
+    // click in one of its fields would otherwise be treated as "outside" and
+    // close both the modal and the panel.
+    if (e.target.closest?.('[role="dialog"], .draggableModal')) {
+        return;
+    }
     if (panelRef.value && !panelRef.value.contains(e.target)) {
         emit('close');
     }

@@ -44,6 +44,10 @@ return [
             'driver' => 'passport',
             'provider' => 'users',
         ],
+        'external' => [
+            'driver' => 'session',
+            'provider' => 'externals',
+        ],
     ],
 
     /*
@@ -67,6 +71,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => \Artwork\Modules\User\Models\User::class,
+        ],
+
+        'externals' => [
+            'driver' => 'eloquent',
+            'model' => \Artwork\Modules\ExternalAccess\Models\ExternalAccess::class,
         ],
 
         // 'users' => [

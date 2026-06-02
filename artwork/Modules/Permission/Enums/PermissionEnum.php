@@ -75,4 +75,9 @@ enum PermissionEnum : string
     case BI_EXPORT = 'can export bi data';
 
     case BI_DASHBOARD = 'can view bi dashboard';
+
+    case INVITE_EXTERNAL = 'can invite externals';
+
+    case CAN_VIEW_OWN_ROSTER = 'can view own roster';
+    case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
 }

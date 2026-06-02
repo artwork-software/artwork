@@ -236,6 +236,7 @@ const types = [
     { name: 'Text', type: 'text' },
     { name: 'Number', type: 'number' },
     { name: 'Date', type: 'date' },
+    { name: 'Year', type: 'year' },
     { name: 'Time', type: 'time' },
     { name: 'Datetime', type: 'datetime-local' },
     { name: 'Checkbox', type: 'checkbox' },

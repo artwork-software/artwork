@@ -84,41 +84,43 @@
                                                 >
                                                     <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
                                                     <template v-if="isCellVisible(cellKey(day, room))">
-                                                        <div
-                                                            v-for="(evt, idx) in eventsInCell(day, room)"
-                                                            :key="evt.id"
-                                                            :class="[
-                                                                'py-0.5',
-                                                                (settings.expand_days && !!evt.allDay) ? 'flex-1 min-h-0' : ''
-                                                            ]"
-                                                            :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                            @click="onEventClick(evt, $event)"
-                                                        >
-                                                            <AsyncSingleEventInCalendar
-                                                                v-memo="[evt.id, evt.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
-                                                                :event="evt"
-                                                                :multi-edit="multiEdit"
-                                                                :font-size="fontSizeCalc"
-                                                                :line-height="lineHeightCalc"
-                                                                :rooms="rooms"
-                                                                :has-admin-role="hasAdminRole()"
-                                                                :width="cardWidthNum"
-                                                                :first_project_tab_id="first_project_tab_id"
-                                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                :verifierForEventTypIds="verifierForEventTypIds"
-                                                                :is-planning="isPlanning"
-                                                                :is-height-full="settings.expand_days && !!evt.allDay"
-                                                                @edit-event="showEditEventModel"
-                                                                @edit-sub-event="openAddSubEventModal"
-                                                                @open-add-sub-event-modal="openAddSubEventModal"
-                                                                @open-confirm-modal="openDeleteEventModal"
-                                                                @show-decline-event-modal="openDeclineEventModal"
-                                                                @accept-room-request="acceptSingleRoomRequest"
-                                                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                                            />
-                                                        </div>
-                                                        <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
-                                                        <div v-if="eventsInCell(day, room).length <= 1 && !settings.expand_days" class="h-2"></div>
+                                                        <template v-for="(cellEvents) in [eventsInCell(day, room)]" :key="0">
+                                                            <div
+                                                                v-for="(evt, idx) in cellEvents"
+                                                                :key="evt.id"
+                                                                :class="[
+                                                                    'py-0.5',
+                                                                    (settings.expand_days && !!evt.allDay) ? 'flex-1 min-h-0' : ''
+                                                                ]"
+                                                                :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
+                                                                @click="onEventClick(evt, $event)"
+                                                            >
+                                                                <AsyncSingleEventInCalendar
+                                                                    v-memo="[evt.id, evt.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                    :event="evt"
+                                                                    :multi-edit="multiEdit"
+                                                                    :font-size="fontSizeCalc"
+                                                                    :line-height="lineHeightCalc"
+                                                                    :rooms="rooms"
+                                                                    :has-admin-role="isAdmin"
+                                                                    :width="cardWidthNum"
+                                                                    :first_project_tab_id="first_project_tab_id"
+                                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                    :verifierForEventTypIds="verifierForEventTypIds"
+                                                                    :is-planning="isPlanning"
+                                                                    :is-height-full="settings.expand_days && !!evt.allDay"
+                                                                    @edit-event="showEditEventModel"
+                                                                    @edit-sub-event="openAddSubEventModal"
+                                                                    @open-add-sub-event-modal="openAddSubEventModal"
+                                                                    @open-confirm-modal="openDeleteEventModal"
+                                                                    @show-decline-event-modal="openDeclineEventModal"
+                                                                    @accept-room-request="acceptSingleRoomRequest"
+                                                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                                />
+                                                            </div>
+                                                            <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
+                                                            <div v-if="cellEvents.length <= 1 && !settings.expand_days" class="h-2"></div>
+                                                        </template>
                                                     </template>
                                                 </div>
 
@@ -187,7 +189,7 @@
                                         :font-size="textStyle.fontSize"
                                         :line-height="textStyle.lineHeight"
                                         :rooms="rooms"
-                                        :has-admin-role="hasAdminRole()"
+                                        :has-admin-role="isAdmin"
                                         :width="zoom_factor * 196"
                                         :first_project_tab_id="first_project_tab_id"
                                         :firstProjectShiftTabId="firstProjectShiftTabId"
@@ -253,21 +255,21 @@
             </div>
             <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-else>
                 <FormButton
-                    v-if="can('can see planning calendar') || hasAdminRole()"
+                    v-if="can('can see planning calendar') || isAdmin"
                     :disabled="checkedCount === 0"
                     @click="requestVerification"
                     :text="checkedCount + ' ' + $t('request verification')"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
                 />
                 <FormButton
-                    v-if="can('can edit planning calendar') || hasAdminRole()"
+                    v-if="can('can edit planning calendar') || isAdmin"
                     :disabled="checkedCount === 0"
                     @click="approveRequests"
                     :text="checkedCount + ' ' + $t('Approve events')"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
                 />
                 <FormButton
-                    v-if="can('can edit planning calendar') || hasAdminRole()"
+                    v-if="can('can edit planning calendar') || isAdmin"
                     class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="showRejectEventVerificationModal = true"
                     :disabled="checkedCount === 0"
@@ -301,7 +303,7 @@
             :project="project"
             :event="eventToEdit"
             :wantedRoomId="wantedRoom"
-            :isAdmin="hasAdminRole()"
+            :isAdmin="isAdmin"
             :roomCollisions="roomCollisions"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
             :requires-axios-requests="true"
@@ -352,7 +354,7 @@
             :eventTypes="eventTypes"
             :rooms="rooms"
             :eventsWithoutRoom="usePage().props.eventsWithoutRoom"
-            :isAdmin="hasAdminRole()"
+            :isAdmin="isAdmin"
             :event-statuses="eventStatuses"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
         />
@@ -394,6 +396,7 @@ const props = defineProps({
 const $t = useTranslation();
 const page = usePage();
 const { hasAdminRole } = usePermission(page.props);
+const isAdmin = computed(() => hasAdminRole());
 
 const AsyncEventComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventComponent.vue") });
 const FunctionBarCalendar = defineAsyncComponent({ loader: () => import("@/Components/FunctionBars/FunctionBarCalendar.vue") });

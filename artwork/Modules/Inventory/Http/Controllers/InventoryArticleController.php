@@ -348,7 +348,16 @@ class InventoryArticleController extends Controller
         if (!$articleId || !$startDate || !$endDate) {
             return response()->json(['error' => 'article_id und date erforderlich'], 400);
         }
-        $details = $this->inventoryPlanningService->getDetailsForModalRange($articleId, $startDate, $endDate);
+        // When editing an existing issue, exclude it from the availability math.
+        $excludeIssueId = $request->integer('issue_id') ?: null;
+        $excludeType = in_array($request->get('type'), ['intern', 'extern'], true) ? $request->get('type') : null;
+        $details = $this->inventoryPlanningService->getDetailsForModalRange(
+            $articleId,
+            $startDate,
+            $endDate,
+            $excludeIssueId,
+            $excludeType
+        );
         return response()->json(['data' => $details]);
     }
 

@@ -44,21 +44,11 @@ class MoneySourceController extends Controller
 
     public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
     {
-        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'historyChangesMorph'])->get();
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks', 'activities'])->get();
 
         foreach ($moneySources as $moneySource) {
             $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
-            $historyArray = [];
-
-            foreach ($moneySource->historyChangesMorph as $history) {
-                $historyArray[] = [
-                    'changes' => json_decode($history->changes),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                ];
-            }
-            $moneySource->history = $historyArray;
+            $moneySource->history = $this->changeService->historyForFrontend($moneySource);
         }
 
         return inertia('MoneySources/MoneySourceManagement', [
@@ -417,17 +407,7 @@ class MoneySourceController extends Controller
             }
         }
 
-        $historyArray = [];
-        $historyComplete = $moneySource->historyChanges()->all();
-
-        foreach ($historyComplete as $history) {
-            $historyArray[] = [
-                'changes' => json_decode($history->changes),
-                'created_at' => $history->created_at->diffInHours() < 24
-                    ? $history->created_at->diffForHumans()
-                    : $history->created_at->format('d.m.Y, H:i'),
-            ];
-        }
+        $historyArray = $this->changeService->historyForFrontend($moneySource);
 
         return inertia('MoneySources/Show', [
             'moneySource' => [

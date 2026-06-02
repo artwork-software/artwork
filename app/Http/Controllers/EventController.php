@@ -1147,29 +1147,21 @@ class EventController extends Controller
         if (request('showHistory')) {
             if (request('historyType') === 'project') {
                 $project = Project::find(request('modelId'));
-                $historyComplete = $project->historyChanges()->all();
-                foreach ($historyComplete as $history) {
-                    $historyObjects[] = [
-                        'changes' => json_decode($history->changes),
-                        'change_by' => $history->changer,
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
+                if ($project !== null) {
+                    $historyObjects = array_merge(
+                        $historyObjects,
+                        $this->changeService->historyForFrontend($project)
+                    );
                 }
             }
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));
-                $historyComplete = $event->historyChanges()->all();
-                foreach ($historyComplete as $history) {
-                    $historyObjects[] = [
-                        'changes' => json_decode($history->changes),
-                        'change_by' => $history->changer,
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
+                if ($event !== null) {
+                    $historyObjects = array_merge(
+                        $historyObjects,
+                        $this->changeService->historyForFrontend($event)
+                    );
                 }
             }
         }

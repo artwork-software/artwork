@@ -17,6 +17,19 @@
                             v-model="searchArticleInput"
                             :label="$t('Search Articles')"
                             />
+                        <p class="mt-1 text-xs text-gray-400">{{ $t('Searches all properties (incl. serial number). Use * as a wildcard, e.g. *158.') }}</p>
+                    </div>
+
+                    <!-- Ref 1.28: optionale Einschränkung auf eine bestimmte Eigenschaft -->
+                    <div class="max-w-xs pt-3">
+                        <ArtworkBaseListbox
+                            :model-value="selectedSearchProperty"
+                            @update:model-value="onSearchPropertyChange"
+                            :items="propertySearchOptions"
+                            by="id"
+                            option-label="name"
+                            :label="$t('Search in property (optional)')"
+                        />
                     </div>
                 </div>
 
@@ -202,6 +215,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {can} from "laravel-permission-to-vuejs";
 import {usePermission} from "@/Composeables/Permission.js";
 import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
@@ -309,6 +323,19 @@ const internOrExternIssue = ref(false)
 const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
 
+// Ref 1.28: optionaler Such-Scope auf eine bestimmte Eigenschaft (null = alle).
+const searchPropertyId = ref(usePage().props?.urlParameters?.search_property_id ?? null)
+const propertySearchOptions = computed(() => [
+    { id: null, name: $t('All properties') },
+    ...(props.properties ?? []),
+])
+const selectedSearchProperty = computed(() =>
+    propertySearchOptions.value.find((p) => p.id === searchPropertyId.value) ?? propertySearchOptions.value[0]
+)
+const onSearchPropertyChange = (value) => {
+    searchPropertyId.value = (value && typeof value === 'object') ? (value.id ?? null) : (value ?? null)
+}
+
 const AddEditArticleModal = defineAsyncComponent({
     loader: () => import('@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'),
 })
@@ -380,10 +407,11 @@ const searchArticles = debounce(() => {
     // search for articles
     router.reload({
         data: {
-            search: searchArticleInput.value
+            search: searchArticleInput.value,
+            search_property_id: searchPropertyId.value,
         },
         preserveScroll: true,
-        only: ['articles']
+        only: ['articles', 'countsByStatus']
     })
 }, 500)
 
@@ -412,6 +440,11 @@ const findBasketForArticle = (articleId) => {
 // watch for search input
 watch(searchArticleInput, (value) => {
     // search for articles with debounce
+    searchArticles()
+})
+
+// re-run search when the optional property scope changes
+watch(searchPropertyId, () => {
     searchArticles()
 })
 

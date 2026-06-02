@@ -244,7 +244,7 @@
 
                 <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="ml-4 relative">
                     <div v-for="(statusValue, index) in articleForm.statusValues">
-                        <div v-if="statusValue.id !== 5" class="grid grid-cols-2 gap-x-4 mb-3">
+                        <div class="grid grid-cols-2 gap-x-4 mb-3">
                             <div class="flex items-center">
                                 <div class="absolute top-0 left-0 w-px h-[90%] bg-gray-300"></div>
                                 <div class="font-lexend text-sm flex items-center text-secondary">
@@ -386,11 +386,20 @@
                                         />
 
                                         <input
-                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection' && property.type !== 'year'"
                                             :type="property.type" v-model="property.value"
                                             :required="property.is_required"
                                             class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                             :placeholder="property.is_required ? $t('Value*') : $t('Value')"
+                                        />
+
+                                        <input
+                                            v-if="property.type === 'year'"
+                                            type="number" v-model="property.value"
+                                            :required="property.is_required"
+                                            min="1900" max="2100" step="1"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            :placeholder="property.is_required ? $t('Year*') : $t('Year')"
                                         />
 
                                         <div v-if="property.type === 'file'">
@@ -1096,6 +1105,15 @@
                                         :search-fields="['name']"
                                         coerce="number"
                                         @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
+                                    />
+
+                                    <BaseInput
+                                        :id="'property-' + property.id"
+                                        v-else-if="property.type === 'year'"
+                                        type="number" v-model="property.value"
+                                        :required="property.is_required"
+                                        :label="property.is_required ? $t('Year*') : $t('Year')"
+                                        @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 
                                     <BaseInput

@@ -20,6 +20,8 @@ enum NotificationGroupEnum: string
 
     case DOCUMENTS = 'DOCUMENTS';
 
+    case EXTERNAL_ACCESS = 'EXTERNAL_ACCESS';
+
     public function title(): string
     {
         return match ($this) {
@@ -31,6 +33,7 @@ enum NotificationGroupEnum: string
             self::SHIFTS => "Shift Planning",
             self::INVENTORY => "Inventory & Material Issues",
             self::DOCUMENTS => "Documents",
+            self::EXTERNAL_ACCESS => "External access",
         };
     }
 
@@ -46,6 +49,7 @@ enum NotificationGroupEnum: string
             self::SHIFTS => "Find out if shifts have been changed, if there were conflicts in shift scheduling, if employees need to be replaced, and more.",
             self::INVENTORY => "Get notified about changes or overbooking of inventory articles and material issues.",
             self::DOCUMENTS => "Get notified when someone sends you a document request or when a requested document has been uploaded.",
+            self::EXTERNAL_ACCESS => "Get notified when external persons fill in their data or update content in shared tabs.",
         };
     }
     // @codingStandardsIgnoreEnd

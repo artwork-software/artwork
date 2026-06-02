@@ -1121,11 +1121,12 @@ onBeforeUnmount(() => {
     document.removeEventListener('click', handleClickOutside);
 });
 
-// Re-check when name or width/zoom changes
-watch(() => [props.event?.project?.name, props.width, zoom_factor.value], () => nextTick(checkTruncation));
-watch(() => [props.event?.eventName, props.width, zoom_factor.value], () => nextTick(checkEventNameTruncation));
-watch(() => [props.event?.project?.group, props.width, zoom_factor.value], () => nextTick(checkProjectGroupNameTruncation));
-watch(() => [props.event?.eventType?.name, props.width, zoom_factor.value], () => nextTick(checkEventTypeTruncation));
+// Re-check truncation when width or zoom changes (event data doesn't change during lifetime)
+watch(
+    () => [props.width, zoom_factor.value],
+    () => nextTick(onResize),
+    { flush: 'post' }
+);
 
 const element = ref(null);
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {

@@ -2,12 +2,13 @@
 
 namespace Artwork\Modules\Change\Builders;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use Artwork\Modules\Change\Interfaces\Builder;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\Models\Activity as DefaultActivity;
 
 class ChangeBuilder implements Builder
 {
@@ -85,7 +86,7 @@ class ChangeBuilder implements Builder
     /**
      * @throws InvalidArgumentException
      */
-    public function build(): Change
+    public function build(): Activity
     {
         if (empty($this->modelClass) || !class_exists($this->modelClass)) {
             throw new InvalidArgumentException(
@@ -105,26 +106,12 @@ class ChangeBuilder implements Builder
             );
         }
 
-        /** @var User $user */
-        $user = Auth::user();
-        $changes[] = [
-            'type' => $this->type ?? 'project',
-            'translationKey' => $this->translationKey,
-            'translationKeyPlaceholderValues' => $this->translationKeyPlaceholderValues,
-            /*'changed_by' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'pronouns' => $user->pronouns,
-                'position' => $user->position,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'profile_photo_url' => $user->profile_photo_url,
-                'profile_photo_path' => $user->profile_photo_path,
-                'phone_number' => $user->phone_number,
-                'email_private' => $user->email_private,
-                'phone_private' => $user->phone_private,
-                'description' => $user->description
-            ]*/
+        $properties = [
+            [
+                'type' => $this->type ?? 'project',
+                'translationKey' => $this->translationKey,
+                'translationKeyPlaceholderValues' => $this->translationKeyPlaceholderValues,
+            ],
         ];
 
         if (!empty($this->type) && $this->type === 'shift') {
@@ -134,7 +121,7 @@ class ChangeBuilder implements Builder
                 );
             }
 
-            $changes[] = [
+            $properties[] = [
                 'event_title' => $this->shift?->event?->eventName ?? __('notifications.shift.without_event'),
                 'event_id' => $this->shift?->event?->id ?? null,
                 'shift_id' => $this->shift->id,
@@ -142,16 +129,22 @@ class ChangeBuilder implements Builder
             ];
         }
 
-        return new Change(
-            [
-                'model_id' => $this->modelId,
-                'model_type' => $this->modelClass,
-                'changes' => json_encode($changes),
-                'change_type' => 'updated',
-                'changer_type' => User::class,
-                'changer_id' => Auth::id(),
-                'created_at' => now()
-            ]
-        );
+        $causerId = Auth::id();
+
+        $activityClass = config('activitylog.activity_model', DefaultActivity::class);
+
+        /** @var Activity $activity */
+        $activity = new $activityClass([
+            'log_name' => $this->type ?? 'default',
+            'description' => $this->translationKey,
+            'subject_type' => $this->modelClass,
+            'subject_id' => $this->modelId,
+            'event' => 'updated',
+            'causer_type' => $causerId !== null ? User::class : null,
+            'causer_id' => $causerId,
+            'properties' => $properties,
+        ]);
+
+        return $activity;
     }
 }

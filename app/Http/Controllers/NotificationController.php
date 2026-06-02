@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -30,8 +31,10 @@ use Inertia\ResponseFactory;
 
 class NotificationController extends Controller
 {
-    public function __construct(private readonly VacationService $vacationService)
-    {
+    public function __construct(
+        private readonly VacationService $vacationService,
+        private readonly ChangeService $changeService,
+    ) {
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
@@ -53,32 +56,20 @@ class NotificationController extends Controller
             if (request('historyType') === 'project') {
                 $project = Project::find(request('modelId'));
                 if ($project !== null) {
-                    $historyComplete = $project->historyChanges()->all();
-                    foreach ($historyComplete as $history) {
-                        $historyObjects[] = [
-                            'changes' => json_decode($history->changes),
-                            'change_by' => $history->changer,
-                            'created_at' => $history->created_at->diffInHours() < 24
-                                ? $history->created_at->diffForHumans()
-                                : $history->created_at->format('d.m.Y, H:i'),
-                        ];
-                    }
+                    $historyObjects = array_merge(
+                        $historyObjects,
+                        $this->changeService->historyForFrontend($project)
+                    );
                 }
             }
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));
                 if ($event !== null) {
-                    $historyComplete = $event->historyChanges()->all();
-                    foreach ($historyComplete as $history) {
-                        $historyObjects[] = [
-                            'changes' => json_decode($history->changes),
-                            'change_by' => $history->changer,
-                            'created_at' => $history->created_at->diffInHours() < 24
-                                ? $history->created_at->diffForHumans()
-                                : $history->created_at->format('d.m.Y, H:i'),
-                        ];
-                    }
+                    $historyObjects = array_merge(
+                        $historyObjects,
+                        $this->changeService->historyForFrontend($event)
+                    );
                 }
             }
 
@@ -86,16 +77,10 @@ class NotificationController extends Controller
                 $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
 
                 foreach ($vacations as $vacation) {
-                    $historyComplete = $vacation->historyChanges()->all();
-                    foreach ($historyComplete as $history) {
-                        $historyObjects[] = [
-                            'changes' => json_decode($history->changes),
-                            'change_by' => $history->changer,
-                            'created_at' => $history->created_at->diffInHours() < 24
-                                ? $history->created_at->diffForHumans()
-                                : $history->created_at->format('d.m.Y, H:i'),
-                        ];
-                    }
+                    $historyObjects = array_merge(
+                        $historyObjects,
+                        $this->changeService->historyForFrontend($vacation)
+                    );
                 }
             }
         }

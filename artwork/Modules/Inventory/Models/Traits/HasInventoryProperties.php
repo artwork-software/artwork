@@ -28,7 +28,10 @@ trait HasInventoryProperties
             'inventory_property_values',
             'inventory_propertyable_id',
             'inventory_article_property_id'
-        )->withPivot('value');
+        )->withPivot('value')
+            // Ref 1.41: globale Eigenschafts-Reihenfolge systemweit anwenden.
+            ->orderBy('inventory_article_properties.order')
+            ->orderBy('inventory_article_properties.id');
     }
 
 }

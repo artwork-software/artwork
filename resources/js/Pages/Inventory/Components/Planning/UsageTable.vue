@@ -9,7 +9,19 @@
         >
             <div>
                 <div class="font-medium text-gray-800">{{ issue.name }}</div>
-                <div class="text-xs text-gray-500">{{ issue.start_date_time }} – {{ issue.end_date_time }}</div>
+                <div class="text-xs text-gray-500">
+                    <span>{{ splitDateTime(issue.start_date_time).date }}</span><span
+                        v-if="splitDateTime(issue.start_date_time).time"
+                        class="ml-1"
+                        :class="timeClass(issue, 'start')"
+                    >{{ splitDateTime(issue.start_date_time).time }}</span>
+                    –
+                    <span>{{ splitDateTime(issue.end_date_time).date }}</span><span
+                        v-if="splitDateTime(issue.end_date_time).time"
+                        class="ml-1"
+                        :class="timeClass(issue, 'end')"
+                    >{{ splitDateTime(issue.end_date_time).time }}</span>
+                </div>
 
                 <ul class="mt-2 divide-y text-sm text-gray-700">
                     <li
@@ -59,7 +71,7 @@
 <script setup>
 
 import { IconEdit, IconLoader2 } from '@tabler/icons-vue';
-import {defineAsyncComponent, ref, watch, nextTick} from 'vue';
+import {defineAsyncComponent, ref, watch, nextTick, computed} from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -108,6 +120,100 @@ watch(() => props.highlightIssueId, async (id) => {
 }, { immediate: true });
 
 const emit = defineEmits(['dataChanged', 'quantityUpdated']);
+
+// Split a combined "<date> HH:mm" string (e.g. "29. Mai 2026 10:00") into its
+// date and time parts so the time can be highlighted independently.
+const splitDateTime = (value) => {
+    if (!value) return { date: '', time: '' };
+    const match = String(value).match(/^(.*?)\s+(\d{1,2}:\d{2})$/);
+    if (match) {
+        return { date: match[1], time: match[2] };
+    }
+    return { date: String(value), time: '' };
+};
+
+// A boundary time is "relevant" when it deviates from the full-day default
+// (00:00 for start, 23:59 for end) — i.e. when it actually constrains the booking.
+const isTimeRelevant = (time, bound) => {
+    if (!time) return false;
+    const fullDayDefault = bound === 'end' ? '23:59' : '00:00';
+    return time !== fullDayDefault;
+};
+
+// Day key for a boundary (prefer the raw Y-m-d field, fall back to the formatted date).
+const issueDayKey = (issue, bound) => {
+    const raw = bound === 'end'
+        ? (issue.end_date ?? issue.return_date)
+        : (issue.start_date ?? issue.issue_date);
+    if (raw) return String(raw).slice(0, 10);
+    return splitDateTime(bound === 'end' ? issue.end_date_time : issue.start_date_time).date;
+};
+
+// Map: day → set of distinct issue ids that start/end on that day at a relevant time.
+const relevantIssuesByDay = computed(() => {
+    const map = {};
+    for (const issue of props.issues || []) {
+        const start = splitDateTime(issue.start_date_time);
+        if (isTimeRelevant(start.time, 'start')) {
+            (map[issueDayKey(issue, 'start')] ||= new Set()).add(issue.id);
+        }
+        const end = splitDateTime(issue.end_date_time);
+        if (isTimeRelevant(end.time, 'end')) {
+            (map[issueDayKey(issue, 'end')] ||= new Set()).add(issue.id);
+        }
+    }
+    return map;
+});
+
+// Convert a "HH:mm[:ss]" time string to minutes since midnight.
+const toMinutes = (time, fallback) => {
+    if (!time) return fallback;
+    const parts = String(time).split(':');
+    if (parts.length < 2) return fallback;
+    const value = (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+    return Math.max(0, Math.min(1440, value));
+};
+
+// The booking's active time window on a given day. Boundary days respect the
+// booking's times; interior days (and missing times) span the full day.
+const windowOnDay = (issue, dayKey) => {
+    const startDay = (issue.start_date ?? issue.issue_date ?? '').slice(0, 10) || null;
+    const endDay = ((issue.end_date ?? issue.return_date) ?? startDay)?.slice(0, 10) || null;
+    if (!startDay || dayKey < startDay || dayKey > endDay) return null;
+    const startMin = (dayKey === startDay) ? toMinutes(issue.start_time, 0) : 0;
+    const endMin = (dayKey === endDay) ? toMinutes(issue.end_time, 1440) : 1440;
+    return [startMin, endMin];
+};
+
+// Colour a boundary time only when its own time is relevant AND at least two
+// distinct bookings have a relevant time on that same day. Then:
+//   red  = its time window actually overlaps another booking that day (collision)
+//   blue = the windows are time-separated on that day (mutually exclusive)
+const timeClass = (issue, bound) => {
+    const info = splitDateTime(bound === 'end' ? issue.end_date_time : issue.start_date_time);
+    if (!isTimeRelevant(info.time, bound)) return '';
+
+    const dayKey = issueDayKey(issue, bound);
+    const sameDayRelevant = relevantIssuesByDay.value[dayKey];
+    if (!sameDayRelevant || sameDayRelevant.size < 2) return '';
+
+    const ownWindow = windowOnDay(issue, dayKey);
+    if (!ownWindow) return '';
+
+    let overlaps = false;
+    for (const other of props.issues || []) {
+        if (other.id === issue.id || !sameDayRelevant.has(other.id)) continue;
+        const otherWindow = windowOnDay(other, dayKey);
+        if (!otherWindow) continue;
+        // Half-open overlap: touching endpoints (e.g. until 10:00 / from 10:00) do NOT collide.
+        if (ownWindow[0] < otherWindow[1] && otherWindow[0] < ownWindow[1]) {
+            overlaps = true;
+            break;
+        }
+    }
+
+    return overlaps ? 'italic text-red-600' : 'italic text-blue-600';
+};
 
 
 const showIssueOfMaterialModal = ref(false);

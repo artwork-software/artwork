@@ -14,14 +14,18 @@
             @click="onCellClick(date.date)"
             class="text-xs px-2 py-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition relative"
             :class="[
-                date.isWeekend ? 'bg-zinc-50' : 'bg-white',
-                isToday(date.date) ? 'ring-1 ring-indigo-300 ring-inset' : 'hover:bg-zinc-50'
+                cellValue(date.date) < 0
+                    ? 'bg-red-100'
+                    : (date.isWeekend ? 'bg-zinc-50' : 'bg-white'),
+                isToday(date.date)
+                    ? 'ring-1 ring-indigo-300 ring-inset'
+                    : (cellValue(date.date) < 0 ? 'hover:bg-red-200' : 'hover:bg-zinc-50')
             ]"
         >
             <div class="inline-flex items-center gap-1">
                 <span
                     class="tabular-nums"
-                    :class="{ 'text-red-600 font-semibold': cellValue(date.date) < 0 }"
+                    :class="{ 'text-red-800 font-semibold': cellValue(date.date) < 0 }"
                 >
                     {{ cellValue(date.date) }}
                 </span>

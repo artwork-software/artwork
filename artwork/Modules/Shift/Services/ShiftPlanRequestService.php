@@ -96,7 +96,11 @@ class ShiftPlanRequestService
             }
 
             $attachPayload[$shift->id] = $payload;
-            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+
+            $roomId = $shift->room_id ?? $shift->event?->room_id;
+            if ($roomId !== null) {
+                broadcast(new UpdateShiftInShiftPlan($shift, $roomId));
+            }
         }
 
         // idempotent attach

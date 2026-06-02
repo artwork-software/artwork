@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Room\Http\Resources;
 
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Http\Resources\UserWithoutApartmentIndexResource;
@@ -22,31 +23,7 @@ class RoomCalendarResource extends JsonResource
     {
         $events = $this->events()->get();
 
-        $historyArray = [];
-        $historyComplete = $this->historyChanges()->all();
-
-        foreach ($historyComplete as $history) {
-            $changer = $history->changer;
-            $changerData = $changer ? [
-                'id' => $changer->id,
-                'first_name' => $changer->first_name,
-                'last_name' => $changer->last_name,
-                'profile_photo_url' => $changer->profile_photo_url,
-            ] : null;
-
-            $changes = json_decode($history->changes, true) ?: [];
-            foreach ($changes as &$change) {
-                $change['changed_by'] = $changerData;
-            }
-            unset($change);
-
-            $historyArray[] = [
-                'changes' => $changes,
-                'created_at' => $history->created_at->diffInHours() < 24
-                    ? $history->created_at->diffForHumans()
-                    : $history->created_at->format('d.m.Y, H:i'),
-            ];
-        }
+        $historyArray = app(ChangeService::class)->historyForFrontendWithInlineCauser($this->resource);
 
         return [
             'resource' => class_basename($this),

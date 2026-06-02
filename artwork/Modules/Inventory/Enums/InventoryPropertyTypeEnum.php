@@ -10,4 +10,5 @@ enum InventoryPropertyTypeEnum: string
     case SELECT = 'select';
     case NUMBER = 'number';
     case FILE = 'file';
+    case YEAR = 'year';
 }

@@ -20,7 +20,7 @@ const AddEditArticleStatusModal = defineAsyncComponent({
 </script>
 
 <template>
-    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 dark:text-white">{{ status.name }}</td>
+    <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-white">{{ status.name }}</td>
     <td class="p-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-300">
         <span :style="{ backgroundColor: status.color + '33', borderColor: status.color + '66' }" class="inline-block w-3 h-3 rounded-full border mr-2 p-3"></span>
     </td>

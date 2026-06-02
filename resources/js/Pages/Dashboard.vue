@@ -322,8 +322,8 @@
                                     </label>
                                     <div
                                         v-if="!task.done && task.deadline"
-                                        class="text-[11px] text-right"
-                                        :class="task.isDeadlineInFuture ? 'text-gray-500' : 'text-red-600'"
+                                        class="text-sm font-medium text-right whitespace-nowrap"
+                                        :class="task.isDeadlineInFuture ? 'text-gray-600' : 'text-red-600'"
                                     >
                                         {{ $t('until') }} {{ task.deadline }}
                                     </div>

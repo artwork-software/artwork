@@ -153,6 +153,11 @@ use Artwork\Modules\Crm\Http\Controllers\CrmImportController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyController;
 use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
+use App\Http\Controllers\ExternalAccessManagementController;
+use App\Http\Controllers\ExternalSubmissionReviewController;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalAccessSettingsController;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController;
 use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
@@ -1072,6 +1077,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanFilters']
     )->name('update.user.inventory.article-plan.filters.update');
 
+    // Ref 1.18: persist planning view settings (only-planned toggle + collapse state)
+    Route::patch(
+        '/user/{user}/inventory/article-plan/view-settings/update',
+        [UserShiftCalendarFilterController::class, 'updateInventoryArticlePlanViewSettings']
+    )->name('update.user.inventory.article-plan.view-settings.update');
+
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
         ->name('user.update.zoom_factor');
@@ -1231,6 +1242,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shift.removeUserByType');
         Route::delete('/removeAllShiftUsers/{shift}', [ShiftController::class, 'removeAllShiftUsers'])
             ->name('shift.removeAllUsers');
+        Route::get('/dayAssignments', [ShiftController::class, 'dayAssignments'])
+            ->name('shift.dayAssignments');
+        Route::post('/removeWorkerFromDay', [ShiftController::class, 'removeWorkerFromDay'])
+            ->name('shift.removeWorkerFromDay');
 
         Route::group(['prefix' => 'budget'], function (): void {
             // GET
@@ -1918,6 +1933,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
+    Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
+        ->name('shift.plan.export.pdf');
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']
@@ -2097,7 +2114,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
-            ->name('user.operationPlan');
+            ->name('user.operationPlan')
+            ->can('can view own roster');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
         Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
@@ -2138,6 +2156,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
+        // (DP-16: nur der Abonnier-Button wird per Recht ausgeblendet; bestehende
+        // Abos bleiben unberührt, daher KEIN serverseitiges Gating der Abo-Routen.)
         Route::post(
             '/shift/calendar/abo/create',
             [UserShiftCalendarAboController::class, 'store']
@@ -2293,6 +2313,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ]
     );
 
+    // External access global settings (admin only)
+    Route::middleware('role:' . \Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)
+        ->prefix('settings/external-access')
+        ->name('settings.external-access.')
+        ->group(function (): void {
+            Route::get('/', [ExternalAccessSettingsController::class, 'index'])->name('index');
+            Route::patch('/', [ExternalAccessSettingsController::class, 'update'])->name('update');
+            Route::post('recipients', [ExternalAccessSettingsController::class, 'addRecipient'])
+                ->name('recipients.add');
+            Route::patch('recipients/{recipient}', [ExternalAccessSettingsController::class, 'updateRecipient'])
+                ->name('recipients.update');
+            Route::delete('recipients/{recipient}', [ExternalAccessSettingsController::class, 'removeRecipient'])
+                ->name('recipients.remove');
+        });
+
     // CRM Routes
     Route::group(['prefix' => 'crm'], function (): void {
         Route::get('/', [CrmController::class, 'index'])->name('crm.index');
@@ -2321,6 +2356,47 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/contacts/{crmContact}/room-types', [CrmContactController::class, 'storeRoomType'])->name('crm.contacts.room-types.store');
         Route::patch('/room-types/{roomType}/name', [CrmContactController::class, 'updateRoomTypeName'])->name('crm.contacts.room-types.update-name');
         Route::delete('/contacts/{crmContact}/room-types/{roomType}', [CrmContactController::class, 'destroyRoomType'])->name('crm.contacts.room-types.destroy');
+
+        // External access invitations (requires the "invite externals" permission, enforced in the request)
+        Route::post('/externals/invitations', [ExternalInvitationController::class, 'store'])
+            ->name('crm.externals.invitations.store');
+        Route::get('/externals/contact-types', [ExternalInvitationController::class, 'contactTypes'])
+            ->name('crm.externals.contact-types.index');
+        Route::get('/externals/contact-types/{crmContactType}/requirements', [
+            ExternalInvitationController::class, 'showContactTypeRequirements',
+        ])->name('crm.externals.contact-types.requirements');
+
+        // External self-edit submission review (Inviter/Admin authorization enforced in service)
+        Route::prefix('contacts/{contact}/external-submissions')
+            ->name('crm.contacts.external-submissions.')
+            ->group(function (): void {
+                Route::get('/', [ExternalSubmissionReviewController::class, 'index'])->name('index');
+                Route::get('{submission}', [ExternalSubmissionReviewController::class, 'show'])->name('show');
+                Route::post('{submission}/approve-all', [ExternalSubmissionReviewController::class, 'approveAll'])
+                    ->name('approve-all');
+                Route::post('{submission}/reject-all', [ExternalSubmissionReviewController::class, 'rejectAll'])
+                    ->name('reject-all');
+                Route::post('{submission}/partial-decisions', [ExternalSubmissionReviewController::class, 'partialDecisions'])
+                    ->name('partial-decisions');
+            });
+
+        // External access management UI (CRM_VIEW to view; manage/relink enforced via policy)
+        Route::prefix('external-access')->name('crm.external-access.')->group(function (): void {
+            Route::get('/', [ExternalAccessManagementController::class, 'index'])
+                ->middleware('can:' . PermissionEnum::CRM_VIEW->value)
+                ->name('index');
+            Route::get('{access}', [ExternalAccessManagementController::class, 'show'])->name('show');
+            Route::patch('{access}/crm-access', [ExternalAccessManagementController::class, 'extendCrmAccess'])
+                ->name('extend-crm-access');
+            Route::post('{access}/revoke', [ExternalAccessManagementController::class, 'revoke'])->name('revoke');
+            Route::post('{access}/reactivate', [ExternalAccessManagementController::class, 'reactivate'])
+                ->name('reactivate');
+            Route::patch('{access}/scopes/{scope}', [ExternalAccessManagementController::class, 'updateScope'])
+                ->name('scope.update');
+            Route::post('{access}/scopes/{scope}/end', [ExternalAccessManagementController::class, 'endScope'])
+                ->name('scope.end');
+            Route::post('{access}/relink', [ExternalAccessManagementController::class, 'relink'])->name('relink');
+        });
 
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');
@@ -2379,6 +2455,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::put('/status/{inventoryArticleStatus}', [InventoryArticleStatusController::class, 'update'])
                 ->name('inventory.article-status.update');
 
+            Route::post('/status/reorder', [InventoryArticleStatusController::class, 'reorder'])
+                ->name('inventory.article-status.reorder');
+
             Route::get('/properties', [InventoryArticlePropertiesController::class, 'index'])
                 ->name('inventory-management.settings.properties');
 
@@ -2393,6 +2472,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // patch inventory-management.settings.properties.update
             Route::patch('/properties/{inventoryArticleProperty}/update', [InventoryArticlePropertiesController::class, 'update'])
                 ->name('inventory-management.settings.properties.update');
+
+            // reorder global property order (Ref 1.41)
+            Route::post('/properties/reorder', [InventoryArticlePropertiesController::class, 'reorder'])
+                ->name('inventory-management.settings.properties.reorder');
 
             // inventory-management.settings.categories.create
             Route::post('/categories/create', [InventoryCategoryController::class, 'store'])

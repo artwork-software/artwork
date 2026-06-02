@@ -13,10 +13,16 @@ class UserInventoryArticlePlanFilter extends Model
         'user_id',
         'start_date',
         'end_date',
+        'only_planned',
+        'open_categories',
+        'open_subcategories',
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'only_planned' => 'boolean',
+        'open_categories' => 'array',
+        'open_subcategories' => 'array',
     ];
 }

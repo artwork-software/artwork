@@ -14,12 +14,11 @@
                     <h2 class="text-lg font-semibold">{{ $t('Invitation wording') }}</h2>
                     <p class="mt-1 text-sm text-zinc-500">{{ $t('The company name used in invitation emails.') }}</p>
                     <div class="mt-4">
-                        <label class="componentLabel">{{ $t('Company name (override)') }}</label>
-                        <input
+                        <BaseInput
+                            id="company_name_override"
                             v-model="form.company_name_override"
-                            type="text"
+                            :label="$t('Company name (override)')"
                             :placeholder="settings.effective_company_name_without_override"
-                            class="mt-1 block w-full rounded-lg border-zinc-300 text-sm"
                         />
                         <p v-if="!form.company_name_override" class="text-xs text-zinc-500 mt-1">
                             {{ $t('Will use:') }} <strong>{{ settings.effective_company_name_without_override }}</strong>
@@ -32,12 +31,20 @@
                     <h2 class="text-lg font-semibold">{{ $t('Default durations') }}</h2>
                     <div class="mt-4 grid grid-cols-2 gap-4">
                         <div>
-                            <label class="componentLabel">{{ $t('CRM access default (months)') }}</label>
-                            <input v-model.number="form.default_crm_access_months" type="number" min="1" max="120" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
+                            <BaseInput
+                                id="default_crm_access_months"
+                                v-model="form.default_crm_access_months"
+                                type="number"
+                                :label="$t('CRM access default (months)')"
+                            />
                         </div>
                         <div>
-                            <label class="componentLabel">{{ $t('Tab access default (days)') }}</label>
-                            <input v-model.number="form.default_tab_access_days" type="number" min="1" max="3650" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
+                            <BaseInput
+                                id="default_tab_access_days"
+                                v-model="form.default_tab_access_days"
+                                type="number"
+                                :label="$t('Tab access default (days)')"
+                            />
                         </div>
                     </div>
                 </section>
@@ -53,26 +60,46 @@
                     </button>
                     <div v-if="securityOpen" class="mt-4 grid grid-cols-2 gap-4">
                         <div>
-                            <label class="componentLabel">{{ $t('Magic link lifetime (minutes)') }}</label>
-                            <input v-model.number="form.login_token_lifetime_minutes" type="number" min="5" max="60" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
-                            <p v-if="errors.login_token_lifetime_minutes" class="text-xs text-red-600 mt-1">{{ errors.login_token_lifetime_minutes }}</p>
+                            <BaseInput
+                                id="login_token_lifetime_minutes"
+                                v-model="form.login_token_lifetime_minutes"
+                                type="number"
+                                :label="$t('Magic link lifetime (minutes)')"
+                                :error="errors.login_token_lifetime_minutes"
+                            />
                         </div>
                         <div>
-                            <label class="componentLabel">{{ $t('Session idle timeout (minutes)') }}</label>
-                            <input v-model.number="form.session_idle_timeout_minutes" type="number" min="15" max="480" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
-                            <p v-if="errors.session_idle_timeout_minutes" class="text-xs text-red-600 mt-1">{{ errors.session_idle_timeout_minutes }}</p>
+                            <BaseInput
+                                id="session_idle_timeout_minutes"
+                                v-model="form.session_idle_timeout_minutes"
+                                type="number"
+                                :label="$t('Session idle timeout (minutes)')"
+                                :error="errors.session_idle_timeout_minutes"
+                            />
                         </div>
                         <div>
-                            <label class="componentLabel">{{ $t('Session absolute lifetime (minutes)') }}</label>
-                            <input v-model.number="form.session_absolute_lifetime_minutes" type="number" min="60" max="1440" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
+                            <BaseInput
+                                id="session_absolute_lifetime_minutes"
+                                v-model="form.session_absolute_lifetime_minutes"
+                                type="number"
+                                :label="$t('Session absolute lifetime (minutes)')"
+                            />
                         </div>
                         <div>
-                            <label class="componentLabel">{{ $t('Link requests per email per hour') }}</label>
-                            <input v-model.number="form.rate_limit_request_link_per_email_per_hour" type="number" min="1" max="100" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
+                            <BaseInput
+                                id="rate_limit_request_link_per_email_per_hour"
+                                v-model="form.rate_limit_request_link_per_email_per_hour"
+                                type="number"
+                                :label="$t('Link requests per email per hour')"
+                            />
                         </div>
                         <div>
-                            <label class="componentLabel">{{ $t('Link requests per IP per hour') }}</label>
-                            <input v-model.number="form.rate_limit_request_link_per_ip_per_hour" type="number" min="1" max="1000" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm" />
+                            <BaseInput
+                                id="rate_limit_request_link_per_ip_per_hour"
+                                v-model="form.rate_limit_request_link_per_ip_per_hour"
+                                type="number"
+                                :label="$t('Link requests per IP per hour')"
+                            />
                         </div>
                     </div>
                 </section>
@@ -116,15 +143,14 @@
         <ArtworkBaseModal v-if="addOpen" :title="$t('Add recipient')" :description="''" @close="addOpen = false">
             <div class="mt-4 space-y-4">
                 <div>
-                    <label class="componentLabel">{{ $t('Linked to') }}</label>
-                    <select v-model="addForm.option" class="menu-button bg-white mt-1">
-                        <optgroup :label="$t('Users')">
-                            <option v-for="o in recipientOptions.users" :key="`u-${o.id}`" :value="o">{{ o.label }}</option>
-                        </optgroup>
-                        <optgroup :label="$t('Departments')">
-                            <option v-for="o in recipientOptions.departments" :key="`d-${o.id}`" :value="o">{{ o.label }}</option>
-                        </optgroup>
-                    </select>
+                    <ArtworkBaseListbox
+                        v-model="addForm.option"
+                        :items="recipientItems"
+                        by="uid"
+                        option-label="label"
+                        :label="$t('Linked to')"
+                        :placeholder="$t('Please select')"
+                    />
                 </div>
                 <div>
                     <label class="componentLabel">{{ $t('Notifications') }}</label>
@@ -160,6 +186,8 @@ import { ref, computed } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()
@@ -174,6 +202,11 @@ const props = defineProps({
 })
 
 const securityOpen = ref(false)
+
+const recipientItems = computed(() => [
+    ...(props.recipientOptions.users ?? []).map((o) => ({ ...o, uid: `u-${o.id}` })),
+    ...(props.recipientOptions.departments ?? []).map((o) => ({ ...o, uid: `d-${o.id}` })),
+])
 
 const form = useForm({
     company_name_override: props.settings.company_name_override,

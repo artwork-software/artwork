@@ -207,6 +207,8 @@
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Export as PDF')" icon="IconFileExport"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showShiftPlanExportModal = true"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
                                       :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
@@ -253,6 +255,12 @@
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :crafts="crafts"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
+    <ExportModal
+        v-if="showShiftPlanExportModal"
+        @close="showShiftPlanExportModal = false"
+        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT]"
+        :configuration="shiftPlanExportConfiguration"
+    />
 </template>
 
 <script setup>
@@ -282,7 +290,16 @@ import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettin
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const {hasAdminRole, can} = usePermission(usePage().props);
+
+const exportTabEnums = useExportTabEnums();
+
+const ExportModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/Export/Modals/ExportModal.vue'),
+    delay: 200,
+    timeout: 3000,
+});
 
 const DatePickerComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
@@ -316,6 +333,7 @@ const showShiftCommitDateSelectModal = ref(false);
 const showCalendarSettingsModal = ref(false);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarAboSettingModal = ref(false);
+const showShiftPlanExportModal = ref(false);
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
 const activeSettings = computed(() => {
@@ -323,6 +341,26 @@ const activeSettings = computed(() => {
         return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings;
     }
     return usePage().props.shift_plan_settings;
+});
+
+// Configuration handed to the PDF export modal so the export mirrors the currently displayed view
+// (time period, active filters and project mode are all taken over via these parameters).
+const shiftPlanExportConfiguration = computed(() => {
+    const projectId = usePage().props.projectId ?? null;
+    const settings = activeSettings.value;
+    const useProjectMode = !!settings?.use_project_time_period && !!settings?.time_period_project_id;
+    return {
+        [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]: {
+            startDate: props.dateValue?.[0] ?? null,
+            endDate: props.dateValue?.[1] ?? null,
+            projectId: projectId,
+            isInProjectView: !!projectId,
+            isDailyView: props.isDailyView,
+            projectName: (projectId || useProjectMode) ? props.projectNameUsedForProjectTimePeriod : null,
+            // In project mode, shifts/events belonging to this project are highlighted in the PDF.
+            highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
+        },
+    };
 });
 
 const userCalendarSettings = useForm({

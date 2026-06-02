@@ -24,6 +24,11 @@
                                               @close="close()"
                                               :project="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.project"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT">
+                    <PdfShiftPlanExport v-if="activeTab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT"
+                                        @close="close()"
+                                        :configuration="configuration[exportTabEnums.PDF_SHIFT_PLAN_EXPORT]"/>
+                </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT">
                     <ExcelBudgetByBudgetDeadlineExport v-if="activeTab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT" @close="close()"/>
                 </template>
@@ -63,6 +68,9 @@ const exportTabEnums = useExportTabEnums(),
     ),
     PdfMonthlyCalendarExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/PdfMonthlyCalendarExport.vue")
+    ),
+    PdfShiftPlanExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/PdfShiftPlanExport.vue")
     ),
     ExcelBudgetByBudgetDeadlineExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelBudgetByBudgetDeadlineExport.vue")

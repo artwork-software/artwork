@@ -9,7 +9,7 @@ use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Artwork\Modules\ExternalAccess\Exceptions\ExternalAccessException;
 use Artwork\Modules\ExternalAccess\Http\Requests\StoreExternalInvitationRequest;
 use Artwork\Modules\ExternalAccess\Services\ExternalAccessService;
-use Artwork\Modules\ExternalAccess\Services\SourceEntityFactoryRegistry;
+use Artwork\Modules\ExternalAccess\Services\ExternalContactTypeInvitabilityService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +18,7 @@ class ExternalInvitationController extends Controller
 {
     public function __construct(
         private readonly ExternalAccessService $externalAccessService,
-        private readonly SourceEntityFactoryRegistry $factoryRegistry,
+        private readonly ExternalContactTypeInvitabilityService $invitabilityService,
         private readonly CrmContactTypeService $contactTypeService,
     ) {
     }
@@ -85,9 +85,9 @@ class ExternalInvitationController extends Controller
             ->all();
 
         return response()->json([
-            'invitable' => $this->factoryRegistry->isInvitable($crmContactType->slug),
+            'invitable' => $this->invitabilityService->isInvitable($crmContactType),
             'slug' => $crmContactType->slug,
-            'public_required_fields' => $this->factoryRegistry->requiredPublicFields($crmContactType->slug),
+            'public_required_fields' => $this->invitabilityService->requiredPublicFields($crmContactType),
             'confidential_required_properties' => $confidentialRequired,
         ]);
     }

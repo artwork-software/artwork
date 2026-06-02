@@ -1242,6 +1242,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shift.removeUserByType');
         Route::delete('/removeAllShiftUsers/{shift}', [ShiftController::class, 'removeAllShiftUsers'])
             ->name('shift.removeAllUsers');
+        Route::get('/dayAssignments', [ShiftController::class, 'dayAssignments'])
+            ->name('shift.dayAssignments');
+        Route::post('/removeWorkerFromDay', [ShiftController::class, 'removeWorkerFromDay'])
+            ->name('shift.removeWorkerFromDay');
 
         Route::group(['prefix' => 'budget'], function (): void {
             // GET
@@ -1929,6 +1933,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
+    Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
+        ->name('shift.plan.export.pdf');
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']

@@ -14,7 +14,9 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
@@ -367,6 +369,187 @@ class ExportPDFController extends Controller
         );
     }
 
+
+    /**
+     * Exports the currently displayed shift plan view (date range, active filters and project mode
+     * are taken over from the request, mirroring the parameters used by shiftPlanEventAPI) into a PDF.
+     * Each ISO calendar week is rendered on its own page.
+     */
+    public function createShiftPlanPDF(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->guard()->user();
+
+        $projectId = $request->get('projectId');
+        $project = !empty($projectId) ? $this->projectService->findById($projectId) : null;
+
+        // Mirror shiftPlanEventAPI: project view forces non-daily, otherwise respect the user's daily flag.
+        $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
+        $isDailyView = !$isInProjectView && $request->boolean('isDailyView', (bool) $user->getAttribute('daily_view'));
+
+        if ($isDailyView) {
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings')
+                ?? $user->daily_view_calendar_settings()->create();
+        } else {
+            $userCalendarSettings = $user->getAttribute('calendar_settings')
+                ?? $user->calendar_settings()->create();
+        }
+
+        $shiftFilterType = $isInProjectView
+            ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+            : ($isDailyView
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value);
+
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $shiftFilterType],
+            [
+                'start_date' => null,
+                'end_date' => null,
+                'event_type_ids' => null,
+                'room_ids' => null,
+                'area_ids' => null,
+                'room_attribute_ids' => null,
+                'room_category_ids' => null,
+                'event_property_ids' => null,
+                'craft_ids' => null,
+            ]
+        );
+
+        // Respect the date range currently shown in the shift plan (sent by the frontend).
+        $startDateParam = $request->get('start');
+        $endDateParam = $request->get('end');
+
+        if (!empty($startDateParam) && !empty($endDateParam)) {
+            $startDate = Carbon::parse($startDateParam)->startOfDay();
+            $endDate = Carbon::parse($endDateParam)->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true,
+            $project
+        );
+
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            false,
+            $project,
+            false
+        );
+        $rooms = $filterResult['rooms'];
+        $lookups = $filterResult['lookups'] ?? [];
+
+        $calendar = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate
+        );
+
+        // Normalize the room blocks to plain nested arrays (identical to the JSON the frontend
+        // receives) so the blade can rely on consistent array access for rooms, events and shifts.
+        $normalizedRooms = json_decode(json_encode($calendar->rooms ?? []), true) ?: [];
+
+        // Lookup: roomId -> room data (content + eventsById + shiftsById) for O(1) blade access.
+        $roomLookup = [];
+        foreach ($normalizedRooms as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? null;
+            if ($rid !== null) {
+                $roomLookup[$rid] = $roomBlock;
+            }
+        }
+
+        // Build the list of days and group them by ISO calendar week (one week = one page).
+        $weeks = [];
+        $cursor = $startDate->copy()->startOfDay();
+        $lastDay = $endDate->copy()->startOfDay();
+        while ($cursor->lte($lastDay)) {
+            $weekKey = $cursor->isoWeekYear . '-' . str_pad((string) $cursor->isoWeek, 2, '0', STR_PAD_LEFT);
+            if (!isset($weeks[$weekKey])) {
+                $weeks[$weekKey] = [
+                    'weekNumber' => $cursor->isoWeek,
+                    'weekYear' => $cursor->isoWeekYear,
+                    'days' => [],
+                ];
+            }
+            $weeks[$weekKey]['days'][] = [
+                'fullDay' => $cursor->format('d.m.Y'),
+                'dayString' => $cursor->translatedFormat('D'),
+                'longDay' => $cursor->translatedFormat('l'),
+                'isWeekend' => $cursor->isWeekend(),
+                'isToday' => $cursor->isToday(),
+            ];
+            $cursor->addDay();
+        }
+        $weeks = array_values($weeks);
+
+        // Human-readable summary of the active filters for the header.
+        $activeFilter = [
+            'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
+            'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
+            'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
+        ];
+
+        $title = $request->get('title');
+        if (empty($title)) {
+            $title = $project ? $project->name : __('Shift plan');
+        }
+
+        // In project mode the shifts/events of the active time-period project are highlighted.
+        $highlightProjectId = $request->get('highlightProjectId');
+        $highlightProjectId = ($highlightProjectId !== null && $highlightProjectId !== '')
+            ? (int) $highlightProjectId
+            : null;
+        $highlightProjectName = $highlightProjectId
+            ? optional($this->projectService->findById($highlightProjectId))->name
+            : null;
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.shiftplan_export',
+            [
+                'title' => $title,
+                'project' => $project,
+                'weeks' => $weeks,
+                'rooms' => $rooms,
+                'roomLookup' => $roomLookup,
+                'eventTypesById' => $lookups['eventTypesById'] ?? [],
+                'activeFilter' => $activeFilter,
+                'created_by' => $user->full_name,
+                'startDate' => $startDate->format('d.m.Y'),
+                'endDate' => $endDate->format('d.m.Y'),
+                'highlightProjectId' => $highlightProjectId,
+                'highlightProjectName' => $highlightProjectName,
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a4'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) ($request->float('dpi') ?: 96));
+
+        $filename = $this->createFilename();
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
 
     public static function eventOverlapsSlot($event, string $dayDisplay, string $slot): bool
     {

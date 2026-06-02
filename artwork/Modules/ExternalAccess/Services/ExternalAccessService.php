@@ -33,6 +33,7 @@ class ExternalAccessService
         private readonly ExternalInvitationRepository $invitationRepository,
         private readonly ExternalAccessScopeRepository $scopeRepository,
         private readonly SourceEntityFactoryRegistry $factoryRegistry,
+        private readonly ExternalContactTypeInvitabilityService $invitabilityService,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -175,19 +176,15 @@ class ExternalAccessService
     {
         $contactType = CrmContactType::query()->findOrFail($command->crmContactTypeId);
 
-        if (!$this->factoryRegistry->isInvitable($contactType->slug)) {
+        if (!$this->invitabilityService->isInvitable($contactType)) {
             throw UnsupportedContactTypeException::forSlug($contactType->slug);
         }
 
         $this->guardConfidentialMandatoryFields($contactType, $command);
 
-        $sourceEntity = $this->factoryRegistry->create($contactType->slug, $command);
-
-        $sourceEntity->createCrmContact();
-        $sourceEntity->syncToCrm();
-
-        /** @var CrmContact $crmContact */
-        $crmContact = $sourceEntity->crmContact()->firstOrFail();
+        $crmContact = $this->invitabilityService->usesGenericPath($contactType)
+            ? $this->createStandaloneCrmContact($contactType, $command, $email)
+            : $this->createCrmContactFromSourceEntity($contactType, $command);
 
         $this->writeConfidentialValues($crmContact, $command->confidentialFieldValues);
 
@@ -197,6 +194,78 @@ class ExternalAccessService
             'invited_by_user_id' => $command->invitedBy->id,
             'crm_access_expires_at' => $this->resolveCrmAccessExpiry($command),
         ]);
+    }
+
+    /**
+     * System contact types: build the dedicated source entity (Freelancer, ServiceProvider, …)
+     * which in turn creates and syncs its CRM contact.
+     */
+    private function createCrmContactFromSourceEntity(
+        CrmContactType $contactType,
+        InviteExternalCommand $command,
+    ): CrmContact {
+        $sourceEntity = $this->factoryRegistry->create($contactType->slug, $command);
+
+        $sourceEntity->createCrmContact();
+        $sourceEntity->syncToCrm();
+
+        return $sourceEntity->crmContact()->firstOrFail();
+    }
+
+    /**
+     * Freely created contact types have no source entity. The external person is represented by
+     * a standalone CRM contact (entity_type/entity_id stay null), named by the inviter-supplied
+     * display name. The email is stored on the ExternalAccess record and, if the contact type
+     * exposes an "Email" CRM property, mirrored there so it is visible in the CRM.
+     */
+    private function createStandaloneCrmContact(
+        CrmContactType $contactType,
+        InviteExternalCommand $command,
+        string $email,
+    ): CrmContact {
+        $displayName = trim((string) (
+            $command->publicFieldValues[ExternalContactTypeInvitabilityService::GENERIC_DISPLAY_NAME_FIELD] ?? ''
+        ));
+
+        $crmContact = CrmContact::create([
+            'crm_contact_type_id' => $contactType->id,
+            'display_name' => $displayName !== '' ? $displayName : $email,
+            'is_active' => true,
+        ]);
+
+        $this->mirrorEmailToCrmProperty($contactType, $crmContact, $email);
+
+        return $crmContact;
+    }
+
+    /**
+     * Writes the email to the contact type's "Email" CRM property when one is assigned, so a
+     * standalone contact is searchable/visible by email in the CRM.
+     */
+    private function mirrorEmailToCrmProperty(
+        CrmContactType $contactType,
+        CrmContact $crmContact,
+        string $email,
+    ): void {
+        $emailProperty = CrmProperty::query()
+            ->where('name', 'Email')
+            ->whereHas(
+                'contactTypes',
+                fn (Builder $ct) => $ct->where('crm_contact_types.id', $contactType->id),
+            )
+            ->first();
+
+        if ($emailProperty === null) {
+            return;
+        }
+
+        CrmPropertyValue::updateOrCreate(
+            [
+                'crm_contact_id' => $crmContact->id,
+                'crm_property_id' => $emailProperty->id,
+            ],
+            ['value' => $email],
+        );
     }
 
     private function guardAgainstInternalUserEmail(string $email): void
@@ -224,7 +293,26 @@ class ExternalAccessService
             }
         }
 
-        return null;
+        // Standalone contacts (freely created types) have no source entity; their email lives in
+        // the "Email" CRM property value. Match on that so re-inviting them does not create a
+        // duplicate contact.
+        return $this->resolveStandaloneCrmContactByEmail($email);
+    }
+
+    /**
+     * Finds a standalone CRM contact (no source entity) whose "Email" CRM property value matches
+     * the given email. Only contacts without a polymorphic source entity are considered, since
+     * entity-backed contacts are already resolved by their own email column above.
+     */
+    private function resolveStandaloneCrmContactByEmail(string $email): ?CrmContact
+    {
+        return CrmPropertyValue::query()
+            ->whereHas('property', fn (Builder $p) => $p->where('name', 'Email'))
+            ->whereRaw('LOWER(value) = ?', [$email])
+            ->whereHas('contact', fn (Builder $c) => $c->whereNull('entity_type'))
+            ->with('contact')
+            ->first()
+            ?->contact;
     }
 
     private function guardConfidentialMandatoryFields(

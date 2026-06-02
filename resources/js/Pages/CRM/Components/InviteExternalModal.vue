@@ -177,6 +177,7 @@ const fieldLabels = {
     first_name: 'First name',
     last_name: 'Last name',
     name: 'Name',
+    display_name: 'Name',
     provider_name: 'Provider name',
     contact_person: 'Contact person',
 }

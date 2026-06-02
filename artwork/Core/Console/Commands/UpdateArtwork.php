@@ -68,8 +68,17 @@ class UpdateArtwork extends Command
         $this->syncCrmContacts();
         $this->cleanupFalseConflicts();
         $this->migrateChangesHistoryToActivityLog();
+        $this->backfillShiftPlanRequestShifts();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function backfillShiftPlanRequestShifts(): void
+    {
+        $this->section('Shift Plan Request Backfill');
+        // Einmaliger Reparatur-Lauf für Anfragen, die unter dem alten Auswahl-Bug erstellt wurden.
+        // --once stellt sicher, dass der Lauf nur einmal pro Umgebung erfolgt (nicht bei jedem Deploy).
+        $this->call('shift-plan-requests:backfill', ['--once' => true]);
     }
 
     private function migrateChangesHistoryToActivityLog(): void

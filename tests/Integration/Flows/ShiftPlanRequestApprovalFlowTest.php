@@ -22,16 +22,18 @@ final class ShiftPlanRequestApprovalFlowTest extends FeatureTestCase
 {
     private function createCraftEventAndShift(): array
     {
+        // 2026-05-06 liegt in ISO-Kalenderwoche 19 (Mo 2026-05-04 – So 2026-05-10),
+        // passend zu week_number = 19 in den Requests unten.
         $craft = Craft::factory()->create();
         $event = Event::factory()->create([
-            'start_time' => '2026-05-11 09:00:00',
-            'end_time' => '2026-05-11 17:00:00',
+            'start_time' => '2026-05-06 09:00:00',
+            'end_time' => '2026-05-06 17:00:00',
         ]);
         $shift = Shift::factory()->create([
             'event_id' => $event->id,
             'craft_id' => $craft->id,
-            'start_date' => '2026-05-11',
-            'end_date' => '2026-05-11',
+            'start_date' => '2026-05-06',
+            'end_date' => '2026-05-06',
             'start' => '09:00:00',
             'end' => '17:00:00',
             'in_workflow' => false,
@@ -156,5 +158,131 @@ final class ShiftPlanRequestApprovalFlowTest extends FeatureTestCase
             ->where('is_committed', false)
             ->count();
         $this->assertSame(0, $stillUncommitted);
+    }
+
+    #[Test]
+    public function approving_request_releases_current_request_id(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, , $shift] = $this->createCraftEventAndShift();
+
+        $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_id' => $craft->id,
+            'week_number' => 19,
+            'year' => 2026,
+        ])->assertRedirect();
+
+        $request = ShiftPlanRequest::query()->where('craft_id', $craft->id)->firstOrFail();
+
+        // Sanity: shift was attached to the pending request
+        $shift->refresh();
+        $this->assertSame($request->id, $shift->current_request_id);
+        $this->assertTrue((bool) $shift->in_workflow);
+
+        $this->post(route('shift-plan-requests.accept', $request))->assertRedirect();
+
+        // After approval the live pointer must be released so the shift is selectable again,
+        // while the shift is committed and no longer "in workflow".
+        $shift->refresh();
+        $this->assertTrue((bool) $shift->is_committed);
+        $this->assertFalse((bool) $shift->in_workflow);
+        $this->assertNull($shift->current_request_id);
+
+        // Historie über die Pivot-Tabelle bleibt erhalten
+        $this->assertTrue($request->requestedShifts()->where('shift_id', $shift->id)->exists());
+    }
+
+    #[Test]
+    public function approved_shift_can_be_requested_again_in_a_new_request(): void
+    {
+        // Regression: previously, accept() left current_request_id pointing at the approved
+        // request, so the store() guard permanently excluded the shift from future requests.
+        $this->actingAsAdmin();
+        [$craft, , $shift] = $this->createCraftEventAndShift();
+
+        // 1. first request + approve
+        $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_id' => $craft->id,
+            'week_number' => 19,
+            'year' => 2026,
+        ])->assertRedirect();
+        $firstRequest = ShiftPlanRequest::query()->where('craft_id', $craft->id)->firstOrFail();
+        $this->post(route('shift-plan-requests.accept', $firstRequest))->assertRedirect();
+
+        // 2. request the same craft/week again -> a NEW pending request must pick the shift up again
+        $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_id' => $craft->id,
+            'week_number' => 19,
+            'year' => 2026,
+        ])->assertRedirect();
+
+        $secondRequest = ShiftPlanRequest::query()
+            ->where('craft_id', $craft->id)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $this->assertNotSame($firstRequest->id, $secondRequest->id);
+
+        $shift->refresh();
+        $this->assertSame($secondRequest->id, $shift->current_request_id);
+        $this->assertTrue((bool) $shift->in_workflow);
+        $this->assertTrue($secondRequest->requestedShifts()->where('shift_id', $shift->id)->exists());
+    }
+
+    #[Test]
+    public function deleting_request_releases_its_shifts(): void
+    {
+        $this->actingAsAdmin();
+        [$craft, , $shift] = $this->createCraftEventAndShift();
+
+        $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_id' => $craft->id,
+            'week_number' => 19,
+            'year' => 2026,
+        ])->assertRedirect();
+
+        $request = ShiftPlanRequest::query()->where('craft_id', $craft->id)->firstOrFail();
+        $shift->refresh();
+        $this->assertSame($request->id, $shift->current_request_id);
+
+        $this->delete(route('shift-plan-requests.destroy', $request))->assertRedirect();
+
+        $this->assertDatabaseMissing('shift_plan_requests', ['id' => $request->id]);
+
+        // Shift must be fully released, not orphaned with a dangling current_request_id.
+        $shift->refresh();
+        $this->assertNull($shift->current_request_id);
+        $this->assertFalse((bool) $shift->in_workflow);
+    }
+
+    #[Test]
+    public function shift_with_stale_in_workflow_flag_can_still_be_requested(): void
+    {
+        // Regression: after a request is deleted, the FK (ON DELETE SET NULL) clears
+        // current_request_id but the denormalized in_workflow flag can stay true. The old
+        // guard's hard `where('in_workflow', false)` then excluded the shift forever.
+        // The new guard relies on request status, not the leaky flag.
+        $this->actingAsAdmin();
+        [$craft, , $shift] = $this->createCraftEventAndShift();
+
+        $shift->forceFill([
+            'in_workflow' => true,
+            'current_request_id' => null,
+        ])->save();
+
+        $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_id' => $craft->id,
+            'week_number' => 19,
+            'year' => 2026,
+        ])->assertRedirect();
+
+        $request = ShiftPlanRequest::query()
+            ->where('craft_id', $craft->id)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $shift->refresh();
+        $this->assertSame($request->id, $shift->current_request_id);
+        $this->assertTrue($request->requestedShifts()->where('shift_id', $shift->id)->exists());
     }
 }

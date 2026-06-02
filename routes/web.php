@@ -3053,6 +3053,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/{shiftPlanRequest}/reject', [ShiftPlanRequestController::class, 'reject'])
                 ->name('reject');
 
+            // Anfrage löschen und zugeordnete Schichten wieder freigeben
+            Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
+                ->name('destroy');
+
             // My views (read-only index + show for planners)
             Route::get('/my', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
                 ->name('my.index');

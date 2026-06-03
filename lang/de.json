@@ -2040,6 +2040,7 @@
     "users": "Benutzer",
     "contracts": "Verträge",
     "planning_calendar": "Planungskalender",
+    "business_intelligence": "Business Intelligence",
     "Module visibility": "Modul-Sichtbarkeiten",
     "Choose which modules should be displayed actively. If a module is unchecked, the respective entry in the main navigation (left sidebar) will be hidden for all users until the checkbox is activated again here.": "Wähle hier aus welche Module aktiv angezeigt werden sollen. Wenn ein Modul abgehakt ist wird der jeweilige Eintrag in der Main-Navigation (linke Leiste) für alle User*innen ausgeblendet bis die Checkbox hier wieder aktiviert wird.",
     "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Hier kannst du für jeden Menüpunkt steuern ob er nur von Admins gesehen werden kann oder auch von anderen Benutzern",

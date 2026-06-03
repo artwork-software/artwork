@@ -44,6 +44,38 @@ final class BackfillShiftPlanRequestShiftsCommandTest extends FeatureTestCase
     }
 
     #[Test]
+    public function backfill_attaches_prod_like_kw25_shift(): void
+    {
+        // Reproduces the prod case 1:1: pending request craft=1, KW25/2026, no attached shifts;
+        // a free single-day shift on 2026-06-16 (which IS inside ISO KW25 = 15.–21.06.2026).
+        $craft = Craft::factory()->create();
+        $request = ShiftPlanRequest::factory()->create([
+            'craft_id' => $craft->id,
+            'week_number' => 25,
+            'year' => 2026,
+            'status' => 'pending',
+        ]);
+
+        $shift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-06-16',
+            'end_date' => '2026-06-16',
+            'start' => '14:30:00',
+            'end' => '23:00:00',
+            'break_minutes' => 30,
+            'is_committed' => false,
+            'in_workflow' => false,
+            'current_request_id' => null,
+        ]);
+
+        $this->assertSame(0, $this->runBackfill(['--no-broadcast' => true]));
+
+        $shift->refresh();
+        $this->assertSame($request->id, $shift->current_request_id, 'KW25 shift must be attached to the KW25 request');
+        $this->assertTrue($request->requestedShifts()->where('shift_id', $shift->id)->exists());
+    }
+
+    #[Test]
     public function backfill_attaches_missing_free_shifts_to_pending_request(): void
     {
         $craft = Craft::factory()->create();

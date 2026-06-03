@@ -22,6 +22,7 @@ class ModuleSettingsMiddleware
         '/users' => 'users',
         '/contracts/view' => 'contracts',
         '/planning-event-calendar' => 'planning_calendar',
+        '/bi/dashboard' => 'business_intelligence',
     ];
 
     /** @var string[] Settings where even admins are blocked when the module is disabled */

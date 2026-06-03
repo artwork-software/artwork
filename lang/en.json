@@ -2030,6 +2030,7 @@
     "users": "Users",
     "contracts": "Contracts",
     "planning_calendar": "Planning Calendar",
+    "business_intelligence": "Business Intelligence",
     "Module visibility": "Module visibility",
     "Choose which modules should be displayed actively. If a module is unchecked, the respective entry in the main navigation (left sidebar) will be hidden for all users until the checkbox is activated again here.": "Choose which modules should be displayed actively. If a module is unchecked, the respective entry in the main navigation (left sidebar) will be hidden for all users until the checkbox is activated again here.",
     "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users",

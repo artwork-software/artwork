@@ -181,6 +181,17 @@ class ShiftRuleService
         })->where('is_active', true)->get();
     }
 
+    public function getActiveRuleByTriggerTypeForUser(User $user, string $triggerType): ?ShiftRule
+    {
+        $activeContract = $user->activeWorkContract();
+        if (!$activeContract) {
+            return null;
+        }
+
+        return $this->getRulesForContract($activeContract)
+            ->firstWhere('trigger_type', $triggerType);
+    }
+
     public function validateShiftRulesForDateRange(Carbon $startDate, Carbon $endDate): Collection
     {
         $violations = collect();
@@ -216,6 +227,9 @@ class ShiftRuleService
             'weeklyMaxHours',
             'restTimeBeforeWorkday',
             'restTimeBeforeHoliday',
+            'restTimeBetweenShiftGroups',
+            'halfDayOffConflict',
+            'halfDayOffOnSpecialDay',
             'minDaysBeforeCommit',
         ];
     }

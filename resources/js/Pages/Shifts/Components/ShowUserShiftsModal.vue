@@ -397,6 +397,9 @@
                             <span class="inline-block h-2 w-2 rounded-full bg-teal-500"></span>
                             <span class="text-xs font-semibold text-teal-800">
                                 {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
+                                <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
+                                    ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
+                                </template>
                             </span>
                         </div>
                         <div class="text-xs text-teal-700">

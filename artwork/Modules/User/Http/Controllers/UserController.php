@@ -46,6 +46,9 @@ use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
 use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
+use Artwork\Modules\WorkTime\Models\UserOvertime;
+use Artwork\Modules\WorkTime\Repositories\UserOvertimeRepository;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
@@ -444,6 +447,32 @@ class UserController extends Controller
             ],
             $compensationData
         ));
+    }
+
+    public function editUserOvertime(User $user): Response|ResponseFactory
+    {
+        $repository = app(UserOvertimeRepository::class);
+        $assign = $user->contract;
+
+        return inertia('Users/UserOvertime', [
+            'userToEdit' => new UserShowResource($user),
+            'currentTab' => 'overtime',
+            'overtime' => $repository->getForUser($user->id),
+            'overtimeStats' => $repository->getDashboardStats($user->id),
+            'overtimePeriod' => $assign?->overtime_compensation_period,
+            'overtimeRuleActive' => (bool) $assign?->overtime_rule_active,
+        ]);
+    }
+
+    public function bookOutOvertime(Request $request, UserOvertime $userOvertime): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        app(OvertimeService::class)->bookOut($userOvertime, (int) auth()->id(), $validated['reason'] ?? null);
+
+        return redirect()->back();
     }
 
     /**

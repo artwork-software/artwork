@@ -28,6 +28,8 @@ class StoreUserContractAssignRequest extends FormRequest
             'free_half_days_per_week' => 'nullable|integer|min:0',
             'special_day_rule_active' => 'boolean',
             'compensation_period' => 'nullable|integer|min:0',
+            'overtime_rule_active' => 'boolean',
+            'overtime_compensation_period' => 'nullable|integer|min:1',
             'free_sundays_per_season' => 'nullable|integer|min:0',
             'days_off_first_26_weeks' => 'nullable|numeric|min:0',
             'work_time_pattern_id' => 'nullable|integer|exists:user_work_time_patterns,id',

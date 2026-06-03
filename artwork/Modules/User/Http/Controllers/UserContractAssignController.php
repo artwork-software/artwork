@@ -57,6 +57,15 @@ class UserContractAssignController extends Controller
                 $workTimeData = collect($data)->only($workTimeFields)->all();
                 $contractData = collect($data)->except($workTimeFields)->filter()->all();
 
+                // filter() above drops false/0/null; persist the overtime toggle/period explicitly
+                // so that disabling the rule (false) and clearing the period actually save.
+                if ($request->has('overtime_rule_active')) {
+                    $contractData['overtime_rule_active'] = $request->boolean('overtime_rule_active');
+                }
+                if ($request->exists('overtime_compensation_period')) {
+                    $contractData['overtime_compensation_period'] = $request->input('overtime_compensation_period');
+                }
+
                 // Update or create user contract if there's contract data
                 if (!empty($contractData)) {
                     $user->contract()->updateOrCreate([], $contractData);

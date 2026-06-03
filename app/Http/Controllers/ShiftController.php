@@ -41,6 +41,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
@@ -1013,6 +1014,18 @@ class ShiftController extends Controller
             $changeService,
             $request->get('seriesShiftData')
         );
+
+        // Immediately re-validate shift rules for users so HFT/shift conflicts surface right after assignment.
+        if ($request->get('userType') === 0) {
+            $assignedUser = User::find($request->get('userId'));
+            if ($assignedUser) {
+                app(ShiftRuleService::class)->validateRulesForUser(
+                    $assignedUser,
+                    Carbon::parse($shift->start_date),
+                    Carbon::parse($shift->end_date)
+                );
+            }
+        }
 
         broadcast(new AssignUserToShift(
             $shift,

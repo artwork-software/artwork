@@ -32,6 +32,8 @@ class UserContractAssign extends Model
         'free_half_days_per_week',
         'special_day_rule_active',
         'compensation_period',
+        'overtime_rule_active',
+        'overtime_compensation_period',
         'free_sundays_per_season',
         'days_off_first_26_weeks',
         'work_time_pattern_id',
@@ -48,6 +50,8 @@ class UserContractAssign extends Model
 
     protected $casts = [
         'special_day_rule_active' => 'boolean',
+        'overtime_rule_active' => 'boolean',
+        'overtime_compensation_period' => 'integer',
         'days_off_first_26_weeks' => 'float',
         'free_full_days_per_week' => 'integer',
         'free_half_days_per_week' => 'integer',

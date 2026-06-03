@@ -91,6 +91,25 @@ class CompensationDayOffRepository extends BaseRepository
         ];
     }
 
+    public function getGrantedHalvesForUserOnDate(int $userId, string $date): Collection
+    {
+        return CompensationDayOff::where('user_id', $userId)
+            ->granted()
+            ->where('value', '<', 1.0)
+            ->whereDate('granted_date', $date)
+            ->get();
+    }
+
+    public function findOpenHalfForUserExcept(int $userId, int $exceptId): ?CompensationDayOff
+    {
+        return CompensationDayOff::where('user_id', $userId)
+            ->where('id', '!=', $exceptId)
+            ->where('value', '<', 1.0)
+            ->open()
+            ->orderBy('deadline')
+            ->first();
+    }
+
     public function createFromProcessing(
         int $userId,
         int $violationId,

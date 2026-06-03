@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Console\Commands;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Illuminate\Console\Command;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -48,12 +49,10 @@ class BackfillShiftPlanRequestShiftsCommand extends Command
 
         // Einmalig-Modus: wenn bereits gelaufen, überspringen. Schützt davor, dass der
         // Reparatur-Lauf bei jedem Deployment (artwork:update) erneut Schichten anhängt.
+        // Wichtig: die Marker-Tabelle wird bei Bedarf SELBST angelegt, damit der Lauf NICHT
+        // von der Migrations-Reihenfolge abhängt (artwork:update läuft ggf. vor `migrate`).
         if ($once && ! $dryRun) {
-            if (! Schema::hasTable('one_time_tasks')) {
-                $this->warn('Tabelle one_time_tasks fehlt – bitte zuerst migrieren. Überspringe Backfill.');
-
-                return self::SUCCESS;
-            }
+            $this->ensureOnceTableExists();
 
             if (DB::table('one_time_tasks')->where('key', self::ONCE_KEY)->exists()) {
                 $this->info('Backfill wurde bereits ausgeführt (--once) – übersprungen.');
@@ -128,7 +127,8 @@ class BackfillShiftPlanRequestShiftsCommand extends Command
         ));
 
         // Einmalig-Marker setzen, damit der Lauf bei künftigen Deployments übersprungen wird.
-        if ($once && ! $dryRun && Schema::hasTable('one_time_tasks')) {
+        if ($once && ! $dryRun) {
+            $this->ensureOnceTableExists();
             DB::table('one_time_tasks')->updateOrInsert(
                 ['key' => self::ONCE_KEY],
                 ['executed_at' => now(), 'updated_at' => now(), 'created_at' => now()]
@@ -136,5 +136,32 @@ class BackfillShiftPlanRequestShiftsCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Stellt sicher, dass die Marker-Tabelle one_time_tasks existiert. Wird bei Bedarf angelegt,
+     * damit der --once-Lauf (aus artwork:update) nicht von der Migrations-Reihenfolge abhängt.
+     * Race-sicher: bei paralleler Anlage (mehrere Container) wird ein Fehler ignoriert, sofern
+     * die Tabelle danach existiert.
+     */
+    private function ensureOnceTableExists(): void
+    {
+        if (Schema::hasTable('one_time_tasks')) {
+            return;
+        }
+
+        try {
+            Schema::create('one_time_tasks', function (Blueprint $table): void {
+                $table->id();
+                $table->string('key')->unique();
+                $table->timestamp('executed_at')->nullable();
+                $table->timestamps();
+            });
+        } catch (\Throwable $e) {
+            // Möglicherweise hat ein paralleler Prozess die Tabelle bereits angelegt.
+            if (! Schema::hasTable('one_time_tasks')) {
+                throw $e;
+            }
+        }
     }
 }

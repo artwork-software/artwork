@@ -518,7 +518,7 @@ const navigation = ref([
         current: route().current('bi.dashboard'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: usePage().props.canViewBiDashboard,
+        has_permission: moduleIsVisible('business_intelligence') && usePage().props.canViewBiDashboard,
         prefetch: false
     },
     {

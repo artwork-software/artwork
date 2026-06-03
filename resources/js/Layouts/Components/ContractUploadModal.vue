@@ -758,8 +758,11 @@ export default {
         selectNewFiles() {
             this.$refs.module_files.click();
         },
-        validateType(file) {
-            this.file = file.target.files[0]
+        validateType(event) {
+            const files = event.dataTransfer?.files ?? event.target?.files;
+            if (files && files.length > 0) {
+                this.file = files[0];
+            }
         },
         closeModal(){
             this.contractForm.reset();

@@ -2,7 +2,7 @@
     <ProjectSettingsHeader :title="$t('Project Role Settings')">
         <template #actions>
             <button class="ui-button-add" @click="showAddProjectRoleModal = true">
-                <PropertyIcon name="IconPlus" stroke-width="1" class="size-5" />
+                <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add Project Role') }}
             </button>
         </template>
@@ -47,7 +47,7 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
@@ -75,7 +75,7 @@ export default {
         }
     },
     methods: {
-        IconPlus,
+        IconCirclePlus,
         closeAddProjectRoleModal() {
             this.showAddProjectRoleModal = false;
         },

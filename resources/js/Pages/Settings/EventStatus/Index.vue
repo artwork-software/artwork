@@ -4,7 +4,7 @@
         <EventSettingHeader>
             <template #actions>
                 <button class="ui-button-add" @click="showCreateEventStatusModal = true">
-                    <component :is="IconPlus" stroke-width="1" class="size-5" />
+                    <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('Add Event Status') }}
                 </button>
             </template>
@@ -111,7 +111,7 @@ import {MenuItem, Switch} from "@headlessui/vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {ref, watch} from "vue";
-import {IconEdit, IconGripVertical, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconGripVertical, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";

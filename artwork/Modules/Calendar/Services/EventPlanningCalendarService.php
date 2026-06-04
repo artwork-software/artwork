@@ -58,6 +58,9 @@ class EventPlanningCalendarService
                 'creator:id,first_name,last_name,position,email',
                 'shifts:id,event_id,start_date,end_date',
             ])
+            ->withExists([
+                'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
+            ])
             ->whereIn('room_id', $roomIds)
             ->where(function ($q) use ($startDate, $endDate): void {
                 $q->whereBetween('start_time', [$startDate, $endDate])

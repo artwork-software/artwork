@@ -225,7 +225,7 @@
                 @click="showAddFunctionModal = true"
             >
                 <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-gray-700">
-                    <component :is="IconPlus" class="size-4" />
+                    <component :is="IconCirclePlus" class="size-4" />
                     <span class="text-xs font-medium">{{ $t('Add Function') }}</span>
                 </div>
             </div>
@@ -313,7 +313,7 @@ import {
     IconClock, IconEdit, IconTrash,
     IconId,
     IconInfoTriangle,
-    IconPlus,
+    IconCirclePlus,
     IconNote,
     IconDeviceFloppy
 } from "@tabler/icons-vue";

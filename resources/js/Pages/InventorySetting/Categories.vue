@@ -5,7 +5,7 @@
     >
         <template #actions>
             <button class="ui-button-add" @click="showAddEditCategoryModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create Category') }}
             </button>
         </template>
@@ -80,7 +80,7 @@ import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCat
 import {ref} from "vue";
 import SingleCategoryInSettings from "@/Pages/InventorySetting/Components/SingleCategoryInSettings.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     categories: {

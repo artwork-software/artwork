@@ -79,7 +79,7 @@
                                 >
                                     <ToolTipComponent
                                         direction="top"
-                                        icon="IconPlus"
+                                        icon="IconCirclePlus"
                                         :tooltip-text="$t('Add new Chat')"
                                         icon-class="size-4"
                                     />

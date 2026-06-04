@@ -533,6 +533,29 @@ readonly class EventService
             ];
         };
 
+        // Build a unified `workers` list (users + freelancers + service providers) for a shift.
+        // The frontend (SingleUserEventShift.vue) reads `shift.workers` with a `type` tag and the
+        // pivot data to decide colleagues and individual times – the separate relation keys alone
+        // would always render "Keine Kolleg*innen".
+        $buildWorkers = function (Shift $shift): array {
+            $tag = function ($workers, string $type) {
+                if ($workers === null) {
+                    return collect();
+                }
+
+                return $workers->map(function ($worker) use ($type) {
+                    $worker->setAttribute('type', $type);
+                    return $worker;
+                });
+            };
+
+            return $tag($shift->users, 'user')
+                ->concat($tag($shift->freelancer, 'freelancer'))
+                ->concat($tag($shift->serviceProvider, 'service_provider'))
+                ->values()
+                ->all();
+        };
+
         $period = CarbonPeriod::create($startDate, $endDate);
         foreach ($period as $date) {
             $formattedDate = $date->format('Y-m-d');
@@ -657,6 +680,7 @@ readonly class EventService
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],
                     'serviceProvider' => $shift->serviceProvider ?? [],
+                    'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
                 ];
@@ -713,6 +737,7 @@ readonly class EventService
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],
                     'serviceProvider' => $shift->serviceProvider ?? [],
+                    'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
                 ];

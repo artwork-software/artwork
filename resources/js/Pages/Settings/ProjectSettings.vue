@@ -49,7 +49,7 @@
                     </div>
 
                     <button class="ui-button-add" @click="openAddStateModal">
-                        <component :is="IconPlus" stroke-width="1" class="size-5" />
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add Status') }}
                     </button>
                 </div>
@@ -304,7 +304,7 @@
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
-import {IconInfoCircle, IconPlus} from '@tabler/icons-vue';
+import {IconInfoCircle, IconCirclePlus} from '@tabler/icons-vue';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -392,7 +392,7 @@ export default {
         }
     },
     methods: {
-        IconPlus,
+        IconCirclePlus,
         openEditGenreModal(genre) {
             this.$inertia.patch(route('genres.update', genre.id), {name: genre.name, color: genre.color}, { preserveScroll: true});
         },

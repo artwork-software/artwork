@@ -61,7 +61,7 @@
             <div v-else class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
                 <div class="mx-auto max-w-md">
                     <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-white text-gray-400 shadow-inner">
-                        <IconPlus class="size-5" />
+                        <IconCirclePlus class="size-5" />
                     </div>
                     <h3 class="text-sm font-semibold text-gray-800">
                         {{ $t('No day services yet') }}
@@ -93,7 +93,7 @@ import { ref } from 'vue'
 import ShiftSettingsHeader from '@/Pages/Settings/Components/ShiftSettingsHeader.vue'
 import AddEditDayServiceModal from '@/Pages/Settings/Components/AddEditDayServiceModal.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
-import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue'
+import { IconCirclePlus, IconEdit, IconTrash } from '@tabler/icons-vue'
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

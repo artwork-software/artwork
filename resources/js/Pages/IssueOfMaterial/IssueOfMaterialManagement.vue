@@ -152,25 +152,27 @@
                             <!-- Raum -->
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('Room') }}</label>
-                                <select
+                                <SearchableSelect
                                     v-model="filters.room_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All rooms') }}</option>
-                                    <option v-for="r in rooms" :key="r.id" :value="r.id">{{ r.name }}</option>
-                                </select>
+                                    :options="rooms"
+                                    value-key="id"
+                                    label-key="name"
+                                    :empty-option="{ label: 'All rooms', value: '' }"
+                                    :placeholder="$t('All rooms')"
+                                />
                             </div>
 
                             <!-- Projekt -->
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">{{ $t('Project') }}</label>
-                                <select
+                                <SearchableSelect
                                     v-model="filters.project_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All projects') }}</option>
-                                    <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                </select>
+                                    :options="projects"
+                                    value-key="id"
+                                    label-key="name"
+                                    :empty-option="{ label: 'All projects', value: '' }"
+                                    :placeholder="$t('All projects')"
+                                />
                             </div>
 
                             <!-- Name-Suche -->
@@ -304,13 +306,14 @@
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <select
+                                <SearchableSelect
                                     v-model="filters.room_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All rooms') }}</option>
-                                    <option v-for="r in rooms" :key="r.id" :value="r.id">{{ r.name }}</option>
-                                </select>
+                                    :options="rooms"
+                                    value-key="id"
+                                    label-key="name"
+                                    :empty-option="{ label: 'All rooms', value: '' }"
+                                    :placeholder="$t('All rooms')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -320,13 +323,14 @@
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <select
+                                <SearchableSelect
                                     v-model="filters.project_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All projects') }}</option>
-                                    <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                </select>
+                                    :options="projects"
+                                    value-key="id"
+                                    label-key="name"
+                                    :empty-option="{ label: 'All projects', value: '' }"
+                                    :placeholder="$t('All projects')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -591,6 +595,7 @@ import {computed, provide, ref, watch, nextTick, onMounted, onBeforeUnmount} fro
 import {can, is} from "laravel-permission-to-vuejs";
 import {IconCirclePlus, IconCopyPlus, IconMenu, IconMenu4, IconSearch, IconX, IconChevronDown} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 
 const props = defineProps({
     issues: Object,

@@ -328,7 +328,7 @@
                                     <span>{{ $t('Special items done') }}</span>
                                 </label>
                                 <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
-                                    <component :is="IconPlus" class="h-3.5 w-3.5" />
+                                    <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
                                     {{ $t('Sonderartikel hinzufügen') }}
                                 </button>
                             </div>
@@ -493,7 +493,7 @@ import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFil
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
-import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import dayjs from "dayjs";
 

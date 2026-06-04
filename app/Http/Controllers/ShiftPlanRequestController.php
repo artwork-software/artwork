@@ -772,16 +772,86 @@ class ShiftPlanRequestController extends Controller
         return ($r === '') ? null : $r;
     }
 
-    public function changes(?Craft $craft = null): \Inertia\Response
+    public function changes(Request $request, ?Craft $craft = null): \Inertia\Response
     {
         $allCrafts = Craft::orderBy('name')->get();
 
-        $changesQuery = CommittedShiftChange::query()
-            ->with(['shift.craft', 'changedBy']) // shift.craft dazu
+        // Filter (all|open|ack) und Seitengröße serverseitig auswerten, damit bei vielen
+        // Änderungen nur die jeweils sichtbare Seite geladen, transformiert und übertragen wird.
+        $filter = $request->query('filter', 'all');
+        if (! in_array($filter, ['all', 'open', 'ack'], true)) {
+            $filter = 'all';
+        }
+
+        $perPage = (int) $request->query('per_page', 50);
+        $perPage = max(1, min(200, $perPage));
+
+        // Freitext-Suche nach der betroffenen Einheit (Name der zugewiesenen/entfernten
+        // Person). Muss serverseitig über die gesamte Datenmenge laufen, nicht nur über
+        // die aktuell angezeigte Seite. Gesucht wird über die polymorphe affectedUser-
+        // Relation (User/Freelancer/ServiceProvider).
+        $search = trim((string) $request->query('search', ''));
+
+        // Basis-Query (Craft-Filter + Suche) als Grundlage für Zähler und Liste.
+        $baseQuery = CommittedShiftChange::query()
             ->when($craft, fn ($q) => $q->where('craft_id', $craft->id))
+            ->when($search !== '', function ($q) use ($search): void {
+                $like = '%' . $search . '%';
+
+                // Vor-/Nachname einzeln sowie als "Vorname Nachname" (User & Freelancer).
+                $personName = function ($w) use ($like): void {
+                    $w->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
+                };
+
+                // Hinweis: whereHasMorph ist mit der projektweiten Model-Basisklasse
+                // inkompatibel (sie verbietet belongsTo() mit Default-Signatur, die
+                // whereHasMorph intern nutzt). Daher pro Typ eine whereIn-Subquery –
+                // bleibt vollständig in SQL und nutzt den (affected_user_type,
+                // affected_user_id)-Index.
+                $q->where(function ($outer) use ($like, $personName): void {
+                    $outer->where(function ($w) use ($personName): void {
+                        $w->where('affected_user_type', User::class)
+                            ->whereIn('affected_user_id', User::query()->where($personName)->select('id'));
+                    })->orWhere(function ($w) use ($personName): void {
+                        $w->where('affected_user_type', Freelancer::class)
+                            ->whereIn('affected_user_id', Freelancer::query()->where($personName)->select('id'));
+                    })->orWhere(function ($w) use ($like): void {
+                        $w->where('affected_user_type', ServiceProvider::class)
+                            ->whereIn('affected_user_id', ServiceProvider::query()
+                                ->where('provider_name', 'like', $like)->select('id'));
+                    });
+                });
+            });
+
+        // Zähler unabhängig vom aktiven Filter (für die Badges in den Tabs).
+        $totalCount   = (clone $baseQuery)->count();
+        $pendingCount = (clone $baseQuery)->whereNull('acknowledged_at')->count();
+
+        $changesQuery = (clone $baseQuery)
+            ->with([
+                // Nur die Felder laden, die das Mapping unten tatsächlich braucht.
+                // Wichtig: Shift hat ein automatisches $with (craft, users, freelancer,
+                // serviceProvider, committedBy). Beim Laden von shift.craft würden sonst
+                // pro Shift tausende User-/Dienstleister-Objekte mitgeladen, was die Seite
+                // bei vielen Änderungen unbenutzbar macht. Daher gezielt entfernen.
+                'shift' => fn ($q) => $q
+                    ->select('id', 'craft_id', 'start_date', 'end_date', 'start', 'end')
+                    ->without(['users', 'freelancer', 'serviceProvider', 'committedBy'])
+                    ->with('craft:id,abbreviation'),
+                // full_name = first_name . ' ' . last_name
+                'changedBy:id,first_name,last_name',
+            ])
+            ->when($filter === 'open', fn ($q) => $q->whereNull('acknowledged_at'))
+            ->when($filter === 'ack', fn ($q) => $q->whereNotNull('acknowledged_at'))
             ->orderByDesc('changed_at');
 
-        $changes = $changesQuery->get()->map(function (CommittedShiftChange $change) {
+        $paginator = $changesQuery->paginate($perPage)->withQueryString();
+
+        // Nur die Datensätze der aktuellen Seite transformieren (through behält die
+        // Paginator-Metadaten/Links bei).
+        $paginator->through(function (CommittedShiftChange $change) {
             $fieldChanges = $change->field_changes ?? [];
 
             $assignment = $fieldChanges['assignment'] ?? null;
@@ -805,11 +875,33 @@ class ShiftPlanRequestController extends Controller
                     $date = optional($shift->start_date)?->format('d.m.Y')
                         ?? optional($shift->end_date)?->format('d.m.Y');
 
+                    // Werte aus field_changes können als volle Datetime ("2026-06-20 14:30:00"),
+                    // als "HH:MM:SS", als "HH:MM" oder als Platzhalter ("null"/leer) vorliegen.
+                    // Einheitlich auf "HH:MM" normalisieren (bzw. null), damit das Datum nicht
+                    // doppelt im Label erscheint und Platzhalter den Fallback unten auslösen.
+                    $toTime = static function ($value): ?string {
+                        if ($value === null || $value === '' || $value === 'null') {
+                            return null;
+                        }
+                        if ($value instanceof \Carbon\Carbon) {
+                            return $value->format('H:i');
+                        }
+                        $str = (string) $value;
+                        if (preg_match('/^(\d{1,2}):(\d{2})/', $str, $m)) {
+                            return sprintf('%02d:%s', (int) $m[1], $m[2]);
+                        }
+                        try {
+                            return \Carbon\Carbon::parse($str)->format('H:i');
+                        } catch (\Throwable $e) {
+                            return null;
+                        }
+                    };
+
                     // Zeiten zuerst aus field_changes lesen
-                    $beforeStart = $fieldChanges['start']['old'] ?? null;
-                    $beforeEnd   = $fieldChanges['end']['old']   ?? null;
-                    $afterStart  = $fieldChanges['start']['new'] ?? null;
-                    $afterEnd    = $fieldChanges['end']['new']   ?? null;
+                    $beforeStart = $toTime($fieldChanges['start']['old'] ?? null);
+                    $beforeEnd   = $toTime($fieldChanges['end']['old']   ?? null);
+                    $afterStart  = $toTime($fieldChanges['start']['new'] ?? null);
+                    $afterEnd    = $toTime($fieldChanges['end']['new']   ?? null);
 
                     // Falls dort nichts steht, auf aktuelle Shift-Werte zurückfallen
                     if (! $beforeStart && $shift->start) {
@@ -835,6 +927,12 @@ class ShiftPlanRequestController extends Controller
                             ? $shift->end->format('H:i')
                             : (string) $shift->end;
                     }
+
+                    // Fallback-Werte (aus den Shift-Spalten) ebenfalls normalisieren.
+                    $beforeStart = $toTime($beforeStart);
+                    $beforeEnd   = $toTime($beforeEnd);
+                    $afterStart  = $toTime($afterStart);
+                    $afterEnd    = $toTime($afterEnd);
 
                     // BEFORE-Label bauen
                     if ($date && $beforeStart && $beforeEnd) {
@@ -884,9 +982,13 @@ class ShiftPlanRequestController extends Controller
         });
 
         return Inertia::render('ShiftPlanRequests/Changes', [
-            'allCrafts' => $allCrafts,
-            'craft'     => $craft,
-            'changes'   => $changes,
+            'allCrafts'    => $allCrafts,
+            'craft'        => $craft,
+            'changes'      => $paginator,
+            'filter'       => $filter,
+            'search'       => $search,
+            'totalCount'   => $totalCount,
+            'pendingCount' => $pendingCount,
         ]);
     }
 

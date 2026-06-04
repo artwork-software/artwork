@@ -421,8 +421,8 @@
                         <button
                             type="button"
                             class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                            :disabled="! changes.prev_page_url"
-                            @click="goToUrl(changes.prev_page_url)"
+                            :disabled="changes.current_page <= 1"
+                            @click="goToPage(changes.current_page - 1)"
                         >
                             {{ t('Previous') }}
                         </button>
@@ -432,8 +432,8 @@
                         <button
                             type="button"
                             class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                            :disabled="! changes.next_page_url"
-                            @click="goToUrl(changes.next_page_url)"
+                            :disabled="changes.current_page >= changes.last_page"
+                            @click="goToPage(changes.current_page + 1)"
                         >
                             {{ t('Next') }}
                         </button>
@@ -543,12 +543,17 @@ watch(search, (value) => {
     }, 300);
 });
 
-// Seitennavigation über die Paginator-URLs (enthalten Filter dank withQueryString()).
-const goToUrl = (url) => {
-    if (! url) {
+// Seitennavigation über die Seitennummer (relativ), NICHT über die absolute
+// Paginator-URL. Hinter einem Reverse-Proxy mit extern terminiertem TLS erzeugt Laravel
+// sonst http://-URLs; ein XHR von der https-Seite dorthin wird als Mixed Content
+// blockiert ("Network Error"). router.reload nutzt die aktuelle (relative) URL und
+// behält Filter & Suche im Query-String bei.
+const goToPage = (page) => {
+    if (! page || page < 1 || page > (props.changes?.last_page ?? 1)) {
         return;
     }
-    router.visit(url, {
+    router.reload({
+        data: { page },
         preserveScroll: true,
         preserveState: true,
     });

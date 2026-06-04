@@ -337,19 +337,25 @@ class Shift extends Model
 
     public function scopeStartAndEndDateOverlap(Builder $builder, string $start, string $end): Builder
     {
-        return $builder
-            ->whereBetween('shifts.start_date', [$start, $end])
-            ->orWhereBetween('shifts.end_date', [$start, $end])
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start_date', '>', $start)
-                    ->where('shifts.end_date', '<', $end);
-            })
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start_date', '<', $start)
-                    ->where('shifts.end_date', '>', $end);
-            });
+        // Die Überlappungsbedingungen müssen in einer eigenen Gruppe gekapselt werden,
+        // damit sie sich korrekt mit vorgelagerten Filtern (z.B. craft_id) per AND verbinden.
+        // Ohne die Gruppierung würde durch die OR-Verknüpfung ein vorheriges where('craft_id')
+        // nur auf die erste Bedingung wirken und Shifts anderer Gewerke einschließen.
+        return $builder->where(function (Builder $builder) use ($start, $end): void {
+            $builder
+                ->whereBetween('shifts.start_date', [$start, $end])
+                ->orWhereBetween('shifts.end_date', [$start, $end])
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start_date', '>', $start)
+                        ->where('shifts.end_date', '<', $end);
+                })
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start_date', '<', $start)
+                        ->where('shifts.end_date', '>', $end);
+                });
+        });
     }
 
 

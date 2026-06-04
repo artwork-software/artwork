@@ -33,42 +33,57 @@ class ShiftHistoryController
         $perPage = (int) $request->query('per_page', 50);
         $perPage = max(1, min(200, $perPage));
 
+        $page = max(1, (int) $request->query('page', 1));
+        // Die vollständige Shift-Liste (inkl. Relationen) ändert sich beim Paginieren nicht
+        // und wird daher nur für die erste Seite geladen & serialisiert. Beim "Mehr laden"
+        // brauchen wir nur die IDs, um die passenden Activities zu filtern.
+        $loadShiftDetails = $page === 1;
+
         // Freitext-Suche (z.B. nach einem Mitarbeiternamen). Muss serverseitig erfolgen,
         // damit auch Treffer auf späteren Seiten gefunden werden – clientseitiges Filtern
         // einer einzelnen Seite würde passende Einträge sonst verbergen.
         $search = trim((string) $request->query('search', ''));
 
         // Shifts im Zeitraum (Overlaps!)
-        $shifts = Shift::query()
-            ->select([
-                'id',
-                'craft_id',
-                'start_date',
-                'end_date',
-                'start',
-                'end',
-                'description',
-                'room_id',
-                'project_id',
-                'is_committed',
-                'in_workflow',
-            ])
-            ->with([
-                'room:id,name',
-                'project:id,name',
-                'craft:id,name,abbreviation',
-            ])
+        $shiftQuery = Shift::query()
             ->when($craftId > 0, fn ($q) => $q->where('craft_id', $craftId))
-            ->startAndEndDateOverlap($startDate->toDateString(), $endDate->toDateString())
-            ->orderBy('start_date')
-            ->orderBy('start')
-            ->get();
+            ->startAndEndDateOverlap($startDate->toDateString(), $endDate->toDateString());
 
-        $shiftIds = $shifts->pluck('id')->all();
+        if ($loadShiftDetails) {
+            // Erste Seite: volle Shift-Liste inkl. Relationen für die Filter-Dropdowns im Frontend.
+            $shifts = (clone $shiftQuery)
+                ->select([
+                    'id',
+                    'craft_id',
+                    'start_date',
+                    'end_date',
+                    'start',
+                    'end',
+                    'description',
+                    'room_id',
+                    'project_id',
+                    'is_committed',
+                    'in_workflow',
+                ])
+                ->with([
+                    'room:id,name',
+                    'project:id,name',
+                    'craft:id,name,abbreviation',
+                ])
+                ->orderBy('start_date')
+                ->orderBy('start')
+                ->get();
+
+            $shiftIds = $shifts->pluck('id')->all();
+        } else {
+            // Folgeseiten: nur die IDs, um die Activities zu filtern.
+            $shifts = null;
+            $shiftIds = (clone $shiftQuery)->pluck('id')->all();
+        }
 
         if (empty($shiftIds)) {
             return response()->json([
-                'shifts' => $shifts,
+                'shifts' => $shifts ?? [],
                 'logs'   => [
                     'data' => [],
                     'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $perPage, 'total' => 0],
@@ -111,8 +126,7 @@ class ShiftHistoryController
             ->orderByDesc('created_at')
             ->paginate($perPage);
 
-        return response()->json([
-            'shifts' => $shifts,
+        $response = [
             'logs'   => [
                 'data' => $paginator->items(),
                 'meta' => [
@@ -126,6 +140,13 @@ class ShiftHistoryController
                 'start_date' => $startDate->toDateString(),
                 'end_date'   => $endDate->toDateString(),
             ],
-        ]);
+        ];
+
+        // Shift-Liste nur auf der ersten Seite mitschicken (siehe $loadShiftDetails).
+        if ($loadShiftDetails) {
+            $response['shifts'] = $shifts;
+        }
+
+        return response()->json($response);
     }
 }

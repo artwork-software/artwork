@@ -448,7 +448,11 @@ const fetchHistory = async (reset: boolean) => {
         })
 
         const payload = res.data
-        shifts.value = payload.shifts ?? []
+        // Die Shift-Liste wird nur beim Reset (erste Seite) vom Server geschickt und
+        // aktualisiert. Beim "Mehr laden" bleibt die bestehende Liste erhalten.
+        if (reset) {
+            shifts.value = payload.shifts ?? []
+        }
 
         const newLogs: RawShiftActivity[] = payload.logs?.data ?? []
         meta.value = payload.logs?.meta ?? { current_page: 1, last_page: 1, per_page: 50, total: 0 }

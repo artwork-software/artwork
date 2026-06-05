@@ -181,7 +181,10 @@ readonly class EventCalendarService
                 'eventProperties',
                 'subEvents',
             ])
-            ->withExists('timelines');
+            ->withExists([
+                'timelines',
+                'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
+            ]);
     }
 
     private function getEventQueryWithMinimalData(): Builder

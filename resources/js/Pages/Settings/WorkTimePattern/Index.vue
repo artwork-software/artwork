@@ -2,7 +2,7 @@
     <ShiftSettingsHeader :title="$t('Work Time Pattern')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateWorkTimePatternModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add Work Time Pattern') }}
             </button>
         </template>
@@ -39,7 +39,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     workTimePatterns: {

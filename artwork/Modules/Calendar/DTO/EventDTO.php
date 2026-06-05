@@ -101,7 +101,8 @@ class EventDTO extends Data
             subEvents: self::serializeSubEvents($event),
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
-            hasVerification: $event->getAttribute('has_verification') ?? false,
+            hasVerification: $event->getAttribute('has_pending_verification')
+                ?? $event->getAttribute('has_verification') ?? false,
             hasTimelines: $event->timelines_exists ?? $event->hasTimelines()
         );
     }

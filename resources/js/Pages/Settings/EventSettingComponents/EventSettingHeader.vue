@@ -26,7 +26,7 @@ import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
-import {IconCalendarEvent, IconPlus} from '@tabler/icons-vue';
+import {IconCalendarEvent, IconCirclePlus} from '@tabler/icons-vue';
 
 export default defineComponent({
     props: ['title', 'description'],
@@ -39,7 +39,7 @@ export default defineComponent({
     data() {
         return {
             IconCalendarEvent,
-            IconPlus,
+            IconCirclePlus,
             tabs: [
                 {
                     name: this.$t('Event Types'),

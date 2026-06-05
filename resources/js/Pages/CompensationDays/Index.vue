@@ -12,17 +12,15 @@
             <!-- Craft filter -->
             <div class="mt-6 flex items-center gap-3">
                 <label class="text-xs font-medium text-zinc-500">{{ $t('Craft') }}:</label>
-                <select
+                <SearchableSelect
                     v-model="selectedCraft"
-                    class="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    :options="crafts"
+                    value-key="id"
+                    :label-key="craft => craft.abbreviation ? `${craft.name} (${craft.abbreviation})` : craft.name"
+                    :empty-option="{ label: 'All crafts', value: null }"
+                    :placeholder="$t('All crafts')"
                     @change="onCraftChange"
-                >
-                    <option :value="null">{{ $t('All crafts') }}</option>
-                    <option v-for="craft in crafts" :key="craft.id" :value="craft.id">
-                        {{ craft.name }}
-                        <template v-if="craft.abbreviation"> ({{ craft.abbreviation }})</template>
-                    </option>
-                </select>
+                />
             </div>
 
             <!-- Summary cards -->
@@ -195,6 +193,7 @@ import { router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
+import SearchableSelect from '@/Artwork/Listbox/SearchableSelect.vue';
 import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import DeleteCompensationDayModal from '@/Pages/Shifts/Components/DeleteCompensationDayModal.vue';
 import CompensationTable from '@/Pages/CompensationDays/CompensationTable.vue';

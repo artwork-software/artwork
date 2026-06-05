@@ -33,7 +33,7 @@
                     </button>
                 </div>
                 <button type="button" @click="form.select_values.push('')" class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
-                    <IconPlus class="h-4 w-4" />
+                    <IconCirclePlus class="h-4 w-4" />
                     {{ $t('Add option') }}
                 </button>
             </div>
@@ -54,7 +54,7 @@ import { useForm } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
-import { IconX, IconPlus } from '@tabler/icons-vue'
+import { IconX, IconCirclePlus } from '@tabler/icons-vue'
 
 const props = defineProps({
     property: { type: Object, default: null },

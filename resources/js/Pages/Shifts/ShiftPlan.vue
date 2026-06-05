@@ -353,7 +353,7 @@
                                         <ToolTipComponent
                                             direction="left"
                                             :tooltip-text="$t('Add Shift')"
-                                            icon="IconPlus"
+                                            icon="IconCirclePlus"
                                             icon-size="size-4"
                                             v-if="!multiEditModeCalendar && can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"

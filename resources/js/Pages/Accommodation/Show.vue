@@ -211,7 +211,7 @@ import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconArrowLeft, IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
+import {IconArrowLeft, IconHome, IconInfoCircle, IconCirclePlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({

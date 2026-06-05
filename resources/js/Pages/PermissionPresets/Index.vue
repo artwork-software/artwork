@@ -122,7 +122,7 @@ import {
 } from '@heroicons/vue/outline'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconCirclePlus, IconEdit, IconPlus, IconTrash, IconUsersGroup} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconTrash, IconUsersGroup} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 /* Props */

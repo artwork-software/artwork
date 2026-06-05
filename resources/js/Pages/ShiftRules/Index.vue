@@ -117,16 +117,14 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Regel-Typ</label>
-                            <select 
+                            <SearchableSelect
                                 v-model="form.trigger_type"
-                                required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            >
-                                <option value="">Bitte wählen...</option>
-                                <option v-for="(label, value) in triggerTypes" :key="value" :value="value">
-                                    {{ label }}
-                                </option>
-                            </select>
+                                :options="Object.entries(triggerTypes).map(([value, label]) => ({ value, label }))"
+                                value-key="value"
+                                label-key="label"
+                                :empty-option="{ label: 'Please select', value: '' }"
+                                :placeholder="$t('Please select')"
+                            />
                         </div>
 
                         <div class="mb-4">
@@ -188,6 +186,7 @@
 import { ref, reactive } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import SearchableSelect from '@/Artwork/Listbox/SearchableSelect.vue'
 
 const props = defineProps({
     shiftRules: Array,

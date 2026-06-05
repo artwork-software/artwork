@@ -124,7 +124,7 @@
                         @click="addCalculation"
                         class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-artwork-buttons-create hover:text-artwork-buttons-create hover:bg-blue-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
                     >
-                        <IconPlus class="w-5 h-5 mr-2" stroke-width="2" />
+                        <IconCirclePlus class="w-5 h-5 mr-2" stroke-width="2" />
                         {{ $t('Add calculation item') }}
                     </button>
 
@@ -387,7 +387,7 @@ import {
     IconCalculator,
     IconMessage,
     IconLink,
-    IconPlus,
+    IconCirclePlus,
     IconTrash,
     IconChevronDown,
     IconCheck,
@@ -409,7 +409,7 @@ export default {
         IconCalculator,
         IconMessage,
         IconLink,
-        IconPlus,
+        IconCirclePlus,
         IconTrash,
         IconChevronDown,
         IconCheck,

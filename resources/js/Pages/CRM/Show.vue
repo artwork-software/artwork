@@ -188,7 +188,7 @@
 
                 <div v-if="!isReadOnly && !showNewRow" class="mt-3">
                     <button type="button" class="ui-button-add" @click="showNewRow = true">
-                        <component :is="IconPlus" class="h-4 w-4 mr-1" />
+                        <component :is="IconCirclePlus" class="h-4 w-4 mr-1" />
                         {{ $t('Add room type') }}
                     </button>
                 </div>
@@ -215,7 +215,7 @@ import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyGroupSection from '@/Pages/CRM/Components/CrmPropertyGroupSection.vue'
-import { IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconPlus, IconX } from '@tabler/icons-vue'
+import { IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconCirclePlus, IconX } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 

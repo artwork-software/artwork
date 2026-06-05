@@ -38,7 +38,7 @@
                     type="button"
                     class="new-button"
                     @click="openCreateMaterialIssue">
-                    <IconPlus class="size-4" />
+                    <IconCirclePlus class="size-4" />
                     {{ $t('New')}}
                 </button>
             </div>
@@ -525,7 +525,7 @@
 import { ref, computed, onBeforeUnmount, watch, onMounted, provide } from 'vue'
 import axios from 'axios'
 import {
-    IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
+    IconCirclePlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
     IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
 } from '@tabler/icons-vue'

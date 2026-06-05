@@ -2,7 +2,7 @@
     <ProjectSettingsHeader :title="$t('Print Layout Settings')" :description="$t('Here you can manage the print layouts for your projects. You can add, edit and delete print layouts. You can also set the default print layout for your projects.')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create print layout') }}
             </button>
         </template>
@@ -64,7 +64,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ProjectSettingsHeader from "@/Pages/Settings/Components/ProjectSettingsHeader.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {computed, ref} from "vue";
 import CreateOrUpdateProjectPrintLayoutModal from "@/Pages/Settings/ProjectPrintLayout/Components/CreateOrUpdateProjectPrintLayoutModal.vue";

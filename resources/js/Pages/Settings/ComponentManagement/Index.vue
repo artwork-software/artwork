@@ -6,7 +6,7 @@
         <!-- Actions -->
         <template #actions>
             <button class="ui-button-add inline-flex items-center gap-2" @click="showAddNewComponentModal = true">
-                <IconPlus class="size-5" stroke-width="1" />
+                <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Create a new component') }}
             </button>
         </template>
@@ -98,7 +98,7 @@ import SingleComponent from '@/Pages/Settings/ComponentManagement/Components/Sin
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue'
 import DropComponentsToolTip from '@/Components/ToolTips/DropComponentsToolTip.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import { IconPlus } from '@tabler/icons-vue'
+import { IconCirclePlus } from '@tabler/icons-vue'
 
 defineOptions({ name: 'ComponentSettingsIndex' })
 

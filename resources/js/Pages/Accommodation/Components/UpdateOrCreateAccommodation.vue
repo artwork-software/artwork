@@ -102,7 +102,7 @@
                             @click="showAddRoomType = true"
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-artwork-buttons-create bg-artwork-buttons-create/10 hover:bg-artwork-buttons-create/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
                         >
-                            <component :is="IconPlus" class="h-4 w-4 mr-2" />
+                            <component :is="IconCirclePlus" class="h-4 w-4 mr-2" />
                             {{ $t('Add room type') }}
                         </button>
                     </div>
@@ -205,7 +205,7 @@ import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import {ListboxButton, ListboxOption, ListboxOptions, Listbox} from "@headlessui/vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconHome, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
+import {IconHome, IconInfoCircle, IconCirclePlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Predefined room types from TypOfRoom enum - only these should be translated

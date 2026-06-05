@@ -618,6 +618,8 @@
                                         :color="row.craft.color"
                                         :craft="row.craft"
                                         :is-managing-craft="row.worker.element.managing_craft_ids.includes(row.craft.id)"
+                                        :enable-info-modal="true"
+                                        @open-user-info-modal="openUserInfoModal"
                                     />
                                     <MultiEditUserCell
                                         v-else-if="multiEditMode && !highlightMode"
@@ -720,6 +722,12 @@
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
+            />
+            <UserShiftInfoModal
+                v-if="showUserInfoModal && userInfoModalUserId"
+                :user-id="userInfoModalUserId"
+                :user-name="userInfoModalUserName"
+                @closed="showUserInfoModal = false"
             />
             <ShiftHistoryModal
                 v-if="showHistoryModal"
@@ -840,6 +848,7 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import UserShiftInfoModal from "@/Pages/Shifts/Components/UserShiftInfoModal.vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
@@ -2567,6 +2576,19 @@ function openShowUserShiftModal(user: any, day: any) {
     userToShow.value = user
     dayToShow.value = day
     showUserShifts.value = true
+}
+
+// DP-18: Info-Modal je User
+const showUserInfoModal = ref(false)
+const userInfoModalUserId = ref<number | null>(null)
+const userInfoModalUserName = ref('')
+function openUserInfoModal(userId: number | string) {
+    const worker = dropWorkers.value?.find((w: any) => w.type === 0 && w.element.id === userId)
+    userInfoModalUserId.value = Number(userId)
+    userInfoModalUserName.value = worker
+        ? ((worker.element.full_name) ?? `${worker.element.first_name ?? ''} ${worker.element.last_name ?? ''}`.trim())
+        : ''
+    showUserInfoModal.value = true
 }
 
 async function handleWorkerReload() {

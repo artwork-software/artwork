@@ -80,4 +80,8 @@ enum PermissionEnum : string
 
     case CAN_VIEW_OWN_ROSTER = 'can view own roster';
     case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
+
+    case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
+
+    case CAN_PAY_OUT_OVERTIME = 'can pay out overtime';
 }

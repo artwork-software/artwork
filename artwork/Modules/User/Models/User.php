@@ -266,6 +266,7 @@ class User extends Model implements
         'chat_public_key',
         'use_chat',
         'work_time_balance',
+        'payable_overtime_minutes',
         'chat_popup_position',
         'chat_push_notification',
         'is_time_preset_open'

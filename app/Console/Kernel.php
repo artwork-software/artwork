@@ -13,6 +13,8 @@ use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
+use Artwork\Core\Console\Commands\TrackShiftKpisCommand;
+use Artwork\Core\Console\Commands\MarkPayableOvertimeCommand;
 use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
@@ -46,6 +48,10 @@ class Kernel extends ConsoleKernel
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
+        // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
+        $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();
+        // DP-18 Stufe 2: überfällige Überstunden als auszuzahlend markieren
+        $schedule->command(MarkPayableOvertimeCommand::class)->dailyAt('00:45')->runInBackground();
         $schedule->command(ImportHolidaysCommand::class)->yearly()->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')

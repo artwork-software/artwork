@@ -53,6 +53,16 @@
                     />
                 </div>
 
+                <button
+                    v-if="type === 0 && enableInfoModal && can('can view shift user kpis')"
+                    type="button"
+                    class="hover:opacity-70 transition-opacity"
+                    :title="$t('Staff info data')"
+                    @click.stop="emit('openUserInfoModal', item.id)"
+                >
+                    <PropertyIcon name="IconInfoCircle" class="w-4 h-4" />
+                </button>
+
                 <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
                     <PropertyIcon name="IconCalendarShare" class="w-4 h-4" />
                 </a>
@@ -67,6 +77,7 @@ import { usePage } from '@inertiajs/vue3';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { can } from 'laravel-permission-to-vuejs';
 const {
     backgroundColorWithOpacityOld
 } = useColorHelper();
@@ -113,6 +124,11 @@ const props = defineProps<{
     craft?: Craft | null
     isManagingCraft?: boolean
     workTimeBalance?: string | null
+    enableInfoModal?: boolean
+}>()
+
+const emit = defineEmits<{
+    (e: 'openUserInfoModal', id: number | string): void
 }>()
 
 /**

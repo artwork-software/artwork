@@ -582,6 +582,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                     'means potential data disclosure to external parties.',
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CAN_VIEW_SHIFT_USER_KPIS->value,
+                'name_de' => "Personal-Infodaten im Dienstplan sehen",
+                'translation_key' => "View staff info data in shift plan",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf das Info-Fenster mit spielzeitbezogenen Kennzahlen je Person im Dienstplan öffnen.',
+                'tooltipKey' => "User can open the per-person info window with season-related KPIs in the shift plan.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_PAY_OUT_OVERTIME->value,
+                'name_de' => "Überstunden auszahlen",
+                'translation_key' => "Pay out overtime",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf Überstunden manuell ausbuchen (Auszahlung) und damit das Zeitkonto reduzieren.',
+                'tooltipKey' => "User can manually book out overtime (payout) and thereby reduce the time account.",
+                'checked' => false
+            ],
         ];
     }
 

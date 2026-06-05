@@ -103,6 +103,12 @@ class VacationController extends Controller
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
+        // DP-18: "Frei" (FREE_WORK) kann als Ganzer freier Tag (full) oder Halber freier Tag
+        // (morning|afternoon) gesetzt werden.
+        $dayPart = $request->get('dayPart');
+        $isFree = $checked['type'] === 'FREE_WORK';
+        $isHalf = $isFree && in_array($dayPart, ['morning', 'afternoon'], true);
+        $resolvedDayPart = $isFree ? ($isHalf ? $dayPart : 'full') : null;
         $vacations = $this->vacationService->findVacationWithinInterval($user, $day);
         if ($checked['type'] === VacationEnum::AVAILABLE->value) {
             if ($vacations->count() > 0) {
@@ -116,7 +122,8 @@ class VacationController extends Controller
             $createVacationRequest = new CreateVacationRequest([
                 'date' => $day,
                 'type' => 'vacation',
-                'full_day' => true,
+                'full_day' => !$isHalf,
+                'day_part' => $resolvedDayPart,
                 'is_series' => false,
                 'comment' => $checked['type'],
             ]);
@@ -136,6 +143,8 @@ class VacationController extends Controller
                     $vacation->update([
                         'type' => $checked['type'],
                         'comment' => $checked['type'],
+                        'full_day' => !$isHalf,
+                        'day_part' => $resolvedDayPart,
                         'created_by' => auth()->id(),
                     ]);
                 }

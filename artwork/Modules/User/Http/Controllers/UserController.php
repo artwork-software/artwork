@@ -35,7 +35,12 @@ use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
+use Artwork\Modules\Shift\Models\OvertimePayout;
+use Artwork\Modules\Shift\Models\UserShiftKpiSnapshot;
+use Artwork\Modules\Shift\Services\OvertimeService;
+use Artwork\Modules\Shift\Services\ShiftKpiTrackingService;
 use Artwork\Modules\Shift\Services\ShiftRuleService;
+use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -447,6 +452,168 @@ class UserController extends Controller
     }
 
     /**
+     * DP-18: Lazy-Endpoints für das Info-Modal je User im Schichtplan.
+     * Jeder Tab lädt seine Daten erst beim Öffnen (Performance).
+     */
+    public function shiftUserInfoSeason(User $user, ShiftKpiTrackingService $service): JsonResponse
+    {
+        [$seasonStart, $seasonEnd] = $service->getSeasonBounds();
+        $kpis = $service->computeForUser($user, $seasonStart, $seasonEnd);
+
+        $snapshot = UserShiftKpiSnapshot::query()
+            ->where('user_id', $user->id)
+            ->where('season_start', $seasonStart->toDateString())
+            ->where('season_end', $seasonEnd->toDateString())
+            ->first();
+
+        return response()->json([
+            'kpis' => $kpis,
+            'season' => [
+                'start' => $seasonStart->toDateString(),
+                'end' => $seasonEnd->toDateString(),
+            ],
+            'snapshot_recalculated_at' => $snapshot?->recalculated_at,
+        ]);
+    }
+
+    public function shiftUserInfoCompensation(User $user): JsonResponse
+    {
+        return response()->json($this->shiftRuleService->getCompensationDataForUser($user));
+    }
+
+    public function shiftUserInfoVacation(User $user): JsonResponse
+    {
+        $year = Carbon::now()->year;
+        $vacations = $user->vacations()
+            ->where('type', 'OFF_WORK')
+            ->whereYear('date', $year)
+            ->orderBy('date')
+            ->get(['id', 'date', 'full_day', 'day_part', 'comment']);
+
+        $granted = 0.0;
+        foreach ($vacations as $vacation) {
+            $granted += $vacation->full_day ? 1.0 : 0.5;
+        }
+        $entitlement = (int) (optional($user->activeWorkContract())->annual_vacation_days ?? 0);
+
+        return response()->json([
+            'year' => $year,
+            'entitlement' => $entitlement,
+            'granted' => $granted,
+            'remaining' => $entitlement - $granted,
+            'vacations' => $vacations,
+        ]);
+    }
+
+    public function shiftUserInfoWorktimes(User $user): JsonResponse
+    {
+        $startInput = request()->input('start');
+        $endInput = request()->input('end');
+        $start = $startInput ? Carbon::parse($startInput) : Carbon::now()->startOfMonth();
+        $end = $endInput ? Carbon::parse($endInput) : Carbon::now()->endOfMonth();
+
+        $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
+        $flatDays = collect($workTimes)->flatten(1);
+        $totalWorkedMinutes = (int) $flatDays->sum('worked_hours');
+        $totalWantedMinutes = (int) $flatDays->sum('wantedHours');
+
+        return response()->json([
+            'workTimes' => $workTimes,
+            'dateRange' => [
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+            ],
+            'totals' => [
+                'worked' => $this->convertMinutesToHoursAndMinutes($totalWorkedMinutes),
+                'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
+            ],
+        ]);
+    }
+
+    /**
+     * DP-18 Stufe 2: Überstunden-Daten (Tab im Info-Modal + User-Detailseite).
+     */
+    private function buildOvertimePayload(User $user, OvertimeService $service): array
+    {
+        $data = $service->computeForUser($user);
+
+        $payouts = OvertimePayout::query()
+            ->where('user_id', $user->id)
+            ->with('createdBy:id,first_name,last_name')
+            ->orderByDesc('payout_date')
+            ->get()
+            ->map(fn (OvertimePayout $p) => [
+                'id' => $p->id,
+                'minutes' => $p->minutes,
+                'hours_formatted' => $this->convertMinutesToHoursAndMinutes($p->minutes),
+                'payout_date' => $p->payout_date->toDateString(),
+                'comment' => $p->comment,
+                'created_by' => $p->createdBy
+                    ? $p->createdBy->first_name . ' ' . $p->createdBy->last_name
+                    : null,
+            ])->values()->toArray();
+
+        return [
+            'balance_minutes' => $data['balance_minutes'],
+            'balance_formatted' => $this->convertMinutesToHoursAndMinutes($data['balance_minutes']),
+            'payable_minutes' => $data['payable_minutes'],
+            'payable_formatted' => $this->convertMinutesToHoursAndMinutes($data['payable_minutes']),
+            'payout_active' => $data['payout_active'],
+            'deadline_days' => $data['deadline_days'],
+            'open_chunks' => collect($data['open_chunks'])->map(fn ($c) => array_merge($c, [
+                'remaining_formatted' => $this->convertMinutesToHoursAndMinutes($c['remaining_minutes']),
+            ]))->toArray(),
+            'per_day' => collect($data['per_day'])->map(fn ($d) => array_merge($d, [
+                'minutes_formatted' => $this->convertMinutesToHoursAndMinutes($d['minutes']),
+            ]))->toArray(),
+            'payouts' => $payouts,
+            'can_pay_out' => auth()->user()?->can('can pay out overtime') ?? false,
+        ];
+    }
+
+    public function shiftUserInfoOvertime(User $user, OvertimeService $service): JsonResponse
+    {
+        return response()->json($this->buildOvertimePayload($user, $service));
+    }
+
+    public function editUserOvertime(User $user, OvertimeService $service): Response|ResponseFactory
+    {
+        return inertia('Users/UserOvertime', [
+            'userToEdit' => new UserShowResource($user),
+            'currentTab' => 'overtime',
+            'overtime' => $this->buildOvertimePayload($user, $service),
+        ]);
+    }
+
+    public function payOutOvertime(
+        Request $request,
+        User $user,
+        OvertimeService $service,
+        WorkTimeBookingRepository $workTimeBookingRepository
+    ): JsonResponse {
+        $validated = $request->validate([
+            'minutes' => 'required|integer|min:1',
+            'comment' => 'nullable|string|max:1000',
+            'payout_date' => 'nullable|date',
+        ]);
+        $minutes = (int) $validated['minutes'];
+        $payoutDate = !empty($validated['payout_date']) ? Carbon::parse($validated['payout_date']) : Carbon::today();
+
+        OvertimePayout::create([
+            'user_id' => $user->id,
+            'minutes' => $minutes,
+            'payout_date' => $payoutDate->toDateString(),
+            'created_by' => auth()->id(),
+            'comment' => $validated['comment'] ?? null,
+        ]);
+
+        // Zeitkonto um die ausgezahlten Minuten reduzieren
+        $workTimeBookingRepository->updateUserBalance($user, -$minutes);
+
+        return response()->json($this->buildOvertimePayload($user->fresh(), $service));
+    }
+
+    /**
      * @param Carbon $start
      * @param Carbon $end
      * @param User $user
@@ -502,11 +669,13 @@ class UserController extends Controller
             $compensationInfo = null;
             if (isset($compensationDayOffs[$dateKey])) {
                 $dayCompDays = $compensationDayOffs[$dateKey];
-                $totalCompValue = $dayCompDays->sum('value');
-                if ($totalCompValue >= 1.0) {
+                // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
+                // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> Minus-Delta = Überstundenabbau.
+                $holidayCompValue = (float) $dayCompDays->where('for_holiday', true)->sum('value');
+                if ($holidayCompValue >= 1.0) {
                     $dailyTargetMinutes = 0;
-                } else {
-                    $dailyTargetMinutes = (int) round($dailyTargetMinutes * (1 - $totalCompValue));
+                } elseif ($holidayCompValue > 0) {
+                    $dailyTargetMinutes = (int) round($dailyTargetMinutes * (1 - $holidayCompValue));
                 }
                 $compensationInfo = $dayCompDays->map(fn ($d) => [
                     'value' => (float) $d->value,

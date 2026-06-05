@@ -138,7 +138,8 @@ class ShiftRuleService
             (float) $attributes['compensation_days'],
             $attributes['compensation_deadline'],
             $attributes['compensation_reason'] ?? null,
-            $attributes['for_holiday'] ?? false
+            $attributes['for_holiday'] ?? false,
+            $attributes['half_day_period'] ?? null
         );
     }
 

@@ -30,8 +30,13 @@ class HalfDayOffConflictCheck extends AbstractRuleCheck
         $thresholdHour = (int) floor($rule->individual_number_value);
         $thresholdMinute = (int) round(($rule->individual_number_value - $thresholdHour) * 60);
 
+        // Preload all granted halves for the whole range once and group by date (avoids a per-day query).
+        $halvesByDate = $repository
+            ->getGrantedHalvesForUserInRange($user->id, $startDate->format('Y-m-d'), $endDate->format('Y-m-d'))
+            ->groupBy(fn ($half): string => Carbon::parse($half->granted_date)->format('Y-m-d'));
+
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $halves = $repository->getGrantedHalvesForUserOnDate($user->id, $date->format('Y-m-d'));
+            $halves = $halvesByDate->get($date->format('Y-m-d')) ?? collect();
             if ($halves->isEmpty()) {
                 continue;
             }

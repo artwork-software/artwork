@@ -24,31 +24,33 @@ class RestTimeBetweenShiftGroupsCheck extends AbstractRuleCheck
     {
         $violations = collect();
 
-        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        // Preload all shift-group shifts for the whole range once and group by start date
+        // (avoids a per-day query). Only shifts that actually belong to a shift group are relevant.
+        $shiftsByDate = Shift::whereHas('users', function ($query) use ($user): void {
+            $query->where('users.id', $user->id);
+        })
+            ->whereNotNull('shift_group_id')
+            ->whereDate('start_date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+            ->with('shiftGroup')
+            ->orderBy('start')
+            ->get()
+            ->groupBy(fn (Shift $shift): string => Carbon::parse($shift->start_date)->format('Y-m-d'));
 
-        foreach ($dateRange as $date) {
-            $violations = $violations->concat($this->checkShiftGroupRestForDay($rule, $user, $date));
+        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
+            $shifts = $shiftsByDate->get($date->format('Y-m-d')) ?? collect();
+            $violations = $violations->concat($this->checkShiftGroupRestForDay($rule, $user, $date, $shifts));
         }
 
         return $violations;
     }
 
-    private function checkShiftGroupRestForDay(ShiftRule $rule, User $user, Carbon $date): Collection
+    private function checkShiftGroupRestForDay(ShiftRule $rule, User $user, Carbon $date, Collection $shifts): Collection
     {
         $violations = collect();
 
         $dayStart = $date->copy()->startOfDay();
         $dayEnd = $date->copy()->endOfDay();
-
-        // Only shifts that actually belong to a shift group are relevant for this rule.
-        $shifts = Shift::whereHas('users', function ($query) use ($user): void {
-            $query->where('users.id', $user->id);
-        })
-            ->whereNotNull('shift_group_id')
-            ->whereDate('start_date', $date)
-            ->with('shiftGroup')
-            ->orderBy('start')
-            ->get();
 
         $segments = [];
         foreach ($shifts as $shift) {

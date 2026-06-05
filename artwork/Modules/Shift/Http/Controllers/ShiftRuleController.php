@@ -306,6 +306,7 @@ class ShiftRuleController extends Controller
             'compensation_deadline' => $validated['compensation_deadline'],
             'compensation_reason' => $validated['compensation_reason'] ?? null,
             'for_holiday' => $validated['for_holiday'] ?? false,
+            'half_day_period' => $validated['half_day_period'] ?? null,
         ], auth()->id());
 
         return redirect()->back()->with('flash', [
@@ -610,7 +611,10 @@ class ShiftRuleController extends Controller
             'deadline' => 'required|date',
             'reason' => 'nullable|string|max:500',
             'for_holiday' => 'sometimes|boolean',
+            'half_day_period' => 'nullable|in:morning,afternoon',
         ]);
+
+        $isHalfDay = (float) $validated['value'] < 1.0;
 
         CompensationDayOff::create([
             'user_id' => $validated['user_id'],
@@ -619,6 +623,8 @@ class ShiftRuleController extends Controller
             'deadline' => $validated['deadline'],
             'reason' => $validated['reason'] ?? null,
             'for_holiday' => $validated['for_holiday'] ?? false,
+            // The period only applies to a half day.
+            'half_day_period' => $isHalfDay ? ($validated['half_day_period'] ?? null) : null,
         ]);
 
         return redirect()->back()->with('flash', [

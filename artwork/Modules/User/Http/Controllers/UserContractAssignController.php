@@ -7,6 +7,7 @@ use Artwork\Modules\User\Http\Requests\StoreUserContractAssignRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserContractAssignRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractAssign;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -37,7 +38,7 @@ class UserContractAssignController extends Controller
         $data = $request->safe()->except(['user_id']);
 
         try {
-            DB::transaction(function () use ($user, $data): void {
+            DB::transaction(function () use ($request, $user, $data): void {
                 // Extract work time pattern related fields
                 $workTimeFields = [
                     'id',
@@ -102,6 +103,11 @@ class UserContractAssignController extends Controller
                     }
                 }
             });
+
+            // If the overtime rule settings changed, recompute so deadlines/status reflect the new period.
+            if ($request->has('overtime_rule_active') || $request->exists('overtime_compensation_period')) {
+                app(OvertimeService::class)->recomputeForUser($user);
+            }
 
             return back()->with('success', __('User contract assigned successfully.'));
         } catch (\Throwable $e) {

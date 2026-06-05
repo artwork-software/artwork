@@ -100,6 +100,20 @@ class CompensationDayOffRepository extends BaseRepository
             ->get();
     }
 
+    /**
+     * All granted half compensation days for a user within a date range, in one query.
+     * Used by rule checks to avoid a per-day query (N+1) when iterating a range.
+     */
+    public function getGrantedHalvesForUserInRange(int $userId, string $start, string $end): Collection
+    {
+        return CompensationDayOff::where('user_id', $userId)
+            ->granted()
+            ->where('value', '<', 1.0)
+            ->whereDate('granted_date', '>=', $start)
+            ->whereDate('granted_date', '<=', $end)
+            ->get();
+    }
+
     public function findOpenHalfForUserExcept(int $userId, int $exceptId): ?CompensationDayOff
     {
         return CompensationDayOff::where('user_id', $userId)
@@ -116,7 +130,8 @@ class CompensationDayOffRepository extends BaseRepository
         float $totalDays,
         string $deadline,
         ?string $reason,
-        bool $forHoliday = false
+        bool $forHoliday = false,
+        ?string $halfDayPeriod = null
     ): void {
         $records = [];
 
@@ -136,6 +151,8 @@ class CompensationDayOffRepository extends BaseRepository
                 'deadline' => $deadline,
                 'reason' => $reason,
                 'for_holiday' => $forHoliday,
+                // The period only applies to a half day; full days keep it null.
+                'half_day_period' => $value < 1.0 ? $halfDayPeriod : null,
             ]);
         }
     }

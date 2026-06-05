@@ -170,7 +170,7 @@
                     :is-planning="isPlanning"
                 />
             </div>
-            <div class="mt-[4.5rem] w-max" v-else>
+            <div class="w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
                     <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
                         <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
@@ -186,8 +186,8 @@
                                     <AsyncSingleEventInCalendar
                                         :event="event"
                                         :multi-edit="multiEdit"
-                                        :font-size="textStyle.fontSize"
-                                        :line-height="textStyle.lineHeight"
+                                        :font-size="fontSizeCalc"
+                                        :line-height="lineHeightCalc"
                                         :rooms="rooms"
                                         :has-admin-role="isAdmin"
                                         :width="zoom_factor * 196"

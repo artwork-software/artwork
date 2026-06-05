@@ -47,7 +47,7 @@
 <script setup>
 
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import {IconLayoutKanban, IconLayoutList, IconPlus} from "@tabler/icons-vue";
+import {IconLayoutKanban, IconLayoutList, IconCirclePlus} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";

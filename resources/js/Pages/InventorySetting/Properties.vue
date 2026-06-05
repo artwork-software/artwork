@@ -5,7 +5,7 @@
     >
         <template #actions>
             <button class="ui-button-add" @click="showAddEditPropertyModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create Property') }}
             </button>
         </template>
@@ -94,7 +94,7 @@ import {router} from "@inertiajs/vue3";
 import draggable from "vuedraggable";
 import AddEditArticlePropertyModal from "@/Pages/InventorySetting/Components/AddEditArticlePropertyModal.vue";
 import SinglePropertyInSettings from "@/Pages/InventorySetting/Components/SinglePropertyInSettings.vue";
-import {IconPlus, IconGripVertical} from "@tabler/icons-vue";
+import {IconCirclePlus, IconGripVertical} from "@tabler/icons-vue";
 
 const props = defineProps({
     properties: {

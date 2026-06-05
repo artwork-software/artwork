@@ -4,10 +4,11 @@ import { router } from '@inertiajs/vue3'
 import AddSingleShiftPresetModal from './Components/AddSingleShiftPresetModal.vue'
 import { useI18n } from 'vue-i18n'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue"
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue"
 
 // Tabler Icons
 import {
-    IconPlus,
+    IconCirclePlus,
     IconPencil,
     IconTrash,
     IconSearch,
@@ -136,7 +137,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
     >
         <template #actions>
             <button class="ui-button-add" type="button" @click="openAddModal">
-                <IconPlus class="size-4" />
+                <IconCirclePlus class="size-4" />
                 <span>{{ $t('Create Preset') }}</span>
             </button>
         </template>
@@ -158,17 +159,15 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
 
                     <!-- Craft-Filter -->
                     <div class="grid grid-cols-[1fr_auto] gap-2">
-                        <div class="relative">
-                            <IconChevronDown class="pointer-events-none absolute right-3 top-2.5 size-4 text-gray-400" />
-                            <select
+                        <div>
+                            <SearchableSelect
                                 v-model="selectedCraftId"
-                                class="w-full appearance-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                            >
-                                <option :value="'all'">{{ $t('All Crafts') }}</option>
-                                <option v-for="c in props.crafts" :key="c.id" :value="c.id">
-                                    {{ c.name }} {{ c.abbreviation ? `(${c.abbreviation})` : '' }}
-                                </option>
-                            </select>
+                                :options="props.crafts"
+                                value-key="id"
+                                :label-key="c => c.abbreviation ? `${c.name} (${c.abbreviation})` : c.name"
+                                :empty-option="{ label: 'All Crafts', value: 'all' }"
+                                :placeholder="$t('All Crafts')"
+                            />
                         </div>
                         <!-- Aktiver Zustand sichtbar (ui-button + Extras) -->
                         <button
@@ -372,7 +371,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                 </div>
                 <div class="mt-4 flex justify-center">
                     <button class="ui-button" type="button" @click="openAddModal">
-                        <IconPlus class="size-4" />
+                        <IconCirclePlus class="size-4" />
                         <span>{{ $t('Create Preset') }}</span>
                     </button>
                 </div>

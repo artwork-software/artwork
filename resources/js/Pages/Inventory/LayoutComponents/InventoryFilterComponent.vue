@@ -39,16 +39,16 @@
                             <span class="font-lexend text-xs text-gray-700">{{ $t("Presets") }}</span>
                         </div>
 
-                        <select
-                            v-model="selectedPresetId"
-                            class="h-10 w-full sm:w-[280px] rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-900 outline-0 focus:outline-0 ring-0 focus:ring-0"
-                            @change.stop
-                        >
-                            <option :value="null">{{ $t("No preset") }}</option>
-                            <option v-for="p in filterPresets" :key="p.id" :value="p.id">
-                                {{ p.is_default ? "★ " : "" }}{{ p.name }}
-                            </option>
-                        </select>
+                        <div class="w-full sm:w-[280px]">
+                            <SearchableSelect
+                                v-model="selectedPresetId"
+                                :options="filterPresets"
+                                value-key="id"
+                                :label-key="p => (p.is_default ? '★ ' : '') + p.name"
+                                :empty-option="{ label: 'No preset', value: null }"
+                                :placeholder="$t('No preset')"
+                            />
+                        </div>
 
                         <button
                             type="button"
@@ -165,15 +165,14 @@
                             class="flex items-center border border-gray-200 rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500"
                             v-if="filterProperty.type !== 'selection' && filterProperty.type !== 'checkbox'"
                         >
-                            <select
-                                v-model="filterProperty.operator"
+                            <SearchableSelect
                                 v-if="getAllowedFilters(filterProperty.type).length > 0"
-                                class="text-gray-700 min-w-28 text-sm px-2 py-2 border-none rounded-l-lg focus:outline-none focus:ring-0 bg-white"
-                            >
-                                <option v-for="filter in getAllowedFilters(filterProperty.type)" :key="filter.type" :value="filter.type">
-                                    {{ filter.name }}
-                                </option>
-                            </select>
+                                v-model="filterProperty.operator"
+                                :options="getAllowedFilters(filterProperty.type)"
+                                value-key="type"
+                                label-key="name"
+                                class="min-w-28"
+                            />
 
                             <input
                                 v-model="filterProperty.value"
@@ -186,16 +185,13 @@
 
                         <!-- Selection -->
                         <div v-if="filterProperty.type === 'selection'" class="w-full">
-                            <select
-                                @change="submitFilter"
+                            <SearchableSelect
                                 v-model="filterProperty.value"
-                                class="block shadow-sm w-full h-10 rounded-lg border border-gray-200 bg-white text-xs text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                            >
-                                <option value="">{{ $t("Please select") }}</option>
-                                <option v-for="value in filterProperty.select_values" :value="value" :key="value">
-                                    {{ value }}
-                                </option>
-                            </select>
+                                :options="filterProperty.select_values"
+                                :empty-option="{ label: 'Please select', value: '' }"
+                                :placeholder="$t('Please select')"
+                                @change="submitFilter"
+                            />
                         </div>
 
                         <!-- Checkbox -->
@@ -550,6 +546,7 @@
 import { computed, inject, onMounted, ref, watch } from "vue"
 import axios from "axios"
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue"
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue"
 import { router, usePage } from "@inertiajs/vue3"
 import { isBool } from "@aesoper/normal-utils"
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue"
@@ -561,7 +558,7 @@ import {
     IconChevronDown,
     IconX,
     IconBookmark,
-    IconPlus,
+    IconCirclePlus,
     IconPencil,
     IconTrash,
     IconStar,

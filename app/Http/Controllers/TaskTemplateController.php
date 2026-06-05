@@ -18,11 +18,16 @@ class TaskTemplateController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $nextOrder = TaskTemplate::where('checklist_template_id', $request->checklist_template_id)
+            ->max('order');
+
         TaskTemplate::create([
             'name' => $request->name,
             'description' => $request->description,
             'done' => false,
-            'checklist_template_id' => $request->checklist_template_id
+            'checklist_template_id' => $request->checklist_template_id,
+            'order' => $nextOrder !== null ? $nextOrder + 1 : 0,
+            'deadline_days_after_creation' => $request->deadline_days_after_creation
         ]);
 
         return Redirect::back();
@@ -41,7 +46,18 @@ class TaskTemplateController extends Controller
 
     public function update(Request $request, TaskTemplate $taskTemplate): RedirectResponse
     {
-        $taskTemplate->update($request->only('name', 'description', 'done', 'checklist_template_id'));
+        $taskTemplate->update(
+            $request->only('name', 'description', 'done', 'checklist_template_id', 'deadline_days_after_creation')
+        );
+
+        return Redirect::back();
+    }
+
+    public function updateOrder(Request $request): RedirectResponse
+    {
+        foreach ($request->collect('taskTemplates') as $taskTemplate) {
+            TaskTemplate::where('id', $taskTemplate['id'])->update(['order' => $taskTemplate['order']]);
+        }
 
         return Redirect::back();
     }

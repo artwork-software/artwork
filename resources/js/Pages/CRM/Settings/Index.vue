@@ -135,7 +135,7 @@
                         <!-- Add property button -->
                         <div class="px-6 py-3 border-t">
                             <button @click="activeGroupForProperty = group; showPropertyModal = true" class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
-                                <component :is="IconPlus" class="h-4 w-4" />
+                                <component :is="IconCirclePlus" class="h-4 w-4" />
                                 {{ $t('Add property') }}
                             </button>
                         </div>
@@ -213,7 +213,7 @@ import AddEditTypeModal from '@/Pages/CRM/Settings/Components/AddEditTypeModal.v
 import AddEditGroupModal from '@/Pages/CRM/Settings/Components/AddEditGroupModal.vue'
 import AddEditPropertyModal from '@/Pages/CRM/Settings/Components/AddEditPropertyModal.vue'
 import PropertyAssignmentModal from '@/Pages/CRM/Settings/Components/PropertyAssignmentModal.vue'
-import { IconArrowLeft, IconCirclePlus, IconEdit, IconTrash, IconPlus, IconGripVertical } from '@tabler/icons-vue'
+import { IconArrowLeft, IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue'
 import { useCrmSettingsListener } from '@/Composeables/Listener/useCrmSettingsListener.js'
 import { useTranslation } from '@/Composeables/Translation.js'
 

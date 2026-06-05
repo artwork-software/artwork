@@ -283,7 +283,7 @@
                                             v-else
                                             class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 group-hover:bg-indigo-100"
                                         >
-                                            <PropertyIcon name="IconPlus" class="h-3 w-3" />
+                                            <PropertyIcon name="IconCirclePlus" class="h-3 w-3" />
                                             {{ $t('Add') }}
                                         </span>
                                     </div>

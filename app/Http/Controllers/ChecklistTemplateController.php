@@ -30,7 +30,9 @@ class ChecklistTemplateController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('ChecklistTemplates/ChecklistTemplateManagement', [
-            'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
+            'checklist_templates' => ChecklistTemplateIndexResource::collection(
+                ChecklistTemplate::with(['task_templates', 'user', 'users'])->get()
+            )->resolve(),
         ]);
     }
 
@@ -96,28 +98,17 @@ class ChecklistTemplateController extends Controller
         }
     }
 
-    public function show(ChecklistTemplate $checklistTemplate): Response|ResponseFactory
-    {
-        return inertia('ChecklistTemplates/Show', [
-            'checklist_template' => new ChecklistTemplateIndexResource($checklistTemplate)
-        ]);
-    }
-
-    public function edit(ChecklistTemplate $checklistTemplate): Response|ResponseFactory
-    {
-        return inertia('ChecklistTemplates/Edit', [
-            'checklist_template' => new ChecklistTemplateIndexResource($checklistTemplate)
-        ]);
-    }
-
     public function update(Request $request, ChecklistTemplate $checklistTemplate): RedirectResponse
     {
         $checklistTemplate->update($request->only('name'));
 
-        $userIdsToSync = Collection::make($request->users)->pluck('id');
-        $checklistTemplate->users()->sync($userIdsToSync);
+        if ($request->has('users')) {
+            $userIdsToSync = Collection::make($request->users)->pluck('id');
+            $checklistTemplate->users()->sync($userIdsToSync);
+        }
 
         if ($request->task_templates) {
+            $userIdsToSync = Collection::make($request->users)->pluck('id');
             $checklistTemplate->task_templates()->delete();
             foreach ($request->task_templates as $task_template) {
                 $task_template_new = $checklistTemplate->task_templates()->create($task_template);
@@ -125,7 +116,7 @@ class ChecklistTemplateController extends Controller
             }
         }
 
-        return Redirect::route('checklist_templates.management', $checklistTemplate->id);
+        return Redirect::back();
     }
 
     public function destroy(ChecklistTemplate $checklistTemplate): RedirectResponse

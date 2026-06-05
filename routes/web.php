@@ -362,9 +362,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan');
 
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
-    Route::get('/checklist/templates', function () {
-        return Inertia::render('ChecklistTemplates/Edit');
-    })->name('checklistTemplates.edit');
 
     //Invitations
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
@@ -608,9 +605,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('checklist_templates.search');
     Route::post('/checklist_templates', [ChecklistTemplateController::class, 'store'])
         ->name('checklist_templates.store');
-    Route::get('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'show']);
-    Route::get('/checklist_templates/{checklist_template}/edit', [ChecklistTemplateController::class, 'edit'])
-        ->name('checklist_templates.edit');
     Route::patch('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'update'])
         ->name('checklist_templates.update');
     Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy'])
@@ -635,9 +629,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //TaskTemplates
     Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
     Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
+    Route::put('/task_templates/order', [TaskTemplateController::class, 'updateOrder'])->name('task_templates.order');
     Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
-    Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update']);
-    Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy']);
+    Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update'])
+        ->name('task_templates.update');
+    Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy'])
+        ->name('task_templates.destroy');
 
 
 

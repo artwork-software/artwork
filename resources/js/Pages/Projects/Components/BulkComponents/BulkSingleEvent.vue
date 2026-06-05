@@ -224,7 +224,7 @@
                     <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
                               :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
-                            <IconPlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
+                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
                             <BaseInput
                                 type="number"
                                 label="Anzahl"
@@ -383,7 +383,7 @@ import {
     IconCheck,
     IconChevronDown,
     IconCircleCheckFilled, IconCopy, IconDeviceFloppy, IconEdit, IconFileImport, IconNote,
-    IconPlus, IconRepeat, IconTrash,
+    IconCirclePlus, IconRepeat, IconTrash,
 } from "@tabler/icons-vue";
 import {
     Listbox,

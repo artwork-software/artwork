@@ -80,7 +80,7 @@
                     :disabled="!selectedGroupToAdd"
                     class="ui-button-add shrink-0"
                 >
-                    <component :is="IconPlus" class="h-4 w-4" />
+                    <component :is="IconCirclePlus" class="h-4 w-4" />
                 </button>
             </div>
 
@@ -100,7 +100,7 @@ import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconX, IconPlus } from '@tabler/icons-vue'
+import { IconX, IconCirclePlus } from '@tabler/icons-vue'
 
 const props = defineProps({
     contactType: { type: Object, required: true },

@@ -305,7 +305,6 @@ import {
     IconChevronUp, IconCirclePlus,
     IconFileExport,
     IconGeometry,
-    IconPlus,
     IconSearch,
     IconX
 } from "@tabler/icons-vue";

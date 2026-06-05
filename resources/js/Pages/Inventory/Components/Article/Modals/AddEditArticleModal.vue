@@ -433,15 +433,11 @@
 
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="grid grid-cols-1 p-2">
-                                                <select id="location" name="location" v-model="property.value"
-                                                        :required="property.is_required"
-                                                        class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                    <option v-if="property.is_required" value="" disabled selected>
-                                                        {{ $t('Please select') }}*
-                                                    </option>
-                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}
-                                                    </option>
-                                                </select>
+                                                <SearchableSelect
+                                                    v-model="property.value"
+                                                    :options="property.select_values"
+                                                    :placeholder="property.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                                />
                                             </div>
                                         </div>
 
@@ -533,18 +529,11 @@
                                 <!-- selection -->
                                 <div v-else-if="prop.type === 'selection'">
                                     <div class="grid grid-cols-1 p-2">
-                                        <select
+                                        <SearchableSelect
                                             v-model="acrossValues[prop.id]"
-                                            :required="prop.is_required"
-                                            class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                        >
-                                            <option v-if="prop.is_required" value="" disabled selected>
-                                                {{ $t('Please select') }}*
-                                            </option>
-                                            <option v-for="value in prop.select_values" :value="value" :key="value">
-                                                {{ value }}
-                                            </option>
-                                        </select>
+                                            :options="prop.select_values"
+                                            :placeholder="prop.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                        />
                                     </div>
                                 </div>
 
@@ -671,13 +660,15 @@
                                             <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                                 {{ $t('Status') }}
                                             </label>
-                                            <select class="focus:outline-hidden w-full"
-                                                    v-model="bulkEdit.status">
-                                                <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="status in statusList" :value="status" :key="status.id">
-                                                    {{ status.name }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="bulkEdit.status"
+                                                :options="statusList"
+                                                value-key="$self"
+                                                label-key="name"
+                                                color-key="color"
+                                                :empty-option="{ label: 'Do not change', value: null }"
+                                                :placeholder="$t('Do not change')"
+                                            />
                                         </div>
                                     </div>
 
@@ -699,13 +690,14 @@
                                             <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                                 {{ $t('Property') }}
                                             </label>
-                                            <select class="focus:outline-hidden w-full"
-                                                    v-model="bulkEdit.propertyId">
-                                                <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="p in bulkEditableProperties" :key="p.id" :value="p.id">
-                                                    {{ p.name }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="bulkEdit.propertyId"
+                                                :options="bulkEditableProperties"
+                                                value-key="id"
+                                                label-key="name"
+                                                :empty-option="{ label: 'Do not change', value: null }"
+                                                :placeholder="$t('Do not change')"
+                                            />
                                         </div>
                                     </div>
 
@@ -727,12 +719,11 @@
 
                                             <!-- Selection -->
                                             <div v-else-if="selectedBulkProp.type === 'selection'">
-                                                <select class="focus:outline-hidden w-full"
-                                                        v-model="bulkEdit.propertyValue">
-                                                    <option v-for="val in selectedBulkProp.select_values" :key="val" :value="val">
-                                                        {{ val }}
-                                                    </option>
-                                                </select>
+                                                <SearchableSelect
+                                                    v-model="bulkEdit.propertyValue"
+                                                    :options="selectedBulkProp.select_values"
+                                                    :placeholder="$t('Please select')"
+                                                />
                                             </div>
 
                                             <!-- Room -->
@@ -883,7 +874,7 @@
                                         type="button"
                                         class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                         @click="addNewDetailedArticle">
-                                        <component :is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
+                                        <component :is="IconCirclePlus" class="h-5 w-5" aria-hidden="true"/>
                                         <span>{{ $t('Add Detailed Article') }}</span>
                                     </button>
                                     <button
@@ -910,11 +901,14 @@
                                         <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                             {{ $t('Status') }}
                                         </label>
-                                        <select class="focus:outline-hidden w-full" v-model="bulkCreateData.status">
-                                            <option v-for="status in statusList" :value="status" :key="status.id">
-                                                {{ status.name }}
-                                            </option>
-                                        </select>
+                                        <SearchableSelect
+                                            v-model="bulkCreateData.status"
+                                            :options="statusList"
+                                            value-key="$self"
+                                            label-key="name"
+                                            color-key="color"
+                                            :placeholder="$t('Please select')"
+                                        />
                                     </div>
 
                                     <!-- Property-Vorbelegung -->
@@ -959,14 +953,12 @@
                                             />
 
                                             <div v-else-if="prop.type === 'selection'">
-                                                <select
+                                                <SearchableSelect
                                                     v-model="prop.value"
-                                                    class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
-                                                    <option value="">{{ $t('Please select') }}</option>
-                                                    <option v-for="val in prop.select_values" :value="val" :key="val">
-                                                        {{ val }}
-                                                    </option>
-                                                </select>
+                                                    :options="prop.select_values"
+                                                    :empty-option="{ label: 'Please select', value: '' }"
+                                                    :placeholder="$t('Please select')"
+                                                />
                                             </div>
 
                                             <div v-else-if="prop.type === 'checkbox'" class="px-1">
@@ -1049,14 +1041,15 @@
                                     <label for="location" class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                         {{ $t('Status*') }}
                                     </label>
-                                    <select id="location" name="location" class=" focus:outline-hidden"
-                                            v-model="activeDetailedArticleForEditing.status" required
-                                            @change="onDetailedStatusSave(activeDetailedArticleForEditing, activeDetailedArticleForEditing.status)">
-                                        <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
-                                        <option v-for="status in statusList" :value="status" :key="status.id">
-                                            {{ status.name }}
-                                        </option>
-                                    </select>
+                                    <SearchableSelect
+                                        v-model="activeDetailedArticleForEditing.status"
+                                        :options="statusList"
+                                        value-key="$self"
+                                        label-key="name"
+                                        color-key="color"
+                                        :placeholder="$t('Please select a status') + '*'"
+                                        @change="onDetailedStatusSave(activeDetailedArticleForEditing, activeDetailedArticleForEditing.status)"
+                                    />
                                 </div>
                                 <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_inventory_article_status_id'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
@@ -1152,17 +1145,12 @@
 
                                     <div v-else-if="property.type === 'selection'" class="">
                                         <div class="relative w-full">
-                                            <select id="location" name="location" v-model="property.value"
-                                                    :required="property.is_required"
-                                                    @change="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
-                                                    class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
-                                                <option v-if="property.is_required" disabled selected>
-                                                    {{ $t('Please select') }}*
-                                                </option>
-                                                <option v-for="value in property.select_values" :value="value" :key="value">
-                                                    {{ value }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="property.value"
+                                                :options="property.select_values"
+                                                :placeholder="property.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                                @change="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
+                                            />
                                         </div>
                                     </div>
 
@@ -1228,6 +1216,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryStylelessCombobox
     from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryStylelessCombobox.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
@@ -1240,7 +1229,7 @@ import {
     IconInfoCircle,
     IconPhoto,
     IconPhotoPlus,
-    IconPlus,
+    IconCirclePlus,
     IconTrash,
     IconTag,
     IconLock

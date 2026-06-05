@@ -322,16 +322,13 @@
                               />
 
                               <!-- Selection: vordefinierte Werte -->
-                              <select
+                              <SearchableSelect
                                   v-else-if="prop.type === 'selection' && prop.select_values && prop.select_values.length"
                                   v-model="prop.value"
-                                  class="border border-gray-300 bg-white shadow-md rounded px-2 py-3 text-xs w-full"
-                              >
-                                  <option value="">{{ $t('Any') }}</option>
-                                  <option v-for="v in prop.select_values" :key="`${prop.id}-${v}`" :value="v">
-                                      {{ v }}
-                                  </option>
-                              </select>
+                                  :options="prop.select_values"
+                                  :empty-option="{ label: 'Any', value: '' }"
+                                  :placeholder="$t('Any')"
+                              />
 
                               <!-- Checkbox -->
                               <div v-else-if="prop.type === 'checkbox'" class="flex items-center">
@@ -508,6 +505,7 @@ import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import { XIcon } from '@heroicons/vue/outline'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";

@@ -512,7 +512,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import Button from "@/Jetstream/Button.vue";
-import {IconCheck, IconEdit, IconGripVertical, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconEdit, IconGripVertical, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -678,7 +678,7 @@ export default defineComponent({
         IconCheck,
         IconEdit,
         IconTrash,
-        IconPlus,
+        IconCirclePlus,
         IconGripVertical,
         addUserToWorkflow(user) {
             const userAlreadyExistsOnServer =

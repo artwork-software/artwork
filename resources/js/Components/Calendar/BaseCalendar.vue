@@ -134,7 +134,7 @@
                                                     :aria-label="$t('Add event')"
                                                     @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
                                                 >
-                                                    <component :is="IconPlus" class="size-4" />
+                                                    <component :is="IconCirclePlus" class="size-4" />
                                                 </button>
 
                                             </div>
@@ -371,7 +371,7 @@
 import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconAlertTriangle, IconPlus} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";

@@ -155,13 +155,14 @@
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <select
+                                <SearchableSelect
                                     v-model="filters.issued_by_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All') }}</option>
-                                    <option v-for="u in users" :key="u.id" :value="u.id">{{ userDisplay(u) }}</option>
-                                </select>
+                                    :options="users"
+                                    value-key="id"
+                                    :label-key="userDisplay"
+                                    :empty-option="{ label: 'All', value: '' }"
+                                    :placeholder="$t('All')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -171,13 +172,14 @@
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
                             <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                <select
+                                <SearchableSelect
                                     v-model="filters.received_by_id"
-                                    class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                >
-                                    <option :value="''">{{ $t('All') }}</option>
-                                    <option v-for="u in users" :key="u.id" :value="u.id">{{ userDisplay(u) }}</option>
-                                </select>
+                                    :options="users"
+                                    value-key="id"
+                                    :label-key="userDisplay"
+                                    :empty-option="{ label: 'All', value: '' }"
+                                    :placeholder="$t('All')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -324,6 +326,7 @@ import { computed, provide, ref, watch } from "vue";
 import { can, is } from "laravel-permission-to-vuejs";
 import {IconCirclePlus, IconCopyPlus, IconMenu4, IconSearch, IconX, IconChevronDown} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 
 const props = defineProps({
     issues: Object,

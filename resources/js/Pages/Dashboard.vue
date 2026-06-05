@@ -332,7 +332,7 @@
                                 <Link
                                     v-if="task.projectId"
                                     :href="route('projects.tab', { project: task.projectId, projectTab: first_project_tasks_tab_id })"
-                                    class="mt-2 inline-flex items-center gap-1 text-[11px] text-indigo-700 hover:text-indigo-800"
+                                    class="mt-2 inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800"
                                 >
                                     {{ task.projectName }}
                                     <PropertyIcon name="IconChevronRight" class="h-3 w-3" />

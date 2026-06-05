@@ -26,6 +26,8 @@ class ChecklistTemplateIndexResource extends JsonResource
                 'name' => $taskTemplate->name,
                 'description' => $taskTemplate->description,
                 'done' => $taskTemplate->done,
+                'order' => $taskTemplate->order,
+                'deadline_days_after_creation' => $taskTemplate->deadline_days_after_creation,
             ]),
             'users' => $this->users->map(fn (User $user) => [
                 'id' => $user->id,

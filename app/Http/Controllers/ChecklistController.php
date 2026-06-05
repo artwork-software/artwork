@@ -89,7 +89,9 @@ class ChecklistController extends Controller
                 'done' => false,
                 'checklist_id' => $checklist->id,
                 'order' => Task::max('order') + 1,
-                'deadline' => Carbon::now()->addDays(3)
+                'deadline' => $task_template->deadline_days_after_creation !== null
+                    ? Carbon::now()->addDays($task_template->deadline_days_after_creation)->endOfDay()
+                    : null
             ]);
             $task->task_users()->sync(
                 $template->users->map(function ($user) {

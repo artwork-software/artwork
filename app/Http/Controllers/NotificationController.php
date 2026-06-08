@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
@@ -35,6 +36,26 @@ class NotificationController extends Controller
         private readonly VacationService $vacationService,
         private readonly ChangeService $changeService,
     ) {
+    }
+
+    /**
+     * Paginated today's unread notifications for the dashboard. Loaded page-by-page so a user
+     * with thousands of notifications does not blow up the dashboard payload / browser memory.
+     */
+    public function todayPaginated(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $perPage = min(50, max(1, $request->integer('perPage', 5)));
+
+        $notifications = Auth::user()
+            ->notifications()
+            ->select(['id', 'data->priority as priority', 'data'])
+            ->whereDate('created_at', now()->format('Y-m-d'))
+            ->withCasts(['created_at' => TimeAgoCast::class])
+            ->whereNull('read_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($notifications);
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising

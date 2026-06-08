@@ -233,7 +233,9 @@ readonly class EventService
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
+        bool $sendPerEventNotifications = true,
     ): void {
+        $eventsDeleted = false;
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
@@ -246,8 +248,17 @@ readonly class EventService
                 );
             }
 
-            $this->createEventDeletedNotificationsForProjectManagers($event, $notificationService, $projectTabService);
-            $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+            // When a whole project is deleted we send one consolidated notification instead
+            // (see ProjectController::destroy), so the per-event notifications are skipped to
+            // avoid flooding users with thousands of "event deleted" messages.
+            if ($sendPerEventNotifications) {
+                $this->createEventDeletedNotificationsForProjectManagers(
+                    $event,
+                    $notificationService,
+                    $projectTabService
+                );
+                $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+            }
 
             $eventCommentService->deleteEventComments($event->comments);
             $timelineService->deleteTimelines($event->timelines);
@@ -260,11 +271,19 @@ readonly class EventService
             );
             $subEventService->deleteSubEvents($event->subEvents);
 
-            broadcast(new OccupancyUpdated())->toOthers();
-
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
             $this->eventRepository->delete($event);
+            $eventsDeleted = true;
+        }
+
+        // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
+        // generic, payload-less ping that just makes open calendars refetch their visible
+        // range, so a single broadcast already updates all clients live. Firing it per event
+        // meant thousands of redundant broadcasts and was a main cause of timeouts when
+        // deleting projects with very many events.
+        if ($eventsDeleted) {
+            broadcast(new OccupancyUpdated())->toOthers();
         }
     }
 

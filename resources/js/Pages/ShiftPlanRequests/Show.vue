@@ -96,6 +96,7 @@ const props = defineProps({
     days: {type: Array, required: true},
     individualTimes: {type: Array, default: () => []},
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
+    overviewChanges: {type: Object, default: () => ({removed: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
 });
 
@@ -249,6 +250,14 @@ const rejectedMap = computed(() => {
     return map;
 });
 
+const typeLabelForType = (type) => {
+    switch (type) {
+        case 'freelancer': return 'Freelancer';
+        case 'service_provider': return 'Service provider';
+        default: return 'User';
+    }
+};
+
 const rows = computed(() => {
     const map = new Map();
     const ensureRow = (key, base) => {
@@ -284,7 +293,8 @@ const rows = computed(() => {
             is_rejected: !!rejectedMap.value[uniqueKey]?.rejected || !!meta.workflow_rejection_reason,
             workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
-            has_changes_after_workflow: meta.has_changes_after_workflow ?? false
+            has_changes_after_workflow: meta.has_changes_after_workflow ?? false,
+            is_subsequently_added: !!shift.is_subsequently_added
         });
         row.totals.total_shifts += 1;
         row.totals.total_hours += computeDurationHours(shift);
@@ -430,6 +440,34 @@ const rows = computed(() => {
                 working_time_minutes: it.working_time_minutes,
             });
         }
+    }
+
+    // Geister-Einträge für komplett gestrichene / entfernte Schichten einfügen.
+    for (const marker of (props.overviewChanges?.removed || [])) {
+        if (!marker.date || !dayDates.includes(marker.date)) continue;
+        const key = `${marker.type}-${marker.id}`;
+        const row = ensureRow(key, {
+            type: marker.type,
+            id: marker.id,
+            name: marker.name || t('Unknown user'),
+            avatar: null,
+            typeLabel: typeLabelForType(marker.type)
+        });
+        if (!row.days[marker.date]) row.days[marker.date] = [];
+
+        const ghostKey = `ghost-${marker.shift_id ?? 'x'}-${marker.type}-${marker.id}-${marker.date}-${marker.source}`;
+        if (row.days[marker.date].some(e => e.unique_key === ghostKey)) continue;
+
+        row.days[marker.date].push({
+            unique_key: ghostKey,
+            is_removed_ghost: true,
+            shift_id: marker.shift_id ?? null,
+            start_time: marker.start,
+            end_time: marker.end,
+            qualification: marker.qualification || null,
+            source: marker.source, // 'post_commit' | 'shift_deleted'
+            reason: marker.reason
+        });
     }
 
     return Array.from(map.values());

@@ -10,6 +10,7 @@
                 :crafts="crafts"
                 @previousTimeRange="goToPrevAssignedDay"
                 @nextTimeRange="goToNextAssignedDay"
+                @openHistoryModal="showHistoryModal = true"
                 :user_to_edit_id="userToEditId"
             />
         </div>
@@ -134,6 +135,16 @@
         :individual-time="selectedIndividualTime"
         @closed="closeEditIndividualTimeModal"
     />
+
+    <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt -->
+    <ShiftHistoryModal
+        v-if="showHistoryModal"
+        :crafts="crafts"
+        :initial-start-date="dateValue[0]"
+        :initial-end-date="dateValue[1]"
+        :prefill-search="prefillSearchName"
+        @close="showHistoryModal = false"
+    />
 </template>
 
 <script setup>
@@ -144,7 +155,7 @@
  * - Gruppierung nach Raum (inkl. "Ohne Raum")
  */
 
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, defineAsyncComponent, ref, watch, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
 import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
@@ -153,8 +164,13 @@ import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
 
+const ShiftHistoryModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+})
+
 const showEditIndividualTimeModal = ref(false)
 const selectedIndividualTime = ref(null)
+const showHistoryModal = ref(false)
 
 function openEditIndividualTimeModal(individualTime) {
     selectedIndividualTime.value = individualTime
@@ -179,6 +195,27 @@ const props = defineProps({
 
 const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
+
+// Name, mit dem die Schichtverlauf-Suche im Einsatzplan vorbelegt wird: der Name des
+// betrachteten Users (user_to_edit). Fallbacks: zusammengesetzter Name, generischer
+// Name (Dienstleister/Freelancer) oder – zur Sicherheit – der eingeloggte User.
+const prefillSearchName = computed(() => {
+    const nameOf = (u) => {
+        if (!u) return ''
+        return (
+            u.full_name ||
+            [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+            u.name ||
+            ''
+        )
+    }
+    return (
+        nameOf(page.props?.user_to_edit) ||
+        nameOf(page.props?.serviceProvider) ||
+        nameOf(page.props?.freelancer) ||
+        nameOf(page.props?.auth?.user)
+    )
+})
 
 // Provide shiftPlanLookups so child components (e.g. SingleUserEventShift) can inject them
 const { setLookups } = provideShiftPlanLookups()

@@ -1173,8 +1173,11 @@ class EventController extends Controller
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
-            'notificationOfToday' => $notification->get(),
+            // Only the first page is shipped with the dashboard; further pages are loaded on
+            // demand via the notifications.today endpoint so a user with thousands of
+            // notifications does not bloat the payload. Keep perPage (5) in sync with Dashboard.vue.
             'notificationCount' => $notification->count(),
+            'notificationOfToday' => $notification->take(5)->get(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),

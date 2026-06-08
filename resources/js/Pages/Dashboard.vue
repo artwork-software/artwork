@@ -261,8 +261,8 @@
                             </div>
                         </div>
 
-                        <div v-if="notificationOfToday?.length" class="px-5 pb-5 grid grid-cols-1 gap-3">
-                            <div v-for="n in notificationOfToday" :key="n.id" class="rounded-xl border border-gray-100 bg-white shadow-sm p-4">
+                        <div v-if="notifications.length" class="px-5 pb-5 grid grid-cols-1 gap-3" :class="{ 'opacity-50 pointer-events-none': notificationsLoading }">
+                            <div v-for="n in notifications" :key="n.id" class="rounded-xl border border-gray-100 bg-white shadow-sm p-4">
                                 <NotificationBlock
                                     :history-objects="historyObjects"
                                     :notification="n"
@@ -275,6 +275,26 @@
                                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                     :is-dashboard="true"
                                 />
+                            </div>
+
+                            <div v-if="notificationPageCount > 1" class="flex items-center justify-between pt-1 text-xs text-gray-500">
+                                <button
+                                    type="button"
+                                    :disabled="notificationPage === 1 || notificationsLoading"
+                                    @click="fetchNotificationPage(notificationPage - 1)"
+                                    class="rounded px-2 py-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {{ $t('Back') }}
+                                </button>
+                                <span>{{ $t('Page') }} {{ notificationPage }} / {{ notificationPageCount }}</span>
+                                <button
+                                    type="button"
+                                    :disabled="notificationPage === notificationPageCount || notificationsLoading"
+                                    @click="fetchNotificationPage(notificationPage + 1)"
+                                    class="rounded px-2 py-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {{ $t('Next') }}
+                                </button>
                             </div>
                         </div>
 
@@ -357,7 +377,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent} from 'vue'
+import {computed, onMounted, onBeforeUnmount, defineOptions, defineAsyncComponent, ref} from 'vue'
+import axios from 'axios'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from '@/Mixins/Permissions.vue'
@@ -398,8 +419,36 @@ const canViewShifts = computed(() => can('can view shift plan') || is('artwork a
 
 const eventsCountToday = computed(() => props.eventsOfDay?.length ?? 0)
 const shiftsCountToday = computed(() => (props.shiftsOfDay?.length ?? 0) + (props.individualTimesOfDay?.length ?? 0))
-const notificationsCountToday = computed(() => props.notificationOfToday?.length ?? 0)
+const notificationsCountToday = computed(() => props.notificationCount ?? 0)
 const openTasksCount = computed(() => (props.tasks?.filter(t => !t.done).length) ?? 0)
+
+// Server-side pagination for today's notifications: the dashboard ships only the first page
+// (see EventController::showDashboardPage), further pages are fetched on demand so a user with
+// thousands of notifications neither bloats the payload nor the browser. Keep PER_PAGE in sync
+// with the controller.
+const NOTIFICATIONS_PER_PAGE = 5
+const notifications = ref([...(props.notificationOfToday ?? [])])
+const notificationPage = ref(1)
+const notificationPageCount = computed(
+    () => Math.max(1, Math.ceil((props.notificationCount ?? 0) / NOTIFICATIONS_PER_PAGE))
+)
+const notificationsLoading = ref(false)
+
+const fetchNotificationPage = async (targetPage: number) => {
+    if (targetPage < 1 || targetPage > notificationPageCount.value || notificationsLoading.value) {
+        return
+    }
+    notificationsLoading.value = true
+    try {
+        const { data } = await axios.get(route('notifications.today'), {
+            params: { page: targetPage, perPage: NOTIFICATIONS_PER_PAGE },
+        })
+        notifications.value = data.data ?? []
+        notificationPage.value = data.current_page ?? targetPage
+    } finally {
+        notificationsLoading.value = false
+    }
+}
 
 const BaseAlertComponent = defineAsyncComponent(() => import('@/Components/Alerts/BaseAlertComponent.vue'));
 const NotificationBlock = defineAsyncComponent(() => import('@/Layouts/Components/NotificationComponents/NotificationBlock.vue'));

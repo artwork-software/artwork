@@ -44,13 +44,21 @@ class ShiftHistoryController
         // einer einzelnen Seite würde passende Einträge sonst verbergen.
         $search = trim((string) $request->query('search', ''));
 
-        // Shifts im Zeitraum (Overlaps!)
-        $shiftQuery = Shift::query()
+        $startYmd = $startDate->toDateString();
+        $endYmd   = $endDate->toDateString();
+
+        // Shifts im Zeitraum (Overlaps!) – bewusst inkl. soft-deleted (withTrashed):
+        // Eine gelöschte Schicht soll mit ihrem KOMPLETTEN Verlauf sichtbar bleiben,
+        // auch mit Einträgen, die VOR diesem Feature entstanden sind (ohne Snapshot).
+        // Solange die Row noch existiert (auch soft-deleted), liefert sie das Schicht-
+        // Start-Datum für den Zeitraum-Filter.
+        $shiftQuery = Shift::withTrashed()
             ->when($craftId > 0, fn ($q) => $q->where('craft_id', $craftId))
-            ->startAndEndDateOverlap($startDate->toDateString(), $endDate->toDateString());
+            ->startAndEndDateOverlap($startYmd, $endYmd);
 
         if ($loadShiftDetails) {
             // Erste Seite: volle Shift-Liste inkl. Relationen für die Filter-Dropdowns im Frontend.
+            // deleted_at mitgeben, damit das Frontend gelöschte Schichten kennzeichnen kann.
             $shifts = (clone $shiftQuery)
                 ->select([
                     'id',
@@ -64,6 +72,7 @@ class ShiftHistoryController
                     'project_id',
                     'is_committed',
                     'in_workflow',
+                    'deleted_at',
                 ])
                 ->with([
                     'room:id,name',
@@ -81,7 +90,24 @@ class ShiftHistoryController
             $shiftIds = (clone $shiftQuery)->pluck('id')->all();
         }
 
-        if (empty($shiftIds)) {
+        // Force-gelöschte Schichten (Row physisch weg) über den im Log gespeicherten
+        // Snapshot wieder einfangen: deren Einträge tragen properties->shift_snapshot
+        // (inkl. Schicht-Start-Datum), das das Löschen überlebt.
+        $snapshotShiftIds = Activity::query()
+            ->where('log_name', 'shift')
+            ->where('subject_type', Shift::class)
+            ->whereBetween('properties->shift_snapshot->start_date', [$startYmd, $endYmd])
+            ->when($craftId > 0, fn ($q) => $q->where('properties->craft_id', $craftId))
+            ->distinct()
+            ->pluck('subject_id')
+            ->all();
+
+        // Vereinigte Menge: alle Schichten (lebend, soft-deleted, force-deleted-mit-Snapshot),
+        // deren START im Zeitraum liegt. Für genau diese Schichten zeigen wir ALLE Activities –
+        // damit der komplette Verlauf inkl. Lösch-Eintrag erscheint, unabhängig vom Fortbestand.
+        $matchedShiftIds = array_values(array_unique(array_merge($shiftIds, $snapshotShiftIds)));
+
+        if (empty($matchedShiftIds)) {
             return response()->json([
                 'shifts' => $shifts ?? [],
                 'logs'   => [
@@ -89,32 +115,43 @@ class ShiftHistoryController
                     'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $perPage, 'total' => 0],
                 ],
                 'range'  => [
-                    'start_date' => $startDate->toDateString(),
-                    'end_date'   => $endDate->toDateString(),
+                    'start_date' => $startYmd,
+                    'end_date'   => $endYmd,
                 ],
             ]);
         }
 
-        // Activity Logs für diese Shifts (Spatie activity_log)
+        // Activity Logs (Spatie activity_log) – über die Schicht-Zugehörigkeit, NICHT über
+        // den Fortbestand der Schicht. So bleiben Einträge gelöschter Schichten sichtbar.
         $paginator = Activity::query()
             ->where('log_name', 'shift')
             ->where('subject_type', Shift::class)
-            ->whereIn('subject_id', $shiftIds)
+            ->whereIn('subject_id', $matchedShiftIds)
             ->when($search !== '', function ($q) use ($search): void {
-                $like = '%' . $search . '%';
-                $q->where(function ($inner) use ($like, $search): void {
+                // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten),
+                // damit z.B. "jannik" auch "Jannik Müller" findet – unabhängig von der
+                // Spalten-Collation. Teiltreffer über LIKE %...%.
+                $like = '%' . mb_strtolower($search) . '%';
+                $q->where(function ($inner) use ($like): void {
                     // Beschreibung des Log-Eintrags
-                    $inner->where('description', 'like', $like)
+                    $inner->whereRaw('LOWER(description) LIKE ?', [$like])
                         // Namen/Werte stecken in den translation_key_placeholder_values (JSON in properties),
                         // z.B. der zugewiesene Mitarbeitername.
-                        ->orWhere('properties', 'like', $like)
+                        ->orWhereRaw('LOWER(properties) LIKE ?', [$like])
                         // Verursacher (Planer:in), der die Änderung ausgelöst hat
                         ->orWhereHasMorph(
                             'causer',
                             [\Artwork\Modules\User\Models\User::class],
                             function ($c) use ($like): void {
-                                $c->where('first_name', 'like', $like)
-                                    ->orWhere('last_name', 'like', $like);
+                                $c->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                                    // Vollständigen Namen ("Vorname Nachname") matchen –
+                                    // sonst findet die Suche nach dem kompletten Namen den
+                                    // Verursacher nie (Felder werden einzeln verglichen).
+                                    ->orWhereRaw(
+                                        "LOWER(CONCAT(COALESCE(first_name,''),' ',COALESCE(last_name,''))) LIKE ?",
+                                        [$like]
+                                    );
                             }
                         );
                 });

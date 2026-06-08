@@ -202,6 +202,16 @@ class ShiftWorkerService
                         $shift->craft->name,
                         $pivot->craft_abbreviation,
                     ],
+                    // Manuelle activity()-Einträge lösen tapActivity() NICHT aus, daher
+                    // hier dieselben Kontext-/Snapshot-Felder wie beim auto-geloggten
+                    // Shift-Eintrag setzen (für Chip-Anzeige, Craft-/Zeitraum-Filter und
+                    // Lesbarkeit nach dem Löschen der Schicht).
+                    'context' => $shift->is_committed
+                        ? 'post_commit'
+                        : ($shift->in_workflow ? 'in_workflow' : 'normal'),
+                    'shift_id' => $shift->id,
+                    'craft_id' => $shift->craft_id,
+                    'shift_snapshot' => $shift->toActivitySnapshot(),
                 ]);
             })
             ->log($logMessage);

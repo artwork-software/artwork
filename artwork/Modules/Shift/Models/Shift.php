@@ -134,15 +134,97 @@ class Shift extends Model
             ->dontSubmitEmptyLogs();
     }
 
+    /**
+     * Namen der zum Löschzeitpunkt zugewiesenen Mitarbeiter.
+     * Wird im `deleting`-Observer befüllt (da die shift_workers-Pivots nach dem Löschen
+     * per DB-Cascade verschwinden) und in tapActivity() in den Lösch-Eintrag geschrieben.
+     *
+     * @var array<int,string>|null
+     */
+    public ?array $deletionAffectedWorkers = null;
+
+    /**
+     * Erfasst die Namen der aktuell zugewiesenen Mitarbeiter (User/Freelancer/Dienstleister).
+     * MUSS vor dem eigentlichen Löschen aufgerufen werden (Pivots noch vorhanden).
+     */
+    public function captureDeletionAffectedWorkers(): void
+    {
+        $names = [];
+
+        try {
+            foreach ($this->users as $user) {
+                $name = $user->getFullNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+            foreach ($this->freelancer as $freelancer) {
+                $name = $freelancer->getNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+            foreach ($this->serviceProvider as $serviceProvider) {
+                $name = $serviceProvider->getNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Defensiv: lieber kein Name als ein Crash beim Löschen.
+        }
+
+        $this->deletionAffectedWorkers = array_values(array_unique($names));
+    }
+
     public function tapActivity(Activity $activity, string $eventName): void
     {
-        $activity->properties = $activity->properties->merge([
+        $merge = [
             'context'       => $this->is_committed ? 'post_commit' : ($this->in_workflow ? 'in_workflow' : 'normal'),
             'shift_id'      => $this->id,
             'craft_id'      => $this->craft_id,
             'project_id'    => $this->project_id,
             'current_request_id' => $this->current_request_id,
-        ]);
+            // Snapshot des Schicht-Zustands zum Zeitpunkt dieses Log-Eintrags.
+            // Wird im Verlauf für den Kontext-Chip genutzt, damit dort der damalige
+            // Stand erscheint und nicht der aktuelle (Live-)Stand der Schicht. Außerdem
+            // bleibt so der Eintrag nach dem Löschen der Schicht eigenständig lesbar.
+            'shift_snapshot' => $this->toActivitySnapshot(),
+        ];
+
+        // Lösch-Eintrag um die betroffenen Mitarbeiter anreichern: macht den Eintrag
+        // aussagekräftig ("Schicht gelöscht. Betroffen: …") UND über die Namens-Suche
+        // auffindbar (die Namen landen in den Properties).
+        if ($eventName === 'deleted' && ! empty($this->deletionAffectedWorkers)) {
+            $merge['translation_key'] = 'Shift was deleted. Affected: {0}';
+            $merge['translation_key_placeholder_values'] = [implode(', ', $this->deletionAffectedWorkers)];
+            $merge['affected_workers'] = $this->deletionAffectedWorkers;
+        }
+
+        $activity->properties = $activity->properties->merge($merge);
+    }
+
+    /**
+     * Identitäts-Snapshot der Schicht für Activity-Log-Einträge.
+     *
+     * Enthält bewusst nur darstellungsrelevante Felder. start_date/end_date als
+     * ISO (Y-m-d) für serverseitige Zeitraum-Filter; start/end als 'H:i' (Cast).
+     *
+     * @return array<string,mixed>
+     */
+    public function toActivitySnapshot(): array
+    {
+        return [
+            'id'         => $this->id,
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date'   => $this->end_date?->format('Y-m-d'),
+            'start'      => $this->start,
+            'end'        => $this->end,
+            'craft_id'   => $this->craft_id,
+            'craft'      => $this->craft?->abbreviation,
+            'room'       => $this->room?->name,
+            'project'    => $this->project?->name,
+        ];
     }
 
     public function committedBy(): BelongsTo

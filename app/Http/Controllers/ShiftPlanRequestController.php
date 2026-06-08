@@ -38,6 +38,60 @@ class ShiftPlanRequestController extends Controller
     }
 
     /**
+     * Lädt die Schichten zur Anzeige einer Anfrage:
+     *  - die ursprünglich angefragten Schichten (Pivot) → is_subsequently_added = false
+     *  - nachträglich hinzugefügte Schichten: Schichten desselben Gewerks in derselben KW, die nach
+     *    dem Anlegen der Anfrage erstellt wurden und nicht Teil der Anfrage sind
+     *    → is_subsequently_added = true
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int,Shift>
+     */
+    private function loadShiftsForRequest(
+        ShiftPlanRequest $shiftPlanRequest,
+        Carbon $start,
+        Carbon $end
+    ): \Illuminate\Database\Eloquent\Collection {
+        $relations = [
+            'users',
+            'freelancer',
+            'serviceProvider',
+            'craft',
+            'shiftsQualifications',
+            'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
+            'shiftPlanRequestChanges.changedBy',
+            'activities' => fn ($query) => $query->orderByDesc('created_at'),
+            'activities.causer',
+            'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
+            'committedShiftChanges.changedBy',
+        ];
+
+        $requestedShiftIds = $shiftPlanRequest->requestedShifts->pluck('id')->toArray();
+
+        $requestedShifts = Shift::query()
+            ->whereIn('id', $requestedShiftIds)
+            ->with($relations)
+            ->get()
+            ->each(fn (Shift $shift) => $shift->setAttribute('is_subsequently_added', false));
+
+        $addedShifts = Shift::query()
+            ->where('craft_id', $shiftPlanRequest->craft_id)
+            ->startAndEndDateOverlap($start->toDateString(), $end->toDateString())
+            ->when(
+                ! empty($requestedShiftIds),
+                fn ($q) => $q->whereNotIn('id', $requestedShiftIds)
+            )
+            ->when(
+                $shiftPlanRequest->created_at,
+                fn ($q) => $q->where('created_at', '>=', $shiftPlanRequest->created_at)
+            )
+            ->with($relations)
+            ->get()
+            ->each(fn (Shift $shift) => $shift->setAttribute('is_subsequently_added', true));
+
+        return $requestedShifts->concat($addedShifts)->values();
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(): \Inertia\Response
@@ -195,23 +249,8 @@ class ShiftPlanRequestController extends Controller
             ])
             ->values();
 
-        // Alle Schichten, die zu diesem Request gehören
-        $shifts = Shift::query()
-            ->whereIn('id', $shiftPlanRequest->requestedShifts->pluck('id')->toArray())
-            ->with([
-                'users',
-                'freelancer',
-                'serviceProvider',
-                'craft',
-                'shiftsQualifications',
-                'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'shiftPlanRequestChanges.changedBy',
-                'activities' => fn ($query) => $query->orderByDesc('created_at'),
-                'activities.causer',
-                'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'committedShiftChanges.changedBy',
-            ])
-            ->get();
+        // Alle Schichten, die zu diesem Request gehören (inkl. nachträglich hinzugefügter Schichten)
+        $shifts = $this->loadShiftsForRequest($shiftPlanRequest, $start, $end);
 
         // Alle Worker des Gewerks laden
         $craft = $shiftPlanRequest->craft;
@@ -250,11 +289,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1088,23 +1131,8 @@ class ShiftPlanRequestController extends Controller
             ])
             ->values();
 
-        // Alle Schichten, die zu diesem Request gehören
-        $shifts = Shift::query()
-            ->whereIn('id', $shiftPlanRequest->requestedShifts->pluck('id')->toArray())
-            ->with([
-                'users',
-                'freelancer',
-                'serviceProvider',
-                'craft',
-                'shiftsQualifications',
-                'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'shiftPlanRequestChanges.changedBy',
-                'activities' => fn ($query) => $query->orderByDesc('created_at'),
-                'activities.causer',
-                'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'committedShiftChanges.changedBy',
-            ])
-            ->get();
+        // Alle Schichten, die zu diesem Request gehören (inkl. nachträglich hinzugefügter Schichten)
+        $shifts = $this->loadShiftsForRequest($shiftPlanRequest, $start, $end);
 
         // Alle Worker des Gewerks laden (gleich wie in show())
         $craft = $shiftPlanRequest->craft;
@@ -1143,11 +1171,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,

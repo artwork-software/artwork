@@ -57,11 +57,22 @@ class ShiftPlanRequestController extends Controller
             'serviceProvider',
             'craft',
             'shiftsQualifications',
-            'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
+            // Nur Workflow-Änderungen, die zu DIESER Anfrage gehören (nicht aus früheren Anfragen
+            // derselben Schicht), damit der "Änderung angefordert"-Marker nicht fälschlich greift.
+            'shiftPlanRequestChanges' => fn ($query) => $query
+                ->where('shift_plan_request_id', $shiftPlanRequest->id)
+                ->orderByDesc('created_at'),
             'shiftPlanRequestChanges.changedBy',
             'activities' => fn ($query) => $query->orderByDesc('created_at'),
             'activities.causer',
-            'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
+            // Nur nachträgliche (post-commit) Änderungen, die NACH dem Stellen der Anfrage
+            // passiert sind, damit der "Geändert"-Marker nur echte nachträgliche Änderungen zeigt.
+            'committedShiftChanges' => fn ($query) => $query
+                ->when(
+                    $shiftPlanRequest->created_at,
+                    fn ($q) => $q->where('changed_at', '>=', $shiftPlanRequest->created_at)
+                )
+                ->orderByDesc('created_at'),
             'committedShiftChanges.changedBy',
         ];
 

@@ -951,6 +951,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/today', [NotificationController::class, 'todayPaginated'])
+        ->name('notifications.today');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
@@ -1932,6 +1934,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
+    Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
+        ->name('user.shiftplan.export.monthly-pdf');
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']

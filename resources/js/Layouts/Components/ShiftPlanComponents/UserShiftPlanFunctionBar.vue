@@ -32,6 +32,16 @@
                 </div>
             </div>
         </div>
+        <div class="flex items-center">
+            <ToolTipComponent
+                direction="bottom"
+                :tooltip-text="$t('Export shift plan as PDF')"
+                :icon="IconFileTypePdf"
+                icon-size="h-5 w-5 text-primary"
+                @click="showExportModal = true"
+                classesButton="ui-button"
+            />
+        </div>
         <!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
         <!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
         <!--        </div>-->
@@ -43,6 +53,13 @@
                              :crafts="crafts"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false"
                           is_shift_calendar_abo/>
+    <UserShiftPlanExportModal
+        v-if="showExportModal"
+        :user-to-edit-id="user_to_edit_id"
+        :type="type"
+        :date-value="dateValue"
+        @close="showExportModal = false"
+    />
 </template>
 
 <script>
@@ -58,14 +75,16 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
+import {IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import UserShiftPlanExportModal from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanExportModal.vue";
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        UserShiftPlanExportModal,
         ToolTipComponent,
         PropertyIcon,
         CalendarAboInfoModal,
@@ -94,6 +113,7 @@ export default {
             activeFilters: [],
             showCalendarAboSettingModal: false,
             showCalendarAboInfoModal: false,
+            showExportModal: false,
         }
     },
     computed: {
@@ -122,6 +142,7 @@ export default {
     methods: {
         IconChevronLeft,
         IconChevronRight,
+        IconFileTypePdf,
 
         previousTimeRange() {
             this.$emit('previousTimeRange')

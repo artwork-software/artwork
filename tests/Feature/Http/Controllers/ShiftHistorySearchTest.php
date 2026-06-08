@@ -152,6 +152,31 @@ final class ShiftHistorySearchTest extends FeatureTestCase
     }
 
     #[Test]
+    public function search_with_shift_day_sort_does_not_break_on_joined_columns(): void
+    {
+        // Regression: mit sort=shift_day wird shifts gejoint; shifts hat ebenfalls eine
+        // Spalte "description" → unqualifiziertes LOWER(description) war ambiguous (1052).
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Ehlers', 'Tech', 'Stage', 'ST'],
+        ]);
+
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => $shift->craft_id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'search' => 'ehlers',
+            'sort' => 'shift_day',
+        ]));
+
+        $response->assertOk();
+        $response->assertJsonPath('logs.meta.total', 1);
+    }
+
+    #[Test]
     public function without_search_all_entries_are_returned(): void
     {
         $this->actingAsAdmin();

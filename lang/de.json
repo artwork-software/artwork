@@ -3596,6 +3596,7 @@
     "Shift was deleted": "Schicht gelöscht",
     "Shift was deleted. Affected: {0}": "Schicht gelöscht. Betroffen: {0}",
     "Shift was restored": "Schicht wiederhergestellt",
+    "Subsequently deleted": "Im Nachhinein gelöscht",
     "Changed by {causer} on {datetime}": "Änderung durch {causer} am {datetime}",
     "in_workflow": "Nach Anfrageprozess",
     "Post-commit": "Nachträglich",

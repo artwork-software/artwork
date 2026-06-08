@@ -3577,6 +3577,7 @@
     "Shift was deleted": "Shift deleted",
     "Shift was deleted. Affected: {0}": "Shift deleted. Affected: {0}",
     "Shift was restored": "Shift restored",
+    "Subsequently deleted": "Subsequently deleted",
     "Changed by {causer} on {datetime}": "Changed by {causer} on {datetime}",
     "in_workflow": "After request process",
     "Post-commit": "Post-commit",

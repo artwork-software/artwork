@@ -194,9 +194,10 @@
                                         </p>
                                         <span
                                             v-if="entry.shiftDetails.deleted"
-                                            class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-700"
+                                            class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600"
                                         >
-                                            {{ t('deleted') }}
+                                            <IconTrash class="h-3 w-3" />
+                                            {{ t('Subsequently deleted') }}
                                         </span>
                                     </div>
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -309,6 +310,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import { IconTrash } from "@tabler/icons-vue";
 
 type ShiftActivityProperties = {
     translation_key?: string | null
@@ -455,34 +457,69 @@ const shiftLabelById = (id: number) => {
     return s ? `#${id} · ${shiftLabel(s)}` : `#${id}`
 }
 
-// Strukturierte Schichtdaten für die "Schicht-Card" pro Verlaufseintrag.
-// Bevorzugt den Snapshot (Stand zum Zeitpunkt des Eintrags & überlebt das Löschen der
-// Schicht), fällt für Alt-Einträge ohne Snapshot auf die aktuelle Live-Schicht zurück.
-const buildShiftDetails = (snap: ShiftSnapshot | null, id: number | null): EntryShiftDetails => {
-    const live = id != null ? shiftsById.value[String(id)] as any : null
+// Monats-Abkürzungen (DE/EN) → für Alt-Einträge, deren properties.old das Datum als
+// "21. Sep 2026" / "30. Jun 2026" speichert (Backend ->format('d. M Y')).
+const MONTH_ABBR: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', 'mär': '03', maerz: '03', apr: '04',
+    may: '05', mai: '05', jun: '06', jul: '07', aug: '08', sep: '09',
+    oct: '10', okt: '10', nov: '11', dec: '12', dez: '12',
+}
 
-    const sd = snap?.start_date || live?.start_date || ''
-    const ed = snap?.end_date || live?.end_date || ''
+// Wandelt verschiedene Datumsdarstellungen nach DD.MM.YYYY. ISO/DD.MM.YYYY laufen über
+// formatDate; das gespeicherte "21. Sep 2026" wird per Monats-Map konvertiert.
+const normalizeDate = (value?: string | null): string => {
+    if (!value) return ''
+    const m = String(value).match(/^(\d{1,2})\.\s*([^\s.]+)\.?\s*(\d{4})$/)
+    if (m) {
+        const mon = MONTH_ABBR[m[2].toLowerCase()]
+        if (mon) return `${m[1].padStart(2, '0')}.${mon}.${m[3]}`
+    }
+    return formatDate(value)
+}
+
+// Strukturierte Schichtdaten für die "Schicht-Card" pro Verlaufseintrag.
+// Priorität: Snapshot (Stand zum Zeitpunkt des Eintrags) → aktuelle Live-Schicht →
+// properties.old des Log-Eintrags (enthält bei Alt-Einträgen die Schichtdaten zum
+// Zeitpunkt, z.B. bei Lösch-/Update-Einträgen). So zeigen auch alte Einträge zu
+// (force-)gelöschten Schichten echte Daten statt nur "–".
+const buildShiftDetails = (log: RawShiftActivity): EntryShiftDetails => {
+    const snap = (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null
+    const id = (
+        (log.properties?.shift_id as number | null | undefined) ??
+        (log.subject_id as number | null | undefined) ??
+        snap?.id ??
+        null
+    )
+    const live = id != null ? shiftsById.value[String(id)] as any : null
+    const old = (log.properties as any)?.old ?? null
+
+    const sd = snap?.start_date || live?.start_date || old?.start_date || ''
+    const ed = snap?.end_date || live?.end_date || old?.end_date || ''
     const dateLabel = sd
-        ? (ed && ed !== sd ? `${formatDate(sd)} – ${formatDate(ed)}` : formatDate(sd))
+        ? (ed && ed !== sd ? `${normalizeDate(sd)} – ${normalizeDate(ed)}` : normalizeDate(sd))
         : '–'
 
-    const start = snap?.start || live?.start || ''
-    const end = snap?.end || live?.end || ''
+    const start = snap?.start || live?.start || old?.start || ''
+    const end = snap?.end || live?.end || old?.end || ''
     const timeLabel = (start || end) ? [start, end].filter(Boolean).join(' – ') : '–'
 
-    const craft = snap?.craft || live?.craft?.name || live?.craft?.abbreviation || '–'
-    const room = snap?.room || live?.room?.name || '–'
-    const project = snap?.project || live?.project?.name || '–'
+    const craft = snap?.craft || live?.craft?.name || live?.craft?.abbreviation || old?.['craft.name'] || '–'
+    const room = snap?.room || live?.room?.name || old?.['room.name'] || '–'
+    const project = snap?.project || live?.project?.name || old?.['project.name'] || '–'
+
+    // "Nicht mehr existent": Live-Schicht ist (soft-)gelöscht ODER es gibt gar keine
+    // Live-Row mehr (force-deleted, nur über Snapshot/old rekonstruiert). Wiederhergestellte
+    // Schichten haben eine Live-Row ohne deleted_at → werden NICHT markiert.
+    const deleted = id != null && (!live || !!live?.deleted_at)
 
     return {
-        id: id ?? snap?.id ?? null,
+        id: id ?? null,
         dateLabel,
         timeLabel,
         craft: craft || '–',
         room: room || '–',
         project: project || '–',
-        deleted: !!live?.deleted_at,
+        deleted,
     }
 }
 
@@ -712,10 +749,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 changes: normalizeChanges(log),
                 shiftId,
                 snapshot: (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
-                shiftDetails: buildShiftDetails(
-                    (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
-                    shiftId,
-                ),
+                shiftDetails: buildShiftDetails(log),
                 haystack,
             }
         })

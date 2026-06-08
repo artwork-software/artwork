@@ -28,6 +28,7 @@ return [
             'deleted' => 'A document has been deleted'
         ],
         'delete' => ':project has been deleted',
+        'delete_with_events' => ':project with :count events has been deleted',
     ],
     'contract' => [
         'add' => 'A contract has been shared with you',

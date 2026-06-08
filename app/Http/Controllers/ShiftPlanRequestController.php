@@ -250,11 +250,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1143,11 +1147,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,

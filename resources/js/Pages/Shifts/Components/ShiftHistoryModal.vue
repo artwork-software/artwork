@@ -197,9 +197,9 @@
                                             {{ entry.createdAtFormatted }}
                                         </span>
 
-                                        <span v-if="entry.shiftId" class="inline-flex items-center">
+                                        <span v-if="entry.shiftId || entry.snapshot" class="inline-flex items-center">
                                             <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] text-gray-700">
-                                                {{ shiftLabelById(entry.shiftId) }}
+                                                {{ entryShiftLabel(entry) }}
                                             </span>
                                         </span>
 
@@ -312,6 +312,7 @@ type ShiftLite = {
     end: string | null
     room?: { id: number; name: string | null } | null
     project?: { id: number; name: string | null } | null
+    deleted_at?: string | null
 }
 
 const props = defineProps<{
@@ -419,6 +420,37 @@ const shiftLabelById = (id: number) => {
     return s ? `#${id} · ${shiftLabel(s)}` : `#${id}`
 }
 
+// Chip-Label aus dem im Log gespeicherten Snapshot (Stand zum Zeitpunkt des Eintrags).
+const snapshotLabel = (snap: ShiftSnapshot, id: number | null) => {
+    const sd = snap.start_date || ''
+    const ed = snap.end_date || ''
+    const datePart = sd
+        ? (ed && ed !== sd ? `${formatDate(sd)}–${formatDate(ed)}` : formatDate(sd))
+        : ''
+    const time = [snap.start, snap.end].filter(Boolean).join('–')
+    const room = snap.room ? ` · ${snap.room}` : ''
+    const proj = snap.project ? ` · ${snap.project}` : ''
+    const parts: string[] = [`#${id ?? snap.id ?? ''}`]
+    if (datePart) parts.push(datePart)
+    if (time) parts.push(time)
+    return `${parts.join(' · ')}${room}${proj}`
+}
+
+// Bevorzugt den Snapshot (zeigt den damaligen Stand & überlebt das Löschen der Schicht),
+// fällt für Alt-Einträge ohne Snapshot auf die aktuelle Live-Schicht zurück.
+// Hängt einen "gelöscht"-Hinweis an, wenn die Schicht (soft-)gelöscht ist.
+const entryShiftLabel = (entry: NormalizedLogEntry) => {
+    const id = entry.shiftId ?? entry.snapshot?.id ?? null
+    const live = id != null ? shiftsById.value[String(id)] : null
+    const deletedMark = live?.deleted_at ? ` · ${t('deleted')}` : ''
+
+    const snap = entry.snapshot
+    if (snap && (snap.start_date || snap.start || snap.end)) {
+        return snapshotLabel(snap, id) + deletedMark
+    }
+    return (id ? shiftLabelById(id) : '') + deletedMark
+}
+
 const resetFilters = () => {
     search.value = currentUserName
     selectedContext.value = { id: 'all', name: 'All contexts' }
@@ -492,7 +524,21 @@ type NormalizedLogEntry = {
     level: 'default' | 'success' | 'warning' | 'danger'
     changes: NormalizedChange[]
     shiftId: number | null
+    snapshot: ShiftSnapshot | null
     haystack: string
+}
+
+// Zustand der Schicht zum Zeitpunkt des Log-Eintrags (aus properties.shift_snapshot).
+type ShiftSnapshot = {
+    id?: number | null
+    start_date?: string | null
+    end_date?: string | null
+    start?: string | null
+    end?: string | null
+    craft_id?: number | null
+    craft?: string | null
+    room?: string | null
+    project?: string | null
 }
 
 const getCauserName = (log: RawShiftActivity) => {
@@ -524,6 +570,7 @@ const detectLevel = (log: RawShiftActivity): NormalizedLogEntry['level'] => {
 
     if (desc.includes('assigned') || ev === 'assigned' || key.includes('assigned_to_shift')) return 'success'
     if (desc.includes('removed')  || ev === 'removed'  || key.includes('removed_from_shift')) return 'danger'
+    if (desc.includes('deleted')  || ev === 'deleted'  || key.includes('deleted')) return 'danger'
     if (desc.includes('updated')  || ev.includes('updated') || key.includes('updated') || key === 'shift_updated') return 'warning'
     if (key === 'committed_shift_change_reverted' || desc.includes('reverted')) return 'warning'
     return 'default'
@@ -541,6 +588,9 @@ const iconForLevel = (level: NormalizedLogEntry['level']) => {
 const messageForLog = (log: RawShiftActivity) => {
     const msgFromKey = activityTranslation(log)
     if (msgFromKey) return msgFromKey
+    // Lösch-Einträge klar benennen ("Schicht gelöscht") statt nur "gelöscht" – gilt auch
+    // für Alt-Einträge ohne translation_key. Die betroffene Schicht steht im Kontext-Chip.
+    if (log.event === 'deleted') return t('Shift was deleted')
     if (log.description) return t(log.description)
     if (log.event) return t(log.event)
     return t('Change in shift')
@@ -604,6 +654,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 level,
                 changes: normalizeChanges(log),
                 shiftId,
+                snapshot: (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
                 haystack,
             }
         })

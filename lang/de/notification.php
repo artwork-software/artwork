@@ -28,6 +28,7 @@ return [
             'deleted' => 'Ein Dokument wurde gelöscht'
         ],
         'delete' => ':project wurde gelöscht',
+        'delete_with_events' => ':project mit :count Terminen wurde gelöscht',
     ],
     'contract' => [
         'add' => 'Ein Vertrag wurde für dich freigegeben',

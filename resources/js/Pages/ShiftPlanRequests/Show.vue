@@ -96,7 +96,7 @@ const props = defineProps({
     days: {type: Array, required: true},
     individualTimes: {type: Array, default: () => []},
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
-    overviewChanges: {type: Object, default: () => ({added_unique_keys: [], removed: []})},
+    overviewChanges: {type: Object, default: () => ({removed: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
 });
 
@@ -250,9 +250,6 @@ const rejectedMap = computed(() => {
     return map;
 });
 
-// Unique-Keys (shiftId-type-id) von Zuordnungen, die im Zeitraum neu hinzugekommen sind.
-const addedKeySet = computed(() => new Set(props.overviewChanges?.added_unique_keys || []));
-
 const typeLabelForType = (type) => {
     switch (type) {
         case 'freelancer': return 'Freelancer';
@@ -297,7 +294,7 @@ const rows = computed(() => {
             workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
             has_changes_after_workflow: meta.has_changes_after_workflow ?? false,
-            is_new: addedKeySet.value.has(uniqueKey)
+            is_subsequently_added: !!shift.is_subsequently_added
         });
         row.totals.total_shifts += 1;
         row.totals.total_hours += computeDurationHours(shift);

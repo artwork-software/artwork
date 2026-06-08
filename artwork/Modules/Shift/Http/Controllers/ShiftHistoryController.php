@@ -128,25 +128,28 @@ class ShiftHistoryController
             ->where('subject_type', Shift::class)
             ->whereIn('subject_id', $matchedShiftIds)
             ->when($search !== '', function ($q) use ($search): void {
-                $like = '%' . $search . '%';
-                $q->where(function ($inner) use ($like, $search): void {
+                // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten),
+                // damit z.B. "jannik" auch "Jannik Müller" findet – unabhängig von der
+                // Spalten-Collation. Teiltreffer über LIKE %...%.
+                $like = '%' . mb_strtolower($search) . '%';
+                $q->where(function ($inner) use ($like): void {
                     // Beschreibung des Log-Eintrags
-                    $inner->where('description', 'like', $like)
+                    $inner->whereRaw('LOWER(description) LIKE ?', [$like])
                         // Namen/Werte stecken in den translation_key_placeholder_values (JSON in properties),
                         // z.B. der zugewiesene Mitarbeitername.
-                        ->orWhere('properties', 'like', $like)
+                        ->orWhereRaw('LOWER(properties) LIKE ?', [$like])
                         // Verursacher (Planer:in), der die Änderung ausgelöst hat
                         ->orWhereHasMorph(
                             'causer',
                             [\Artwork\Modules\User\Models\User::class],
                             function ($c) use ($like): void {
-                                $c->where('first_name', 'like', $like)
-                                    ->orWhere('last_name', 'like', $like)
+                                $c->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
                                     // Vollständigen Namen ("Vorname Nachname") matchen –
                                     // sonst findet die Suche nach dem kompletten Namen den
                                     // Verursacher nie (Felder werden einzeln verglichen).
                                     ->orWhereRaw(
-                                        "CONCAT(COALESCE(first_name,''),' ',COALESCE(last_name,'')) like ?",
+                                        "LOWER(CONCAT(COALESCE(first_name,''),' ',COALESCE(last_name,''))) LIKE ?",
                                         [$like]
                                     );
                             }

@@ -35,6 +35,14 @@
         <div class="flex items-center">
             <ToolTipComponent
                 direction="bottom"
+                :tooltip-text="$t('History')"
+                icon="IconHistory"
+                icon-size="h-5 w-5 text-primary"
+                @click="$emit('openHistoryModal')"
+                classesButton="ui-button"
+            />
+            <ToolTipComponent
+                direction="bottom"
                 :tooltip-text="$t('Export shift plan as PDF')"
                 :icon="IconFileTypePdf"
                 icon-size="h-5 w-5 text-primary"
@@ -107,7 +115,7 @@ export default {
         'crafts',
         'user_to_edit_id'
     ],
-    emits: ['previousTimeRange', 'nextTimeRange'],
+    emits: ['previousTimeRange', 'nextTimeRange', 'openHistoryModal'],
     data() {
         return {
             activeFilters: [],

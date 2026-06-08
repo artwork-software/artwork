@@ -23,7 +23,7 @@
                         <IconTrash class="h-3 w-3 text-red-400 shrink-0" />
                     </div>
                     <span class="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-600">
-                        {{ entry.reason === 'shift_deleted' ? $t('Shift deleted') : $t('Removed from shift') }}
+                        {{ entry.reason === 'shift_deleted' ? $t('Subsequently deleted') : $t('Removed from shift') }}
                     </span>
                     <div v-if="entry.qualification" class="text-[10px] text-red-400/80 line-through truncate">{{ entry.qualification }}</div>
                 </template>
@@ -33,8 +33,8 @@
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-medium text-gray-900">{{ entry.start_time }} – {{ entry.end_time }}</span>
                         <div class="flex items-center gap-1">
-                            <span v-if="entry.is_new" class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
-                                {{ $t('New') }}
+                            <span v-if="entry.is_subsequently_added" class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                                {{ $t('Subsequently added') }}
                             </span>
                             <span v-if="entry.is_committed" class="inline-flex items-center gap-1 text-[10px] text-gray-500">
                                 <IconLock class="h-3 w-3" />

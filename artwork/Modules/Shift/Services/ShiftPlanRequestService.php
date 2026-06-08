@@ -26,19 +26,21 @@ class ShiftPlanRequestService
 
     /**
      * Baut Marker für die Übersicht der Schichtplan-Anfrage:
-     *  - "added": Worker, die im Zeitraum neu auf eine (noch existierende) Schicht gesetzt wurden
-     *    → Frontend zeigt ein "Neu"-Badge an der entsprechenden Zelle.
-     *  - "removed": Worker, die eine Schicht hatten, die komplett gestrichen wurde, bzw. die aus
-     *    einer noch existierenden Schicht entfernt wurden → Frontend zeigt eine durchgestrichene
-     *    Geister-Zelle an.
+     *  - "removed": Worker, die eine Schicht hatten, die nachträglich komplett gestrichen wurde, bzw.
+     *    die nachträglich aus einer noch existierenden Schicht entfernt wurden → Frontend zeigt eine
+     *    durchgestrichene Geister-Zelle ("nachträglich gelöscht").
      *
-     * Quellen (gemäß Auswahl: Workflow + nachträgliche Änderungen):
-     *  - committed_shift_changes (post-commit Zuweisungen/Entfernungen, unbestätigt)
+     * Nachträglich HINZUGEFÜGTE Schichten werden NICHT hier ermittelt, sondern im Controller als
+     * echte Schicht-Zeilen geladen (Schichten im Gewerk/der KW, die nicht Teil der ursprünglichen
+     * Anfrage sind) und über das Flag `is_subsequently_added` markiert.
+     *
+     * Quellen:
+     *  - committed_shift_changes (post-commit Entfernungen, unbestätigt)
      *  - soft-gelöschte Schichten + ihre soft-gelöschten Zuordnungen (komplett gestrichene Schichten)
      *
      * @param Collection<int,Shift> $liveShifts Bereits geladene, noch existierende Schichten der Anfrage
      *        (inkl. users/freelancer/serviceProvider).
-     * @return array{added_unique_keys: array<int,string>, removed: array<int,array<string,mixed>>}
+     * @return array{removed: array<int,array<string,mixed>>}
      */
     public function buildOverviewChangeMarkers(
         ShiftPlanRequest $request,
@@ -69,15 +71,9 @@ class ShiftPlanRequestService
             }
         }
 
-        $addedUniqueKeys = [];
         $removed = [];
 
-        // 1) Post-commit Zuweisungen/Entfernungen (nachträgliche, noch unbestätigte Änderungen)
-        $assignedTypes = [
-            'user_assigned_to_shift',
-            'freelancer_assigned_to_shift',
-            'service_provider_assigned_to_shift',
-        ];
+        // 1) Post-commit Entfernungen (nachträgliche, noch unbestätigte Änderungen)
         $removedTypes = [
             'user_removed_from_shift',
             'freelancer_removed_from_shift',
@@ -87,7 +83,7 @@ class ShiftPlanRequestService
         $committedChanges = CommittedShiftChange::query()
             ->where('craft_id', $request->craft_id)
             ->whereNull('acknowledged_at')
-            ->whereIn('change_type', array_merge($assignedTypes, $removedTypes))
+            ->whereIn('change_type', $removedTypes)
             ->get();
 
         foreach ($committedChanges as $change) {
@@ -108,14 +104,6 @@ class ShiftPlanRequestService
             }
 
             $uniqueKey = $change->shift_id . '-' . $short . '-' . $workerId;
-
-            if (in_array($change->change_type, $assignedTypes, true)) {
-                // Nur markieren, wenn die Zuordnung aktuell tatsächlich (noch) besteht.
-                if ($change->shift_id && isset($current[$uniqueKey])) {
-                    $addedUniqueKeys[$uniqueKey] = true;
-                }
-                continue;
-            }
 
             // Entfernung: Geister-Zelle nur, wenn der Worker aktuell NICHT (wieder) auf der Schicht ist.
             if ($change->shift_id && isset($current[$uniqueKey])) {
@@ -186,8 +174,7 @@ class ShiftPlanRequestService
         }
 
         return [
-            'added_unique_keys' => array_keys($addedUniqueKeys),
-            'removed'           => $removed,
+            'removed' => $removed,
         ];
     }
 

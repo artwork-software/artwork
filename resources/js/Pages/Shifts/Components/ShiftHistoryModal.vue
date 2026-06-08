@@ -1,6 +1,7 @@
 <!-- resources/js/Components/Shift/ShiftActivityLogModal.vue -->
 <template>
     <ArtworkBaseModal
+        modal-size="sm:max-w-5xl"
         :title="t('Shift history')"
         :description="t('Select a craft and date range to load shift history. Use filters to narrow down results.')"
         @close="handleClose"
@@ -65,6 +66,7 @@
                             type="date"
                             label="From"
                             :disabled="loading"
+                            @focusout="onDateBlur"
                         />
                     </div>
 
@@ -75,6 +77,7 @@
                             type="date"
                             label="To"
                             :disabled="loading"
+                            @focusout="onDateBlur"
                         />
                     </div>
 
@@ -161,6 +164,15 @@
                     </div>
                 </div>
 
+                <!-- Sortier-Umschalter: nach Schichttag (statt nach Änderungsdatum) gruppieren -->
+                <div class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-3">
+                    <ArtworkBaseToggle
+                        v-model="groupByShiftDay"
+                        :label="t('Group by shift day')"
+                        :description="t('Sort entries by the day of the shift they belong to instead of by the date of the change.')"
+                    />
+                </div>
+
                 <div v-if="error" class="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-artwork-messages-error">
                     {{ error }}
                 </div>
@@ -177,7 +189,7 @@
                 <!-- Scroll area, damit nichts zusammengedrückt wirkt -->
                 <div class="px-5 py-5 max-h-[60vh] overflow-y-auto pr-4 space-y-6">
                     <div v-for="group in groupedLogs" :key="group.dayKey" class="space-y-3">
-                        <DividerChip :label="formatDate(group.dayLabel)" variant="brand" />
+                        <DividerChip :label="group.unknown ? t('Unknown date') : formatDate(group.dayLabel)" variant="brand" />
 
                         <ol class="space-y-4">
                             <li
@@ -310,6 +322,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
 import { IconTrash } from "@tabler/icons-vue";
 
 type ShiftActivityProperties = {
@@ -419,6 +432,9 @@ const selectedContext = ref<{ id: string; name: string } | null>({ id: 'all', na
 const selectedLevel   = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All types' })
 const selectedShift   = ref<ShiftLite | null>(null)
 
+// Sortierung: false = nach Änderungsdatum (created_at, Default), true = nach Schichttag.
+const groupByShiftDay = ref(false)
+
 const contextItems = [
     { id: 'all',         name: 'All contexts' },
     { id: 'normal',      name: 'Normal' },
@@ -477,6 +493,23 @@ const normalizeDate = (value?: string | null): string => {
     return formatDate(value)
 }
 
+// Liefert einen sortierbaren ISO-Tagesschlüssel (YYYY-MM-DD) aus ISO, DD.MM.YYYY oder
+// "21. Sep 2026". Wird für die Gruppierung nach Schichttag benötigt.
+const toIsoDay = (value?: string | null): string => {
+    if (!value) return ''
+    const s = String(value)
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`
+    m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/)
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    m = s.match(/^(\d{1,2})\.\s*([^\s.]+)\.?\s*(\d{4})$/)
+    if (m) {
+        const mon = MONTH_ABBR[m[2].toLowerCase()]
+        if (mon) return `${m[3]}-${mon}-${m[1].padStart(2, '0')}`
+    }
+    return ''
+}
+
 // Strukturierte Schichtdaten für die "Schicht-Card" pro Verlaufseintrag.
 // Priorität: Snapshot (Stand zum Zeitpunkt des Eintrags) → aktuelle Live-Schicht →
 // properties.old des Log-Eintrags (enthält bei Alt-Einträgen die Schichtdaten zum
@@ -512,8 +545,11 @@ const buildShiftDetails = (log: RawShiftActivity): EntryShiftDetails => {
     // Schichten haben eine Live-Row ohne deleted_at → werden NICHT markiert.
     const deleted = id != null && (!live || !!live?.deleted_at)
 
+    const dayKey = toIsoDay(snap?.start_date || live?.start_date || old?.start_date)
+
     return {
         id: id ?? null,
+        dayKey,
         dateLabel,
         timeLabel,
         craft: craft || '–',
@@ -548,6 +584,9 @@ const fetchHistory = async (reset: boolean) => {
                 // Serverseitige Suche: stellt sicher, dass auch Treffer auf späteren Seiten
                 // gefunden werden (nicht nur in der aktuell geladenen Seite).
                 search: search.value?.trim() || undefined,
+                // Sortierung: nach Schichttag, damit die Paginierung vollständige Tage von
+                // oben befüllt (statt nur die neuesten Änderungen quer über alle Tage).
+                sort: groupByShiftDay.value ? 'shift_day' : undefined,
             },
         })
 
@@ -569,13 +608,12 @@ const fetchHistory = async (reset: boolean) => {
     }
 }
 
-// Auto-refresh (debounced) für Gewerk/Zeitraum. Der Suchbegriff wird hier BEWUSST
-// NICHT beobachtet: Während des Tippens würde ein serverseitiger Reload die Liste
-// neu laden und den Scroll-/Modalinhalt springen lassen ("rausgeschmissen"). Die
-// Suche läuft währenddessen rein clientseitig (filteredLogs); der serverseitige
-// Reload mit Suchbegriff passiert erst beim Verlassen des Feldes (onSearchBlur).
+// Auto-refresh (debounced) NUR für die Gewerk-Auswahl. Suchbegriff UND Zeitraum werden
+// hier BEWUSST nicht beobachtet: ein Reload beim Tippen würde die Liste neu laden und den
+// Scroll-/Modalinhalt springen lassen. Such-Reload + Datums-Reload passieren erst beim
+// Verlassen des jeweiligen Feldes (onSearchBlur / onDateBlur).
 let timer: number | null = null
-watch([craftId, startDate, endDate], () => {
+watch([craftId], () => {
     if (timer) window.clearTimeout(timer)
     timer = window.setTimeout(() => fetchHistory(true), 250)
 })
@@ -586,6 +624,18 @@ const onSearchBlur = () => {
     fetchHistory(true)
 }
 
+// Zeitraum-Reload erst beim Verlassen des Datumsfeldes (nicht schon beim Ändern des Tages),
+// damit eine halb eingegebene Eingabe nicht sofort eine teure Abfrage auslöst.
+const onDateBlur = () => {
+    fetchHistory(true)
+}
+
+// Beim Umschalten der Sortierung neu laden: die Server-Paginierung ändert sich (nach
+// Schichttag vs. nach Änderungsdatum), damit auch vollständige Tage von oben geladen werden.
+watch(groupByShiftDay, () => {
+    fetchHistory(true)
+})
+
 onMounted(() => {
     fetchHistory(true)
 })
@@ -594,6 +644,7 @@ onMounted(() => {
 type NormalizedChange = { index: number; fieldName: string; oldValue: any; newValue: any }
 type EntryShiftDetails = {
     id: number | null
+    dayKey: string
     dateLabel: string
     timeLabel: string
     craft: string
@@ -773,21 +824,35 @@ const filteredLogs = computed(() => {
     })
 })
 
-const dayLabel = (dayKey: string) => dayKey
+// Gruppierung: nach Änderungsdatum (created_at, Default) ODER nach Schichttag (Toggle).
+// Innerhalb einer Gruppe bleibt die Reihenfolge "neueste Änderung zuerst" (filteredLogs
+// erbt die created_at-DESC-Sortierung aus normalizedLogs). Gruppen absteigend nach Tag,
+// "ohne Datum" ganz unten.
 const groupedLogs = computed(() => {
+    const byShiftDay = groupByShiftDay.value
     const groups: Record<string, NormalizedLogEntry[]> = {}
 
     for (const item of filteredLogs.value) {
-        const key = String(item.createdAt ?? '').slice(0, 10)
-        const dayKey = key && key.length === 10 ? key : 'Unknown'
-        if (!groups[dayKey]) groups[dayKey] = []
-        groups[dayKey].push(item)
+        let key: string
+        if (byShiftDay) {
+            key = item.shiftDetails.dayKey || 'unknown'
+        } else {
+            const k = String(item.createdAt ?? '').slice(0, 10)
+            key = k && k.length === 10 ? k : 'unknown'
+        }
+        if (!groups[key]) groups[key] = []
+        groups[key].push(item)
     }
 
-    const orderedKeys = Object.keys(groups).sort((a, b) => (a > b ? -1 : 1))
+    const orderedKeys = Object.keys(groups).sort((a, b) => {
+        if (a === 'unknown') return 1
+        if (b === 'unknown') return -1
+        return a > b ? -1 : 1
+    })
     return orderedKeys.map((k) => ({
         dayKey: k,
-        dayLabel: dayLabel(k),
+        dayLabel: k === 'unknown' ? '' : k,
+        unknown: k === 'unknown',
         items: groups[k],
     }))
 })

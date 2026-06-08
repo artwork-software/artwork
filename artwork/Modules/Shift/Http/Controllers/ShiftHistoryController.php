@@ -148,11 +148,13 @@ class ShiftHistoryController
                 // Spalten-Collation. Teiltreffer über LIKE %...%.
                 $like = '%' . mb_strtolower($search) . '%';
                 $q->where(function ($inner) use ($like): void {
-                    // Beschreibung des Log-Eintrags
-                    $inner->whereRaw('LOWER(description) LIKE ?', [$like])
+                    // Beschreibung des Log-Eintrags. Spalten explizit mit activity_log.
+                    // qualifizieren – beim sort=shift_day-Join hat auch shifts eine Spalte
+                    // "description" → sonst "Column 'description' is ambiguous".
+                    $inner->whereRaw('LOWER(activity_log.description) LIKE ?', [$like])
                         // Namen/Werte stecken in den translation_key_placeholder_values (JSON in properties),
                         // z.B. der zugewiesene Mitarbeitername.
-                        ->orWhereRaw('LOWER(properties) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(activity_log.properties) LIKE ?', [$like])
                         // Verursacher (Planer:in), der die Änderung ausgelöst hat
                         ->orWhereHasMorph(
                             'causer',

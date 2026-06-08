@@ -34,6 +34,7 @@
         </div>
         <div class="flex items-center">
             <ToolTipComponent
+                v-if="$can('can view shift plan') || hasAdminRole()"
                 direction="bottom"
                 :tooltip-text="$t('History')"
                 icon="IconHistory"

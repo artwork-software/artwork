@@ -114,6 +114,44 @@ final class ShiftHistorySearchTest extends FeatureTestCase
     }
 
     #[Test]
+    public function shift_day_sort_orders_by_shift_start_date_not_change_date(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+
+        $earlyShift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-05-05', 'end_date' => '2026-05-05',
+            'start' => '09:00:00', 'end' => '17:00:00',
+            'in_workflow' => false, 'current_request_id' => null,
+        ]);
+        $lateShift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-05-20', 'end_date' => '2026-05-20',
+            'start' => '09:00:00', 'end' => '17:00:00',
+            'in_workflow' => false, 'current_request_id' => null,
+        ]);
+
+        // Change the LATE shift first, then the EARLY shift (newest created_at = early).
+        // Under created_at sort the early entry would be on top; under shift_day sort the
+        // late shift's entry must be on top (later shift day first).
+        $this->logActivity($lateShift, 'late shift change');
+        $this->logActivity($earlyShift, 'early shift change');
+
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => $craft->id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'sort' => 'shift_day',
+        ]));
+
+        $response->assertOk();
+        $data = $response->json('logs.data');
+        $this->assertNotEmpty($data);
+        $this->assertSame($lateShift->id, (int) $data[0]['subject_id']);
+    }
+
+    #[Test]
     public function without_search_all_entries_are_returned(): void
     {
         $this->actingAsAdmin();

@@ -44,6 +44,10 @@ class ShiftHistoryController
         // einer einzelnen Seite würde passende Einträge sonst verbergen.
         $search = trim((string) $request->query('search', ''));
 
+        // Sortierung: 'shift_day' = nach dem Tag der zugehörigen Schicht (damit die
+        // Paginierung vollständige Schichttage von oben befüllt), sonst nach Änderungsdatum.
+        $sortByShiftDay = $request->query('sort') === 'shift_day';
+
         $startYmd = $startDate->toDateString();
         $endYmd   = $endDate->toDateString();
 
@@ -93,9 +97,20 @@ class ShiftHistoryController
         // Force-gelöschte Schichten (Row physisch weg) über den im Log gespeicherten
         // Snapshot wieder einfangen: deren Einträge tragen properties->shift_snapshot
         // (inkl. Schicht-Start-Datum), das das Löschen überlebt.
+        //
+        // Performance: Diese Abfrage wertet einen JSON-Pfad (properties->shift_snapshot->
+        // start_date) ohne Index aus – auf großen activity_log-Tabellen teuer. Wir grenzen
+        // sie daher hart ein:
+        //   - event='deleted': force-gelöschte Schichten loggen IMMER ein deleted-Event mit
+        //     Snapshot (forceDelete ruft intern delete()); andere Events brauchen wir hier
+        //     nicht, um die subject_id einzufangen → deutlich weniger JSON-Auswertungen.
+        //   - whereNotIn($shiftIds): lebende/soft-deleted Schichten sind bereits abgedeckt;
+        //     hier interessieren nur Schichten ohne Row.
         $snapshotShiftIds = Activity::query()
             ->where('log_name', 'shift')
             ->where('subject_type', Shift::class)
+            ->where('event', 'deleted')
+            ->when(!empty($shiftIds), fn ($q) => $q->whereNotIn('subject_id', $shiftIds))
             ->whereBetween('properties->shift_snapshot->start_date', [$startYmd, $endYmd])
             ->when($craftId > 0, fn ($q) => $q->where('properties->craft_id', $craftId))
             ->distinct()
@@ -160,7 +175,22 @@ class ShiftHistoryController
                 // Causer: bei dir ist das offenbar ein User-Objekt mit first/last/full_name/type/profile_photo_url
                 'causer',
             ])
-            ->orderByDesc('created_at')
+            ->when($sortByShiftDay, function ($q): void {
+                // Nach Schichttag sortieren: über die (auch soft-deleted) Schicht-Row, mit
+                // Fallback auf das im Snapshot gespeicherte Start-Datum für force-gelöschte
+                // Schichten (keine Row mehr). Innerhalb eines Tages weiter neueste Änderung
+                // zuerst. select(activity_log.*) verhindert Spaltenkollisionen durch den Join.
+                $q->leftJoin('shifts', 'shifts.id', '=', 'activity_log.subject_id')
+                    ->select('activity_log.*')
+                    ->orderByRaw(
+                        'COALESCE(shifts.start_date, '
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date"))'
+                        . ') DESC'
+                    )
+                    ->orderByDesc('activity_log.created_at');
+            }, function ($q): void {
+                $q->orderByDesc('created_at');
+            })
             ->paginate($perPage);
 
         $response = [

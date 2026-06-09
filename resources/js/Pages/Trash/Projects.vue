@@ -1,30 +1,10 @@
 <template>
-    <div class="flex w-full justify-between">
-        <div>
-
-        </div>
-        <div class="flex justify-end items-center ml-8 -mt-14">
-            <div v-if="!showSearchbar" @click="openSearchbar"
-                 class="cursor-pointer inset-y-0 mr-3">
-                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-            </div>
-            <button v-if="trashed_projects.length > 0" @click="showConfirmDeleteAll = true"
-                    class="cursor-pointer text-red-500 hover:text-red-700 mr-3">
-                <TrashIcon class="h-5 w-5" aria-hidden="true"/>
-            </button>
-            <div v-else class="flex items-center w-64 mr-2">
-                <div>
-                    <input type="text"
-                           :placeholder="$t('Search')"
-                           v-model="searchText"
-                           ref="searchBarInput"
-                           class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                </div>
-                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-            </div>
-        </div>
-    </div>
-    <div v-if="filteredTrashedProjects.length > 0" v-for="(project,index) in filteredTrashedProjects" :key="project.id"
+    <TrashSearchAndActions
+        property-name="trashed_projects"
+        :total="trashed_projects.total"
+        @delete-all="showConfirmDeleteAll = true"
+    />
+    <div v-for="project in trashed_projects.data" :key="project.id"
          class="mt-5 border-b-2 border-gray-200 w-full">
         <div class="py-5 flex justify-between">
             <div class="flex">
@@ -175,6 +155,13 @@
 
     </div>
 
+    <BasePaginator
+        v-if="trashed_projects.total > 0"
+        :entities="trashed_projects"
+        property-name="trashed_projects"
+        class="mt-6"
+    />
+
     <ConfirmDeleteModal
         v-if="showConfirmDeleteAll"
         :title="$t('Delete all')"
@@ -207,6 +194,8 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 
 export default {
     props: ['trashed_projects'],
@@ -216,19 +205,7 @@ export default {
         return {
             showProjectHistory: false,
             selectedProjectId: null,
-            showSearchbar: false,
-            searchText: '',
             showConfirmDeleteAll: false,
-        }
-    },
-    computed: {
-        filteredTrashedProjects() {
-            if (this.searchText === '') {
-                return this.trashed_projects;
-            }
-            return this.trashed_projects.filter(project => {
-                return project.name.toLowerCase().includes(this.searchText.toLowerCase())
-            })
         }
     },
     methods: {
@@ -240,18 +217,6 @@ export default {
             this.showProjectHistory = false;
             this.selectedProjectId = null;
         },
-        closeSearchbar() {
-            this.showSearchbar = false
-            this.searchText = ''
-        },
-        openSearchbar(){
-            this.showSearchbar = !this.showSearchbar;
-            this.$nextTick(() => {
-                if (this.showSearchbar) {
-                    this.$refs.searchBarInput.focus();
-                }
-            });
-        },
         forceDeleteAll() {
             this.$inertia.delete(route('projects.force.all'), {
                 onSuccess: () => {
@@ -262,6 +227,8 @@ export default {
     },
     components: {
         BaseMenu,
+        BasePaginator,
+        TrashSearchAndActions,
         ConfirmDeleteModal,
         UserPopoverTooltip,
         Input, SearchIcon,

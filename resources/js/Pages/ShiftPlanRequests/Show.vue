@@ -495,9 +495,9 @@ const rejectRequestChange = (change) => {
         {},
         {
             preserveScroll: true,
-            onSuccess: () => {
-                // z.B. Liste der Changes aktualisieren
-            },
+            // Lokalen State (geöffnetes Sidepanel) behalten, aber frische Props laden, damit der
+            // zurückgesetzte Change sofort aus dem Änderungsverlauf verschwindet.
+            preserveState: true,
             onError: (errors) => {
                 console.error('Fehler beim Zurücksetzen der Änderung:', errors);
             },

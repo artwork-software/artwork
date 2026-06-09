@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Database\Factories\UserContractAssignFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +26,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserContractAssign extends Model
 {
     use HasFactory;
+
+    protected static function newFactory(): Factory
+    {
+        return UserContractAssignFactory::new();
+    }
 
     protected $fillable = [
         'user_id',

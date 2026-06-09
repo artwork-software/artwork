@@ -8,9 +8,9 @@
             <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex headline2 ">
                     {{ name }}
-                    <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? '' : ''"
+                    <div v-if="!showSection && displayUnreadCount > 0"
                          class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
-                        {{ notifications.length }}
+                        {{ displayUnreadCount }}
                     </div>
                 </div>
                 <div @click="setAllOnRead()"
@@ -26,7 +26,7 @@
                  @mouseleave="notification.hovered = false"
                  :class="index !== 0 && showSection ? 'border-t-2 mb-2 mt-3' : ''"
                  class=""
-                 v-for="(notification,index) in notifications">
+                 v-for="(notification,index) in unread.items" :key="notification.id">
                 <NotificationBlock
                     :notification="notification"
                     :event-types="eventTypes"
@@ -43,12 +43,25 @@
                     :event-statuses="eventStatuses"
                 />
             </div>
-            <div @click="showReadSection = true" v-if="showSection && !showReadSection"
+            <div v-if="showSection && unread.loading && unread.items.length === 0"
+                 class="ml-12 my-6 xsLight">
+                {{ $t('Loading...') }}
+            </div>
+            <div v-if="showSection && !unread.loading && unread.items.length === 0 && displayUnreadCount === 0"
+                 class="ml-12 my-6 xsLight">
+                {{ $t('No new notifications') }}
+            </div>
+            <div v-if="showSection && unread.items.length < unread.total"
+                 @click="loadMoreUnread"
+                 class="ml-12 my-4 linkText cursor-pointer">
+                {{ $t('Show more') }} ({{ unread.items.length }}/{{ unread.total }})
+            </div>
+            <div @click="openArchive" v-if="showSection && !showReadSection"
                  class="ml-12 my-6 linkText cursor-pointer">
                 {{ $t('View old notifications')}}
             </div>
             <div class="flex justify-between items-center w-full mt-8 xsDark border-t-2 pt-4 pl-4 pr-4" v-if="showReadSection">
-                <div :class="!readNotifications ? 'mb-12' : ''" class="flex items-center">
+                <div :class="archived.items.length === 0 ? 'mb-12' : ''" class="flex items-center">
                     <img src="/Svgs/IconSvgs/icon_archive_black.svg"
                          alt="Archive icon black"
                          class="h-4 w-4 mr-2"
@@ -62,7 +75,7 @@
             <div v-if="showReadSection" @mouseover="notification.hovered = true"
                  @mouseleave="notification.hovered = false" :class="index !== 0 && showSection ? 'border-t-2' : ''"
                  class=" w-full"
-                 v-for="(notification,index) in readNotifications">
+                 v-for="(notification,index) in archived.items" :key="notification.id">
                 <NotificationBlock
                     :notification="notification"
                     :event-types="eventTypes"
@@ -77,6 +90,19 @@
                     :first_project_budget_tab_id="first_project_budget_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 />
+            </div>
+            <div v-if="showReadSection && archived.loading && archived.items.length === 0"
+                 class="ml-12 my-4 xsLight">
+                {{ $t('Loading...') }}
+            </div>
+            <div v-if="showReadSection && !archived.loading && archived.items.length === 0"
+                 class="ml-12 my-4 xsLight">
+                {{ $t('No archived notifications') }}
+            </div>
+            <div v-if="showReadSection && archived.items.length < archived.total"
+                 @click="loadMoreArchived"
+                 class="ml-12 my-4 linkText cursor-pointer">
+                {{ $t('Show more') }} ({{ archived.items.length }}/{{ archived.total }})
             </div>
         </div>
     </div>
@@ -158,6 +184,10 @@ export default  {
     },
     data() {
         return {
+            perPage: 20,
+            unread: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
+            archived: { items: [], page: 0, total: 0, lastPage: 1, loading: false },
+            archiving: false,
             showSection: true,
             showReadSection: false,
             deleteComponentVisible: false,
@@ -175,16 +205,14 @@ export default  {
             answerRequestForm: useForm({
                 accepted: false,
             }),
-            setOnReadAll: useForm({
-                notificationIds: [],
-            })
         }
     },
     props: [
         'eventTypes',
         'rooms',
-        'notifications',
-        'readNotifications',
+        'groupType',
+        'unreadCount',
+        'archivedCount',
         'projects',
         'name',
         'historyObjects',
@@ -197,7 +225,79 @@ export default  {
         'first_project_calendar_tab_id',
         'eventStatuses'
     ],
+    computed: {
+        // Badge/empty-state count: prefer the locally loaded total (kept in sync after archiving),
+        // fall back to the server-provided prop before the first fetch.
+        displayUnreadCount() {
+            return this.unread.page > 0 ? this.unread.total : (this.unreadCount || 0);
+        },
+    },
+    mounted() {
+        if (this.showSection && (this.unreadCount || 0) > 0) {
+            this.fetchUnread(1);
+        }
+    },
+    watch: {
+        // After a single archive/delete inside a NotificationBlock the whole page is reloaded via
+        // Inertia, refreshing these count props. Re-fetch the visible lists so they stay in sync.
+        unreadCount() {
+            if (this.showSection) {
+                this.fetchUnread(1);
+            }
+        },
+        showSection(open) {
+            if (open && this.unread.page === 0 && (this.unreadCount || 0) > 0) {
+                this.fetchUnread(1);
+            }
+        },
+    },
     methods: {
+        async fetchUnread(page = 1) {
+            this.unread.loading = true;
+            try {
+                const { data } = await axios.get(route('notifications.list'), {
+                    params: { groupType: this.groupType, status: 'unread', page, perPage: this.perPage },
+                });
+                this.unread.items = page === 1 ? data.data : this.unread.items.concat(data.data);
+                this.unread.page = data.current_page;
+                this.unread.lastPage = data.last_page;
+                this.unread.total = data.total;
+            } catch (err) {
+                console.error(err);
+            } finally {
+                this.unread.loading = false;
+            }
+        },
+        loadMoreUnread() {
+            if (!this.unread.loading && this.unread.page < this.unread.lastPage) {
+                this.fetchUnread(this.unread.page + 1);
+            }
+        },
+        async fetchArchived(page = 1) {
+            this.archived.loading = true;
+            try {
+                const { data } = await axios.get(route('notifications.list'), {
+                    params: { groupType: this.groupType, status: 'archived', page, perPage: this.perPage },
+                });
+                this.archived.items = page === 1 ? data.data : this.archived.items.concat(data.data);
+                this.archived.page = data.current_page;
+                this.archived.lastPage = data.last_page;
+                this.archived.total = data.total;
+            } catch (err) {
+                console.error(err);
+            } finally {
+                this.archived.loading = false;
+            }
+        },
+        loadMoreArchived() {
+            if (!this.archived.loading && this.archived.page < this.archived.lastPage) {
+                this.fetchArchived(this.archived.page + 1);
+            }
+        },
+        openArchive() {
+            this.showReadSection = true;
+            this.fetchArchived(1);
+        },
         formatDate(isoDate) {
             if(isoDate?.split('T').length > 1){
                 return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
@@ -237,20 +337,25 @@ export default  {
             this.notificationToDelete = notification;
             this.deleteComponentVisible = true;
         },
-        setAllOnRead() {
-            // filter notifications to only include those with archivable button types
-            const notifications = this.notifications.filter(
-                notification => notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete'].includes(button)).length === 0
-            );
-
-            // get all notification ids and push it in set on read all form
-            notifications.forEach(notification => {
-                this.setOnReadAll.notificationIds.push(notification.id);
-            });
-
-            this.setOnReadAll.patch(route('notifications.setReadAtAll'), {
-                preserveScroll: true,
-            });
+        async setAllOnRead() {
+            if (this.archiving || this.displayUnreadCount === 0) {
+                return;
+            }
+            // The archivable-button filtering happens server-side; we only pass the group so even
+            // tens of thousands of notifications are archived in one chunked bulk operation (and
+            // offloaded to a queued job above the backend threshold) instead of shipping all ids.
+            this.archiving = true;
+            try {
+                await axios.patch(route('notifications.setReadAtAll'), { groupType: this.groupType });
+                await this.fetchUnread(1);
+                if (this.showReadSection) {
+                    await this.fetchArchived(1);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                this.archiving = false;
+            }
         },
         async afterRequestAnswer(bool) {
             if (!bool) {

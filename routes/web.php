@@ -959,6 +959,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/today', [NotificationController::class, 'todayPaginated'])
         ->name('notifications.today');
+    Route::get('/notifications/list', [NotificationController::class, 'list'])
+        ->name('notifications.list');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
@@ -2245,6 +2247,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch inventory-management.articles.detailed.update-property (inline autosave for detailed article properties)
         Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [InventoryArticleController::class, 'updateDetailedArticlePropertyValue'])
             ->name('inventory-management.articles.detailed.update-property');
+
+        // File uploads for article properties of type "file" (single file per property/article)
+        Route::post('/articles/property-file/upload', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'upload'])
+            ->name('inventory-management.articles.property-file.upload');
+        Route::get('/articles/property-file/download', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'download'])
+            ->name('inventory-management.articles.property-file.download');
+        Route::delete('/articles/property-file/delete', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'destroy'])
+            ->name('inventory-management.articles.property-file.delete');
 
         // delete articles.destroy
         Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])

@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Database\Factories\UserContractFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,6 +25,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class UserContract extends Model
 {
     use HasFactory;
+
+    protected static function newFactory(): Factory
+    {
+        return UserContractFactory::new();
+    }
 
     protected $fillable = [
         'name',

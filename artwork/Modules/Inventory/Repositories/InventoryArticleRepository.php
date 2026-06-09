@@ -4,6 +4,8 @@ namespace Artwork\Modules\Inventory\Repositories;
 
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
+use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -288,8 +290,13 @@ class InventoryArticleRepository
             $image->forceDelete();
         }
 
-        // delete detailed articles
         $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+
+        // remove uploaded files of "file" type properties (article + detailed articles)
+        // before the pivot rows are detached, so the paths are still resolvable.
+        $this->deletePropertyFiles($article, $detailedArticles);
+
+        // delete detailed articles
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->properties()->detach();
             $detailedArticle->forceDelete();
@@ -298,6 +305,58 @@ class InventoryArticleRepository
         // delete article
         $article->properties()->detach();
         $article->forceDelete();
+    }
+
+    /**
+     * Permanently delete the stored files of "file" type property values that
+     * belong to the given article and its detailed articles. A file is only
+     * removed when no other (kept) property value still references the same
+     * path – this protects shared paths created by article duplication.
+     *
+     * @param \Illuminate\Support\Collection<int, InventoryDetailedQuantityArticle> $detailedArticles
+     */
+    private function deletePropertyFiles(InventoryArticle $article, Collection $detailedArticles): void
+    {
+        $values = InventoryPropertyValue::query()
+            ->whereHas('property', fn ($query) => $query->where('type', 'file'))
+            ->where(function ($query) use ($article, $detailedArticles) {
+                $query->where(function ($q) use ($article) {
+                    $q->where('inventory_propertyable_type', InventoryArticle::class)
+                        ->where('inventory_propertyable_id', $article->id);
+                });
+
+                if ($detailedArticles->isNotEmpty()) {
+                    $query->orWhere(function ($q) use ($detailedArticles) {
+                        $q->where('inventory_propertyable_type', InventoryDetailedQuantityArticle::class)
+                            ->whereIn('inventory_propertyable_id', $detailedArticles->pluck('id')->all());
+                    });
+                }
+            })
+            ->get(['id', 'value']);
+
+        $removedIds = $values->pluck('id')->all();
+
+        foreach ($values->pluck('value')->filter()->unique() as $path) {
+            // Only ever touch files inside the dedicated property uploads directory.
+            if (!str_starts_with((string) $path, 'uploads/inventory-properties/')) {
+                continue;
+            }
+
+            // Skip if another, non-removed property value still points to this file.
+            $stillReferenced = InventoryPropertyValue::query()
+                ->where('value', $path)
+                ->whereNotIn('id', $removedIds)
+                ->exists();
+
+            if ($stillReferenced) {
+                continue;
+            }
+
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+                Storage::deleteDirectory(dirname($path));
+            }
+        }
     }
 
     public function restore(InventoryArticle $article): void

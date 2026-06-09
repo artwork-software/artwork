@@ -22,7 +22,7 @@
             </template>
 
             <span v-if="compensationDayToday" class="text-teal-400">
-                {{ compensationDayToday === 'full' ? t('Compensation day off') : t('Half compensation day off') }}<template v-if="cellParts.length">, </template>
+                {{ compensationDayToday === 'full' ? t('Compensation day off') : t('Half compensation day off') }}<template v-if="compensationDayToday === 'half' && compensationHalfPeriod"> ({{ compensationHalfPeriod === 'morning' ? t('Morning') : t('Afternoon') }})</template><template v-if="cellParts.length">, </template>
             </span>
 
             <template v-for="part in cellParts" :key="part.key">
@@ -237,6 +237,15 @@ const compensationDayToday = computed(() => {
     // Sum up values for the day
     const totalValue = arr.reduce((sum, d) => sum + parseFloat(d.value || 0), 0)
     return totalValue >= 1.0 ? 'full' : 'half'
+})
+
+/** Vormittag/Nachmittag bei halbem freien Tag */
+const compensationHalfPeriod = computed(() => {
+    const dayOffs = props.user?.compensation_day_offs?.[props.day.withoutFormat]
+    if (!dayOffs) return null
+    const arr = Array.isArray(dayOffs) ? dayOffs : Object.values(dayOffs)
+    const half = arr.find(d => d.half_day_period === 'morning' || d.half_day_period === 'afternoon')
+    return half ? half.half_day_period : null
 })
 
 /** Violations am Tag */

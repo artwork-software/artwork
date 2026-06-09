@@ -141,6 +141,9 @@
                                 type="number"
                                 id="individual_number_value"
                             />
+                            <p v-if="form.trigger_type === 'halfDayOffConflict'" class="mt-1 text-xs text-gray-500">
+                                {{ $t('Time as a decimal hour (14 = 14:00, 14.5 = 14:30).') }}
+                            </p>
                         </div>
 
                         <div>
@@ -310,6 +313,9 @@ const triggerTypeLabels = {
     'maxWorkingHoursOnWeek': 'Wochenmaximum an Stunden',
     'restTimeBeforeWorkday': 'Ruhezeit vor Werktag',
     'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag',
+    'restTimeBetweenShiftGroups': 'Ruhezeit zwischen Schichtgruppen',
+    'halfDayOffConflict': 'Konflikt: halber freier Tag / Schicht',
+    'halfDayOffOnSpecialDay': 'Kein halber freier Tag an Sondertagen',
     'minDaysBeforeCommit': 'Mindesttage bis Verbindlich-Schaltung'
 }
 

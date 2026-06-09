@@ -4033,10 +4033,20 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedProjects = Project::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Project $project) => (new ProjectIndexResource($project))->resolve());
+
         return inertia('Trash/Projects', [
-            'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
+            'trashed_projects' => $trashedProjects
         ]);
     }
 
@@ -4624,6 +4634,32 @@ class ProjectController extends Controller
         }
 
         return $projects;
+    }
+
+    /**
+     * Liefert aus einer Liste von Projekt-IDs nur die zurück, die noch (nicht gelöscht)
+     * existieren. Wird von der "Zuletzt geöffnete Projekte"-Komponente genutzt, deren
+     * Liste clientseitig in localStorage liegt und sonst auf gelöschte Projekte verweisen
+     * würde.
+     *
+     * @return array<int, int>
+     */
+    public function filterExistingProjectIds(Request $request): array
+    {
+        $ids = collect($request->input('ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Project::whereIn('id', $ids)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void

@@ -108,4 +108,95 @@ final class DatabaseNotificationServiceTest extends TestCase
         $this->assertDatabaseMissing('notifications', ['id' => $oldUnread->id]);
         $this->assertDatabaseHas('notifications', ['id' => $recentUnread->id]);
     }
+
+    #[Test]
+    public function is_archivable_only_when_all_buttons_are_whitelisted(): void
+    {
+        $archivable = $this->createNotification(['data' => ['buttons' => ['show_project', 'accept']]]);
+        $notArchivable = $this->createNotification(['data' => ['buttons' => ['show_project', 'some_action']]]);
+
+        $this->assertTrue($this->service->isArchivable($archivable));
+        $this->assertFalse($this->service->isArchivable($notArchivable));
+    }
+
+    #[Test]
+    public function archive_all_unread_for_user_only_archives_archivable_in_given_group(): void
+    {
+        $user = User::factory()->create();
+
+        $archivableRooms = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => ['show_project']]);
+        $nonArchivableRooms = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => ['needs_action']]);
+        $archivableEvents = $this->createForUser($user, ['groupType' => 'EVENTS', 'buttons' => ['accept']]);
+
+        $count = $this->service->archiveAllUnreadForUser($user, 'ROOMS');
+
+        $this->assertSame(1, $count);
+        $this->assertNotNull($archivableRooms->fresh()->read_at);
+        $this->assertNull($nonArchivableRooms->fresh()->read_at, 'non-archivable stays unread');
+        $this->assertNull($archivableEvents->fresh()->read_at, 'other group untouched');
+    }
+
+    #[Test]
+    public function archive_all_unread_for_user_without_group_archives_across_all_groups(): void
+    {
+        $user = User::factory()->create();
+
+        $rooms = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => ['show_project']]);
+        $events = $this->createForUser($user, ['groupType' => 'EVENTS', 'buttons' => ['accept']]);
+
+        $count = $this->service->archiveAllUnreadForUser($user);
+
+        $this->assertSame(2, $count);
+        $this->assertNotNull($rooms->fresh()->read_at);
+        $this->assertNotNull($events->fresh()->read_at);
+    }
+
+    #[Test]
+    public function delete_all_for_user_removes_every_notification(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $a = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => []]);
+        $b = $this->createForUser($user, ['groupType' => 'EVENTS', 'buttons' => []]);
+        $foreign = $this->createForUser($other, ['groupType' => 'ROOMS', 'buttons' => []]);
+
+        $deleted = $this->service->deleteAllForUser($user);
+
+        $this->assertSame(2, $deleted);
+        $this->assertDatabaseMissing('notifications', ['id' => $a->id]);
+        $this->assertDatabaseMissing('notifications', ['id' => $b->id]);
+        // other user's notification must stay untouched
+        $this->assertDatabaseHas('notifications', ['id' => $foreign->id]);
+    }
+
+    #[Test]
+    public function delete_all_for_user_with_only_archived_keeps_unread(): void
+    {
+        $user = User::factory()->create();
+
+        $unread = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => []]);
+        $read = $this->createForUser($user, ['groupType' => 'ROOMS', 'buttons' => [], 'read_at' => Carbon::now()]);
+
+        $deleted = $this->service->deleteAllForUser($user, onlyArchived: true);
+
+        $this->assertSame(1, $deleted);
+        $this->assertDatabaseHas('notifications', ['id' => $unread->id]);
+        $this->assertDatabaseMissing('notifications', ['id' => $read->id]);
+    }
+
+    private function createForUser(User $user, array $data): DatabaseNotification
+    {
+        $readAt = $data['read_at'] ?? null;
+        unset($data['read_at']);
+
+        return DatabaseNotification::create([
+            'id' => (string) Str::uuid(),
+            'type' => 'TestNotification',
+            'notifiable_type' => $user->getMorphClass(),
+            'notifiable_id' => $user->id,
+            'data' => $data,
+            'read_at' => $readAt,
+        ]);
+    }
 }

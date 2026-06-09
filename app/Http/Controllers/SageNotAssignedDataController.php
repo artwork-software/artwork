@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,14 +29,29 @@ class SageNotAssignedDataController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function getTrashed(): Response
+    public function getTrashed(Request $request): Response
     {
         $this->authorize('getTrashed', SageNotAssignedData::class);
+
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $sageNotAssignedDataTrashed = SageNotAssignedData::onlyTrashed()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('buchungstext', 'like', '%' . $search . '%')
+                        ->orWhere('kreditor', 'like', '%' . $search . '%')
+                        ->orWhere('belegnummer', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render(
             'Trash/SageNotAssignedData',
             [
-                'sageNotAssignedDataTrashed' => $this->sageNotAssignedDataService->getTrashed()
+                'sageNotAssignedDataTrashed' => $sageNotAssignedDataTrashed
             ]
         );
     }

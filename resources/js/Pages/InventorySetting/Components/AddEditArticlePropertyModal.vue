@@ -241,6 +241,7 @@ const types = [
     { name: 'Datetime', type: 'datetime-local' },
     { name: 'Checkbox', type: 'checkbox' },
     { name: 'Selection', type: 'selection' },
+    { name: 'File', type: 'file' },
 
 ]
 

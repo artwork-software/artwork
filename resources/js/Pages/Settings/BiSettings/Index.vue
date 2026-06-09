@@ -5,7 +5,7 @@
     >
         <template #actions>
             <button class="ui-button-add inline-flex items-center gap-2" @click="openCreateModal">
-                <IconPlus class="size-5" stroke-width="1" />
+                <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Create BI field') }}
             </button>
         </template>
@@ -85,7 +85,7 @@
 import { ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
-import { IconPlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
+import { IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';

@@ -36,7 +36,9 @@ class EventDTOWithVerifications extends Data
         public ?array $eventProperties,
         public ?bool $occupancy_option,
         public ?int $declinedRoomId = null,
-        public ?array $eventStatus,
+        // Kann ein Array, null ODER ein Lazy/InertiaLazy sein (siehe fromModel: Lazy::inertia(...)),
+        // wenn ein Event-Status existiert, aber use_event_status_color deaktiviert ist.
+        public array|Lazy|null $eventStatus,
         public ?array $subEvents,
         public ?string $option_string,
         public ?bool $isPlanning = false,
@@ -105,7 +107,8 @@ class EventDTOWithVerifications extends Data
             subEvents: self::serializeSubEvents($event),
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
-            hasVerification: $event->getAttribute('has_verification') ?? false,
+            hasVerification: $event->getAttribute('has_pending_verification')
+                ?? $event->getAttribute('has_verification') ?? false,
             verifications: self::serializeVerifications($verificationsByEvent, $event->id),
         );
     }

@@ -133,7 +133,7 @@
                                             class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
                                             @click="openAddEventForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
                                         >
-                                            <PropertyIcon name="IconPlus" class="size-3" />
+                                            <PropertyIcon name="IconCirclePlus" class="size-3" />
                                             {{ $t('Add appointment') }}
                                         </button>
                                     </div>
@@ -151,7 +151,7 @@
                                                     v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
                                                     direction="left"
                                                     :tooltip-text="$t('Add Shift')"
-                                                    icon="IconPlus"
+                                                    icon="IconCirclePlus"
                                                     icon-size="size-3.5"
                                                     @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
                                                     classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-5 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
@@ -243,7 +243,7 @@
                                                 class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
                                                 @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
                                             >
-                                                <PropertyIcon name="IconPlus" class="size-3" />
+                                                <PropertyIcon name="IconCirclePlus" class="size-3" />
                                                 {{ $t('Add Shift') }}
                                             </button>
                                         </template>
@@ -266,7 +266,7 @@
                                             v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
                                             direction="left"
                                             :tooltip-text="$t('Add Shift')"
-                                            icon="IconPlus"
+                                            icon="IconCirclePlus"
                                             icon-size="size-4"
                                             @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
                                             classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
@@ -361,7 +361,7 @@
                                         v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
                                         direction="left"
                                         :tooltip-text="$t('Add Shift')"
-                                        icon="IconPlus"
+                                        icon="IconCirclePlus"
                                         icon-size="size-4"
                                         @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
                                         classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out mr-2"

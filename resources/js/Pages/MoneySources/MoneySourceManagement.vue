@@ -449,7 +449,7 @@ import {
     Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/vue'
 import {
-    IconPlus, IconChevronDown, IconCircleCheck, IconSearch, IconX, IconFilter, IconArrowsSort,
+    IconCirclePlus, IconChevronDown, IconCircleCheck, IconSearch, IconX, IconFilter, IconArrowsSort,
     IconSortAscending, IconSortDescending, IconEdit, IconCopy, IconPin, IconTrash, IconPinned, IconCurrencyEuro
 } from '@tabler/icons-vue'
 

@@ -1,322 +1,202 @@
 <template>
-    <app-layout :title="$t('Checklist template') + ' ' + $t('Create')">
-        <div class="artwork-container">
-            <div class="flex-wrap">
-                <div class="flex">
-                    <h2 class="mb-4 headline1">{{$t('Checklist template')}}</h2>
+    <ChecklistTemplatesHeader
+        :title="$t('New checklist template')"
+        :description="$t('You can create and edit your checklist template here - it can then be used in any project.')"
+    >
+        <template #actions>
+            <Link :href="route('checklist_templates.management')" class="ui-button">
+                {{ $t('Back') }}
+            </Link>
+        </template>
+
+        <div class="my-8 max-w-3xl">
+            <!-- Name -->
+            <BaseInput
+                id="checklistTemplateName"
+                v-model="form.name"
+                :label="$t('Name of the checklist template') + '*'"
+                required
+            />
+
+            <!-- Users -->
+            <div class="mt-8 bg-gray-50 rounded-xl p-5">
+                <div class="flex items-center justify-between">
+                    <h3 class="headline4">{{ $t('Checklist users') }}</h3>
+                    <BaseUIButton
+                        :label="$t('Assign users')"
+                        @click="showUsersModal = true"
+                    />
                 </div>
-                <div class="xsLight max-w-screen-sm">
-                    {{$t('You can create and edit your checklist template here - it can then be used in any project.')}}
-                </div>
-                <div class="flex mt-8">
-                    <div class="max-w-2xl w-full">
-                        <BaseInput
-                            id="teamName"
-                            v-model="templateForm.name"
-                            :label="$t('Name of the checklist template')"/>
-                        <span v-if="showEmptyTaskNameError" class="errorText">{{ $t('You must enter a name.')}}</span>
-                    </div>
-                </div>
-                <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.users.length === 0">
-                        <span
-                            class="text-secondary subpixel-antialiased cursor-pointer">{{ $t('No users added yet')}}</span>
-                    </div>
-                    <div v-else class="-mr-3 my-auto" v-for="(user, index) in templateForm.users">
-                        <img class="h-10 w-10 mr-2 object-cover rounded-full border-2 border-white"
-                             :class="index !== 0 ? '-ml-2' : ''"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                    </div>
-                    <div @click="openChangeUsersModal"
-                         class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
-                        <PencilAltIcon
-                            class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                            aria-hidden="true"/>
-                    </div>
-                </div>
-                <div class="flex">
-                    <div class="flex w-full mt-12">
-                        <div class="">
-                            <button @click="openAddTaskModal()" type="button"
-                                    class="flex hover:bg-success my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
-                        </div>
-                        <div v-if="this.$page.props.show_hints" class="flex">
-                            <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                            <span
-                                class="ml-1 my-auto hind">{{$t('Create new tasks')}}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-6">
-                    <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID"
-                               v-model="templateForm.task_templates" @start="dragging=true" @end="dragging=false">
-                        <template #item="{element}">
-                            <div class="flex mt-6 flex-wrap w-full"
-                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex w-full group">
-                                    <input v-model="element.done"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <p class="ml-4 my-auto font-black"
-                                       :class="element.done ? 'text-secondary' : 'sDark'">
-                                        {{ element.name }}</p>
-                                    <button type="button" @click="deleteTaskFromTemplate(element)">
-                                        <span class="sr-only">
-                                            {{$t('Remove task from checklist template')}}
-                                        </span>
-                                        <XCircleIcon class="ml-4 h-5 w-5 hover:text-error group-hover:block hidden "/>
-                                    </button>
-                                </div>
-                                <div class="ml-10 xsLight">
-                                    {{ element.description }}
-                                </div>
-                            </div>
-                        </template>
-                    </draggable>
-                </div>
-                <div class="pt-8">
-                    <div class="mt-2 items-center">
-                        <FormButton
-                            v-if="!showSuccess"
-                            @click="createChecklistTemplate"
-                            :text="$t('Create template')"
-                            />
-                        <button v-else type="submit"
-                                class="items-center rounded-full px-16 py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >
-                            <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
-                        </button>
+                <AlertComponent
+                    class="mt-3"
+                    type="info"
+                    text-size="text-sm"
+                    :text="$t('The tasks in this checklist are automatically assigned to all users. Users who are not in the project are added automatically.')"
+                />
+                <div class="mt-4 flex items-center">
+                    <span v-if="form.users.length === 0" class="text-secondary text-sm">
+                        {{ $t('No users added yet') }}
+                    </span>
+                    <div v-else class="flex -space-x-2">
+                        <UserPopoverTooltip
+                            v-for="(user, index) in form.users"
+                            :key="user.id"
+                            :user="user"
+                            height="10"
+                            width="10"
+                            :classes="index > 0 ? '!ring-2 ring-white' : ''"
+                        />
                     </div>
                 </div>
             </div>
 
-        </div>
-        <!-- Add Task Modal-->
-        <BaseModal @closed="closeAddTaskModal" v-if="addingTask" :show-image="false">
-                <div class="mx-4">
-                    <ModalHeader
-                        :title="$t('New task')"
+            <!-- Tasks -->
+            <div class="mt-10">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="headline4">{{ $t('Tasks') }}</h3>
+                    <BaseUIButton
+                        is-add-button
+                        :label="$t('New task')"
+                        @click="openAddTaskModal = true"
                     />
-                    <form @submit.prevent="addTaskToTemplate" class="grid grid-cols-1 gap-4">
-                        <BaseInput
-                            id="task_name"
-                            v-model="newTaskName"
-                            :label="$t('Task')"
-                            required
-                        />
-                        <BaseTextarea
-                            :label="$t('Comment')"
-                            v-model="newTaskDescription"
-                            id="newTaskDescription"
-                            rows="3"
-                        />
-                        <div class="flex items-center justify-center">
-                            <FormButton
-                                type="submit"
-                                :disabled="this.newTaskName === ''"
-                                :text="$t('Add')"/>
-                        </div>
-                    </form>
+                </div>
 
+                <div v-if="form.task_templates.length === 0" class="text-center text-sm text-zinc-400 py-6 border border-dashed border-zinc-200 rounded-xl">
+                    {{ $t('No tasks added yet') }}
                 </div>
-        </BaseModal>
-        <!-- Change Teams Modal -->
-        <BaseModal @closed="closeChangeUsersModal" v-if="showChangeUsersModal" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
-                <div class="mx-3">
-                    <ModalHeader
-                        :title="$t('Assign checklist template')"
-                        :description="$t('Type the name of the user to whom you want to assign the checklist template.')"
-                    />
-                    <div>
-                        <UserSearch v-model="user_query" @userSelected="addUser"/>
-                    </div>
-                    <div class="mt-4">
-                        <div v-for="(user,index) in templateForm.users"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                             <div class="flex items-center">
-                                <img class="h-12 w-12 mr-2 object-cover rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                {{ user.first_name }} {{ user.last_name }}
-                            </div>
-                            <button type="button" @click="deleteUser(user)">
-                                <span class="sr-only">{{ $t('Remove user from checklist template')}}</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                            </button>
+                <draggable
+                    v-else
+                    v-model="form.task_templates"
+                    item-key="_tmpId"
+                    handle=".drag-handle"
+                    ghost-class="opacity-50"
+                >
+                    <template #item="{ element, index }">
+                        <SingleTaskTemplateInListView
+                            local
+                            :task="element"
+                            @update="updateTask(index, $event)"
+                            @delete="removeTask(index)"
+                        />
+                    </template>
+                </draggable>
+            </div>
+
+            <!-- Save -->
+            <div class="mt-10">
+                <BaseUIButton
+                    is-add-button
+                    :label="$t('Create template')"
+                    :disabled="form.name === '' || form.processing"
+                    @click="createTemplate"
+                />
+            </div>
+        </div>
+
+        <!-- Add task modal (local) -->
+        <AddEditTaskTemplateModal
+            v-if="openAddTaskModal"
+            local
+            @closed="openAddTaskModal = false"
+            @save="addTask"
+        />
+
+        <!-- Users modal -->
+        <ArtworkBaseModal
+            v-if="showUsersModal"
+            :title="$t('Assign checklist template')"
+            :description="$t('Type the name of the user to whom you want to assign the checklist template.')"
+            @close="showUsersModal = false"
+        >
+            <div class="mt-6">
+                <UserSearch @user-selected="addUser" />
+                <div v-if="form.users.length > 0" class="mt-6 bg-gray-50 rounded-xl p-4 grid grid-cols-1 gap-3">
+                    <div
+                        v-for="user in form.users"
+                        :key="user.id"
+                        class="flex items-center justify-between"
+                    >
+                        <div class="flex items-center gap-x-3">
+                            <img class="h-9 w-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
+                            <span class="sDark">{{ user.first_name }} {{ user.last_name }}</span>
                         </div>
-                    </div>
-                    <div class="flex items-center justify-center mt-5">
-                        <FormButton
-                            class=""
-                            @click="closeChangeUsersModal"
-                            :text="$t('Assign')" />
+                        <button type="button" @click="removeUser(user)">
+                            <span class="sr-only">{{ $t('Remove user from checklist template') }}</span>
+                            <XIcon class="h-4 w-4 p-0.5 rounded-full bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover" />
+                        </button>
                     </div>
                 </div>
-        </BaseModal>
-    </app-layout>
+                <div class="mt-8 flex items-center justify-end">
+                    <BaseUIButton :label="$t('Done')" @click="showUsersModal = false" />
+                </div>
+            </div>
+        </ArtworkBaseModal>
+    </ChecklistTemplatesHeader>
 </template>
 
-<script>
-import AppLayout from '@/Layouts/AppLayout.vue'
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon, PlusSmIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import JetButton from "@/Jetstream/Button.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInput from "@/Jetstream/Input.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import draggable from "vuedraggable";
-import {useForm} from "@inertiajs/vue3";
-import Button from "@/Jetstream/Button.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+<script setup>
+import { ref } from 'vue'
+import { Link, useForm, usePage } from '@inertiajs/vue3'
+import { XIcon } from '@heroicons/vue/outline'
+import draggable from 'vuedraggable'
+import ChecklistTemplatesHeader from '@/Pages/ChecklistTemplates/Components/ChecklistTemplatesHeader.vue'
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
+import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue'
+import UserSearch from '@/Components/SearchBars/UserSearch.vue'
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SingleTaskTemplateInListView from '@/Pages/ChecklistTemplates/Components/SingleTaskTemplateInListView.vue'
+import AddEditTaskTemplateModal from '@/Pages/ChecklistTemplates/Components/AddEditTaskTemplateModal.vue'
 
-export default {
-    mixins: [Permissions],
-    name: "Template Create",
-    props: [],
-    components: {
-        BaseTextarea,
-        BaseInput,
-        TextareaComponent,
-        ModalHeader,
-        UserSearch,
-        TextInputComponent,
-        BaseModal,
-        FormButton,
-        Button,
-        TeamIconCollection,
-        AppLayout,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
-        SvgCollection,
-        XCircleIcon,
-        JetButton,
-        JetDialogModal,
-        JetInput,
-        JetInputError,
-        CheckIcon,
-        ChevronDownIcon,
-        PlusSmIcon,
-        draggable,
-    },
-    data() {
-        return {
-            deletingTeam: false,
-            showSuccess: false,
-            deletingAllMembers: false,
-            team_query: "",
-            addingTask: false,
-            dragging: false,
-            showChangeUsersModal: false,
-            user_query: "",
-            user_search_results: [],
-            templateForm: useForm({
-                name: "",
-                //user who created the template
-                user_id: this.$page.props.auth.user.id,
-                task_templates: [],
-                users: [],
-            }),
-            newTaskName: "",
-            newTaskDescription: "",
-            taskForm: useForm({
-                name: "",
-                description: "",
-            }),
-            showEmptyTaskNameError: false
-        }
-    },
-    methods: {
-        openChangeUsersModal() {
-            this.showChangeUsersModal = true;
-        },
-        closeChangeUsersModal() {
-            this.showChangeUsersModal = false;
-        },
-        openAddTaskModal() {
-            this.addingTask = true;
-        },
-        closeAddTaskModal() {
-            this.addingTask = false;
-        },
-        showSuccessButton() {
-            this.showSuccess = true;
-            setTimeout(() => {
-                this.showSuccess = false
-            }, 1000)
-        },
-        addTaskToTemplate() {
-            this.templateForm.task_templates.push({name: this.newTaskName, description: this.newTaskDescription});
-            this.newTaskName = "";
-            this.newTaskDescription = "";
-            this.closeAddTaskModal();
-        },
-        createChecklistTemplate() {
-            if (this.templateForm.name === '') {
-                this.showEmptyTaskNameError = true;
-                return;
-            }
+const openAddTaskModal = ref(false)
+const showUsersModal = ref(false)
+let tmpIdCounter = 0
 
-            this.showEmptyTaskNameError = false;
+const form = useForm({
+    name: '',
+    user_id: usePage().props.auth.user.id,
+    task_templates: [],
+    users: []
+})
 
-            this.templateForm.post(route('checklist_templates.store'));
-            this.showSuccessButton();
-        },
-        deleteTaskFromTemplate(taskToDelete) {
-            this.templateForm.task_templates.splice(this.templateForm.task_templates.indexOf(taskToDelete), 1);
-        },
-        addUser(user) {
-            for (let assignedUser of this.templateForm.users) {
-                //if user is already assigned do nothing
-                if (user.id === assignedUser.id) {
-                    this.user_query = ""
-                    return;
-                }
-            }
-            this.templateForm.users.push(user);
-            this.user_query = "";
-            this.user_search_results = []
-        },
-        deleteUser(user) {
-            this.templateForm.users.splice(this.templateForm.users.indexOf(user), 1);
-        },
-    },
-    watch: {
-        user_query: {
-            handler() {
-                if (this.user_query.length > 0) {
-                    axios.get('/users/search', {
-                        params: {query: this.user_query}
-                    }).then(response => {
-                        this.user_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        }
+const addTask = (task) => {
+    form.task_templates.push({ ...task, _tmpId: ++tmpIdCounter })
+}
+
+const updateTask = (index, task) => {
+    form.task_templates.splice(index, 1, task)
+}
+
+const removeTask = (index) => {
+    form.task_templates.splice(index, 1)
+}
+
+const addUser = (user) => {
+    if (!form.users.some((u) => u.id === user.id)) {
+        form.users.push(user)
     }
 }
+
+const removeUser = (user) => {
+    form.users = form.users.filter((u) => u.id !== user.id)
+}
+
+const createTemplate = () => {
+    if (form.name === '') {
+        return
+    }
+
+    form
+        .transform((data) => ({
+            ...data,
+            task_templates: data.task_templates.map((task, index) => ({
+                name: task.name,
+                description: task.description,
+                deadline_days_after_creation: task.deadline_days_after_creation ?? null,
+                order: index
+            }))
+        }))
+        .post(route('checklist_templates.store'))
+}
 </script>
-
-<style scoped>
-
-</style>

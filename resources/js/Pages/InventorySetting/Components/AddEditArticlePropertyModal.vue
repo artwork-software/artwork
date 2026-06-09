@@ -67,7 +67,7 @@
 
                         <div class="flex items-center justify-end">
                             <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
-                                <component :is="IconPlus" class="size-4" aria-hidden="true" />
+                                <component :is="IconCirclePlus" class="size-4" aria-hidden="true" />
                                 {{ $t('Selection Add value') }}
                             </button>
                         </div>
@@ -221,7 +221,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconCheck, IconChevronDown, IconInfoCircle, IconPlus} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconInfoCircle, IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     property: {

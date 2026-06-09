@@ -1,25 +1,10 @@
 <template>
-    <div class="w-full flex justify-end items-center ml-8 -mt-14">
-        <div v-if="!this.showSearchbar" @click="openSearchbar"
-             class="cursor-pointer inset-y-0 mr-3">
-            <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-        </div>
-        <button v-if="trashedCostUnits.length > 0" @click="showConfirmDeleteAll = true"
-                class="cursor-pointer text-red-500 hover:text-red-700 mr-3">
-            <TrashIcon class="h-5 w-5" aria-hidden="true"/>
-        </button>
-        <div v-else class="flex items-center w-64 mr-2">
-            <div>
-                <input type="text"
-                       :placeholder="$t('Search')"
-                       ref="searchBarInput"
-                       v-model="this.searchText"
-                       class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-            </div>
-            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-        </div>
-    </div>
-    <div v-for="trashedCostUnit in this.filteredTrashedCostUnits"
+    <TrashSearchAndActions
+        property-name="trashedCostUnits"
+        :total="trashedCostUnits.total"
+        @delete-all="showConfirmDeleteAll = true"
+    />
+    <div v-for="trashedCostUnit in trashedCostUnits.data" :key="trashedCostUnit.id"
          class="flex w-full bg-white my-2 border border-gray-200">
         <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
             <ChevronUpIcon v-if="trashedCostUnit.hidden === true"
@@ -102,6 +87,13 @@
         </div>
     </div>
 
+    <BasePaginator
+        v-if="trashedCostUnits.total > 0"
+        :entities="trashedCostUnits"
+        property-name="trashedCostUnits"
+        class="mt-6"
+    />
+
     <ConfirmDeleteModal
         v-if="showConfirmDeleteAll"
         :title="$t('Delete all')"
@@ -120,12 +112,16 @@ import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 
 export default {
     name: "BudgetManagementCostUnitsTrashed",
     layout: [AppLayout, TrashLayout],
     props: ['trashedCostUnits'],
     components: {
+        BasePaginator,
+        TrashSearchAndActions,
         ConfirmDeleteModal,
         Input,
         XIcon,
@@ -143,36 +139,10 @@ export default {
     },
     data() {
         return {
-            showSearchbar: false,
-            searchText: '',
             showConfirmDeleteAll: false,
         }
     },
-    computed: {
-        filteredTrashedCostUnits() {
-            if (!this.searchText) {
-                return this.trashedCostUnits;
-            }
-
-            return this.trashedCostUnits.filter((trashedCostUnit) => {
-                return trashedCostUnit.cost_unit_number.includes(this.searchText) ||
-                    trashedCostUnit.title.includes(this.searchText);
-            });
-        }
-    },
     methods: {
-        closeSearchbar() {
-            this.showSearchbar = false
-            this.searchText = ''
-        },
-        openSearchbar(){
-            this.showSearchbar = !this.showSearchbar;
-            this.$nextTick(() => {
-                if (this.showSearchbar) {
-                    this.$refs.searchBarInput.focus();
-                }
-            });
-        },
         forceDeleteAll() {
             this.$inertia.delete(route('budget-settings.account-management.trash-cost-units.forceDeleteAll'), {
                 onSuccess: () => {

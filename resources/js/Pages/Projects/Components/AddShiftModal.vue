@@ -205,14 +205,34 @@ watch(() => usePage().props.shiftGroups, (v: any) => {
     }
 }, { deep: true })
 
-// Support both old format (shift.craft object) and new ShiftDTO (shift.craftId integer)
-const selectedCraft = ref(
-    props.shift
-        ? (props.shift.craft ?? (props.shift.craftId != null
-            ? (props.crafts?.find((c: any) => c.id === props.shift.craftId) ?? null)
-            : null))
-        : null
-)
+// Support both old format (shift.craft object) and new ShiftDTO (shift.craftId integer).
+// WICHTIG: Das an der Schicht hängende craft wird häufig "schlank" geladen
+// (nur id/name/abbreviation/color) – also OHNE qualifications. Würden wir dieses
+// schlanke Objekt verwenden, bliebe die Qualifikationsliste leer und das Edit-Formular
+// würde ein leeres `shiftsQualifications` senden, was im Backend als "alle Plätze entfernen"
+// interpretiert wird und die Schichtplätze + Zuweisungen löscht.
+// Daher bevorzugen wir ein vollständiges craft aus den übergebenen Listen (mit qualifications).
+function resolveCraftWithQualifications(shift: any): any | null {
+    if (!shift) return null
+    const craftId = shift.craft?.id ?? shift.craftId ?? shift.craft_id ?? null
+    const findInLists = (id: any) =>
+        (props.currentUserCrafts as any[] | undefined)?.find((c: any) => c.id === id)
+        ?? (props.crafts as any[] | undefined)?.find((c: any) => c.id === id)
+        ?? null
+
+    if (craftId != null) {
+        const fromLists = findInLists(craftId)
+        // Nur bevorzugen, wenn die qualifications tatsächlich geladen sind
+        if (fromLists && Array.isArray(fromLists.qualifications)) {
+            return fromLists
+        }
+        return shift.craft ?? fromLists
+    }
+
+    return shift.craft ?? null
+}
+
+const selectedCraft = ref(resolveCraftWithQualifications(props.shift))
 
 // Track original craft to detect changes during editing
 const originalCraftId = props.edit
@@ -435,6 +455,15 @@ watch(() => props.shift, () => {
 
 onMounted(() => initSelectedRoom())
 
+// Qualifikationsname auflösen: zuerst aus den Craft-Qualifikationen, dann aus der
+// Master-Liste (props.shiftQualifications). Wird für den Edit-Fallback gebraucht.
+function resolveQualificationName(id) {
+    const fromCraft = (selectedCraft.value?.qualifications || []).find((q: any) => q.id === id)
+    if (fromCraft?.name) return fromCraft.name
+    const fromMaster = (props.shiftQualifications as any[] | undefined)?.find((q: any) => q.id === id)
+    return fromMaster?.name ?? ''
+}
+
 function getInitialQualificationValue() {
     const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
         // auf Edit: vorhandenen Wert übernehmen
@@ -453,6 +482,28 @@ function getInitialQualificationValue() {
             error: null,
         }
     })
+
+    // Edit-Fallback: Die vorhandenen Schichtplätze IMMER anzeigen – auch wenn das Gewerk
+    // der Schicht ohne `qualifications` geladen wurde (z. B. weil es kein Craft der/des
+    // aktuellen Users ist) oder eine Qualifikation später aus dem Gewerk entfernt wurde.
+    // So lassen sich die offenen Plätze pro Qualifikation auch im Bearbeiten-Modal anpassen.
+    if (props.edit) {
+        const knownIds = new Set(list.map(q => q.id))
+        ;(props.shift?.shifts_qualifications || []).forEach((sq) => {
+            const id = sq.shift_qualification_id
+            if (id != null && !knownIds.has(id)) {
+                list.push({
+                    id,
+                    name: resolveQualificationName(id),
+                    available: true,
+                    value: sq.value,
+                    warning: null,
+                    error: null,
+                })
+                knownIds.add(id)
+            }
+        })
+    }
 
     return list
 }

@@ -11,19 +11,13 @@
                 <label class="block text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-1.5">
                     {{ $t('Rule') }}
                 </label>
-                <select
+                <SearchableSelect
                     v-model="form.shift_rule_id"
-                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-artwork-buttons-hover focus:ring-1 focus:ring-artwork-buttons-hover"
-                >
-                    <option :value="null" disabled>{{ $t('Select rule') }}</option>
-                    <option
-                        v-for="rule in availableRules"
-                        :key="rule.id"
-                        :value="rule.id"
-                    >
-                        {{ rule.name }}
-                    </option>
-                </select>
+                    :options="availableRules"
+                    value-key="id"
+                    label-key="name"
+                    :placeholder="$t('Select rule')"
+                />
                 <p v-if="form.errors.shift_rule_id" class="mt-1 text-xs text-red-500">
                     {{ form.errors.shift_rule_id }}
                 </p>
@@ -115,6 +109,7 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import SearchableSelect from '@/Artwork/Listbox/SearchableSelect.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';

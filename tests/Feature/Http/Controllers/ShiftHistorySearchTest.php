@@ -90,6 +90,93 @@ final class ShiftHistorySearchTest extends FeatureTestCase
     }
 
     #[Test]
+    public function search_is_case_insensitive_and_matches_partial_names(): void
+    {
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Jannik Müller', 'Tech', 'Stage', 'ST'],
+        ]);
+
+        // Lower-case, partial first name must still find "Jannik Müller".
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => $shift->craft_id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'search' => 'jannik',
+        ]));
+
+        $response->assertOk();
+        $response->assertJsonPath('logs.meta.total', 1);
+        $this->assertCount(1, $response->json('logs.data'));
+    }
+
+    #[Test]
+    public function shift_day_sort_orders_by_shift_start_date_not_change_date(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+
+        $earlyShift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-05-05', 'end_date' => '2026-05-05',
+            'start' => '09:00:00', 'end' => '17:00:00',
+            'in_workflow' => false, 'current_request_id' => null,
+        ]);
+        $lateShift = Shift::factory()->create([
+            'craft_id' => $craft->id,
+            'start_date' => '2026-05-20', 'end_date' => '2026-05-20',
+            'start' => '09:00:00', 'end' => '17:00:00',
+            'in_workflow' => false, 'current_request_id' => null,
+        ]);
+
+        // Change the LATE shift first, then the EARLY shift (newest created_at = early).
+        // Under created_at sort the early entry would be on top; under shift_day sort the
+        // late shift's entry must be on top (later shift day first).
+        $this->logActivity($lateShift, 'late shift change');
+        $this->logActivity($earlyShift, 'early shift change');
+
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => $craft->id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'sort' => 'shift_day',
+        ]));
+
+        $response->assertOk();
+        $data = $response->json('logs.data');
+        $this->assertNotEmpty($data);
+        $this->assertSame($lateShift->id, (int) $data[0]['subject_id']);
+    }
+
+    #[Test]
+    public function search_with_shift_day_sort_does_not_break_on_joined_columns(): void
+    {
+        // Regression: mit sort=shift_day wird shifts gejoint; shifts hat ebenfalls eine
+        // Spalte "description" → unqualifiziertes LOWER(description) war ambiguous (1052).
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+
+        $this->logActivity($shift, 'User assigned to shift', [
+            'translation_key' => '{0} was assigned to shift as {1} for {2} ({3})',
+            'translation_key_placeholder_values' => ['Ehlers', 'Tech', 'Stage', 'ST'],
+        ]);
+
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => $shift->craft_id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'search' => 'ehlers',
+            'sort' => 'shift_day',
+        ]));
+
+        $response->assertOk();
+        $response->assertJsonPath('logs.meta.total', 1);
+    }
+
+    #[Test]
     public function without_search_all_entries_are_returned(): void
     {
         $this->actingAsAdmin();

@@ -233,7 +233,9 @@ readonly class EventService
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
+        bool $sendPerEventNotifications = true,
     ): void {
+        $eventsDeleted = false;
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
@@ -246,8 +248,17 @@ readonly class EventService
                 );
             }
 
-            $this->createEventDeletedNotificationsForProjectManagers($event, $notificationService, $projectTabService);
-            $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+            // When a whole project is deleted we send one consolidated notification instead
+            // (see ProjectController::destroy), so the per-event notifications are skipped to
+            // avoid flooding users with thousands of "event deleted" messages.
+            if ($sendPerEventNotifications) {
+                $this->createEventDeletedNotificationsForProjectManagers(
+                    $event,
+                    $notificationService,
+                    $projectTabService
+                );
+                $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
+            }
 
             $eventCommentService->deleteEventComments($event->comments);
             $timelineService->deleteTimelines($event->timelines);
@@ -260,11 +271,19 @@ readonly class EventService
             );
             $subEventService->deleteSubEvents($event->subEvents);
 
-            broadcast(new OccupancyUpdated())->toOthers();
-
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
             $this->eventRepository->delete($event);
+            $eventsDeleted = true;
+        }
+
+        // Broadcast once after the whole batch instead of per event. OccupancyUpdated is a
+        // generic, payload-less ping that just makes open calendars refetch their visible
+        // range, so a single broadcast already updates all clients live. Firing it per event
+        // meant thousands of redundant broadcasts and was a main cause of timeouts when
+        // deleting projects with very many events.
+        if ($eventsDeleted) {
+            broadcast(new OccupancyUpdated())->toOthers();
         }
     }
 
@@ -533,6 +552,29 @@ readonly class EventService
             ];
         };
 
+        // Build a unified `workers` list (users + freelancers + service providers) for a shift.
+        // The frontend (SingleUserEventShift.vue) reads `shift.workers` with a `type` tag and the
+        // pivot data to decide colleagues and individual times – the separate relation keys alone
+        // would always render "Keine Kolleg*innen".
+        $buildWorkers = function (Shift $shift): array {
+            $tag = function ($workers, string $type) {
+                if ($workers === null) {
+                    return collect();
+                }
+
+                return $workers->map(function ($worker) use ($type) {
+                    $worker->setAttribute('type', $type);
+                    return $worker;
+                });
+            };
+
+            return $tag($shift->users, 'user')
+                ->concat($tag($shift->freelancer, 'freelancer'))
+                ->concat($tag($shift->serviceProvider, 'service_provider'))
+                ->values()
+                ->all();
+        };
+
         $period = CarbonPeriod::create($startDate, $endDate);
         foreach ($period as $date) {
             $formattedDate = $date->format('Y-m-d');
@@ -657,6 +699,7 @@ readonly class EventService
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],
                     'serviceProvider' => $shift->serviceProvider ?? [],
+                    'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
                 ];
@@ -713,6 +756,7 @@ readonly class EventService
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],
                     'serviceProvider' => $shift->serviceProvider ?? [],
+                    'workers' => $buildWorkers($shift),
                     'shiftQualifications' => $shift->shiftsQualifications ?? [],
                     'plannedWorkingHours' => $plannedData['totalWorkTime'],
                 ];

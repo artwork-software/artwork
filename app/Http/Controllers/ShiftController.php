@@ -369,7 +369,11 @@ class ShiftController extends Controller
             $shift->load('craft:id,name,abbreviation,color');
         }
 
-        if (!$request->filled('shiftsQualifications') || empty($request->get('shiftsQualifications'))) {
+        // WICHTIG: Nur löschen, wenn das Feld `shiftsQualifications` bewusst leer mitgeschickt wurde
+        // (User hat alle Schichtplätze entfernt). Fehlt das Feld komplett im Request – z. B. bei einem
+        // partiellen Update wie dem zeitlichen Verschieben einer Schicht – dürfen weder die Schichtplätze
+        // noch die Zuweisungen (ShiftWorker = Source of Truth) gelöscht werden.
+        if ($request->has('shiftsQualifications') && empty($request->get('shiftsQualifications'))) {
             ShiftWorker::where('shift_id', $shift->id)->forceDelete();
 
             ShiftUser::where('shift_id', $shift->id)->forceDelete();
@@ -386,7 +390,7 @@ class ShiftController extends Controller
         }
 
 
-        foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+        foreach ($request->get('shiftsQualifications', []) as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
 

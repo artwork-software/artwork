@@ -118,7 +118,7 @@
                             @click="addRow"
                             :disabled="isMaxReached"
                         >
-                            <component :is="IconPlus" class="size-4" />
+                            <component :is="IconCirclePlus" class="size-4" />
                             {{ $t('Add Link') }}
                         </button>
 
@@ -313,7 +313,7 @@
                 class="text-xs underline underline-offset-2 flex items-center gap-1 text-indigo-600 hover:text-indigo-700"
                 @click="addEditEntry"
             >
-                <component :is="IconPlus" class="size-4" />
+                <component :is="IconCirclePlus" class="size-4" />
                 {{ $t('Add Entry') }}
             </button>
 
@@ -347,7 +347,7 @@ import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonCompo
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue"
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue"
-import { IconEdit, IconPlus, IconGripVertical, IconTemplate, IconDeviceFloppy, IconTrash } from "@tabler/icons-vue"
+import { IconEdit, IconCirclePlus, IconGripVertical, IconTemplate, IconDeviceFloppy, IconTrash } from "@tabler/icons-vue"
 
 defineOptions({ name: "LinkListComponent" })
 

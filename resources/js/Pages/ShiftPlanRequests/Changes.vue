@@ -94,7 +94,7 @@
                                     :class="activeFilter === filter.value
                                         ? 'bg-indigo-600 text-white shadow-sm'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                                    @click="activeFilter = filter.value"
+                                    @click="changeFilter(filter.value)"
                                 >
                                     <span>{{ t(filter.label) }}</span>
                                     <span
@@ -112,10 +112,38 @@
                                 </button>
                             </div>
 
-                            <p class="text-xs text-gray-400">
-                                {{ t('Changes with pending approval are highlighted.') }}
-                            </p>
+                            <!-- Suche nach betroffener Einheit (serverseitig, über alle Seiten) -->
+                            <div class="relative w-full sm:w-80">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="7" />
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    </svg>
+                                </span>
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    :placeholder="t('Search affected entity')"
+                                    class="w-full rounded-full border border-gray-200 bg-white py-1.5 pl-9 pr-9 text-xs text-gray-700 placeholder-gray-400 transition focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                >
+                                <button
+                                    v-if="search"
+                                    type="button"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 transition hover:text-gray-600"
+                                    :aria-label="t('Reset')"
+                                    @click="search = ''"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
+
+                        <p class="mt-2 text-xs text-gray-400">
+                            {{ t('Changes with pending approval are highlighted.') }}
+                        </p>
                     </div>
                 </div>
 
@@ -166,7 +194,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                             <tr
-                                v-for="change in filteredChanges"
+                                v-for="change in pageChanges"
                                 :key="change.id"
                                 :class="[
                                     !change.acknowledged ? 'bg-amber-50/60' : 'bg-white',
@@ -203,17 +231,17 @@
 
                                 <!-- Arbeitszeit vorher -->
                                 <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
-                                    <div class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
-                                        <span>{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
+                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs leading-none text-gray-700">
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400"></span>
+                                        <span class="whitespace-nowrap">{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
                                     </div>
                                 </td>
 
                                 <!-- Arbeitszeit nachher -->
                                 <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
-                                    <div class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        <span>{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
+                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs leading-none text-emerald-700">
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                        <span class="whitespace-nowrap">{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
                                     </div>
                                 </td>
 
@@ -240,17 +268,17 @@
                                 <td class="px-4 py-3 sm:px-6">
                                     <span
                                         v-if="!change.acknowledged"
-                                        class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium leading-none text-amber-800"
                                     >
-                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                        {{ t('Changed after commitment') }}
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"></span>
+                                        <span class="whitespace-nowrap">{{ t('Changed after commitment') }}</span>
                                     </span>
                                     <span
                                         v-else
-                                        class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium leading-none text-emerald-800"
                                     >
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        {{ t('Approval granted') }}
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                        <span class="whitespace-nowrap">{{ t('Approval granted') }}</span>
                                     </span>
                                 </td>
 
@@ -271,7 +299,7 @@
                                 </td>
                             </tr>
 
-                            <tr v-if="filteredChanges.length === 0">
+                            <tr v-if="pageChanges.length === 0">
                                 <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 sm:px-6">
                                     {{ t('No changes found for the current filter.') }}
                                 </td>
@@ -284,7 +312,7 @@
                 <!-- Mobile: Kartenansicht -->
                 <div class="space-y-3 md:hidden">
                     <div
-                        v-for="change in filteredChanges"
+                        v-for="change in pageChanges"
                         :key="change.id"
                         :class="[
                             'rounded-2xl border px-4 py-3 shadow-sm',
@@ -314,13 +342,13 @@
                                     </p>
                                     <span
                                         v-if="!change.acknowledged"
-                                        class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800"
+                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-800"
                                     >
                                         {{ t('Changed after commitment') }}
                                     </span>
                                     <span
                                         v-else
-                                        class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800"
+                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-800"
                                     >
                                         {{ t('Approval granted') }}
                                     </span>
@@ -336,18 +364,18 @@
                                 <span class="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                                     {{ t('Before') }}
                                 </span>
-                                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
-                                    <span>{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 leading-none">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400"></span>
+                                    <span class="whitespace-nowrap">{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
                                 </span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                                     {{ t('After') }}
                                 </span>
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                    <span>{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 leading-none text-emerald-700">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                    <span class="whitespace-nowrap">{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
                                 </span>
                             </div>
                         </div>
@@ -374,10 +402,41 @@
                     </div>
 
                     <div
-                        v-if="filteredChanges.length === 0"
+                        v-if="pageChanges.length === 0"
                         class="rounded-2xl border border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-500"
                     >
                         {{ t('No changes after commitment have been recorded for this craft yet.') }}
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div
+                    v-if="changes.last_page > 1"
+                    class="flex flex-col items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 shadow-sm sm:flex-row sm:px-6"
+                >
+                    <p class="text-xs text-gray-500">
+                        {{ t('Showing {0}–{1} of {2}', [changes.from || 0, changes.to || 0, changes.total || 0]) }}
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            :disabled="changes.current_page <= 1"
+                            @click="goToPage(changes.current_page - 1)"
+                        >
+                            {{ t('Previous') }}
+                        </button>
+                        <span class="text-xs text-gray-500">
+                            {{ t('Page {0} of {1}', [changes.current_page, changes.last_page]) }}
+                        </span>
+                        <button
+                            type="button"
+                            class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            :disabled="changes.current_page >= changes.last_page"
+                            @click="goToPage(changes.current_page + 1)"
+                        >
+                            {{ t('Next') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -389,7 +448,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -406,16 +465,39 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    // Paginator-Objekt (Laravel LengthAwarePaginator): { data, current_page, last_page,
+    // per_page, total, from, to, prev_page_url, next_page_url, ... }
     changes: {
-        type: Array,
+        type: Object,
         required: true,
+    },
+    // Aktiver serverseitiger Filter: 'all' | 'open' | 'ack'
+    filter: {
+        type: String,
+        default: 'all',
+    },
+    // Aktueller serverseitiger Suchbegriff (betroffene Einheit)
+    search: {
+        type: String,
+        default: '',
+    },
+    // Zähler über alle Seiten hinweg (unabhängig vom aktiven Filter)
+    totalCount: {
+        type: Number,
+        default: 0,
+    },
+    pendingCount: {
+        type: Number,
+        default: 0,
     },
 });
 
 const { t } = useI18n();
 
 const showCraftSelector = ref(false);
-const activeFilter = ref('all');
+
+// Filter wird serverseitig ausgewertet; der aktive Wert kommt als Prop.
+const activeFilter = computed(() => props.filter);
 
 const filters = [
     { value: 'all',  label: 'All changes' },
@@ -423,18 +505,59 @@ const filters = [
     { value: 'ack',  label: 'Approval granted' },
 ];
 
-const totalChanges = computed(() => props.changes.length);
-const pendingChanges = computed(() => props.changes.filter(c => !c.acknowledged).length);
+// Zähler kommen serverseitig (über alle Seiten), nicht mehr aus dem geladenen Array.
+const totalChanges = computed(() => props.totalCount);
+const pendingChanges = computed(() => props.pendingCount);
 
-const filteredChanges = computed(() => {
-    if (activeFilter.value === 'open') {
-        return props.changes.filter(c => !c.acknowledged);
+// Nur die Datensätze der aktuellen Seite.
+const pageChanges = computed(() => props.changes?.data ?? []);
+
+// Filterwechsel: serverseitig neu laden, Seite auf 1 zurücksetzen.
+// (router.reload behält die übrige Query-String – inkl. search – bei.)
+const changeFilter = (value) => {
+    if (value === props.filter) {
+        return;
     }
-    if (activeFilter.value === 'ack') {
-        return props.changes.filter(c => c.acknowledged);
+    router.reload({
+        data: { filter: value, page: 1 },
+        preserveScroll: true,
+    });
+};
+
+// Suche: lokaler Eingabewert, serverseitig (debounced) über die gesamte Datenmenge.
+const search = ref(props.search ?? '');
+
+let searchTimer = null;
+watch(search, (value) => {
+    if (searchTimer) {
+        window.clearTimeout(searchTimer);
     }
-    return props.changes;
+    searchTimer = window.setTimeout(() => {
+        router.reload({
+            // Bei neuer Suche zurück auf Seite 1; Filter bleibt über die URL erhalten.
+            data: { search: value.trim(), page: 1 },
+            preserveScroll: true,
+            // Komponente erhalten, damit der Fokus im Suchfeld beim Tippen bleibt.
+            preserveState: true,
+        });
+    }, 300);
 });
+
+// Seitennavigation über die Seitennummer (relativ), NICHT über die absolute
+// Paginator-URL. Hinter einem Reverse-Proxy mit extern terminiertem TLS erzeugt Laravel
+// sonst http://-URLs; ein XHR von der https-Seite dorthin wird als Mixed Content
+// blockiert ("Network Error"). router.reload nutzt die aktuelle (relative) URL und
+// behält Filter & Suche im Query-String bei.
+const goToPage = (page) => {
+    if (! page || page < 1 || page > (props.changes?.last_page ?? 1)) {
+        return;
+    }
+    router.reload({
+        data: { page },
+        preserveScroll: true,
+        preserveState: true,
+    });
+};
 
 const describeChange = (change) => {
     const fieldChanges = change.field_changes || {};

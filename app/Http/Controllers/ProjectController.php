@@ -86,6 +86,8 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\DTOs\ProjectSearchDTO;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Events\UpdateBudget;
+use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
+use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -3902,27 +3904,15 @@ class ProjectController extends Controller
 
     public function destroy(
         Project $project,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        CommentService $commentService,
-        ChecklistService $checklistService,
-        ProjectFileService $projectFileService,
-        EventService $eventService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        ProjectTabService $projectTabService,
-        TaskService $taskService,
         Request $request
     ): RedirectResponse {
+        // Single, consolidated notification instead of one per deleted event.
+        $eventCount = $project->events()->count();
+
         foreach ($project->users()->get() as $user) {
-            $notificationTitle = __('notification.project.delete', [
-                'project' => $project->name
+            $notificationTitle = __('notification.project.delete_with_events', [
+                'project' => $project->name,
+                'count' => $eventCount,
             ], $user->language);
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
@@ -3940,25 +3930,14 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->projectService->softDelete(
-            $project,
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService,
-            $changeService,
-            $commentService,
-            $checklistService,
-            $projectFileService,
-            $eventService,
-            $eventCommentService,
-            $timelineService,
-            $shiftService,
-            $subEventService,
-            $notificationService,
-            $projectTabService,
-            $taskService
-        );
+        // Soft-delete the project row itself synchronously so it disappears from the overview
+        // immediately on reload. The heavy cascade (events, shifts, sub-events, timelines,
+        // budget table, ...) is offloaded to a queued job so the request still returns fast –
+        // projects with very many events (e.g. 10k) would otherwise exceed the PHP/HTTP
+        // timeout. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
+        $project->delete();
+
+        SoftDeleteProjectJob::dispatch($project->id, Auth::id());
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),
@@ -3967,90 +3946,23 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function forceDelete(
-        int $id,
-        CommentService $commentService,
-        ChecklistService $checklistService,
-        EventService $eventService,
-        ProjectFileService $projectFileService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        TaskService $taskService
-    ): RedirectResponse {
-
-        $events = Event::onlyTrashed()->where('project_id', $id)->get();
-
-        /** @var Project $project */
-        $project = Project::onlyTrashed()->findOrFail($id);
-
-        $eventService->forceDeleteAll(
-            $events,
-            $eventCommentService,
-            $timelineService,
-            $shiftService,
-            $subEventService,
-            $notificationService
-        );
-
-        if ($project) {
-            $this->projectService->forceDelete(
-                $project,
-                $commentService,
-                $checklistService,
-                $eventService,
-                $projectFileService,
-                $eventCommentService,
-                $timelineService,
-                $shiftService,
-                $subEventService,
-                $notificationService,
-                $taskService
-            );
-        }
+    public function forceDelete(int $id): RedirectResponse
+    {
+        // Offloaded to a queued job: the cascade (events, shifts, sub-events, timelines,
+        // budget table, ...) would exceed the PHP/HTTP timeout for projects with very many
+        // events. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
+        ForceDeleteProjectJob::dispatch($id, Auth::id());
 
         return Redirect::route('projects.trashed');
     }
 
-    public function forceDeleteAll(
-        CommentService $commentService,
-        ChecklistService $checklistService,
-        EventService $eventService,
-        ProjectFileService $projectFileService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        TaskService $taskService
-    ): RedirectResponse {
-        $projects = Project::onlyTrashed()->get();
-        foreach ($projects as $project) {
-            $events = Event::onlyTrashed()->where('project_id', $project->id)->get();
-            $eventService->forceDeleteAll(
-                $events,
-                $eventCommentService,
-                $timelineService,
-                $shiftService,
-                $subEventService,
-                $notificationService
-            );
-            $this->projectService->forceDelete(
-                $project,
-                $commentService,
-                $checklistService,
-                $eventService,
-                $projectFileService,
-                $eventCommentService,
-                $timelineService,
-                $shiftService,
-                $subEventService,
-                $notificationService,
-                $taskService
-            );
-        }
+    public function forceDeleteAll(): RedirectResponse
+    {
+        // One bounded job per trashed project instead of force-deleting everything inline.
+        Project::onlyTrashed()
+            ->pluck('id')
+            ->each(fn (int $projectId) => ForceDeleteProjectJob::dispatch($projectId, Auth::id()));
+
         return Redirect::route('projects.trashed');
     }
 
@@ -4121,10 +4033,20 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedProjects = Project::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Project $project) => (new ProjectIndexResource($project))->resolve());
+
         return inertia('Trash/Projects', [
-            'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
+            'trashed_projects' => $trashedProjects
         ]);
     }
 

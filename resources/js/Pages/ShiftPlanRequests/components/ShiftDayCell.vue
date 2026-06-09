@@ -11,14 +11,31 @@
             <div v-for="entry in entries"
                  :key="entry.unique_key"
                  class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] transition relative"
-                 :class="entry.is_individual_time ? 'bg-blue-50 border border-blue-200' : [entryCardClass(entry), 'cursor-pointer']"
-                 @click="!entry.is_individual_time && $emit('open-history', entry.shift_id)">
+                 :class="entry.is_removed_ghost
+                     ? 'border border-dashed border-red-300 bg-red-50/40'
+                     : (entry.is_individual_time ? 'bg-blue-50 border border-blue-200' : [entryCardClass(entry), 'cursor-pointer'])"
+                 @click="(!entry.is_individual_time && !entry.is_removed_ghost) && $emit('open-history', entry.shift_id)">
+
+                <!-- Removed / Deleted Ghost Entry -->
+                <template v-if="entry.is_removed_ghost">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-red-400 line-through">{{ entry.start_time }} – {{ entry.end_time }}</span>
+                        <IconTrash class="h-3 w-3 text-red-400 shrink-0" />
+                    </div>
+                    <span class="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-600">
+                        {{ entry.reason === 'shift_deleted' ? $t('Subsequently deleted') : $t('Removed from shift') }}
+                    </span>
+                    <div v-if="entry.qualification" class="text-[10px] text-red-400/80 line-through truncate">{{ entry.qualification }}</div>
+                </template>
 
                 <!-- Shift Entry -->
-                <template v-if="!entry.is_individual_time">
+                <template v-else-if="!entry.is_individual_time">
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-medium text-gray-900">{{ entry.start_time }} – {{ entry.end_time }}</span>
                         <div class="flex items-center gap-1">
+                            <span v-if="entry.is_subsequently_added" class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                                {{ $t('Subsequently added') }}
+                            </span>
                             <span v-if="entry.is_committed" class="inline-flex items-center gap-1 text-[10px] text-gray-500">
                                 <IconLock class="h-3 w-3" />
                                 {{ $t('Committed') }}
@@ -62,7 +79,7 @@
     </div>
 </template>
 <script setup>
-import { IconAlertTriangle, IconClock, IconLock } from '@tabler/icons-vue';
+import { IconAlertTriangle, IconClock, IconLock, IconTrash } from '@tabler/icons-vue';
 import {computed} from 'vue';
 const props = defineProps({
     entries: { type: Array, default: () => [] },

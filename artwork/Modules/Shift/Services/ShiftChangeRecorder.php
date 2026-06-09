@@ -24,6 +24,32 @@ use Illuminate\Support\Facades\Auth;
 class ShiftChangeRecorder
 {
     /**
+     * Wenn true, werden KEINE Änderungs-Einträge (ShiftPlanRequestChange / CommittedShiftChange)
+     * geschrieben. Wird z.B. beim Zurücksetzen einer Änderung (revertChange) gesetzt, damit das
+     * Rückgängigmachen selbst nicht erneut als Änderung im Verlauf auftaucht.
+     */
+    protected static bool $suppressed = false;
+
+    /**
+     * Führt $callback aus, ohne dass dabei ausgelöste Model-Events Änderungs-Einträge erzeugen.
+     *
+     * @template T
+     * @param callable():T $callback
+     * @return T
+     */
+    public static function withoutRecording(callable $callback): mixed
+    {
+        $previous = self::$suppressed;
+        self::$suppressed = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$suppressed = $previous;
+        }
+    }
+
+    /**
      * Haupteinstiegspunkt: von Observern aus aufrufen.
      *
      * @param \Illuminate\Database\Eloquent\Model $model
@@ -31,6 +57,10 @@ class ShiftChangeRecorder
      */
     public function record(Model $model, string $eventName): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         if (! in_array($eventName, ['created', 'updated', 'deleted'], true)) {
             return;
         }
@@ -308,6 +338,10 @@ class ShiftChangeRecorder
 
     public function recordWithOriginal(Model $model, array $original, string $eventName = 'updated'): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         if ($eventName !== 'updated') {
             return;
         }
@@ -340,6 +374,10 @@ class ShiftChangeRecorder
 
     public function recordGlobalQualificationDiff(Shift $shift, array $before, array $after): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         $changes = [];
 
         $allIds = array_unique(array_merge(array_keys($before), array_keys($after)));

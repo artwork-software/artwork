@@ -26,6 +26,8 @@ class ModuleSettings extends Settings
 
     public bool $planning_calendar;
 
+    public bool $business_intelligence;
+
     public static function group(): string
     {
         return 'module_settings';

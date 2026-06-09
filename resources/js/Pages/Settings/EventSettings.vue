@@ -4,7 +4,7 @@
            <EventSettingHeader>
                <template #actions>
                    <button class="ui-button-add" @click="openAddEventTypeModal">
-                       <component :is="IconPlus" stroke-width="1" class="size-5" />
+                       <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                        {{ $t('New Event Type') }}
                    </button>
                </template>
@@ -104,7 +104,7 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BiEventTypeTagManager from "@/Pages/Settings/EventType/Components/BiEventTypeTagManager.vue";
 export default {
@@ -212,7 +212,7 @@ export default {
     methods: {
         IconTrash,
         IconEdit,
-        IconPlus,
+        IconCirclePlus,
         addColor(color) {
             this.eventTypeForm.hex_code = color;
         },

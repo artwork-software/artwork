@@ -3,11 +3,14 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Contracts\ShiftRuleCheckInterface;
+use Artwork\Modules\Shift\RuleChecks\HalfDayOffConflictCheck;
+use Artwork\Modules\Shift\RuleChecks\HalfDayOffOnSpecialDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxConsecutiveWorkingDaysCheck;
 use Artwork\Modules\Shift\RuleChecks\MaxWorkingHoursOnDayCheck;
 use Artwork\Modules\Shift\RuleChecks\MinDaysBeforeCommitCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeHolidayCheck;
 use Artwork\Modules\Shift\RuleChecks\RestTimeBeforeWorkdayCheck;
+use Artwork\Modules\Shift\RuleChecks\RestTimeBetweenShiftGroupsCheck;
 use Artwork\Modules\Shift\RuleChecks\WeeklyMaxHoursCheck;
 use InvalidArgumentException;
 
@@ -29,6 +32,9 @@ class ShiftRuleCheckFactory
         $this->checks['maxWorkingHoursOnWeek'] = $this->checks['weeklyMaxHours'];
         $this->register(new RestTimeBeforeWorkdayCheck());
         $this->register(new RestTimeBeforeHolidayCheck());
+        $this->register(new RestTimeBetweenShiftGroupsCheck());
+        $this->register(new HalfDayOffConflictCheck());
+        $this->register(new HalfDayOffOnSpecialDayCheck());
         $this->register(new MinDaysBeforeCommitCheck());
     }
 

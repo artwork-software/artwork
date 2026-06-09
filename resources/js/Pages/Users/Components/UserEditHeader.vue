@@ -75,6 +75,7 @@ export default {
                 {name: 'Employment contract', href: route('user.edit.contract', {user: this.user_to_edit.id}), current: route().current('user.edit.contract'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
                 {name: 'Work Times', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconCalendarTime'},
                 {name: 'Substitute days off', href: route('user.edit.compensationDays', {user: this.user_to_edit.id}), current: route().current('user.edit.compensationDays'), permission: this.$can('can plan shifts') || this.hasAdminRole(), icon: 'IconCalendarOff'},
+                {name: 'Overtime', href: route('user.edit.overtime', {user: this.user_to_edit.id}), current: route().current('user.edit.overtime'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClock'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

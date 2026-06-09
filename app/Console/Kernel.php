@@ -5,7 +5,6 @@ namespace App\Console;
 use Artwork\Core\Console\Commands\CalculateDailyWorkingHoursOfUsers;
 use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
-use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Core\Console\Commands\NotifyCraftIfShiftDeadlineReached;
@@ -41,7 +40,6 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(DeleteOldNotificationsCommand::class)->dailyAt('07:00');
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');

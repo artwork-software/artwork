@@ -4033,10 +4033,20 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedProjects = Project::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Project $project) => (new ProjectIndexResource($project))->resolve());
+
         return inertia('Trash/Projects', [
-            'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
+            'trashed_projects' => $trashedProjects
         ]);
     }
 

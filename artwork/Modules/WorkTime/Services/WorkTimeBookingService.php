@@ -92,6 +92,9 @@ class WorkTimeBookingService
             }
 
             $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+            // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
+            app(OvertimeService::class)->recomputeForUser($user);
         }
     }
 

@@ -62,6 +62,27 @@ class Holiday extends Model
     }
 
     /**
+     * Checks whether the given date is marked as a "Sondertag" (treatAsSpecialDay = true).
+     * Considers one-time holidays (exact date) and yearly recurring holidays (month-day match).
+     */
+    public static function isSpecialDay(Carbon|string $date): bool
+    {
+        $day = $date instanceof Carbon ? $date : Carbon::parse($date);
+        $formattedDate = $day->toDateString();
+        $monthDay = $day->format('m-d');
+
+        return self::where(function ($query) use ($formattedDate, $monthDay): void {
+            $query->where(function ($q) use ($formattedDate): void {
+                $q->where('yearly', false)
+                    ->whereDate('date', $formattedDate);
+            })->orWhere(function ($q) use ($monthDay): void {
+                $q->where('yearly', true)
+                    ->whereRaw("DATE_FORMAT(date, '%m-%d') = ?", [$monthDay]);
+            });
+        })->where('treatAsSpecialDay', true)->exists();
+    }
+
+    /**
      * @return string[]
      */
     public function getCastedDateAttribute(): array

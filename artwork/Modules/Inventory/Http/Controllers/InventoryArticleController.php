@@ -71,10 +71,26 @@ class InventoryArticleController extends Controller
         //
     }
 
-    public function indexTrash()
+    public function indexTrash(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedArticles = InventoryArticle::onlyTrashed()
+            ->with([
+                'properties',
+                'category',
+                'subCategory',
+                'images' => fn ($query) => $query->withTrashed(),
+                'detailedArticleQuantities' => fn ($query) => $query->withTrashed(),
+            ])
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Trash/InventoryArticles', [
-            'trashedArticles' => $this->inventoryArticleService->getAllTrashed()
+            'trashedArticles' => $trashedArticles
         ]);
     }
 

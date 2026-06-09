@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -1251,7 +1252,11 @@ class ShiftPlanRequestController extends Controller
             ]);
         }
 
-        return DB::transaction(function () use ($shiftPlanRequest, $shiftChange, $shift, $fieldChanges, $user) {
+        // Das Zurücksetzen darf selbst KEINE neuen Änderungs-Einträge erzeugen: Sonst würde der
+        // erneute $shift->save() (bzw. die Qualifikations-Saves) über die Observer wieder einen
+        // ShiftPlanRequestChange/CommittedShiftChange anlegen und die "abgelehnte" Änderung bliebe
+        // als frischer Revert-Eintrag im Verlauf stehen.
+        return ShiftChangeRecorder::withoutRecording(fn () => DB::transaction(function () use ($shiftPlanRequest, $shiftChange, $shift, $fieldChanges, $user) {
             $rollbackFieldChanges = [];
 
             // Originalzustand der Schicht für Activity-Log
@@ -1451,19 +1456,22 @@ class ShiftPlanRequestController extends Controller
             // Schicht nach allen Anpassungen speichern
             $shift->save();
 
-            // Neuen Change-Eintrag als "Rollback" loggen (damit History vollständig bleibt)
-            if (! empty($rollbackFieldChanges) && $shift->is_committed) {
-                CommittedShiftChange::create([
-                    'subject_type'      => Shift::class,
-                    'subject_id'        => $shift->id,
-                    'shift_id'           => $shift->id,
-                    'craft_id'           => $shift->craft_id,
-                    'change_type'        => 'revert',
-                    'field_changes'      => $rollbackFieldChanges,
-                    'affected_user_id'   => $shiftChange->affected_user_id ?? null,
-                    'changed_by_user_id' => $user->id,
-                    'changed_at'         => now(),
-                ]);
+            // Den im selben record()-Aufruf angelegten Post-commit-Eintrag DERSELBEN Bearbeitung
+            // entfernen. Bei einer Schicht, die zugleich in_workflow UND is_committed ist, legt
+            // ShiftChangeRecorder::record() für eine Bearbeitung sowohl einen ShiftPlanRequestChange
+            // (Workflow) als auch einen CommittedShiftChange (Post-commit) mit identischem changed_at
+            // an. Beim Ablehnen muss daher auch der Post-commit-Eintrag weg, sonst bleibt die
+            // abgelehnte Änderung im Änderungsverlauf (Post-commit-Bereich) sichtbar.
+            //
+            // Bewusst KEIN neuer "revert"-CommittedShiftChange mehr: Die Ablehnung wird unten als
+            // Activity protokolliert (Audit-Trail), soll aber keinen weiteren sichtbaren
+            // Änderungseintrag erzeugen.
+            if ($shiftChange->changed_at) {
+                CommittedShiftChange::query()
+                    ->where('shift_id', $shift->id)
+                    ->whereNull('acknowledged_at')
+                    ->where('changed_at', $shiftChange->changed_at)
+                    ->delete();
             }
 
             // Activity-Log – nur wirklich geänderte Felder loggen
@@ -1486,6 +1494,6 @@ class ShiftPlanRequestController extends Controller
             $shiftChange->delete();
 
             return back()->with('success', 'Shift reverted');
-        });
+        }));
     }
 }

@@ -64,7 +64,13 @@
                             {{ property.name }}
                         </div>
                         <div>
-                            {{ formatProperty(property) }}
+                            <a v-if="property.type === 'file' && property.pivot?.value"
+                               :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                               class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
+                                {{ fileName(property.pivot.value) }}
+                            </a>
+                            <span v-else-if="property.type === 'file'">-</span>
+                            <template v-else>{{ formatProperty(property) }}</template>
                         </div>
                     </div>
                 </div>
@@ -172,6 +178,8 @@ const getMainImageInImage = computed(() => {
         image: usePage().props.big_logo,
     }
 })
+
+const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
 
 const formatProperty = (property) => {
     if (property.type === 'room') {

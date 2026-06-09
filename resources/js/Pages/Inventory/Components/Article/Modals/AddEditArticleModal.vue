@@ -402,26 +402,11 @@
                                             :placeholder="property.is_required ? $t('Year*') : $t('Year')"
                                         />
 
-                                        <div v-if="property.type === 'file'">
-                                            <input type="file" @input="property.value = $event.target.files"
-                                                   class="sr-only"/>
-                                            <div class="flex items-center gap-x-2">
-                                                <div class="flex items-center gap-x-2">
-                                                    <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400"
-                                                               aria-hidden="true"/>
-                                                    <div class="flex">
-                                                        <div class="truncate font-medium">{{
-                                                                property.value ? property.value[0].name : $t('Select a file')
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button"
-                                                        class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                        @click="property.value = null">
-                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                                </button>
-                                            </div>
+                                        <div v-if="property.type === 'file'" class="px-3 py-1.5">
+                                            <PropertyFileCell
+                                                v-model="property.value"
+                                                :required="property.is_required"
+                                            />
                                         </div>
 
 
@@ -539,22 +524,11 @@
 
                                 <!-- file -->
                                 <div v-else-if="prop.type === 'file'">
-                                    <input type="file" class="sr-only" @input="setAcrossValue(prop.id, $event.target.files)" />
-                                    <div class="flex items-center gap-x-2">
-                                        <div class="flex items-center gap-x-2">
-                                            <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
-                                            <div class="flex">
-                                                <div class="truncate font-medium">
-                                                    {{ acrossValues[prop.id]?.[0]?.name ?? $t('Select a file') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="button"
-                                                class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                @click="setAcrossValue(prop.id, null)">
-                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                        </button>
-                                    </div>
+                                    <PropertyFileCell
+                                        :model-value="acrossValues[prop.id]"
+                                        :required="prop.is_required"
+                                        @update:model-value="val => setAcrossValue(prop.id, val)"
+                                    />
                                 </div>
 
                                 <!-- checkbox -->
@@ -1119,22 +1093,11 @@
                                     />
 
                                     <div v-else-if="property.type === 'file'">
-                                        <input type="file" @input="property.value = $event.target.files" class="sr-only"/>
-                                        <div class="flex items-center gap-x-2">
-                                            <div class="flex items-center gap-x-2">
-                                                <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
-                                                <div class="flex">
-                                                    <div class="truncate font-medium">
-                                                        {{ property.value ? property.value[0].name : $t('Select a file') }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button"
-                                                    class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                    @click="property.value = null">
-                                                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                            </button>
-                                        </div>
+                                        <PropertyFileCell
+                                            v-model="property.value"
+                                            :required="property.is_required"
+                                            @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
+                                        />
                                     </div>
 
                                     <div v-else-if="property.type === 'checkbox'" class="px-3 items-center flex">
@@ -1220,6 +1183,7 @@ import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryStylelessCombobox
     from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryStylelessCombobox.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
+import PropertyFileCell from "@/Pages/Inventory/Components/Article/PropertyFileCell.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import {

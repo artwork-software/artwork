@@ -399,6 +399,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/compensation-days', [UserController::class, 'editUserCompensationDays'])
         ->can('can plan shifts')
         ->name('user.edit.compensationDays');
+    Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
+        ->can('can manage workers')
+        ->name('user.edit.overtime');
+    Route::post('/overtime/{userOvertime}/book-out', [UserController::class, 'bookOutOvertime'])
+        ->can('can manage workers')
+        ->name('overtime.book-out');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
     // user.update.open.crafts

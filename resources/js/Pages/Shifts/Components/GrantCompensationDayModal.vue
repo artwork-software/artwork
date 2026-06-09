@@ -40,6 +40,12 @@
                                     >
                                         {{ dayOff.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                                     </span>
+                                    <span
+                                        v-if="dayOff.half_day_period === 'morning' || dayOff.half_day_period === 'afternoon'"
+                                        class="inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-600"
+                                    >
+                                        {{ dayOff.half_day_period === 'morning' ? $t('Morning') : $t('Afternoon') }}
+                                    </span>
                                     <span class="text-xs font-medium text-zinc-700">
                                         {{ dayOff.violation?.shift_rule?.name || '-' }}
                                     </span>
@@ -74,14 +80,77 @@
                         />
                     </div>
 
+                    <!-- Half day period selection (only for half compensation days) -->
+                    <div
+                        v-if="selectedDayOff && isHalfDay(selectedDayOff)"
+                        class="space-y-2 rounded-xl border border-zinc-200 px-4 py-3"
+                    >
+                        <h4 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                            {{ $t('Time of day') }}
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <label
+                                v-for="option in halfDayPeriodOptions"
+                                :key="option.value"
+                                class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs cursor-pointer"
+                                :class="halfDayPeriod === option.value
+                                    ? 'border-artwork-buttons-hover bg-blue-50/50 text-zinc-800'
+                                    : 'border-zinc-200 text-zinc-600 hover:border-zinc-300'"
+                            >
+                                <input
+                                    type="radio"
+                                    class="hidden"
+                                    name="half_day_period"
+                                    :value="option.value"
+                                    v-model="halfDayPeriod"
+                                />
+                                {{ $t(option.label) }}
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-zinc-400">
+                            {{ $t('"Both" uses a second open half day off (morning + afternoon = whole day off).') }}
+                        </p>
+                    </div>
+
                     <WeekSchedulePreview
                         v-if="grantedDate"
                         :user-id="userId"
                         :selected-date="grantedDate"
                     />
 
+                    <!-- Special day (Sondertag) rule warning -->
+                    <div v-if="specialDayWarning" class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
+                            <span class="text-xs font-semibold text-amber-800">
+                                {{ $t('Rule violation') }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-amber-700 mb-1">
+                            {{ $t('If you assign this now, it violates rule') }}: <span class="font-semibold">{{ specialDayWarning.name }}</span>
+                        </p>
+                        <p v-if="specialDayWarning.description" class="text-[11px] text-amber-600 mb-3">
+                            {{ specialDayWarning.description }}
+                        </p>
+                        <div class="flex gap-2">
+                            <BaseUIButton
+                                :label="$t('Assign anyway')"
+                                is-delete-button
+                                is-small
+                                :disabled="granting"
+                                @click="proceedAfterSpecialDay"
+                            />
+                            <BaseUIButton
+                                :label="$t('Cancel')"
+                                is-cancel-button
+                                is-small
+                                @click="specialDayWarning = null"
+                            />
+                        </div>
+                    </div>
+
                     <!-- Shift warning -->
-                    <div v-if="shiftWarning" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <div v-if="shiftWarning && !specialDayWarning" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
                             <span class="text-xs font-semibold text-amber-800">
@@ -117,10 +186,10 @@
                     @click="$emit('close')"
                 />
                 <BaseUIButton
-                    v-if="selectedDayOff && grantedDate && !shiftWarning"
+                    v-if="selectedDayOff && grantedDate && !shiftWarning && !specialDayWarning"
                     :label="$t('Grant compensation day')"
                     is-add-button
-                    :disabled="granting"
+                    :disabled="granting || (isHalfDay(selectedDayOff) && !halfDayPeriod)"
                     @click="checkAndGrant"
                 />
             </div>
@@ -150,7 +219,20 @@ const openDays = ref([]);
 const selectedDayOff = ref(null);
 const grantedDate = ref(props.preselectedDate || '');
 const shiftWarning = ref(null);
+const specialDayWarning = ref(null);
+const lastCheck = ref(null);
 const granting = ref(false);
+const halfDayPeriod = ref(null);
+
+const halfDayPeriodOptions = [
+    { value: 'morning', label: 'Morning' },
+    { value: 'afternoon', label: 'Afternoon' },
+    { value: 'both', label: 'Both' },
+];
+
+function isHalfDay(dayOff) {
+    return dayOff && parseFloat(dayOff.value) < 1.0;
+}
 
 onMounted(async () => {
     try {
@@ -163,9 +245,16 @@ onMounted(async () => {
     }
 });
 
-// Reset shift warning when date or selected day changes
+// Reset warnings when date or selected day changes
 watch([() => grantedDate.value, () => selectedDayOff.value], () => {
     shiftWarning.value = null;
+    specialDayWarning.value = null;
+    lastCheck.value = null;
+});
+
+// Reset period when switching to another compensation day
+watch(() => selectedDayOff.value, () => {
+    halfDayPeriod.value = null;
 });
 
 function formatDate(date) {
@@ -188,6 +277,15 @@ async function checkAndGrant() {
             { granted_date: grantedDate.value }
         );
 
+        lastCheck.value = response.data;
+
+        // Special day rule warning takes precedence; requires explicit "Assign anyway".
+        if (response.data.special_day_rule) {
+            specialDayWarning.value = response.data.special_day_rule;
+            granting.value = false;
+            return;
+        }
+
         if (response.data.has_shifts) {
             shiftWarning.value = response.data;
             granting.value = false;
@@ -200,8 +298,19 @@ async function checkAndGrant() {
     }
 }
 
+// User confirmed the special-day rule violation -> continue, still honoring the shift conflict flow.
+function proceedAfterSpecialDay() {
+    specialDayWarning.value = null;
+    if (lastCheck.value?.has_shifts) {
+        shiftWarning.value = lastCheck.value;
+        return;
+    }
+    grantDay(false);
+}
+
 async function grantDay(removeShifts) {
     if (!selectedDayOff.value || !grantedDate.value) return;
+    if (isHalfDay(selectedDayOff.value) && !halfDayPeriod.value) return;
 
     granting.value = true;
     router.post(
@@ -209,6 +318,7 @@ async function grantDay(removeShifts) {
         {
             granted_date: grantedDate.value,
             remove_shifts: removeShifts,
+            half_day_period: isHalfDay(selectedDayOff.value) ? halfDayPeriod.value : null,
         },
         {
             preserveScroll: true,

@@ -7,6 +7,7 @@ use Artwork\Modules\User\Http\Requests\StoreUserContractAssignRequest;
 use Artwork\Modules\User\Http\Requests\UpdateUserContractAssignRequest;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContractAssign;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -37,7 +38,7 @@ class UserContractAssignController extends Controller
         $data = $request->safe()->except(['user_id']);
 
         try {
-            DB::transaction(function () use ($user, $data): void {
+            DB::transaction(function () use ($request, $user, $data): void {
                 // Extract work time pattern related fields
                 $workTimeFields = [
                     'id',
@@ -56,6 +57,15 @@ class UserContractAssignController extends Controller
                 // Don't filter work time data - we need empty strings too
                 $workTimeData = collect($data)->only($workTimeFields)->all();
                 $contractData = collect($data)->except($workTimeFields)->filter()->all();
+
+                // filter() above drops false/0/null; persist the overtime toggle/period explicitly
+                // so that disabling the rule (false) and clearing the period actually save.
+                if ($request->has('overtime_rule_active')) {
+                    $contractData['overtime_rule_active'] = $request->boolean('overtime_rule_active');
+                }
+                if ($request->exists('overtime_compensation_period')) {
+                    $contractData['overtime_compensation_period'] = $request->input('overtime_compensation_period');
+                }
 
                 // Update or create user contract if there's contract data
                 if (!empty($contractData)) {
@@ -93,6 +103,11 @@ class UserContractAssignController extends Controller
                     }
                 }
             });
+
+            // If the overtime rule settings changed, recompute so deadlines/status reflect the new period.
+            if ($request->has('overtime_rule_active') || $request->exists('overtime_compensation_period')) {
+                app(OvertimeService::class)->recomputeForUser($user);
+            }
 
             return back()->with('success', __('User contract assigned successfully.'));
         } catch (\Throwable $e) {

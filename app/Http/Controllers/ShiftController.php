@@ -41,6 +41,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Services\ShiftRuleService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
@@ -214,9 +215,29 @@ class ShiftController extends Controller
 
         $this->shiftService->save($shift);
 
-
+        // Re-validate so changed times/break/craft immediately surface (or clear) rule conflicts.
+        $this->revalidateShiftRules(
+            $shift->users()->get(),
+            Carbon::parse($shift->start_date),
+            Carbon::parse($shift->end_date)
+        );
 
         return $this->redirector->route('shifts.plan');
+    }
+
+    /**
+     * Re-run the shift-rule checks for the given users over the given date range so that
+     * violations (e.g. HFT/shift conflicts, rest time) surface immediately after a mutation.
+     */
+    private function revalidateShiftRules(iterable $users, Carbon $start, Carbon $end): void
+    {
+        $service = app(ShiftRuleService::class);
+
+        foreach ($users as $user) {
+            if ($user instanceof User) {
+                $service->validateRulesForUser($user, $start->copy(), $end->copy());
+            }
+        }
     }
 
     public function updateShift(
@@ -783,11 +804,18 @@ class ShiftController extends Controller
                 $conflict->delete();
             });
         }
+        // Capture affected users + range before deletion so we can re-validate afterwards.
+        $affectedUsers = $shift->users()->get();
+        $shiftStart = Carbon::parse($shift->start_date);
+        $shiftEnd = Carbon::parse($shift->end_date);
+
         broadcast(new DestroyShift(
             $shift,
             $shift->event_id ? $shift->event->room_id : $shift->room_id
         ));
         $this->shiftService->forceDelete($shift);
+
+        $this->revalidateShiftRules($affectedUsers, $shiftStart, $shiftEnd);
     }
 
     public function bulkDelete(Request $request): void
@@ -1018,6 +1046,18 @@ class ShiftController extends Controller
             $request->get('seriesShiftData')
         );
 
+        // Immediately re-validate shift rules for users so HFT/shift conflicts surface right after assignment.
+        if ($request->get('userType') === 0) {
+            $assignedUser = User::find($request->get('userId'));
+            if ($assignedUser) {
+                $this->revalidateShiftRules(
+                    [$assignedUser],
+                    Carbon::parse($shift->start_date),
+                    Carbon::parse($shift->end_date)
+                );
+            }
+        }
+
         broadcast(new AssignUserToShift(
             $shift,
             $shift->event_id ? $shift->event->room_id : $shift->room_id,
@@ -1067,6 +1107,11 @@ class ShiftController extends Controller
             return $isShiftTab ? $this->redirector->back() : null;
         }
 
+        // Capture the removed user (user-type only) before removal so we can re-validate afterwards.
+        $removedUserId = $userType === 0
+            ? \Artwork\Modules\Shift\Models\ShiftUser::where('id', $usersPivotId)->value('user_id')
+            : null;
+
         if ($serviceToUse instanceof ShiftServiceProviderService) {
             $serviceToUse->removeFromShift(
                 $usersPivotId,
@@ -1102,6 +1147,17 @@ class ShiftController extends Controller
             $userType
         ));
 
+        // Re-validate the removed user so now-obsolete conflicts can be re-evaluated for the shift's range.
+        if ($removedUserId) {
+            $removedUser = User::find($removedUserId);
+            if ($removedUser) {
+                $this->revalidateShiftRules(
+                    [$removedUser],
+                    Carbon::parse($shift->start_date),
+                    Carbon::parse($shift->end_date)
+                );
+            }
+        }
 
         return $isShiftTab ? $this->redirector->back() : null;
     }

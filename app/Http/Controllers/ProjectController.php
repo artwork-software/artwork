@@ -4636,6 +4636,32 @@ class ProjectController extends Controller
         return $projects;
     }
 
+    /**
+     * Liefert aus einer Liste von Projekt-IDs nur die zurück, die noch (nicht gelöscht)
+     * existieren. Wird von der "Zuletzt geöffnete Projekte"-Komponente genutzt, deren
+     * Liste clientseitig in localStorage liegt und sonst auf gelöschte Projekte verweisen
+     * würde.
+     *
+     * @return array<int, int>
+     */
+    public function filterExistingProjectIds(Request $request): array
+    {
+        $ids = collect($request->input('ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Project::whereIn('id', $ids)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
         $this->timelineService->updateTimeline($timeline, collect($request->all()));

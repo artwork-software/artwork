@@ -11,6 +11,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\GlobalQualification;
@@ -204,13 +205,30 @@ class ShiftService
             'break_minutes' => $data['break_minutes'],
             'description' => $data['description'],
             'room_id' => $data['room_id'],
-            'project_id' => $data['project_id'],
-            'shift_group_id' => $data['shift_group_id'],
+            'project_id' => $this->resolveExistingProjectId($data['project_id'] ?? null),
+            'shift_group_id' => $data['shift_group_id'] ?? null,
         ]);
 
         $shift->craft()->associate($craftId);
 
         return $this->save($shift);
+    }
+
+    /**
+     * Das Frontend kann eine veraltete project_id liefern (z.B. wenn das Projekt
+     * zwischenzeitlich gelöscht wurde oder der Suchindex noch nicht aktualisiert ist).
+     * Eine nicht (mehr) existierende project_id würde die FK-Constraint
+     * shifts_project_id_foreign verletzen und den Request mit einem 500 abbrechen.
+     * Da der FK ON DELETE SET NULL ist, ist null ein gültiger Zustand – wir
+     * normalisieren eine unbekannte project_id daher auf null.
+     */
+    private function resolveExistingProjectId(int|string|null $projectId): ?int
+    {
+        if ($projectId === null || $projectId === '') {
+            return null;
+        }
+
+        return Project::whereKey($projectId)->exists() ? (int) $projectId : null;
     }
 
     public function createShiftWithoutEvent(int $craftId, array $data): Shift|Model

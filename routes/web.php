@@ -2693,6 +2693,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
         Route::post('/search/workers', [WorkerController::class, 'scoutWorkerSearch'])->name('worker.scoutSearch');
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
+        Route::post('/projects/existing', [ProjectController::class, 'filterExistingProjectIds'])
+            ->name('project.filterExistingIds');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

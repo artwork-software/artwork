@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\Shift\Models;
+namespace Artwork\Modules\WorkTime\Models;
 
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $minutes
- * @property string $payout_date
+ * @property \Illuminate\Support\Carbon $payout_date
  * @property int|null $created_by
  * @property string|null $comment
  */

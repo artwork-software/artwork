@@ -1,25 +1,35 @@
 <template>
     <div class="space-y-5">
+        <!-- Regel nicht aktiv -->
+        <div v-if="!local.rule_active"
+             class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {{ $t('The overtime rule is not active for this user. Activate it in the employment contract tab.') }}
+        </div>
+
         <!-- Kennzahlen -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border border-gray-100 p-3">
-                <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Current overtime balance') }}</p>
-                <p class="mt-1 text-2xl font-semibold">{{ local.balance_formatted }}</p>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-lg border border-zinc-200 px-4 py-3">
+                <p class="text-[11px] uppercase tracking-wide text-zinc-400">{{ $t('Open') }}</p>
+                <p class="mt-1 text-xl font-semibold text-zinc-800">{{ local.open_formatted }}</p>
             </div>
-            <div class="rounded-lg border p-3"
-                 :class="local.payable_minutes > 0 ? 'border-red-200 bg-red-50/40' : 'border-gray-100'">
-                <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Payable (deadline exceeded)') }}</p>
-                <p class="mt-1 text-2xl font-semibold" :class="local.payable_minutes > 0 ? 'text-red-600' : ''">
+            <div class="rounded-lg border px-4 py-3"
+                 :class="local.payable_minutes > 0 ? 'border-red-200 bg-red-50/40' : 'border-zinc-200'">
+                <p class="text-[11px] uppercase tracking-wide"
+                   :class="local.payable_minutes > 0 ? 'text-red-500' : 'text-zinc-400'">
+                    {{ $t('Overtime to be paid out') }}
+                </p>
+                <p class="mt-1 text-xl font-semibold" :class="local.payable_minutes > 0 ? 'text-red-600' : 'text-zinc-800'">
                     {{ local.payable_formatted }}
                 </p>
-                <p v-if="!local.payout_active" class="text-[11px] text-gray-400 mt-0.5">
-                    {{ $t('No payout deadline configured in the contract.') }}
-                </p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 px-4 py-3">
+                <p class="text-[11px] uppercase tracking-wide text-zinc-400">{{ $t('Paid out') }}</p>
+                <p class="mt-1 text-xl font-semibold text-zinc-800">{{ local.paid_out_formatted }}</p>
             </div>
         </div>
 
         <!-- Manuelle Auszahlung -->
-        <div v-if="local.can_pay_out" class="rounded-lg border border-gray-200 p-3">
+        <div v-if="local.can_pay_out && local.payable_minutes > 0" class="rounded-lg border border-gray-200 p-3">
             <h4 class="text-sm font-semibold text-gray-900 mb-2">{{ $t('Pay out overtime') }}</h4>
             <p class="text-[11px] text-gray-400 mb-2">
                 {{ $t('Booking reduces the time account. The actual payment happens outside artwork.') }}
@@ -41,42 +51,59 @@
                            class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm" />
                 </div>
                 <button type="button"
-                        :disabled="submitting || totalMinutes < 1"
+                        :disabled="submitting || totalMinutes < 1 || totalMinutes > local.payable_minutes"
                         class="rounded-lg bg-artwork-buttons-create px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                         @click="submitPayout">
                     {{ $t('Pay out') }}
                 </button>
             </div>
+            <p v-if="totalMinutes > local.payable_minutes" class="mt-1 text-xs text-amber-600">
+                {{ $t('The amount exceeds the payable overtime.') }}
+            </p>
             <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
         </div>
 
-        <!-- Offene Überstunden-Chunks mit Frist -->
+        <!-- Tage mit Überstunden -->
         <div>
-            <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ $t('Open overtime (with deadlines)') }}</h4>
-            <table class="min-w-full text-sm">
-                <thead>
-                    <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
-                        <th class="py-2 pr-4 font-medium">{{ $t('Accrued on') }}</th>
-                        <th class="py-2 px-2 font-medium">{{ $t('Amount') }}</th>
-                        <th class="py-2 pl-2 font-medium">{{ $t('Deadline') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="(c, i) in local.open_chunks" :key="i">
-                        <td class="py-2 pr-4">{{ formatDate(c.accrual_date) }}</td>
-                        <td class="py-2 px-2 font-medium">{{ c.remaining_formatted }}</td>
-                        <td class="py-2 pl-2">
-                            <span :class="c.overdue ? 'text-red-600 font-medium' : ''">
-                                {{ c.deadline ? formatDate(c.deadline) : '–' }}
-                            </span>
-                            <span v-if="c.overdue" class="text-xs text-red-600">({{ $t('payable') }})</span>
-                        </td>
-                    </tr>
-                    <tr v-if="!local.open_chunks.length">
-                        <td colspan="3" class="py-4 text-center text-gray-400">{{ $t('No open overtime.') }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h4 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                {{ $t('Days with overtime') }}
+                <span class="text-xs font-normal text-zinc-400">({{ local.entries.length }})</span>
+            </h4>
+            <div v-if="local.entries.length" class="overflow-hidden rounded-lg border border-zinc-200">
+                <table class="min-w-full text-xs">
+                    <thead class="bg-zinc-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Date') }}</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Overtime') }}</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Remaining') }}</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Deadline') }}</th>
+                            <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-100">
+                        <tr v-for="entry in local.entries" :key="entry.id">
+                            <td class="px-3 py-2.5 text-zinc-700">{{ formatDate(entry.date) }}</td>
+                            <td class="px-3 py-2.5 text-zinc-700">{{ entry.minutes_formatted }}</td>
+                            <td class="px-3 py-2.5 text-zinc-700">{{ entry.remaining_formatted }}</td>
+                            <td class="px-3 py-2.5"
+                                :class="entry.status === 'payable' ? 'text-red-600 font-medium' : 'text-zinc-700'">
+                                {{ formatDate(entry.deadline) }}
+                            </td>
+                            <td class="px-3 py-2.5">
+                                <span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                                      :class="statusClass(entry.status)">
+                                    {{ statusLabel(entry.status) }}
+                                </span>
+                                <span v-if="entry.status === 'paid_out' && entry.paid_out_by"
+                                      class="ml-1 text-[10px] text-zinc-400">
+                                    {{ entry.paid_out_by }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p v-else class="text-sm text-zinc-400 italic">{{ $t('No overtime recorded.') }}</p>
         </div>
 
         <!-- Auszahlungs-Historie -->
@@ -101,35 +128,20 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Überstunden je Tag -->
-        <details class="rounded-lg border border-gray-100">
-            <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-gray-700">
-                {{ $t('Overtime per day') }}
-            </summary>
-            <table class="min-w-full text-sm">
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="d in local.per_day" :key="d.date">
-                        <td class="py-1.5 px-3 text-gray-700">{{ formatDate(d.date) }}</td>
-                        <td class="py-1.5 px-3 text-right text-green-600">+{{ d.minutes_formatted }}</td>
-                    </tr>
-                    <tr v-if="!local.per_day.length">
-                        <td colspan="2" class="py-3 text-center text-gray-400">{{ $t('No overtime recorded.') }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </details>
     </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
     userId: { type: Number, required: true },
     data: { type: Object, required: true },
 })
+
+const { t } = useI18n()
 
 const local = ref({ ...props.data })
 watch(() => props.data, (v) => { local.value = { ...v } })
@@ -158,6 +170,26 @@ const submitPayout = async () => {
     } finally {
         submitting.value = false
     }
+}
+
+const statusLabel = (status) => {
+    const map = {
+        open: t('Open'),
+        compensated: t('Compensated'),
+        payable: t('Overtime to be paid out'),
+        paid_out: t('Paid out'),
+    }
+    return map[status] || status
+}
+
+const statusClass = (status) => {
+    const map = {
+        open: 'bg-blue-100 text-blue-700',
+        compensated: 'bg-green-100 text-green-700',
+        payable: 'bg-red-100 text-red-700',
+        paid_out: 'bg-zinc-100 text-zinc-600',
+    }
+    return map[status] || 'bg-zinc-100 text-zinc-600'
 }
 
 const formatDate = (value) => {

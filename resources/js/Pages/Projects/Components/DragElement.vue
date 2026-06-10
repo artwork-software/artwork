@@ -54,7 +54,7 @@
                 </div>
 
                 <button
-                    v-if="type === 0 && enableInfoModal && can('can view shift user kpis')"
+                    v-if="type === 0 && enableInfoModal && (can('can view shift user kpis') || is('artwork admin'))"
                     type="button"
                     class="hover:opacity-70 transition-opacity"
                     :title="$t('Staff info data')"
@@ -77,7 +77,7 @@ import { usePage } from '@inertiajs/vue3';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import { can } from 'laravel-permission-to-vuejs';
+import { can, is } from 'laravel-permission-to-vuejs';
 const {
     backgroundColorWithOpacityOld
 } = useColorHelper();

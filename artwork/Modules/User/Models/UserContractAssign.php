@@ -65,9 +65,6 @@ class UserContractAssign extends Model
         'one_and_half_day_combinations',
         'one_and_half_day_combinations_active',
         'annual_vacation_days',
-        // Überstunden (DP-18 Stufe 2)
-        'overtime_payout_active',
-        'overtime_deadline_days',
     ];
 
     protected $casts = [
@@ -91,9 +88,6 @@ class UserContractAssign extends Model
         'one_and_half_day_combinations' => 'integer',
         'one_and_half_day_combinations_active' => 'boolean',
         'annual_vacation_days' => 'integer',
-        // Überstunden (DP-18 Stufe 2)
-        'overtime_payout_active' => 'boolean',
-        'overtime_deadline_days' => 'integer',
     ];
 
 

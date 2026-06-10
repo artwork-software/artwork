@@ -2,13 +2,13 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\Shift\Services\OvertimeService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\WorkTime\Services\OvertimeService;
 use Illuminate\Console\Command;
 
 /**
- * Markiert nächtlich die überfälligen, nicht abgebauten Überstunden je User als
- * "auszuzahlend" (users.payable_overtime_minutes). DP-18 Stufe 2.
+ * Nächtlicher Recompute der Überstunden-Einträge je User: kippt offene Einträge mit
+ * abgelaufener Frist auf "auszuzahlend" (payable), auch ohne neue Zeitbuchung. DP-18 Stufe 2.
  */
 class MarkPayableOvertimeCommand extends Command
 {
@@ -18,22 +18,15 @@ class MarkPayableOvertimeCommand extends Command
 
     public function handle(OvertimeService $service): int
     {
-        $this->info('Marking payable overtime...');
+        $this->info('Recomputing overtime entries...');
 
         $users = User::query()->where('can_work_shifts', true)->get();
-        $count = 0;
 
         foreach ($users as $user) {
-            $result = $service->computeForUser($user);
-            $payable = (int) $result['payable_minutes'];
-
-            if ((int) $user->payable_overtime_minutes !== $payable) {
-                $user->forceFill(['payable_overtime_minutes' => $payable])->saveQuietly();
-            }
-            $count++;
+            $service->recomputeForUser($user);
         }
 
-        $this->info("Payable overtime updated for {$count} users.");
+        $this->info("Overtime recomputed for {$users->count()} users.");
 
         return self::SUCCESS;
     }

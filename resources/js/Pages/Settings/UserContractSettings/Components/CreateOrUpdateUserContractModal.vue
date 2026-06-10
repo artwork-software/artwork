@@ -119,21 +119,21 @@
                     <div class="mt-3 rounded-md border border-gray-100 p-3">
                         <div class="flex items-start gap-3">
                             <div class="flex h-6 shrink-0 items-center">
-                                <input id="overtime_payout_active" type="checkbox" class="input-checklist"
-                                       v-model="userContractForm.overtime_payout_active" />
+                                <input id="overtime_rule_active" type="checkbox" class="input-checklist"
+                                       v-model="userContractForm.overtime_rule_active" />
                             </div>
                             <div class="flex-1 text-sm/6">
-                                <label for="overtime_payout_active" class="font-medium text-gray-900">
+                                <label for="overtime_rule_active" class="font-medium text-gray-900">
                                     {{ $t('Non-reduced overtime within the deadline leads to financial compensation') }}
                                 </label>
                             </div>
                         </div>
-                        <div v-if="userContractForm.overtime_payout_active" class="mt-2 pl-7">
+                        <div v-if="userContractForm.overtime_rule_active" class="mt-2 pl-7">
                             <BaseInput
-                                v-model="userContractForm.overtime_deadline_days"
+                                v-model="userContractForm.overtime_compensation_period"
                                 :label="$t('Period within which overtime must be reduced (days)')"
                                 type="number"
-                                id="overtime_deadline_days" />
+                                id="overtime_compensation_period" />
                         </div>
                     </div>
                 </div>
@@ -194,8 +194,8 @@ const props = defineProps({
             one_and_half_day_combinations: 0,
             one_and_half_day_combinations_active: false,
             annual_vacation_days: 0,
-            overtime_payout_active: false,
-            overtime_deadline_days: 0,
+            overtime_rule_active: false,
+            overtime_compensation_period: null,
         })
     },
 })
@@ -226,8 +226,8 @@ const userContractForm = useForm({
     one_and_half_day_combinations_active: props.userContract.one_and_half_day_combinations_active ?? false,
     annual_vacation_days: props.userContract.annual_vacation_days ?? 0,
     // Überstunden (DP-18 Stufe 2)
-    overtime_payout_active: props.userContract.overtime_payout_active ?? false,
-    overtime_deadline_days: props.userContract.overtime_deadline_days ?? 0,
+    overtime_rule_active: props.userContract.overtime_rule_active ?? false,
+    overtime_compensation_period: props.userContract.overtime_compensation_period ?? null,
 })
 
 const seasonInfoParams = [

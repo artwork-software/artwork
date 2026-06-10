@@ -183,8 +183,9 @@ class ShiftKpiTrackingService
 
         // belegte Tage: Schichten (Pivot) + individuelle Zeiten
         $occupied = [];
-        $shiftRows = DB::table('shift_user')
-            ->where('user_id', $user->id)
+        $shiftRows = DB::table('shift_workers')
+            ->where('employable_type', \Artwork\Modules\User\Models\User::class)
+            ->where('employable_id', $user->id)
             ->whereNull('deleted_at')
             ->whereNotNull('start_date')
             ->where('start_date', '<=', $toStr)

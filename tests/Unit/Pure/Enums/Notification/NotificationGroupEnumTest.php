@@ -57,9 +57,15 @@ final class NotificationGroupEnumTest extends UnitTestCase
     }
 
     #[Test]
+    public function it_has_external_access_case(): void
+    {
+        $this->assertSame('EXTERNAL_ACCESS', NotificationGroupEnum::EXTERNAL_ACCESS->value);
+    }
+
+    #[Test]
     public function it_has_expected_total_cases(): void
     {
-        $this->assertCount(8, NotificationGroupEnum::cases());
+        $this->assertCount(9, NotificationGroupEnum::cases());
     }
 
     #[Test]

@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Http\Controllers\Project;
 
+use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Support\Facades\Bus;
+use ReflectionProperty;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
@@ -89,7 +92,15 @@ final class ProjectDeleteTest extends FeatureTestCase
 
         $response = $this->delete('/projects/' . $project->id . '/force');
 
+        // The cascade runs in a queued job (Bus is faked in FeatureTestCase).
         $response->assertRedirect();
+        Bus::assertDispatched(
+            ForceDeleteProjectJob::class,
+            fn (ForceDeleteProjectJob $job) => (new ReflectionProperty($job, 'projectId'))->getValue($job) === $project->id
+        );
+
+        // Execute the job inline to verify the actual deletion.
+        app()->call([new ForceDeleteProjectJob($project->id, auth()->id()), 'handle']);
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
     }
 

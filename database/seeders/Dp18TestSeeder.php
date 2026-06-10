@@ -6,7 +6,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
-use Artwork\Modules\Shift\Models\OvertimePayout;
+use Artwork\Modules\WorkTime\Models\OvertimePayout;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
@@ -102,8 +102,8 @@ class Dp18TestSeeder extends Seeder
                 'one_and_half_day_combinations' => 5,
                 'one_and_half_day_combinations_active' => true,
                 'annual_vacation_days' => 30,
-                'overtime_payout_active' => true,
-                'overtime_deadline_days' => 30,
+                'overtime_rule_active' => true,
+                'overtime_compensation_period' => 30,
             ]
         );
     }
@@ -131,6 +131,8 @@ class Dp18TestSeeder extends Seeder
                 'user_contract_id' => $contract->id,
                 'free_sundays_per_season' => $contract->free_sundays_per_season,
                 'days_off_first_26_weeks' => $contract->days_off_first_26_weeks,
+                'overtime_rule_active' => $contract->overtime_rule_active,
+                'overtime_compensation_period' => $contract->overtime_compensation_period,
             ]
         );
     }

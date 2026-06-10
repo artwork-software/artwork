@@ -50,9 +50,9 @@ class StoreUserContractRequest extends FormRequest
             'one_and_half_day_combinations' => 'nullable|integer|min:0',
             'one_and_half_day_combinations_active' => 'boolean',
             'annual_vacation_days' => 'nullable|integer|min:0',
-            // Überstunden (DP-18 Stufe 2)
-            'overtime_payout_active' => 'boolean',
-            'overtime_deadline_days' => 'nullable|integer|min:0',
+            // Überstunden-Regel (Vorgabe für die Zuweisung am User)
+            'overtime_rule_active' => 'boolean',
+            'overtime_compensation_period' => 'nullable|integer|min:1',
         ];
     }
 }

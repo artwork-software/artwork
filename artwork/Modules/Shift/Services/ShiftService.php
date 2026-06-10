@@ -11,6 +11,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Events\UpdateEventShiftInShiftPlan;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\GlobalQualification;
@@ -19,6 +20,7 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Events\AssignUserToShift;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
@@ -203,13 +205,30 @@ class ShiftService
             'break_minutes' => $data['break_minutes'],
             'description' => $data['description'],
             'room_id' => $data['room_id'],
-            'project_id' => $data['project_id'],
-            'shift_group_id' => $data['shift_group_id'],
+            'project_id' => $this->resolveExistingProjectId($data['project_id'] ?? null),
+            'shift_group_id' => $data['shift_group_id'] ?? null,
         ]);
 
         $shift->craft()->associate($craftId);
 
         return $this->save($shift);
+    }
+
+    /**
+     * Das Frontend kann eine veraltete project_id liefern (z.B. wenn das Projekt
+     * zwischenzeitlich gelöscht wurde oder der Suchindex noch nicht aktualisiert ist).
+     * Eine nicht (mehr) existierende project_id würde die FK-Constraint
+     * shifts_project_id_foreign verletzen und den Request mit einem 500 abbrechen.
+     * Da der FK ON DELETE SET NULL ist, ist null ein gültiger Zustand – wir
+     * normalisieren eine unbekannte project_id daher auf null.
+     */
+    private function resolveExistingProjectId(int|string|null $projectId): ?int
+    {
+        if ($projectId === null || $projectId === '') {
+            return null;
+        }
+
+        return Project::whereKey($projectId)->exists() ? (int) $projectId : null;
     }
 
     public function createShiftWithoutEvent(int $craftId, array $data): Shift|Model
@@ -267,17 +286,15 @@ class ShiftService
             $shiftsQualificationsService->delete($shiftsQualification);
         }
 
-        foreach ($shift->users as $user) {
-            $shiftUserService->delete($user->pivot);
-        }
-
-        foreach ($shift->freelancer as $freelancer) {
-            $shiftFreelancerService->delete($freelancer->pivot);
-        }
-
-        foreach ($shift->serviceProvider as $serviceProvider) {
-            $shiftServiceProviderService->delete($serviceProvider->pivot);
-        }
+        // Worker assignments (users, freelancers and service providers) all live in the
+        // unified shift_workers pivot (ShiftWorker). Delete them in one go. The legacy
+        // per-type services still expect the old ShiftUser/ShiftFreelancer/
+        // ShiftServiceProvider pivots and would throw a TypeError when handed a
+        // ShiftWorker instance, which aborted the whole project/event deletion cascade.
+        ShiftWorker::query()
+            ->where('shift_id', $shift->id)
+            ->get()
+            ->each(static fn (ShiftWorker $shiftWorker): ?bool => $shiftWorker->delete());
 
         return $this->shiftRepository->delete($shift);
     }
@@ -315,18 +332,14 @@ class ShiftService
                 fn($shiftsQualification) => $shiftsQualificationsService->restore($shiftsQualification)
             );
 
-            // restore shift users and freelancers from pivot table
-            $shift->users()->each(
-                fn($user) => $shiftUserService->restore($user->pivot)
-            );
-
-            $shift->freelancer()->each(
-                fn($freelancer) => $shiftFreelancerService->restore($freelancer->pivot)
-            );
-
-            $shift->serviceProvider()->each(
-                fn($serviceProvider) => $shiftServiceProviderService->restore($serviceProvider->pivot)
-            );
+            // Worker assignments (users, freelancers, service providers) all live in the unified
+            // shift_workers pivot (ShiftWorker) and were soft-deleted together with the shift.
+            // Restore them directly: the users()/freelancer()/serviceProvider() relations exclude
+            // soft-deleted rows, and the legacy per-type services expect the old pivot models.
+            ShiftWorker::onlyTrashed()
+                ->where('shift_id', $shift->id)
+                ->get()
+                ->each(static fn (ShiftWorker $shiftWorker): ?bool => $shiftWorker->restore());
         }
     }
 

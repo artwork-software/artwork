@@ -44,13 +44,25 @@ class ShiftHistoryController
         // einer einzelnen Seite würde passende Einträge sonst verbergen.
         $search = trim((string) $request->query('search', ''));
 
-        // Shifts im Zeitraum (Overlaps!)
-        $shiftQuery = Shift::query()
+        // Sortierung: 'shift_day' = nach dem Tag der zugehörigen Schicht (damit die
+        // Paginierung vollständige Schichttage von oben befüllt), sonst nach Änderungsdatum.
+        $sortByShiftDay = $request->query('sort') === 'shift_day';
+
+        $startYmd = $startDate->toDateString();
+        $endYmd   = $endDate->toDateString();
+
+        // Shifts im Zeitraum (Overlaps!) – bewusst inkl. soft-deleted (withTrashed):
+        // Eine gelöschte Schicht soll mit ihrem KOMPLETTEN Verlauf sichtbar bleiben,
+        // auch mit Einträgen, die VOR diesem Feature entstanden sind (ohne Snapshot).
+        // Solange die Row noch existiert (auch soft-deleted), liefert sie das Schicht-
+        // Start-Datum für den Zeitraum-Filter.
+        $shiftQuery = Shift::withTrashed()
             ->when($craftId > 0, fn ($q) => $q->where('craft_id', $craftId))
-            ->startAndEndDateOverlap($startDate->toDateString(), $endDate->toDateString());
+            ->startAndEndDateOverlap($startYmd, $endYmd);
 
         if ($loadShiftDetails) {
             // Erste Seite: volle Shift-Liste inkl. Relationen für die Filter-Dropdowns im Frontend.
+            // deleted_at mitgeben, damit das Frontend gelöschte Schichten kennzeichnen kann.
             $shifts = (clone $shiftQuery)
                 ->select([
                     'id',
@@ -64,6 +76,7 @@ class ShiftHistoryController
                     'project_id',
                     'is_committed',
                     'in_workflow',
+                    'deleted_at',
                 ])
                 ->with([
                     'room:id,name',
@@ -81,7 +94,35 @@ class ShiftHistoryController
             $shiftIds = (clone $shiftQuery)->pluck('id')->all();
         }
 
-        if (empty($shiftIds)) {
+        // Force-gelöschte Schichten (Row physisch weg) über den im Log gespeicherten
+        // Snapshot wieder einfangen: deren Einträge tragen properties->shift_snapshot
+        // (inkl. Schicht-Start-Datum), das das Löschen überlebt.
+        //
+        // Performance: Diese Abfrage wertet einen JSON-Pfad (properties->shift_snapshot->
+        // start_date) ohne Index aus – auf großen activity_log-Tabellen teuer. Wir grenzen
+        // sie daher hart ein:
+        //   - event='deleted': force-gelöschte Schichten loggen IMMER ein deleted-Event mit
+        //     Snapshot (forceDelete ruft intern delete()); andere Events brauchen wir hier
+        //     nicht, um die subject_id einzufangen → deutlich weniger JSON-Auswertungen.
+        //   - whereNotIn($shiftIds): lebende/soft-deleted Schichten sind bereits abgedeckt;
+        //     hier interessieren nur Schichten ohne Row.
+        $snapshotShiftIds = Activity::query()
+            ->where('log_name', 'shift')
+            ->where('subject_type', Shift::class)
+            ->where('event', 'deleted')
+            ->when(!empty($shiftIds), fn ($q) => $q->whereNotIn('subject_id', $shiftIds))
+            ->whereBetween('properties->shift_snapshot->start_date', [$startYmd, $endYmd])
+            ->when($craftId > 0, fn ($q) => $q->where('properties->craft_id', $craftId))
+            ->distinct()
+            ->pluck('subject_id')
+            ->all();
+
+        // Vereinigte Menge: alle Schichten (lebend, soft-deleted, force-deleted-mit-Snapshot),
+        // deren START im Zeitraum liegt. Für genau diese Schichten zeigen wir ALLE Activities –
+        // damit der komplette Verlauf inkl. Lösch-Eintrag erscheint, unabhängig vom Fortbestand.
+        $matchedShiftIds = array_values(array_unique(array_merge($shiftIds, $snapshotShiftIds)));
+
+        if (empty($matchedShiftIds)) {
             return response()->json([
                 'shifts' => $shifts ?? [],
                 'logs'   => [
@@ -89,32 +130,45 @@ class ShiftHistoryController
                     'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $perPage, 'total' => 0],
                 ],
                 'range'  => [
-                    'start_date' => $startDate->toDateString(),
-                    'end_date'   => $endDate->toDateString(),
+                    'start_date' => $startYmd,
+                    'end_date'   => $endYmd,
                 ],
             ]);
         }
 
-        // Activity Logs für diese Shifts (Spatie activity_log)
+        // Activity Logs (Spatie activity_log) – über die Schicht-Zugehörigkeit, NICHT über
+        // den Fortbestand der Schicht. So bleiben Einträge gelöschter Schichten sichtbar.
         $paginator = Activity::query()
             ->where('log_name', 'shift')
             ->where('subject_type', Shift::class)
-            ->whereIn('subject_id', $shiftIds)
+            ->whereIn('subject_id', $matchedShiftIds)
             ->when($search !== '', function ($q) use ($search): void {
-                $like = '%' . $search . '%';
-                $q->where(function ($inner) use ($like, $search): void {
-                    // Beschreibung des Log-Eintrags
-                    $inner->where('description', 'like', $like)
+                // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten),
+                // damit z.B. "jannik" auch "Jannik Müller" findet – unabhängig von der
+                // Spalten-Collation. Teiltreffer über LIKE %...%.
+                $like = '%' . mb_strtolower($search) . '%';
+                $q->where(function ($inner) use ($like): void {
+                    // Beschreibung des Log-Eintrags. Spalten explizit mit activity_log.
+                    // qualifizieren – beim sort=shift_day-Join hat auch shifts eine Spalte
+                    // "description" → sonst "Column 'description' is ambiguous".
+                    $inner->whereRaw('LOWER(activity_log.description) LIKE ?', [$like])
                         // Namen/Werte stecken in den translation_key_placeholder_values (JSON in properties),
                         // z.B. der zugewiesene Mitarbeitername.
-                        ->orWhere('properties', 'like', $like)
+                        ->orWhereRaw('LOWER(activity_log.properties) LIKE ?', [$like])
                         // Verursacher (Planer:in), der die Änderung ausgelöst hat
                         ->orWhereHasMorph(
                             'causer',
                             [\Artwork\Modules\User\Models\User::class],
                             function ($c) use ($like): void {
-                                $c->where('first_name', 'like', $like)
-                                    ->orWhere('last_name', 'like', $like);
+                                $c->whereRaw('LOWER(first_name) LIKE ?', [$like])
+                                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$like])
+                                    // Vollständigen Namen ("Vorname Nachname") matchen –
+                                    // sonst findet die Suche nach dem kompletten Namen den
+                                    // Verursacher nie (Felder werden einzeln verglichen).
+                                    ->orWhereRaw(
+                                        "LOWER(CONCAT(COALESCE(first_name,''),' ',COALESCE(last_name,''))) LIKE ?",
+                                        [$like]
+                                    );
                             }
                         );
                 });
@@ -123,7 +177,22 @@ class ShiftHistoryController
                 // Causer: bei dir ist das offenbar ein User-Objekt mit first/last/full_name/type/profile_photo_url
                 'causer',
             ])
-            ->orderByDesc('created_at')
+            ->when($sortByShiftDay, function ($q): void {
+                // Nach Schichttag sortieren: über die (auch soft-deleted) Schicht-Row, mit
+                // Fallback auf das im Snapshot gespeicherte Start-Datum für force-gelöschte
+                // Schichten (keine Row mehr). Innerhalb eines Tages weiter neueste Änderung
+                // zuerst. select(activity_log.*) verhindert Spaltenkollisionen durch den Join.
+                $q->leftJoin('shifts', 'shifts.id', '=', 'activity_log.subject_id')
+                    ->select('activity_log.*')
+                    ->orderByRaw(
+                        'COALESCE(shifts.start_date, '
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date"))'
+                        . ') DESC'
+                    )
+                    ->orderByDesc('activity_log.created_at');
+            }, function ($q): void {
+                $q->orderByDesc('created_at');
+            })
             ->paginate($perPage);
 
         $response = [

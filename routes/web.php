@@ -425,6 +425,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can pay out overtime')
         ->name('user.overtime.payout');
 
+    Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
+        ->can('can manage workers')
+        ->name('user.edit.overtime');
+    Route::post('/overtime/{userOvertime}/book-out', [UserController::class, 'bookOutOvertime'])
+        ->can('can manage workers')
+        ->name('overtime.book-out');
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
     // user.update.open.crafts
@@ -977,6 +983,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/today', [NotificationController::class, 'todayPaginated'])
+        ->name('notifications.today');
+    Route::get('/notifications/list', [NotificationController::class, 'list'])
+        ->name('notifications.list');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
@@ -1958,6 +1968,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
+    Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
+        ->name('user.shiftplan.export.monthly-pdf');
     Route::get(
         '/calendar/export/pdf/{filename}/download',
         [ExportPDFController::class, 'download']
@@ -2261,6 +2273,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // patch inventory-management.articles.detailed.update-property (inline autosave for detailed article properties)
         Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [InventoryArticleController::class, 'updateDetailedArticlePropertyValue'])
             ->name('inventory-management.articles.detailed.update-property');
+
+        // File uploads for article properties of type "file" (single file per property/article)
+        Route::post('/articles/property-file/upload', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'upload'])
+            ->name('inventory-management.articles.property-file.upload');
+        Route::get('/articles/property-file/download', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'download'])
+            ->name('inventory-management.articles.property-file.download');
+        Route::delete('/articles/property-file/delete', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'destroy'])
+            ->name('inventory-management.articles.property-file.delete');
 
         // delete articles.destroy
         Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
@@ -2699,6 +2719,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
         Route::post('/search/workers', [WorkerController::class, 'scoutWorkerSearch'])->name('worker.scoutSearch');
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
+        Route::post('/projects/existing', [ProjectController::class, 'filterExistingProjectIds'])
+            ->name('project.filterExistingIds');
     });
 
     Route::group(['prefix' => 'chat'], function (): void {

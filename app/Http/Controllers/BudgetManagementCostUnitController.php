@@ -25,12 +25,24 @@ class BudgetManagementCostUnitController extends Controller
         $this->authorizeResource(BudgetManagementCostUnit::class, 'budgetManagementCostUnit');
     }
 
-    public function indexTrash(): Response
+    public function indexTrash(Request $request): Response
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedCostUnits = BudgetManagementCostUnit::onlyTrashed()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('cost_unit_number', 'like', '%' . $search . '%')
+                    ->orWhere('title', 'like', '%' . $search . '%');
+            })
+            ->orderBy('cost_unit_number')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render(
             'Trash/BudgetManagementCostUnit',
             [
-                'trashedCostUnits' => $this->budgetManagementCostUnitService->getAllTrashed()
+                'trashedCostUnits' => $trashedCostUnits
             ]
         );
     }

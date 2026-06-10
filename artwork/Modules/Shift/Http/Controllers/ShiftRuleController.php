@@ -306,6 +306,7 @@ class ShiftRuleController extends Controller
             'compensation_deadline' => $validated['compensation_deadline'],
             'compensation_reason' => $validated['compensation_reason'] ?? null,
             'for_holiday' => $validated['for_holiday'] ?? false,
+            'half_day_period' => $validated['half_day_period'] ?? null,
         ], auth()->id());
 
         return redirect()->back()->with('flash', [
@@ -323,6 +324,7 @@ class ShiftRuleController extends Controller
             'granted_date' => 'required|date',
             'remove_shifts' => 'boolean',
             'check_only' => 'boolean',
+            'half_day_period' => 'nullable|in:morning,afternoon,both',
         ]);
 
         $grantedDate = $validated['granted_date'];
@@ -352,19 +354,59 @@ class ShiftRuleController extends Controller
                 ->delete();
         }
 
-        $compensationDayOff->update([
-            'granted_date' => $grantedDate,
-            'granted_by' => auth()->id(),
-            'granted_at' => now(),
-        ]);
+        $period = $validated['half_day_period'] ?? null;
+        $isHalfDay = (float) $compensationDayOff->value < 1.0;
+
+        // "both" pairs a second open half day on the same date (morning + afternoon = whole day off).
+        if ($isHalfDay && $period === 'both') {
+            $secondHalf = $this->compensationDayOffRepository()
+                ->findOpenHalfForUserExcept($compensationDayOff->user_id, $compensationDayOff->id);
+
+            if (!$secondHalf) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'half_day_period' => 'Für "Beides" werden zwei offene halbe freie Tage benötigt.',
+                ]);
+            }
+
+            $compensationDayOff->update([
+                'half_day_period' => 'morning',
+                'granted_date' => $grantedDate,
+                'granted_by' => auth()->id(),
+                'granted_at' => now(),
+            ]);
+            $secondHalf->update([
+                'half_day_period' => 'afternoon',
+                'granted_date' => $grantedDate,
+                'granted_by' => auth()->id(),
+                'granted_at' => now(),
+            ]);
+        } else {
+            $compensationDayOff->update([
+                'half_day_period' => $isHalfDay ? $period : null,
+                'granted_date' => $grantedDate,
+                'granted_by' => auth()->id(),
+                'granted_at' => now(),
+            ]);
+        }
 
         // Invalidate WorkingHourCache
         app(\Artwork\Modules\User\Services\WorkingHourCacheService::class)
             ->forgetForEntity('user', $compensationDayOff->user_id);
 
+        // Immediately re-validate shift rules for the affected day so HFT/shift conflicts surface at once.
+        if ($compensationDayOff->user) {
+            $day = Carbon::parse($grantedDate);
+            $this->shiftRuleService->validateRulesForUser($compensationDayOff->user, $day->copy(), $day->copy());
+        }
+
         return redirect()->back()->with('flash', [
             'message' => 'Compensation day successfully granted'
         ]);
+    }
+
+    private function compensationDayOffRepository(): CompensationDayOffRepository
+    {
+        return app(CompensationDayOffRepository::class);
     }
 
     public function checkCompensationDay(Request $request, CompensationDayOff $compensationDayOff): JsonResponse
@@ -380,9 +422,33 @@ class ShiftRuleController extends Controller
             })
             ->count();
 
+        // Special day check: granting a half day off on a "Sondertag" violates the halfDayOffOnSpecialDay rule.
+        $specialDayRule = null;
+        $isHalfDay = (float) $compensationDayOff->value < 1.0;
+
+        if (
+            $isHalfDay
+            && \Artwork\Modules\Holidays\Models\Holiday::isSpecialDay($validated['granted_date'])
+            && $compensationDayOff->user
+        ) {
+            $rule = $this->shiftRuleService->getActiveRuleByTriggerTypeForUser(
+                $compensationDayOff->user,
+                'halfDayOffOnSpecialDay'
+            );
+            if ($rule) {
+                $specialDayRule = [
+                    'id' => $rule->id,
+                    'name' => $rule->name,
+                    'description' => $rule->description,
+                ];
+            }
+        }
+
         return new JsonResponse([
             'has_shifts' => $shiftsOnDate > 0,
             'shift_count' => $shiftsOnDate,
+            'special_day' => $specialDayRule !== null,
+            'special_day_rule' => $specialDayRule,
         ]);
     }
 
@@ -545,7 +611,10 @@ class ShiftRuleController extends Controller
             'deadline' => 'required|date',
             'reason' => 'nullable|string|max:500',
             'for_holiday' => 'sometimes|boolean',
+            'half_day_period' => 'nullable|in:morning,afternoon',
         ]);
+
+        $isHalfDay = (float) $validated['value'] < 1.0;
 
         CompensationDayOff::create([
             'user_id' => $validated['user_id'],
@@ -554,6 +623,8 @@ class ShiftRuleController extends Controller
             'deadline' => $validated['deadline'],
             'reason' => $validated['reason'] ?? null,
             'for_holiday' => $validated['for_holiday'] ?? false,
+            // The period only applies to a half day.
+            'half_day_period' => $isHalfDay ? ($validated['half_day_period'] ?? null) : null,
         ]);
 
         return redirect()->back()->with('flash', [

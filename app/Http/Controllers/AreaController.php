@@ -95,14 +95,24 @@ class AreaController extends Controller
         return Redirect::route('areas.trashed');
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
-        return inertia('Trash/Areas', [
-            'trashed_areas' => Area::onlyTrashed()->get()->map(fn ($area) => [
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedAreas = Area::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->rooms)->resolve(),
-            ])
+            ]);
+
+        return inertia('Trash/Areas', [
+            'trashed_areas' => $trashedAreas
         ]);
     }
 }

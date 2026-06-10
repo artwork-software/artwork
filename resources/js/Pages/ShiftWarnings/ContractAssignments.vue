@@ -201,7 +201,10 @@ const triggerTypeLabels = {
     'weekly_max_hours': 'Wochenmaximum an Stunden',
     'rest_time_before_workday': 'Ruhezeit vor Werktag',
     'rest_time_before_holiday': 'Ruhezeit vor Sonder-/Sonntag',
-    'min_days_before_commit': 'Mindesttage bis zur Verbindlich-Schaltung'
+    'min_days_before_commit': 'Mindesttage bis zur Verbindlich-Schaltung',
+    'restTimeBetweenShiftGroups': 'Ruhezeit zwischen Schichtgruppen',
+    'halfDayOffConflict': 'Konflikt: halber freier Tag / Schicht',
+    'halfDayOffOnSpecialDay': 'Kein halber freier Tag an Sondertagen'
 }
 
 function formatTriggerType(type) {

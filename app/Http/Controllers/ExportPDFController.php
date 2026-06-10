@@ -7,7 +7,9 @@ use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Event\Models\EventProperty;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -26,6 +28,7 @@ use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Routing\UrlGenerator;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Inertia\ResponseFactory as InertiaResponseFactory;
@@ -739,6 +742,283 @@ class ExportPDFController extends Controller
         return $this->inertiaResponseFactory->location(
             $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
         );
+    }
+
+    /**
+     * Persönlicher Einsatzplan als Monatsübersicht (Outlook-Stil): 1 Monat = 1 Seite,
+     * KW-Zeilen, Mo–So-Spalten. Schichten in Gewerk-Farbe, individuelle Zeiten in Grau.
+     */
+    public function createUserShiftPlanPDF(
+        Request $request,
+        User $user,
+        EventService $eventService
+    ): Response {
+        $authUser = $this->authManager->guard()->user();
+
+        $type = $request->string('type', 'user')->toString();
+        $modelId = (int) ($request->integer('model_id') ?: $user->id);
+
+        // Monatsliste (je YYYY-MM)
+        $startMonth = $request->get('startMonth');
+        $endMonth = $request->get('endMonth');
+
+        $start = $startMonth
+            ? Carbon::parse($startMonth . '-01')->startOfMonth()
+            : Carbon::now()->startOfMonth();
+        $end = $endMonth
+            ? Carbon::parse($endMonth . '-01')->endOfMonth()
+            : $start->copy()->endOfMonth();
+
+        if ($end->lt($start)) {
+            $end = $start->copy()->endOfMonth();
+        }
+
+        $months = [];
+        $cursor = $start->copy();
+        while ($cursor->lte($end)) {
+            $months[] = [
+                'start' => $cursor->copy()->startOfMonth(),
+                'end' => $cursor->copy()->endOfMonth(),
+            ];
+            $cursor->addMonth();
+        }
+
+        // Globale Grid-Spanne: Montag der ersten KW .. Sonntag der letzten KW
+        $gridStart = $months[0]['start']->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd = end($months)['end']->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
+            $modelId,
+            $type,
+            $gridStart->copy(),
+            $gridEnd->copy()
+        );
+
+        // Feiertage im Zeitraum -> map[Y-m-d] = name
+        $holidayMap = [];
+        $holidays = Holiday::query()
+            ->whereDate('date', '<=', $gridEnd->format('Y-m-d'))
+            ->whereDate('end_date', '>=', $gridStart->format('Y-m-d'))
+            ->get();
+        foreach ($holidays as $holiday) {
+            $hStart = Carbon::parse($holiday->date);
+            $hEnd = Carbon::parse($holiday->end_date ?? $holiday->date);
+            foreach (CarbonPeriod::create($hStart, $hEnd) as $hDay) {
+                $holidayMap[$hDay->format('Y-m-d')] = $holiday->name;
+            }
+        }
+
+        $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+        $weeklyWorkingHours = $type === 'user' ? (float) ($user->weekly_working_hours ?? 0) : null;
+
+        // Schichtqualifikationen (Funktion) -> [id => name]
+        $shiftQualifications = \Artwork\Modules\Shift\Models\ShiftQualification::query()
+            ->pluck('name', 'id')
+            ->all();
+
+        $pages = [];
+        foreach ($months as $monthData) {
+            $monthStart = $monthData['start'];
+            $monthEnd = $monthData['end'];
+            $monthNumber = $monthStart->month;
+
+            $weekGridStart = $monthStart->copy()->startOfWeek(Carbon::MONDAY);
+            $weekGridEnd = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
+
+            $weeks = [];
+            $monthWorkMinutes = 0;
+            $daysInMonth = $monthEnd->day;
+            $prevHolidayName = null; // Namen mehrtägiger Feiertage/Ferien nur am ersten Tag zeigen
+
+            $cursorWeek = $weekGridStart->copy();
+            while ($cursorWeek->lte($weekGridEnd)) {
+                $cells = [];
+                for ($i = 0; $i < 7; $i++) {
+                    $day = $cursorWeek->copy()->addDays($i);
+                    $key = $day->format('Y-m-d');
+                    $dayData = $daysWithData[$key] ?? null;
+                    $inMonth = $day->month === $monthNumber && $day->year === $monthStart->year;
+                    $holidayName = $holidayMap[$key] ?? null;
+                    $showHolidayLabel = $holidayName !== null && $holidayName !== $prevHolidayName;
+                    $prevHolidayName = $holidayName;
+
+                    $shiftBlocks = [];
+                    foreach (($dayData['shifts'] ?? []) as $shift) {
+                        $shiftBlocks[] = $this->buildUserShiftBlock($shift, $type, $modelId, $shiftQualifications);
+                    }
+
+                    $individualBlocks = [];
+                    foreach (($dayData['individualTimes'] ?? []) as $it) {
+                        $individualBlocks[] = [
+                            'title' => $it['title'] ?? '',
+                            'full_day' => (bool) ($it['full_day'] ?? false),
+                            'start' => !empty($it['start_time']) ? substr((string) $it['start_time'], 0, 5) : null,
+                            'end' => !empty($it['end_time']) ? substr((string) $it['end_time'], 0, 5) : null,
+                        ];
+                    }
+
+                    if ($inMonth && $dayData) {
+                        $monthWorkMinutes += $this->hhmmToMinutes($dayData['totalWorkTime'] ?? '00:00');
+                    }
+
+                    $cells[] = [
+                        'dayNumber' => $day->day,
+                        'inMonth' => $inMonth,
+                        'isWeekend' => $day->isWeekend(),
+                        'isHoliday' => $holidayName !== null,
+                        'holidayName' => $showHolidayLabel ? $holidayName : null,
+                        'shifts' => $shiftBlocks,
+                        'individualTimes' => $individualBlocks,
+                    ];
+                }
+                $weeks[] = [
+                    'kw' => $cursorWeek->isoWeek(),
+                    'cells' => $cells,
+                ];
+                $cursorWeek->addWeek();
+            }
+
+            $sollMinutes = $weeklyWorkingHours !== null
+                ? (int) round($weeklyWorkingHours / 7 * $daysInMonth * 60)
+                : null;
+            $diffMinutes = $sollMinutes !== null ? $monthWorkMinutes - $sollMinutes : null;
+
+            $pages[] = [
+                'monthLabel' => $monthStart->translatedFormat('F Y'),
+                'monthName' => $monthStart->translatedFormat('F'),
+                'weekDayNames' => $dayNames,
+                'weeks' => $weeks,
+                'totalWork' => $this->minutesToHhmm($monthWorkMinutes),
+                'sollWork' => $sollMinutes !== null ? $this->minutesToHhmm($sollMinutes) : null,
+                'diffWork' => $diffMinutes !== null ? $this->minutesToHhmmSigned($diffMinutes) : null,
+                'diffPositive' => $diffMinutes !== null ? $diffMinutes >= 0 : null,
+            ];
+        }
+
+        // Logo als base64
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $bigLogoBase64 = null;
+        if ($generalSettings->big_logo_path) {
+            $storage = $this->filesystemManager->disk('public');
+            if ($storage->exists($generalSettings->big_logo_path)) {
+                $logoContent = $storage->get($generalSettings->big_logo_path);
+                $mimeType = $storage->mimeType($generalSettings->big_logo_path);
+                $bigLogoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
+            }
+        }
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.user_shift_plan',
+            [
+                'userName' => $user->full_name,
+                'showSoll' => $weeklyWorkingHours !== null,
+                'pages' => $pages,
+                'created_by' => $authUser->first_name . ' ' . $authUser->last_name,
+                'created_date' => Carbon::now()->format('d.m.Y'),
+                'bigLogoBase64' => $bigLogoBase64,
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a4'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) $request->float('dpi', 96));
+
+        $filename = $this->createFilename();
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $shift
+     * @param array<int, string> $shiftQualifications  [shift_qualification_id => name]
+     * @return array<string, mixed>
+     */
+    private function buildUserShiftBlock(array $shift, string $type, int $modelId, array $shiftQualifications): array
+    {
+        $color = data_get($shift, 'craft.color') ?: '#3730a3';
+        $craft = data_get($shift, 'craft.name');
+        $room = data_get($shift, 'room.name') ?? data_get($shift, 'event.room.name');
+        $project = data_get($shift, 'project.name') ?? data_get($shift, 'event.project.name');
+        $eventName = data_get($shift, 'event.name');
+
+        $colleagues = [];
+        $note = null;
+        $function = null;
+        foreach (($shift['workers'] ?? []) as $worker) {
+            $wType = data_get($worker, 'type');
+            $wId = (int) data_get($worker, 'id');
+
+            if ($wType === $type && $wId === $modelId) {
+                $note = data_get($worker, 'pivot.short_description') ?: $note;
+                $qualId = data_get($worker, 'pivot.shift_qualification_id');
+                $function = $qualId ? ($shiftQualifications[$qualId] ?? null) : null;
+                continue;
+            }
+
+            $name = $this->workerName($worker);
+            if ($name !== '') {
+                $colleagues[] = $name;
+            }
+        }
+
+        return [
+            'color' => $color,
+            'craft' => $craft,
+            'function' => $function,
+            'start' => !empty($shift['start']) ? substr((string) $shift['start'], 0, 5) : null,
+            'end' => !empty($shift['end']) ? substr((string) $shift['end'], 0, 5) : null,
+            'room' => $room,
+            'project' => $project,
+            'event' => $eventName,
+            'description' => $shift['description'] ?? null,
+            'note' => $note,
+            'colleagues' => $colleagues,
+            'committed' => (bool) ($shift['is_committed'] ?? false),
+        ];
+    }
+
+    private function workerName(mixed $worker): string
+    {
+        $name = trim((string) data_get($worker, 'first_name') . ' ' . (string) data_get($worker, 'last_name'));
+        if ($name !== '') {
+            return $name;
+        }
+
+        return (string) (data_get($worker, 'provider_name') ?? data_get($worker, 'name') ?? '');
+    }
+
+    private function hhmmToMinutes(?string $time): int
+    {
+        if (!$time) {
+            return 0;
+        }
+        [$h, $m] = array_pad(explode(':', $time), 2, '0');
+
+        return ((int) $h) * 60 + (int) $m;
+    }
+
+    private function minutesToHhmm(int $minutes): string
+    {
+        $minutes = max(0, $minutes);
+
+        return sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
+    }
+
+    private function minutesToHhmmSigned(int $minutes): string
+    {
+        $sign = $minutes < 0 ? '-' : '+';
+        $abs = abs($minutes);
+
+        return sprintf('%s%02d:%02d', $sign, intdiv($abs, 60), $abs % 60);
     }
 
     public function download(

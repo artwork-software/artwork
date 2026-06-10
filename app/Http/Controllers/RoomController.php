@@ -239,14 +239,36 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
-        return inertia('Trash/Rooms', [
-            'trashed_rooms' => Area::withTrashed()->get()->map(fn($area) => [
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        // Group trashed rooms by area, paginating at area granularity. Only areas that
+        // actually contain (matching) trashed rooms are returned. The search matches
+        // room names; areas without a matching trashed room are excluded.
+        $trashedRooms = Area::withTrashed()
+            ->whereHas(
+                'trashedRooms',
+                fn ($query) => $query->when($search !== '', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
+            )
+            ->with([
+                'trashedRooms' => fn ($query) => $query->when(
+                    $search !== '',
+                    fn ($q) => $q->where('name', 'like', '%' . $search . '%')
+                ),
+            ])
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->trashedRooms)->resolve(),
-            ])
+            ]);
+
+        return inertia('Trash/Rooms', [
+            'trashed_rooms' => $trashedRooms
         ]);
     }
 

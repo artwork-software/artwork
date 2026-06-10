@@ -370,7 +370,9 @@ class ProjectService
             $shiftService,
             $subEventService,
             $notificationService,
-            $projectTabService
+            $projectTabService,
+            // Project deletion sends one consolidated notification instead of per-event ones.
+            sendPerEventNotifications: false
         );
         $checklistService->deleteAll($project->checklists, $taskService);
         $projectFileService->deleteAll($project->project_files);
@@ -557,8 +559,8 @@ class ProjectService
         $checklistService->restoreAll($project->checklists()->onlyTrashed()->get(), $taskService);
 
         $table = $project->table()->onlyTrashed()->first();
-        $table->restore();
         if ($table) {
+            $table->restore();
             $columns = $table->columns()->onlyTrashed()->get();
             foreach ($columns as $column) {
                 $column->restore();

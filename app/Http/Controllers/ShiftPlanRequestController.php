@@ -14,6 +14,7 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -35,6 +36,71 @@ class ShiftPlanRequestController extends Controller
         protected AuthManager $auth,
         protected HelperService $helperService
     ) {
+    }
+
+    /**
+     * Lädt die Schichten zur Anzeige einer Anfrage:
+     *  - die ursprünglich angefragten Schichten (Pivot) → is_subsequently_added = false
+     *  - nachträglich hinzugefügte Schichten: Schichten desselben Gewerks in derselben KW, die nach
+     *    dem Anlegen der Anfrage erstellt wurden und nicht Teil der Anfrage sind
+     *    → is_subsequently_added = true
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int,Shift>
+     */
+    private function loadShiftsForRequest(
+        ShiftPlanRequest $shiftPlanRequest,
+        Carbon $start,
+        Carbon $end
+    ): \Illuminate\Database\Eloquent\Collection {
+        $relations = [
+            'users',
+            'freelancer',
+            'serviceProvider',
+            'craft',
+            'shiftsQualifications',
+            // Nur Workflow-Änderungen, die zu DIESER Anfrage gehören (nicht aus früheren Anfragen
+            // derselben Schicht), damit der "Änderung angefordert"-Marker nicht fälschlich greift.
+            'shiftPlanRequestChanges' => fn ($query) => $query
+                ->where('shift_plan_request_id', $shiftPlanRequest->id)
+                ->orderByDesc('created_at'),
+            'shiftPlanRequestChanges.changedBy',
+            'activities' => fn ($query) => $query->orderByDesc('created_at'),
+            'activities.causer',
+            // Nur nachträgliche (post-commit) Änderungen, die NACH dem Stellen der Anfrage
+            // passiert sind, damit der "Geändert"-Marker nur echte nachträgliche Änderungen zeigt.
+            'committedShiftChanges' => fn ($query) => $query
+                ->when(
+                    $shiftPlanRequest->created_at,
+                    fn ($q) => $q->where('changed_at', '>=', $shiftPlanRequest->created_at)
+                )
+                ->orderByDesc('created_at'),
+            'committedShiftChanges.changedBy',
+        ];
+
+        $requestedShiftIds = $shiftPlanRequest->requestedShifts->pluck('id')->toArray();
+
+        $requestedShifts = Shift::query()
+            ->whereIn('id', $requestedShiftIds)
+            ->with($relations)
+            ->get()
+            ->each(fn (Shift $shift) => $shift->setAttribute('is_subsequently_added', false));
+
+        $addedShifts = Shift::query()
+            ->where('craft_id', $shiftPlanRequest->craft_id)
+            ->startAndEndDateOverlap($start->toDateString(), $end->toDateString())
+            ->when(
+                ! empty($requestedShiftIds),
+                fn ($q) => $q->whereNotIn('id', $requestedShiftIds)
+            )
+            ->when(
+                $shiftPlanRequest->created_at,
+                fn ($q) => $q->where('created_at', '>=', $shiftPlanRequest->created_at)
+            )
+            ->with($relations)
+            ->get()
+            ->each(fn (Shift $shift) => $shift->setAttribute('is_subsequently_added', true));
+
+        return $requestedShifts->concat($addedShifts)->values();
     }
 
     /**
@@ -195,23 +261,8 @@ class ShiftPlanRequestController extends Controller
             ])
             ->values();
 
-        // Alle Schichten, die zu diesem Request gehören
-        $shifts = Shift::query()
-            ->whereIn('id', $shiftPlanRequest->requestedShifts->pluck('id')->toArray())
-            ->with([
-                'users',
-                'freelancer',
-                'serviceProvider',
-                'craft',
-                'shiftsQualifications',
-                'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'shiftPlanRequestChanges.changedBy',
-                'activities' => fn ($query) => $query->orderByDesc('created_at'),
-                'activities.causer',
-                'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'committedShiftChanges.changedBy',
-            ])
-            ->get();
+        // Alle Schichten, die zu diesem Request gehören (inkl. nachträglich hinzugefügter Schichten)
+        $shifts = $this->loadShiftsForRequest($shiftPlanRequest, $start, $end);
 
         // Alle Worker des Gewerks laden
         $craft = $shiftPlanRequest->craft;
@@ -250,11 +301,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1088,23 +1143,8 @@ class ShiftPlanRequestController extends Controller
             ])
             ->values();
 
-        // Alle Schichten, die zu diesem Request gehören
-        $shifts = Shift::query()
-            ->whereIn('id', $shiftPlanRequest->requestedShifts->pluck('id')->toArray())
-            ->with([
-                'users',
-                'freelancer',
-                'serviceProvider',
-                'craft',
-                'shiftsQualifications',
-                'shiftPlanRequestChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'shiftPlanRequestChanges.changedBy',
-                'activities' => fn ($query) => $query->orderByDesc('created_at'),
-                'activities.causer',
-                'committedShiftChanges' => fn ($query) => $query->orderByDesc('created_at'),
-                'committedShiftChanges.changedBy',
-            ])
-            ->get();
+        // Alle Schichten, die zu diesem Request gehören (inkl. nachträglich hinzugefügter Schichten)
+        $shifts = $this->loadShiftsForRequest($shiftPlanRequest, $start, $end);
 
         // Alle Worker des Gewerks laden (gleich wie in show())
         $craft = $shiftPlanRequest->craft;
@@ -1143,11 +1183,15 @@ class ShiftPlanRequestController extends Controller
                 return $it;
             });
 
+        $overviewChanges = app(ShiftPlanRequestService::class)
+            ->buildOverviewChangeMarkers($shiftPlanRequest, $start, $end, $shifts);
+
         return Inertia::render('ShiftPlanRequests/Show', [
             'request' => $shiftPlanRequest,
             'shifts'  => $shifts,
             'days'    => $days,
             'individualTimes' => $individualTimes,
+            'overviewChanges' => $overviewChanges,
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1208,7 +1252,11 @@ class ShiftPlanRequestController extends Controller
             ]);
         }
 
-        return DB::transaction(function () use ($shiftPlanRequest, $shiftChange, $shift, $fieldChanges, $user) {
+        // Das Zurücksetzen darf selbst KEINE neuen Änderungs-Einträge erzeugen: Sonst würde der
+        // erneute $shift->save() (bzw. die Qualifikations-Saves) über die Observer wieder einen
+        // ShiftPlanRequestChange/CommittedShiftChange anlegen und die "abgelehnte" Änderung bliebe
+        // als frischer Revert-Eintrag im Verlauf stehen.
+        return ShiftChangeRecorder::withoutRecording(fn () => DB::transaction(function () use ($shiftPlanRequest, $shiftChange, $shift, $fieldChanges, $user) {
             $rollbackFieldChanges = [];
 
             // Originalzustand der Schicht für Activity-Log
@@ -1408,19 +1456,22 @@ class ShiftPlanRequestController extends Controller
             // Schicht nach allen Anpassungen speichern
             $shift->save();
 
-            // Neuen Change-Eintrag als "Rollback" loggen (damit History vollständig bleibt)
-            if (! empty($rollbackFieldChanges) && $shift->is_committed) {
-                CommittedShiftChange::create([
-                    'subject_type'      => Shift::class,
-                    'subject_id'        => $shift->id,
-                    'shift_id'           => $shift->id,
-                    'craft_id'           => $shift->craft_id,
-                    'change_type'        => 'revert',
-                    'field_changes'      => $rollbackFieldChanges,
-                    'affected_user_id'   => $shiftChange->affected_user_id ?? null,
-                    'changed_by_user_id' => $user->id,
-                    'changed_at'         => now(),
-                ]);
+            // Den im selben record()-Aufruf angelegten Post-commit-Eintrag DERSELBEN Bearbeitung
+            // entfernen. Bei einer Schicht, die zugleich in_workflow UND is_committed ist, legt
+            // ShiftChangeRecorder::record() für eine Bearbeitung sowohl einen ShiftPlanRequestChange
+            // (Workflow) als auch einen CommittedShiftChange (Post-commit) mit identischem changed_at
+            // an. Beim Ablehnen muss daher auch der Post-commit-Eintrag weg, sonst bleibt die
+            // abgelehnte Änderung im Änderungsverlauf (Post-commit-Bereich) sichtbar.
+            //
+            // Bewusst KEIN neuer "revert"-CommittedShiftChange mehr: Die Ablehnung wird unten als
+            // Activity protokolliert (Audit-Trail), soll aber keinen weiteren sichtbaren
+            // Änderungseintrag erzeugen.
+            if ($shiftChange->changed_at) {
+                CommittedShiftChange::query()
+                    ->where('shift_id', $shift->id)
+                    ->whereNull('acknowledged_at')
+                    ->where('changed_at', $shiftChange->changed_at)
+                    ->delete();
             }
 
             // Activity-Log – nur wirklich geänderte Felder loggen
@@ -1443,6 +1494,6 @@ class ShiftPlanRequestController extends Controller
             $shiftChange->delete();
 
             return back()->with('success', 'Shift reverted');
-        });
+        }));
     }
 }

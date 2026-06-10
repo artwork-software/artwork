@@ -17,6 +17,7 @@ class ProductionDatabaseSeeder extends Seeder
             ShiftQualificationSeeder::class,
             DefaultComponentSeeder::class,
             InventoryManagementDefaultColumnsSeeder::class,
+            InventoryArticlePropertiesSeeder::class,
             SubdivisionSeeder::class,
             DatabaseSettingsSeeder::class,
             BudgetColumnSettingSeeder::class,

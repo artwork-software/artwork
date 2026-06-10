@@ -228,6 +228,13 @@
                                         >
                                             {{ formatProperty(article, property) }}
                                         </a>
+                                        <a
+                                            v-else-if="property.type === 'file' && property.pivot?.value"
+                                            :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                        >
+                                            {{ fileName(property.pivot.value) }}
+                                        </a>
                                         <span v-else>{{ formatProperty(article, property) }}</span>
                                     </dd>
                                 </div>
@@ -385,6 +392,13 @@
                                                 >
                                                     {{ formatProperty(detailedArticle, property) }}
                                                 </a>
+                                                <a
+                                                    v-else-if="property.type === 'file' && property.pivot?.value"
+                                                    :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                >
+                                                    {{ fileName(property.pivot.value) }}
+                                                </a>
                                                 <span v-else>{{ formatProperty(detailedArticle, property) }}</span>
                                             </dd>
                                         </div>
@@ -541,6 +555,8 @@ const confirmDelete = () => {
 const openArticleEditModal = () => {
     emit('openArticleEditModal', props.article)
 }
+
+const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
 
 const formatProperty = (article, property) => {
     if (property.type === 'room') {

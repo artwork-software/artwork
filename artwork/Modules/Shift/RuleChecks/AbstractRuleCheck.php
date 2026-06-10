@@ -121,6 +121,44 @@ abstract class AbstractRuleCheck implements ShiftRuleCheckInterface
         ]);
     }
 
+    protected function isSpecialDay(Carbon $date): bool
+    {
+        return Holiday::isSpecialDay($date);
+    }
+
+    protected function createViolationWithoutShift(
+        ShiftRule $rule,
+        User $user,
+        Carbon $date,
+        array $violationData
+    ): ShiftRuleViolation {
+        // Dedupe on (rule, user, date) for shift-less violations.
+        $existingViolation = ShiftRuleViolation::where([
+            'shift_rule_id' => $rule->id,
+            'user_id' => $user->id,
+            'violation_date' => $date->format('Y-m-d'),
+        ])->whereNull('shift_id')->first();
+
+        if ($existingViolation) {
+            if ($existingViolation->status === 'active') {
+                $existingViolation->update([
+                    'violation_data' => $violationData,
+                ]);
+            }
+            return $existingViolation;
+        }
+
+        return ShiftRuleViolation::create([
+            'shift_rule_id' => $rule->id,
+            'shift_id' => null,
+            'user_id' => $user->id,
+            'violation_date' => $date->format('Y-m-d'),
+            'violation_data' => $violationData,
+            'severity' => 'warning',
+            'status' => 'active'
+        ]);
+    }
+
     protected function checkRestTimeBetweenShiftsOnSameDay(
         ShiftRule $rule,
         User $user,

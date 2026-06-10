@@ -1173,8 +1173,11 @@ class EventController extends Controller
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
-            'notificationOfToday' => $notification->get(),
+            // Only the first page is shipped with the dashboard; further pages are loaded on
+            // demand via the notifications.today endpoint so a user with thousands of
+            // notifications does not bloat the payload. Keep perPage (5) in sync with Dashboard.vue.
             'notificationCount' => $notification->count(),
+            'notificationOfToday' => $notification->take(5)->get(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::select(['id', 'name', 'area_id', 'order'])->get(),
@@ -2981,18 +2984,35 @@ class EventController extends Controller
             ->count();
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
-        return inertia('Trash/Events', [
-            'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedEvents = Event::onlyTrashed()
+            ->with(['project', 'event_type', 'room'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('eventName', 'like', '%' . $search . '%')
+                        ->orWhere('name', 'like', '%' . $search . '%')
+                        ->orWhereHas('project', fn ($project) => $project->where('name', 'like', '%' . $search . '%'));
+                });
+            })
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn ($event) => [
                 'id' => $event->id,
                 'name' => $event->eventName,
                 'project' => $event->project,
                 'event_type' => $event->event_type,
-                'start' => $event->start_time->format('d.m.Y, H:i'),
-                'end' => $event->end_time->format('d.m.Y, H:i'),
+                'start' => $event->start_time?->format('d.m.Y, H:i'),
+                'end' => $event->end_time?->format('d.m.Y, H:i'),
                 'room_name' => $event->room?->label,
-            ]),
+            ]);
+
+        return inertia('Trash/Events', [
+            'trashed_events' => $trashedEvents,
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);

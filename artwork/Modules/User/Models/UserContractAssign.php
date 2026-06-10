@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\User\Models;
 
+use Database\Factories\UserContractAssignFactory;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +27,11 @@ class UserContractAssign extends Model
 {
     use HasFactory;
 
+    protected static function newFactory(): Factory
+    {
+        return UserContractAssignFactory::new();
+    }
+
     protected $fillable = [
         'user_id',
         'user_contract_id',
@@ -32,6 +39,8 @@ class UserContractAssign extends Model
         'free_half_days_per_week',
         'special_day_rule_active',
         'compensation_period',
+        'overtime_rule_active',
+        'overtime_compensation_period',
         'free_sundays_per_season',
         'days_off_first_26_weeks',
         'work_time_pattern_id',
@@ -63,6 +72,8 @@ class UserContractAssign extends Model
 
     protected $casts = [
         'special_day_rule_active' => 'boolean',
+        'overtime_rule_active' => 'boolean',
+        'overtime_compensation_period' => 'integer',
         'days_off_first_26_weeks' => 'float',
         'free_full_days_per_week' => 'integer',
         'free_half_days_per_week' => 'integer',

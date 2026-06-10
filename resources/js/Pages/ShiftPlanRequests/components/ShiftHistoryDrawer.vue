@@ -23,6 +23,10 @@
                     </button>
                 </div>
                 <div class="px-4 py-4 space-y-6 text-sm">
+                    <div class="flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2 text-[11px] text-blue-900">
+                        <IconInfoCircle class="h-4 w-4 shrink-0 mt-px"/>
+                        <p>{{ $t('This panel shows all changes to the entire shift across every assigned person – not only the person you selected.') }}</p>
+                    </div>
                     <section class="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-3 text-[11px]">
                         <div class="flex items-center justify-between mb-2">
                             <p class="font-semibold text-gray-800">{{ $t('Current shift overview') }}</p>
@@ -89,6 +93,11 @@
                                             formatDateTime(change.changed_at || change.created_at)
                                         }}</span>
                                 </div>
+                                <p v-if="affectedPersonName(change)"
+                                   class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-gray-900 border border-gray-200">
+                                    <IconUser class="h-3 w-3 text-gray-500"/>
+                                    {{ affectedPersonName(change) }}
+                                </p>
                                 <p class="mt-1 text-[11px] text-gray-700 capitalize">{{ $t('Type') }}:
                                     {{ $t(change.change_type) }}</p>
                                 <div class="mt-2 rounded-lg bg-white/90 border border-gray-200 px-2 py-1.5">
@@ -140,6 +149,11 @@
                                                     $t(change.change_type)
                                                 }}</span>
                                         </div>
+                                        <span v-if="affectedPersonName(change)"
+                                              class="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 border border-indigo-100">
+                                            <IconUser class="h-3 w-3 text-indigo-400"/>
+                                            {{ affectedPersonName(change) }}
+                                        </span>
                                         <div class="flex flex-wrap items-center gap-2 text-[10px] text-indigo-900/80">
                                             <span class="inline-flex items-center gap-1">
                                                 <IconUser class="h-3 w-3"/>
@@ -269,7 +283,7 @@
     </transition>
 </template>
 <script setup>
-import {IconLock, IconX, IconUser, IconAlertTriangle} from '@tabler/icons-vue';
+import {IconLock, IconX, IconUser, IconAlertTriangle, IconInfoCircle} from '@tabler/icons-vue';
 import {useShiftPlanRequest} from './useShiftPlanRequest.js';
 
 const props = defineProps({
@@ -294,6 +308,7 @@ const {
     formatDateTime,
     formatDateShort,
     extractFieldEntries,
+    affectedPersonName,
     fieldLabel,
     formatFieldValue,
     extractInitialState,

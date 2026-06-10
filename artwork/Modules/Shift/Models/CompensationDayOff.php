@@ -19,7 +19,7 @@ class CompensationDayOff extends Model
     {
         return LogOptions::defaults()
             ->useLogName('compensation_day_off')
-            ->logOnly(['user_id', 'violation_id', 'value', 'deadline', 'granted_date', 'granted_by', 'granted_at', 'reason', 'for_holiday'])
+            ->logOnly(['user_id', 'violation_id', 'value', 'half_day_period', 'deadline', 'granted_date', 'granted_by', 'granted_at', 'reason', 'for_holiday'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -28,6 +28,7 @@ class CompensationDayOff extends Model
         'user_id',
         'violation_id',
         'value',
+        'half_day_period',
         'deadline',
         'granted_date',
         'granted_by',
@@ -93,5 +94,15 @@ class CompensationDayOff extends Model
     public function isGranted(): bool
     {
         return $this->granted_at !== null;
+    }
+
+    public function isMorning(): bool
+    {
+        return $this->half_day_period === 'morning';
+    }
+
+    public function isAfternoon(): bool
+    {
+        return $this->half_day_period === 'afternoon';
     }
 }

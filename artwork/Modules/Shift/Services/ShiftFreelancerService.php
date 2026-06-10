@@ -52,6 +52,7 @@ readonly class ShiftFreelancerService
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
         ?array $seriesShiftData = null,
+        bool $isOverbooked = false
     ): void {
 
         $freelancer = Freelancer::find($freelancerId);
@@ -68,7 +69,8 @@ readonly class ShiftFreelancerService
             $vacationConflictService,
             $availabilityConflictService,
             $changeService,
-            $seriesShiftData
+            $seriesShiftData,
+            $isOverbooked
         );
     }
 

@@ -50,7 +50,8 @@
                               :class="{
                                 'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
                                 'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
-                                'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount
+                                'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount,
+                                'bg-amber-500': computedUsedWorkerCount > computedMaxWorkerCount
                               }">
                         </span>
                     </div>
@@ -68,6 +69,7 @@
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
                     :key="row.shift_qualification_id"
                     class="flex items-center"
+                    :class="{ 'text-amber-600 font-semibold': row.workerCount > row.maxWorkerCount }"
                 >
                     {{ row.workerCount }}/{{ row.maxWorkerCount }}
                     <PropertyIcon
@@ -246,19 +248,23 @@ const shiftWorkers = computed(() => props.shift.workers || [])
 
 const computedUsedWorkerCount = computed(() => shiftWorkers.value.length)
 
+const allowOverbooking = computed(() => !!(page.props as any).allow_shift_overbooking)
+
 const computedShiftsQualificationsWithWorkerCount = computed(() => {
-    const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number }> = []
+    const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number, regularWorkerCount: number }> = []
     props.shift?.shifts_qualifications?.forEach((sq: any) => {
         if (sq.value === null || sq.value === 0) return
 
-        const assigned = shiftWorkers.value.filter(
+        const assignedWorkers = shiftWorkers.value.filter(
             (w: any) => w.pivot?.shift_qualification_id === sq.shift_qualification_id
-        ).length
+        )
 
         rows.push({
             shift_qualification_id: sq.shift_qualification_id,
             maxWorkerCount: sq.value,
-            workerCount: assigned
+            workerCount: assignedWorkers.length,
+            // Überbuchte Zuweisungen belegen keine regulären Plätze
+            regularWorkerCount: assignedWorkers.filter((w: any) => !w.pivot?.is_overbooked).length
         })
     })
     return rows
@@ -552,13 +558,13 @@ function openMultipleShiftQualificationSlotsAvailableModal(user: any, slots: any
     showMultipleShiftQualificationSlotsAvailableModal.value = true
 }
 
-function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selectedShiftQualificationId?: number) {
+function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selectedShiftQualificationId?: number, closeOnButton?: boolean, isOverbooked?: boolean) {
     showMultipleShiftQualificationSlotsAvailableModal.value = false
     showMultipleShiftQualificationSlotsAvailableModalSlots.value = null
     showMultipleShiftQualificationSlotsAvailableModalDroppedUser.value = null
 
     if (user && selectedShiftQualificationId) {
-        assignUser(user, selectedShiftQualificationId)
+        assignUser(user, selectedShiftQualificationId, !!isOverbooked)
     }
 }
 
@@ -623,10 +629,21 @@ function saveUser() {
             (sq: any) => sq.shift_qualification_id === q.id
         )
         if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
-        return qualificationData.workerCount < qualificationData.maxWorkerCount
+        return qualificationData.regularWorkerCount < qualificationData.maxWorkerCount
     })
 
-    if (qualificationsWithAvailableSlots.length === 0) {
+    // Volle Funktionen sind bei aktivierter Überbuchung trotzdem wählbar (als Überbuchung)
+    const overbookableQualifications = allowOverbooking.value
+        ? matches.filter((q: any) => {
+            const qualificationData = computedShiftsQualificationsWithWorkerCount.value.find(
+                (sq: any) => sq.shift_qualification_id === q.id
+            )
+            if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
+            return qualificationData.regularWorkerCount >= qualificationData.maxWorkerCount
+        })
+        : []
+
+    if (qualificationsWithAvailableSlots.length === 0 && overbookableQualifications.length === 0) {
         const label = user.type === 0
             ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
             : user.type === 1
@@ -640,12 +657,17 @@ function saveUser() {
         return
     }
 
-    if (qualificationsWithAvailableSlots.length === 1) {
+    // Auto-Zuweisung nur bei genau einer regulären Option ohne Überbuchungs-Alternative.
+    // Sobald eine Überbuchung im Spiel ist, muss das Auswahlmodal erscheinen.
+    if (qualificationsWithAvailableSlots.length === 1 && overbookableQualifications.length === 0) {
         assignUser(user, qualificationsWithAvailableSlots[0].id)
         return
     }
 
-    openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsWithAvailableSlots)
+    openMultipleShiftQualificationSlotsAvailableModal(user, [
+        ...qualificationsWithAvailableSlots.map((q: any) => ({ ...q, isOverbooked: false })),
+        ...overbookableQualifications.map((q: any) => ({ ...q, isOverbooked: true })),
+    ])
 }
 
 
@@ -675,7 +697,7 @@ function resolveCraftAbbreviationForAssignment(user: any, shiftQualificationId: 
     return user.craft_abbreviation ?? ''
 }
 
-function assignUser(user: any, shiftQualificationId: number) {
+function assignUser(user: any, shiftQualificationId: number, isOverbooked: boolean = false) {
     const craftAbbr = resolveCraftAbbreviationForAssignment(user, shiftQualificationId)
     axios.post(
         route('shift.assignUserByType', { shift: props.shift.id }),
@@ -684,7 +706,8 @@ function assignUser(user: any, shiftQualificationId: number) {
             userType: user.type,
             shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            craft_abbreviation: craftAbbr
+            craft_abbreviation: craftAbbr,
+            isOverbooked
         }
     ).then(() => {
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)

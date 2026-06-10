@@ -29,6 +29,7 @@ trait HasShifts
             ->withPivot([
                 'id',
                 'shift_qualification_id',
+                'is_overbooked',
                 'shift_count',
                 'craft_abbreviation',
                 'short_description',

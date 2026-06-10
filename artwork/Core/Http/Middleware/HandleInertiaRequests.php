@@ -212,6 +212,8 @@ class HandleInertiaRequests extends Middleware
                 // chatUsers only on reload and not on page change
                 'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
+                'allow_shift_overbooking'      => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->allow_shift_overbooking,
                 'isUserWorkFlowUser'           => $isUserWorkFlowUser,
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,

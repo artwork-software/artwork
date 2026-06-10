@@ -186,7 +186,7 @@
             <ShiftNoteComponent :shift="shift" />
 
             <!-- Gebuchte Nutzer -->
-            <div v-for="user in shift.users" :key="'u'+user.id">
+            <div v-for="user in shift.users" :key="'u'+user.id" :class="{ 'border border-dashed border-amber-500 rounded-lg': user.pivot?.is_overbooked }">
                 <ShiftBookedElementComponent
                     :user="user"
                     :type="0"
@@ -206,7 +206,7 @@
             </div>
 
             <!-- Freelancer -->
-            <div v-for="freelancer in shift.freelancer" :key="'f'+freelancer.id">
+            <div v-for="freelancer in shift.freelancer" :key="'f'+freelancer.id" :class="{ 'border border-dashed border-amber-500 rounded-lg': freelancer.pivot?.is_overbooked }">
                 <ShiftBookedElementComponent
                     :user="freelancer"
                     :type="1"
@@ -226,7 +226,7 @@
             </div>
 
             <!-- Dienstleister -->
-            <div v-for="serviceProvider in shift.service_provider" :key="'p'+serviceProvider.id">
+            <div v-for="serviceProvider in shift.service_provider" :key="'p'+serviceProvider.id" :class="{ 'border border-dashed border-amber-500 rounded-lg': serviceProvider.pivot?.is_overbooked }">
                 <ShiftBookedElementComponent
                     :user="serviceProvider"
                     :type="2"
@@ -396,9 +396,10 @@ const computedShiftQualificationDropElements = computed(() => {
     props.shift.shifts_qualifications.forEach(sq => {
         let required = sq.value
         const id = sq.shift_qualification_id
-        required -= props.shift.users.filter(u => u.pivot.shift_qualification_id === id).length
-        required -= props.shift.freelancer.filter(f => f.pivot.shift_qualification_id === id).length
-        required -= props.shift.service_provider.filter(p => p.pivot.shift_qualification_id === id).length
+        // Überbuchte Zuweisungen belegen keine regulären Plätze
+        required -= props.shift.users.filter(u => u.pivot.shift_qualification_id === id && !u.pivot.is_overbooked).length
+        required -= props.shift.freelancer.filter(f => f.pivot.shift_qualification_id === id && !f.pivot.is_overbooked).length
+        required -= props.shift.service_provider.filter(p => p.pivot.shift_qualification_id === id && !p.pivot.is_overbooked).length
         if (required > 0) res.push({ shift_qualification_id: id, requiredDropElementsCount: required })
     })
     return res

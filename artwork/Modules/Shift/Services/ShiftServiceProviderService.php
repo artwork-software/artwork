@@ -46,7 +46,8 @@ readonly class ShiftServiceProviderService
         string $craftAbbreviation,
         ShiftCountService $shiftCountService,
         ChangeService $changeService,
-        array|null $seriesShiftData = null
+        array|null $seriesShiftData = null,
+        bool $isOverbooked = false
     ): void {
 
         $serviceProvider = ServiceProvider::find($serviceProviderId);
@@ -63,7 +64,8 @@ readonly class ShiftServiceProviderService
             null, // vacationConflictService
             null, // availabilityConflictService
             $changeService,
-            $seriesShiftData
+            $seriesShiftData,
+            $isOverbooked
         );
     }
 

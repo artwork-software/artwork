@@ -1,7 +1,7 @@
 <template>
     <ArtworkBaseModal
-        :title="$t('Add Function')"
-        :description="$t('Select a function to add to the shift')"
+        :title="isOverbooking ? $t('Add overbooking') : $t('Add Function')"
+        :description="isOverbooking ? $t('Select a function to overbook. The demand remains unchanged.') : $t('Select a function to add to the shift')"
         @close="$emit('close')"
     >
         <div class="grid grid-cols-2 w-full gap-4">
@@ -35,6 +35,11 @@ const props = defineProps({
     crafts: {
         type: [Array, Object],
         required: true
+    },
+    // Überbuchungs-Modus: schafft einen Überbuchungsplatz statt regulären Bedarf zu erhöhen
+    isOverbooking: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -55,7 +60,11 @@ const availableQualifications = computed(() => {
 });
 
 const addQualification = (qualificationId) => {
-    router.patch(route('shifts.qualifications.add', { shift: props.shift.id }), {
+    const routeName = props.isOverbooking
+        ? 'shifts.qualifications.overbook.increase'
+        : 'shifts.qualifications.add';
+
+    router.patch(route(routeName, { shift: props.shift.id }), {
         qualification_id: qualificationId
     }, {
         preserveScroll: true,

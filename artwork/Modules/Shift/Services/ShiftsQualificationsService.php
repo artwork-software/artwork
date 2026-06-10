@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -104,6 +105,103 @@ readonly class ShiftsQualificationsService
                 ['value' => $workerCount]
             );
         }
+    }
+
+    /**
+     * Schafft einen zusätzlichen Überbuchungsplatz für die Funktion einer Schicht.
+     * Der geplante Bedarf (value) bleibt dabei unangetastet.
+     */
+    public function increaseOverbookedValue(int $shiftId, int $shiftQualificationId): void
+    {
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (is_null($existingShiftsQualifications)) {
+            $this->createShiftsQualificationForShift(
+                $shiftId,
+                [
+                    'shift_qualification_id' => $shiftQualificationId,
+                    'value' => 0,
+                    'overbooked_value' => 1
+                ]
+            );
+
+            return;
+        }
+
+        $this->shiftsQualificationsRepository->update(
+            $existingShiftsQualifications,
+            ['overbooked_value' => $existingShiftsQualifications->getAttribute('overbooked_value') + 1]
+        );
+    }
+
+    /**
+     * Entfernt einen offenen Überbuchungsplatz. Befüllte Überbuchungsplätze bleiben bestehen,
+     * dafür muss zuerst der zugewiesene Worker entfernt werden.
+     */
+    public function decreaseOverbookedValue(int $shiftId, int $shiftQualificationId): void
+    {
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (
+            is_null($existingShiftsQualifications) ||
+            $existingShiftsQualifications->getAttribute('overbooked_value') <= 0 ||
+            $existingShiftsQualifications->getAttribute('overbooked_value') <=
+                $this->getOverbookedWorkerCount($shiftId, $shiftQualificationId)
+        ) {
+            return;
+        }
+
+        $this->shiftsQualificationsRepository->update(
+            $existingShiftsQualifications,
+            ['overbooked_value' => $existingShiftsQualifications->getAttribute('overbooked_value') - 1]
+        );
+    }
+
+    /**
+     * Stellt sicher, dass für eine Überbuchungs-Zuweisung ein offener Überbuchungsplatz existiert
+     * (Multiedit/Drag&Drop erzeugen den Platz implizit mit).
+     */
+    public function ensureOpenOverbookedSlot(int $shiftId, int $shiftQualificationId): void
+    {
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (is_null($existingShiftsQualifications)) {
+            $this->createShiftsQualificationForShift(
+                $shiftId,
+                [
+                    'shift_qualification_id' => $shiftQualificationId,
+                    'value' => 0,
+                    'overbooked_value' => 1
+                ]
+            );
+
+            return;
+        }
+
+        $overbookedWorkerCount = $this->getOverbookedWorkerCount($shiftId, $shiftQualificationId);
+
+        if ($existingShiftsQualifications->getAttribute('overbooked_value') <= $overbookedWorkerCount) {
+            $this->shiftsQualificationsRepository->update(
+                $existingShiftsQualifications,
+                ['overbooked_value' => $overbookedWorkerCount + 1]
+            );
+        }
+    }
+
+    private function getOverbookedWorkerCount(int $shiftId, int $shiftQualificationId): int
+    {
+        return ShiftWorker::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)
+            ->where('is_overbooked', true)
+            ->count();
     }
 
     public function increaseValueOrCreateWithOneByQualification(int $shiftId, int $shiftQualificationId): void

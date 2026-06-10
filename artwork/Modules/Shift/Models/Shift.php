@@ -290,7 +290,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', User::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason'])
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason'])
             ->without('calendar_settings');
     }
 
@@ -301,7 +301,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', Freelancer::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
     }
 
     public function serviceProvider(): MorphToMany
@@ -311,7 +311,7 @@ class Shift extends Model
             ->using(ShiftWorker::class)
             ->where('shift_workers.employable_type', ServiceProvider::class)
             ->whereNull('shift_workers.deleted_at')
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
     }
 
     /**

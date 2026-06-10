@@ -4849,5 +4849,14 @@
     "No open substitute days off.": "Keine offenen ersatzfreien Tage.",
     "No granted substitute days off.": "Keine gewährten ersatzfreien Tage.",
     "No entries.": "Keine Einträge.",
-    "Values applying to this user (may differ from the contract template).": "Für diesen User geltende Werte (können vom Vertrags-Template abweichen)."
+    "Values applying to this user (may differ from the contract template).": "Für diesen User geltende Werte (können vom Vertrags-Template abweichen).",
+    "Overbooking": "Überbuchung",
+    "Overbook": "Überbuchen",
+    "Add overbooking": "Überbuchung hinzufügen",
+    "Select a function to overbook. The demand remains unchanged.": "Wähle eine Funktion, die überbucht werden soll. Der geplante Bedarf bleibt unverändert.",
+    "Remove overbooking slot": "Überbuchungsplatz entfernen",
+    "Overbooking of shifts": "Überbuchung von Schichten",
+    "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.": "Wenn aktiviert, können Planende mehr Personen in eine Schicht einteilen als der festgelegte Bedarf vorsieht. Überbuchte Plätze werden gesondert markiert und der Bedarf bleibt unverändert.",
+    "Allow overbooking": "Überbuchung erlauben",
+    "Deactivated": "Deaktiviert"
 }

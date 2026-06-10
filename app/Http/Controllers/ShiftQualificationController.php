@@ -75,6 +75,30 @@ class ShiftQualificationController extends Controller
         broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
     }
 
+    public function increaseOverbookedValue(Shift $shift, Request $request): void
+    {
+        if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            abort(403, 'Shift overbooking is not enabled for this instance.');
+        }
+
+        $this->shiftsQualificationsService
+            ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
+
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+    }
+
+    public function decreaseOverbookedValue(Shift $shift, Request $request): void
+    {
+        if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            abort(403, 'Shift overbooking is not enabled for this instance.');
+        }
+
+        $this->shiftsQualificationsService
+            ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
+
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+    }
+
     public function destroy(
         ShiftQualification $shiftQualification,
     ) {

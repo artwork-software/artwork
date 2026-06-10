@@ -264,8 +264,13 @@ class ShiftWorkerService
         ?VacationConflictService $vacationConflictService = null,
         ?AvailabilityConflictService $availabilityConflictService = null,
         ?ChangeService $changeService = null,
-        ?array $seriesShiftData = null
+        ?array $seriesShiftData = null,
+        bool $isOverbooked = false
     ): ShiftWorker {
+        if ($isOverbooked && !app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            throw new \RuntimeException('Shift overbooking is not enabled for this instance.');
+        }
+
         if ($this->isAlreadyAssigned($shift, $worker)) {
             return $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
                 $this->getEmployableType($worker),
@@ -276,22 +281,32 @@ class ShiftWorkerService
 
         $employableType = $this->getEmployableType($worker);
 
+        if ($isOverbooked) {
+            $this->shiftsQualificationsService->ensureOpenOverbookedSlot(
+                $shift->id,
+                $shiftQualificationId
+            );
+        }
+
         $shiftWorkerPivot = $this->shiftWorkerRepository->createForShift(
             $shift->id,
             $employableType,
             $worker->id,
             $shiftQualificationId,
             $craftAbbreviation,
-            $shift
+            $shift,
+            $isOverbooked
         );
 
         $shiftWorkerPivot->setRelation('employable', $worker);
         $shiftWorkerPivot->load('shiftQualification');
 
-        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-            $shift->id,
-            $shiftQualificationId
-        );
+        if (!$isOverbooked) {
+            $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+                $shift->id,
+                $shiftQualificationId
+            );
+        }
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),
@@ -357,7 +372,8 @@ class ShiftWorkerService
                 $notificationService,
                 $vacationConflictService,
                 $availabilityConflictService,
-                $changeService
+                $changeService,
+                $isOverbooked
             );
         }
 
@@ -703,7 +719,8 @@ class ShiftWorkerService
         ?NotificationService $notificationService = null,
         ?VacationConflictService $vacationConflictService = null,
         ?AvailabilityConflictService $availabilityConflictService = null,
-        ?ChangeService $changeService = null
+        ?ChangeService $changeService = null,
+        bool $isOverbooked = false
     ): void {
         $employableType = $this->getEmployableType($worker);
 
@@ -723,12 +740,14 @@ class ShiftWorkerService
                 continue;
             }
 
-            if (
-                $this->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-                    $shiftBetweenDates->id,
-                    $shiftQualificationId
-                ) >= $shiftsQualificationsValue
-            ) {
+            $qualificationIsFull = $this->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
+                $shiftBetweenDates->id,
+                $shiftQualificationId
+            ) >= $shiftsQualificationsValue;
+
+            // Volle Schichten der Serie nur befüllen, wenn explizit überbucht wird —
+            // und nur dann als Überbuchung markieren, wenn die Funktion dort wirklich voll ist.
+            if ($qualificationIsFull && !$isOverbooked) {
                 continue;
             }
 
@@ -741,7 +760,8 @@ class ShiftWorkerService
                 $vacationConflictService,
                 $availabilityConflictService,
                 $changeService,
-                null // seriesShiftData = null
+                null, // seriesShiftData = null
+                $isOverbooked && $qualificationIsFull
             );
         }
     }

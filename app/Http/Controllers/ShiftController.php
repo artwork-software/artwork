@@ -915,12 +915,16 @@ class ShiftController extends Controller
             ));
         }
 
+        $allowOverbooking = app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking;
+
         foreach ($shiftsToHandle['assignToShift'] as $shiftToAssign) {
             $shift = $shiftService->getById($shiftToAssign['shiftId']);
 
             if (!$shift instanceof Shift) {
                 continue;
             }
+
+            $isOverbooked = $allowOverbooking && ($shiftToAssign['isOverbooked'] ?? false);
 
             // Resolve a valid shift qualification id if not provided
             $resolvedShiftQualificationId = $shiftToAssign['shiftQualificationId'] ?? null;
@@ -948,7 +952,9 @@ class ShiftController extends Controller
                     $resolvedShiftQualificationId,
                     $request->string('craft_abbreviation'),
                     $shiftCountService,
-                    $changeService
+                    $changeService,
+                    null,
+                    $isOverbooked
                 );
 
                 broadcast(new AssignUserToShift(
@@ -970,7 +976,9 @@ class ShiftController extends Controller
                 $shiftCountService,
                 $vacationConflictService,
                 $availabilityConflictService,
-                $changeService
+                $changeService,
+                null,
+                $isOverbooked
             );
 
             broadcast(new AssignUserToShift(
@@ -1000,6 +1008,11 @@ class ShiftController extends Controller
             abort(403);
         }
 
+        $isOverbooked = $request->boolean('isOverbooked');
+        if ($isOverbooked && !app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            abort(403, 'Shift overbooking is not enabled for this instance.');
+        }
+
         $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($request->get('userType')) {
             0 => $shiftUserService,
@@ -1020,7 +1033,8 @@ class ShiftController extends Controller
                 $request->string('craft_abbreviation'),
                 $shiftCountService,
                 $changeService,
-                $request->get('seriesShiftData')
+                $request->get('seriesShiftData'),
+                $isOverbooked
             );
 
             broadcast(new AssignUserToShift(
@@ -1043,7 +1057,8 @@ class ShiftController extends Controller
             $vacationConflictService,
             $availabilityConflictService,
             $changeService,
-            $request->get('seriesShiftData')
+            $request->get('seriesShiftData'),
+            $isOverbooked
         );
 
         // Immediately re-validate shift rules for users so HFT/shift conflicts surface right after assignment.

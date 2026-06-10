@@ -53,7 +53,8 @@ class ShiftUserService
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
-        ?array $seriesShiftData = null
+        ?array $seriesShiftData = null,
+        bool $isOverbooked = false
     ): void {
 
         $user = User::find($userId);
@@ -70,7 +71,8 @@ class ShiftUserService
             $vacationConflictService,
             $availabilityConflictService,
             $changeService,
-            $seriesShiftData
+            $seriesShiftData,
+            $isOverbooked
         );
     }
 

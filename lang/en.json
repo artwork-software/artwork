@@ -4803,5 +4803,14 @@
     "No open substitute days off.": "No open substitute days off.",
     "No granted substitute days off.": "No granted substitute days off.",
     "No entries.": "No entries.",
-    "Values applying to this user (may differ from the contract template).": "Values applying to this user (may differ from the contract template)."
+    "Values applying to this user (may differ from the contract template).": "Values applying to this user (may differ from the contract template).",
+    "Overbooking": "Overbooking",
+    "Overbook": "Overbook",
+    "Add overbooking": "Add overbooking",
+    "Select a function to overbook. The demand remains unchanged.": "Select a function to overbook. The demand remains unchanged.",
+    "Remove overbooking slot": "Remove overbooking slot",
+    "Overbooking of shifts": "Overbooking of shifts",
+    "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.": "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.",
+    "Allow overbooking": "Allow overbooking",
+    "Deactivated": "Deactivated"
 }

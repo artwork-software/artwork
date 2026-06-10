@@ -681,6 +681,15 @@ class NotificationService
         }
     }
 
+    public function deleteUnhandledRoomRequestNotificationsByEventId(int $eventId): void
+    {
+        DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->whereNull('data->handledStatus')
+            ->delete();
+    }
+
     public function deleteUpsertRoomRequestNotificationByEventId(int $eventId): void
     {
         $notificationCollection = DB::table('notifications')

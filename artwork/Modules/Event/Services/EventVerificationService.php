@@ -10,6 +10,7 @@ use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
@@ -22,7 +23,23 @@ class EventVerificationService
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
+        private readonly RoomRequestNotificationService $roomRequestNotificationService,
     ){
+    }
+
+    /**
+     * Stellt einen geplanten Termin auf einen "richtigen" Termin um.
+     * War der Termin als Raumanfrage angelegt (occupancy_option), bleibt die Anfrage bestehen
+     * und die Raumadmins werden erst jetzt benachrichtigt - nicht schon im Planungskalender.
+     */
+    private function confirmEvent(Event $event): void
+    {
+        $this->trackIsPlanningChange($event, false);
+        $event->update(['is_planning' => false]);
+
+        if ($event->occupancy_option && $event->room_id) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
+        }
     }
 
     private function trackIsPlanningChange(Event $event, bool $newIsPlanning): void
@@ -185,8 +202,7 @@ class EventVerificationService
 
         switch ($eventType->verification_mode) {
             case 'any':
-                $this->trackIsPlanningChange($event, false);
-                $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                $this->confirmEvent($event);
                 $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 $event->verifications()->where('status', 'pending')->delete();
                 break;
@@ -198,8 +214,7 @@ class EventVerificationService
                     'name' => $verification->verifier->full_name,
                 ], $eventCreator->language);
                 if ($approvedCount === $totalCount) {
-                    $this->trackIsPlanningChange($event, false);
-                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                    $this->confirmEvent($event);
                     $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 }
                 break;
@@ -207,8 +222,7 @@ class EventVerificationService
             case 'specific':
                 $specificVerifier = $eventType->specificVerifier;
                 if ($verification->verifier_id === $specificVerifier->id) {
-                    $this->trackIsPlanningChange($event, false);
-                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
+                    $this->confirmEvent($event);
                     $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
                 }
                 break;
@@ -317,8 +331,7 @@ class EventVerificationService
         $uuid = Str::uuid()->toString();
 
         if ($eventType->verification_mode === 'none') {
-            $this->trackIsPlanningChange($event, false);
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+            $this->confirmEvent($event);
             return;
         }
 
@@ -336,8 +349,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $this->trackIsPlanningChange($event, false);
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+            $this->confirmEvent($event);
             return;
         }
 
@@ -349,8 +361,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $this->trackIsPlanningChange($event, false);
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+            $this->confirmEvent($event);
             return;
         }
 
@@ -406,6 +417,7 @@ class EventVerificationService
     {
         $this->trackIsPlanningChange($event, true);
         $event->update(['is_planning' => true]);
+        $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
         foreach ($event->verifications as $verification) {
             $verifier = $verification->verifier;
             $verification->delete();

@@ -60,7 +60,10 @@ class EventVerificationController extends Controller
 
         $roomBookingRequests = collect();
         if ($canSeeRoomRequests) {
+            // Anfragen zu geplanten Terminen erreichen die Raumadmins erst,
+            // wenn der Termin auf einen "richtigen" Termin umgestellt wurde
             $query = Event::where('occupancy_option', true)
+                ->where('is_planning', false)
                 ->whereNotNull('room_id')
                 ->with(['room', 'event_type', 'project', 'creator'])
                 ->orderBy('start_time');

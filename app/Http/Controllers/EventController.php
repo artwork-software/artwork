@@ -60,6 +60,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -158,6 +159,7 @@ class EventController extends Controller
         private readonly WorkingHourCacheService $workingHourCacheService,
         private readonly WorkerService $workerService,
         private readonly WorkerShiftPlanService $workerShiftPlanService,
+        private readonly RoomRequestNotificationService $roomRequestNotificationService,
     ) {
     }
 
@@ -1349,8 +1351,10 @@ class EventController extends Controller
             }
         }
 
-        if ($request->isOption) {
-            $this->createRequestNotification($request, $firstEvent);
+        // Raumanfragen zu geplanten Terminen werden erst beim Umstellen auf einen
+        // "richtigen" Termin verschickt (siehe EventVerificationService::confirmEvent)
+        if ($request->isOption && !$firstEvent->is_planning) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($firstEvent);
         }
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -1650,133 +1654,6 @@ class EventController extends Controller
         );
         $event->project()->associate($project);
         $event->save();
-    }
-
-    private function createRequestNotification($request, Event $event): void
-    {
-        $room = Room::find($request->roomId);
-        $admins = $room->users()->wherePivot('is_admin', true)->get();
-
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setEventId($event->id);
-        $this->notificationService->setRoomId($room->id);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
-
-        $this->notificationService->setButtons(['show_in_calendar', 'accept', 'decline']);
-        if (!empty($admins)) {
-            foreach ($admins as $admin) {
-                // notification.event.new_room_request
-                $notificationTitle = __('notification.event.new_room_request', [], $admin->language);
-                $broadcastMessage = [
-                    'id' => Str::uuid()->toString(),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
-                    ],
-                    2 => [
-                        'type' => 'string',
-                        'title' => $event->event_type->name . ', ' . $event->eventName,
-                        'href' => null
-                    ],
-                    3 => [
-                        'type' => 'link',
-                        'title' => $event->project->name ?? '',
-                        'href' => $event->project ?
-                            route(
-                                'projects.tab',
-                                [
-                                    $event->project->id,
-                                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                                        ProjectTabComponentEnum::CALENDAR
-                                    )
-                                ]
-                            ) :
-                            null
-                    ],
-                    4 => [
-                        'type' => 'string',
-                        'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
-                            Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                        'href' => null
-                    ]
-                ];
-                if (!$this->notificationService->updateExistingRoomRequestNotification(
-                    $event->id,
-                    $admin->id,
-                    $notificationDescription
-                )) {
-                    $this->notificationService->setTitle($notificationTitle);
-                    $this->notificationService->setBroadcastMessage($broadcastMessage);
-                    $this->notificationService->setDescription($notificationDescription);
-                    $this->notificationService->setNotificationKey(Str::random(15));
-                    $this->notificationService->setNotificationTo($admin);
-                    $this->notificationService->createNotification();
-                }
-            }
-        } else {
-            $user = User::find($room->user_id);
-            if ($user === null) {
-                return;
-            }
-            // notification.event.new_room_request
-            $notificationTitle = __('notification.event.new_room_request', [], $user->language);
-            $broadcastMessage = [
-                'id' => Str::uuid()->toString(),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
-                ],
-                2 => [
-                    'type' => 'string',
-                    'title' => $event->event_type->name . ', ' . $event->eventName,
-                    'href' => null
-                ],
-                3 => [
-                    'type' => 'link',
-                    'title' => $event->project->name ?? '',
-                    'href' => $event->project ?
-                        route(
-                            'projects.tab',
-                            [
-                                $event->project->id,
-                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                                    ProjectTabComponentEnum::CALENDAR
-                                )
-                            ]
-                        ) :
-                        null
-                ],
-                4 => [
-                    'type' => 'string',
-                    'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
-                        Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                    'href' => null
-                ]
-            ];
-            if (!$this->notificationService->updateExistingRoomRequestNotification(
-                $event->id,
-                $user->id,
-                $notificationDescription
-            )) {
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey(Str::random(15));
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-            }
-        }
     }
 
     /**
@@ -2093,15 +1970,19 @@ class EventController extends Controller
                         'declined_room_id' => null,
                         'accepted' => false,
                     ]);
-                    $this->createRequestNotification($request, $event);
+                    // Bei geplanten Terminen geht die Raumanfrage erst beim Umstellen
+                    // auf einen "richtigen" Termin raus
+                    if (!$event->is_planning) {
+                        $this->roomRequestNotificationService->notifyRoomAdmins($event);
+                    }
                     $roomRequestNotificationSent = true;
                 }
             }
         }
 
         // Update existing room request notifications if event details changed while request is still pending
-        if (!$roomRequestNotificationSent && $event->occupancy_option && $event->room_id) {
-            $this->createRequestNotification($request, $event);
+        if (!$roomRequestNotificationSent && !$event->is_planning && $event->occupancy_option && $event->room_id) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
         }
 
         $newEventDescription = $event->description;
@@ -2208,6 +2089,12 @@ class EventController extends Controller
             'comment' => $request->comment,
             'is_admin_comment' => false
         ]);
+
+        // Keine Benachrichtigung an Raumadmins zu geplanten Terminen - die Anfrage
+        // erreicht sie erst beim Umstellen auf einen "richtigen" Termin
+        if ($event->is_planning) {
+            return;
+        }
 
         $this->notificationService->setNotificationKey(Str::random(15));
         $room = Room::find($event->room_id);
@@ -4194,6 +4081,10 @@ class EventController extends Controller
 
         // Set the event as a planning event
         $event->update(['is_planning' => true]);
+
+        // Offene Raumanfrage-Benachrichtigungen zurückziehen - der Termin ist für
+        // Raumadmins ohne Planungskalender-Zugriff nicht mehr sichtbar
+        $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
 
         if (!$wasPlanning) {
             $this->changeService->saveFromBuilder(

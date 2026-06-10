@@ -511,6 +511,24 @@
                         </Listbox>
                     </section>
 
+                    <!-- DP-18: "Frei" als ganzer oder halber freier Tag (Vormittag/Nachmittag) -->
+                    <section v-if="checked && checked.type === 'FREE_WORK'"
+                             class="space-y-2 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
+                        <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                            {{ t('Free day type') }}
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <label v-for="opt in freeDayPartOptions" :key="opt.value"
+                                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm cursor-pointer"
+                                   :class="freeDayPart === opt.value
+                                       ? 'border-artwork-buttons-create text-artwork-buttons-create bg-artwork-buttons-create/5'
+                                       : 'border-zinc-200 text-zinc-600'">
+                                <input type="radio" class="hidden" :value="opt.value" v-model="freeDayPart" />
+                                {{ t(opt.label) }}
+                            </label>
+                        </div>
+                    </section>
+
                     <!-- Kommentar -->
                     <section class="space-y-3 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
                         <div class="flex items-center justify-between">
@@ -779,6 +797,14 @@ const vacationTypes = ref([
     { name: 'Frei', type: 'FREE_WORK' },
 ]);
 
+// DP-18: Ganzer/Halber freier Tag für den "Frei"-Status
+const freeDayPart = ref('full');
+const freeDayPartOptions = [
+    { value: 'full', label: 'Full free day' },
+    { value: 'morning', label: 'Half free day (morning)' },
+    { value: 'afternoon', label: 'Half free day (afternoon)' },
+];
+
 const checked = ref(null);
 const vacationTypeBeforeUpdate = ref(null);
 
@@ -972,9 +998,11 @@ onMounted(async () => {
         );
         checked.value = vacationType ?? vacationTypes.value[0];
         vacationTypeBeforeUpdate.value = vacationType ?? vacationTypes.value[0];
+        freeDayPart.value = vacation.day_part ?? 'full';
     } else {
         checked.value = vacationTypes.value[0];
         vacationTypeBeforeUpdate.value = vacationTypes.value[0];
+        freeDayPart.value = 'full';
     }
 
     // Load active rules for manual violation creation
@@ -1154,6 +1182,7 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
                 // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
                 // daher hier nie automatisch detachen.
                 remove_from_shifts: false,
@@ -1175,6 +1204,7 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
                 // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
                 // daher hier nie automatisch detachen.
                 remove_from_shifts: false,
@@ -1196,6 +1226,7 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
                 // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
                 // daher hier nie automatisch detachen.
                 remove_from_shifts: false,

@@ -3948,10 +3948,13 @@ class ProjectController extends Controller
 
     public function forceDelete(int $id): RedirectResponse
     {
+        // 404 for ids that don't reference a trashed project (avoids queueing junk jobs).
+        $project = Project::onlyTrashed()->findOrFail($id);
+
         // Offloaded to a queued job: the cascade (events, shifts, sub-events, timelines,
         // budget table, ...) would exceed the PHP/HTTP timeout for projects with very many
         // events. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
-        ForceDeleteProjectJob::dispatch($id, Auth::id());
+        ForceDeleteProjectJob::dispatch($project->id, Auth::id());
 
         return Redirect::route('projects.trashed');
     }

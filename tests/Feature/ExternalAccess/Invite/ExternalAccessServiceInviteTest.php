@@ -302,9 +302,23 @@ final class ExternalAccessServiceInviteTest extends TestCase
     }
 
     #[Test]
-    public function it_throws_for_a_non_invitable_contact_type(): void
+    public function it_throws_for_an_inactive_contact_type(): void
     {
+        // Freely created types are invitable via the generic path as long as they are active;
+        // an inactive type must be rejected.
         $type = $this->contactType('some_custom_type');
+        $type->forceFill(['is_active' => false])->save();
+
+        $this->expectException(UnsupportedContactTypeException::class);
+
+        $this->service()->invite($this->command(['crmContactTypeId' => $type->id]));
+    }
+
+    #[Test]
+    public function it_throws_for_a_system_type_without_factory(): void
+    {
+        $type = $this->contactType('some_system_type');
+        $type->forceFill(['is_system' => true])->save();
 
         $this->expectException(UnsupportedContactTypeException::class);
 

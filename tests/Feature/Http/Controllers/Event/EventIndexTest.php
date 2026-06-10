@@ -79,13 +79,14 @@ final class EventIndexTest extends FeatureTestCase
     }
 
     #[Test]
-    public function admin_can_view_event_requests_index(): void
+    public function event_requests_index_redirects_to_event_verifications(): void
     {
         $this->actingAsAdmin();
 
         $response = $this->get(route('events.requests'));
 
-        $response->assertOk();
+        // The legacy event requests page was replaced by event verifications.
+        $response->assertRedirect(route('event-verifications.index'));
     }
 
     #[Test]

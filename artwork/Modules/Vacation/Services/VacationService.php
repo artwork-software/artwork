@@ -47,6 +47,7 @@ readonly class VacationService
             'end_time' => $request->end_time,
             'date' => $request->date,
             'full_day' =>  $request->full_day,
+            'day_part' => $request->day_part,
             'comment' => $request->comment,
             'is_series' => $request->is_series,
             'type' => $vacationTypeEnum,

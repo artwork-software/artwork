@@ -399,12 +399,32 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/compensation-days', [UserController::class, 'editUserCompensationDays'])
         ->can('can plan shifts')
         ->name('user.edit.compensationDays');
+
+    // DP-18: Lazy-Endpoints für das User-Info-Modal im Schichtplan (je Tab)
+    Route::get('/users/{user}/shift-info/season', [UserController::class, 'shiftUserInfoSeason'])
+        ->can('can view shift user kpis')
+        ->name('shift.user-info.season');
+    Route::get('/users/{user}/shift-info/compensation', [UserController::class, 'shiftUserInfoCompensation'])
+        ->can('can view shift user kpis')
+        ->name('shift.user-info.compensation');
+    Route::get('/users/{user}/shift-info/vacation', [UserController::class, 'shiftUserInfoVacation'])
+        ->can('can view shift user kpis')
+        ->name('shift.user-info.vacation');
+    Route::get('/users/{user}/shift-info/worktimes', [UserController::class, 'shiftUserInfoWorktimes'])
+        ->can('can view shift user kpis')
+        ->name('shift.user-info.worktimes');
+    Route::get('/users/{user}/shift-info/overtime', [UserController::class, 'shiftUserInfoOvertime'])
+        ->can('can view shift user kpis')
+        ->name('shift.user-info.overtime');
+
+    // DP-18 Stufe 2: Überstunden – User-Detail-Tab + manuelle Auszahlung
     Route::get('/users/{user}/overtime', [UserController::class, 'editUserOvertime'])
         ->can('can manage workers')
         ->name('user.edit.overtime');
-    Route::post('/overtime/{userOvertime}/book-out', [UserController::class, 'bookOutOvertime'])
-        ->can('can manage workers')
-        ->name('overtime.book-out');
+    Route::post('/users/{user}/overtime/payout', [UserController::class, 'payOutOvertime'])
+        ->can('can pay out overtime')
+        ->name('user.overtime.payout');
+
     Route::patch('/users/{user}/edit', [UserController::class, 'updateUserDetails'])->name('user.update');
 
     // user.update.open.crafts

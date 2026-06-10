@@ -48,6 +48,21 @@ class WorkTimeBookingService
                 $wantedMinutes = 0;
             }
 
+            // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
+            // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> der freie Tag erzeugt ein
+            // Minus-Delta = Überstundenabbau.
+            $holidayCompValue = (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
+                ->where('user_id', $user->id)
+                ->where('for_holiday', true)
+                ->whereNotNull('granted_date')
+                ->whereDate('granted_date', $today->toDateString())
+                ->sum('value');
+            if ($holidayCompValue >= 1.0) {
+                $wantedMinutes = 0;
+            } elseif ($holidayCompValue > 0) {
+                $wantedMinutes = (int) round($wantedMinutes * (1 - $holidayCompValue));
+            }
+
             $workedTimes = $this->calculateShiftMinutes($today, $user);
             $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
                 $workedTimes['total'],

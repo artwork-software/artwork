@@ -31,7 +31,7 @@ class UserOvertimeRepository
         return [
             'open_minutes' => (int) UserOvertime::forUser($userId)->open()->sum('remaining_minutes'),
             'payable_minutes' => (int) UserOvertime::forUser($userId)->payable()->sum('remaining_minutes'),
-            'paid_out_minutes' => (int) UserOvertime::forUser($userId)->paidOut()->sum('minutes'),
+            'paid_out_minutes' => (int) UserOvertime::forUser($userId)->sum('paid_out_minutes'),
         ];
     }
 }

@@ -1108,9 +1108,15 @@ class ShiftController extends Controller
         }
 
         // Capture the removed user (user-type only) before removal so we can re-validate afterwards.
-        $removedUserId = $userType === 0
-            ? \Artwork\Modules\Shift\Models\ShiftUser::where('id', $usersPivotId)->value('user_id')
-            : null;
+        // Pivot ids reference the unified shift_workers table; fall back to the legacy pivot.
+        $removedUserId = null;
+        if ($userType === 0) {
+            $removedUserId = ShiftWorker::query()
+                ->where('id', $usersPivotId)
+                ->where('employable_type', User::class)
+                ->value('employable_id')
+                ?? \Artwork\Modules\Shift\Models\ShiftUser::where('id', $usersPivotId)->value('user_id');
+        }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
             $serviceToUse->removeFromShift(

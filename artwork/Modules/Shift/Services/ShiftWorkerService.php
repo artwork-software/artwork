@@ -7,7 +7,6 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Events\ShiftAssigned;
@@ -795,8 +794,7 @@ class ShiftWorkerService
         }
 
         $this->notifyShortBreakUser($shiftBreakCheck, $user, $notificationService);
-        $this->notifyShortBreakAdmins($shiftBreakCheck, $user, $notificationService);
-        $this->notifyShortBreakCraftUsers($shiftBreakCheck, $shift, $user, $notificationService);
+        $this->notifyShortBreakPlanner($shiftBreakCheck, $user, $notificationService);
 
         $notificationService->clearNotificationData();
     }
@@ -833,68 +831,40 @@ class ShiftWorkerService
         $notificationService->createNotification();
     }
 
-    private function notifyShortBreakAdmins($shiftBreakCheck, User $user, NotificationService $notificationService): void
+    private function notifyShortBreakPlanner($shiftBreakCheck, User $user, NotificationService $notificationService): void
     {
+        $planner = $this->auth->user();
+
+        // Nur die planende Person benachrichtigen - und nicht doppelt, falls sie sich selbst eingeplant hat
+        // (die bekommt bereits die "your_short_break"-Benachrichtigung).
+        if (! $planner instanceof User || $planner->id === $user->id) {
+            return;
+        }
+
         $notificationService->setPriority(1);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
         $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
-        foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
-            $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
+        $notificationTitle = __('notification.shift.worker_short_break', [], $planner->language);
 
-            $notificationService->setTitle($notificationTitle);
-            $notificationService->setDescription([
-                1 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns', [], $adminUser->language) . $user->getFullNameAttribute(),
-                    'href'  => null,
-                ],
-                2 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns_time_period', [
-                        'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
-                        'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
-                    ], $adminUser->language),
-                    'href'  => null,
-                ],
-            ]);
-            $notificationService->setNotificationTo($adminUser);
-            $notificationService->createNotification();
-        }
-    }
-
-    private function notifyShortBreakCraftUsers($shiftBreakCheck, Shift $shift, User $user, NotificationService $notificationService): void
-    {
-        $usersWhichGotNotification = [];
-
-        foreach ($shift->craft->users as $craftUser) {
-            if ($craftUser->id === $user->id || in_array($craftUser->id, $usersWhichGotNotification, true)) {
-                continue;
-            }
-
-            $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
-
-            $notificationService->setTitle($notificationTitle);
-            $notificationService->setDescription([
-                1 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns', [], $craftUser->language) . $user->getFullNameAttribute(),
-                    'href'  => null,
-                ],
-                2 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns_time_period', [
-                        'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
-                        'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
-                    ], $craftUser->language),
-                    'href'  => null,
-                ],
-            ]);
-
-            $notificationService->setNotificationTo($craftUser);
-            $notificationService->createNotification();
-            $usersWhichGotNotification[] = $craftUser->id;
-        }
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setDescription([
+            1 => [
+                'type'  => 'string',
+                'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
+                'href'  => null,
+            ],
+            2 => [
+                'type'  => 'string',
+                'title' => __('notification.keyWords.concerns_time_period', [
+                    'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y'),
+                    'end'   => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                ], $planner->language),
+                'href'  => null,
+            ],
+        ]);
+        $notificationService->setNotificationTo($planner);
+        $notificationService->createNotification();
     }
 
     private function checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary(Shift $shift, User $user, NotificationService $notificationService): void
@@ -907,8 +877,7 @@ class ShiftWorkerService
         }
 
         $this->notifyMoreThanTenShiftsUser($shiftCheck, $user, $notificationService);
-        $this->notifyMoreThanTenShiftsAdmins($shiftCheck, $user, $notificationService);
-        $this->notifyMoreThanTenShiftsCraftUsers($shiftCheck, $user, $notificationService);
+        $this->notifyMoreThanTenShiftsPlanner($shiftCheck, $user, $notificationService);
 
         $notificationService->clearNotificationData();
     }
@@ -946,84 +915,45 @@ class ShiftWorkerService
         $notificationService->createNotification();
     }
 
-    private function notifyMoreThanTenShiftsAdmins($shiftCheck, User $user, NotificationService $notificationService): void
+    private function notifyMoreThanTenShiftsPlanner($shiftCheck, User $user, NotificationService $notificationService): void
     {
+        $planner = $this->auth->user();
+
+        // Nur die planende Person benachrichtigen - und nicht doppelt, falls sie sich selbst eingeplant hat
+        // (die bekommt bereits die "more_than_ten_days"-Benachrichtigung).
+        if (! $planner instanceof User || $planner->id === $user->id) {
+            return;
+        }
+
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
         $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
-        foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
-            $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
+        $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $planner->language);
 
-            $broadcastMessage = [
-                'id'      => Str::uuid()->toString(),
-                'type'    => 'error',
-                'message' => $notificationTitle,
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns', [], $user->language) . $user->getFullNameAttribute(),
-                    'href'  => null,
-                ],
-                2 => [
-                    'type'  => 'string',
-                    'title' => __('notification.keyWords.concerns_time_period', [
-                        'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
-                        'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
-                    ], $user->language),
-                    'href'  => null,
-                ],
-            ];
-
-            $notificationService->setBroadcastMessage($broadcastMessage);
-            $notificationService->setDescription($notificationDescription);
-            $notificationService->setNotificationTo($adminUser);
-            $notificationService->createNotification();
-        }
-    }
-
-    private function notifyMoreThanTenShiftsCraftUsers($shiftCheck, User $user, NotificationService $notificationService): void
-    {
-        $usersWhichGotNotification = [];
-
-        foreach ($user->crafts as $craft) {
-            foreach ($craft->users as $craftUser) {
-                if ($craftUser->id === $user->id || in_array($craftUser->id, $usersWhichGotNotification, true)) {
-                    continue;
-                }
-
-                $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $craftUser->language);
-
-                $broadcastMessage = [
-                    'id'      => Str::uuid()->toString(),
-                    'type'    => 'error',
-                    'message' => $notificationTitle,
-                ];
-                $notificationDescription = [
-                    1 => [
-                        'type'  => 'string',
-                        'title' => __('notification.keyWords.concerns', [], $craftUser->language) . $user->getFullNameAttribute(),
-                        'href'  => null,
-                    ],
-                    2 => [
-                        'type'  => 'string',
-                        'title' => __('notification.keyWords.concerns_time_period', [
-                            'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
-                            'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
-                        ], $craftUser->language),
-                        'href'  => null,
-                    ],
-                ];
-
-                $notificationService->setBroadcastMessage($broadcastMessage);
-                $notificationService->setDescription($notificationDescription);
-                $notificationService->setNotificationTo($craftUser);
-                $notificationService->createNotification();
-
-                $usersWhichGotNotification[] = $craftUser->id;
-            }
-        }
+        $notificationService->setBroadcastMessage([
+            'id'      => Str::uuid()->toString(),
+            'type'    => 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setDescription([
+            1 => [
+                'type'  => 'string',
+                'title' => __('notification.keyWords.concerns', [], $planner->language) . $user->getFullNameAttribute(),
+                'href'  => null,
+            ],
+            2 => [
+                'type'  => 'string',
+                'title' => __('notification.keyWords.concerns_time_period', [
+                    'start' => Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y'),
+                    'end'   => Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
+                ], $planner->language),
+                'href'  => null,
+            ],
+        ]);
+        $notificationService->setNotificationTo($planner);
+        $notificationService->createNotification();
     }
 }

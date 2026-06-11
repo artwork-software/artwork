@@ -413,6 +413,9 @@ class EventController extends Controller
             }
         } else {
             $userCalendarSettings = $user->getAttribute('calendar_settings');
+            if ($userCalendarSettings === null) {
+                $userCalendarSettings = $user->calendar_settings()->create();
+            }
         }
 
         $isPlanning           = $request->boolean('isPlanning', false);

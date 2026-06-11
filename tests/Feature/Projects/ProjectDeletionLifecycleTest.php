@@ -4,6 +4,7 @@ namespace Tests\Feature\Projects;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -53,6 +54,26 @@ final class ProjectDeletionLifecycleTest extends FeatureTestCase
             $this->makeProjectWithAssignedShift();
 
         $this->softDelete($project);
+
+        $this->assertSoftDeleted('projects', ['id' => $project->id]);
+        $this->assertSoftDeleted('events', ['id' => $event->id]);
+        $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
+        $this->assertSoftDeleted('shift_workers', ['shift_id' => $shift->id]);
+    }
+
+    #[Test]
+    public function soft_delete_cascade_runs_after_project_row_was_already_deleted(): void
+    {
+        // Prod-Ablauf: Der Controller soft-deletet die Projekt-Zeile sofort, der Queue-Job
+        // macht danach die Kaskade. Dabei ist $event->project bereits null (SoftDeletes-Scope) –
+        // das hat die Kaskade früher beim ersten Event mit project_id gecrasht und
+        // verwaiste Events hinterlassen (Sentry MOUSONTURM-P / MOUSONTURM-Q).
+        ['project' => $project, 'event' => $event, 'shift' => $shift] =
+            $this->makeProjectWithAssignedShift();
+
+        $project->delete();
+
+        app()->call([new SoftDeleteProjectJob($project->id), 'handle']);
 
         $this->assertSoftDeleted('projects', ['id' => $project->id]);
         $this->assertSoftDeleted('events', ['id' => $event->id]);

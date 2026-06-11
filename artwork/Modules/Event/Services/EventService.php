@@ -186,7 +186,7 @@ readonly class EventService
                 $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
-                    ->setModelId($event->project->id)
+                    ->setModelId($event->project_id)
                     ->setTranslationKey('Schedule deleted')
             );
         }
@@ -243,7 +243,7 @@ readonly class EventService
                     $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
-                        ->setModelId($event->project->id)
+                        ->setModelId($event->project_id)
                         ->setTranslationKey('Schedule deleted')
                 );
             }
@@ -305,7 +305,7 @@ readonly class EventService
                 $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
-                    ->setModelId($event->project->id)
+                    ->setModelId($event->project_id)
                     ->setTranslationKey('Schedule restored')
             );
         }
@@ -369,7 +369,7 @@ readonly class EventService
                     $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
-                        ->setModelId($event->project->id)
+                        ->setModelId($event->project_id)
                         ->setTranslationKey('Schedule restored')
                 );
             }

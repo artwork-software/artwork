@@ -56,7 +56,9 @@ class EventWithoutRoomDTO extends Data
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
             description: $event->description,
-            project: $event->project_id ? ProjectDTO::fromModel($event->project, $userCalendarSettings) : null,
+            project: $event->project_id && $event->project
+                ? ProjectDTO::fromModel($event->project, $userCalendarSettings)
+                : null,
             eventType: $eventType ? [
                 'id' => $eventType->id,
                 'name' => $eventType->name,

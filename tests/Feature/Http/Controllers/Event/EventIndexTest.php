@@ -90,6 +90,28 @@ final class EventIndexTest extends FeatureTestCase
     }
 
     #[Test]
+    public function events_all_api_handles_events_whose_project_was_deleted(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $event = Event::factory()->create([
+            'project_id' => $project->id,
+            'start_time' => '2026-04-10 10:00:00',
+            'end_time' => '2026-04-10 12:00:00',
+        ]);
+        $project->delete();
+
+        $response = $this->getJson(route('events.all', [
+            'start_date' => '2026-04-01',
+            'end_date' => '2026-04-30',
+            'isPlanning' => 'false',
+        ]));
+
+        $response->assertOk();
+        $this->assertNotNull($event->fresh(), 'Event soll trotz gelöschtem Projekt bestehen bleiben');
+    }
+
+    #[Test]
     public function admin_can_get_timelines_for_event(): void
     {
         $this->actingAsAdmin();

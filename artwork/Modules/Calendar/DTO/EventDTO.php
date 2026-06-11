@@ -57,6 +57,7 @@ class EventDTO extends Data
     ): EventDTO {
         $eventType = $eventTypes[$event->event_type_id] ?? null;
         $user = $event->user_id ? ($users[$event->user_id] ?? null) : null;
+        $project = $event->project_id ? ($projects[$event->project_id] ?? null) : null;
         $eventStatus = $event->event_type_id !== null
             ? ($eventStatuses[$event->event_status_id] ?? null)
             : null;
@@ -69,9 +70,7 @@ class EventDTO extends Data
             description: $event->description,
             // Lookup kann leer sein, wenn das Projekt bereits im Papierkorb liegt
             // (z.B. abgebrochene Lösch-Kaskade) – dann ohne Projekt-Chip rendern statt 500.
-            project: isset($projects[$event->project_id])
-                ? ProjectDTO::fromModel($projects[$event->project_id], $userCalendarSettings)
-                : null,
+            project: $project ? ProjectDTO::fromModel($project, $userCalendarSettings) : null,
             eventType: $eventType ? [
                 'id' => $eventType->id,
                 'name' => $eventType->name,

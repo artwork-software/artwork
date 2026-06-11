@@ -4860,5 +4860,6 @@
     "Allow overbooking": "Überbuchung erlauben",
     "Deactivated": "Deaktiviert",
     "Shift plan request has already been processed.": "Die Dienstplananfrage wurde bereits bearbeitet.",
-    "Individual working time": "Individuelle Arbeitszeit"
+    "Individual working time": "Individuelle Arbeitszeit",
+    "Some calendar data could not be loaded. Click here to retry.": "Einige Kalenderdaten konnten nicht geladen werden. Hier klicken zum erneuten Laden."
 }

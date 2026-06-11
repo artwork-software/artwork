@@ -4814,5 +4814,6 @@
     "Allow overbooking": "Allow overbooking",
     "Deactivated": "Deactivated",
     "Shift plan request has already been processed.": "Shift plan request has already been processed.",
-    "Individual working time": "Individual working time"
+    "Individual working time": "Individual working time",
+    "Some calendar data could not be loaded. Click here to retry.": "Some calendar data could not be loaded. Click here to retry."
 }

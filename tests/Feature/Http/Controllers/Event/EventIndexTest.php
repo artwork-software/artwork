@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -109,6 +110,63 @@ final class EventIndexTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertNotNull($event->fresh(), 'Event soll trotz gelöschtem Projekt bestehen bleiben');
+    }
+
+    #[Test]
+    public function accept_event_works_when_room_was_deleted(): void
+    {
+        // Sentry MOUSONTURM-N: Room::find() liefert bei gelöschtem Raum null,
+        // die Notification-Blöcke haben dann auf $room->name gecrasht (500).
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $event = Event::factory()->create(['project_id' => $project->id]);
+        Room::find($event->room_id)?->delete();
+
+        $response = $this->put(route('events.accept', $event), ['adminComment' => null]);
+
+        $response->assertRedirect();
+    }
+
+    #[Test]
+    public function decline_event_works_when_room_was_deleted(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $event = Event::factory()->create(['project_id' => $project->id]);
+        Room::find($event->room_id)?->delete();
+
+        $response = $this->put(route('events.decline', $event), ['comment' => 'Kein Platz']);
+
+        $response->assertRedirect();
+    }
+
+    #[Test]
+    public function events_all_api_returns_422_for_invalid_dates(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->getJson(route('events.all', [
+            'start_date' => 'not-a-date',
+            'end_date' => '2026-04-30',
+        ]));
+
+        $response->assertUnprocessable();
+    }
+
+    #[Test]
+    public function dashboard_history_with_unknown_model_id_does_not_crash(): void
+    {
+        // Sentry MOUSONTURM-M (Alt-Code): Event::find(modelId) konnte null sein und
+        // historyChanges() crashte. Der Guard kam mit ARTWORK-345 – hier festnageln.
+        $this->actingAsAdmin();
+
+        $response = $this->get(route('dashboard', [
+            'showHistory' => 1,
+            'historyType' => 'event',
+            'modelId' => PHP_INT_MAX,
+        ]));
+
+        $response->assertOk();
     }
 
     #[Test]

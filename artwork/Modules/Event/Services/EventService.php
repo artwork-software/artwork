@@ -336,7 +336,7 @@ readonly class EventService
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
 
         foreach ($event->project->managerUsers as $projectManager) {
-            if ($projectManager->id === $event->creator->id) {
+            if ($projectManager->id === $event->user_id) {
                 continue;
             }
 
@@ -355,7 +355,7 @@ readonly class EventService
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null,
                 ],
                 3 => [
@@ -388,10 +388,15 @@ readonly class EventService
         NotificationService $notificationService,
         ProjectTabService $projectTabService,
     ): void {
+        $creator = $event->creator;
+        if ($creator === null) {
+            // Ersteller wurde gelöscht – es gibt keinen Empfänger mehr
+            return;
+        }
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
-        $notificationTitle = __('notification.event.deleted', [], $event->creator->language);
+        $notificationTitle = __('notification.event.deleted', [], $creator->language);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setBroadcastMessage([
             'id' => Str::uuid()->toString(),
@@ -406,7 +411,7 @@ readonly class EventService
             ],
             2 => [
                 'type' => 'string',
-                'title' => $event->event_type->name . ', ' . $event->eventName,
+                'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null,
             ],
             3 => [
@@ -429,7 +434,7 @@ readonly class EventService
                 'href' => null,
             ],
         ]);
-        $notificationService->setNotificationTo($event->creator);
+        $notificationService->setNotificationTo($creator);
         $notificationService->createNotification();
     }
 

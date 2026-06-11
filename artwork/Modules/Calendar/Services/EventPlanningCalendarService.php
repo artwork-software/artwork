@@ -90,10 +90,10 @@ class EventPlanningCalendarService
             ->orderBy('start_time')
             ->get();
 
-        $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $projectIds = $events->pluck('project_id')->unique();
-        $userIds = $events->pluck('user_id')->unique();
-        $eventStatusIds = $events->pluck('event_status_id')->unique();
+        $eventTypeIds = $events->pluck('event_type_id')->unique()->filter();
+        $projectIds = $events->pluck('project_id')->unique()->filter();
+        $userIds = $events->pluck('user_id')->unique()->filter();
+        $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
         $eventIds = $events->pluck('id');
 
         $users = User::whereIn('id', $userIds)

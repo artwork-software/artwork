@@ -295,6 +295,8 @@ class EventController extends Controller
         // Datum bestimmen
         $dateRangeRequested = $request->filled(['start_date','end_date']);
         if ($dateRangeRequested) {
+            // Ungültige Datums-Strings sollen Validierungsfehler statt 500 liefern
+            $request->validate(['start_date' => 'date', 'end_date' => 'date']);
             $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
             $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
         } else {
@@ -435,8 +437,14 @@ class EventController extends Controller
             ['start_date' => null, 'end_date' => null]
         );
 
-        $startDate = Carbon::parse($request->input('start_date'))->startOfDay();
-        $endDate   = Carbon::parse($request->input('end_date'))->endOfDay();
+        // Ungültige Datums-Strings sollen 422 statt 500 liefern
+        $validated = $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date'],
+        ]);
+
+        $startDate = Carbon::parse($validated['start_date'])->startOfDay();
+        $endDate   = Carbon::parse($validated['end_date'])->endOfDay();
 
         $rooms = $this->calendarDataService->getFilteredRooms(
             $userCalendarFilter,
@@ -1471,12 +1479,12 @@ class EventController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room?->name,
+                'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type->name . ', ' . $event->eventName,
+                'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -1523,12 +1531,12 @@ class EventController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room?->name,
+                'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type->name . ', ' . $event->eventName,
+                'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -1599,12 +1607,12 @@ class EventController extends Controller
                 ],
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room?->name,
+                    'href' => $room ? route('rooms.show', $room->id) : null
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' =>  $event->event_type->name . ', ' . $event->eventName,
+                    'title' =>  ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1694,11 +1702,11 @@ class EventController extends Controller
                 $this->notificationService->setPriority(1);
                 $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
 
-                $this->notificationService->setRoomId($room->id);
+                $this->notificationService->setRoomId($event->room_id);
                 $this->notificationService->setEventId($event->id);
                 $this->notificationService->setButtons(['answerDialog']);
                 foreach ($projectManagers as $projectManager) {
-                    if ($projectManager->id === $event->creator) {
+                    if ($projectManager->id === $event->user_id) {
                         continue;
                     }
                     $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
@@ -1712,12 +1720,12 @@ class EventController extends Controller
                     $notificationDescription = [
                         1 => [
                             'type' => 'link',
-                            'title' => $room->name,
-                            'href' => route('rooms.show', $room->id)
+                            'title' => $room?->name,
+                            'href' => $room ? route('rooms.show', $room->id) : null
                         ],
                         2 => [
                             'type' => 'string',
-                            'title' => $event->event_type->name . ', ' . $event->eventName,
+                            'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                             'href' => null
                         ],
                         3 => [
@@ -1752,7 +1760,7 @@ class EventController extends Controller
                     $this->notificationService->setNotificationTo($projectManager);
                     $this->notificationService->createNotification();
                 }
-                $notificationTitle = __('notification.event.admin_message', [], $event->creator->language);
+                $notificationTitle = __('notification.event.admin_message', [], $event->creator?->language);
                 $broadcastMessage = [
                     'id' => Str::uuid()->toString(),
                     'type' => 'success',
@@ -1763,12 +1771,12 @@ class EventController extends Controller
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
+                        'title' => $room?->name,
+                        'href' => $room ? route('rooms.show', $room->id) : null
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type->name . ', ' . $event->eventName,
+                        'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -1800,8 +1808,10 @@ class EventController extends Controller
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
                 $this->notificationService->setNotificationKey(Str::random(15));
-                $this->notificationService->setNotificationTo($event->creator);
-                $this->notificationService->createNotification();
+                if ($event->creator !== null) {
+                    $this->notificationService->setNotificationTo($event->creator);
+                    $this->notificationService->createNotification();
+                }
             }
         }
 
@@ -1816,7 +1826,7 @@ class EventController extends Controller
             $this->notificationService->setEventId($event->id);
 
             foreach ($projectManagers as $projectManager) {
-                if ($projectManager->id === $event->creator) {
+                if ($projectManager->id === $event->user_id) {
                     continue;
                 }
                 $notificationTitle = __('notification.event.room_change_confirmed', [], $projectManager->language);
@@ -1828,12 +1838,12 @@ class EventController extends Controller
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
+                        'title' => $room?->name,
+                        'href' => $room ? route('rooms.show', $room->id) : null
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type->name . ', ' . $event->eventName,
+                        'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -1868,7 +1878,7 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator->language);
+            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator?->language);
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
                 'type' => 'success',
@@ -1877,12 +1887,12 @@ class EventController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room?->name,
+                    'href' => $room ? route('rooms.show', $room->id) : null
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1914,8 +1924,10 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo($event->creator);
-            $this->notificationService->createNotification();
+            if ($event->creator !== null) {
+                $this->notificationService->setNotificationTo($event->creator);
+                $this->notificationService->createNotification();
+            }
         }
 
         $oldEventDescription   = $event->description;
@@ -2129,12 +2141,12 @@ class EventController extends Controller
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
+                        'title' => $room?->name,
+                        'href' => $room ? route('rooms.show', $room->id) : null
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -2172,7 +2184,8 @@ class EventController extends Controller
                 $this->notificationService->createNotification();
             }
         } else {
-            $user = User::find($room->user_id);
+            // Raum kann gelöscht/null sein – dann gibt es keinen Empfänger für die Anfrage
+            $user = $room ? User::find($room->user_id) : null;
             if ($user === null) {
                 return;
             }
@@ -2185,12 +2198,12 @@ class EventController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room?->name,
+                    'href' => $room ? route('rooms.show', $room->id) : null
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -2273,7 +2286,7 @@ class EventController extends Controller
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setProjectId($event->project_id);
         foreach ($projectManagers as $projectManager) {
-            if ($projectManager->id === $event->creator) {
+            if ($projectManager->id === $event->user_id) {
                 continue;
             }
             $notificationTitle = __('notification.event.room_request_accept', [], $projectManager->language);
@@ -2285,12 +2298,12 @@ class EventController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
-                    'title' => $room->name,
-                    'href' => route('rooms.show', $room->id)
+                    'title' => $room?->name,
+                    'href' => $room ? route('rooms.show', $room->id) : null
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -2324,7 +2337,7 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
-        $notificationTitle = __('notification.event.room_request_accept', [], $event->creator()->first()->language);
+        $notificationTitle = __('notification.event.room_request_accept', [], $event->creator?->language);
         $broadcastMessage = [
             'id' => Str::uuid()->toString(),
             'type' => 'success',
@@ -2333,12 +2346,12 @@ class EventController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room?->name,
+                'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
                 'type' => 'string',
-                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -2369,8 +2382,10 @@ class EventController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationTo($event->creator);
-        $this->notificationService->createNotification();
+        if ($event->creator !== null) {
+            $this->notificationService->setNotificationTo($event->creator);
+            $this->notificationService->createNotification();
+        }
 
         /** @var User $currentUser */
         $currentUser = $this->authManager->user();
@@ -2417,7 +2432,7 @@ class EventController extends Controller
             $this->notificationService->setProjectId($event->project_id);
             $this->notificationService->setButtons(['answer']);
             foreach ($projectManagers as $projectManager) {
-                if ($projectManager->id === $event->creator) {
+                if ($projectManager->id === $event->user_id) {
                     continue;
                 }
                 $notificationTitle = __('notification.event.admin_message', [], $projectManager->language);
@@ -2429,12 +2444,12 @@ class EventController extends Controller
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
+                        'title' => $room?->name,
+                        'href' => $room ? route('rooms.show', $room->id) : null
                     ],
                     2 => [
                         'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                         'href' => null
                     ],
                     3 => [
@@ -2469,7 +2484,7 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __('notification.event.admin_message', [], $event->creator()->first()->language);
+            $notificationTitle = __('notification.event.admin_message', [], $event->creator?->language);
             $broadcastMessage = [
                 'id' => Str::uuid()->toString(),
                 'type' => 'success',
@@ -2483,7 +2498,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -2515,8 +2530,10 @@ class EventController extends Controller
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationKey(Str::random(15));
-            $this->notificationService->setNotificationTo($event->creator);
-            $this->notificationService->createNotification();
+            if ($event->creator !== null) {
+                $this->notificationService->setNotificationTo($event->creator);
+                $this->notificationService->createNotification();
+            }
         }
 
         $this->changeService->saveFromBuilder(
@@ -2543,7 +2560,7 @@ class EventController extends Controller
         $this->notificationService->setProjectId($event->project_id);
         $this->notificationService->setButtons(['change_request', 'event_delete']);
         foreach ($projectManagers as $projectManager) {
-            if ($projectManager->id === $event->creator) {
+            if ($projectManager->id === $event->user_id) {
                 continue;
             }
             $notificationTitle = __('notification.event.room_request_declined', [], $projectManager->language);
@@ -2560,7 +2577,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -2595,7 +2612,7 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
-        $notificationTitle = __('notification.event.room_request_declined', [], $event->creator()->first()->language);
+        $notificationTitle = __('notification.event.room_request_declined', [], $event->creator?->language);
         $broadcastMessage = [
             'id' => Str::uuid()->toString(),
             'type' => 'error',
@@ -2609,7 +2626,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => ($event->event_type?->name ?? '') . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -2641,8 +2658,10 @@ class EventController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationKey(Str::random(15));
-        $this->notificationService->setNotificationTo($event->creator);
-        $this->notificationService->createNotification();
+        if ($event->creator !== null) {
+            $this->notificationService->setNotificationTo($event->creator);
+            $this->notificationService->createNotification();
+        }
 
         /** @var User $currentUser */
         $currentUser = $this->authManager->user();
@@ -2830,8 +2849,14 @@ class EventController extends Controller
 
     public function getCollisionCount(Request $request): int
     {
-        $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
-        $end = Carbon::parse($request->query('end'))->setTimezone(config('app.timezone'));
+        // Ungültige Datums-Strings sollen 422 statt 500 liefern
+        $validated = $request->validate([
+            'start' => ['required', 'date'],
+            'end' => ['required', 'date'],
+        ]);
+
+        $start = Carbon::parse($validated['start'])->setTimezone(config('app.timezone'));
+        $end = Carbon::parse($validated['end'])->setTimezone(config('app.timezone'));
 
         return Event::query()
             ->startAndEndTimeOverlap($start, $end)

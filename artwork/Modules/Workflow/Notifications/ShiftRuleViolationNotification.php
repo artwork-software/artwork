@@ -29,14 +29,17 @@ class ShiftRuleViolationNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
+        // Queued Notification: zwischen Enqueue und Versand kann die Regel gelöscht
+        // worden sein (Violations werden bei Re-Checks aufgeräumt) — ohne Guard
+        // crasht der Queue-Job und die Mail geht verloren.
         $rule = $this->violation->shiftRule;
-        
+
         return (new MailMessage)
             ->subject('Schicht-Regelverstoß erkannt')
             ->greeting('Hallo ' . $notifiable->first_name . ',')
             ->line($this->message)
-            ->line('Regel: ' . $rule->name)
-            ->line('Datum: ' . $this->violation->violation_date->format('d.m.Y'))
+            ->line('Regel: ' . ($rule?->name ?? 'Gelöschte Regel'))
+            ->line('Datum: ' . $this->violation->violation_date?->format('d.m.Y'))
             ->action('Relevante Schichten anzeigen', $this->getShiftPlanUrl())
             ->line('Bitte überprüfen Sie den Schichtplan und nehmen Sie gegebenenfalls Anpassungen vor.');
     }
@@ -46,11 +49,11 @@ class ShiftRuleViolationNotification extends Notification implements ShouldQueue
         return [
             'type' => 'shift_rule_violation',
             'violation_id' => $this->violation->id,
-            'rule_name' => $this->violation->shiftRule->name,
-            'violation_date' => $this->violation->violation_date->format('Y-m-d'),
+            'rule_name' => $this->violation->shiftRule?->name ?? 'Gelöschte Regel',
+            'violation_date' => $this->violation->violation_date?->format('Y-m-d'),
             'message' => $this->message,
             'severity' => $this->violation->severity,
-            'warning_color' => $this->violation->shiftRule->warning_color,
+            'warning_color' => $this->violation->shiftRule?->warning_color,
             'shift_plan_url' => $this->getShiftPlanUrl()
         ];
     }

@@ -127,18 +127,7 @@ export default defineComponent({
             this.$emit('closed')
         },
         savePreset(){
-            //this.presetForm.event_type_id = this.selectedEventType.id;
-            if (this.eventId !== null && this.eventId !== undefined) {
-                this.presetForm.post(
-                    route('shift-presets.store', { event: this.eventId }),
-                    {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            this.closeModal()
-                        }
-                    }
-                )
-            } else if (this.preset?.id !== null && this.preset?.id !== undefined) {
+            if (this.preset?.id !== null && this.preset?.id !== undefined) {
                 this.presetForm.patch(
                     route('update.shift.preset', { shiftPreset: this.preset.id }),
                     {

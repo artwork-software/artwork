@@ -8,13 +8,11 @@ use Tests\Feature\FeatureTestCase;
 final class ShiftIndexTest extends FeatureTestCase
 {
     #[Test]
-    public function check_collisions_route_is_publicly_accessible_returning_400_for_missing_params(): void
+    public function check_collisions_requires_authentication(): void
     {
-        // This route is not under auth middleware
-        $response = $this->postJson(route('shift.check-collisions'), []);
-
-        $response->assertStatus(400);
-        $response->assertJsonStructure(['error']);
+        // Liefert Zuweisungs-/Zeitdaten beliebiger Worker und ist daher auth-pflichtig
+        $this->postJson(route('shift.check-collisions'), [])
+            ->assertUnauthorized();
     }
 
     #[Test]

@@ -13,6 +13,7 @@ use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Models\CommittedShiftChange;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -61,15 +62,6 @@ class ShiftWorkerService
         return Carbon::parse($shift->event_start_day)->dayOfWeek !== (int) $dayOfWeek;
     }
 
-    public function getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-        int $shiftId,
-        int $shiftQualificationId
-    ): int {
-        return $this->shiftWorkerRepository->getCountForShiftIdAndShiftQualificationId(
-            $shiftId,
-            $shiftQualificationId
-        );
-    }
 
     protected function formatWorkingTimeLabel(Shift $shift, ?ShiftWorker $pivot): ?string
     {
@@ -112,6 +104,13 @@ class ShiftWorkerService
         string $affectedUserType,
         ?ShiftWorker $pivot = null
     ): void {
+        // Nur Änderungen NACH Festschreibung bzw. im Workflow protokollieren —
+        // normale Erst-Planung erzeugte sonst unbestätigte Einträge, die die
+        // "Änderungen nach Festschreibung"-Seite fluteten und in der Request-
+        // Übersicht als Geister-Marker ("nachträglich gelöscht") auftauchten.
+        if (!$shift->is_committed && !$shift->in_workflow) {
+            return;
+        }
 
         $fieldChanges = [
             'assignment' => [
@@ -216,6 +215,78 @@ class ShiftWorkerService
             ->log($logMessage);
     }
 
+    /**
+     * Protokolliert eine Änderung an einer einzelnen Zuweisung (individuelle
+     * Arbeitszeit, Kurzbeschreibung) im Workflow- bzw. Festschreibungs-Verlauf.
+     *
+     * Die Pivot-Updates in ShiftController::updateIndividualShiftTime/
+     * updateShortDescription laufen am ShiftChangeRecorder vorbei (der nur
+     * Shift/Qualifications beobachtet) — ohne diesen Aufruf wären Änderungen
+     * an in_workflow-/committed-Schichten in keinem Verlauf sichtbar.
+     *
+     * Die field_changes nutzen bewusst before_label/after_label statt old/new,
+     * damit revertChange() sie nicht als revertierbare SHIFT-Spalten behandelt
+     * (es sind Pivot-Felder).
+     */
+    public function logIndividualPivotChange(
+        ShiftWorker $pivot,
+        string $fieldKey,
+        ?string $beforeLabel,
+        ?string $afterLabel
+    ): void {
+        $shift = $pivot->shift;
+        if (!$shift || $beforeLabel === $afterLabel) {
+            return;
+        }
+
+        $employable = $pivot->employable;
+
+        $fieldChanges = [
+            $fieldKey => [
+                'user_id' => $employable?->id,
+                'user_name' => $employable?->name ?? $employable?->full_name ?? '',
+                'before_label' => $beforeLabel,
+                'after_label' => $afterLabel,
+            ],
+        ];
+
+        if ($shift->in_workflow && $shift->current_request_id) {
+            ShiftPlanRequestChange::create([
+                'shift_plan_request_id' => $shift->current_request_id,
+                'subject_type' => Shift::class,
+                'subject_id' => $shift->getKey(),
+                'change_type' => 'updated',
+                'field_changes' => $fieldChanges,
+                'affected_user_id' => $pivot->employable_type === User::class ? $pivot->employable_id : null,
+                'changed_by_user_id' => $this->auth->id(),
+                'changed_at' => now(),
+            ]);
+
+            return;
+        }
+
+        if ($shift->is_committed) {
+            CommittedShiftChange::create([
+                'craft_id' => $shift->craft_id,
+                'shift_id' => $shift->getKey(),
+                'subject_type' => Shift::class,
+                'subject_id' => $shift->getKey(),
+                'change_type' => 'updated',
+                'field_changes' => $fieldChanges,
+                'affected_user_type' => match ($pivot->employable_type) {
+                    User::class => 'user',
+                    Freelancer::class => 'freelancer',
+                    default => 'service_provider',
+                },
+                'affected_user_id' => $pivot->employable_id,
+                'changed_by_user_id' => $this->auth->id(),
+                'changed_at' => now(),
+                'acknowledged_at' => null,
+                'acknowledged_by_user_id' => null,
+            ]);
+        }
+    }
+
     public function getChangeTypeForWorker(Employable $worker, bool $isRemoval = false): string
     {
         $prefix = match (true) {
@@ -271,42 +342,87 @@ class ShiftWorkerService
             throw new \RuntimeException('Shift overbooking is not enabled for this instance.');
         }
 
-        if ($this->isAlreadyAssigned($shift, $worker)) {
-            return $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
-                $this->getEmployableType($worker),
-                $worker->id,
-                $shift->id
-            );
-        }
-
         $employableType = $this->getEmployableType($worker);
 
-        if ($isOverbooked) {
-            $this->shiftsQualificationsService->ensureOpenOverbookedSlot(
-                $shift->id,
-                $shiftQualificationId
-            );
-        }
+        // Pivot-Anlage, Slot-Auflösung und Bedarfs-/Überbuchungs-Updates atomar und
+        // unter Lock auf der Schicht-Zeile: zwei parallele Requests (Doppelklick,
+        // zweiter Planer) konnten sonst dieselbe Person doppelt buchen bzw.
+        // overbooked_value per Read-Modify-Write inkonsistent machen.
+        [$shiftWorkerPivot, $isOverbooked, $wasAlreadyAssigned] = \Illuminate\Support\Facades\DB::transaction(
+            function () use ($shift, $worker, $shiftQualificationId, $craftAbbreviation, $employableType, $isOverbooked) {
+                Shift::query()->whereKey($shift->id)->lockForUpdate()->first();
 
-        $shiftWorkerPivot = $this->shiftWorkerRepository->createForShift(
-            $shift->id,
-            $employableType,
-            $worker->id,
-            $shiftQualificationId,
-            $craftAbbreviation,
-            $shift,
-            $isOverbooked
+                if ($this->isAlreadyAssigned($shift, $worker)) {
+                    return [
+                        $this->shiftWorkerRepository->findByEmployableIdAndShiftId(
+                            $employableType,
+                            $worker->id,
+                            $shift->id
+                        ),
+                        $isOverbooked,
+                        true,
+                    ];
+                }
+
+                // Slot-Lage serverseitig bestimmen — das Client-Flag kann auf veraltetem
+                // State beruhen (zweiter Planer, verpasster Broadcast, Doppel-Drop).
+                $qualificationRow = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+                    $shift->id,
+                    $shiftQualificationId
+                );
+                $regularSlotsFree = $qualificationRow !== null
+                    && $this->shiftsQualificationsService->getRegularWorkerCount($shift->id, $shiftQualificationId)
+                        < (int) $qualificationRow->getAttribute('value');
+
+                if (
+                    $isOverbooked
+                    && $regularSlotsFree
+                    && !$this->shiftsQualificationsService->hasOpenOverbookedSlot($shift->id, $shiftQualificationId)
+                ) {
+                    // Regulärer Platz ist (wieder) frei und es wartet kein explizit angelegter
+                    // offener Überbuchungsplatz → normal zuweisen, statt aus veraltetem
+                    // Frontend-State heraus einen neuen Überbuchungsplatz zu erzeugen.
+                    // (Explizit angelegte offene Überbuchungsplätze werden respektiert; der
+                    // umgekehrte Fall — reguläre Zuweisung auf volle Funktion — bleibt bewusst
+                    // beim Alt-Verhalten "stilles Bedarfs-Hochsetzen", siehe
+                    // PLAN_Ueberbuchung_Schichten.md und ShiftOverbookingTest.)
+                    $isOverbooked = false;
+                }
+
+                if ($isOverbooked) {
+                    $this->shiftsQualificationsService->ensureOpenOverbookedSlot(
+                        $shift->id,
+                        $shiftQualificationId
+                    );
+                }
+
+                $shiftWorkerPivot = $this->shiftWorkerRepository->createForShift(
+                    $shift->id,
+                    $employableType,
+                    $worker->id,
+                    $shiftQualificationId,
+                    $craftAbbreviation,
+                    $shift,
+                    $isOverbooked
+                );
+
+                if (!$isOverbooked) {
+                    $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+                        $shift->id,
+                        $shiftQualificationId
+                    );
+                }
+
+                return [$shiftWorkerPivot, $isOverbooked, false];
+            }
         );
+
+        if ($wasAlreadyAssigned) {
+            return $shiftWorkerPivot;
+        }
 
         $shiftWorkerPivot->setRelation('employable', $worker);
         $shiftWorkerPivot->load('shiftQualification');
-
-        if (!$isOverbooked) {
-            $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-                $shift->id,
-                $shiftQualificationId
-            );
-        }
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),
@@ -535,18 +651,21 @@ class ShiftWorkerService
 
         $employableType = $this->getEmployableType($worker);
 
-        $this->logManualRemovalActivity($shift, $pivot, $worker);
+        // Verlaufs-Einträge und Pivot-Delete atomar: sonst können bei einem Fehler
+        // "removed"-Einträge für eine weiterhin bestehende Zuweisung zurückbleiben.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($shift, $pivot, $worker, $employableType): void {
+            $this->logManualRemovalActivity($shift, $pivot, $worker);
 
-        $this->logCommittedShiftAssignmentChange(
-            $shift,
-            $worker,
-            $this->getChangeTypeForWorker($worker, true),
-            $employableType,
-            $pivot
-        );
+            $this->logCommittedShiftAssignmentChange(
+                $shift,
+                $worker,
+                $this->getChangeTypeForWorker($worker, true),
+                $employableType,
+                $pivot
+            );
 
-        $pivot->forceDelete();
-        \Illuminate\Support\Facades\Log::info("Deleted shift worker pivot", ["id" => $pivot->id]);
+            $pivot->forceDelete();
+        });
 
         match (true) {
             $worker instanceof User => $this->shiftCountService->handleShiftUsersShiftCount($shift, $worker->id),
@@ -568,6 +687,28 @@ class ShiftWorkerService
                 $vacationConflictService,
                 $availabilityConflictService,
                 $changeService
+            );
+        } elseif (
+            $shift->is_committed
+            && $worker instanceof ServiceProvider
+            && $shift->event?->exists
+            && $changeService
+        ) {
+            // Symmetrie zum Assign-Pfad: das Entfernen eines Dienstleisters von einer
+            // festgeschriebenen Schicht wurde im Projekt-Änderungsfeed nicht protokolliert.
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Service provider was removed from shift')
+                    ->setTranslationKeyPlaceholderValues([
+                        $worker->getNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event->eventName,
+                    ])
             );
         }
 
@@ -663,8 +804,7 @@ class ShiftWorkerService
                 1 => [
                     'type'  => 'string',
                     'title' => __('notification.keyWords.your_shift') .
-                        Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                        $shift->time_span_label,
                     'href'  => null,
                 ],
             ]);
@@ -733,14 +873,26 @@ class ShiftWorkerService
                 continue;
             }
 
-            $shiftsQualificationsValue = $this->shiftsQualificationsRepository
-                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId)?->value;
+            $qualificationRow = $this->shiftsQualificationsRepository
+                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId);
 
-            if ($shiftsQualificationsValue === null || $shiftsQualificationsValue === 0) {
+            // Funktion existiert an dieser Serien-Schicht gar nicht → überspringen
+            if ($qualificationRow === null) {
                 continue;
             }
 
-            $qualificationIsFull = $this->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
+            $shiftsQualificationsValue = (int) $qualificationRow->getAttribute('value');
+
+            // Reine Überbuchungs-Funktionen (value = 0, nur overbooked_value) sind für
+            // reguläre Serien-Zuweisungen tabu, für Überbuchungs-Zuweisungen aber gültig.
+            if ($shiftsQualificationsValue === 0 && !$isOverbooked) {
+                continue;
+            }
+
+            // Voll-Prüfung nur über REGULÄRE Worker: Überbuchte belegen den separaten
+            // overbooked_value-Slot. Würden sie mitgezählt, gälte eine Schicht mit freiem
+            // regulären Platz fälschlich als voll (Skip bzw. unnötige Überbuchung).
+            $qualificationIsFull = $this->shiftsQualificationsService->getRegularWorkerCount(
                 $shiftBetweenDates->id,
                 $shiftQualificationId
             ) >= $shiftsQualificationsValue;
@@ -770,7 +922,7 @@ class ShiftWorkerService
     private function createAssignedToShiftNotification(Shift $shift, User $user, NotificationService $notificationService): void
     {
         if ($shift->event?->exists) {
-            $notificationService->setProjectId($shift->event?->project->id);
+            $notificationService->setProjectId($shift->event?->project?->id);
             $notificationService->setEventId($shift->event->id);
         }
 
@@ -794,8 +946,7 @@ class ShiftWorkerService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.your_shift') .
-                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    $shift->time_span_label,
                 'href'  => null,
             ],
         ]);

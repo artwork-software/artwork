@@ -59,7 +59,12 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
 
         let updated = false;
 
-        if (room.shiftsById) {
+        // Nur event-LOSE Schichten ins Raum-Raster upserten: Der Server-Load filtert
+        // whereNull(event_id) — eine per Broadcast eingefügte Event-Schicht würde nach
+        // dem nächsten Reload wieder verschwinden (Live-Ansicht ≠ Server-Wahrheit).
+        const isStandaloneShift = !(data.shift.eventId ?? data.shift.event_id);
+
+        if (room.shiftsById && isStandaloneShift) {
             // Always upsert into shiftsById (handles both new and existing standalone shifts)
             room.shiftsById[data.shift.id] = data.shift;
             updated = true;

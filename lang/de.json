@@ -4858,5 +4858,7 @@
     "Overbooking of shifts": "Überbuchung von Schichten",
     "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.": "Wenn aktiviert, können Planende mehr Personen in eine Schicht einteilen als der festgelegte Bedarf vorsieht. Überbuchte Plätze werden gesondert markiert und der Bedarf bleibt unverändert.",
     "Allow overbooking": "Überbuchung erlauben",
-    "Deactivated": "Deaktiviert"
+    "Deactivated": "Deaktiviert",
+    "Shift plan request has already been processed.": "Die Dienstplananfrage wurde bereits bearbeitet.",
+    "Individual working time": "Individuelle Arbeitszeit"
 }

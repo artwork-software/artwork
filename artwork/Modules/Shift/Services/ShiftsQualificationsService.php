@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
@@ -38,10 +37,18 @@ readonly class ShiftsQualificationsService
             //if shiftsQualification is not existing create it
             $this->createShiftsQualificationForShift($shiftId, $shiftsQualification);
         } else {
-            //update existing shiftsQualification value based on parameters
+            // Der Bedarf darf nicht unter die Zahl der bereits regulär zugewiesenen
+            // Personen sinken — sonst entsteht eine Überbesetzung ohne
+            // Überbuchungs-Markierung (Anzeige "3/1" ohne is_overbooked).
+            $requestedValue = max(0, (int) ($shiftsQualification['value'] ?? 0));
+            $regularWorkerCount = $this->getRegularWorkerCount(
+                $shiftId,
+                $shiftsQualification['shift_qualification_id']
+            );
+
             $this->shiftsQualificationsRepository->save(
                 $existingShiftsQualification->fill(
-                    ['value' => $shiftsQualification['value'] ?? 0]
+                    ['value' => max($requestedValue, $regularWorkerCount)]
                 )
             );
         }
@@ -84,20 +91,10 @@ readonly class ShiftsQualificationsService
             return;
         }
 
-        /** @var Shift $shiftWithWorker */
-        $shiftWithWorker = $existingShiftsQualifications
-            ->load('shift')
-            ->getAttribute('shift');
-
-        $workerCount = $shiftWithWorker->users()
-                ->wherePivot('shift_qualification_id', $shiftQualificationId)
-                ->count() +
-            $shiftWithWorker->freelancer()
-                ->wherePivot('shift_qualification_id', $shiftQualificationId)
-                ->count() +
-            $shiftWithWorker->serviceProvider()
-                ->wherePivot('shift_qualification_id', $shiftQualificationId)
-                ->count();
+        // Nur REGULÄRE Worker zählen: Überbuchte belegen den separaten
+        // overbooked_value-Slot — würden sie mitgezählt, würde der geplante
+        // Bedarf (value) bei jeder weiteren regulären Zuweisung aufgebläht.
+        $workerCount = $this->getRegularWorkerCount($shiftId, $shiftQualificationId);
 
         if ($existingShiftsQualifications->getAttribute('value') < $workerCount) {
             $this->shiftsQualificationsRepository->update(
@@ -202,6 +199,31 @@ readonly class ShiftsQualificationsService
         return ShiftWorker::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)
             ->where('is_overbooked', true)
             ->count();
+    }
+
+    public function getRegularWorkerCount(int $shiftId, int $shiftQualificationId): int
+    {
+        return ShiftWorker::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)
+            ->where('is_overbooked', false)
+            ->count();
+    }
+
+    /**
+     * Existiert ein offener (noch unbesetzter) Überbuchungsplatz für die Funktion?
+     */
+    public function hasOpenOverbookedSlot(int $shiftId, int $shiftQualificationId): bool
+    {
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (is_null($existingShiftsQualifications)) {
+            return false;
+        }
+
+        return (int) $existingShiftsQualifications->getAttribute('overbooked_value')
+            > $this->getOverbookedWorkerCount($shiftId, $shiftQualificationId);
     }
 
     public function increaseValueOrCreateWithOneByQualification(int $shiftId, int $shiftQualificationId): void

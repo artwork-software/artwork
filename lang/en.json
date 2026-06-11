@@ -4812,5 +4812,7 @@
     "Overbooking of shifts": "Overbooking of shifts",
     "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.": "If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.",
     "Allow overbooking": "Allow overbooking",
-    "Deactivated": "Deactivated"
+    "Deactivated": "Deactivated",
+    "Shift plan request has already been processed.": "Shift plan request has already been processed.",
+    "Individual working time": "Individual working time"
 }

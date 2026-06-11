@@ -67,6 +67,25 @@ class Shift extends Model
     use SoftDeletes;
     use LogsActivity;
 
+    protected static function booted(): void
+    {
+        // Für event-lose Schichten event_start_day/event_end_day immer mit
+        // start_date/end_date synchron halten: Ruhezeit-Check und Kollisions-
+        // berechnung lesen diese Felder, und Carbon::parse(null) ergäbe "jetzt".
+        static::saving(function (Shift $shift): void {
+            if ($shift->event_id !== null) {
+                return;
+            }
+
+            $shift->event_start_day = $shift->start_date
+                ? Carbon::parse($shift->start_date)->toDateString()
+                : null;
+            $shift->event_end_day = $shift->end_date
+                ? Carbon::parse($shift->end_date)->toDateString()
+                : null;
+        });
+    }
+
     protected $fillable = [
         'event_id',
         'start_date',
@@ -365,10 +384,38 @@ class Shift extends Model
         return $formattedHours . ':' . $formattedMinutes;
     }
 
+    /**
+     * Anzeige-Label "06.05.2026 09:00 - 17:00" (bzw. mit End-Datum bei Über-Mitternacht).
+     *
+     * shifts.start/end sind reine Uhrzeiten — Carbon::parse('18:00') ergäbe das
+     * HEUTIGE Datum; Notifications zeigten dadurch das Versanddatum statt des Schichtdatums.
+     */
+    public function getTimeSpanLabelAttribute(): string
+    {
+        $startDay = $this->start_date ? Carbon::parse($this->start_date)->format('d.m.Y') : '';
+        $endDay = $this->end_date ? Carbon::parse($this->end_date)->format('d.m.Y') : $startDay;
+        $startTime = $this->start ? Carbon::parse($this->start)->format('H:i') : '';
+        $endTime = $this->end ? Carbon::parse($this->end)->format('H:i') : '';
+
+        if ($startDay === $endDay) {
+            return trim("{$startDay} {$startTime} - {$endTime}");
+        }
+
+        return trim("{$startDay} {$startTime} - {$endDay} {$endTime}");
+    }
+
     public function getInfringementAttribute(): bool
     {
         $start = Carbon::parse($this->start);
         $end = Carbon::parse($this->end);
+
+        // Über-Mitternacht-Schichten: end < start am selben Tag → Ende +1 Tag,
+        // sonst wäre der Diff in Carbon 3 negativ und der Pausen-Check
+        // (z.B. 10h-Nachtschicht ohne Pause) würde NIE anschlagen.
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
         $diff = $start->diffInRealMinutes($end);
         $break = $this->break_minutes;
 
@@ -393,28 +440,35 @@ class Shift extends Model
         Carbon $eventStartDay,
         Carbon $eventEndDay
     ): Builder {
-        return $builder
-            ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('shifts.start_date', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('shifts.end_date', [$eventStartDay, $eventEndDay]);
+        // Gruppierung wie bei scopeStartAndEndDateOverlap: ohne sie würden die
+        // OR-Zweige vorgelagerte Filter (z.B. shift_uuid oder craft_id) aushebeln.
+        return $builder->where(function (Builder $builder) use ($eventStartDay, $eventEndDay): void {
+            $builder
+                ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('shifts.start_date', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('shifts.end_date', [$eventStartDay, $eventEndDay]);
+        });
     }
 
     public function scopeStartAndEndOverlap(Builder $builder, string $start, string $end): Builder
     {
-        return $builder
-            ->whereBetween('shifts.start', [$start, $end])
-            ->orWhereBetween('shifts.end', [$start, $end])
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start', '>', $start)
-                    ->where('shifts.end', '<', $end);
-            })
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start', '<', $start)
-                    ->where('shifts.end', '>', $end);
-            });
+        // Gruppierung wie bei scopeStartAndEndDateOverlap (siehe Kommentar dort).
+        return $builder->where(function (Builder $builder) use ($start, $end): void {
+            $builder
+                ->whereBetween('shifts.start', [$start, $end])
+                ->orWhereBetween('shifts.end', [$start, $end])
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start', '>', $start)
+                        ->where('shifts.end', '<', $end);
+                })
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start', '<', $start)
+                        ->where('shifts.end', '>', $end);
+                });
+        });
     }
 
     public function scopeStartAndEndDateOverlap(Builder $builder, string $start, string $end): Builder

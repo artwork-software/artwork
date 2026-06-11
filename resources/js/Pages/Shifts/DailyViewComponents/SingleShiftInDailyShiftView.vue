@@ -1032,6 +1032,10 @@ watch(() => props.shift, () => {
     assignablePeopleCache.value = {};
     globalQualificationDeltas.value = {}
     shiftQualificationDeltas.value = {}
+    // Auch das Überbuchungs-Delta zurücksetzen: nach dem Broadcast ist der Worker
+    // bereits in props.shift enthalten — ohne Reset wurde er doppelt gezählt und
+    // offene Überbuchungsplätze verschwanden bis zum Reload.
+    overbookedQualificationDeltas.value = {}
 }, { deep: true });
 
 // Event-Handler: Wenn Kind-Komponente meldet, dass ein User entfernt wurde, Zähler sofort dekrementieren

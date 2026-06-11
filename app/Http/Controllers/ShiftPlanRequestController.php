@@ -14,6 +14,9 @@ use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\ShiftChangeRecorder;
 use Artwork\Modules\Shift\Services\ShiftPlanRequestService;
 use Artwork\Modules\User\Models\User;
@@ -25,6 +28,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Spatie\Activitylog\Models\Activity;
@@ -205,25 +209,40 @@ class ShiftPlanRequestController extends Controller
         $user = $this->auth->user();
         $data['requested_by_user_id'] = $user->id;
 
-        // 1. Prüfen, ob es bereits ein PENDING-Request für Craft/KW/Jahr gibt
-        $shiftPlanRequest = ShiftPlanRequest::query()
-            ->where('craft_id', $data['craft_id'])
-            ->where('week_number', $data['week_number'])
-            ->where('year', $data['year'])
-            ->where('status', 'pending')
-            ->first();
-
         $service = app(ShiftPlanRequestService::class);
 
-        // 2. Wenn keines existiert → neues anlegen, sonst vorhandenes nutzen
-        if (! $shiftPlanRequest) {
-            $shiftPlanRequest = $service->createRequestWithShifts($data, [], true);
-        }
+        // Check-then-create unter Lock auf der Craft-Zeile: zwei gleichzeitige
+        // "Alle Schichten festsetzen"-Aufrufe erzeugten sonst zwei pending-Requests
+        // für dieselbe KW, auf die sich die Schichten zufällig verteilten.
+        $shiftPlanRequest = DB::transaction(function () use ($data, $service) {
+            Craft::query()->whereKey($data['craft_id'])->lockForUpdate()->first();
+
+            // 1. Prüfen, ob es bereits ein PENDING-Request für Craft/KW/Jahr gibt
+            $shiftPlanRequest = ShiftPlanRequest::query()
+                ->where('craft_id', $data['craft_id'])
+                ->where('week_number', $data['week_number'])
+                ->where('year', $data['year'])
+                ->where('status', 'pending')
+                ->first();
+
+            // 2. Wenn keines existiert → neues anlegen, sonst vorhandenes nutzen
+            if (! $shiftPlanRequest) {
+                $shiftPlanRequest = $service->createRequestWithShifts($data, [], true);
+            }
+
+            return $shiftPlanRequest;
+        });
 
         // 3. Freie Schichten des Gewerks/der KW an die Anfrage anhängen (Auswahl, Activity-Log,
         //    Pivot-Historie, Workflow-Flags). Gemeinsame Logik in ShiftPlanRequestService, damit
         //    der Backfill-Command exakt dasselbe Verhalten nutzt.
         $service->attachFreeShiftsToRequest($shiftPlanRequest, $user, true);
+
+        // Genehmiger ueber die neue Anfrage benachrichtigen (nur bei Neuanlage,
+        // nicht beim Nachreichen weiterer Schichten an eine bestehende Anfrage).
+        if ($shiftPlanRequest->wasRecentlyCreated) {
+            $this->notifyApproversAboutNewRequest($shiftPlanRequest);
+        }
 
         return back()->with(
             'success',
@@ -335,44 +354,72 @@ class ShiftPlanRequestController extends Controller
         /** @var \App\Models\User $user */
         $user = $this->auth->user();
 
-        $shiftPlanRequest->status = 'approved';
-        $shiftPlanRequest->reviewed_by_user_id = $user->id;
-        $shiftPlanRequest->reviewed_at = now();
-        $shiftPlanRequest->save();
+        // Status-Flip UND Festschreibungs-Loop in EINER Transaktion: schlägt ein
+        // Save mitten im Loop fehl, wird auch der Status zurückgerollt (keine
+        // "approved"-Anfrage mit halb committeten Schichten).
+        $approved = false;
+        $response = DB::transaction(function () use ($shiftPlanRequest, $user, &$approved) {
+            // Atomarer Status-Flip nur aus 'pending': verhindert Doppel-Genehmigung und
+            // Genehmigen nach Ablehnung (auch bei zwei gleichzeitigen Genehmigern —
+            // der zweite wartet auf das Row-Lock und sieht dann flipped = 0).
+            $flipped = ShiftPlanRequest::query()
+                ->whereKey($shiftPlanRequest->id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'approved',
+                    'reviewed_by_user_id' => $user->id,
+                    'reviewed_at' => now(),
+                ]);
 
-        // commit all shifts in this request
-        $shifts = Shift::query()
-            ->where('current_request_id', $shiftPlanRequest->id)
-            ->get();
+            if ($flipped === 0) {
+                return back()->with('error', __('Shift plan request has already been processed.'));
+            }
 
-        foreach ($shifts as $shift) {
-            $shift->workflow_rejection_reason = null;
-            $shift->is_committed = true;
-            $shift->in_workflow = false;
-            // Den Live-Zeiger auf die Anfrage lösen: Sobald eine Schicht genehmigt/festgeschrieben
-            // ist, gehört sie keiner aktiven Anfrage mehr an und muss bei einer erneuten
-            // "Alle Schichten festsetzen"-Aktion wieder auswählbar sein. Die Historie bleibt über
-            // die Pivot-Tabelle shift_plan_request_shifts (requestedShifts) erhalten.
-            $shift->current_request_id = null;
-            $shift->committing_user_id = $this->auth->id();
-            $shift->save();
+            $shiftPlanRequest->refresh();
 
-            DB::table('shift_workers')
-                ->where('shift_id', $shift->id)
-                ->update(['workflow_rejection_reason' => null]);
+            // commit all shifts in this request
+            $shifts = Shift::query()
+                ->where('current_request_id', $shiftPlanRequest->id)
+                ->get();
 
-            activity()
-                ->performedOn($shift)
-                ->causedBy($user)
-                ->useLog('shift')
-                ->event('shift_committed')
-                ->log('Shift committed as part of approved shift plan request');
+            foreach ($shifts as $shift) {
+                $shift->workflow_rejection_reason = null;
+                $shift->is_committed = true;
+                $shift->in_workflow = false;
+                // Den Live-Zeiger auf die Anfrage lösen: Sobald eine Schicht genehmigt/festgeschrieben
+                // ist, gehört sie keiner aktiven Anfrage mehr an und muss bei einer erneuten
+                // "Alle Schichten festsetzen"-Aktion wieder auswählbar sein. Die Historie bleibt über
+                // die Pivot-Tabelle shift_plan_request_shifts (requestedShifts) erhalten.
+                $shift->current_request_id = null;
+                $shift->committing_user_id = $this->auth->id();
+                $shift->save();
+
+                DB::table('shift_workers')
+                    ->where('shift_id', $shift->id)
+                    ->update(['workflow_rejection_reason' => null]);
+
+                activity()
+                    ->performedOn($shift)
+                    ->causedBy($user)
+                    ->useLog('shift')
+                    ->event('shift_committed')
+                    ->log('Shift committed as part of approved shift plan request');
+            }
+
+            $approved = true;
+
+            return back()->with(
+                'success',
+                __('Shift plan request approved successfully.')
+            );
+        });
+
+        // Nach erfolgreichem Commit den Antragsteller informieren
+        if ($approved) {
+            $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), true);
         }
 
-        return back()->with(
-            'success',
-            __('Shift plan request approved successfully.')
-        );
+        return $response;
     }
 
     /**
@@ -401,6 +448,12 @@ class ShiftPlanRequestController extends Controller
      */
     public function destroy(ShiftPlanRequest $shiftPlanRequest): \Illuminate\Http\RedirectResponse
     {
+        // Nur offene Anfragen können zurückgezogen werden — genehmigte/abgelehnte
+        // Anfragen sind Historie und dürfen nicht mehr entfernt werden.
+        if ($shiftPlanRequest->status !== 'pending') {
+            return back()->with('error', __('Shift plan request has already been processed.'));
+        }
+
         DB::transaction(function () use ($shiftPlanRequest): void {
             Shift::query()
                 ->where('current_request_id', $shiftPlanRequest->id)
@@ -437,378 +490,409 @@ class ShiftPlanRequestController extends Controller
             'shifts.*.reason' => ['nullable', 'string'],
         ]);
 
-        // Request als abgelehnt markieren
-        $shiftPlanRequest->rejected_days = $payload['days'] ?? [];
-        $shiftPlanRequest->rejected_shifts = $payload['shifts'] ?? [];
-        $shiftPlanRequest->review_comment = $payload['global_reason'] ?? null;
-        $shiftPlanRequest->status = 'rejected';
-        $shiftPlanRequest->reviewed_by_user_id = $user->id;
-        $shiftPlanRequest->reviewed_at = now();
-        $shiftPlanRequest->save();
+        // Status-Flip UND Rollback-Loop in EINER Transaktion: schlägt ein Save mitten
+        // im Loop fehl, wird auch der Status zurückgerollt (kein 'rejected'-Request
+        // mit halb zurückgerollten Schichten).
+        $rejected = false;
+        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $payload, &$rejected) {
+            // Atomarer Status-Flip nur aus 'pending': verhindert Ablehnen nach Genehmigung
+            // (Schichten wären schon committed) und doppelte Rollbacks.
+            $flipped = ShiftPlanRequest::query()
+                ->whereKey($shiftPlanRequest->id)
+                ->where('status', 'pending')
+                ->update([
+                    'rejected_days' => json_encode($payload['days'] ?? []),
+                    'rejected_shifts' => json_encode($payload['shifts'] ?? []),
+                    'review_comment' => $payload['global_reason'] ?? null,
+                    'status' => 'rejected',
+                    'reviewed_by_user_id' => $user->id,
+                    'reviewed_at' => now(),
+                ]);
 
-        // Alle Schichten, die zu diesem Request gehören
-        $shifts = Shift::query()
-            ->where('current_request_id', $shiftPlanRequest->id)
-            ->get();
-
-        $selectedEntries = collect($payload['shifts'] ?? []);
-        $entriesByShift = $selectedEntries->groupBy('shift_id');
-
-        // Gründe pro Tag
-        $dayReasons = collect($payload['days'] ?? [])
-            ->pluck('reason', 'date')
-            ->map(fn($r) => $this->cleanReason($r))
-            ->filter();
-
-        // Felder, die im Workflow getrackt werden und auf _initial zurück sollen
-        $fieldsToRevert = [
-            'event_id',
-            'start_date',
-            'end_date',
-            'start',
-            'end',
-            'break_minutes',
-            'craft_id',
-            'description',
-            'is_committed',
-            'committing_user_id',
-            'room_id',
-            'project_id',
-            'shift_group_id',
-        ];
-
-        foreach ($shifts as $shift) {
-            $frontendStart = $shift->formatted_dates['frontend_start'] ?? null;
-
-            if ($frontendStart) {
-                $date = Carbon::parse($frontendStart)->toDateString(); // 2025-11-10
-            } else {
-                $date = $shift->event_start_day; // falls du das im Format Y-m-d speicherst
+            if ($flipped === 0) {
+                return back()->with('error', __('Shift plan request has already been processed.'));
             }
 
-            $dayReason = $date ? ($dayReasons->get($date) ?? null) : null;
-            $globalReason = $this->cleanReason($payload['global_reason'] ?? null);
+            $shiftPlanRequest->refresh();
 
-            // alle Entry-Reasons für diese Schicht
-            $entries = $entriesByShift->get($shift->id, collect());
+            // Alle Schichten, die zu diesem Request gehören
+            $shifts = Shift::query()
+                ->where('current_request_id', $shiftPlanRequest->id)
+                ->get();
 
-            // ✅ ganz wichtig: alte Pivot-Reasons löschen, sonst schleppst du Altlasten mit
-            DB::table('shift_workers')
-                ->where('shift_id', $shift->id)
-                ->update(['workflow_rejection_reason' => null]);
+            $selectedEntries = collect($payload['shifts'] ?? []);
+            $entriesByShift = $selectedEntries->groupBy('shift_id');
 
-            // Summary fürs Shift-Activitylog (nicht fürs UI)
-            $summaryReason = null;
+            // Gründe pro Tag
+            $dayReasons = collect($payload['days'] ?? [])
+                ->pluck('reason', 'date')
+                ->map(fn($r) => $this->cleanReason($r))
+                ->filter();
 
-            foreach ($entries as $entry) {
-                $rowType = $entry['row_type'] ?? null;
-                $rowId = isset($entry['row_id']) ? (int)$entry['row_id'] : null;
-
-                $entryReason = $this->cleanReason($entry['reason'] ?? null);
-
-                // unassigned → bleibt am Shift (weil es kein Assignment gibt)
-                if ($rowType === 'unassigned' || empty($rowId)) {
-                    $summaryReason ??= $entryReason;
-                    continue;
-                }
-
-                $employableClass = $this->rowTypeToEmployableClass($rowType);
-
-                if (!$employableClass) {
-                    continue;
-                }
-
-                // ✅ pro (shift × employable) setzen (alle rows, falls mehrere qualification-rows existieren)
-                DB::table('shift_workers')
-                    ->where('shift_id', $shift->id)
-                    ->where('employable_type', $employableClass)
-                    ->where('employable_id', $rowId)
-                    ->whereNull('deleted_at')
-                    ->update(['workflow_rejection_reason' => $entryReason]);
-
-                $summaryReason ??= $entryReason;
-            }
-
-            // wenn nix auf Entry-Ebene da war, nimm Tag/Global
-            $summaryReason ??= $dayReason ?? $globalReason;
-
-            // ---------- 2) Initial-Daten aus erster ShiftPlanRequestChange holen ----------
-            /** @var ShiftPlanRequestChange|null $firstChange */
-            $firstChange = $shift->shiftPlanRequestChanges()
-                ->orderBy('changed_at')
-                ->orderBy('id')
-                ->first();
-
-            $initialData = null;
-            if ($firstChange) {
-                $fieldChanges = $firstChange->field_changes ?? [];
-                if (is_array($fieldChanges) && isset($fieldChanges['_initial']) && is_array($fieldChanges['_initial'])) {
-                    $initialData = $fieldChanges['_initial'];
-                }
-            }
-
-            // Originalzustand der Schicht (für Activity-Log)
-            $originalBeforeRollback = $shift->getAttributes();
-
-            $rollbackFieldChanges = [];
-
-            // ---------- 3) "normale" Felder auf _initial zurücksetzen ----------
-            if ($initialData) {
-                foreach ($fieldsToRevert as $field) {
-                    if (! array_key_exists($field, $initialData)) {
-                        continue;
-                    }
-
-                    $currentValue = $shift->{$field};
-                    $initialValue = $initialData[$field];
-
-                    // Datumfelder aus ISO-String / JSON normalisieren
-                    if (in_array($field, ['start_date', 'end_date'], true) && ! empty($initialValue)) {
-                        try {
-                            // toDateString() ist safe:
-                            // - für DATE-Spalten exakt richtig
-                            // - für DATETIME wandelt MySQL "YYYY-MM-DD" zu "YYYY-MM-DD 00:00:00"
-                            $initialValue = Carbon::parse($initialValue)->toDateString();
-                        } catch (\Throwable $e) {
-                            // im Zweifel den ursprünglichen Wert lassen, damit kein weiterer Crash passiert
-                        }
-                    }
-
-                    if ($currentValue != $initialValue) {
-                        $rollbackFieldChanges[$field] = [
-                            'old' => $currentValue,
-                            'new' => $initialValue,
-                        ];
-
-                        $shift->{$field} = $initialValue;
-                    }
-                }
-            }
-
-            // ---------- 4) GlobalQualifications + ShiftQualifications zurücksetzen ----------
-            $shift->loadMissing(['globalQualifications', 'shiftsQualifications']);
-
-            // 4a) GlobalQualifications
-            if ($initialData && array_key_exists('global_qualifications', $initialData)) {
-                $initialGlobals = collect($initialData['global_qualifications'] ?? [])
-                    ->keyBy(fn ($item) => (int) $item['global_qualification_id']);
-
-                // "Vorher"-Mengen aus Relation (pivot.quantity oder value)
-                $beforeGlobals = $shift->globalQualifications
-                    ->mapWithKeys(static function ($gq) {
-                        $id  = (int) $gq->global_qualification_id;
-                        $qty = $gq->pivot->quantity ?? $gq->value ?? 0;
-
-                        return [$id => (int) $qty];
-                    })
-                    ->toArray();
-
-                // Payload für sync() anhand _initial aufbauen
-                $syncPayload = [];
-                foreach ($initialGlobals as $id => $item) {
-                    $qty = (int) ($item['value'] ?? $item['quantity'] ?? 0);
-                    if ($qty > 0) {
-                        $syncPayload[$id] = ['quantity' => $qty];
-                    }
-                }
-
-                // Revert in DB
-                $shift->globalQualifications()->sync($syncPayload);
-
-                // "Nachher"-Mengen aus Payload
-                $afterGlobals = [];
-                foreach ($syncPayload as $id => $row) {
-                    $afterGlobals[(int) $id] = (int) ($row['quantity'] ?? 0);
-                }
-
-                // Alle IDs, die betroffen sein könnten
-                $allGlobalIds = collect(array_keys($beforeGlobals))
-                    ->merge(array_keys($afterGlobals))
-                    ->unique()
-                    ->values()
-                    ->all();
-
-                foreach ($allGlobalIds as $id) {
-                    $old = (int) ($beforeGlobals[$id] ?? 0);
-                    $new = (int) ($afterGlobals[$id] ?? 0);
-
-                    if ($old === $new) {
-                        continue;
-                    }
-
-                    $item  = $initialGlobals->get((int) $id);
-                    $label = $item['label'] ?? null;
-
-                    $rollbackFieldChanges['global_qualifications'][] = [
-                        'global_qualification_id' => (int) $id,
-                        'label'                   => $label,
-                        'old'                     => $old,
-                        'new'                     => $new,
-                        'kind'                    => 'global',
-                    ];
-                }
-            }
-
-            // 4b) ShiftQualifications (ShiftsQualifications-Modelle)
-            if ($initialData && array_key_exists('shifts_qualifications', $initialData)) {
-                $initialShiftQuals = collect($initialData['shifts_qualifications'] ?? [])
-                    ->keyBy(fn ($item) => (int) $item['shift_qualification_id']);
-
-                // "Vorher"-Mengen
-                $beforeShiftQuals = $shift->shiftsQualifications
-                    ->mapWithKeys(static function ($sq) {
-                        return [(int) $sq->shift_qualification_id => (int) $sq->value];
-                    })
-                    ->toArray();
-
-                // Zielmengen aus _initial
-                $targetShiftQuantities = [];
-                foreach ($initialShiftQuals as $id => $item) {
-                    $targetShiftQuantities[(int) $id] = (int) ($item['value'] ?? 0);
-                }
-
-                // IDs, die in Zukunft existieren sollen (value > 0)
-                $idsToKeep = collect($targetShiftQuantities)
-                    ->filter(fn ($v) => $v > 0)
-                    ->keys()
-                    ->map(fn ($id) => (int) $id)
-                    ->values()
-                    ->all();
-
-                // Erst alle entfernen, die nicht mehr existieren sollen
-                if (! empty($idsToKeep)) {
-                    $shift->shiftsQualifications()
-                        ->whereNotIn('shift_qualification_id', $idsToKeep)
-                        ->delete();
-                } else {
-                    // Wenn keine übrig bleiben sollen → alles löschen
-                    $shift->shiftsQualifications()->delete();
-                }
-
-                // Reload, damit wir mit aktuellem Stand weiterarbeiten
-                $shift->load('shiftsQualifications');
-
-                // Jetzt für alle Ziel-IDs die Werte anpassen / neu anlegen
-                foreach ($targetShiftQuantities as $id => $targetValue) {
-                    /** @var \Artwork\Modules\Shift\Models\ShiftsQualifications|null $sq */
-                    $sq = $shift->shiftsQualifications
-                        ->firstWhere('shift_qualification_id', (int) $id);
-
-                    if ($targetValue <= 0) {
-                        // Sollte es noch existieren, löschen wir es
-                        if ($sq) {
-                            $sq->delete();
-                        }
-                        continue;
-                    }
-
-                    if (! $sq) {
-                        // neu anlegen
-                        $sq = new ShiftsQualifications();
-                        $sq->shift_id               = $shift->id;
-                        $sq->shift_qualification_id = (int) $id;
-                    }
-
-                    $sq->value = $targetValue;
-                    $sq->save();
-                }
-
-                // Reload nach Änderungen
-                $shift->load('shiftsQualifications');
-
-                // "Nachher"-Mengen
-                $afterShiftQuals = $shift->shiftsQualifications
-                    ->mapWithKeys(static function ($sq) {
-                        return [(int) $sq->shift_qualification_id => (int) $sq->value];
-                    })
-                    ->toArray();
-
-                $allShiftQualIds = collect(array_keys($beforeShiftQuals))
-                    ->merge(array_keys($afterShiftQuals))
-                    ->unique()
-                    ->values()
-                    ->all();
-
-                foreach ($allShiftQualIds as $id) {
-                    $old = (int) ($beforeShiftQuals[$id] ?? 0);
-                    $new = (int) ($afterShiftQuals[$id] ?? 0);
-
-                    if ($old === $new) {
-                        continue;
-                    }
-
-                    $item  = $initialShiftQuals->get((int) $id);
-                    $label = $item['label'] ?? null;
-
-                    $rollbackFieldChanges['shifts_qualifications'][] = [
-                        'shift_qualification_id' => (int) $id,
-                        'label'                  => $label,
-                        'old'                    => $old,
-                        'new'                    => $new,
-                        'kind'                   => 'normal',
-                    ];
-                }
-            }
-
-            // ---------- 5) Workflow-Felder setzen / Activity-Log ----------
-            $old = [
-                'in_workflow'               => $originalBeforeRollback['in_workflow'] ?? (bool) $shift->in_workflow,
-                'workflow_rejection_reason' => $originalBeforeRollback['workflow_rejection_reason'] ?? $shift->workflow_rejection_reason,
+            // Felder, die im Workflow getrackt werden und auf _initial zurück sollen
+            $fieldsToRevert = [
+                'event_id',
+                'start_date',
+                'end_date',
+                'start',
+                'end',
+                'break_minutes',
+                'craft_id',
+                'description',
+                'is_committed',
+                'committing_user_id',
+                'room_id',
+                'project_id',
+                'shift_group_id',
             ];
 
-            $shift->workflow_rejection_reason = $summaryReason;
-            $shift->in_workflow               = false; // aus Workflow entfernen
-            $shift->is_committed              = false; // Sicherheitshalber nicht festgeschrieben
-            // $shift->current_request_id kannst du lassen, wenn du die Zuordnung behalten willst
+            foreach ($shifts as $shift) {
+                $frontendStart = $shift->formatted_dates['frontend_start'] ?? null;
 
-            $shift->save();
-
-            // ---------- 6) Rollback als eigenen ShiftPlanRequestChange-Eintrag loggen ----------
-            if (! empty($rollbackFieldChanges)) {
-                if ($initialData) {
-                    $rollbackFieldChanges['_initial'] = $initialData;
+                if ($frontendStart) {
+                    $date = Carbon::parse($frontendStart)->toDateString(); // 2025-11-10
+                } else {
+                    $date = $shift->event_start_day; // falls du das im Format Y-m-d speicherst
                 }
 
-                ShiftPlanRequestChange::create([
-                    'shift_plan_request_id' => $shiftPlanRequest->id,
-                    'subject_type'          => Shift::class,
-                    'subject_id'            => $shift->id,
-                    'change_type'           => 'rejected', // oder 'rollback'
-                    'field_changes'         => $rollbackFieldChanges,
-                    'affected_user_id'      => null,
-                    'changed_by_user_id'    => $user->id,
-                    'changed_at'            => now(),
-                ]);
+                $dayReason = $date ? ($dayReasons->get($date) ?? null) : null;
+                $globalReason = $this->cleanReason($payload['global_reason'] ?? null);
+
+                // alle Entry-Reasons für diese Schicht
+                $entries = $entriesByShift->get($shift->id, collect());
+
+                // ✅ ganz wichtig: alte Pivot-Reasons löschen, sonst schleppst du Altlasten mit
+                DB::table('shift_workers')
+                    ->where('shift_id', $shift->id)
+                    ->update(['workflow_rejection_reason' => null]);
+
+                // Summary fürs Shift-Activitylog (nicht fürs UI)
+                $summaryReason = null;
+
+                foreach ($entries as $entry) {
+                    $rowType = $entry['row_type'] ?? null;
+                    $rowId = isset($entry['row_id']) ? (int)$entry['row_id'] : null;
+
+                    $entryReason = $this->cleanReason($entry['reason'] ?? null);
+
+                    // unassigned → bleibt am Shift (weil es kein Assignment gibt)
+                    if ($rowType === 'unassigned' || empty($rowId)) {
+                        $summaryReason ??= $entryReason;
+                        continue;
+                    }
+
+                    $employableClass = $this->rowTypeToEmployableClass($rowType);
+
+                    if (!$employableClass) {
+                        continue;
+                    }
+
+                    // ✅ pro (shift × employable) setzen (alle rows, falls mehrere qualification-rows existieren)
+                    DB::table('shift_workers')
+                        ->where('shift_id', $shift->id)
+                        ->where('employable_type', $employableClass)
+                        ->where('employable_id', $rowId)
+                        ->whereNull('deleted_at')
+                        ->update(['workflow_rejection_reason' => $entryReason]);
+
+                    $summaryReason ??= $entryReason;
+                }
+
+                // wenn nix auf Entry-Ebene da war, nimm Tag/Global
+                $summaryReason ??= $dayReason ?? $globalReason;
+
+                // ---------- 2) Initial-Daten aus erster ShiftPlanRequestChange holen ----------
+                // Auf die AKTUELLE Anfrage einschränken: Schichten können den Workflow mehrfach
+                // durchlaufen (abgelehnte Schichten werden in neue Requests aufgenommen). Ohne den
+                // Filter würde auf den _initial-Zustand einer FRÜHEREN Anfrage zurückgerollt und
+                // zwischenzeitlich genehmigte Änderungen gingen verloren.
+                /** @var ShiftPlanRequestChange|null $firstChange */
+                $firstChange = $shift->shiftPlanRequestChanges()
+                    ->where('shift_plan_request_id', $shiftPlanRequest->id)
+                    ->orderBy('changed_at')
+                    ->orderBy('id')
+                    ->first();
+
+                $initialData = null;
+                if ($firstChange) {
+                    $fieldChanges = $firstChange->field_changes ?? [];
+                    if (is_array($fieldChanges) && isset($fieldChanges['_initial']) && is_array($fieldChanges['_initial'])) {
+                        $initialData = $fieldChanges['_initial'];
+                    }
+                }
+
+                // Originalzustand der Schicht (für Activity-Log)
+                $originalBeforeRollback = $shift->getAttributes();
+
+                $rollbackFieldChanges = [];
+
+                // ---------- 3) "normale" Felder auf _initial zurücksetzen ----------
+                if ($initialData) {
+                    foreach ($fieldsToRevert as $field) {
+                        if (! array_key_exists($field, $initialData)) {
+                            continue;
+                        }
+
+                        $currentValue = $shift->{$field};
+                        $initialValue = $initialData[$field];
+
+                        // Datumfelder aus ISO-String / JSON normalisieren
+                        if (in_array($field, ['start_date', 'end_date'], true) && ! empty($initialValue)) {
+                            try {
+                                // toDateString() ist safe:
+                                // - für DATE-Spalten exakt richtig
+                                // - für DATETIME wandelt MySQL "YYYY-MM-DD" zu "YYYY-MM-DD 00:00:00"
+                                $initialValue = Carbon::parse($initialValue)->toDateString();
+                            } catch (\Throwable $e) {
+                                // im Zweifel den ursprünglichen Wert lassen, damit kein weiterer Crash passiert
+                            }
+                        }
+
+                        if ($currentValue != $initialValue) {
+                            $rollbackFieldChanges[$field] = [
+                                'old' => $currentValue,
+                                'new' => $initialValue,
+                            ];
+
+                            $shift->{$field} = $initialValue;
+                        }
+                    }
+                }
+
+                // ---------- 4) GlobalQualifications + ShiftQualifications zurücksetzen ----------
+                $shift->loadMissing(['globalQualifications', 'shiftsQualifications']);
+
+                // 4a) GlobalQualifications
+                if ($initialData && array_key_exists('global_qualifications', $initialData)) {
+                    $initialGlobals = collect($initialData['global_qualifications'] ?? [])
+                        ->keyBy(fn ($item) => (int) $item['global_qualification_id']);
+
+                    // "Vorher"-Mengen aus Relation (pivot.quantity oder value)
+                    $beforeGlobals = $shift->globalQualifications
+                        ->mapWithKeys(static function ($gq) {
+                            $id  = (int) $gq->global_qualification_id;
+                            $qty = $gq->pivot->quantity ?? $gq->value ?? 0;
+
+                            return [$id => (int) $qty];
+                        })
+                        ->toArray();
+
+                    // Payload für sync() anhand _initial aufbauen
+                    $syncPayload = [];
+                    foreach ($initialGlobals as $id => $item) {
+                        $qty = (int) ($item['value'] ?? $item['quantity'] ?? 0);
+                        if ($qty > 0) {
+                            $syncPayload[$id] = ['quantity' => $qty];
+                        }
+                    }
+
+                    // Revert in DB
+                    $shift->globalQualifications()->sync($syncPayload);
+
+                    // "Nachher"-Mengen aus Payload
+                    $afterGlobals = [];
+                    foreach ($syncPayload as $id => $row) {
+                        $afterGlobals[(int) $id] = (int) ($row['quantity'] ?? 0);
+                    }
+
+                    // Alle IDs, die betroffen sein könnten
+                    $allGlobalIds = collect(array_keys($beforeGlobals))
+                        ->merge(array_keys($afterGlobals))
+                        ->unique()
+                        ->values()
+                        ->all();
+
+                    foreach ($allGlobalIds as $id) {
+                        $old = (int) ($beforeGlobals[$id] ?? 0);
+                        $new = (int) ($afterGlobals[$id] ?? 0);
+
+                        if ($old === $new) {
+                            continue;
+                        }
+
+                        $item  = $initialGlobals->get((int) $id);
+                        $label = $item['label'] ?? null;
+
+                        $rollbackFieldChanges['global_qualifications'][] = [
+                            'global_qualification_id' => (int) $id,
+                            'label'                   => $label,
+                            'old'                     => $old,
+                            'new'                     => $new,
+                            'kind'                    => 'global',
+                        ];
+                    }
+                }
+
+                // 4b) ShiftQualifications (ShiftsQualifications-Modelle)
+                if ($initialData && array_key_exists('shifts_qualifications', $initialData)) {
+                    $initialShiftQuals = collect($initialData['shifts_qualifications'] ?? [])
+                        ->keyBy(fn ($item) => (int) $item['shift_qualification_id']);
+
+                    // "Vorher"-Mengen
+                    $beforeShiftQuals = $shift->shiftsQualifications
+                        ->mapWithKeys(static function ($sq) {
+                            return [(int) $sq->shift_qualification_id => (int) $sq->value];
+                        })
+                        ->toArray();
+
+                    // Zielmengen aus _initial
+                    $targetShiftQuantities = [];
+                    foreach ($initialShiftQuals as $id => $item) {
+                        $targetShiftQuantities[(int) $id] = (int) ($item['value'] ?? 0);
+                    }
+
+                    // IDs, die in Zukunft existieren sollen (value > 0)
+                    $idsToKeep = collect($targetShiftQuantities)
+                        ->filter(fn ($v) => $v > 0)
+                        ->keys()
+                        ->map(fn ($id) => (int) $id)
+                        ->values()
+                        ->all();
+
+                    // Erst alle entfernen, die nicht mehr existieren sollen
+                    if (! empty($idsToKeep)) {
+                        $shift->shiftsQualifications()
+                            ->whereNotIn('shift_qualification_id', $idsToKeep)
+                            ->delete();
+                    } else {
+                        // Wenn keine übrig bleiben sollen → alles löschen
+                        $shift->shiftsQualifications()->delete();
+                    }
+
+                    // Reload, damit wir mit aktuellem Stand weiterarbeiten
+                    $shift->load('shiftsQualifications');
+
+                    // Jetzt für alle Ziel-IDs die Werte anpassen / neu anlegen
+                    foreach ($targetShiftQuantities as $id => $targetValue) {
+                        /** @var \Artwork\Modules\Shift\Models\ShiftsQualifications|null $sq */
+                        $sq = $shift->shiftsQualifications
+                            ->firstWhere('shift_qualification_id', (int) $id);
+
+                        if ($targetValue <= 0) {
+                            // Sollte es noch existieren, löschen wir es
+                            if ($sq) {
+                                $sq->delete();
+                            }
+                            continue;
+                        }
+
+                        if (! $sq) {
+                            // neu anlegen
+                            $sq = new ShiftsQualifications();
+                            $sq->shift_id               = $shift->id;
+                            $sq->shift_qualification_id = (int) $id;
+                        }
+
+                        $sq->value = $targetValue;
+                        $sq->save();
+                    }
+
+                    // Reload nach Änderungen
+                    $shift->load('shiftsQualifications');
+
+                    // "Nachher"-Mengen
+                    $afterShiftQuals = $shift->shiftsQualifications
+                        ->mapWithKeys(static function ($sq) {
+                            return [(int) $sq->shift_qualification_id => (int) $sq->value];
+                        })
+                        ->toArray();
+
+                    $allShiftQualIds = collect(array_keys($beforeShiftQuals))
+                        ->merge(array_keys($afterShiftQuals))
+                        ->unique()
+                        ->values()
+                        ->all();
+
+                    foreach ($allShiftQualIds as $id) {
+                        $old = (int) ($beforeShiftQuals[$id] ?? 0);
+                        $new = (int) ($afterShiftQuals[$id] ?? 0);
+
+                        if ($old === $new) {
+                            continue;
+                        }
+
+                        $item  = $initialShiftQuals->get((int) $id);
+                        $label = $item['label'] ?? null;
+
+                        $rollbackFieldChanges['shifts_qualifications'][] = [
+                            'shift_qualification_id' => (int) $id,
+                            'label'                  => $label,
+                            'old'                    => $old,
+                            'new'                    => $new,
+                            'kind'                   => 'normal',
+                        ];
+                    }
+                }
+
+                // ---------- 5) Workflow-Felder setzen / Activity-Log ----------
+                $old = [
+                    'in_workflow'               => $originalBeforeRollback['in_workflow'] ?? (bool) $shift->in_workflow,
+                    'workflow_rejection_reason' => $originalBeforeRollback['workflow_rejection_reason'] ?? $shift->workflow_rejection_reason,
+                ];
+
+                $shift->workflow_rejection_reason = $summaryReason;
+                $shift->in_workflow               = false; // aus Workflow entfernen
+                $shift->is_committed              = false; // Sicherheitshalber nicht festgeschrieben
+                // $shift->current_request_id kannst du lassen, wenn du die Zuordnung behalten willst
+
+                $shift->save();
+
+                // ---------- 6) Rollback als eigenen ShiftPlanRequestChange-Eintrag loggen ----------
+                if (! empty($rollbackFieldChanges)) {
+                    if ($initialData) {
+                        $rollbackFieldChanges['_initial'] = $initialData;
+                    }
+
+                    ShiftPlanRequestChange::create([
+                        'shift_plan_request_id' => $shiftPlanRequest->id,
+                        'subject_type'          => Shift::class,
+                        'subject_id'            => $shift->id,
+                        'change_type'           => 'rejected', // oder 'rollback'
+                        'field_changes'         => $rollbackFieldChanges,
+                        'affected_user_id'      => null,
+                        'changed_by_user_id'    => $user->id,
+                        'changed_at'            => now(),
+                    ]);
+                }
+
+                // ---------- 7) Activity-Log für die Ablehnung ----------
+                activity()
+                    ->performedOn($shift)
+                    ->causedBy($user)
+                    ->useLog('shift')
+                    ->event('shift_rejected')
+                    ->withProperties([
+                        'old' => $old,
+                        'attributes' => [
+                            'in_workflow'               => $shift->in_workflow,
+                            'workflow_rejection_reason' => $shift->workflow_rejection_reason,
+                        ],
+                        'shift_plan_request_id' => $shiftPlanRequest->id,
+                    ])
+                    ->tap(function (Activity $activity) use ($shift): void {
+                        $activity->properties = $activity->properties->merge([
+                            'translation_key' => 'Shift rejected with reason: "{0}"',
+                            'translation_key_placeholder_values' => [
+                                $shift->workflow_rejection_reason ?? __('No reason provided'),
+                            ],
+                        ]);
+                    })
+                    ->log('Shift rejected as part of shift plan request');
+
+                broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
             }
 
-            // ---------- 7) Activity-Log für die Ablehnung ----------
-            activity()
-                ->performedOn($shift)
-                ->causedBy($user)
-                ->useLog('shift')
-                ->event('shift_rejected')
-                ->withProperties([
-                    'old' => $old,
-                    'attributes' => [
-                        'in_workflow'               => $shift->in_workflow,
-                        'workflow_rejection_reason' => $shift->workflow_rejection_reason,
-                    ],
-                    'shift_plan_request_id' => $shiftPlanRequest->id,
-                ])
-                ->tap(function (Activity $activity) use ($shift): void {
-                    $activity->properties = $activity->properties->merge([
-                        'translation_key' => 'Shift rejected with reason: "{0}"',
-                        'translation_key_placeholder_values' => [
-                            $shift->workflow_rejection_reason ?? __('No reason provided'),
-                        ],
-                    ]);
-                })
-                ->log('Shift rejected as part of shift plan request');
+            $rejected = true;
 
-            broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+            return back()->with('success', __('Shift plan request rejected successfully.'));
+        });
+
+        // Nach erfolgreichem Rollback den Antragsteller informieren
+        if ($rejected) {
+            $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), false);
         }
 
-        return back()->with('success', __('Shift plan request rejected successfully.'));
+        return $response;
     }
 
     private function rowTypeToEmployableClass(?string $rowType): ?string
@@ -1121,6 +1205,24 @@ class ShiftPlanRequestController extends Controller
      */
     public function myShow(ShiftPlanRequest $shiftPlanRequest): \Inertia\Response
     {
+        // Zugriff analog zur Filterlogik von requests(): eigener Antrag, zuständiges
+        // Gewerk (assignable_by_all oder craftShiftPlaner) oder Genehmiger/Admin.
+        $user = User::find($this->auth->id());
+        $craftIsAccessible = Craft::query()
+            ->where('id', $shiftPlanRequest->craft_id)
+            ->where(function ($q) use ($user): void {
+                $q->where('assignable_by_all', true)
+                    ->orWhereHas('craftShiftPlaner', fn ($sq) => $sq->where('user_id', $user->id));
+            })
+            ->exists();
+
+        abort_unless(
+            $shiftPlanRequest->requested_by_user_id === $user->id
+            || $craftIsAccessible
+            || $user->can('approve-shift-plan-requests'),
+            403
+        );
+
         $shiftPlanRequest->load([
             'craft',
             'requestedBy',
@@ -1223,6 +1325,24 @@ class ShiftPlanRequestController extends Controller
     {
         /** @var User $user */
         $user = $this->auth->user();
+
+        // Nur Shift-Subject-Changes sind revertierbar: bei Pivot-Changes
+        // (ShiftUser & Co.) ist subject_id die PIVOT-ID — Shift::find() würde eine
+        // voellig andere Schicht laden und die Feld-Reverts dort anwenden.
+        if ($shiftChange->subject_type !== Shift::class) {
+            return back()->withErrors([
+                'message' => 'Only shift changes can be reverted.',
+            ]);
+        }
+
+        // Der Change muss zur uebergebenen Anfrage gehoeren — sonst liesse sich ein
+        // Change aus Request A ueber die URL von Request B revertieren.
+        if ((int) $shiftChange->shift_plan_request_id !== (int) $shiftPlanRequest->id) {
+            return back()->withErrors([
+                'message' => 'The specified change does not belong to the provided shift plan request.',
+            ]);
+        }
+
         // Zugehörige Schicht laden
         $shift = Shift::find($shiftChange->subject_id) ?? null;
 
@@ -1283,6 +1403,20 @@ class ShiftPlanRequestController extends Controller
                 ) {
                     $oldValue     = $value['old'];
                     $currentValue = $shift->{$field};
+
+                    // Bestandsdaten: ältere Change-Einträge enthalten Datums-old-Werte
+                    // als UTC-ISO-String ("2025-11-14T23:00:00Z" für den lokalen 15.11.).
+                    // Ohne Konvertierung würde der Datetime-Cast den UTC-Zeitpunkt in die
+                    // DATE-Spalte schreiben und die Schicht auf den Vortag verschieben.
+                    if (in_array($field, ['start_date', 'end_date'], true) && !empty($oldValue)) {
+                        try {
+                            $oldValue = Carbon::parse($oldValue, 'UTC')
+                                ->setTimezone(config('app.timezone', 'Europe/Berlin'))
+                                ->toDateString();
+                        } catch (\Throwable $e) {
+                            // im Zweifel Originalwert behalten
+                        }
+                    }
 
                     if ($currentValue != $oldValue) {
                         $rollbackFieldChanges[$field] = [
@@ -1495,5 +1629,111 @@ class ShiftPlanRequestController extends Controller
 
             return back()->with('success', 'Shift reverted');
         }));
+    }
+
+    /**
+     * Benachrichtigt alle hinterlegten Genehmiger (ShiftCommitWorkflowUser) ueber
+     * eine neu eingereichte Dienstplananfrage. Das tat frueher nur der entfernte
+     * Alt-Store (ShiftCommitWorkflowRequests) — das Live-System lief stumm.
+     */
+    private function notifyApproversAboutNewRequest(ShiftPlanRequest $shiftPlanRequest): void
+    {
+        $shiftPlanRequest->loadMissing(['craft', 'requestedBy']);
+
+        [$weekStart, $weekEnd] = $this->helperService->getDateRangeByCalendarWeekAndYear(
+            $shiftPlanRequest->week_number,
+            $shiftPlanRequest->year
+        );
+
+        $notificationService = app(NotificationService::class);
+
+        foreach (ShiftCommitWorkflowUser::with('user')->get() as $workflowUser) {
+            $userToNotify = $workflowUser->user;
+            if (!$userToNotify instanceof User) {
+                continue;
+            }
+
+            $notificationTitle = __('notification.shift.new_commit_request_title', [], $userToNotify->language);
+
+            $notificationService->setNotificationTo($userToNotify);
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('green');
+            $notificationService->setPriority(2);
+            $notificationService->setNotificationConstEnum(
+                NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
+            );
+            $notificationService->setBroadcastMessage([
+                'id' => Str::uuid()->toString(),
+                'type' => 'success',
+                'message' => $notificationTitle,
+            ]);
+            $notificationService->setDescription([
+                0 => [
+                    'type' => 'text',
+                    'title' => __('notification.shift.new_commit_request', [
+                        'user' => $shiftPlanRequest->requestedBy?->full_name ?? '',
+                        'start_time' => $weekStart->format('d.m.Y'),
+                        'end_time' => $weekEnd->format('d.m.Y'),
+                    ], $userToNotify->language),
+                    'href' => route('shifts.approvals.review'),
+                ],
+                1 => [
+                    'type' => 'link',
+                    'title' => __('notification.shift.link_label_new_commit_request', [], $userToNotify->language),
+                    'href' => route('shifts.approvals.review'),
+                ],
+            ]);
+            $notificationService->createNotification();
+            $notificationService->clearNotificationData();
+        }
+    }
+
+    /**
+     * Benachrichtigt den Antragsteller ueber die Entscheidung (genehmigt/abgelehnt)
+     * zu seiner Dienstplananfrage.
+     */
+    private function notifyRequesterAboutDecision(ShiftPlanRequest $shiftPlanRequest, bool $approved): void
+    {
+        $requester = User::find($shiftPlanRequest->requested_by_user_id);
+        if (!$requester) {
+            return;
+        }
+
+        $shiftPlanRequest->loadMissing('craft');
+
+        $notificationService = app(NotificationService::class);
+
+        $notificationTitle = __(
+            $approved
+                ? 'notification.shift.commit_request_approved'
+                : 'notification.shift.commit_request_rejected',
+            [
+                'craft' => $shiftPlanRequest->craft?->name ?? '',
+                'week' => $shiftPlanRequest->week_number,
+            ],
+            $requester->language
+        );
+
+        $notificationService->setNotificationTo($requester);
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon($approved ? 'green' : 'red');
+        $notificationService->setPriority(2);
+        $notificationService->setNotificationConstEnum(
+            NotificationEnum::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST
+        );
+        $notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => $approved ? 'success' : 'error',
+            'message' => $notificationTitle,
+        ]);
+        $notificationService->setDescription([
+            0 => [
+                'type' => 'link',
+                'title' => $notificationTitle,
+                'href' => route('shift-plan-requests.my.show', $shiftPlanRequest->id),
+            ],
+        ]);
+        $notificationService->createNotification();
+        $notificationService->clearNotificationData();
     }
 }

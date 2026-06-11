@@ -69,6 +69,8 @@ return [
         'new_commit_request_title' => 'New shift commit request',
         'new_commit_request' => 'New shift commit request :start_time - :end_time from :user',
         'link_label_new_commit_request' => 'Go to shift commit request',
+        'commit_request_approved' => 'Shift plan request :craft (week :week) was approved',
+        'commit_request_rejected' => 'Shift plan request :craft (week :week) was rejected',
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',

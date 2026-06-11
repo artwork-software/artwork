@@ -41,8 +41,6 @@ use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Shift\Models\PresetShift;
-use Artwork\Modules\Shift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -61,7 +59,6 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
-use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\Shift\Services\ShiftTimePresetService;
 use Artwork\Modules\Event\Models\SubEvent;
@@ -103,70 +100,6 @@ readonly class EventService
         $this->cachedData = null;
     }
 
-    public function importShiftPreset(
-        Event $event,
-        ShiftPreset $shiftPreset,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        ShiftQualificationService $shiftQualificationService,
-        ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
-        //$timelineService->forceDeleteTimelines($event->timelines);
-        /*foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
-            $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
-        }*/
-
-        $shiftService->forceDeleteShifts($event->shifts);
-        /** @var PresetShift $presetShift */
-        foreach ($shiftPreset->shifts as $presetShift) {
-            $shift = $shiftService->createFromShiftPresetShiftForEvent($presetShift, $event);
-
-            /** @var PresetShiftShiftsQualifications $presetShiftShiftsQualification */
-            foreach ($presetShift->shiftsQualifications as $presetShiftShiftsQualification) {
-                if (
-                    !$shiftQualificationService->isStillAvailable(
-                        $presetShiftShiftsQualification->shift_qualification_id
-                    )
-                ) {
-                    continue;
-                }
-
-                $shiftsQualificationsService->createShiftsQualificationForShift(
-                    $shift->id,
-                    [
-                        'shift_qualification_id' => $presetShiftShiftsQualification->shift_qualification_id,
-                        'value' => $presetShiftShiftsQualification->value,
-                    ]
-                );
-            }
-        }
-    }
-
-    public function importShiftPresetForEventsOfProjectByEventType(
-        ShiftPreset $shiftPreset,
-        int $projectId,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        ShiftQualificationService $shiftQualificationService,
-        ShiftsQualificationsService $shiftsQualificationsService,
-    ): void {
-        foreach (
-            $this->eventRepository->getEventsByProjectIdAndEventTypeId(
-                $projectId,
-                $shiftPreset->event_type_id
-            ) as $eventByProjectIdAndEventTypeId
-        ) {
-            $this->importShiftPreset(
-                $eventByProjectIdAndEventTypeId,
-                $shiftPreset,
-                $timelineService,
-                $shiftService,
-                $shiftQualificationService,
-                $shiftsQualificationsService
-            );
-        }
-    }
-
     public function delete(
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService,
@@ -186,7 +119,7 @@ readonly class EventService
                 $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
-                    ->setModelId($event->project->id)
+                    ->setModelId($event->project_id)
                     ->setTranslationKey('Schedule deleted')
             );
         }
@@ -243,7 +176,7 @@ readonly class EventService
                     $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
-                        ->setModelId($event->project->id)
+                        ->setModelId($event->project_id)
                         ->setTranslationKey('Schedule deleted')
                 );
             }
@@ -305,7 +238,7 @@ readonly class EventService
                 $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
-                    ->setModelId($event->project->id)
+                    ->setModelId($event->project_id)
                     ->setTranslationKey('Schedule restored')
             );
         }
@@ -369,7 +302,7 @@ readonly class EventService
                     $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
-                        ->setModelId($event->project->id)
+                        ->setModelId($event->project_id)
                         ->setTranslationKey('Schedule restored')
                 );
             }

@@ -1091,6 +1091,7 @@ function numericTypeToWorkerType(type: number|string): string {
 }
 
 const recentReloads = new Map<string, number>()
+const pendingWorkerReloads = new Set<string>()
 
 async function reloadSingleWorker(workerId: number|string, workerType: string) {
     const start = props.dateValue?.[0]
@@ -1102,7 +1103,19 @@ async function reloadSingleWorker(workerId: number|string, workerType: string) {
     const key = `${workerType}:${workerId}`
     const now = Date.now()
     const lastReload = recentReloads.get(key)
-    if (lastReload && (now - lastReload) < 2000) return
+    if (lastReload && (now - lastReload) < 2000) {
+        // Trailing-Reload statt stillem Verwerfen: Zwei Mutationen am selben Worker
+        // innerhalb von 2s ließen die Zeile sonst stale, bis irgendein späteres
+        // Ereignis denselben Worker erneut lud.
+        if (!pendingWorkerReloads.has(key)) {
+            pendingWorkerReloads.add(key)
+            setTimeout(() => {
+                pendingWorkerReloads.delete(key)
+                reloadSingleWorker(workerId, workerType)
+            }, 2000 - (now - lastReload) + 50)
+        }
+        return
+    }
     recentReloads.set(key, now)
 
     try {
@@ -3389,16 +3402,20 @@ async function persistRemove(shiftId: number) {
 
 function enqueueSave(taskFn: () => Promise<any>) {
     const session = multiEditSessionId.value
-    saveQueue.value = saveQueue.value
+    // Fehler des VORGÄNGERS schlucken (Queue am Leben halten), den eigenen Task
+    // aber genau EINMAL ausführen. Das frühere .catch hing am eigenen taskFn und
+    // führte ihn bei einem Fehler komplett erneut aus (Qualifikations-Picker nach
+    // Abbruch sofort wieder offen, POST nach Teilverarbeitung doppelt).
+    const run = saveQueue.value
+        .catch(() => {})
         .then(() => {
             if (session !== multiEditSessionId.value) return
             return taskFn()
         })
-        .catch((e) => {
-            if (session !== multiEditSessionId.value) return
-            return taskFn()
-        })
-    return saveQueue.value
+    // Die Queue selbst nie rejected weiterreichen; der Aufrufer bekommt den
+    // echten Task-Promise (inkl. Fehler) zurück.
+    saveQueue.value = run.catch(() => {})
+    return run
 }
 
 function isSaving(shiftId: number) {

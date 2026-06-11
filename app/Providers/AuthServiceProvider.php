@@ -49,6 +49,7 @@ use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Sector\Policies\SectorPolicy;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider as ServiceProviderModel;
 use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
+use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Policies\ShiftQualificationPolicy;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
@@ -104,6 +105,13 @@ class AuthServiceProvider extends ServiceProvider
                 return null;
             }
             return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ? true : null;
+        });
+
+        // Genehmiger-Seite des Dienstplan-Festschreibungs-Workflows: wer als
+        // ShiftCommitWorkflowUser hinterlegt ist, darf Anfragen prüfen, genehmigen,
+        // ablehnen und Änderungen nach Festschreibung bearbeiten (Admins via Gate::before).
+        Gate::define('approve-shift-plan-requests', function (User $user): bool {
+            return ShiftCommitWorkflowUser::where('user_id', $user->id)->exists();
         });
     }
 }

@@ -74,13 +74,6 @@ readonly class ShiftFreelancerService
         );
     }
 
-    private function isFreelancerAlreadyAssignedToShift(Shift $shift, int $freelancerId): bool
-    {
-        return $shift->freelancer()
-            ->get(['freelancers.id'])
-            ->pluck('id')
-            ->contains($freelancerId);
-    }
 
 
     private function handleAssignedToShift(
@@ -124,62 +117,6 @@ readonly class ShiftFreelancerService
         );
     }
 
-    private function handleSeriesShiftData(
-        Shift $shift,
-        Carbon $start,
-        Carbon $end,
-        string $dayOfWeek,
-        int $freelancerId,
-        int $shiftQualificationId,
-        string $craftAbbreviation,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
-        AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): void {
-        /** @var Shift $shiftBetweenDates */
-        foreach (
-            $this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates
-        ) {
-            if (
-                $this->shiftWorkerService->isSameShift($shift, $shiftBetweenDates) ||
-                $this->shiftWorkerService->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
-                $this->isFreelancerAlreadyAssignedToShift($shiftBetweenDates, $freelancerId)
-            ) {
-                continue;
-            }
-
-            $shiftsQualificationsValue = $this->shiftsQualificationsRepository
-                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId)?->value;
-
-            if ($shiftsQualificationsValue === null || $shiftsQualificationsValue === 0) {
-                continue;
-            }
-
-            if (
-                $this->shiftWorkerService->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-                    $shiftBetweenDates->id,
-                    $shiftQualificationId
-                ) >= $shiftsQualificationsValue
-            ) {
-                continue;
-            }
-
-            // Nur für diese Schicht zuweisen (ohne Serienlogik erneut anzustoßen)
-            $this->assignToShift(
-                $shiftBetweenDates,
-                $freelancerId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-    }
 
 
     /**

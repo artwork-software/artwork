@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\PresetShift;
 use Artwork\Modules\Shift\Services\PresetShiftService;
 use Artwork\Modules\Shift\Services\PresetShiftsShiftsQualificationsService;
@@ -50,52 +49,9 @@ readonly class ShiftPresetService
         return $shiftPresets;
     }
 
-    public function findByNameAndEventTypeId(string $name, int $eventTypeId): Collection
-    {
-        return $this->shiftPresetRepository->findByNameAndEventTypeId($name, $eventTypeId);
-    }
     public function findByName(string $name): Collection
     {
         return $this->shiftPresetRepository->findByName($name);
-    }
-
-    public function storeFromEventAndRequest(
-        Event $event,
-        Request $request,
-        PresetShiftService $presetShiftService,
-        PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService,
-        ShiftPresetTimelineService $shiftPresetTimelineService
-    ): void {
-        $shiftPreset = $this->createFromRequest($request);
-
-        foreach ($event->shifts as $shift) {
-            $presetShift = $presetShiftService->createPresetShiftFromExistingShift($shiftPreset->id, $shift);
-
-            foreach ($shift->shiftsQualifications as $shiftsQualifications) {
-                $presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
-                    $presetShift->id,
-                    [
-                        'shift_qualification_id' => $shiftsQualifications->shift_qualification_id,
-                        'value' => $shiftsQualifications->value
-                    ]
-                );
-            }
-        }
-
-        /*
-        // INFO: If we want to store the timeline in the new timeline preset, we need to uncomment this code
-        // store timeline in new timeline preset
-        $eventTimeline = $event->timelines;
-        $newTimelinePreset = ShiftPresetTimeline::create([
-            'name' => $request->get('name') . ' - Timeline'
-        ]);
-        foreach ($eventTimeline as $timeline) {
-            $newTimelinePreset->times()->create([
-                'start' => $timeline->start,
-                'end' => $timeline->end,
-                'description' => $timeline->description
-            ]);
-        }*/
     }
 
     public function duplicateShiftPreset(

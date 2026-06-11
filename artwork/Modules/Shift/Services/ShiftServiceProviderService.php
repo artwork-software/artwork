@@ -69,60 +69,7 @@ readonly class ShiftServiceProviderService
         );
     }
 
-    private function isServiceProviderAlreadyAssignedToShift(Shift $shift, int $serviceProviderId): bool
-    {
-        return $shift->serviceProvider()
-            ->get(['service_providers.id'])
-            ->pluck('id')
-            ->contains($serviceProviderId);
-    }
 
-    private function handleSeriesShiftData(
-        Shift $shift,
-        Carbon $start,
-        Carbon $end,
-        string $dayOfWeek,
-        int $serviceProviderId,
-        int $shiftQualificationId,
-        string $craftAbbreviation,
-        ShiftCountService $shiftCountService,
-        ChangeService $changeService
-    ): void {
-        /** @var Shift $shiftBetweenDates */
-        foreach ($this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates) {
-            if (
-                $this->shiftWorkerService->isSameShift($shift, $shiftBetweenDates) ||
-                $this->shiftWorkerService->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
-                $this->isServiceProviderAlreadyAssignedToShift($shiftBetweenDates, $serviceProviderId)
-            ) {
-                continue;
-            }
-
-            $shiftsQualificationsValue = $this->shiftsQualificationsRepository
-                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId)?->value;
-
-            if ($shiftsQualificationsValue === null || $shiftsQualificationsValue === 0) {
-                continue;
-            }
-
-            if ($this->shiftWorkerService->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-                    $shiftBetweenDates->id,
-                    $shiftQualificationId
-                ) >= $shiftsQualificationsValue) {
-                continue;
-            }
-
-            // Nur für diese Schicht zuweisen (ohne Serienlogik erneut anzustoßen)
-            $this->assignToShift(
-                $shiftBetweenDates,
-                $serviceProviderId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $shiftCountService,
-                $changeService
-            );
-        }
-    }
 
 
     /**

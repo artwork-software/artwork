@@ -70,6 +70,8 @@ return [
         'new_commit_request_title' => 'Neue Schicht-Commit-Anfrage',
         'new_commit_request' => 'Neue Schicht-Commit-Anfrage :start_time - :end_time von :user',
         'link_label_new_commit_request' => 'Gehe zu Schicht-Commit-Anfrage',
+        'commit_request_approved' => 'Dienstplananfrage :craft (KW :week) wurde genehmigt',
+        'commit_request_rejected' => 'Dienstplananfrage :craft (KW :week) wurde abgelehnt',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

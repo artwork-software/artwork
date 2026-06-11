@@ -100,7 +100,6 @@ use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -2053,10 +2052,17 @@ class EventController extends Controller
 
             $this->workingHourCacheService->forgetForShift($shift);
 
-            $shift->update([
+            // event_start_day/event_end_day mitziehen (Scopes, ShiftCountService und
+            // Konflikt-Checks lesen diese Felder) und über ShiftService::save speichern,
+            // damit individuelle Pivot-Zeiten (shift_workers.start_date/end_date)
+            // synchronisiert und Änderungen an committed Schichten geloggt werden.
+            $shift->fill([
                 'start_date' => $startDay,
                 'end_date'   => $endDay,
+                'event_start_day' => Carbon::create($event->start_time)->format('Y-m-d'),
+                'event_end_day' => Carbon::create($event->end_time)->format('Y-m-d'),
             ]);
+            app(\Artwork\Modules\Shift\Services\ShiftService::class)->save($shift);
         }
 
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
@@ -2739,26 +2745,7 @@ class EventController extends Controller
                 ->where('id', '!=', $event->id)
                 ->where('start_time', '>', $cutoff);
 
-            $ids = $query->pluck('id');
-
-            if ($ids->isNotEmpty()) {
-                foreach ($query->get() as $eventToDelete) {
-                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
-                }
-
-                $usesSoftDeletes = in_array(
-                    SoftDeletes::class,
-                    class_uses_recursive(Event::class),
-                    true
-                );
-
-                if ($usesSoftDeletes) {
-                    // wirklich weg damit (nicht nur "trashed")
-                    Event::whereIn('id', $ids)->forceDelete();
-                } else {
-                    Event::whereIn('id', $ids)->delete();
-                }
-            }
+            $this->forceDeleteSeriesEventsWithCascade($query->get());
 
             [$nextStart, $nextEnd] = $this->generateNextOccurrence($eventStart->copy(), $eventEnd->copy(), $freq);
 
@@ -2785,28 +2772,7 @@ class EventController extends Controller
                 ->where('id', '!=', $event->id);
 
 
-            $ids = $query->pluck('id');
-
-            if ($ids->isNotEmpty()) {
-                foreach ($query->get() as $eventToDelete) {
-                    broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
-                }
-
-                $usesSoftDeletes = in_array(
-                    SoftDeletes::class,
-                    class_uses_recursive(Event::class),
-                    true
-                );
-
-                if ($usesSoftDeletes) {
-                    // wirklich weg damit (nicht nur "trashed")
-                    Event::whereIn('id', $ids)->forceDelete();
-                } else {
-                    Event::whereIn('id', $ids)->delete();
-                }
-            }
-
-
+            $this->forceDeleteSeriesEventsWithCascade($query->get());
 
             // Aktuelles Event aus der Serie lösen
             $event->update(['is_series' => false, 'series_id' => null]);
@@ -3236,39 +3202,123 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function forceDelete(int $id): RedirectResponse
-    {
+    public function forceDelete(
+        int $id,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService
+    ): RedirectResponse {
         $event = Event::onlyTrashed()->findOrFail($id);
 
         $this->authorize('delete', $event);
-        $event->subEvents()->forceDelete();
-        $event->forceDelete();
+
+        // Über den Service löschen, damit die mitgetrashten Schichten (inkl.
+        // shift_workers), Timelines und Kommentare nicht als Leichen zurückbleiben
+        // (der FK würde nur event_id auf NULL setzen).
+        $this->eventService->forceDeleteAll(
+            [$event],
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
 
         return Redirect::route('events.trashed');
     }
 
-    public function forceDeleteAll(): RedirectResponse
-    {
-        Event::onlyTrashed()->each(function ($event) {
-            $event->subEvents()->forceDelete();
-            $event->forceDelete();
-        });
+    public function forceDeleteAll(
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService
+    ): RedirectResponse {
+        $this->eventService->forceDeleteAll(
+            Event::onlyTrashed()->get(),
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
+
         return Redirect::route('events.trashed');
     }
 
-    public function restore(int $id): RedirectResponse
-    {
+    public function restore(
+        int $id,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService
+    ): RedirectResponse {
         /** @var Event $event */
         $event = Event::onlyTrashed()->findOrFail($id);
-        $event->subEvents()->restore();
-        $event->restore();
 
-        if (!$event->project()->exists()) {
+        // Stale Projekt-Zeiger vor dem Restore bereinigen: EventService::restore
+        // greift bei gesetzter project_id auf $event->project->id zu und würde bei
+        // einem zwischenzeitlich gelöschten Projekt crashen.
+        if ($event->project_id && !$event->project()->exists()) {
             $event->project_id = null;
-            $event->save();
+            $event->saveQuietly();
         }
 
+        // Über den Service wiederherstellen, damit auch die mitgetrashten
+        // Schichten (inkl. shift_workers), Timelines, Kommentare und SubEvents
+        // zurückkommen — nicht nur das Event selbst.
+        $this->eventService->restore(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService
+        );
+
         return Redirect::route('events.trashed');
+    }
+
+    /**
+     * Hard-Delete von Serien-Events (Serie kürzen / is_series deaktivieren) MIT Kaskade.
+     *
+     * Vorher lief hier ein Query-Builder-forceDelete: Der shifts-FK ist ON DELETE SET NULL,
+     * d.h. die Schichten der gelöschten Events lebten als Geister-Schichten weiter —
+     * inklusive eingeplanter Mitarbeiter. timelines/sub_events haben gar keinen FK und
+     * blieben als verwaiste Zeilen zurück.
+     */
+    private function forceDeleteSeriesEventsWithCascade(\Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $eventsToDelete): void
+    {
+        if ($eventsToDelete->isEmpty()) {
+            return;
+        }
+
+        $shiftService = app(ShiftService::class);
+        $timelineService = app(TimelineService::class);
+        $subEventService = app(SubEventService::class);
+        $notificationService = app(NotificationService::class);
+
+        foreach ($eventsToDelete as $eventToDelete) {
+            broadcast(new RemoveEvent($eventToDelete, $eventToDelete->room_id));
+
+            $shiftService->forceDeleteShifts($eventToDelete->shifts);
+            $timelineService->forceDeleteTimelines($eventToDelete->timelines);
+            $subEventService->forceDeleteSubEvents($eventToDelete->subEvents);
+            $notificationService->deleteUpsertRoomRequestNotificationByEventId($eventToDelete->id);
+
+            $eventToDelete->forceDelete();
+        }
     }
 
     private function checkDateChanges(

@@ -9,6 +9,7 @@
                 v-for="qualification in availableQualifications"
                 :key="qualification.id"
                 :label="qualification.name"
+                :disabled="requestInFlight"
                 @click="addQualification(qualification.id)"
                 :icon="qualification.icon"
                 is-add-button
@@ -18,7 +19,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import { router } from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -59,7 +60,15 @@ const availableQualifications = computed(() => {
     return foundCraft.qualifications;
 });
 
+// In-Flight-Guard: Doppelklick erhöhte den Bedarf bzw. die Überbuchungsplätze um 2
+const requestInFlight = ref(false);
+
 const addQualification = (qualificationId) => {
+    if (requestInFlight.value) {
+        return;
+    }
+    requestInFlight.value = true;
+
     const routeName = props.isOverbooking
         ? 'shifts.qualifications.overbook.increase'
         : 'shifts.qualifications.add';
@@ -70,6 +79,9 @@ const addQualification = (qualificationId) => {
         preserveScroll: true,
         onSuccess: () => {
             emit('close');
+        },
+        onFinish: () => {
+            requestInFlight.value = false;
         }
     });
 };

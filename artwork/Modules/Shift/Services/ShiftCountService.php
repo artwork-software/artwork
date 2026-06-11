@@ -22,11 +22,16 @@ readonly class ShiftCountService
 
     private function getPossiblyCollidingShifts(Shift $shift): Collection|null
     {
+        // Fallback auf start_date/end_date: Carbon::parse(null) ergäbe "jetzt" und
+        // die Kollisionsberechnung liefe für Schichten ohne event_start_day ins Leere.
+        $startDay = $shift->event_start_day ?? $shift->start_date;
+        $endDay = $shift->event_end_day ?? $shift->end_date ?? $startDay;
+
         return $this
             ->shiftRepository
             ->getShiftsBetweenEventStartDayAndEventEndDayStartAndEndTimeOverlapByProjectEventIds(
-                Carbon::parse($shift->event_start_day),
-                Carbon::parse($shift->event_end_day),
+                Carbon::parse($startDay),
+                Carbon::parse($endDay),
                 $shift->start,
                 $shift->end,
                 $shift->event?->project?->events()->get('id')->pluck('id')->toArray() ?? []

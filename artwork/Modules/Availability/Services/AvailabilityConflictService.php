@@ -53,7 +53,7 @@ class AvailabilityConflictService
 
         foreach ($shifts as $shift) {
             $shiftCommittedBy = $shift->committedBy()->first();
-            if (!$user) {
+            if ($user) {
                 $notificationTitle = __(
                     'notification.shift.conflict',
                     [],
@@ -115,7 +115,7 @@ class AvailabilityConflictService
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
                             ]);
-                            if (!$user) {
+                            if ($user) {
                                 $notificationService->setNotificationTo($user);
                                 $notificationService->createNotification();
                             }

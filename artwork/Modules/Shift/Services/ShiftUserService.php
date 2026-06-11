@@ -76,13 +76,6 @@ class ShiftUserService
         );
     }
 
-    private function isUserAlreadyAssignedToShift(Shift $shift, int $userId): bool
-    {
-        return $shift->users()
-            ->get(['users.id'])
-            ->pluck('id')
-            ->contains($userId);
-    }
 
 
     private function logManualAssignmentActivity(Shift $shift, ShiftUser $shiftUserPivot): void
@@ -162,7 +155,7 @@ class ShiftUserService
         NotificationService $notificationService
     ): void {
         if ($shift->event?->exists) {
-            $notificationService->setProjectId($shift->event?->project->id);
+            $notificationService->setProjectId($shift->event?->project?->id);
             $notificationService->setEventId($shift->event->id);
         }
 
@@ -186,8 +179,7 @@ class ShiftUserService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.your_shift') .
-                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    $shift->time_span_label,
                 'href'  => null,
             ],
         ]);
@@ -418,62 +410,6 @@ class ShiftUserService
         $notificationService->setNotificationTo($planner);
         $notificationService->createNotification();
     }
-
-    private function handleSeriesShiftData(
-        Shift $shift,
-        Carbon $start,
-        Carbon $end,
-        string $dayOfWeek,
-        int $userId,
-        int $shiftQualificationId,
-        string $craftAbbreviation,
-        NotificationService $notificationService,
-        ShiftCountService $shiftCountService,
-        VacationConflictService $vacationConflictService,
-        AvailabilityConflictService $availabilityConflictService,
-        ChangeService $changeService
-    ): void {
-        /** @var Shift $shiftBetweenDates */
-        foreach ($this->shiftRepository->getShiftsByUuidBetweenDates($shift->shift_uuid, $start, $end) as $shiftBetweenDates) {
-            if (
-                $this->shiftWorkerService->isSameShift($shift, $shiftBetweenDates) ||
-                $this->shiftWorkerService->isDayOfWeekFilteredOut($dayOfWeek, $shiftBetweenDates) ||
-                $this->isUserAlreadyAssignedToShift($shiftBetweenDates, $userId)
-            ) {
-                continue;
-            }
-
-            $shiftsQualificationsValue = $this->shiftsQualificationsRepository
-                ->findByShiftIdAndShiftQualificationId($shiftBetweenDates->id, $shiftQualificationId)?->value;
-
-            if ($shiftsQualificationsValue === null || $shiftsQualificationsValue === 0) {
-                continue;
-            }
-
-            if (
-                $this->shiftWorkerService->getWorkerCountForQualificationByShiftIdAndShiftQualificationId(
-                    $shiftBetweenDates->id,
-                    $shiftQualificationId
-                ) >= $shiftsQualificationsValue
-            ) {
-                continue;
-            }
-
-            // Nur für diese Schicht zuweisen (ohne Serienlogik erneut anzustoßen)
-            $this->assignToShift(
-                $shiftBetweenDates,
-                $userId,
-                $shiftQualificationId,
-                $craftAbbreviation,
-                $notificationService,
-                $shiftCountService,
-                $vacationConflictService,
-                $availabilityConflictService,
-                $changeService
-            );
-        }
-    }
-
 
     /**
      * Entfernt einen User aus einer Schicht (inkl. Serienlogik).
@@ -770,8 +706,7 @@ class ShiftUserService
             1 => [
                 'type'  => 'string',
                 'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
-                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    $shift->time_span_label,
                 'href'  => null,
             ],
         ]);

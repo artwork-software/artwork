@@ -69,10 +69,15 @@ class ShiftQualificationController extends Controller
 
     public function updateValue(Shift $shift, Request $request): void
     {
+        // Unbekannte qualification_id würde sonst als FK-Verletzung mit 500 enden
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
     }
 
     public function increaseOverbookedValue(Shift $shift, Request $request): void
@@ -81,10 +86,14 @@ class ShiftQualificationController extends Controller
             abort(403, 'Shift overbooking is not enabled for this instance.');
         }
 
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
         $this->shiftsQualificationsService
             ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
     }
 
     public function decreaseOverbookedValue(Shift $shift, Request $request): void
@@ -93,10 +102,14 @@ class ShiftQualificationController extends Controller
             abort(403, 'Shift overbooking is not enabled for this instance.');
         }
 
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
         $this->shiftsQualificationsService
             ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
 
-        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
     }
 
     public function destroy(

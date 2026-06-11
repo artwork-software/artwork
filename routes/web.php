@@ -166,7 +166,6 @@ use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportController;
-use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowRequestsController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
@@ -856,9 +855,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
-        ->name('multi-edit.calendar.cell.delete');
+        ->name('multi-edit.calendar.cell.delete')
+        ->can('can plan shifts');
 
-    Route::group(['prefix' => 'shift-plan'], function (): void {
+    Route::group(['prefix' => 'shift-plan', 'middleware' => 'can:can plan shifts'], function (): void {
         // POST event.shift.store.without.event
         Route::post('/event/shift/store/without/event', [ShiftController::class, 'storeShiftWithoutEvent'])
             ->name('event.shift.store.without.event');
@@ -881,41 +881,40 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
-    Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
-    Route::post('/shifts/{shift}/commit/change', [EventController::class, 'changeCommitShifts'])->name('shift.change.commit.status');
-    Route::post('/shifts/commit/request', [ShiftCommitWorkflowRequestsController::class, 'store'])
-        ->name('shifts.requestCommit');
-
-    Route::group(['prefix' => 'shifts-commit-requests'], function (): void {
-        Route::get('/', [ShiftCommitWorkflowRequestsController::class, 'index'])
-            ->name('shifts.commit-requests.index');
-        Route::patch('/{shiftCommitRequest}/approve', [ShiftCommitWorkflowRequestsController::class, 'approve'])
-            ->name('shifts.commit-requests.approve');
-        Route::patch('/{shiftCommitRequest}/decline', [ShiftCommitWorkflowRequestsController::class, 'decline'])
-            ->name('shifts.commit-requests.decline');
-    });
+    Route::post('/shifts/commit', [EventController::class, 'commitShifts'])
+        ->name('shifts.commit')
+        ->can('can commit shifts');
+    Route::post('/shifts/{shift}/commit/change', [EventController::class, 'changeCommitShifts'])
+        ->name('shift.change.commit.status')
+        ->can('can commit shifts');
 
     // patch shifts.qualifications.add
     Route::patch('/shifts/{shift}/qualifications/add', [ShiftQualificationController::class, 'updateValue'])
-        ->name('shifts.qualifications.add');
+        ->name('shifts.qualifications.add')
+        ->can('can plan shifts');
 
     // Überbuchungsplätze (nur bei aktivierter Überbuchung in den Schichteinstellungen)
     Route::patch('/shifts/{shift}/qualifications/overbook/increase', [ShiftQualificationController::class, 'increaseOverbookedValue'])
-        ->name('shifts.qualifications.overbook.increase');
+        ->name('shifts.qualifications.overbook.increase')
+        ->can('can plan shifts');
     Route::patch('/shifts/{shift}/qualifications/overbook/decrease', [ShiftQualificationController::class, 'decreaseOverbookedValue'])
-        ->name('shifts.qualifications.overbook.decrease');
+        ->name('shifts.qualifications.overbook.decrease')
+        ->can('can plan shifts');
 
     // shift.plan.user.cell.update
     Route::post('/shiftplan/user/cell/update', [ShiftController::class, 'updateUserCell'])
-        ->name('shift.plan.user.cell.update');
+        ->name('shift.plan.user.cell.update')
+        ->can('can plan shifts');
 
     // multi-edit.cell.delete
     Route::post('/shiftplan/multi/edit/cell/delete', [ShiftController::class, 'deleteMultiEditCell'])
-        ->name('multi-edit.cell.delete');
+        ->name('multi-edit.cell.delete')
+        ->can('can plan shifts');
 
     // event.shift.store.multi.add
     Route::post('/event/shift/store/multi/add', [ShiftController::class, 'storeShiftMultiAdd'])
-        ->name('event.shift.store.multi.add');
+        ->name('event.shift.store.multi.add')
+        ->can('can plan shifts');
 
 
 
@@ -1070,7 +1069,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('money_source/task/{moneySourceTask}/undone', [MoneySourceTaskController::class, 'markAsUnDone'])
         ->name('money_source.task.undone');
     Route::post('/money_source/task', [MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
-    Route::post('/{event}/shift/preset/store', [ShiftPresetController::class, 'store'])->name('shift-presets.store');
     Route::delete('/user/{user}/calendar/filter/reset', [UserCalendarFilterController::class, 'reset'])
         ->name('reset.user.calendar.filter');
     Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])
@@ -1238,29 +1236,40 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('edit.timeline.event');
         Route::post('/timeline/add/magic/{event}', [ShiftController::class, 'addTimeLine'])
             ->name('create.timeline.event');
-        Route::post('/{event}/shift/store', [ShiftController::class, 'store'])->name('event.shift.store');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
             ->name('project.sum.money.source.store');
 
         // PATCH
         Route::patch('/timeline/{timeline}/update', [ProjectController::class, 'updateTimeline'])
             ->name('update.timeline');
-        Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
-        Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
+        Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])
+            ->name('update.shift.commitment')
+            ->can('can commit shifts');
+        Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])
+            ->name('event.shift.update')
+            ->can('can plan shifts');
 
         // shifts.updateTime
         Route::patch('/{shift}/update/time', [ShiftController::class, 'updateTime'])
-            ->name('event.shift.update.updateTime');
+            ->name('event.shift.update.updateTime')
+            ->can('can plan shifts');
         Route::patch('/{shift}/update/description', [ShiftController::class, 'updateDescription'])
-            ->name('event.shift.update.updateDescription');
+            ->name('event.shift.update.updateDescription')
+            ->can('can plan shifts');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])
             ->name('project.sum.money.source.update');
         Route::patch('/{presetShift}/preset/update/description', [ShiftPresetController::class, 'updateDescription'])
             ->name('preset.shift.update.updateDescription');
         // DELETE
-        Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
-        Route::post('/bulk-delete', [ShiftController::class, 'bulkDelete'])->name('shifts.multi.delete');
-        Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])->name('shifts.multi.duplicate');
+        Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])
+            ->name('shifts.destroy')
+            ->can('can plan shifts');
+        Route::post('/bulk-delete', [ShiftController::class, 'bulkDelete'])
+            ->name('shifts.multi.delete')
+            ->can('can plan shifts');
+        Route::post('/bulk-duplicate', [ShiftController::class, 'bulkDuplicate'])
+            ->name('shifts.multi.duplicate')
+            ->can('can plan shifts');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])
@@ -1272,9 +1281,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])
             ->name('project.delete.keyVisual');
         Route::delete('/removeFromShift/{usersPivotId}/type/{userType}', [ShiftController::class, 'removeFromShift'])
-            ->name('shift.removeUserByType');
+            ->name('shift.removeUserByType')
+            ->can('can plan shifts');
         Route::delete('/removeAllShiftUsers/{shift}', [ShiftController::class, 'removeAllShiftUsers'])
-            ->name('shift.removeAllUsers');
+            ->name('shift.removeAllUsers')
+            ->can('can plan shifts');
         Route::get('/dayAssignments', [ShiftController::class, 'dayAssignments'])
             ->name('shift.dayAssignments');
         Route::post('/removeWorkerFromDay', [ShiftController::class, 'removeWorkerFromDay'])
@@ -1931,18 +1942,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
         ->name('update.shift.preset');
     Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->name('shift.template.search');
-    Route::post('/shift/{event}/{shiftPreset}/import/preset/', [ShiftPresetController::class, 'import'])
-        ->name('shift.preset.import');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
-
-    Route::post(
-        '/shift/{event}/{shiftPreset}/import/preset/',
-        [ShiftPresetController::class, 'import']
-    )
-        ->name('shift.preset.import');
 
     Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
         ->name('preset.timeline.update');
@@ -1990,7 +1993,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/pdf-export-user-filters/{pdfExportUserFilter}', [\Artwork\Modules\User\Http\Controllers\PdfExportUserFilterController::class, 'destroy'])
         ->name('pdf-export-user-filters.destroy');
 
-    Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
+    Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])
+        ->name('shift.multi.edit.save')
+        ->can('can plan shifts');
 
     Route::resource('permission-presets', PermissionPresetController::class)
         ->only(['index', 'store', 'update', 'destroy']);
@@ -2004,7 +2009,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     );
 
     Route::get('/shift-history', [ShiftHistoryController::class, 'index'])
-        ->name('shift.history.index');
+        ->name('shift.history.index')
+        ->can('can view shift plan');
 
     Route::get('/event/standard-values', [EventController::class, 'standardEventValues'])
         ->name('event.standard.values');
@@ -3073,16 +3079,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::prefix('shifts/approvals')->name('shifts.approvals.')->group(function (): void {
         Route::get('/review', [\App\Http\Controllers\ShiftPlanRequestController::class, 'index'])
-            ->name('review');          // Prüfungsanfragen
+            ->name('review')           // Prüfungsanfragen
+            ->can('approve-shift-plan-requests');
 
         Route::get('/changes', [\App\Http\Controllers\ShiftPlanRequestController::class, 'changes'])
-            ->name('changes');         // Änderungsliste
+            ->name('changes')          // Änderungsliste
+            ->can('approve-shift-plan-requests');
 
         Route::get('/{craft?}/changes', [\App\Http\Controllers\ShiftPlanRequestController::class, 'changes'])
-            ->name('changes-craft');         // Änderungsliste
+            ->name('changes-craft')    // Änderungsliste
+            ->can('approve-shift-plan-requests');
 
         Route::get('/requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
-            ->name('requests');        // Angefragte Dienstpläne
+            ->name('requests');        // Angefragte Dienstpläne (Controller filtert selbst nach Zuständigkeit)
 
         Route::get('/{craft}/past-requests', [\App\Http\Controllers\ShiftPlanRequestController::class, 'pastRequests'])
             ->name('past-requests');
@@ -3096,39 +3105,47 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             /*Route::get('/', [ShiftPlanRequestController::class, 'index'])
                 ->name('index');*/
 
-            Route::get('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'show'])
-                ->name('show');
-
-            // accept
-            Route::post('/{shiftPlanRequest}/accept', [ShiftPlanRequestController::class, 'accept'])
-                ->name('accept');
-
-            Route::post('/{shiftPlanRequest}/reject', [ShiftPlanRequestController::class, 'reject'])
-                ->name('reject');
-
-            // Anfrage löschen und zugeordnete Schichten wieder freigeben
-            Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
-                ->name('destroy');
-
-            // My views (read-only index + show for planners)
+            // My views (read-only index + show for planners) — vor der Wildcard-Route
+            // registrieren, sonst matcht /{shiftPlanRequest} den Pfad /my zuerst.
             Route::get('/my', [\App\Http\Controllers\ShiftPlanRequestController::class, 'requests'])
                 ->name('my.index');
 
             Route::get('/my/{shiftPlanRequest}', [\App\Http\Controllers\ShiftPlanRequestController::class, 'myShow'])
                 ->name('my.show');
+
+            Route::get('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'show'])
+                ->name('show')
+                ->can('approve-shift-plan-requests');
+
+            // accept
+            Route::post('/{shiftPlanRequest}/accept', [ShiftPlanRequestController::class, 'accept'])
+                ->name('accept')
+                ->can('approve-shift-plan-requests');
+
+            Route::post('/{shiftPlanRequest}/reject', [ShiftPlanRequestController::class, 'reject'])
+                ->name('reject')
+                ->can('approve-shift-plan-requests');
+
+            // Anfrage löschen und zugeordnete Schichten wieder freigeben
+            Route::delete('/{shiftPlanRequest}', [ShiftPlanRequestController::class, 'destroy'])
+                ->name('destroy')
+                ->can('approve-shift-plan-requests');
         });
 
 
     Route::post(
         '/committed-shift-changes/{change}/acknowledge',
         [ShiftPlanRequestController::class, 'acknowledge']
-    )->name('committed-shift-changes.acknowledge');
+    )->name('committed-shift-changes.acknowledge')
+        ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])
-        ->name('shift-plan-requests.change.revert');
+        ->name('shift-plan-requests.change.revert')
+        ->can('approve-shift-plan-requests');
 
     Route::post('/commit-shift-workflow-request', [\App\Http\Controllers\ShiftPlanRequestController::class, 'store'])
-        ->name('commit-shift-workflow-request.store');
+        ->name('commit-shift-workflow-request.store')
+        ->can('can commit shifts');
 
 
     Route::group(['prefix' => 'api/helper'], function (): void {
@@ -3179,7 +3196,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // shifts.createFromPresets
     Route::post('/shifts/createFromPresets', [\Artwork\Modules\Shift\Http\Controllers\ShiftController::class, 'createFromPresets'])
-        ->name('shifts.createFromPresets');
+        ->name('shifts.createFromPresets')
+        ->can('can plan shifts');
 
     Route::prefix('inventory')->group(function () {
         Route::post('/filter-presets', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleFilterPresetController::class, 'store'])
@@ -3204,8 +3222,9 @@ Route::get(
 )->name('user-calendar-abo.show');
 
 
-// /shift/check-collisions
-Route::post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
+// /shift/check-collisions — liefert Zuweisungs-/Zeitdaten beliebiger Worker, daher zwingend hinter Auth
+Route::middleware(['auth:sanctum', 'verified'])
+    ->post('/shift/check-collisions', [ShiftController::class, 'checkCollisions'])
     ->name('shift.check-collisions');
 
 Route::get('/generate-avatar-image/{letters}', [\Artwork\Modules\User\Http\Controllers\UserController::class, 'createAvatarImage'])

@@ -1898,7 +1898,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('event-type.update.inventory.relevant');
 
 
-        Route::group(['prefix' => 'inventory-tags'], static function (): void {
+        Route::group(
+            ['prefix' => 'inventory-tags', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
+            static function (): void {
             Route::get('/', [InventoryTagGroupController::class, 'index'])
                 ->name('settings.inventory-tags.index');
 
@@ -2270,34 +2272,42 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // post inventory-management.articles.store
         Route::post('/articles/store', [InventoryArticleController::class, 'store'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.store');
 
         // patch inventory-management.articles.update
         Route::patch('/articles/{inventoryArticle}/update', [InventoryArticleController::class, 'update'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.update');
 
         // patch inventory-management.articles.update-field (inline autosave)
         Route::patch('/articles/{inventoryArticle}/update-field', [InventoryArticleController::class, 'updateField'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.update-field');
 
         // patch inventory-management.articles.detailed.update-field (inline autosave for detailed articles)
         Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-field', [InventoryArticleController::class, 'updateDetailedArticleField'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.detailed.update-field');
 
         // patch inventory-management.articles.detailed.update-property (inline autosave for detailed article properties)
         Route::patch('/articles/detailed/{inventoryDetailedQuantityArticle}/update-property', [InventoryArticleController::class, 'updateDetailedArticlePropertyValue'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.detailed.update-property');
 
         // File uploads for article properties of type "file" (single file per property/article)
         Route::post('/articles/property-file/upload', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'upload'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.property-file.upload');
         Route::get('/articles/property-file/download', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'download'])
             ->name('inventory-management.articles.property-file.download');
         Route::delete('/articles/property-file/delete', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticlePropertyFileController::class, 'destroy'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_CREATE_EDIT->value)
             ->name('inventory-management.articles.property-file.delete');
 
         // delete articles.destroy
         Route::delete('/articles/{inventoryArticle}/destroy', [InventoryArticleController::class, 'destroy'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.destroy');
 
         // get inventory.articles.trash
@@ -2306,12 +2316,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // delete articles.forceDelete
         Route::delete('/articles/force-all', [InventoryArticleController::class, 'forceDeleteAll'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.forceDeleteAll');
         Route::delete('/articles/{inventoryArticle}/forceDelete', [InventoryArticleController::class, 'forceDelete'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.forceDelete');
 
         // patch articles.restore
         Route::patch('/articles/{inventoryArticle}/restore', [InventoryArticleController::class, 'restore'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DELETE->value)
             ->name('articles.restore');
 
         //inventory.filter.store
@@ -2487,12 +2500,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'inventory-management'], function (): void {
 
         Route::get('/article/planning', [InventoryArticleController::class, 'index'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_DISPOSITION->value)
             ->name('inventory-management.article.planning');
 
         Route::get('/', [InventoryController::class, 'inventory'])
+            ->middleware('can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value)
             ->name('inventory-management.inventory');
 
-        Route::group(['prefix' => 'settings'], function (): void {
+        Route::group(
+            ['prefix' => 'settings', 'middleware' => 'can:' . PermissionEnum::INVENTORY_SETTINGS->value],
+            function (): void {
 
             Route::get('/general', [GeneralSettingsController::class, 'inventoryGeneral'])
                 ->name('inventory-management.settings.general');
@@ -2551,7 +2568,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('inventory-management.settings.categories.delete');
         });
 
-        Route::group(['prefix' => 'inventory'], function (): void {
+        Route::group(
+            ['prefix' => 'inventory', 'middleware' => 'can:' . PermissionEnum::INVENTORY_STOCK_MANAGE->value],
+            function (): void {
             Route::group(['prefix' => 'column'], function (): void {
                 Route::post(
                     '/create',
@@ -2700,33 +2719,37 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('inventory-management.inventory.filter.update');
         });
 
-        Route::get('/scheduling', [InventoryController::class, 'scheduling'])
-            ->name('inventory-management.scheduling');
+        Route::group(
+            ['middleware' => 'can:' . PermissionEnum::INVENTORY_PLANER->value],
+            function (): void {
+            Route::get('/scheduling', [InventoryController::class, 'scheduling'])
+                ->name('inventory-management.scheduling');
 
-        // inventory.dropItemToEvent
-        Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
-            ->name('inventory.dropItemToEvent');
+            // inventory.dropItemToEvent
+            Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
+                ->name('inventory.dropItemToEvent');
 
-        // inventory.events.destroy
-        Route::delete(
-            '/inventory/events/{craftInventoryItemEvent}',
-            [CraftInventoryItemEventController::class, 'destroy']
-        )
-            ->name('inventory.events.destroy');
+            // inventory.events.destroy
+            Route::delete(
+                '/inventory/events/{craftInventoryItemEvent}',
+                [CraftInventoryItemEventController::class, 'destroy']
+            )
+                ->name('inventory.events.destroy');
 
-        // patch inventory.updateEvent
-        Route::patch(
-            '/inventory/updateEvent/{craftInventoryItemEvent}',
-            [CraftInventoryItemEventController::class, 'update']
-        )
-            ->name('inventory.updateEvent');
+            // patch inventory.updateEvent
+            Route::patch(
+                '/inventory/updateEvent/{craftInventoryItemEvent}',
+                [CraftInventoryItemEventController::class, 'update']
+            )
+                ->name('inventory.updateEvent');
 
-        // post inventory.multi.events.store
-        Route::post(
-            '/inventory/multi/events/store',
-            [CraftInventoryItemEventController::class, 'storeMultiple']
-        )
-            ->name('inventory.multi.events.store');
+            // post inventory.multi.events.store
+            Route::post(
+                '/inventory/multi/events/store',
+                [CraftInventoryItemEventController::class, 'storeMultiple']
+            )
+                ->name('inventory.multi.events.store');
+        });
     });
 
     Route::group(['prefix' => 'searching'], function (): void {
@@ -2920,6 +2943,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
 
     Route::get('/material-issue-log', [MaterialIssueLogController::class, 'index'])
+        ->middleware('can:' . PermissionEnum::MATERIAL_ISSUE_LOG_VIEW->value)
         ->name('material-issue-log.index');
 
     Route::prefix('material-sets')

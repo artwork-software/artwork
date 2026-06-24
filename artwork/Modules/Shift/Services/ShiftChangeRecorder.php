@@ -300,6 +300,16 @@ class ShiftChangeRecorder
 
             $oldValue = $original[$key] ?? null;
 
+            // Datums-Felder lokal normalisieren: getOriginal() liefert durch den
+            // datetime-Cast Carbon-Objekte, die json_encode als UTC-ISO serialisiert
+            // ("2025-11-14T23:00:00Z" für den lokalen 15.11.). Beim Revert würde der
+            // Wert unkonvertiert in die DATE-Spalte geschrieben und die Schicht um
+            // einen Tag verrutschen — gleiche Bug-Klasse wie bei normalizeInitialDates.
+            if (in_array($key, ['start_date', 'end_date'], true)) {
+                $oldValue = $this->normalizeDateValue($oldValue);
+                $newValue = $this->normalizeDateValue($newValue);
+            }
+
             if ($oldValue == $newValue) {
                 continue;
             }
@@ -710,6 +720,34 @@ class ShiftChangeRecorder
      * Hintergrund: DB speichert i.d.R. UTC (z.B. 2025-11-14 23:00:00),
      * wir wollen aber im Log das lokale Datum (z.B. 2025-11-15) sehen.
      */
+    /**
+     * Einzelnen Datumswert (Carbon-Objekt oder ISO-/UTC-String) auf das lokale
+     * Y-m-d-Datum normalisieren — Pendant zu normalizeInitialDates für die
+     * per-Feld old/new-Werte.
+     */
+    protected function normalizeDateValue(mixed $value): mixed
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return $value;
+        }
+
+        if (!is_string($value) && !$value instanceof \DateTimeInterface) {
+            return $value;
+        }
+
+        try {
+            return Carbon::parse($value, 'UTC')
+                ->setTimezone(config('app.timezone', 'Europe/Berlin'))
+                ->toDateString();
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
     protected function normalizeInitialDates(array $initial): array
     {
         foreach (['start_date', 'end_date'] as $field) {

@@ -581,6 +581,31 @@ class ExportPDFController extends Controller
     }
 
 
+    /**
+     * Normalisiert Monats-Eingaben auf "YYYY-MM". Akzeptiert "YYYY-MM", "YYYY-MM-DD",
+     * "MM.YYYY" und "DD.MM.YYYY"; alles andere ergibt null (= Fallback aktueller Monat).
+     */
+    private function normalizeMonthInput(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+        if (preg_match('/^\d{4}-\d{2}$/', $value)) {
+            return $value;
+        }
+        if (preg_match('/^(\d{4})-(\d{2})-\d{2}/', $value, $matches)) {
+            return $matches[1] . '-' . $matches[2];
+        }
+        if (preg_match('/^(\d{1,2})\.(\d{4})$/', $value, $matches)) {
+            return sprintf('%04d-%02d', $matches[2], $matches[1]);
+        }
+        if (preg_match('/^\d{1,2}\.(\d{1,2})\.(\d{4})$/', $value, $matches)) {
+            return sprintf('%04d-%02d', $matches[2], $matches[1]);
+        }
+
+        return null;
+    }
+
     public function createMonthlyPDF(Request $request): Response
     {
         /** @var User $user */
@@ -612,8 +637,10 @@ class ExportPDFController extends Controller
                 $cursor->addMonth();
             }
         } else {
-            $startMonth = $request->get('startMonth');
-            $endMonth = $request->get('endMonth');
+            // User-Eingaben können je nach Browser/Locale auch "10.2025", "15.10.2025" oder
+            // "2025-10-15" sein – auf "YYYY-MM" normalisieren statt mit 500 zu crashen
+            $startMonth = $this->normalizeMonthInput($request->get('startMonth'));
+            $endMonth = $this->normalizeMonthInput($request->get('endMonth'));
 
             if ($startMonth) {
                 $start = Carbon::parse($startMonth . '-01')->startOfMonth();

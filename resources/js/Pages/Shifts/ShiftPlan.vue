@@ -618,6 +618,8 @@
                                         :color="row.craft.color"
                                         :craft="row.craft"
                                         :is-managing-craft="row.worker.element.managing_craft_ids.includes(row.craft.id)"
+                                        :enable-info-modal="true"
+                                        @open-user-info-modal="openUserInfoModal"
                                     />
                                     <MultiEditUserCell
                                         v-else-if="multiEditMode && !highlightMode"
@@ -720,6 +722,12 @@
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
+            />
+            <UserShiftInfoModal
+                v-if="showUserInfoModal && userInfoModalUserId"
+                :user-id="userInfoModalUserId"
+                :user-name="userInfoModalUserName"
+                @closed="showUserInfoModal = false"
             />
             <ShiftHistoryModal
                 v-if="showHistoryModal"
@@ -840,6 +848,7 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import UserShiftInfoModal from "@/Pages/Shifts/Components/UserShiftInfoModal.vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
@@ -1082,6 +1091,7 @@ function numericTypeToWorkerType(type: number|string): string {
 }
 
 const recentReloads = new Map<string, number>()
+const pendingWorkerReloads = new Set<string>()
 
 async function reloadSingleWorker(workerId: number|string, workerType: string) {
     const start = props.dateValue?.[0]
@@ -1093,7 +1103,19 @@ async function reloadSingleWorker(workerId: number|string, workerType: string) {
     const key = `${workerType}:${workerId}`
     const now = Date.now()
     const lastReload = recentReloads.get(key)
-    if (lastReload && (now - lastReload) < 2000) return
+    if (lastReload && (now - lastReload) < 2000) {
+        // Trailing-Reload statt stillem Verwerfen: Zwei Mutationen am selben Worker
+        // innerhalb von 2s ließen die Zeile sonst stale, bis irgendein späteres
+        // Ereignis denselben Worker erneut lud.
+        if (!pendingWorkerReloads.has(key)) {
+            pendingWorkerReloads.add(key)
+            setTimeout(() => {
+                pendingWorkerReloads.delete(key)
+                reloadSingleWorker(workerId, workerType)
+            }, 2000 - (now - lastReload) + 50)
+        }
+        return
+    }
     recentReloads.set(key, now)
 
     try {
@@ -2569,6 +2591,19 @@ function openShowUserShiftModal(user: any, day: any) {
     showUserShifts.value = true
 }
 
+// DP-18: Info-Modal je User
+const showUserInfoModal = ref(false)
+const userInfoModalUserId = ref<number | null>(null)
+const userInfoModalUserName = ref('')
+function openUserInfoModal(userId: number | string) {
+    const worker = dropWorkers.value?.find((w: any) => w.type === 0 && w.element.id === userId)
+    userInfoModalUserId.value = Number(userId)
+    userInfoModalUserName.value = worker
+        ? ((worker.element.full_name) ?? `${worker.element.first_name ?? ''} ${worker.element.last_name ?? ''}`.trim())
+        : ''
+    showUserInfoModal.value = true
+}
+
 async function handleWorkerReload() {
     if (userToShow.value) {
         await reloadSingleWorker(userToShow.value.element.id, numericTypeToWorkerType(userToShow.value.type))
@@ -3054,14 +3089,15 @@ async function closeShiftsQualificationsAssignmentModal(closedForAssignment: boo
 
         if (singleResolver) {
             const picked = (assignedShifts ?? []).find((s: any) => s.shiftId === singleShiftId)
-            singleResolver(picked ? {id: picked.shiftQualificationId} : null)
+            singleResolver(picked ? {id: picked.shiftQualificationId, isOverbooked: !!picked.isOverbooked} : null)
             return
         }
 
         ;(assignedShifts ?? []).forEach((s: any) => {
             shiftsToHandleOnMultiEdit.assignToShift.push({
                 shiftId: s.shiftId,
-                shiftQualificationId: s.shiftQualificationId
+                shiftQualificationId: s.shiftQualificationId,
+                isOverbooked: !!s.isOverbooked
             })
         })
 
@@ -3154,20 +3190,23 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
         enqueueSave(async () => {
             const needsQuali = requiredQualificationIdsForShift(shift).length > 0
             let qualificationId: number | null = null
+            let isOverbooked = false
 
             if (needsQuali) {
-                qualificationId = await resolveQualificationFor(shift)
-                if (!qualificationId) {
+                const resolved = await resolveQualificationFor(shift)
+                if (!resolved) {
                     userForMultiEdit.value.shift_ids = Array.from(oldIds)
                     const msg = $t('No matching qualification for this shift')
                     $toast?.error?.(msg)
                     showNotice('error', 'Qualification required', 'This user does not have a matching qualification for this shift.')
                     throw new Error('no_qualification')
                 }
+                qualificationId = resolved.id
+                isOverbooked = resolved.isOverbooked
             }
 
             const shiftCraftId = shift.craft_id ?? shift.craftId ?? shift.craft?.id ?? null
-            await persistAssign(shift.id, qualificationId, shiftCraftId)
+            await persistAssign(shift.id, qualificationId, shiftCraftId, isOverbooked)
             showNotice('success', 'Assigned', 'The user was successfully added to the shift.')
         })
             .catch((err) => {
@@ -3200,6 +3239,28 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
                 reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     }
+}
+
+// Überbuchung global aktiviert? (Schichteinstellungen)
+const allowOverbooking = computed<boolean>(() => !!(usePage().props as any).allow_shift_overbooking)
+
+// IDs der Funktionen einer Schicht, deren reguläre Plätze bereits voll belegt sind
+function fullQualificationIdsForShift(shift: any): Set<number> {
+    const full = new Set<number>()
+    const quals = Array.isArray(shift?.shifts_qualifications)
+        ? shift.shifts_qualifications
+        : Object.values(shift?.shifts_qualifications || {})
+    const workers = Array.isArray(shift?.workers) ? shift.workers : []
+
+    for (const sq of quals) {
+        const value = sq?.value ?? 0
+        if (value <= 0) continue
+        const regularAssigned = workers.filter(
+            (w: any) => w?.pivot?.shift_qualification_id === sq.shift_qualification_id && !w?.pivot?.is_overbooked
+        ).length
+        if (regularAssigned >= value) full.add(Number(sq.shift_qualification_id))
+    }
+    return full
 }
 
 // IDs aller universell einsetzbaren Crafts (für multi-edit)
@@ -3244,14 +3305,35 @@ async function resolveQualificationFor(desiredShift: any) {
         })
 
     if (available.length === 0) return null
-    if (available.length === 1) return available[0].id
+
+    if (allowOverbooking.value) {
+        // Volle Funktionen bleiben bei aktivierter Überbuchung wählbar — als Überbuchung markiert.
+        const fullIds = fullQualificationIdsForShift(desiredShift)
+        const decorated = available.map((uq: any) => ({...uq, isOverbooked: fullIds.has(Number(uq.id))}))
+
+        // Auto-Zuweisung nur, wenn es genau eine Option gibt und diese ein freier regulärer Platz ist.
+        // Sobald eine Überbuchung im Spiel ist, muss das Auswahlmodal erscheinen.
+        if (decorated.length === 1 && !decorated[0].isOverbooked) {
+            return {id: decorated[0].id, isOverbooked: false}
+        }
+
+        if (openQualificationPicker) {
+            const picked = await openQualificationPicker(desiredShift, decorated)
+            return picked?.id != null ? {id: picked.id, isOverbooked: !!picked.isOverbooked} : null
+        }
+
+        const firstFree = decorated.find((o: any) => !o.isOverbooked)
+        return firstFree ? {id: firstFree.id, isOverbooked: false} : null
+    }
+
+    if (available.length === 1) return {id: available[0].id, isOverbooked: false}
 
     if (openQualificationPicker) {
         const picked = await openQualificationPicker(desiredShift, available)
-        return picked?.id ?? null
+        return picked?.id != null ? {id: picked.id, isOverbooked: !!picked.isOverbooked} : null
     }
 
-    return available[0].id
+    return {id: available[0].id, isOverbooked: false}
 }
 
 
@@ -3293,7 +3375,7 @@ function resolveMultiEditCraftAbbreviation(shiftCraftId: number | null, shiftQua
     return userForMultiEdit.value.craft_abbreviation ?? ''
 }
 
-async function persistAssign(shiftId: number, shiftQualificationId: number | null, shiftCraftId: number | null = null) {
+async function persistAssign(shiftId: number, shiftQualificationId: number | null, shiftCraftId: number | null = null, isOverbooked: boolean = false) {
     const craftAbbr = resolveMultiEditCraftAbbreviation(shiftCraftId, shiftQualificationId)
     const payload = {
         userType: userForMultiEdit.value.type,
@@ -3301,7 +3383,7 @@ async function persistAssign(shiftId: number, shiftQualificationId: number | nul
         craft_abbreviation: craftAbbr,
         shiftsToHandle: {
             assignToShift: [
-                ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId}] : [{shiftId}]),
+                ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId, isOverbooked}] : [{shiftId}]),
             ],
             removeFromShift: [],
         },
@@ -3320,16 +3402,20 @@ async function persistRemove(shiftId: number) {
 
 function enqueueSave(taskFn: () => Promise<any>) {
     const session = multiEditSessionId.value
-    saveQueue.value = saveQueue.value
+    // Fehler des VORGÄNGERS schlucken (Queue am Leben halten), den eigenen Task
+    // aber genau EINMAL ausführen. Das frühere .catch hing am eigenen taskFn und
+    // führte ihn bei einem Fehler komplett erneut aus (Qualifikations-Picker nach
+    // Abbruch sofort wieder offen, POST nach Teilverarbeitung doppelt).
+    const run = saveQueue.value
+        .catch(() => {})
         .then(() => {
             if (session !== multiEditSessionId.value) return
             return taskFn()
         })
-        .catch((e) => {
-            if (session !== multiEditSessionId.value) return
-            return taskFn()
-        })
-    return saveQueue.value
+    // Die Queue selbst nie rejected weiterreichen; der Aufrufer bekommt den
+    // echten Task-Promise (inkl. Fehler) zurück.
+    saveQueue.value = run.catch(() => {})
+    return run
 }
 
 function isSaving(shiftId: number) {

@@ -15,7 +15,8 @@ class ShiftWorkerRepository extends BaseRepository
         int $employableId,
         int $shiftQualificationId,
         string $craftAbbreviation,
-        Shift $shift
+        Shift $shift,
+        bool $isOverbooked = false
     ): ShiftWorker {
         $startDate = $shift->start_date ?? now();
         $endDate = $shift->end_date ?? $startDate;
@@ -27,6 +28,7 @@ class ShiftWorkerRepository extends BaseRepository
             'employable_type' => $employableType,
             'employable_id' => $employableId,
             'shift_qualification_id' => $shiftQualificationId,
+            'is_overbooked' => $isOverbooked,
             'craft_abbreviation' => $craftAbbreviation,
             'short_description' => null,
             'start_date' => $startDate,

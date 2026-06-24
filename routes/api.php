@@ -47,13 +47,16 @@ Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
 });
 
 Route::get('/inventory/categories', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'getAllCategories'])
+    ->middleware('auth:sanctum')
     ->name('inventory.categories.get-all');
 
 Route::post('/room/search', [RoomController::class, 'search'])
     ->name('room.search');
 
 
-Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])->name('inventory.articles.search');
+Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])
+    ->middleware('auth:sanctum')
+    ->name('inventory.articles.search');
 
 
 // Inventory API routes

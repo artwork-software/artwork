@@ -45,9 +45,15 @@ final class InventoryPropertyTypeEnumTest extends UnitTestCase
     }
 
     #[Test]
-    public function it_has_six_cases(): void
+    public function it_has_year_case(): void
     {
-        $this->assertCount(6, InventoryPropertyTypeEnum::cases());
+        $this->assertSame('year', InventoryPropertyTypeEnum::YEAR->value);
+    }
+
+    #[Test]
+    public function it_has_seven_cases(): void
+    {
+        $this->assertCount(7, InventoryPropertyTypeEnum::cases());
     }
 
     #[Test]

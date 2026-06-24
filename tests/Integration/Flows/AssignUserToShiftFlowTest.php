@@ -66,12 +66,11 @@ final class AssignUserToShiftFlowTest extends FeatureTestCase
         $this->actingAsAdmin();
         $shift = Shift::factory()->create();
 
-        $response = $this->post(route('shift.assignUserByType', $shift), [
+        $this->postJson(route('shift.assignUserByType', $shift), [
             'userType' => 99,
             'userId' => 1,
-        ]);
+        ])->assertUnprocessable();
 
-        $response->assertSuccessful();
         $this->assertSame(0, $shift->fresh('users')->users->count());
     }
 

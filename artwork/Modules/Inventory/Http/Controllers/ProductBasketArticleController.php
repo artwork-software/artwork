@@ -49,8 +49,7 @@ class ProductBasketArticleController extends Controller
 
     public function updateQuantity(ProductBasketArticle $basketArticle, Request $request)
     {
-        // Optional: Policy/Ownership prüfen
-        // $this->authorize('update', $basketArticle);
+        $this->authorizeBasketArticleOwnership($basketArticle);
 
         // 1) Validierung: entweder target ODER delta (string oder int)
         $data = $request->validate([
@@ -110,9 +109,12 @@ class ProductBasketArticleController extends Controller
         ]);
     }
 
-    public function updateQuantitySingle(ProductBasketArticle $basketArticle, Request $request){
+    public function updateQuantitySingle(ProductBasketArticle $basketArticle, Request $request)
+    {
+        $this->authorizeBasketArticleOwnership($basketArticle);
+
         $data = $request->validate([
-            'quantity' => ['sometimes', 'integer', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
         ]);
 
         $basketArticle->update(['quantity' => $data['quantity']]);
@@ -147,12 +149,25 @@ class ProductBasketArticleController extends Controller
      */
     public function destroy(ProductBasketArticle $basketArticle)
     {
+        $this->authorizeBasketArticleOwnership($basketArticle);
+
         $basketArticle->delete();
         return response()->json(['deleted' => true, 'basket_article_id' => $basketArticle->id]);
     }
 
     public function removeArticles(ProductBasket $productBasket)
     {
+        abort_unless($productBasket->user_id === auth()->id(), 403);
+
         $productBasket->basketArticles()->delete();
+    }
+
+    /**
+     * Stellt sicher, dass der eingeloggte User Eigentümer des zum Basket-Artikel
+     * gehörenden Warenkorbs ist (verhindert IDOR auf fremde Warenkörbe).
+     */
+    private function authorizeBasketArticleOwnership(ProductBasketArticle $basketArticle): void
+    {
+        abort_unless($basketArticle->productBasket?->user_id === auth()->id(), 403);
     }
 }

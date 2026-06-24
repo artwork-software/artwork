@@ -78,6 +78,19 @@ class ShiftSettingsController extends Controller
         return $this->redirector->back();
     }
 
+    public function updateAllowShiftOverbooking(
+        Request $request,
+        ShiftSettings $shiftSettings,
+    ): RedirectResponse {
+        try {
+            $shiftSettings->allow_shift_overbooking = $request->boolean('allow_shift_overbooking');
+            $shiftSettings->save();
+        } catch (Throwable $t) {
+        }
+
+        return $this->redirector->back();
+    }
+
     public function saveWarningMultipleAssignments(Request $request): void
     {
         $this->generalSettingsService->updateWarningMultipleAssignmentsFromRequest($request);

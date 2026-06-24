@@ -66,6 +66,10 @@ class InventoryArticlePropertiesController extends Controller
      */
     public function destroy(InventoryArticleProperties $inventoryArticleProperty)
     {
+        // Pflicht-Properties (z. B. "Raum"/"Hersteller", is_deletable=false) dürfen nicht
+        // gelöscht werden — sonst entfernt die FK-Kaskade alle zugehörigen Property-Werte.
+        abort_unless($inventoryArticleProperty->is_deletable, 403);
+
         $inventoryArticleProperty->delete();
     }
 

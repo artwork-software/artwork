@@ -257,7 +257,9 @@ function getDefaultDeadline() {
     if (days > 0 && props.violation.violation_date) {
         const d = new Date(props.violation.violation_date);
         d.setDate(d.getDate() + days);
-        return d.toISOString().split('T')[0];
+        // lokales Datum formatieren – toISOString() würde nach UTC verschieben (Off-by-one)
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
     return '';
 }

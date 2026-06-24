@@ -329,13 +329,8 @@ class ShiftRuleController extends Controller
 
         $grantedDate = $validated['granted_date'];
 
-        // Check if user has shifts on that date
-        $shiftsOnDate = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
-            ->whereHas('shift', function ($query) use ($grantedDate): void {
-                $query->whereDate('start_date', '<=', $grantedDate)
-                    ->whereDate('end_date', '>=', $grantedDate);
-            })
-            ->count();
+        // Check if user has shifts on that date (unified shift_workers pivot)
+        $shiftsOnDate = $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)->count();
 
         if (!empty($validated['check_only'])) {
             return new JsonResponse([
@@ -344,14 +339,21 @@ class ShiftRuleController extends Controller
             ]);
         }
 
-        // Remove shifts if requested
+        // Remove shifts if requested - via ShiftWorkerService so activity log, change
+        // records and notifications fire like a manual removal from the shift plan.
         if (!empty($validated['remove_shifts']) && $shiftsOnDate > 0) {
-            \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
-                ->whereHas('shift', function ($query) use ($grantedDate): void {
-                    $query->whereDate('start_date', '<=', $grantedDate)
-                        ->whereDate('end_date', '>=', $grantedDate);
-                })
-                ->delete();
+            $shiftWorkerService = app(\Artwork\Modules\Shift\Services\ShiftWorkerService::class);
+            $this->userShiftWorkersOnDateQuery($compensationDayOff->user_id, $grantedDate)
+                ->with('shift')
+                ->get()
+                ->each(fn (\Artwork\Modules\Shift\Models\ShiftWorker $pivot) => $shiftWorkerService->removeFromShift(
+                    $pivot,
+                    true,
+                    app(\Artwork\Modules\Notification\Services\NotificationService::class),
+                    app(\Artwork\Modules\Vacation\Services\VacationConflictService::class),
+                    app(\Artwork\Modules\Availability\Services\AvailabilityConflictService::class),
+                    app(\Artwork\Modules\Change\Services\ChangeService::class)
+                ));
         }
 
         $period = $validated['half_day_period'] ?? null;
@@ -404,6 +406,26 @@ class ShiftRuleController extends Controller
         ]);
     }
 
+    /**
+     * Schicht-Zuweisungen eines Users an einem Tag aus der vereinheitlichten shift_workers-Pivot.
+     * Matcht Pivot-Zeitraum (worker-individuelle Zeiten) ODER Schicht-Zeitraum.
+     */
+    private function userShiftWorkersOnDateQuery(int $userId, string $date): \Illuminate\Database\Eloquent\Builder
+    {
+        return \Artwork\Modules\Shift\Models\ShiftWorker::query()
+            ->where('employable_type', User::class)
+            ->where('employable_id', $userId)
+            ->where(function ($query) use ($date): void {
+                $query->where(function ($subQuery) use ($date): void {
+                    $subQuery->whereDate('start_date', '<=', $date)
+                        ->whereDate('end_date', '>=', $date);
+                })->orWhereHas('shift', function ($subQuery) use ($date): void {
+                    $subQuery->whereDate('start_date', '<=', $date)
+                        ->whereDate('end_date', '>=', $date);
+                });
+            });
+    }
+
     private function compensationDayOffRepository(): CompensationDayOffRepository
     {
         return app(CompensationDayOffRepository::class);
@@ -415,12 +437,10 @@ class ShiftRuleController extends Controller
             'granted_date' => 'required|date',
         ]);
 
-        $shiftsOnDate = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $compensationDayOff->user_id)
-            ->whereHas('shift', function ($query) use ($validated): void {
-                $query->whereDate('start_date', '<=', $validated['granted_date'])
-                    ->whereDate('end_date', '>=', $validated['granted_date']);
-            })
-            ->count();
+        $shiftsOnDate = $this->userShiftWorkersOnDateQuery(
+            $compensationDayOff->user_id,
+            $validated['granted_date']
+        )->count();
 
         // Special day check: granting a half day off on a "Sondertag" violates the halfDayOffOnSpecialDay rule.
         $specialDayRule = null;
@@ -540,13 +560,20 @@ class ShiftRuleController extends Controller
 
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
-        // Load shifts for the week
-        $shiftUsers = \Artwork\Modules\Shift\Models\ShiftUser::where('user_id', $user->id)
-            ->whereHas('shift', function ($query) use ($monday, $sunday): void {
-                $query->whereDate('start_date', '<=', $sunday->toDateString())
-                    ->whereDate('end_date', '>=', $monday->toDateString());
+        // Load shifts for the week from the unified shift_workers pivot. The pivot carries
+        // per-worker dates/times that may differ from the shift itself (individual shift times).
+        $weekStart = $monday->toDateString();
+        $weekEnd = $sunday->toDateString();
+        $shifts = $user->shifts()
+            ->where(function ($query) use ($weekStart, $weekEnd): void {
+                $query->where(function ($subQuery) use ($weekStart, $weekEnd): void {
+                    $subQuery->whereDate('shifts.start_date', '<=', $weekEnd)
+                        ->whereDate('shifts.end_date', '>=', $weekStart);
+                })->orWhere(function ($subQuery) use ($weekStart, $weekEnd): void {
+                    $subQuery->whereDate('shift_workers.start_date', '<=', $weekEnd)
+                        ->whereDate('shift_workers.end_date', '>=', $weekStart);
+                });
             })
-            ->with('shift:id,start_date,end_date,start,end')
             ->get();
 
         // Load individual times for the week
@@ -566,13 +593,17 @@ class ShiftRuleController extends Controller
             $currentDay = $monday->copy()->addDays($i);
             $dateStr = $currentDay->toDateString();
 
-            $dayShifts = $shiftUsers->filter(function ($su) use ($dateStr) {
-                $shift = $su->shift;
-                if (!$shift) return false;
-                return $shift->start_date <= $dateStr && $shift->end_date >= $dateStr;
-            })->map(fn ($su) => [
-                'start' => $su->shift->start ?? '',
-                'end' => $su->shift->end ?? '',
+            $dayShifts = $shifts->filter(function ($shift) use ($dateStr) {
+                $shiftStart = $shift->pivot->start_date ?? $shift->start_date;
+                $shiftEnd = $shift->pivot->end_date ?? $shift->end_date;
+                if (!$shiftStart || !$shiftEnd) {
+                    return false;
+                }
+                return Carbon::parse($shiftStart)->toDateString() <= $dateStr
+                    && Carbon::parse($shiftEnd)->toDateString() >= $dateStr;
+            })->map(fn ($shift) => [
+                'start' => substr((string) ($shift->pivot->start_time ?? $shift->start ?? ''), 0, 5),
+                'end' => substr((string) ($shift->pivot->end_time ?? $shift->end ?? ''), 0, 5),
             ])->values();
 
             $dayIndividualTimes = $individualTimes->filter(function ($it) use ($dateStr) {

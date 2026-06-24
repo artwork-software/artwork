@@ -47,6 +47,7 @@ class Vacation extends Model
         'end_time',
         'date',
         'full_day',
+        'day_part',
         'comment',
         'is_series',
         'series_id',

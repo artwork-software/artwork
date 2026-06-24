@@ -27,6 +27,18 @@
                     </div>
                 </div>
             </div>
+            <div
+                v-if="hasFailedMonths"
+                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
+                @click="retryFailedMonths"
+            >
+                <div class="flex items-center justify-center w-full h-full gap-x-1">
+                    <IconAlertTriangle class="size-4 text-white" aria-hidden="true" />
+                    <div class="text-white text-sm font-bold">
+                        {{ $t('Some calendar data could not be loaded. Click here to retry.') }}
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Grid -->
         <div :style="{ paddingTop: topbarHeight + 'px' }">
@@ -595,6 +607,17 @@ const monthIndexByKey = computed(() => {
 
 const loadedMonths = ref<Set<string>>(new Set());
 const loadingMonths = ref<Set<string>>(new Set());
+// Fehlgeschlagene Monats-Loads: key -> Fehlversuche. Ohne Tracking würde jeder
+// Scroll-Trigger endlos neu laden und der User sähe nur leere Zellen (Prod-Bug).
+const failedMonths = ref<Map<string, number>>(new Map());
+const MAX_MONTH_LOAD_RETRIES = 3;
+const hasFailedMonths = computed(() =>
+    Array.from(failedMonths.value.values()).some((count) => count >= MAX_MONTH_LOAD_RETRIES)
+);
+async function retryFailedMonths() {
+    failedMonths.value.clear();
+    await ensureAroundInternal(focusedMonthKey.value);
+}
 const monthControllers = new Map<string, AbortController>();
 let currentEpoch = 0;
 const monthEpoch = new Map<string, number>();
@@ -728,6 +751,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
 async function loadMonth(key: string, epoch: number) {
     if (!key) return;
     if (loadedMonths.value.has(key) || loadingMonths.value.has(key)) return;
+    if ((failedMonths.value.get(key) ?? 0) >= MAX_MONTH_LOAD_RETRIES) return;
 
     const rec = monthList.value.find(m => m.key === key);
     if (!rec) return;
@@ -753,11 +777,13 @@ async function loadMonth(key: string, epoch: number) {
         setCalendarMonthData(key, data?.calendar ?? []);
 
         loadedMonths.value.add(key);
+        failedMonths.value.delete(key);
         pruneLoadedIfNeeded();
     } catch (err) {
         const name = (err as any)?.name;
         if (name === 'CanceledError' || name === 'AbortError') return;
         if (typeof axios.isCancel === 'function' && axios.isCancel(err)) return;
+        failedMonths.value.set(key, (failedMonths.value.get(key) ?? 0) + 1);
         console.error('Fehler beim Laden Monat', key, err);
     } finally {
         loadingMonths.value.delete(key);

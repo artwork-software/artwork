@@ -447,6 +447,35 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
+
+            <div class="flex flex-col gap-2 card white p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Overbooking of shifts')"
+                    :description="$t('If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.')"
+                />
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[!shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('Deactivated') }}
+                        </span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.allow_shift_overbooking"
+                            @update:model-value="updateAllowShiftOverbooking"
+                            :class="[
+                                shiftSettings.allow_shift_overbooking ?
+                                    'bg-artwork-buttons-create' :
+                                    'bg-gray-200',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.allow_shift_overbooking ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('Allow overbooking') }}
+                        </span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
@@ -862,6 +891,17 @@ export default defineComponent({
                 route('shift.settings.update.calendar-abo-show-all-shifts'),
                 {
                     calendar_abo_show_all_shifts: calendarAboShowAllShifts
+                },
+                {
+                    preserveScroll: true
+                }
+            )
+        },
+        updateAllowShiftOverbooking(allowShiftOverbooking) {
+            router.patch(
+                route('shift.settings.update.allow-shift-overbooking'),
+                {
+                    allow_shift_overbooking: allowShiftOverbooking
                 },
                 {
                     preserveScroll: true

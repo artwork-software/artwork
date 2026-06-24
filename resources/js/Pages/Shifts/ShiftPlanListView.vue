@@ -27,9 +27,9 @@
                 <span class="text-sm text-gray-600">{{ selectedShiftIds.length }} {{ $t('selected') }}</span>
                 <button
                     type="button"
-                    :disabled="selectedShiftIds.length === 0"
+                    :disabled="selectedShiftIds.length === 0 || duplicateInFlight"
                     @click="duplicateSelectedShifts"
-                    :class="[selectedShiftIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
+                    :class="[(selectedShiftIds.length === 0 || duplicateInFlight) ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
                 >
                     {{ $t('Duplicate') }}
                 </button>
@@ -1094,12 +1094,20 @@ const deleteSelectedShifts = () => {
     });
 };
 
+// In-Flight-Guard: Doppelklick auf "Duplizieren" erzeugte jede Schicht zweimal
+const duplicateInFlight = ref(false);
 const duplicateSelectedShifts = () => {
+    if (duplicateInFlight.value) {
+        return;
+    }
+    duplicateInFlight.value = true;
     axios.post(route('shifts.multi.duplicate'), {
         shift_ids: selectedShiftIds.value,
     }).then(() => {
         selectedShiftIds.value = [];
         router.reload({ only: ['groupedShifts'], preserveScroll: true });
+    }).finally(() => {
+        duplicateInFlight.value = false;
     });
 };
 </script>

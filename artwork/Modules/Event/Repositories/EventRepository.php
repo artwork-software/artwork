@@ -38,11 +38,6 @@ class EventRepository extends BaseRepository
         return $this->event->newModelQuery();
     }
 
-    public function getEventsByProjectIdAndEventTypeId(int $projectId, int $eventTypeId): Collection
-    {
-        return Event::byProjectId($projectId)->byEventTypeId($eventTypeId)->get();
-    }
-
     public function getEventsWhereUserHasShiftsInPeriod(int $userId, CarbonPeriod $carbonPeriod): Collection
     {
         return Event::query()

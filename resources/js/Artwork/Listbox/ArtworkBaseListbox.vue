@@ -18,7 +18,8 @@
             <Float
                 portal
                 strategy="fixed"
-                auto-placement
+                flip
+                adaptive-width
                 :offset="6"
                 placement="bottom-start"
                 floating-as="div"

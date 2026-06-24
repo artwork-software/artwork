@@ -38,6 +38,21 @@ class StoreUserContractRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'free_sundays_per_season' => 'required|integer|min:0',
             'days_off_first_26_weeks' => 'required|numeric|min:0',
+            // Spielzeitbezogene Infodaten (DP-18)
+            'free_sundays_per_season_active' => 'boolean',
+            'days_off_first_26_weeks_active' => 'boolean',
+            'free_sundays_sat_mon_per_half' => 'nullable|integer|min:0',
+            'free_sundays_sat_mon_per_half_active' => 'boolean',
+            'free_sundays_and_saturdays_per_season' => 'nullable|integer|min:0',
+            'free_sundays_and_saturdays_per_season_active' => 'boolean',
+            'free_sundays_per_calendar_year' => 'nullable|integer|min:0',
+            'free_sundays_per_calendar_year_active' => 'boolean',
+            'one_and_half_day_combinations' => 'nullable|integer|min:0',
+            'one_and_half_day_combinations_active' => 'boolean',
+            'annual_vacation_days' => 'nullable|integer|min:0',
+            // Überstunden-Regel (Vorgabe für die Zuweisung am User)
+            'overtime_rule_active' => 'boolean',
+            'overtime_compensation_period' => 'nullable|integer|min:1',
         ];
     }
 }

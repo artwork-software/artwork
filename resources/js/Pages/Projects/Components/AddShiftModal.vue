@@ -903,7 +903,7 @@ function saveShift() {
         return
     }
 
-    if (props.shiftPlanModal && !shiftForm.id) {
+    if (!shiftForm.id) {
         shiftForm.post(route('event.shift.store.without.event'), {
             preserveScroll: true,
             preserveState: true,
@@ -914,36 +914,22 @@ function saveShift() {
         return
     }
 
-    if (shiftForm.id) {
-        if (props.shiftPlanModal) {
-            // In the shift plan list/daily view, use axios instead of Inertia to avoid
-            // the redirect response overwriting localGroupedShifts with filtered data
-            // (e.g. craft filter excludes the shift after a craft change).
-            // The WebSocket broadcast handles the real-time UI update.
-            axios.patch(route('event.shift.update', props.shift.id), {
-                ...shiftForm.data(),
-                updateOrCreateInShiftPlan: true,
+    if (props.shiftPlanModal) {
+        // In the shift plan list/daily view, use axios instead of Inertia to avoid
+        // the redirect response overwriting localGroupedShifts with filtered data
+        // (e.g. craft filter excludes the shift after a craft change).
+        // The WebSocket broadcast handles the real-time UI update.
+        axios.patch(route('event.shift.update', props.shift.id), {
+            ...shiftForm.data(),
+            updateOrCreateInShiftPlan: true,
+        })
+            .catch((e) => console.log(e))
+            .finally(() => {
+                shiftForm.reset()
+                closeModal(true)
             })
-                .catch((e) => console.log(e))
-                .finally(() => {
-                    shiftForm.reset()
-                    closeModal(true)
-                })
-        } else {
-            shiftForm.patch(route('event.shift.update', props.shift.id), {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    shiftForm.reset()
-                    router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
-                    closeModal(true)
-                },
-                onError: (e) => console.log(e),
-                onFinish: () => { shiftForm.reset(); closeModal(true) },
-            })
-        }
     } else {
-        shiftForm.post(route('event.shift.store', props.event.id), {
+        shiftForm.patch(route('event.shift.update', props.shift.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {

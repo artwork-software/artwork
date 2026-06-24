@@ -18,31 +18,27 @@ final class ShiftAssignmentTest extends FeatureTestCase
     }
 
     #[Test]
-    public function admin_assign_with_unknown_user_type_returns_falsy_response(): void
+    public function admin_assign_with_unknown_user_type_fails_validation(): void
     {
         $this->actingAsAdmin();
         $shift = Shift::factory()->create();
 
-        $response = $this->post(route('shift.assignUserByType', $shift), [
+        $this->postJson(route('shift.assignUserByType', $shift), [
             'userType' => 99,
             'userId' => 1,
-        ]);
-
-        $response->assertSuccessful();
-        // returns boolean false serialized
-        $this->assertContains(trim($response->getContent()), ['', 'false', '0']);
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['userType', 'shiftQualificationId']);
     }
 
     #[Test]
-    public function admin_assign_with_no_user_type_returns_falsy_response(): void
+    public function admin_assign_with_no_user_type_fails_validation(): void
     {
         $this->actingAsAdmin();
         $shift = Shift::factory()->create();
 
-        $response = $this->post(route('shift.assignUserByType', $shift), []);
-
-        $response->assertSuccessful();
-        $this->assertContains(trim($response->getContent()), ['', 'false', '0']);
+        $this->postJson(route('shift.assignUserByType', $shift), [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['userId', 'userType', 'shiftQualificationId']);
     }
 
     #[Test]

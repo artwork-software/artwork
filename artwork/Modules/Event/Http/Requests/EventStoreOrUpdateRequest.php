@@ -35,6 +35,7 @@ class EventStoreOrUpdateRequest extends FormRequest
             'optionString' => ['sometimes','nullable','string'],
             'allDay' => ['sometimes', 'nullable', 'boolean'],
             'showProjectPeriodInCalendar' => ['sometimes', 'nullable', 'boolean'],
+            'seriesEndDate' => ['sometimes', 'nullable', 'date'],
         ];
     }
 

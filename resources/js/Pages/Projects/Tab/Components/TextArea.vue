@@ -9,7 +9,14 @@
                 {{ projectData.data.label }}
             </label>
             <!-- Anzeige (HTML) bis geklickt wird -->
-            <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1 w-full">
+            <div
+                v-if="descriptionClicked === false"
+                @click="handleDescriptionClick()"
+                @focus="handleDescriptionClick()"
+                @keydown.enter.prevent="handleDescriptionClick()"
+                :tabindex="canEditComponent ? 0 : undefined"
+                class="flex items-center gap-x-1 w-full focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create rounded"
+            >
                 <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400 shrink-0" />
                 <div
                     class="subpixel-antialiased flex-1"
@@ -153,7 +160,10 @@ function handleDescriptionClick() {
                 const root = descriptionWrapRef.value
                 const ta = root?.querySelector?.("textarea")
                 ta?.focus()
-                ta?.select()
+                // Cursor ans Ende setzen, statt den gesamten Inhalt zu markieren
+                // (markierter Text könnte sonst versehentlich überschrieben/gelöscht werden)
+                const end = ta?.value?.length ?? 0
+                ta?.setSelectionRange?.(end, end)
             })
         })
     }

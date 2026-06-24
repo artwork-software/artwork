@@ -125,13 +125,21 @@
 
         <div v-else class="mt-5">
             <div class="mt-5">
+                <p class="text-xs text-gray-400 mb-2">
+                    {{ $t('Values applying to this user (may differ from the contract template).') }}
+                </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-700">
-                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ selectedContract?.free_full_days_per_week }}</div>
-                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ selectedContract?.free_half_days_per_week }}</div>
-                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ selectedContract?.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
-                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ selectedContract?.compensation_period }}</div>
-                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ selectedContract?.free_sundays_per_season }}</div>
-                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ Number(selectedContract?.days_off_first_26_weeks).toFixed(2) }}</div>
+                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ userContractForm.free_full_days_per_week }}</div>
+                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ userContractForm.free_half_days_per_week }}</div>
+                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ userContractForm.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
+                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ userContractForm.compensation_period }}</div>
+                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ userContractForm.free_sundays_per_season }}</div>
+                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ Number(userContractForm.days_off_first_26_weeks ?? 0).toFixed(2) }}</div>
+                    <div><b>{{ $t('Overtime rule active') }}:</b> {{ userContractForm.overtime_rule_active ? $t('Yes') : $t('No') }}</div>
+                    <div v-if="userContractForm.overtime_rule_active">
+                        <b>{{ $t('Period within which overtime must be reduced (days)') }}:</b>
+                        {{ userContractForm.overtime_compensation_period ?? '-' }}
+                    </div>
                 </div>
             </div>
 

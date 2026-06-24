@@ -583,8 +583,14 @@ class NotificationService
     public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift): stdClass
     {
         $minDurationHours = 12;
-        $newShiftStart = Carbon::parse($shift->event_start_day . ' ' . $shift->start);
-        $newShiftEnd = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
+        // Fallback auf start_date/end_date: Carbon::parse(null . ' ' . $start) ergäbe
+        // das heutige Datum und macht den Ruhezeit-Check für solche Schichten unbrauchbar.
+        $shiftStartDay = $shift->event_start_day
+            ?? ($shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null);
+        $shiftEndDay = $shift->event_end_day
+            ?? ($shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : $shiftStartDay);
+        $newShiftStart = Carbon::parse($shiftStartDay . ' ' . $shift->start);
+        $newShiftEnd = Carbon::parse($shiftEndDay . ' ' . $shift->end);
 
         // If the shift crosses midnight (end time < start time on same day), advance end by 1 day
         if ($newShiftEnd->lessThanOrEqualTo($newShiftStart)) {
@@ -596,8 +602,8 @@ class NotificationService
             ->whereBetween(
                 'event_start_day',
                 [
-                    Carbon::parse($shift->event_start_day)->subDay(),
-                    Carbon::parse($shift->event_start_day)->addDay()
+                    Carbon::parse($shiftStartDay)->subDay(),
+                    Carbon::parse($shiftStartDay)->addDay()
                 ]
             )
             ->without(['craft'])
@@ -607,8 +613,12 @@ class NotificationService
         $notificationObj->shortBreak = false;
 
         foreach ($otherShifts as $otherShift) {
-            $otherStart = Carbon::parse($otherShift->event_start_day . ' ' . $otherShift->start);
-            $otherEnd = Carbon::parse($otherShift->event_end_day . ' ' . $otherShift->end);
+            $otherStartDay = $otherShift->event_start_day
+                ?? ($otherShift->start_date ? Carbon::parse($otherShift->start_date)->toDateString() : null);
+            $otherEndDay = $otherShift->event_end_day
+                ?? ($otherShift->end_date ? Carbon::parse($otherShift->end_date)->toDateString() : $otherStartDay);
+            $otherStart = Carbon::parse($otherStartDay . ' ' . $otherShift->start);
+            $otherEnd = Carbon::parse($otherEndDay . ' ' . $otherShift->end);
 
             // If the other shift crosses midnight, advance end by 1 day
             if ($otherEnd->lessThanOrEqualTo($otherStart)) {
@@ -679,6 +689,15 @@ class NotificationService
                 ->where('id', $notification->id)
                 ->update(['data' => json_encode($data)]);
         }
+    }
+
+    public function deleteUnhandledRoomRequestNotificationsByEventId(int $eventId): void
+    {
+        DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->whereNull('data->handledStatus')
+            ->delete();
     }
 
     public function deleteUpsertRoomRequestNotificationByEventId(int $eventId): void

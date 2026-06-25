@@ -580,6 +580,10 @@ const describeChange = (change) => {
                 return t('Global qualifications');
             case 'assignment':
                 return t('Assignment');
+            case 'individual_time':
+                return t('Individual working time');
+            case 'worker_short_description':
+                return t('Short description');
             default:
                 return key;
         }

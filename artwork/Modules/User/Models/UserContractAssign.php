@@ -52,7 +52,19 @@ class UserContractAssign extends Model
         'saturday',
         'sunday',
         'valid_from',
-        'valid_until'
+        'valid_until',
+        // Spielzeitbezogene Infodaten (DP-18)
+        'free_sundays_per_season_active',
+        'days_off_first_26_weeks_active',
+        'free_sundays_sat_mon_per_half',
+        'free_sundays_sat_mon_per_half_active',
+        'free_sundays_and_saturdays_per_season',
+        'free_sundays_and_saturdays_per_season_active',
+        'free_sundays_per_calendar_year',
+        'free_sundays_per_calendar_year_active',
+        'one_and_half_day_combinations',
+        'one_and_half_day_combinations_active',
+        'annual_vacation_days',
     ];
 
     protected $casts = [
@@ -63,7 +75,19 @@ class UserContractAssign extends Model
         'free_full_days_per_week' => 'integer',
         'free_half_days_per_week' => 'integer',
         'compensation_period' => 'integer',
-        'free_sundays_per_season' => 'integer'
+        'free_sundays_per_season' => 'integer',
+        // Spielzeitbezogene Infodaten (DP-18)
+        'free_sundays_per_season_active' => 'boolean',
+        'days_off_first_26_weeks_active' => 'boolean',
+        'free_sundays_sat_mon_per_half' => 'integer',
+        'free_sundays_sat_mon_per_half_active' => 'boolean',
+        'free_sundays_and_saturdays_per_season' => 'integer',
+        'free_sundays_and_saturdays_per_season_active' => 'boolean',
+        'free_sundays_per_calendar_year' => 'integer',
+        'free_sundays_per_calendar_year_active' => 'boolean',
+        'one_and_half_day_combinations' => 'integer',
+        'one_and_half_day_combinations_active' => 'boolean',
+        'annual_vacation_days' => 'integer',
     ];
 
 

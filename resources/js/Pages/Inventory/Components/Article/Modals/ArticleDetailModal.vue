@@ -5,6 +5,7 @@
             <div class="mb-5">
                 <div class="card flex justify-center">
                     <Galleria
+                        v-if="displayCustom"
                         v-model:activeIndex="activeIndex"
                         v-model:visible="displayCustom"
                         :value="article.images"

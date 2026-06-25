@@ -68,6 +68,8 @@ class EventDTO extends Data
             end: Carbon::parse($event->end_time)->format('Y-m-d H:i'),
             eventName: $event->eventName,
             description: $event->description,
+            // Lookup kann leer sein, wenn das Projekt bereits im Papierkorb liegt
+            // (z.B. abgebrochene Lösch-Kaskade) – dann ohne Projekt-Chip rendern statt 500.
             project: $project ? ProjectDTO::fromModel($project, $userCalendarSettings) : null,
             eventType: $eventType ? [
                 'id' => $eventType->id,
@@ -80,7 +82,7 @@ class EventDTO extends Data
                 null,
             allDay: $event->allDay,
             roomId: $event->room_id,
-            roomName: $event->room->name,
+            roomName: $event->room?->name,
             startHour: $event->getAttribute('start_hour') ?? 0,
             minutesFormStartHourToStart: $event->getAttribute('minutes_form_start_hour_to_start') ?? 0,
             eventLengthInHours: $event->getAttribute('event_length_in_hours') ?? 0,

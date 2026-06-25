@@ -288,7 +288,7 @@ class InventoryArticle extends Model
 
             foreach ($detailedQuantities as $detailedQuantity) {
                 if ($detailedQuantity->status && $detailedQuantity->status->name === 'Einsatzbereit') {
-                    $total += (int) $detailedQuantity->quantity;
+                    $total += (float) $detailedQuantity->quantity;
                 }
             }
         } else {
@@ -302,7 +302,7 @@ class InventoryArticle extends Model
                 $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
             }
 
-            $total = $readyStatus ? (int) $readyStatus->pivot->value : 0;
+            $total = $readyStatus ? (float) $readyStatus->pivot->value : 0;
         }
         $available = max($total - $usedQuantity, 0);
 

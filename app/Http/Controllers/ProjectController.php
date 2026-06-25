@@ -382,6 +382,12 @@ class ProjectController extends Controller
                             ? Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y')
                             : null;
                         break;
+                    case ProjectTabComponentEnum::PROJECT_PERIOD->value:
+                        // Derived from the project's events (event types flagged
+                        // relevant_for_project_period, falling back to all events). Soft-deleted
+                        // events are excluded because the accessor uses the events() relation.
+                        $projectData->project_period = $project->first_and_last_event_date;
+                        break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
                         $projectData->cost_center = $project->costCenter;
                         $projectData->gema = $project->gema;
@@ -551,13 +557,15 @@ class ProjectController extends Controller
             $project->update(['is_group' => true]);
             $project->projectsOfGroup()->sync($request->get('projects'));
         } elseif (!empty($request->selectedGroup)) {
-            $group = Project::find($request->selectedGroup['id']);
-            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            $group = Project::find($request->selectedGroup['id'] ?? null);
+            if ($group) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
 
-            // Ensure the group's is_group flag is set to true
-            if (!$group->is_group) {
-                $group->is_group = true;
-                $group->save();
+                // Ensure the group's is_group flag is set to true
+                if (!$group->is_group) {
+                    $group->is_group = true;
+                    $group->save();
+                }
             }
         }
 
@@ -3134,15 +3142,18 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group = Project::find($request->get('selectedGroup')['id']);
-            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            $group = Project::find($request->get('selectedGroup')['id'] ?? null);
+            if ($group) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
 
-            // Ensure the group's is_group flag is set to true
-            if (!$group->is_group) {
-                $group->is_group = true;
-                $group->save();
+                // Ensure the group's is_group flag is set to true
+                if (!$group->is_group) {
+                    $group->is_group = true;
+                    $group->save();
+                }
             }
 
             // Ensure the project has at least one column marked as relevant for project groups
@@ -3906,6 +3917,7 @@ class ProjectController extends Controller
         Project $project,
         Request $request
     ): RedirectResponse {
+        $this->authorize('delete', $project);
         // Single, consolidated notification instead of one per deleted event.
         $eventCount = $project->events()->count();
 
@@ -3948,16 +3960,21 @@ class ProjectController extends Controller
 
     public function forceDelete(int $id): RedirectResponse
     {
+        // 404 for ids that don't reference a trashed project (avoids queueing junk jobs).
+        $project = Project::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $project);
+
         // Offloaded to a queued job: the cascade (events, shifts, sub-events, timelines,
         // budget table, ...) would exceed the PHP/HTTP timeout for projects with very many
         // events. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
-        ForceDeleteProjectJob::dispatch($id, Auth::id());
+        ForceDeleteProjectJob::dispatch($project->id, Auth::id());
 
         return Redirect::route('projects.trashed');
     }
 
     public function forceDeleteAll(): RedirectResponse
     {
+        abort_unless(Auth::user()?->can(PermissionEnum::PROJECT_DELETE->value), 403);
         // One bounded job per trashed project instead of force-deleting everything inline.
         Project::onlyTrashed()
             ->pluck('id')
@@ -3997,6 +4014,7 @@ class ProjectController extends Controller
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $project);
 
         if ($project) {
             $this->projectService->restore(

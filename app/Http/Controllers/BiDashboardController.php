@@ -24,9 +24,14 @@ class BiDashboardController extends Controller
             403
         );
 
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
         $data = $this->biDashboardService->getDashboardData(
-            $request->query('date_from'),
-            $request->query('date_to')
+            $validated['date_from'] ?? null,
+            $validated['date_to'] ?? null
         );
 
         return Inertia::render('BusinessIntelligence/Dashboard', [

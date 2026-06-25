@@ -85,6 +85,8 @@ class DayServiceController extends Controller
             $dayServiceable
         );
 
+        abort_if($modelInstance === null, 422, 'Unbekannter modelType oder ungültige ID.');
+
         $this->dayServicesService->attachDayServiceable(
             $dayService,
             $modelInstance,
@@ -114,6 +116,8 @@ class DayServiceController extends Controller
             $modelType = $request->string('modelType'),
             $dayServiceable
         );
+
+        abort_if($modelInstance === null, 422, 'Unbekannter modelType oder ungültige ID.');
 
         $modelInstance->dayServices()->wherePivot(
             'date',

@@ -26,6 +26,7 @@ class ShiftWorker extends MorphPivot
         'end_date' => 'date',
         'start_time' => TimeWithoutSeconds::class,
         'end_time' => TimeWithoutSeconds::class,
+        'is_overbooked' => 'boolean',
     ];
 
     public function shift(): BelongsTo

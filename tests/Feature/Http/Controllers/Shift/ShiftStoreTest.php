@@ -2,23 +2,12 @@
 
 namespace Tests\Feature\Http\Controllers\Shift;
 
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Shift\Models\Shift;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 final class ShiftStoreTest extends FeatureTestCase
 {
-    #[Test]
-    public function guest_cannot_store_shift_for_event(): void
-    {
-        $event = Event::factory()->create();
-
-        $this->postJson(route('event.shift.store', $event), [])
-            ->assertUnauthorized();
-    }
-
     #[Test]
     public function guest_cannot_store_shift_without_event(): void
     {

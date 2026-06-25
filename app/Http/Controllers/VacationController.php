@@ -45,6 +45,15 @@ class VacationController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         AvailabilitySeriesService $availabilitySeriesService
     ): void {
+        // Nur für sich selbst anlegen – fremde Urlaube/Verfügbarkeiten brauchen "can manage availability".
+        abort_unless(
+            (int) $user->id === (int) auth()->id()
+                || (bool) auth()->user()?->can(
+                    \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+                ),
+            403
+        );
+
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
                 $user,
@@ -73,6 +82,16 @@ class VacationController extends Controller
         Freelancer $freelancer,
         AvailabilitySeriesService $availabilitySeriesService
     ): void {
+        // Freelancer sind "Worker": Worker-Manager dürfen deren Urlaube/Verfügbarkeiten anlegen
+        // (Frontend gated auf "can manage workers"); Verfügbarkeits-Manager ebenfalls.
+        abort_unless(
+            (bool) auth()->user()?->can(\Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value)
+                || (bool) auth()->user()?->can(
+                    \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+                ),
+            403
+        );
+
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
                 $freelancer,
@@ -103,6 +122,12 @@ class VacationController extends Controller
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
+        // DP-18: "Frei" (FREE_WORK) kann als Ganzer freier Tag (full) oder Halber freier Tag
+        // (morning|afternoon) gesetzt werden.
+        $dayPart = $request->get('dayPart');
+        $isFree = $checked['type'] === 'FREE_WORK';
+        $isHalf = $isFree && in_array($dayPart, ['morning', 'afternoon'], true);
+        $resolvedDayPart = $isFree ? ($isHalf ? $dayPart : 'full') : null;
         $vacations = $this->vacationService->findVacationWithinInterval($user, $day);
         if ($checked['type'] === VacationEnum::AVAILABLE->value) {
             if ($vacations->count() > 0) {
@@ -116,7 +141,8 @@ class VacationController extends Controller
             $createVacationRequest = new CreateVacationRequest([
                 'date' => $day,
                 'type' => 'vacation',
-                'full_day' => true,
+                'full_day' => !$isHalf,
+                'day_part' => $resolvedDayPart,
                 'is_series' => false,
                 'comment' => $checked['type'],
             ]);
@@ -136,6 +162,8 @@ class VacationController extends Controller
                     $vacation->update([
                         'type' => $checked['type'],
                         'comment' => $checked['type'],
+                        'full_day' => !$isHalf,
+                        'day_part' => $resolvedDayPart,
                         'created_by' => auth()->id(),
                     ]);
                 }
@@ -268,6 +296,7 @@ class VacationController extends Controller
         Vacation $vacation,
         AvailabilitySeriesService $availabilitySeriesService
     ): RedirectResponse {
+        $this->authorize('update', $vacation);
         if ($updateVacationRequest->validated()) {
             if ($updateVacationRequest->type_before_update !== $updateVacationRequest->type) {
                 if ($updateVacationRequest->type === 'available') {
@@ -313,6 +342,7 @@ class VacationController extends Controller
 
     public function destroy(Vacation $vacation): RedirectResponse
     {
+        $this->authorize('delete', $vacation);
         $this->vacationService->delete($vacation);
         return redirect()->back();
     }

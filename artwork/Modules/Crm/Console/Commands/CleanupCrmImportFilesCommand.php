@@ -24,7 +24,14 @@ class CleanupCrmImportFilesCommand extends Command
         $files = $disk->files($directory);
         $deleted = 0;
 
+        // Nur tatsächlich verwaiste (alte) Dateien löschen – sonst werden gerade
+        // hochgeladene Importe, deren Spalten-Mapping noch läuft, mitten im Workflow entfernt.
+        $threshold = now()->subHours((int) $this->option('hours'))->getTimestamp();
+
         foreach ($files as $file) {
+            if ($disk->lastModified($file) >= $threshold) {
+                continue;
+            }
             $disk->delete($file);
             $deleted++;
         }

@@ -153,7 +153,7 @@ const columnSizeMinMax = {
     3: { min: 100, max: 450 },
     4: { min: 100, max: 450 },
     5: { min: 146, max: 450 },
-    6: { min: 195, max: 450 }
+    6: { min: 110, max: 450 }
 }
 
 // sinnvolle, harmonische Vorschläge (Mitte zwischen min/max bzw. Domain-Wissen)
@@ -163,7 +163,7 @@ const suggested = {
     3: 220,
     4: 144,
     5: 180,
-    6: 250
+    6: 150
 }
 
 const columns = computed(() =>
@@ -194,7 +194,7 @@ const setColumnSizeToDefault = () => {
         3: 144,
         4: 144,
         5: 144,
-        6: 250
+        6: 150
     }
     submit()
 }

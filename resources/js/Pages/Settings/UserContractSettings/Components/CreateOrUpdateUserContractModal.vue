@@ -71,22 +71,71 @@
                     <p v-if="userContractForm.errors.compensation_period" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
 
-                <div>
-                    <BaseInput
-                        v-model="userContractForm.free_sundays_per_season"
-                        label="Free Sundays Per Season"
-                        type="number"
-                        id="free_sundays_per_season" />
-                    <p v-if="userContractForm.errors.free_sundays_per_season" class="text-red-500 mt-0.5 text-xs"></p>
+                <!-- Spielzeitbezogene Infodaten (DP-18) -->
+                <div class="mt-6 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-semibold text-gray-900">{{ $t('Season-related info data') }}</h3>
+                    <p class="text-xs text-gray-500 mb-3">
+                        {{ $t('Activate the parameters relevant for this contract and define the target value (X). The season is configured in the tool settings under "Communication & Legal".') }}
+                    </p>
+
+                    <div class="space-y-3">
+                        <div v-for="param in seasonInfoParams" :key="param.key"
+                             class="rounded-md border border-gray-100 p-3">
+                            <div class="flex items-start gap-3">
+                                <div class="flex h-6 shrink-0 items-center">
+                                    <input :id="`param_${param.key}`" type="checkbox" class="input-checklist"
+                                           v-model="userContractForm[param.activeKey]" />
+                                </div>
+                                <div class="flex-1 text-sm/6">
+                                    <label :for="`param_${param.key}`" class="font-medium text-gray-900">
+                                        {{ $t(param.label) }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div v-if="userContractForm[param.activeKey]" class="mt-2 pl-7">
+                                <BaseInput
+                                    v-model="userContractForm[param.key]"
+                                    :label="$t('Minimum value (X)')"
+                                    type="number"
+                                    :step="param.step || '1'"
+                                    :id="param.key" />
+                            </div>
+                        </div>
+
+                        <!-- Urlaubsanspruch pro Kalenderjahr -->
+                        <div class="rounded-md border border-gray-100 p-3">
+                            <BaseInput
+                                v-model="userContractForm.annual_vacation_days"
+                                :label="$t('Annual vacation days (per calendar year)')"
+                                type="number"
+                                id="annual_vacation_days" />
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <BaseInput
-                        v-model="userContractForm.days_off_first_26_weeks"
-                        label="Days Off First 26 Weeks"
-                        type="number"
-                        id="days_off_first_26_weeks" step="0.01" />
-                    <p v-if="userContractForm.errors.days_off_first_26_weeks" class="text-red-500 mt-0.5 text-xs"></p>
+                <!-- Überstunden (DP-18 Stufe 2) -->
+                <div class="mt-6 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-semibold text-gray-900">{{ $t('Overtime') }}</h3>
+                    <div class="mt-3 rounded-md border border-gray-100 p-3">
+                        <div class="flex items-start gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <input id="overtime_rule_active" type="checkbox" class="input-checklist"
+                                       v-model="userContractForm.overtime_rule_active" />
+                            </div>
+                            <div class="flex-1 text-sm/6">
+                                <label for="overtime_rule_active" class="font-medium text-gray-900">
+                                    {{ $t('Non-reduced overtime within the deadline leads to financial compensation') }}
+                                </label>
+                            </div>
+                        </div>
+                        <div v-if="userContractForm.overtime_rule_active" class="mt-2 pl-7">
+                            <BaseInput
+                                v-model="userContractForm.overtime_compensation_period"
+                                :label="$t('Period within which overtime must be reduced (days)')"
+                                type="number"
+                                id="overtime_compensation_period" />
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -133,7 +182,20 @@ const props = defineProps({
             special_day_rule_active: false,
             compensation_period: 0,
             free_sundays_per_season: 0,
-            days_off_first_26_weeks: 0.00
+            days_off_first_26_weeks: 0.00,
+            free_sundays_per_season_active: false,
+            days_off_first_26_weeks_active: false,
+            free_sundays_sat_mon_per_half: 0,
+            free_sundays_sat_mon_per_half_active: false,
+            free_sundays_and_saturdays_per_season: 0,
+            free_sundays_and_saturdays_per_season_active: false,
+            free_sundays_per_calendar_year: 0,
+            free_sundays_per_calendar_year_active: false,
+            one_and_half_day_combinations: 0,
+            one_and_half_day_combinations_active: false,
+            annual_vacation_days: 0,
+            overtime_rule_active: false,
+            overtime_compensation_period: null,
         })
     },
 })
@@ -149,8 +211,33 @@ const userContractForm = useForm({
     special_day_rule_active: props.userContract.special_day_rule_active,
     compensation_period: props.userContract.compensation_period,
     free_sundays_per_season: props.userContract.free_sundays_per_season,
-    days_off_first_26_weeks: props.userContract.days_off_first_26_weeks
+    days_off_first_26_weeks: props.userContract.days_off_first_26_weeks,
+    // Spielzeitbezogene Infodaten (DP-18)
+    free_sundays_per_season_active: props.userContract.free_sundays_per_season_active ?? false,
+    days_off_first_26_weeks_active: props.userContract.days_off_first_26_weeks_active ?? false,
+    free_sundays_sat_mon_per_half: props.userContract.free_sundays_sat_mon_per_half ?? 0,
+    free_sundays_sat_mon_per_half_active: props.userContract.free_sundays_sat_mon_per_half_active ?? false,
+    free_sundays_and_saturdays_per_season: props.userContract.free_sundays_and_saturdays_per_season ?? 0,
+    free_sundays_and_saturdays_per_season_active:
+        props.userContract.free_sundays_and_saturdays_per_season_active ?? false,
+    free_sundays_per_calendar_year: props.userContract.free_sundays_per_calendar_year ?? 0,
+    free_sundays_per_calendar_year_active: props.userContract.free_sundays_per_calendar_year_active ?? false,
+    one_and_half_day_combinations: props.userContract.one_and_half_day_combinations ?? 0,
+    one_and_half_day_combinations_active: props.userContract.one_and_half_day_combinations_active ?? false,
+    annual_vacation_days: props.userContract.annual_vacation_days ?? 0,
+    // Überstunden (DP-18 Stufe 2)
+    overtime_rule_active: props.userContract.overtime_rule_active ?? false,
+    overtime_compensation_period: props.userContract.overtime_compensation_period ?? null,
 })
+
+const seasonInfoParams = [
+    { key: 'free_sundays_per_season', activeKey: 'free_sundays_per_season_active', label: 'Free Sundays per season' },
+    { key: 'days_off_first_26_weeks', activeKey: 'days_off_first_26_weeks_active', label: 'Days off in the first 26 weeks', step: '0.5' },
+    { key: 'free_sundays_sat_mon_per_half', activeKey: 'free_sundays_sat_mon_per_half_active', label: 'Free Sundays connected with Saturday/Monday per season half' },
+    { key: 'free_sundays_and_saturdays_per_season', activeKey: 'free_sundays_and_saturdays_per_season_active', label: 'Free Sundays + Saturdays per season' },
+    { key: 'free_sundays_per_calendar_year', activeKey: 'free_sundays_per_calendar_year_active', label: 'Free Sundays per calendar year' },
+    { key: 'one_and_half_day_combinations', activeKey: 'one_and_half_day_combinations_active', label: '1.5-day combinations' },
+];
 
 const submit = () => {
     if(userContractForm.id) {

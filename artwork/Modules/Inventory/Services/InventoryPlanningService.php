@@ -706,16 +706,16 @@ class InventoryPlanningService
     /**
      * Get the "Einsatzbereit" quantity for an article.
      */
-    private function getEinsatzbereitQuantity(InventoryArticle $article): int
+    private function getEinsatzbereitQuantity(InventoryArticle $article): float
     {
         if ($article->is_detailed_quantity) {
-            return (int) $article->detailedArticleQuantities
+            return (float) $article->detailedArticleQuantities
                 ->filter(fn ($dq) => $dq->status && $dq->status->name === 'Einsatzbereit')
                 ->sum('quantity');
         }
 
         $readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit');
-        return $readyStatus ? (int) $readyStatus->pivot->value : 0;
+        return $readyStatus ? (float) $readyStatus->pivot->value : 0;
     }
 
     /**

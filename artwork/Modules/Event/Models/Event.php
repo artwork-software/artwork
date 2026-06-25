@@ -486,6 +486,11 @@ class Event extends Model
         return $builder
             ->select($columnToOrderBy)
             ->whereRaw('`projects`.`id` = `events`.`project_id`')
+            // The repository builds this subquery via newModelQuery(), which bypasses the
+            // SoftDeletes global scope. Without this guard, soft-deleted events would count
+            // towards a project's earliest/latest event and skew the chronological sort
+            // (e.g. a trashed 2025 event pulling a 2027 project ahead of a real 2026 one).
+            ->whereNull('events.deleted_at')
             ->orderBy($columnToOrderBy, $direction)
             ->take(1);
     }

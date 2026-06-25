@@ -62,131 +62,6 @@ class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
-    private function convertStartEndDate(array $data): object
-    {
-        $start = Carbon::parse($data['start']);
-        $end = Carbon::parse($data['end']);
-
-        return (object) [
-            'start' => $start->format('Y-m-d'),
-            'end' => $end->isBefore($start)
-                ? $start->copy()->addDay()->format('Y-m-d')
-                : $start->format('Y-m-d'),
-        ];
-    }
-
-    private function convertStartEndDateByEvent(Event $event, array $data): object
-    {
-        // 1) Basis-Datum: bevorzugt $data['start_date'], dann $data['day'], sonst Event-Start-Datum
-        $baseDate = $data['start_date']
-            ?? $data['day']
-            ?? Carbon::parse($event->start_time)->toDateString();
-
-        // 2) Zeiten: bevorzugt $data['start']/$data['end'], sonst Event-Zeiten
-        $startTime = $data['start'] ?? Carbon::parse($event->start_time)->format('H:i');
-        $endTime   = $data['end']   ?? Carbon::parse($event->end_time ?? $event->start_time)->format('H:i');
-
-        // 3) Kombinieren zu konkreten DateTimes auf Basis des Basisdatums
-        $start = Carbon::parse("{$baseDate} {$startTime}");
-        $end   = Carbon::parse("{$baseDate} {$endTime}");
-
-        // 4) Über-Mitternacht-Fall (Ende < Start) -> Ende +1 Tag
-        if ($end->lessThan($start)) {
-            $end->addDay();
-        }
-
-        return (object) [
-            'start' => $start->toDateString(), // start_date
-            'end'   => $end->toDateString(),   // end_date
-        ];
-    }
-
-    public function createShiftBySeriesEvent(Event $event, array $data, int $craftId): Shift|Model
-    {
-        $dates = $this->convertStartEndDate($data);
-
-        $shift = new Shift([
-            'start_date' => $dates->start,
-            'end_date' => $dates->end,
-            'start' => $data['start'],
-            'end' => $data['end'],
-            'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'],
-            'is_committed' => false,
-        ]);
-
-        $shift->event()->associate($event);
-        $shift->craft()->associate($craftId);
-
-        return $this->save($shift);
-    }
-
-    public function createShift(Event $event, Craft $craft, array $data): Shift|Model
-    {
-        $dates = $this->convertStartEndDateByEvent($event, $data);
-
-        $shift = new Shift([
-            'start_date' => $dates->start,
-            'end_date' => $dates->end,
-            'start' => $data['start'],
-            'end' => $data['end'],
-            'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'],
-        ]);
-
-        $shift->event()->associate($event);
-        $shift->craft()->associate($craft);
-
-        return $this->save($shift);
-    }
-
-    public function createShiftByRequest(array $data, Event $event): Model|Shift
-    {
-        return $this->createShift(
-            $event,
-            $this->craftService->findById($data['craft_id']),
-            $data
-        );
-    }
-
-    public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
-    {
-        //dd($event, $data);
-        $dates = $this->convertStartEndDateByEvent($event, $data);
-
-        $shift = new Shift([
-            'start_date' => $dates->start,
-            'end_date' => $dates->end,
-            'start' => Carbon::parse($data['start'])->format('H:i'),
-            'end' => Carbon::parse($data['end'])->format('H:i'),
-            'break_minutes' => $data['break_minutes'],
-            'description' => $data['description'],
-        ]);
-
-        $shift->event()->associate($event);
-        $shift->craft()->associate($craftId);
-
-        return $this->save($shift);
-    }
-
-    public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, Event $event): Shift
-    {
-        $shift = new Shift([
-            'event_id' => $event->id,
-            'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
-            'end_date' => Carbon::parse($event->end_time)->format('Y-m-d'),
-            'start' => $presetShift->start,
-            'end' => $presetShift->end,
-            'break_minutes' => $presetShift->break_minutes,
-            'craft_id' => $presetShift->craft_id,
-            'description' => $presetShift->description,
-            'is_committed' => false
-        ]);
-
-        $this->shiftRepository->save($shift);
-        return $shift;
-    }
-
     public function createShiftWithoutEventAutomatic(int $craftId, array $data, string $day): Shift|Model
     {
         $start = Carbon::parse($data['start']);
@@ -366,8 +241,10 @@ class ShiftService
             ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
 
         $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
-        $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
-        $this->notificationService->setEventId($shift->event()->first()->id);
+        // Nullsafe: Schichten ohne Event bzw. Events ohne Projekt crashten hier sonst
+        // mit "Attempt to read property on null" — und rissen das Anlegen der Schicht mit.
+        $this->notificationService->setProjectId($shift->event?->project?->id);
+        $this->notificationService->setEventId($shift->event?->id);
         $this->notificationService->setShiftId($shift->id);
         foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
             $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
@@ -380,10 +257,9 @@ class ShiftService
                 1 => [
                     'type' => 'string',
                     'title' => __('notification.keyWords.concerns') .
-                        $shift->event()->first()->project()->first()->name . ' , ' .
-                        $shift->craft()->first()->abbreviation . ' ' .
-                        Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                        ($shift->event?->project?->name ?? __('notification.shift.without_project')) . ' , ' .
+                        ($shift->craft?->abbreviation ?? '') . ' ' .
+                        $shift->time_span_label,
                     'href' => null
                 ],
             ];
@@ -452,8 +328,10 @@ class ShiftService
             return;
         }
 
-        $oldWorkTime = $oldEnd->diffInMinutes($oldStart);
-        $newWorkTime = $newEnd->diffInMinutes($newStart);
+        // Carbon 3: diffInMinutes ist vorzeichenbehaftet — Start->Ende statt
+        // Ende->Start, sonst landen negative Minuten in work_time.old/new.
+        $oldWorkTime = $oldStart->diffInMinutes($oldEnd);
+        $newWorkTime = $newStart->diffInMinutes($newEnd);
 
         $changedByUserId = Auth::id();
 
@@ -674,14 +552,19 @@ class ShiftService
 
     public function commitShiftsByDate(Carbon $startDate, Carbon $endDate, int $craftId): void
     {
-        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])->where('craft_id', $craftId)->get();
+        // orderBy: first()/last() müssen den tatsächlichen Zeitraum liefern —
+        // ohne Sortierung war der in der Notification genannte Zeitraum zufällig.
+        $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])
+            ->where('craft_id', $craftId)
+            ->orderBy('start_date')
+            ->get();
 
         if ($shifts->isEmpty()) {
             return;
         }
 
         $firstShift = $shifts->first();
-        $lastShift = $shifts->last();
+        $lastShift = $shifts->sortBy('end_date')->last();
 
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
@@ -693,7 +576,7 @@ class ShiftService
             $shift->is_committed = true;
             $shift->committing_user_id = Auth::id();
             $shift->save();
-            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->room_id ?? $shift->event->room_id));
+            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
 
             foreach ($shift->users as $user) {
                 if (!in_array($user->id, $userIdHasGetNotification)) {
@@ -706,8 +589,9 @@ class ShiftService
                             'title' => __(
                                 'notification.keyWords.concerns_time_period',
                                 [
-                                    'start' => $firstShift->start_date->format('d.m.Y H:i'),
-                                    'end' => $lastShift->end_date->format('d.m.Y H:i'),
+                                    // DATE-Spalten: H:i zeigte immer "00:00"
+                                    'start' => $firstShift->start_date->format('d.m.Y'),
+                                    'end' => $lastShift->end_date->format('d.m.Y'),
                                 ],
                                 $user->language
                             ),

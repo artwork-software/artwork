@@ -27,13 +27,7 @@ export default defineComponent({
                     name: this.$t('Inventory'),
                     href: route('inventory-management.inventory'),
                     current: route().current('inventory-management.inventory'),
-                    hasPermission: true
-                },
-                {
-                    name: this.$t('Inventory Scheduling'),
-                    href: route('inventory-management.scheduling'),
-                    current: route().current('inventory-management.scheduling'),
-                    hasPermission: true
+                    hasPermission: this.hasAdminRole() || this.$can('can manage inventory stock')
                 }
             ]
         }

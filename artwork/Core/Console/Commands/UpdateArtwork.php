@@ -51,6 +51,7 @@ class UpdateArtwork extends Command
         $this->addProjectGroupColumn();
         $this->updateServiceProviderContacts();
         $this->addInventoryArticleStatus();
+        $this->addInventoryArticleProperties();
         $this->addInventoryArticlePlanFilter();
         $this->setupPassport();
         $this->removeOldCalendarComponent();
@@ -196,6 +197,12 @@ class UpdateArtwork extends Command
     {
         $this->section('Inventory Article Status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
+    }
+
+    private function addInventoryArticleProperties(): void
+    {
+        $this->section('Inventory Article Properties');
+        $this->call('db:seed', ['--class' => 'InventoryArticlePropertiesSeeder', '--force' => true]);
     }
 
     private function addInventoryArticlePlanFilter(): void

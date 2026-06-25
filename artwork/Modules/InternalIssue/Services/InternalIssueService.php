@@ -136,7 +136,7 @@ class InternalIssueService
         ]);
 
         foreach ($issue->files as $file) {
-            Storage::delete($file->file_path);
+            Storage::disk('public')->delete($file->file_path);
             $file->delete();
         }
 
@@ -180,7 +180,7 @@ class InternalIssueService
 
     public function deleteFile(InternalIssueFile $file): void
     {
-        Storage::delete($file->file_path);
+        Storage::disk('public')->delete($file->file_path);
         $file->delete();
     }
 

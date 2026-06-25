@@ -56,16 +56,9 @@ class UserContractAssignController extends Controller
 
                 // Don't filter work time data - we need empty strings too
                 $workTimeData = collect($data)->only($workTimeFields)->all();
-                $contractData = collect($data)->except($workTimeFields)->filter()->all();
-
-                // filter() above drops false/0/null; persist the overtime toggle/period explicitly
-                // so that disabling the rule (false) and clearing the period actually save.
-                if ($request->has('overtime_rule_active')) {
-                    $contractData['overtime_rule_active'] = $request->boolean('overtime_rule_active');
-                }
-                if ($request->exists('overtime_compensation_period')) {
-                    $contractData['overtime_compensation_period'] = $request->input('overtime_compensation_period');
-                }
+                // Kein ->filter(): false/0/null sind gueltige Werte (Regel deaktivieren,
+                // Vertrag entfernen via user_contract_id = null, Felder auf 0 setzen).
+                $contractData = collect($data)->except($workTimeFields)->all();
 
                 // Update or create user contract if there's contract data
                 if (!empty($contractData)) {

@@ -5,10 +5,11 @@
                 <div class="grid grid-cols-2 w-full gap-4">
                     <BaseUIButton
                         v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
-                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name]) + (shouldShowAbbreviation(availableShiftQualificationSlot) && availableShiftQualificationSlot.pivot?.craft_id ? ' [' + getCraftAbbreviation(availableShiftQualificationSlot.pivot.craft_id) + ']' : '')"
-                        @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id)"
+                        :label="$t('Use as {0}', [availableShiftQualificationSlot.name]) + (shouldShowAbbreviation(availableShiftQualificationSlot) && availableShiftQualificationSlot.pivot?.craft_id ? ' [' + getCraftAbbreviation(availableShiftQualificationSlot.pivot.craft_id) + ']' : '') + (availableShiftQualificationSlot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
+                        @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id, false, !!availableShiftQualificationSlot.isOverbooked)"
                         :icon="availableShiftQualificationSlot.icon"
                         is-add-button
+                        :class="{ '!border-amber-500 !border-dashed': availableShiftQualificationSlot.isOverbooked }"
                     />
                 </div>
             </div>
@@ -73,8 +74,8 @@ export default defineComponent({
             const craft = crafts.find(c => c.id === craftId);
             return craft ? craft.abbreviation : '';
         },
-        close(event, droppedUser = null, shiftQualificationId = null, closeOnButton = false) {
-            this.$emit('close', droppedUser, shiftQualificationId, closeOnButton);
+        close(event, droppedUser = null, shiftQualificationId = null, closeOnButton = false, isOverbooked = false) {
+            this.$emit('close', droppedUser, shiftQualificationId, closeOnButton, isOverbooked);
         }
     }
 });

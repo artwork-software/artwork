@@ -84,7 +84,7 @@ class EventDTOWithVerifications extends Data
                 null,
             allDay: $event->allDay,
             roomId: $event->room_id,
-            roomName: $event->room->name,
+            roomName: $event->room?->name,
             startHour: $event->getAttribute('start_hour') ?? 0,
             minutesFormStartHourToStart: $event->getAttribute('minutes_form_start_hour_to_start') ?? 0,
             eventLengthInHours: $event->getAttribute('event_length_in_hours') ?? 0,

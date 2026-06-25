@@ -54,6 +54,7 @@ readonly class ShiftListViewSerializer
                 'shift_id' => $sq->shift_id,
                 'shift_qualification_id' => $sq->shift_qualification_id,
                 'value' => $sq->value,
+                'overbooked_value' => $sq->overbooked_value,
             ])->values()->all(),
             'globalQualifications' => $shift->globalQualifications->map(fn ($gq) => [
                 'id' => $gq->id,
@@ -77,6 +78,7 @@ readonly class ShiftListViewSerializer
                 'type' => $type,
                 'pivot' => $worker->pivot ? [
                     'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
+                    'is_overbooked' => (bool) ($worker->pivot->is_overbooked ?? false),
                 ] : null,
             ];
 

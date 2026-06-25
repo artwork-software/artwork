@@ -115,8 +115,18 @@
             </div>
 
         </div>
-        <!-- Header + Events (horizontal scroll container) -->
-        <div ref="bulkScrollContainer" class="overflow-x-auto w-full" @scroll="onMainScroll">
+        <!-- Header + Events (horizontal scroll container)
+             Nicht-Modal: feste Maximalhöhe → dieser Container wird zum echten vertikalen
+             Scroll-Parent. Das ist nötig, weil der DynamicScroller (page-mode) seinen
+             Scroll-Listener an den ersten scrollbaren Vorfahren hängt; ohne eigene Scrollhöhe
+             würde er an diesen overflow-x-Container binden, der vertikal aber nie scrollt
+             (das Dokument scrollt) → virtualisierte Zeilen würden beim Scrollen nicht
+             nachgeladen. Header und Zeilen bleiben so im selben Container horizontal synchron. -->
+        <div ref="bulkScrollContainer"
+             class="overflow-x-auto w-full"
+             :class="isInModal ? '' : 'overflow-y-auto'"
+             :style="isInModal ? '' : 'max-height: calc(100vh - var(--project-header-height, 130px) - var(--bulk-function-bar-height, 60px) - 32px)'"
+             @scroll="onMainScroll">
             <div class="w-fit mx-auto">
                 <!-- Function bar (sticky unter ProjectHeader) -->
                 <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
@@ -164,57 +174,81 @@
                         </div>
                     </div>
                 </div>
-                <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
-                    <div v-if="sortedEvents.length > 0 && showEvents">
-                        <!-- Render events by groups -->
-                        <div v-for="(group, groupIndex) in getEventGroups()" :key="group.key" class="mb-6">
+                <div :class="isInModal ? 'min-h-96 w-max' : ''">
+                    <!--
+                        A: Virtualisierte Event-Liste. Statt aller (sehr schweren) BulkSingleEvent-
+                        Komponenten wird nur die sichtbare Teilmenge gerendert. Gruppen-Divider,
+                        Events und "Hinzufügen"-Buttons sind zu einer flachen Zeilenliste (flatRows)
+                        zusammengeführt, damit der DynamicScroller sie einheitlich virtualisieren kann.
+                    -->
+                    <DynamicScroller
+                        v-if="flatRows.length > 0 && showEvents"
+                        :items="flatRows"
+                        :min-item-size="64"
+                        key-field="id"
+                        :page-mode="!isInModal"
+                        :style="isInModal ? 'height: 384px' : ''"
+                        :class="isInModal ? 'overflow-y-auto' : ''"
+                        v-slot="{ item, index, active }"
+                    >
+                        <DynamicScrollerItem
+                            :item="item"
+                            :active="active"
+                            :data-index="index"
+                            :size-dependencies="[
+                                item.kind,
+                                multiEdit,
+                                timeArray,
+                                showEndDate,
+                                showDescriptionInBulk,
+                                item.event ? item.event.description : null,
+                                item.event ? item.event.name : null,
+                            ]"
+                        >
                             <!-- Group Divider -->
                             <DividerChip
-                                v-if="group.label && usePage().props.auth.user.bulk_sort_id !== 0"
+                                v-if="item.kind === 'divider'"
                                 class="mb-6"
                                 :class="usePage().props.auth.user.bulk_sort_id === 3 ? 'cursor-pointer' : ''"
                                 variant="brand"
-                                :label="group.label"
-                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(group.key, $event) : null"
+                                :label="item.group.label"
+                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(item.group.key, $event) : null"
                             />
 
-                            <!-- Events in this group -->
-                            <div v-for="(event, eventIndex) in group.events"
-                                 :key="`event-${event.id}`" class="mb-2">
-                                <div :id="eventIndex" class="mx-1">
-                                    <BulkSingleEvent
-                                        :can-edit-component="canEditComponent && hasCreateEventsPermission"
-                                        :rooms="rooms"
-                                        :event_types="eventTypes"
-                                        :time-array="timeArray"
-                                        :event="event"
-                                        :copy-types="copyTypes"
-                                        :index="eventIndex"
-                                        :is-in-modal="isInModal"
-                                        @open-event-component="onOpenEventComponent"
-                                        @edit-event="onOpenEventComponent"
-                                        @delete-current-event="deleteCurrentEvent"
-                                        @create-copy-by-event-with-data="createCopyByEventWithData"
-                                        :event-statuses="eventStatuses"
-                                        :multi-edit="multiEdit"
-                                        :has-permission="hasCreateEventsPermission"
-                                        :last-edit-event-ids="lastEditEventIds"
-                                        :show-end-date="showEndDate"
-                                    />
-                                </div>
+                            <!-- Single Event -->
+                            <div v-else-if="item.kind === 'event'" :id="item.eventIndex" class="mx-1 mb-2">
+                                <BulkSingleEvent
+                                    :can-edit-component="canEditComponent && hasCreateEventsPermission"
+                                    :rooms="rooms"
+                                    :event_types="eventTypes"
+                                    :time-array="timeArray"
+                                    :event="item.event"
+                                    :copy-types="copyTypes"
+                                    :index="item.eventIndex"
+                                    :is-in-modal="isInModal"
+                                    @open-event-component="onOpenEventComponent"
+                                    @edit-event="onOpenEventComponent"
+                                    @delete-current-event="deleteCurrentEvent"
+                                    @create-copy-by-event-with-data="createCopyByEventWithData"
+                                    :event-statuses="eventStatuses"
+                                    :multi-edit="multiEdit"
+                                    :has-permission="hasCreateEventsPermission"
+                                    :last-edit-event-ids="lastEditEventIds"
+                                    :show-end-date="showEndDate"
+                                />
                             </div>
 
                             <!-- Add Event Button for this group -->
-                            <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit"
-                                 class="flex justify-center mt-4 mb-2">
+                            <div v-else-if="item.kind === 'add'"
+                                 class="flex justify-center mt-4 mb-6">
                                 <IconCirclePlus
-                                    @click="addEmptyEventForGroup(group)"
+                                    @click="addEmptyEventForGroup(item.group)"
                                     class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                     stroke-width="2"
                                 />
                             </div>
-                        </div>
-                    </div>
+                        </DynamicScrollerItem>
+                    </DynamicScroller>
 
                     <div v-else class="flex items-center h-24 print:hidden">
                         <AlertComponent
@@ -283,7 +317,7 @@
                             {{ $t('Multi-Edit') }}
                           </span>
                             <span class="text-sm text-zinc-600 dark:text-zinc-300 truncate">
-                                {{ getEventIdsWhereSelectedForMultiEdit().length }} {{ $t('selected') }}
+                                {{ selectedMultiEditIds.length }} {{ $t('selected') }}
                             </span>
                         </div>
 
@@ -291,11 +325,11 @@
                         <div class="flex items-center gap-2 sm:gap-3">
                             <BaseUIButton :label="$t('Edit')" is-add-button
                                           @click="hasCreateEventsPermission ? openMultiEditModal() : null"
-                                          :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
+                                          :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
                             />
                             <BaseUIButton :label="$t('Delete')" is-delete-button
                                           @click="hasCreateEventsPermission ? (showConfirmDeleteModal = true) : null"
-                                          :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
+                                          :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
                             />
                         </div>
                     </div>
@@ -390,6 +424,8 @@ import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEven
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
 
 const exportTabEnums = useExportTabEnums();
@@ -495,6 +531,9 @@ const storeFocus = (id, type = null) => {
 provide('focusRegistry', focusRegistry);
 provide('storeFocusGlobal', storeFocus);
 provide('event_properties', props.event_properties);
+// B: Multi-Edit-Status zentral bereitstellen, statt ihn als Prop durch jede (virtualisierte)
+// Event-Zeile zu reichen. Reduziert Prop-Drilling und Re-Render-Aufwand beim Umschalten.
+provide('bulkMultiEdit', multiEdit);
 
 // Show description inline toggle
 const showDescriptionInBulk = ref(usePage().props.auth.user.show_description_in_bulk ?? false);
@@ -515,7 +554,7 @@ const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
 });
 
 // Group events by current sorting criteria
-const getEventGroups = () => {
+const eventGroups = computed(() => {
     const groups = [];
     const sortId = usePage().props.auth.user?.bulk_sort_id;
 
@@ -590,7 +629,32 @@ const getEventGroups = () => {
     }
 
     return groups;
-};
+});
+
+// Flache Zeilenliste für die Virtualisierung (DynamicScroller).
+// Jede Zeile ist entweder ein Gruppen-Divider, ein Event oder ein "Event hinzufügen"-Button.
+// Dadurch wird nur die sichtbare Teilmenge der (sehr schweren) BulkSingleEvent-Komponenten gerendert.
+const flatRows = computed(() => {
+    const rows = [];
+    const sortId = usePage().props.auth.user?.bulk_sort_id;
+    const showAddButtons = props.canEditComponent && hasCreateEventsPermission.value && !multiEdit.value;
+
+    eventGroups.value.forEach((group) => {
+        if (group.label && sortId !== 0 && sortId) {
+            rows.push({id: `divider-${group.key}`, kind: 'divider', group});
+        }
+
+        group.events.forEach((event, eventIndex) => {
+            rows.push({id: `event-${event.id}`, kind: 'event', event, eventIndex, group});
+        });
+
+        if (showAddButtons) {
+            rows.push({id: `add-${group.key}`, kind: 'add', group});
+        }
+    });
+
+    return rows;
+});
 
 // Nur bei Sortierung nach Tag (3) lokal sortieren – sonst Server-Reihenfolge belassen.
 const sortedEvents = computed(() => {
@@ -655,8 +719,8 @@ const sortedEvents = computed(() => {
     return list;
 });
 
-const getEventIdsWhereSelectedForMultiEdit = () =>
-    events.value.filter(e => e.isSelectedForMultiEdit).map(e => e.id);
+const selectedMultiEditIds = computed(() =>
+    events.value.filter(e => e.isSelectedForMultiEdit).map(e => e.id));
 
 // --- Actions
 const UpdateMultiEditEmits = (value) => {
@@ -978,7 +1042,7 @@ const updateUserSortId = (id) => {
 
 const deleteSelectedEvents = () => {
     isLoading.value = true;
-    const selectedIds = getEventIdsWhereSelectedForMultiEdit();
+    const selectedIds = selectedMultiEditIds.value;
 
     axios.delete(route('event.bulk.multi-edit.delete'), {
         data: {eventIds: selectedIds}
@@ -998,7 +1062,7 @@ const deleteSelectedEvents = () => {
 };
 
 const openMultiEditModal = () => {
-    eventIdsForMultiEdit.value = getEventIdsWhereSelectedForMultiEdit();
+    eventIdsForMultiEdit.value = selectedMultiEditIds.value;
     showMultiEditModal.value = true;
 };
 
@@ -1204,6 +1268,12 @@ watch(isPlanningEvent, (newValue) => {
     localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
 });
 
+// Virtualisierte Zeilen mounten asynchron – Sticky-Scrollbar-Breite neu vermessen,
+// sobald sich die Zeilenanzahl ändert (initial laden, filtern, Multi-Edit umschalten).
+watch(() => flatRows.value.length, () => {
+    requestAnimationFrame(updateStickyScrollbar);
+});
+
 // --- Sticky scrollbar logic ---
 const onMainScroll = () => {
     if (isSyncingScroll) return;
@@ -1254,3 +1324,17 @@ const onScrollOrResize = () => {
     stickyScrollRAF = requestAnimationFrame(updateStickyScrollbar);
 };
 </script>
+
+<style scoped>
+/*
+  vue-virtual-scroller setzt .vue-recycle-scroller__item-wrapper auf overflow:hidden und
+  fixiert die item-views auf width:100% (= sichtbare Viewport-Breite). Die Bulk-Zeilen sind
+  jedoch breiter als der Viewport (horizontaler Scroll über den äußeren Container). Dadurch
+  wurden die rechtsbündigen Spalten – Notiz-Icon und das Aktions-/Kontextmenü – abgeschnitten.
+  overflow:visible gibt den überstehenden Zeileninhalt wieder frei; der horizontale Scroll
+  des äußeren Containers macht ihn weiterhin erreichbar und hält ihn mit dem Header synchron.
+*/
+:deep(.vue-recycle-scroller__item-wrapper) {
+    overflow: visible;
+}
+</style>

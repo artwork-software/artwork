@@ -190,6 +190,11 @@ class ContractService
             $this->notificationService->createNotification();
         }
 
+        // Verwaiste Datei vermeiden: die Vertragsdatei wird beim endgültigen Löschen mit entfernt.
+        if ($contract->basename) {
+            Storage::delete('contracts/' . $contract->basename);
+        }
+
         $contract->forceDelete();
     }
 

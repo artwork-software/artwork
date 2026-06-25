@@ -594,13 +594,20 @@ const createPdf = () => {
         pdf.project = pdfSelectedProject.value.id
     }
 
-    // Convert date (YYYY-MM-DD) to month (YYYY-MM) for backend
-    if (pdf.startMonth && pdf.startMonth.length > 7) {
-        pdf.startMonth = pdf.startMonth.substring(0, 7)
+    // Auf YYYY-MM normalisieren – Browser ohne date-Input-Support liefern auch
+    // Freitext wie "10.2025" oder "15.10.2025" (war Ursache eines Prod-500ers)
+    const toYearMonth = (value: string | null): string | null => {
+        if (!value) return null
+        const iso = value.match(/^(\d{4})-(\d{2})/)
+        if (iso) return `${iso[1]}-${iso[2]}`
+        const monthYear = value.match(/^(\d{1,2})\.(\d{4})$/)
+        if (monthYear) return `${monthYear[2]}-${monthYear[1].padStart(2, '0')}`
+        const dayMonthYear = value.match(/^\d{1,2}\.(\d{1,2})\.(\d{4})$/)
+        if (dayMonthYear) return `${dayMonthYear[2]}-${dayMonthYear[1].padStart(2, '0')}`
+        return null
     }
-    if (pdf.endMonth && pdf.endMonth.length > 7) {
-        pdf.endMonth = pdf.endMonth.substring(0, 7)
-    }
+    pdf.startMonth = toYearMonth(pdf.startMonth)
+    pdf.endMonth = toYearMonth(pdf.endMonth)
 
     const data: Record<string, number[] | null> = {};
 

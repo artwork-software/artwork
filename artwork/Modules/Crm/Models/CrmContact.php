@@ -38,6 +38,18 @@ class CrmContact extends Model
         'profile_photo_url',
     ];
 
+    protected static function booted(): void
+    {
+        // Beim (Soft-)Löschen eines Kontakts offene externe Zugänge widerrufen –
+        // die DB-Cascade auf external_accesses feuert bei Soft-Delete NICHT, sonst
+        // könnte sich ein extern eingeladener, "gelöschter" Kontakt weiter einloggen.
+        static::deleting(function (CrmContact $contact): void {
+            $contact->externalAccesses()
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
+        });
+    }
+
     public function entity(): MorphTo
     {
         return $this->morphTo('entity');

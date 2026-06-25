@@ -69,6 +69,7 @@ class ShiftDTO extends Data
             'shift_id' => $sq->shift_id,
             'shift_qualification_id' => $sq->shift_qualification_id,
             'value' => $sq->value,
+            'overbooked_value' => $sq->overbooked_value,
         ])->values()->all();
     }
 
@@ -92,6 +93,7 @@ class ShiftDTO extends Data
                     'pivot' => $worker->pivot ? [
                         'id' => $worker->pivot->id ?? null,
                         'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
+                        'is_overbooked' => (bool) ($worker->pivot->is_overbooked ?? false),
                         'craft_abbreviation' => $worker->pivot->craft_abbreviation ?? null,
                         'short_description' => $worker->pivot->short_description ?? null,
                         'start_time' => $worker->pivot->start_time ?? null,

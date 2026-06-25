@@ -46,11 +46,12 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-3">
                     <BaseUIButton
                         v-for="slot in currentShiftToAssign?.availableSlots || []"
-                        :key="slot.id"
-                        :label="$t('Insert as {0}', [slot.name])"
+                        :key="`${slot.id}-${slot.isOverbooked ? 'overbooked' : 'regular'}`"
+                        :label="$t('Insert as {0}', [slot.name]) + (slot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
                         :icon="slot.icon"
                         is-add-button
-                        @click="handleShift(currentShiftToAssign!.shift.id, slot.id)"
+                        :class="{ '!border-amber-500 !border-dashed': slot.isOverbooked }"
+                        @click="handleShift(currentShiftToAssign!.shift.id, slot.id, !!slot.isOverbooked)"
                     />
                 </div>
 
@@ -101,6 +102,7 @@ type AvailableSlot = {
     id: number
     name: string
     icon?: string
+    isOverbooked?: boolean
 }
 
 type ShiftToAssign = {
@@ -120,7 +122,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    (e: 'close', closedForAssignment: boolean, shiftsToAssign: { shiftId: number; shiftQualificationId?: number }[]): void
+    (e: 'close', closedForAssignment: boolean, shiftsToAssign: { shiftId: number; shiftQualificationId?: number; isOverbooked?: boolean }[]): void
 }>()
 
 const { resolveCraft } = useShiftPlanLookups();
@@ -128,7 +130,7 @@ const { resolveCraft } = useShiftPlanLookups();
 // --- State ---
 const state = reactive({
     currentShiftToAssignIndex: 0,
-    shiftsToAssign: [] as { shiftId: number; shiftQualificationId?: number }[],
+    shiftsToAssign: [] as { shiftId: number; shiftQualificationId?: number; isOverbooked?: boolean }[],
 })
 
 // --- Computed ---
@@ -155,8 +157,8 @@ const nextShift = () => {
     }
 }
 
-const handleShift = (shiftId: number, shiftQualificationId: number) => {
-    state.shiftsToAssign.push({ shiftId, shiftQualificationId })
+const handleShift = (shiftId: number, shiftQualificationId: number, isOverbooked: boolean = false) => {
+    state.shiftsToAssign.push({ shiftId, shiftQualificationId, isOverbooked })
     if (isLastShiftToAssign()) {
         close(true)
         return

@@ -82,6 +82,12 @@ readonly class CrmContactTypeService
             throw new \RuntimeException('System contact types cannot be deleted.');
         }
 
+        // Verhindert verwaiste/unsichtbare Kontakte: ein Typ mit zugeordneten Kontakten
+        // darf nicht (soft-)gelöscht werden, sonst verschwinden die Kontakte aus der UI.
+        if ($type->contacts()->exists()) {
+            throw new \RuntimeException('Contact types with assigned contacts cannot be deleted.');
+        }
+
         $this->repository->delete($type);
     }
 }

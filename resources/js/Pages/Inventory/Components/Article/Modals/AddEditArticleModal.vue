@@ -196,6 +196,7 @@
                             :max="10000000"
                             :maxlength="1000000"
                             required
+                            :disabled="detailedAlwaysOne && articleForm.is_detailed_quantity"
                             @focusout="onFieldSave('quantity', articleForm.quantity)"
                         />
                         <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
@@ -1643,7 +1644,7 @@ const copyDetailedArticle = (d) => {
     const copiedProps = d.properties.map(p => ({...p, value: p.individual_value ? '' : p.value}))
     const newItem = {
         _key: uid(),
-        name: d.name + ' (Copy)',
+        name: d.name,
         description: d.description,
         quantity: detailedAlwaysOne.value ? 1 : (d.quantity ?? 0),
         properties: copiedProps,

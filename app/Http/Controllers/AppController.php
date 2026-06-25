@@ -188,6 +188,11 @@ class AppController extends Controller
         GeneralSettings $settings,
         StatefulGuard $guard
     ): Redirector|Application|RedirectResponse {
+        // Account-Takeover-Schutz: nach abgeschlossenem Setup darf hier kein weiterer
+        // Admin mehr anonym angelegt werden (der GET-Handler leitet bereits um, der POST
+        // war bislang ungeschützt).
+        abort_if($settings->setup_finished, 403);
+
         /** @var User $user */
         $user = User::create($request->userData());
 

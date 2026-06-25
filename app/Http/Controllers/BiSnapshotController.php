@@ -34,11 +34,16 @@ class BiSnapshotController extends Controller
 
     public function show(Project $project, BiSnapshot $biSnapshot): JsonResponse
     {
+        // IDOR-Schutz: Snapshot muss zum Projekt aus der URL gehören.
+        abort_unless((int) $biSnapshot->project_id === (int) $project->id, 404);
+
         return response()->json($biSnapshot->load('creator'));
     }
 
     public function destroy(Project $project, BiSnapshot $biSnapshot): JsonResponse
     {
+        abort_unless((int) $biSnapshot->project_id === (int) $project->id, 404);
+
         $this->biSnapshotService->delete($biSnapshot);
 
         return response()->json(null, 204);

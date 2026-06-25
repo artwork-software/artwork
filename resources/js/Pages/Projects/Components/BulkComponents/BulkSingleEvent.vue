@@ -6,7 +6,7 @@
                 event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
                 lastEditEventIds.includes(event.id)
                   ? 'outline-2 outline-blue-400/60 outline-dashed' : '',
-                (event.isSelectedForMultiEdit && multiEdit) ? 'ring-2 ring-emerald-400/40' : ''
+                (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-emerald-400/40' : ''
               ]"
         >
             <div
@@ -15,13 +15,13 @@
                 aria-hidden="true"
             />
             <div
-                v-if="event.isSelectedForMultiEdit && multiEdit"
+                v-if="event.isSelectedForMultiEdit && effectiveMultiEdit"
                 class="absolute inset-0 bg-emerald-400/10 pointer-events-none"
                 aria-hidden="true"
             />
 
             <!-- Checkbox bei Multi-Edit -->
-            <div class="flex items-center justify-center pr-2 pl-1" v-if="multiEdit">
+            <div class="flex items-center justify-center pr-2 pl-1" v-if="effectiveMultiEdit">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1" :class="event.isSelectedForMultiEdit ? '' : ''" >
@@ -422,6 +422,9 @@ const SearchTimelinePresetModal = defineAsyncComponent({
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
+// B: Multi-Edit-Status zentral injizieren (siehe BulkBody provide('bulkMultiEdit', ...)).
+// Fallback auf die Prop, falls die Komponente ohne Provider verwendet wird.
+const injectedMultiEdit = inject('bulkMultiEdit', null);
 const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
@@ -442,6 +445,9 @@ const props = defineProps({
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent', 'editEvent']);
 const openEventComponent = (payload) => emit('openEventComponent', payload);
+
+// B: Bevorzugt den zentral bereitgestellten Multi-Edit-Status, sonst die Prop.
+const effectiveMultiEdit = computed(() => injectedMultiEdit ? injectedMultiEdit.value : props.multiEdit);
 
 const showMenu = ref(false);
 const dayString = ref(null);

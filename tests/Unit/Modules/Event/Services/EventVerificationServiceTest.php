@@ -31,6 +31,12 @@ final class EventVerificationServiceTest extends TestCase
             $mock->shouldReceive('setDescription')->andReturnSelf();
             $mock->shouldReceive('setNotificationTo')->andReturnSelf();
             $mock->shouldReceive('createNotification')->andReturnNull();
+            $mock->shouldReceive('setEventId')->andReturnSelf();
+            $mock->shouldReceive('setRoomId')->andReturnSelf();
+            $mock->shouldReceive('setButtons')->andReturnSelf();
+            $mock->shouldReceive('setNotificationKey')->andReturnSelf();
+            $mock->shouldReceive('updateExistingRoomRequestNotification')->andReturnFalse();
+            $mock->shouldReceive('deleteUnhandledRoomRequestNotificationsByEventId')->andReturnNull();
         });
         $this->service = app(EventVerificationService::class);
     }
@@ -150,7 +156,32 @@ final class EventVerificationServiceTest extends TestCase
 
         $fresh = $event->fresh();
         $this->assertFalse((bool) $fresh->is_planning);
-        $this->assertFalse((bool) $fresh->occupancy_option);
+        // Die Raumanfrage bleibt bestehen und geht erst jetzt an die Raumadmins raus
+        $this->assertTrue((bool) $fresh->occupancy_option);
+    }
+
+    #[Test]
+    public function confirming_a_planned_room_request_notifies_room_admins(): void
+    {
+        $user = User::factory()->create();
+        $roomAdmin = User::factory()->create();
+        $eventType = EventType::factory()->create(['verification_mode' => 'none']);
+        $event = Event::factory()->create([
+            'user_id' => $user->id,
+            'is_planning' => true,
+            'occupancy_option' => true,
+            'event_type_id' => $eventType->id,
+        ]);
+        $event->room->users()->attach($roomAdmin->id, ['is_admin' => true]);
+
+        $this->mock(NotificationService::class, function ($mock): void {
+            $mock->shouldIgnoreMissing($mock);
+            $mock->shouldReceive('updateExistingRoomRequestNotification')->andReturnFalse();
+            $mock->shouldReceive('createNotification')->atLeast()->once();
+        });
+        $service = app(EventVerificationService::class);
+
+        $service->requestVerification($event->fresh(), $user);
     }
 
     #[Test]

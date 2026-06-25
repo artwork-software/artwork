@@ -105,6 +105,12 @@ class BiProjectMetricsService
                     return false;
                 }
 
+                // start_time ist nullable; ohne Datumsbezug aus Datumsfiltern ausschließen
+                // (sonst Null-Deref bei gesetztem $from/$to).
+                if (($from || $to) && !$event->start_time) {
+                    return false;
+                }
+
                 if ($from && $event->start_time->lt($from->copy()->startOfDay())) {
                     return false;
                 }

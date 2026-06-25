@@ -34,6 +34,7 @@ enum ProjectTabComponentEnum: string
     case GENERAL_SHIFT_INFORMATION = 'GeneralShiftInformationComponent';
     case BUDGET = 'BudgetTab';
     case PROJECT_BUDGET_DEADLINE = 'ProjectBudgetDeadlineComponent';
+    case PROJECT_PERIOD = 'ProjectPeriodComponent';
     case COMMENT_TAB = 'CommentTab';
     case COMMENT_ALL_TAB = 'CommentAllTab';
     case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';

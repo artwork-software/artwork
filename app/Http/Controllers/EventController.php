@@ -2093,7 +2093,7 @@ class EventController extends Controller
             foreach ($event->project->users->all() as $eventUser) {
                 $this->schedulingService->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
-        } else {
+        } elseif ($event->creator) {
             $this->schedulingService->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
@@ -3111,6 +3111,7 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function updateSeriesEvents(Event $event, Request $request): void
     {
+        $this->authorize('update', $event);
         if (!$event->is_series || !$event->series_id) {
             return;
         }
@@ -3569,6 +3570,7 @@ class EventController extends Controller
             if ($event === null) {
                 continue;
             }
+            $this->authorize('update', $event);
 
             $desiredRoomIds[] = $event->getAttribute('room_id');
 
@@ -3748,6 +3750,7 @@ class EventController extends Controller
             if ($originalEvent === null) {
                 continue;
             }
+            $this->authorize('update', $originalEvent);
 
             $duplicatedEvent = $originalEvent->replicate();
             $duplicatedEvent->series_id = null;

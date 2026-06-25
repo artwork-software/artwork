@@ -10,7 +10,7 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 
 class MoneySourceCalculationService
 {
-    public function getPositionSumOfOneMoneySource(MoneySource $moneySource): int
+    public function getPositionSumOfOneMoneySource(MoneySource $moneySource): float
     {
         $positionSum = 0;
 
@@ -29,7 +29,7 @@ class MoneySourceCalculationService
         return $positionSum;
     }
 
-    private function calculateColumnCellLinkedSum(MoneySource $moneySource): int
+    private function calculateColumnCellLinkedSum(MoneySource $moneySource): float
     {
         $columnCells = ColumnCell::query()
             ->where('linked_money_source_id', $moneySource->id)
@@ -50,7 +50,7 @@ class MoneySourceCalculationService
         return $columnCellsLinkedSum;
     }
 
-    private function calculateBudgetSumDetailsLinkedSum(MoneySource $moneySource): int
+    private function calculateBudgetSumDetailsLinkedSum(MoneySource $moneySource): float
     {
         $budgetSumDetails = BudgetSumDetails::query()
             ->with('column.table.project', 'sumMoneySource')
@@ -60,18 +60,30 @@ class MoneySourceCalculationService
         $budgetSumDetailsLinkedSum = 0;
 
         foreach ($budgetSumDetails as $budgetSumDetail) {
-            foreach ($budgetSumDetail->column->table->costSums as $costSum) {
-                $budgetSumDetailsLinkedSum -= $costSum;
+            // Nur die verknüpfte Spalte zählt, und das Vorzeichen richtet sich nach linked_type
+            // (siehe Referenz-Logik in MoneySourceController). Vorher wurden ALLE Spalten der
+            // Tabelle summiert und linked_type ignoriert -> falsche Restbudgets/Schwellenwarnungen.
+            $linkedType = $budgetSumDetail->sumMoneySource->linked_type ?? null;
+
+            foreach ($budgetSumDetail->column->table->costSums as $columnId => $costSum) {
+                if ($columnId !== $budgetSumDetail->column_id || $budgetSumDetail->type !== 'COST') {
+                    continue;
+                }
+                $budgetSumDetailsLinkedSum += $linkedType === 'EARNING' ? $costSum : -$costSum;
             }
-            foreach ($budgetSumDetail->column->table->earningSums as $earningSum) {
-                $budgetSumDetailsLinkedSum += $earningSum;
+
+            foreach ($budgetSumDetail->column->table->earningSums as $columnId => $earningSum) {
+                if ($columnId !== $budgetSumDetail->column_id || $budgetSumDetail->type !== 'EARNING') {
+                    continue;
+                }
+                $budgetSumDetailsLinkedSum += $linkedType === 'EARNING' ? $earningSum : -$earningSum;
             }
         }
 
         return $budgetSumDetailsLinkedSum;
     }
 
-    private function calculateSubPositionSumDetailsLinkedSum(MoneySource $moneySource): int
+    private function calculateSubPositionSumDetailsLinkedSum(MoneySource $moneySource): float
     {
         $subPositionSumDetails = SubPositionSumDetail::query()
             ->with('subPosition.mainPosition.table.project', 'sumMoneySource')
@@ -93,7 +105,7 @@ class MoneySourceCalculationService
         return $subPositionSumDetailsLinkedSum;
     }
 
-    private function calculateMainPositionDetailsLinkedSum(MoneySource $moneySource): int
+    private function calculateMainPositionDetailsLinkedSum(MoneySource $moneySource): float
     {
         $mainPositionDetails = MainPositionDetails::query()
             ->with('mainPosition.table.project', 'sumMoneySource')

@@ -47,7 +47,7 @@ class Sage100Client implements SageClient
         try {
             return $client
                 ->get($this->endpoint, $query)
-                ->json('$resources');
+                ->json('$resources') ?? [];
         } catch (\Throwable $t) {
             report($t);
             return [];

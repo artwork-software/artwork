@@ -37,6 +37,12 @@ class ContractPolicy
 
     private function hasAccess(User $user, Contract $contract): bool
     {
+        // Ersteller behält Zugriff (die Vertragsliste zeigt eigene Verträge via creator_id;
+        // ohne diese Prüfung bekäme der Ersteller einen 403 auf seinen eigenen Vertrag).
+        if ((int) $contract->creator_id === (int) $user->id) {
+            return true;
+        }
+
         // Check if user has direct access
         if ($contract->accessingUsers->contains($user->id)) {
             return true;

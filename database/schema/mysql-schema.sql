@@ -9771,7 +9771,7 @@ CREATE TABLE `users` (
                          `opened_checklists` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`opened_checklists`)),
                          `opened_areas` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`opened_areas`)),
                          `remember_token` varchar(100) DEFAULT NULL,
-                         `bulk_column_size` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '{"1":146,"2":146,"3":146,"4":146,"5":146,"6":308}' CHECK (json_valid(`bulk_column_size`)),
+                         `bulk_column_size` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '{"1":146,"2":146,"3":146,"4":146,"5":146,"6":150}' CHECK (json_valid(`bulk_column_size`)),
                          `show_description_in_bulk` tinyint(1) NOT NULL DEFAULT 0,
                          `show_project_team_names` tinyint(1) NOT NULL DEFAULT 0,
                          `checklist_style` varchar(255) NOT NULL DEFAULT 'list',

@@ -91,6 +91,13 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         ModuleSettings::class => ModuleSettingsPolicy::class,
         ExternalAccess::class => ExternalAccessPolicy::class,
+        \Artwork\Modules\Chat\Models\Chat::class => \Artwork\Modules\Chat\Policies\ChatPolicy::class,
+        \Artwork\Modules\Vacation\Models\Vacation::class =>
+            \Artwork\Modules\Vacation\Policies\VacationPolicy::class,
+        \Artwork\Modules\IndividualTimes\Models\IndividualTime::class =>
+            \Artwork\Modules\IndividualTimes\Policies\IndividualTimePolicy::class,
+        \Artwork\Modules\Availability\Models\Availability::class =>
+            \Artwork\Modules\Availability\Policies\AvailabilityPolicy::class,
     ];
 
     public function boot(): void

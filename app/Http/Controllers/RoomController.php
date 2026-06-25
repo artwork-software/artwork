@@ -308,8 +308,12 @@ class RoomController extends Controller
     public function collisionsCount(Request $request): array
     {
         $params = $request->get('params');
-        $startDate = Carbon::parse($params['start'])->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($params['end'])->setTimezone(config('app.timezone'));
+        try {
+            $startDate = Carbon::parse($params['start'] ?? null)->setTimezone(config('app.timezone'));
+            $endDate = Carbon::parse($params['end'] ?? null)->setTimezone(config('app.timezone'));
+        } catch (\Throwable $e) {
+            abort(422, 'Invalid date parameters.');
+        }
         $currentEventId = $params['currentEventId'] ?? null;
 
         $collisions = [];

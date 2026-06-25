@@ -105,7 +105,7 @@ readonly class VacationConflictService
                         $this->create([
                             'vacation_id' => $vacation->id,
                             'shift_id' => $shift->id,
-                            'user_name' => $shiftCommittedBy->full_name,
+                            'user_name' => $shiftCommittedBy?->full_name,
                             'date' => $shift?->event_start_day ?? $shift->start_date,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
@@ -125,7 +125,7 @@ readonly class VacationConflictService
                             $conflict = $this->create([
                                 'vacation_id' => $vacation->id,
                                 'shift_id' => $shift->id,
-                                'user_name' => $shiftCommittedBy->full_name,
+                                'user_name' => $shiftCommittedBy?->full_name,
                                 'date' => $shift?->event_start_day ?? $shift->start_date,
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,

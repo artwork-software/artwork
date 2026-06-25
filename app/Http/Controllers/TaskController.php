@@ -186,7 +186,7 @@ class TaskController extends Controller
         /** @var Checklist $checklist */
         $checklist = $task->checklist()->first();
 
-        if ($checklist->hasProject()) {
+        if ($checklist && $checklist->hasProject()) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()

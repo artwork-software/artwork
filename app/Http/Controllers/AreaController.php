@@ -62,7 +62,7 @@ class AreaController extends Controller
 
     public function destroy(Area $area): RedirectResponse
     {
-        foreach ($area->rooms() as $room) {
+        foreach ($area->rooms as $room) {
             $this->roomService->delete($room);
         }
         $this->areaService->delete($area);
@@ -89,7 +89,7 @@ class AreaController extends Controller
         /** @var Area $area */
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->restore();
-        foreach ($area->trashedRooms() as $room) {
+        foreach ($area->trashedRooms as $room) {
             $room->restore();
         }
         return Redirect::route('areas.trashed');

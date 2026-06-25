@@ -31,6 +31,9 @@ class UserFilterTemplateController extends Controller
      */
     public function store(StoreUserFilterTemplateRequest $request, User $user): void
     {
+        // IDOR-Schutz: Vorlagen nur im eigenen Account anlegen.
+        abort_unless((int) auth()->id() === (int) $user->id, 403);
+
         $user->userFilterTemplates()->create([
             'name' => $request->input('name'),
             'room_ids' => $this->nullableArray($request->collect('room_ids')),
@@ -82,6 +85,9 @@ class UserFilterTemplateController extends Controller
      */
     public function destroy(UserFilterTemplate $filter): void
     {
+        // IDOR-Schutz: nur eigene Vorlagen löschen.
+        abort_unless((int) $filter->user_id === (int) auth()->id(), 403);
+
         $filter->delete();
     }
 }

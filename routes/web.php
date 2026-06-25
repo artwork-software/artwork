@@ -210,7 +210,7 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Workflow routes - only accessible via direct URL
-    Route::group(['prefix' => 'workflow'], function (): void {
+    Route::group(['prefix' => 'workflow', 'middleware' => 'role:artwork admin'], function (): void {
         Route::get('/', [WorkflowController::class, 'index'])->name('workflow.index');
         Route::get('/definitions/create', [WorkflowController::class, 'createDefinition'])->name('workflow.definitions.create');
         Route::get('/definitions/{definition}', [WorkflowController::class, 'showDefinition'])->name('workflow.definitions.show');
@@ -925,14 +925,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/holiday', [HolidayController::class, 'index'])
             ->name('holiday.management');
         Route::post('/holiday/api', [HolidayController::class, 'create'])
+            ->can('change event settings')
             ->name('holiday.api.call');
         Route::post('/holiday/store', [HolidayController::class, 'store'])
+            ->can('change event settings')
             ->name('holiday.store');
         Route::delete('/holiday/{holiday}', [HolidayController::class, 'destroy'])
+            ->can('change event settings')
             ->name('holiday.delete');
         Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
+            ->can('change event settings')
             ->name('holiday.update');
         Route::post('/holiday/batch-update', [HolidayController::class, 'batchUpdateTreatAsSpecialDay'])
+            ->can('change event settings')
             ->name('holiday.batch-update');
 
 
@@ -999,10 +1004,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //globalNotification
     Route::put('/globalNotification/create', [GlobalNotificationController::class, 'store'])
+        ->middleware('can:change system notification')
         ->name('global_notification.store');
     Route::put('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'update'])
+        ->middleware('can:change system notification')
         ->name('global_notification.update');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])
+        ->middleware('can:change system notification')
         ->name('global_notification.destroy');
 
     // Money Sources
@@ -1055,10 +1063,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/document-requests', [DocumentRequestController::class, 'index'])->name('document-requests.index');
     Route::post('/document-requests', [DocumentRequestController::class, 'store'])->name('document-requests.store');
     Route::patch('/document-requests/{documentRequest}', [DocumentRequestController::class, 'update'])
+        ->middleware('can:can edit document requests')
         ->name('document-requests.update');
     Route::delete('/document-requests/{documentRequest}', [DocumentRequestController::class, 'destroy'])
+        ->middleware('can:can edit document requests')
         ->name('document-requests.destroy');
     Route::post('/document-requests/{documentRequest}/link-contract', [DocumentRequestController::class, 'linkContract'])
+        ->middleware('can:can edit document requests')
         ->name('document-requests.link-contract');
     Route::get('/document-requests/{documentRequest}/crm-contact', [DocumentRequestController::class, 'getCrmContactData'])
         ->name('document-requests.crm-contact');
@@ -1638,40 +1649,46 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // CompanyTypes
     Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
-    Route::post('/company_types', [CompanyTypeController::class, 'store'])->name('company_types.store');
+    Route::post('/company_types', [CompanyTypeController::class, 'store'])
+        ->middleware('can:change project settings')->name('company_types.store');
     Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])
-        ->name('company_types.delete');
+        ->middleware('can:change project settings')->name('company_types.delete');
     Route::patch('/company_types/{company_type}/restore', [CompanyTypeController::class, 'restore'])
-        ->name('company_types.restore');
+        ->middleware('can:change project settings')->name('company_types.restore');
     Route::delete('/company_types/{id}/force', [CompanyTypeController::class, 'forceDelete'])
-        ->name('company_types.force');
+        ->middleware('can:change project settings')->name('company_types.force');
     Route::patch('/company_types/{company_type}/update', [CompanyTypeController::class, 'update'])
-        ->name('company_types.update');
+        ->middleware('can:change project settings')->name('company_types.update');
 
     // Collecting Societies
     Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])
         ->name('collecting_societies.index');
     Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])
-        ->name('collecting_societies.store');
+        ->middleware('can:change project settings')->name('collecting_societies.store');
     Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])
-        ->name('collecting_societies.delete');
+        ->middleware('can:change project settings')->name('collecting_societies.delete');
     Route::patch(
         '/collecting_societies/{collecting_society}/restore',
         [CollectingSocietyController::class, 'restore']
-    )->name('collecting_societies.restore');
+    )->middleware('can:change project settings')->name('collecting_societies.restore');
     Route::delete('/collecting_societies/{id}/force', [CollectingSocietyController::class, 'forceDelete'])
-        ->name('collecting_societies.force');
+        ->middleware('can:change project settings')->name('collecting_societies.force');
     Route::patch(
         '/collecting_societies/{collecting_society}/update',
         [CollectingSocietyController::class, 'update']
-    )->name('collecting_societies.update');
+    )->middleware('can:change project settings')->name('collecting_societies.update');
     // Currencies
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
-    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
-    Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
-    Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])->name('currencies.restore');
-    Route::patch('/currencies/{currency}/update', [CurrencyController::class, 'update'])->name('currencies.update');
-    Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])->name('currencies.force');
+    Route::post('/currencies', [CurrencyController::class, 'store'])
+        ->middleware('can:change project settings')->name('currencies.store');
+    Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])
+        ->middleware('can:change project settings')->name('currencies.delete');
+    Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])
+        ->middleware('can:change project settings')->name('currencies.restore');
+    Route::patch('/currencies/{currency}/update', [CurrencyController::class, 'update'])
+        ->middleware('can:change project settings')->name('currencies.update');
+    Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])
+        ->middleware('can:change project settings')->name('currencies.force');
 
     // Project States
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
@@ -1746,9 +1763,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::post('/freelancer/vacation/{freelancer}/add', [VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
-    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [VacationController::class, 'update'])
+    Route::patch('/freelancer/vacation/{vacation}/update', [VacationController::class, 'update'])
         ->name('freelancer.vacation.update');
-    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [VacationController::class, 'destroy'])
+    Route::delete('/freelancer/vacation/{vacation}/delete', [VacationController::class, 'destroy'])
         ->name('freelancer.vacation.delete');
 
 
@@ -2374,14 +2391,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
 
-    Route::resource('manufacturers', ManufacturerController::class)->only(
-        [
-            'index',
-            'store',
-            'update',
-            'destroy'
-        ]
-    );
+    Route::resource('manufacturers', ManufacturerController::class)->only(['index']);
+    Route::resource('manufacturers', ManufacturerController::class)
+        ->only(['store', 'update', 'destroy'])
+        ->middleware('can:inventory.settings');
+    // Hinweis: Manufacturer-Menü ist im Frontend mit 'inventory.settings' gegated -> deckungsgleich.
 
     // External access global settings (admin only)
     Route::middleware('role:' . \Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value)
@@ -2416,9 +2430,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
-        Route::post('/contacts', [CrmContactController::class, 'store'])->name('crm.contacts.store');
-        Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])->name('crm.contacts.update');
-        Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])->name('crm.contacts.destroy');
+        // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran
+        // angleichen, um keine Lese-CRM-User auszusperren. Schützt weiterhin Nicht-CRM-User
+        // vor gefälschten Requests. Strenger ('crm manager') wäre eine Produktentscheidung.
+        Route::post('/contacts', [CrmContactController::class, 'store'])
+            ->middleware('can:can view crm')->name('crm.contacts.store');
+        Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])
+            ->middleware('can:can view crm')->name('crm.contacts.update');
+        Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])
+            ->middleware('can:can view crm')->name('crm.contacts.destroy');
         Route::post('/contacts/{crmContact}/profile-image', [CrmContactController::class, 'updateProfileImage'])->name('crm.contacts.profile-image');
         Route::post('/contacts/{crmContact}/property-file', [CrmContactController::class, 'uploadPropertyFile'])->name('crm.contacts.property-file.upload');
         Route::delete('/contacts/{crmContact}/property-file', [CrmContactController::class, 'deletePropertyFile'])->name('crm.contacts.property-file.delete');
@@ -2468,7 +2488,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('{access}/relink', [ExternalAccessManagementController::class, 'relink'])->name('relink');
         });
 
-        Route::group(['prefix' => 'settings'], function (): void {
+        Route::group(['prefix' => 'settings', 'middleware' => 'can:crm manager'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');
             Route::post('/types', [CrmContactTypeController::class, 'store'])->name('crm.types.store');
             Route::patch('/types/{crmContactType}/properties', [CrmContactTypeController::class, 'syncProperties'])->name('crm.types.sync-properties');
@@ -2936,8 +2956,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/print/{externalIssue}', 'print')->name('extern-issue-of-material.print');
     });
 
-    Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])->name('issue-of-material.file.delete');
-    Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])->name('extern-issue-of-material.file.delete');
+    Route::delete('/issue-of-material/file/{internalIssueFile}/delete', [InternalIssueController::class, 'fileDelete'])
+        ->middleware('can:inventory.disposition')->name('issue-of-material.file.delete');
+    Route::delete('/extern-issue-of-material/file/{externalIssueFile}/delete', [ExternalIssueController::class, 'fileDelete'])
+        ->middleware('can:inventory.disposition')->name('extern-issue-of-material.file.delete');
 
     Route::get('/material-issue-log', [MaterialIssueLogController::class, 'index'])
         ->middleware('can:' . PermissionEnum::MATERIAL_ISSUE_LOG_VIEW->value)
@@ -2948,9 +2970,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->controller(MaterialSetController::class)
         ->group(function (): void {
             Route::get('/', 'index')->name('index');     // material-sets.index
-            Route::post('/', 'store')->name('store');    // material-sets.store
-            Route::patch('{set}', 'update')->name('update');  // material-sets.update
-            Route::delete('{set}', 'destroy')->name('destroy');
+            // Frontend gated diese Buttons mit 'set.create_edit' -> Backend daran angleichen.
+            Route::post('/', 'store')->middleware('can:set.create_edit')->name('store');
+            Route::patch('{set}', 'update')->middleware('can:set.create_edit')->name('update');
+            Route::delete('{set}', 'destroy')->middleware('can:set.create_edit')->name('destroy');
         });
 
     // get inventory.articles.available-stock article.id, start_date, end_date
@@ -3302,8 +3325,10 @@ Route::middleware(['auth'])->prefix('bi/dashboard')->group(function () {
 Route::middleware(['auth'])->prefix('bi/export')->group(function () {
     Route::get('/', [BiExportController::class, 'index'])->name('bi.export.index');
     Route::post('/cache', [BiExportController::class, 'cacheExportConfiguration'])->name('bi.export.cache');
-    Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])->name('bi.export.status');
-    Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])->name('bi.export.download');
+    Route::get('/status/{cacheToken}', [BiExportController::class, 'status'])
+        ->middleware('can:can export bi data')->name('bi.export.status');
+    Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])
+        ->middleware('can:can export bi data')->name('bi.export.download');
 
     Route::get('/presets', [BiExportPresetController::class, 'index'])->name('bi.export.presets.index');
     Route::post('/presets', [BiExportPresetController::class, 'store'])->name('bi.export.presets.store');

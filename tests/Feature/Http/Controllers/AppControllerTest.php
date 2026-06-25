@@ -185,4 +185,31 @@ final class AppControllerTest extends FeatureTestCase
         // Redirects to events route
         $response->assertRedirect();
     }
+
+    #[Test]
+    public function setup_create_admin_is_forbidden_when_setup_already_finished(): void
+    {
+        // Account-Takeover-Schutz: auf einer fertig eingerichteten Instanz darf der
+        // öffentliche POST /setup keinen weiteren Admin mehr anlegen.
+        $settings = app(GeneralSettings::class);
+        $settings->setup_finished = true;
+        $settings->save();
+
+        $before = User::count();
+
+        $response = $this->post(route('setup.create'), [
+            'first_name' => 'Mallory',
+            'last_name' => 'Attacker',
+            'email' => 'mallory-takeover@example.test',
+            'position' => 'Intruder',
+            'description' => 'x',
+            'business' => 'EvilCorp',
+            'password' => 'CorrectHorseBatteryStaple-9!',
+            'password_confirmation' => 'CorrectHorseBatteryStaple-9!',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertSame($before, User::count());
+        $this->assertGuest();
+    }
 }

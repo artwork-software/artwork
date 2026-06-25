@@ -61,6 +61,17 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
+        // Deckungsgleich zum Frontend ("Bearbeiten" zeigt sich bei 'write projects' bzw.
+        // Schreibrecht im Projekt-Pivot) – sonst bekämen diese User nach dem Nachrüsten der
+        // Autorisierung einen 403, wo sie vorher bearbeiten konnten.
+        if ($user->can(PermissionEnum::WRITE_PROJECTS->value)) {
+            return true;
+        }
+
+        if ($project->writeUsers->contains($user->id)) {
+            return true;
+        }
+
         foreach ($project->departments as $department) {
             if ($department->users->contains($user->id)) {
                 return true;
@@ -69,7 +80,7 @@ class ProjectPolicy
 
         $isCreator = false;
         foreach ($project->events as $event) {
-            if ($event->created_by->id === $user->id) {
+            if ($event->created_by?->id === $user->id) {
                 $isCreator = true;
             }
         }

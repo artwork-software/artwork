@@ -25,7 +25,7 @@
                 <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
 
-                        <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
+                        <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings?.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
                             <PropertyIcon name="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
                             <ToolTipComponent
@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
+        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings?.show_qualifications">
             <div class="w-full flex flex-row flex-wrap text-[10px] text-zinc-400">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
@@ -97,7 +97,7 @@
 
         </div>
 
-        <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
+        <div v-if="usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 xsLight">
             {{ shift.description }}
         </div>
     </div>

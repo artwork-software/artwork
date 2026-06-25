@@ -46,10 +46,25 @@ class HandleInertiaRequests extends Middleware
         $eventSettings = app(EventSettings::class);
 
         $user = Auth::user();
-        $calendarSettings = $user?->calendar_settings;
-        $dailyViewCalendarSettings = $user?->daily_view_calendar_settings;
-        $shiftPlanSettings = $user?->shift_plan_settings;
-        $shiftPlanDailySettings = $user?->shift_plan_daily_settings;
+        // Settings-Relationen werden hier (vor den Controllern) gelesen und sowohl als Top-Level-Props
+        // als auch via auth.user serialisiert. Fehlt der Datensatz (frisch angelegter User / Erstaufruf),
+        // einmalig anlegen statt null zu teilen – sonst lesen Kalender-/Schichtplan-Komponenten null und
+        // die Seite crasht zum White-Screen.
+        $ensureSettings = static function ($user, string $relation) {
+            if ($user === null) {
+                return null;
+            }
+            $settings = $user->getAttribute($relation);
+            if ($settings === null) {
+                $settings = $user->{$relation}()->create();
+                $user->setRelation($relation, $settings);
+            }
+            return $settings;
+        };
+        $calendarSettings = $ensureSettings($user, 'calendar_settings');
+        $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        $shiftPlanSettings = $ensureSettings($user, 'shift_plan_settings');
+        $shiftPlanDailySettings = $ensureSettings($user, 'shift_plan_daily_settings');
 
         $projectName = null;
         if ($calendarSettings?->use_project_time_period) {

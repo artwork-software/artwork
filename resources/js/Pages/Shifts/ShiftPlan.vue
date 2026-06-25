@@ -1233,9 +1233,9 @@ const calendarSettings = computed(() => {
     }
     return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
 })
-const showUserOverview = ref(calendarSettings.value.show_user_overview ?? true)
-const expandDays = computed(() => calendarSettings.value.expand_days)
-const displayProjectGroups = computed(() => calendarSettings.value.display_project_groups)
+const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
+const expandDays = computed(() => calendarSettings.value?.expand_days)
+const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
 const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
 

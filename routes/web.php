@@ -2722,9 +2722,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(
             ['middleware' => 'can:' . PermissionEnum::INVENTORY_PLANER->value],
             function (): void {
-            Route::get('/scheduling', [InventoryController::class, 'scheduling'])
-                ->name('inventory-management.scheduling');
-
             // inventory.dropItemToEvent
             Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
                 ->name('inventory.dropItemToEvent');

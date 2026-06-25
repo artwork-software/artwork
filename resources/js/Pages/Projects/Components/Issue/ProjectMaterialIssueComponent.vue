@@ -475,12 +475,14 @@
 
     <!-- Article Images Galleria -->
     <Galleria
+        v-if="articleDisplayCustom"
         v-model:activeIndex="articleActiveIndex"
         v-model:visible="articleDisplayCustom"
         :value="articleLightboxImages"
         :responsiveOptions="responsiveOptions"
         :numVisible="7"
         :pt="{ mask: { onClick: onArticleMaskClick } }"
+        containerStyle="max-width: 850px"
         :circular="true"
         :fullScreen="true"
         :showItemNavigators="true"

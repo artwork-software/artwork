@@ -142,6 +142,20 @@ class AddNewComponents extends Command
             $this->info('BI key figures component already exists');
         }
 
+        if (!Component::query()->where('type', ProjectTabComponentEnum::PROJECT_PERIOD)->first()) {
+            Component::create([
+                'name' => 'Project period',
+                'type' => ProjectTabComponentEnum::PROJECT_PERIOD,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+            $this->info('Project period component added');
+        } else {
+            $this->info('Project period component already exists');
+        }
+
         $contractsDocumentsComponent = Component::query()->where('type', ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS)->first();
         if (!$contractsDocumentsComponent) {
             Component::create([

@@ -121,6 +121,14 @@ class DefaultComponentSeeder extends Seeder
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
+                'name' => 'Project period',
+                'type' => ProjectTabComponentEnum::PROJECT_PERIOD,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
                 'name' => 'Comment Tab',
                 'type' => ProjectTabComponentEnum::COMMENT_TAB,
                 'data' => [],

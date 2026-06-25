@@ -131,6 +131,7 @@ import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderCompone
 import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
 import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
 import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBudgetDeadlineComponent.vue";
+import BuilderProjectPeriodComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectPeriodComponent.vue";
 import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
 import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
 import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
@@ -175,6 +176,7 @@ const componentMapping = {
     BuilderRelevantDatesForShiftPlanningComponent,
     BuilderGeneralShiftInformationComponent,
     BuilderProjectBudgetDeadlineComponent,
+    BuilderProjectPeriodComponent,
     BuilderProjectAttributesComponent,
     BuilderBudgetInformations,
     BuilderTextField,

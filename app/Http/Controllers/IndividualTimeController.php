@@ -65,12 +65,18 @@ class IndividualTimeController extends Controller
         // Find the specific model instance by ID
         $modelInstance = $modelClass::findOrFail($request->integer('modelId'));
 
-        // Nur eigene Zeiten anlegen – fremde brauchen "can manage availability".
+        // Eigene Zeiten: immer. Fremde User: "can manage availability".
+        // Freelancer/ServiceProvider (= Worker): zusätzlich "can manage workers" (Frontend-Gate).
         $isSelf = $modelInstance instanceof User && (int) $modelInstance->id === (int) auth()->id();
+        $isWorker = !($modelInstance instanceof User);
         abort_unless(
-            $isSelf || (bool) auth()->user()?->can(
+            $isSelf
+            || (bool) auth()->user()?->can(
                 \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
-            ),
+            )
+            || ($isWorker && (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value
+            )),
             403
         );
 

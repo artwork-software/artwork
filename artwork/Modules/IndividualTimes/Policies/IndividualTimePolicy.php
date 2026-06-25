@@ -24,6 +24,12 @@ class IndividualTimePolicy
             return true;
         }
 
+        // Freelancer/ServiceProvider sind "Worker": Worker-Manager dürfen deren Individualzeiten
+        // pflegen (das Frontend gated die Bearbeitung genau auf "can manage workers").
+        if ($individualTime->timeable_type !== User::class && $user->can(PermissionEnum::MA_MANAGER->value)) {
+            return true;
+        }
+
         return $user->can(PermissionEnum::AVAILABILITY_MANAGEMENT->value);
     }
 

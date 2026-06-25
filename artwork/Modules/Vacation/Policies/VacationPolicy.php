@@ -24,6 +24,12 @@ class VacationPolicy
             return true;
         }
 
+        // Freelancer/ServiceProvider sind "Worker": Worker-Manager dürfen deren Verfügbarkeiten/
+        // Urlaube pflegen (das Frontend gated die Bearbeitung genau auf "can manage workers").
+        if ($vacation->vacationer_type !== User::class && $user->can(PermissionEnum::MA_MANAGER->value)) {
+            return true;
+        }
+
         return $user->can(PermissionEnum::AVAILABILITY_MANAGEMENT->value);
     }
 

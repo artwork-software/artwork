@@ -1324,3 +1324,17 @@ const onScrollOrResize = () => {
     stickyScrollRAF = requestAnimationFrame(updateStickyScrollbar);
 };
 </script>
+
+<style scoped>
+/*
+  vue-virtual-scroller setzt .vue-recycle-scroller__item-wrapper auf overflow:hidden und
+  fixiert die item-views auf width:100% (= sichtbare Viewport-Breite). Die Bulk-Zeilen sind
+  jedoch breiter als der Viewport (horizontaler Scroll über den äußeren Container). Dadurch
+  wurden die rechtsbündigen Spalten – Notiz-Icon und das Aktions-/Kontextmenü – abgeschnitten.
+  overflow:visible gibt den überstehenden Zeileninhalt wieder frei; der horizontale Scroll
+  des äußeren Containers macht ihn weiterhin erreichbar und hält ihn mit dem Header synchron.
+*/
+:deep(.vue-recycle-scroller__item-wrapper) {
+    overflow: visible;
+}
+</style>

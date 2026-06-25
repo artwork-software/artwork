@@ -16,7 +16,6 @@ class ModuleSettingsMiddleware
         '/calendar/view' => 'room_assignment',
         '/shifts/view' => 'shift_plan',
         '/inventory-management' => 'inventory',
-        '/inventory-management/scheduling' => 'inventory',
         '/tasks/own' => 'tasks',
         '/money_sources' => 'sources_of_funding',
         '/users' => 'users',

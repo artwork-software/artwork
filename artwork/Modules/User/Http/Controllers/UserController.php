@@ -412,8 +412,13 @@ class UserController extends Controller
         $startInput = request()->input('start');
         $endInput = request()->input('end');
 
-        $start = $startInput ? Carbon::parse($startInput) : Carbon::now()->startOfMonth();
-        $end = $endInput ? Carbon::parse($endInput) : Carbon::now()->endOfMonth();
+        $start = $this->parseDateOrDefault($startInput, Carbon::now()->startOfMonth());
+        $end = $this->parseDateOrDefault($endInput, Carbon::now()->endOfMonth());
+
+        // Guard against an inverted range (e.g. only one bound supplied/invalid)
+        if ($end->lessThan($start)) {
+            $end = $start->copy()->endOfMonth();
+        }
 
         $workTimes = $this->getPlannedWorkSchedule($start, $end, $user);
 
@@ -437,6 +442,24 @@ class UserController extends Controller
                 'wanted' => $this->convertMinutesToHoursAndMinutes($totalWantedMinutes, true),
             ]
         ]);
+    }
+
+    /**
+     * Safely parse a date input coming from the request, falling back to a default
+     * when the value is missing or not a valid date (e.g. the frontend sends the
+     * literal string "NaN-NaN-NaN" when a date picker holds an invalid value).
+     */
+    private function parseDateOrDefault(mixed $value, Carbon $default): Carbon
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return $default;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return $default;
+        }
     }
 
     public function editUserCompensationDays(User $user): Response|ResponseFactory

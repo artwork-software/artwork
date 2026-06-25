@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Modules\Project\Services;
 
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\User\Models\User;
@@ -239,6 +241,53 @@ final class ProjectServiceTest extends TestCase
         );
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $result);
+    }
+
+    #[Test]
+    public function chronological_ascending_sort_ignores_soft_deleted_events(): void
+    {
+        // Project with a real event in 2026.
+        $projectIn2026 = Project::factory()->create(['name' => 'Project 2026']);
+        Event::factory()->create([
+            'project_id' => $projectIn2026->id,
+            'start_time' => '2026-06-01 10:00:00',
+            'end_time' => '2026-06-01 12:00:00',
+        ]);
+
+        // Project whose only real event is in 2027, but which also carries a
+        // soft-deleted event dated 2025. The trashed event must NOT count towards
+        // the chronological ordering (regression for the 2027-before-2026 bug).
+        $projectIn2027 = Project::factory()->create(['name' => 'Project 2027']);
+        Event::factory()->create([
+            'project_id' => $projectIn2027->id,
+            'start_time' => '2027-01-15 10:00:00',
+            'end_time' => '2027-01-15 12:00:00',
+        ]);
+        $ghost = Event::factory()->create([
+            'project_id' => $projectIn2027->id,
+            'start_time' => '2025-01-01 08:00:00',
+            'end_time' => '2025-01-01 09:00:00',
+        ]);
+        $ghost->delete();
+
+        $result = $this->service->paginateProjects(
+            search: '',
+            perPage: 50,
+            sortEnum: ProjectSortEnum::CHRONOLOGICALLY_ASCENDING,
+            projectStateIds: null,
+            projectFilters: new SupportCollection([]),
+        );
+
+        $orderedIds = collect($result->items())
+            ->pluck('id')
+            ->filter(fn ($id) => in_array($id, [$projectIn2026->id, $projectIn2027->id], true))
+            ->values();
+
+        $this->assertSame(
+            [$projectIn2026->id, $projectIn2027->id],
+            $orderedIds->all(),
+            'The 2026 project must sort before the 2027 project; a soft-deleted 2025 event must not pull it ahead.'
+        );
     }
 
     #[Test]

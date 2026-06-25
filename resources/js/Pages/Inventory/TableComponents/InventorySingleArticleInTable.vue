@@ -1,6 +1,7 @@
 <template>
     <!-- Galleria Component -->
     <Galleria
+        v-if="displayCustom"
         v-model:activeIndex="activeIndex"
         v-model:visible="displayCustom"
         :value="item.images"

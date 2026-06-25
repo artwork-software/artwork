@@ -382,6 +382,12 @@ class ProjectController extends Controller
                             ? Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y')
                             : null;
                         break;
+                    case ProjectTabComponentEnum::PROJECT_PERIOD->value:
+                        // Derived from the project's events (event types flagged
+                        // relevant_for_project_period, falling back to all events). Soft-deleted
+                        // events are excluded because the accessor uses the events() relation.
+                        $projectData->project_period = $project->first_and_last_event_date;
+                        break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
                         $projectData->cost_center = $project->costCenter;
                         $projectData->gema = $project->gema;

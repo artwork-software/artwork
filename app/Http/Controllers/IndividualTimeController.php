@@ -64,6 +64,16 @@ class IndividualTimeController extends Controller
 
         // Find the specific model instance by ID
         $modelInstance = $modelClass::findOrFail($request->integer('modelId'));
+
+        // Nur eigene Zeiten anlegen – fremde brauchen "can manage availability".
+        $isSelf = $modelInstance instanceof User && (int) $modelInstance->id === (int) auth()->id();
+        abort_unless(
+            $isSelf || (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+            ),
+            403
+        );
+
         $individualTimes = $request->get('individualTimes');
 
         foreach ($individualTimes as $individualTime) {
@@ -160,6 +170,7 @@ class IndividualTimeController extends Controller
      */
     public function updateSingle(Request $request, IndividualTime $individualTime): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('update', $individualTime);
         $validated = $request->validate([
             'title' => 'nullable|string|max:255',
             'start_time' => 'nullable|date_format:H:i',
@@ -207,6 +218,7 @@ class IndividualTimeController extends Controller
      */
     public function destroy(IndividualTime $individualTime): void
     {
+        $this->authorize('delete', $individualTime);
         $owner = $individualTime->timeable;
         $individualTime->delete();
 

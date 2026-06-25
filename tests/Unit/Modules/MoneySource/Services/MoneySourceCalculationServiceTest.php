@@ -24,7 +24,7 @@ final class MoneySourceCalculationServiceTest extends TestCase
 
         $sum = $this->service->getPositionSumOfOneMoneySource($moneySource);
 
-        $this->assertSame(0, $sum);
+        $this->assertSame(0.0, $sum);
     }
 
     #[Test]
@@ -34,6 +34,6 @@ final class MoneySourceCalculationServiceTest extends TestCase
 
         $sum = $this->service->getPositionSumOfOneMoneySource($group);
 
-        $this->assertSame(0, $sum);
+        $this->assertSame(0.0, $sum);
     }
 }

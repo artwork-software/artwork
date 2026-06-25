@@ -91,7 +91,12 @@ class EventCollisionService
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
 
-        $joiningRooms = Room::find($request->roomId)->adjoining_rooms()->get();
+        $room = Room::find($request->roomId);
+        if (!$room) {
+            // Termine ohne Raum (z. B. Planungstermine) haben keine angrenzenden Räume.
+            return [];
+        }
+        $joiningRooms = $room->adjoining_rooms()->get();
         $events = [];
         foreach ($joiningRooms as $joiningRoom) {
             $events[] = Event::query()

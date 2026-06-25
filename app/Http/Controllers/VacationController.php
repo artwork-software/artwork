@@ -45,6 +45,15 @@ class VacationController extends Controller
         AvailabilityConflictService $availabilityConflictService,
         AvailabilitySeriesService $availabilitySeriesService
     ): void {
+        // Nur für sich selbst anlegen – fremde Urlaube/Verfügbarkeiten brauchen "can manage availability".
+        abort_unless(
+            (int) $user->id === (int) auth()->id()
+                || (bool) auth()->user()?->can(
+                    \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+                ),
+            403
+        );
+
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
                 $user,
@@ -277,6 +286,7 @@ class VacationController extends Controller
         Vacation $vacation,
         AvailabilitySeriesService $availabilitySeriesService
     ): RedirectResponse {
+        $this->authorize('update', $vacation);
         if ($updateVacationRequest->validated()) {
             if ($updateVacationRequest->type_before_update !== $updateVacationRequest->type) {
                 if ($updateVacationRequest->type === 'available') {
@@ -322,6 +332,7 @@ class VacationController extends Controller
 
     public function destroy(Vacation $vacation): RedirectResponse
     {
+        $this->authorize('delete', $vacation);
         $this->vacationService->delete($vacation);
         return redirect()->back();
     }

@@ -146,6 +146,9 @@ class BiProjectDataController extends Controller
         Project $project,
         Event $event
     ): JsonResponse {
+        // IDOR-Schutz: das Event muss zum Projekt aus der URL gehören.
+        abort_unless((int) $event->project_id === (int) $project->id, 404);
+
         $eventData = $this->biProjectDataService->upsertEventData(
             $project->id,
             $event->id,

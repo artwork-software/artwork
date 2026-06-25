@@ -38,6 +38,9 @@ class BiTimeEffortController extends Controller
         Project $project,
         BiTimeEffort $biTimeEffort
     ): JsonResponse {
+        // IDOR-Schutz: TimeEffort muss zum Projekt aus der URL gehören.
+        abort_unless((int) $biTimeEffort->project_id === (int) $project->id, 404);
+
         $this->biTimeEffortRepository->update($biTimeEffort, $request->validated());
 
         return response()->json($biTimeEffort->fresh()->load('user'));
@@ -45,6 +48,8 @@ class BiTimeEffortController extends Controller
 
     public function destroy(Project $project, BiTimeEffort $biTimeEffort): JsonResponse
     {
+        abort_unless((int) $biTimeEffort->project_id === (int) $project->id, 404);
+
         $this->biTimeEffortRepository->delete($biTimeEffort);
 
         return response()->json(null, 204);

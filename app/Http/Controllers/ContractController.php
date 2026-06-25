@@ -79,6 +79,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract): Response|ResponseFactory
     {
+        $this->authorize('view', $contract);
         return inertia('Contracts/Contracts', [
             'contract' => new ContractResource($contract),
         ]);
@@ -103,11 +104,13 @@ class ContractController extends Controller
 
     public function download(Contract $contract): StreamedResponse
     {
+        $this->authorize('view', $contract);
         return $this->contractService->downloadContract($contract);
     }
 
     public function update(Contract $contract, ContractUpdateRequest $request): RedirectResponse
     {
+        $this->authorize('update', $contract);
         $data = $request->data();
         $data['accessibleUsers'] = $request->accessibleUsers;
         $data['accessibleDepartments'] = $request->accessibleDepartments;
@@ -133,11 +136,15 @@ class ContractController extends Controller
     public function storeFile(Request $request): void
     {
         $contract = Contract::find($request->contract);
-        $this->contractService->storeContractFile($contract, $request->file);
+        if ($contract) {
+            $this->authorize('update', $contract);
+            $this->contractService->storeContractFile($contract, $request->file);
+        }
     }
 
     public function destroy(Contract $contract): RedirectResponse
     {
+        $this->authorize('delete', $contract);
         $this->contractService->deleteContract($contract);
         return Redirect::back();
     }

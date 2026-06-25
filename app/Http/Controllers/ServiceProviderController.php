@@ -34,6 +34,7 @@ class ServiceProviderController extends Controller
 
     public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
         $validated = $request->validate([
             'provider_name' => 'required|string|max:255',
         ]);
@@ -90,6 +91,7 @@ class ServiceProviderController extends Controller
 
     public function update(Request $request, ServiceProvider $serviceProvider): void
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
         $request->validate([
             'provider_name' => 'required|string|max:255',
             'email' => 'nullable|email',
@@ -225,6 +227,7 @@ class ServiceProviderController extends Controller
 
     public function destroy(ServiceProvider $serviceProvider): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
         $serviceProvider->delete();
 
         return Redirect::back();
@@ -232,6 +235,8 @@ class ServiceProviderController extends Controller
 
     public function updateProfileImage(Request $request, ServiceProvider $serviceProvider): void
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+        $request->validate(['profileImage' => 'required|image']);
         if (!Storage::exists("public/profile-photos")) {
             Storage::makeDirectory("public/profile-photos");
         }

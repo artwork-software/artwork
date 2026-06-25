@@ -82,7 +82,7 @@
             @foreach($artistResidencies as $artistResidency)
                 @php
                     $days = $artistResidency->days;
-                    $dailyAllowanceTotal = $artistResidency->daily_allowance * ($days + $artistResidency->additional_daily_allowance);
+                    $dailyAllowanceTotal = $artistResidency->daily_allowance * ($days + floor($artistResidency->additional_daily_allowance));
                     $breakfastCount = $artistResidency->breakfast_count ?? 0;
                     $breakfastDeductionPerDay = $artistResidency->breakfast_deduction_per_day ?? 0;
                     $breakfastDeductionTotal = $breakfastCount * $breakfastDeductionPerDay;
@@ -117,7 +117,7 @@
                     $grandTotal = 0;
                     foreach ($artistResidencies as $artistResidency) {
                         $days = $artistResidency->days;
-                        $dailyAllowanceTotal = $artistResidency->daily_allowance * ($days + $artistResidency->additional_daily_allowance);
+                        $dailyAllowanceTotal = $artistResidency->daily_allowance * ($days + floor($artistResidency->additional_daily_allowance));
                         $breakfastCount = $artistResidency->breakfast_count ?? 0;
                         $breakfastDeductionPerDay = $artistResidency->breakfast_deduction_per_day ?? 0;
                         $breakfastDeductionTotal = $breakfastCount * $breakfastDeductionPerDay;

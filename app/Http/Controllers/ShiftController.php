@@ -322,7 +322,7 @@ class ShiftController extends Controller
         $projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent();
 
         if ($shift->event_id) {
-            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->event->room_id));
+            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->event?->room_id));
         } else {
             broadcast(new UpdateShiftInShiftPlan($shift, $shift->room_id));
         }
@@ -760,7 +760,7 @@ class ShiftController extends Controller
 
         broadcast(new DestroyShift(
             $shift,
-            $shift->event_id ? $shift->event->room_id : $shift->room_id
+            $shift->event_id ? $shift->event?->room_id : $shift->room_id
         ));
         $this->shiftService->forceDelete($shift);
 
@@ -1015,7 +1015,7 @@ class ShiftController extends Controller
 
             broadcast(new AssignUserToShift(
                 $shift,
-                $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                 $request->get('userId'),
                 $request->get('userType')
             ));
@@ -1051,7 +1051,7 @@ class ShiftController extends Controller
 
         broadcast(new AssignUserToShift(
             $shift,
-            $shift->event_id ? $shift->event->room_id : $shift->room_id,
+            $shift->event_id ? $shift->event?->room_id : $shift->room_id,
             $request->get('userId'),
             $request->get('userType')
         ));
@@ -1119,7 +1119,7 @@ class ShiftController extends Controller
 
             broadcast(new RemoveEntityFormShiftEvent(
                 $shift,
-                $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                 $usersPivotId,
                 $userType
             ));
@@ -1139,7 +1139,7 @@ class ShiftController extends Controller
 
         broadcast(new RemoveEntityFormShiftEvent(
             $shift,
-            $shift->event_id ? $shift->event->room_id : $shift->room_id,
+            $shift->event_id ? $shift->event?->room_id : $shift->room_id,
             $usersPivotId,
             $userType
         ));
@@ -1310,7 +1310,7 @@ class ShiftController extends Controller
             if ($shift !== null) {
                 broadcast(new RemoveEntityFormShiftEvent(
                     $shift,
-                    $shift->event_id ? $shift->event->room_id : $shift->room_id,
+                    $shift->event_id ? $shift->event?->room_id : $shift->room_id,
                     $pivotId,
                     $modelType,
                 ));
@@ -1947,7 +1947,7 @@ class ShiftController extends Controller
             broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
         } else {
             $pivot->shift->load('event');
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
         }
     }
 
@@ -1990,7 +1990,7 @@ class ShiftController extends Controller
         if (!$pivot->shift->event_id) {
             broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->room_id));
         } else {
-            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event->room_id));
+            broadcast(new UpdateShiftInShiftPlan($pivot->shift, $pivot->shift->event?->room_id));
         }
     }
 

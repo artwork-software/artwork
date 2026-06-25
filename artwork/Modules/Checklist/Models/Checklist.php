@@ -78,6 +78,8 @@ class Checklist extends Model
 
     public function hasProject(): bool
     {
-        return $this->project_id !== null;
+        // project_id kann gesetzt sein, während das Projekt bereits soft-deleted ist
+        // (Relation dann null) – beide Bedingungen prüfen, sonst Null-Deref auf $this->project.
+        return $this->project_id !== null && $this->project !== null;
     }
 }

@@ -40,6 +40,7 @@ class FreelancerController extends Controller
 
     public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -121,6 +122,7 @@ class FreelancerController extends Controller
 
     public function update(Request $request, Freelancer $freelancer): void
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
         $request->validate([
             'first_name' => 'required|string',
             'last_name' => 'required|string',
@@ -254,6 +256,8 @@ class FreelancerController extends Controller
 
     public function updateProfileImage(Request $request, Freelancer $freelancer): void
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
+        $request->validate(['profileImage' => 'required|image']);
         if (!Storage::exists("public/profile-photos")) {
             Storage::makeDirectory("public/profile-photos");
         }
@@ -269,6 +273,7 @@ class FreelancerController extends Controller
 
     public function destroy(Freelancer $freelancer): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
         $freelancer->delete();
 
         return Redirect::back();

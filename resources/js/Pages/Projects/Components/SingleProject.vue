@@ -1,6 +1,15 @@
 <template>
     <div class="col-span-6 flex items-center">
-        <div class="grid grid-cols-10 gap-x-3">
+        <div v-if="selectable && canDelete" class="flex items-center pr-3 shrink-0">
+            <input
+                type="checkbox"
+                :checked="selected"
+                @change="$emit('toggle-selection', project.id)"
+                class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                :aria-label="$t('Select project')"
+            />
+        </div>
+        <div class="grid grid-cols-10 gap-x-3 w-full">
             <div class="col-span-1 flex items-center justify-center">
                 <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
                     <img :src="'/storage/keyVisual/' + project.key_visual_path" alt="" class="rounded-full h-12 w-12 object-cover" v-if="project.key_visual_path">
@@ -216,7 +225,18 @@ export default {
             type: Object,
             required: true
         },
+        selectable: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
+        selected: {
+            type: Boolean,
+            required: false,
+            default: false
+        },
     },
+    emits: ['toggle-selection'],
     data(){
         return {
             deletingProject: false,
@@ -224,6 +244,11 @@ export default {
         }
     },
     computed: {
+        canDelete(){
+            return this.$role('artwork admin')
+                || this.$can('delete projects')
+                || this.checkPermission(this.project, 'delete');
+        },
         groupPerProject(){
             let groupPerProject = [];
             this.projectGroups.forEach((projectGroup) => {

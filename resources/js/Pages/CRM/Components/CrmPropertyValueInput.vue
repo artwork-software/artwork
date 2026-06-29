@@ -1,11 +1,20 @@
 <template>
     <div>
+        <!-- Uniform external label keeps all field types aligned in a shared grid -->
+        <label
+            v-if="uniformLabel && showExternalLabel"
+            :for="`prop_${property.id}`"
+            class="block text-sm font-medium text-gray-700 mb-1"
+        >
+            {{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span>
+        </label>
+
         <template v-if="property.type === 'text' || property.type === 'link'">
             <BaseInput
                 :id="`prop_${property.id}`"
                 :model-value="value"
                 @update:model-value="$emit('update:value', $event)"
-                :label="$t(property.name) + (required ? ' *' : '')"
+                :label="innerLabel"
                 :disabled="disabled"
                 @focusout="$emit('update:value', $event.target.value)"
             />
@@ -16,7 +25,7 @@
                 :id="`prop_${property.id}`"
                 :model-value="value"
                 @update:model-value="$emit('update:value', $event)"
-                :label="$t(property.name) + (required ? ' *' : '')"
+                :label="innerLabel"
                 :disabled="disabled"
             />
         </template>
@@ -27,7 +36,7 @@
                 type="number"
                 :model-value="value"
                 @update:model-value="$emit('update:value', $event !== null && $event !== '' ? String($event) : '')"
-                :label="$t(property.name) + (required ? ' *' : '')"
+                :label="innerLabel"
                 :disabled="disabled"
             />
         </template>
@@ -38,7 +47,7 @@
                 type="date"
                 :model-value="value"
                 @update:model-value="$emit('update:value', $event)"
-                :label="$t(property.name) + (required ? ' *' : '')"
+                :label="innerLabel"
                 :disabled="disabled"
             />
         </template>
@@ -66,7 +75,7 @@
                         by="id"
                         option-label="name"
                         option-key="id"
-                        :label="$t(property.name) + (required ? ' *' : '')"
+                        :label="uniformLabel ? '' : ($t(property.name) + (required ? ' *' : ''))"
                         :use-translations="true"
                         :placeholder="$t('Select...')"
                         :disabled="disabled"
@@ -133,7 +142,7 @@
                 :id="`prop_${property.id}`"
                 :model-value="value"
                 @update:model-value="$emit('update:value', $event)"
-                :label="$t(property.name) + (required ? ' *' : '')"
+                :label="innerLabel"
                 :disabled="disabled"
             />
         </template>
@@ -149,6 +158,9 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { IconFile, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
+import { useTranslation } from '@/Composeables/Translation.js'
+
+const $t = useTranslation()
 
 const props = defineProps({
     property: { type: Object, required: true },
@@ -157,9 +169,22 @@ const props = defineProps({
     required: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
     error: { type: String, default: '' },
+    // When true, every field type renders a label above the control so they align
+    // consistently within a shared grid (fixes the dropdown-vs-input height mismatch).
+    uniformLabel: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:value'])
+
+// In uniform mode the label is rendered externally for textual/select fields;
+// checkbox & upload already render their own label, so they keep it inline.
+const showExternalLabel = computed(() => !['checkbox', 'upload'].includes(props.property.type))
+
+// Internal label passed to BaseInput/BaseTextarea — suppressed in uniform mode
+// because the external <label> above already shows the field name.
+const innerLabel = computed(() =>
+    props.uniformLabel ? '' : $t(props.property.name) + (props.required ? ' *' : '')
+)
 
 // -- Select type helpers --
 const selectOptions = computed(() => {

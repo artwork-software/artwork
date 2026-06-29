@@ -51,13 +51,14 @@
                                     </div>
 
                                     <!-- CRM-Felder bei CRM-Artist -->
-                                    <div v-if="selectedArtist.is_crm" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <template v-for="prop in props.artistContactTypeProperties" :key="prop.id">
+                                    <div v-if="selectedArtist.is_crm" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                                        <template v-for="prop in orderedArtistProperties" :key="prop.id">
                                             <CrmPropertyValueInput
                                                 :property="prop"
                                                 :value="crmPropertyValues[prop.id] ?? ''"
                                                 :required="prop.is_required"
                                                 :disabled="!canManageCrm"
+                                                uniform-label
                                                 @update:value="crmPropertyValues[prop.id] = $event"
                                             />
                                         </template>
@@ -65,12 +66,13 @@
                                 </div>
 
                                 <!-- Wenn kein Artist gewählt ist und selectArtist = false, zeige dynamische CRM-Felder -->
-                                <div v-else-if="!selectArtist" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <template v-for="prop in props.artistContactTypeProperties" :key="prop.id">
+                                <div v-else-if="!selectArtist" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                                    <template v-for="prop in orderedArtistProperties" :key="prop.id">
                                         <CrmPropertyValueInput
                                             :property="prop"
                                             :value="crmPropertyValues[prop.id] ?? ''"
                                             :required="prop.is_required"
+                                            uniform-label
                                             @update:value="crmPropertyValues[prop.id] = $event"
                                         />
                                     </template>
@@ -578,7 +580,28 @@ const props = defineProps({
         type: Number,
         required: false,
         default: 5.60
+    },
+    defaultDoNotSaveArtist: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    defaultDailyAllowance: {
+        type: Number,
+        required: false,
+        default: 0.00
     }
+})
+
+// Vorname / Nachname / Künstler*innen Name werden in der Eingabemaske nach vorne sortiert,
+// der Rest behält die vom Backend gelieferte Reihenfolge (sort_order).
+const orderedArtistProperties = computed(() => {
+    const priority = ['Vorname', 'Nachname', 'Künstler*innen Name']
+    const rank = (name) => {
+        const index = priority.indexOf(name)
+        return index === -1 ? priority.length : index
+    }
+    return [...(props.artistContactTypeProperties ?? [])].sort((a, b) => rank(a.name) - rank(b.name))
 })
 
 const formatDate = (date) => {
@@ -655,7 +678,7 @@ const artistResidency = useForm({
     artist_crm_contact_id: props.artist_residency?.artist_crm_contact_id ?? null,
     crm_property_values: {},
     sync_crm_changes: false,
-    do_not_save_artist: props.artist_residency?.do_not_save_artist ?? false,
+    do_not_save_artist: props.artist_residency?.do_not_save_artist ?? props.defaultDoNotSaveArtist,
     accommodation_id: null,
     project_id: props.project.id,
     arrival_date: props.artist_residency ? formatDate(props.artist_residency.arrival_date) : '',
@@ -664,7 +687,7 @@ const artistResidency = useForm({
     departure_time: props.artist_residency ? props.artist_residency.departure_time : '',
     type_of_room: null,
     cost_per_night: props.artist_residency ? props.artist_residency.cost_per_night : 0.00,
-    daily_allowance: props.artist_residency ? props.artist_residency.daily_allowance : 0.00,
+    daily_allowance: props.artist_residency ? props.artist_residency.daily_allowance : props.defaultDailyAllowance,
     additional_daily_allowance: props.artist_residency ? props.artist_residency.additional_daily_allowance : 0.00,
     breakfast_count: props.artist_residency ? (props.artist_residency.breakfast_count ?? 0) : 0,
     breakfast_deduction_per_day: props.artist_residency ? (props.artist_residency.breakfast_deduction_per_day ?? props.defaultBreakfastDeduction) : props.defaultBreakfastDeduction,

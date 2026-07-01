@@ -132,6 +132,9 @@ import BuilderProjectMaterialIssueComponent from "@/Pages/Projects/BuilderCompon
 import BuilderProjectContractsDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectContractsDocumentsComponent.vue";
 import BuilderLinkComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkComponent.vue";
 import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkListComponent.vue";
+import BuilderProjectPeriodComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectPeriodComponent.vue";
+import BuilderBiKeyFiguresDisplay from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBiKeyFiguresDisplay.vue";
+import BuilderShiftComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderShiftComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);
@@ -230,6 +233,9 @@ const componentMapping = {
     BuilderLink: BuilderLinkComponent,
     BuilderLinkList: BuilderLinkListComponent,
     BuilderBusinessIntelligenceComponent,
+    BuilderProjectPeriodComponent,
+    BuilderBiKeyFiguresDisplay,
+    BuilderShiftTab: BuilderShiftComponent,
 };
 
 const hasHeaderContent = computed(() => {

@@ -5,7 +5,7 @@
             v-if="linkText && linkText.length > 0"
             :href="linkText"
             target="_blank"
-            class="text-blue-600 hover:underline line-clamp-2 block"
+            class="text-blue-600 hover:underline line-clamp-2 print:line-clamp-none block"
         >
             {{ linkText }}
         </a>

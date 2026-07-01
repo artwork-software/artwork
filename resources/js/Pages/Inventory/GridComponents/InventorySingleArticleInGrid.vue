@@ -9,17 +9,17 @@
 
         <div class="mt-4">
             <div class="flex items-center">
-                <h3 class="xsDark">
+                <h3 class="xsDark break-words min-w-0">
                     {{ item.name }}
                 </h3>
-                <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2" />
+                <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2 shrink-0" />
             </div>
 
-            <p v-if="item?.inventory_number" class="text-xs text-gray-400 font-mono">
+            <p v-if="item?.inventory_number" class="text-xs text-gray-400 font-mono break-words">
                 {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
             </p>
 
-            <p class="text-xs text-gray-500 line-clamp-2">
+            <p class="text-xs text-gray-500 line-clamp-2 break-words">
                 {{ item.description }}
             </p>
 

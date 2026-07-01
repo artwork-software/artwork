@@ -32,7 +32,12 @@
                     <table class="min-w-full divide-y divide-gray-300">
                         <thead>
                         <tr>
-                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">{{ $t('Name')}}</th>
+                            <th v-for="(column, columnIndex) in enabledNameColumns" :key="column.key" scope="col"
+                                :class="columnIndex === 0
+                                    ? 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0'
+                                    : 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900'">
+                                {{ $t(nameColumnLabels[column.key] ?? column.key) }}
+                            </th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Position') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('phone number') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Arrival date') }}</th>
@@ -45,7 +50,7 @@
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
+                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" :name-columns="enabledNameColumns" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
                         </tbody>
                     </table>
                 </div>
@@ -77,6 +82,8 @@
         :crm-accommodations="localCrmAccommodations"
         :artist-contact-type-properties="localArtistContactTypeProperties"
         :default-breakfast-deduction="defaultBreakfastDeduction"
+        :default-do-not-save-artist="defaultDoNotSaveArtist"
+        :default-daily-allowance="defaultDailyAllowance"
     />
 
     <ExportArtistResidenciesModal
@@ -139,6 +146,23 @@ const localCrmArtists = ref([]);
 const localCrmAccommodations = ref([]);
 const localArtistContactTypeProperties = ref([]);
 const defaultBreakfastDeduction = ref(5.60);
+const defaultDoNotSaveArtist = ref(false);
+const defaultDailyAllowance = ref(0.00);
+const nameColumns = ref([
+    { key: 'name', enabled: true },
+    { key: 'first_name', enabled: false },
+    { key: 'last_name', enabled: false },
+]);
+
+const nameColumnLabels = {
+    name: 'Artist name',
+    first_name: 'First name',
+    last_name: 'Last name',
+};
+
+const enabledNameColumns = computed(() =>
+    (nameColumns.value ?? []).filter(column => column.enabled)
+);
 
 watch(
     () => props.project?.id,
@@ -169,6 +193,11 @@ async function fetchArtistResidencies() {
         localCrmAccommodations.value = data?.crm_accommodations ?? [];
         localArtistContactTypeProperties.value = data?.artist_contact_type_properties ?? [];
         defaultBreakfastDeduction.value = data?.default_breakfast_deduction ?? 5.60;
+        defaultDoNotSaveArtist.value = data?.default_do_not_save_artist ?? false;
+        defaultDailyAllowance.value = data?.default_daily_allowance ?? 0.00;
+        if (Array.isArray(data?.name_columns) && data.name_columns.length > 0) {
+            nameColumns.value = data.name_columns;
+        }
     } catch (error) {
         console.error(error);
         loadResidenciesError.value = 'Unable to load artist residencies.';

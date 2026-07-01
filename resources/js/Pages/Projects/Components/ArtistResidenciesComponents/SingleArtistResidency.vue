@@ -1,7 +1,10 @@
 <template>
     <tr :key="artist_residency.id">
-        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-            <div v-if="artist_residency.do_not_save_artist" class="flex items-center gap-1">
+        <td v-for="(column, columnIndex) in nameColumns" :key="column.key"
+            :class="columnIndex === 0
+                ? 'whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0'
+                : 'whitespace-nowrap px-3 py-4 text-sm text-gray-500'">
+            <div v-if="column.key === 'name' && artist_residency.do_not_save_artist" class="flex items-center gap-1">
                 <template v-if="isEditingName">
                     <input
                         ref="nameInputRef"
@@ -13,7 +16,7 @@
                     />
                 </template>
                 <template v-else>
-                    <span>{{ artist_residency?.display_name ?? '' }}</span>
+                    <span>{{ columnValue(column.key) }}</span>
                     <component
                         :is="IconEdit"
                         class="h-3.5 w-3.5 text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
@@ -21,7 +24,7 @@
                     />
                 </template>
             </div>
-            <span v-else>{{ artist_residency?.display_name ?? '' }}</span>
+            <span v-else>{{ columnValue(column.key) }}</span>
         </td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.position || artist_residency?.artist?.position || '' }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.phone_number || artist_residency?.artist?.phone_number || '' }}</td>
@@ -73,10 +76,25 @@ const props = defineProps({
     project: {
         type: Object,
         required: true
+    },
+    nameColumns: {
+        type: Array,
+        required: false,
+        default: () => [{ key: 'name', enabled: true }]
     }
 })
 
 const emit = defineEmits(['editResidency', 'deleted', 'duplicated']);
+
+const columnValue = (key) => {
+    if (key === 'first_name') {
+        return props.artist_residency?.resolved_first_name ?? '';
+    }
+    if (key === 'last_name') {
+        return props.artist_residency?.resolved_last_name ?? '';
+    }
+    return props.artist_residency?.resolved_name ?? props.artist_residency?.display_name ?? '';
+};
 
 const showAddEditArtistResidenciesModal = ref(false);
 
@@ -85,7 +103,7 @@ const editableName = ref('');
 const nameInputRef = ref(null);
 
 const startEditingName = () => {
-    editableName.value = props.artist_residency.display_name ?? '';
+    editableName.value = props.artist_residency.resolved_name ?? props.artist_residency.display_name ?? '';
     isEditingName.value = true;
     nextTick(() => {
         nameInputRef.value?.focus();
@@ -95,7 +113,7 @@ const startEditingName = () => {
 const saveName = async () => {
     isEditingName.value = false;
     const trimmed = editableName.value.trim();
-    if (!trimmed || trimmed === (props.artist_residency.display_name ?? '')) {
+    if (!trimmed || trimmed === (props.artist_residency.resolved_name ?? props.artist_residency.display_name ?? '')) {
         return;
     }
     try {
@@ -105,6 +123,7 @@ const saveName = async () => {
         );
         props.artist_residency.name = trimmed;
         props.artist_residency.display_name = trimmed;
+        props.artist_residency.resolved_name = trimmed;
     } catch (e) {
         console.error(e);
     }

@@ -521,6 +521,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])
         ->name('projects.update_description');
     Route::delete('/projects/force-all', [ProjectController::class, 'forceDeleteAll'])->name('projects.force.all');
+    Route::delete('/projects/bulk-destroy', [ProjectController::class, 'bulkDestroy'])->name('projects.bulk-destroy');
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
@@ -677,6 +678,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Categories
     Route::get('/settings/projects', [CategoryController::class, 'index'])->name('project.settings');
+    Route::get('/settings/projects/artist-residencies', [CategoryController::class, 'artistResidencySettings'])
+        ->name('project.settings.artist_residencies');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);

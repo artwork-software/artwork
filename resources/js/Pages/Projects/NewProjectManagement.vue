@@ -131,6 +131,17 @@
                         <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
                     </button>
 
+                    <!-- Bulk selection mode toggle -->
+                    <button type="button" @click="toggleSelectionMode" v-if="role('artwork admin') || can('delete projects')">
+                        <ToolTipComponent
+                            :icon="IconChecklist"
+                            icon-size="size-6"
+                            :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
+                            direction="bottom"
+                            :classes-button="selectionMode ? 'ui-button text-artwork-buttons-create' : 'ui-button'"
+                        />
+                    </button>
+
                     <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
                 </template>
             </ToolbarHeader>
@@ -199,7 +210,10 @@
                             :create-settings="createSettings"
                             :full-project="pinnedProjectsAll.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at, project.title]"
+                            :selection-mode="selectionMode"
+                            :selected="selectedProjectIds.includes(project.id)"
+                            @toggle-selection="toggleProjectSelection"
+                            v-memo="[project.id, project.updated_at, project.title, selectionMode, selectedProjectIds.includes(project.id)]"
                         />
                     </div>
 
@@ -218,7 +232,10 @@
                             :create-settings="createSettings"
                             :full-project="projects.data.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at, project.title]"
+                            :selection-mode="selectionMode"
+                            :selected="selectedProjectIds.includes(project.id)"
+                            @toggle-selection="toggleProjectSelection"
+                            v-memo="[project.id, project.updated_at, project.title, selectionMode, selectedProjectIds.includes(project.id)]"
                         />
                     </div>
                 </div>
@@ -292,6 +309,65 @@
             :enums="exportTabs"
             :configuration="getExportModalConfiguration()"
         />
+
+        <!-- Selection-mode action bar (move selected projects to trash) -->
+        <div v-if="selectionMode"
+             class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur py-3 pr-6 pl-20 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
+            <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-zinc-600">
+                    <input
+                        type="checkbox"
+                        :checked="allOnPageSelected"
+                        @change="toggleSelectAllOnPage"
+                        class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                    />
+                    {{ $t('Select all on this page') }}
+                    <span class="ml-2 text-zinc-500">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                </label>
+                <div class="flex items-center gap-x-4">
+                    <button type="button" class="text-sm text-zinc-600 hover:text-zinc-900" @click="toggleSelectionMode">
+                        {{ $t('Cancel') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
+                        :class="selectedProjectIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :disabled="selectedProjectIds.length === 0"
+                        @click="openBulkDeleteModal"
+                    >
+                        <component :is="IconTrash" class="h-4 w-4" />
+                        {{ $t('Put in the trash') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk delete confirmation -->
+        <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting">
+            <div class="mx-4">
+                <div class="text-2xl sm:text-3xl font-black text-zinc-900 my-2">
+                    {{ $t('Delete selected projects') }}
+                </div>
+                <div class="text-sm text-rose-600">
+                    {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
+                    <button
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
+                        @click="bulkDeleteProjects"
+                    >
+                        {{ $t('Delete') }}
+                    </button>
+                    <button
+                        type="button"
+                        @click="closeBulkDeleteModal()"
+                        class="text-sm text-zinc-600 hover:underline underline-offset-4"
+                    >
+                        {{ $t('No, not really') }}
+                    </button>
+                </div>
+            </div>
+        </BaseModal>
     </AppLayout>
 </template>
 
@@ -301,13 +377,16 @@ import { router, usePage } from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
+    IconChecklist,
     IconChevronDown,
     IconChevronUp, IconCirclePlus,
     IconFileExport,
     IconGeometry,
     IconSearch,
+    IconTrash,
     IconX
 } from "@tabler/icons-vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
@@ -371,6 +450,51 @@ const page = ref(route().params.page ?? 1);
 const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
+
+// Bulk selection (move multiple projects to trash)
+const selectionMode = ref(false);
+const selectedProjectIds = ref([]);
+const bulkDeleting = ref(false);
+const pageProjectIds = computed(() => (props.projects?.data ?? []).map((p) => p.id));
+const allOnPageSelected = computed(
+    () => pageProjectIds.value.length > 0 && pageProjectIds.value.every((id) => selectedProjectIds.value.includes(id))
+);
+const toggleSelectionMode = () => {
+    selectionMode.value = !selectionMode.value;
+    if (!selectionMode.value) selectedProjectIds.value = [];
+};
+const toggleProjectSelection = (projectId) => {
+    const i = selectedProjectIds.value.indexOf(projectId);
+    if (i === -1) selectedProjectIds.value.push(projectId);
+    else selectedProjectIds.value.splice(i, 1);
+};
+const toggleSelectAllOnPage = () => {
+    if (allOnPageSelected.value) {
+        selectedProjectIds.value = selectedProjectIds.value.filter((id) => !pageProjectIds.value.includes(id));
+    } else {
+        selectedProjectIds.value = [...new Set([...selectedProjectIds.value, ...pageProjectIds.value])];
+    }
+};
+const openBulkDeleteModal = () => {
+    if (selectedProjectIds.value.length) bulkDeleting.value = true;
+};
+const closeBulkDeleteModal = () => (bulkDeleting.value = false);
+const bulkDeleteProjects = () => {
+    router.delete(route("projects.bulk-destroy"), {
+        data: {
+            project_ids: selectedProjectIds.value,
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: project_search.value,
+        },
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedProjectIds.value = [];
+            bulkDeleting.value = false;
+            selectionMode.value = false;
+        },
+    });
+};
 
 // Loading-State für Skeletons
 const isLoading = ref(false);

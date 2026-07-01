@@ -418,12 +418,27 @@ class ProjectController extends Controller
 
     public function updateArtistResidencySettings(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'breakfast_deduction_per_day' => 'required|numeric|min:0',
+            'artist_residency_do_not_save_default' => 'required|boolean',
+            'artist_residency_daily_allowance_default' => 'required|numeric|min:0',
+            'artist_residency_name_columns' => 'required|array',
+            'artist_residency_name_columns.*.key' => 'required|string|in:name,first_name,last_name',
+            'artist_residency_name_columns.*.enabled' => 'required|boolean',
         ]);
 
         $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
-        $settings->breakfast_deduction_per_day = (float) $request->input('breakfast_deduction_per_day');
+        $settings->breakfast_deduction_per_day = (float) $validated['breakfast_deduction_per_day'];
+        $settings->artist_residency_do_not_save_default = (bool) $validated['artist_residency_do_not_save_default'];
+        $settings->artist_residency_daily_allowance_default =
+            (float) $validated['artist_residency_daily_allowance_default'];
+        $settings->artist_residency_name_columns = array_map(
+            static fn (array $column): array => [
+                'key' => $column['key'],
+                'enabled' => (bool) $column['enabled'],
+            ],
+            $validated['artist_residency_name_columns']
+        );
         $settings->save();
 
         return Redirect::back();
@@ -3950,6 +3965,56 @@ class ProjectController extends Controller
         $project->delete();
 
         SoftDeleteProjectJob::dispatch($project->id, Auth::id());
+
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'entitiesPerPage' => $request->get('entitiesPerPage'),
+            'query' => $request->get('query'),
+        ]);
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'project_ids' => 'required|array|min:1',
+            'project_ids.*' => 'integer|exists:projects,id',
+        ]);
+
+        $projects = Project::whereIn('id', $validated['project_ids'])->get();
+
+        foreach ($projects as $project) {
+            // Skip projects the user is not allowed to delete instead of failing the whole batch.
+            if (Auth::user()?->cannot('delete', $project)) {
+                continue;
+            }
+
+            $eventCount = $project->events()->count();
+
+            foreach ($project->users()->get() as $user) {
+                $notificationTitle = __('notification.project.delete_with_events', [
+                    'project' => $project->name,
+                    'count' => $eventCount,
+                ], $user->language);
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'error',
+                    'message' => $notificationTitle
+                ];
+
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
+
+            // Same strategy as destroy(): soft-delete synchronously, offload the cascade to a job.
+            $project->delete();
+            SoftDeleteProjectJob::dispatch($project->id, Auth::id());
+        }
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),

@@ -19,7 +19,7 @@
         <div class="w-full mt-1">
             <BaseCalendar
                 :rooms="rooms"
-                :days="period"
+                :days="enrichedDays"
                 :calendar-data="calendar"
                 :events-without-room="[]"
                 :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
@@ -42,6 +42,7 @@ import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import {computed, onBeforeMount, onMounted, provide, ref} from "vue";
 import {IconAlertSquareRounded, IconX} from "@tabler/icons-vue";
+import { enrichDays } from '@/Composeables/calendarDateUtils.js';
 
 const props = defineProps({
     period: {
@@ -134,6 +135,12 @@ provide('eventStatuses', props.eventStatuses);
 provide('months', props.months);
 provide('event_properties', props.event_properties);
 provide('areas', props.areas);
+
+// Backend liefert seit dem Performance-Refactor nur noch schlanke Tages-DTOs
+// ({ date, holidays, hoursOfDay, isExtraRow }). BaseCalendar erwartet aber die
+// abgeleiteten Felder (withoutFormat, fullDay, isWeekend, ...) — daher client-seitig
+// anreichern, genau wie in Pages/Calendar/Index.vue.
+const enrichedDays = computed(() => enrichDays(props.period))
 
 const showCalendarWarning = ref(props.calendarWarningText)
 

@@ -16,6 +16,7 @@ class ProjectTabArtistResidenciesService
     {
         $artistType = CrmContactType::where('slug', CrmSystemContactTypeEnum::ARTIST->value)->first();
         $accommodationType = CrmContactType::where('slug', CrmSystemContactTypeEnum::ACCOMMODATION->value)->first();
+        $generalSettings = app(GeneralSettings::class);
 
         return [
             'artists' => Artist::all(),
@@ -57,7 +58,10 @@ class ProjectTabArtistResidenciesService
                     'roomType',
                 ])
                 ->get(),
-            'default_breakfast_deduction' => app(GeneralSettings::class)->breakfast_deduction_per_day,
+            'default_breakfast_deduction' => $generalSettings->breakfast_deduction_per_day,
+            'default_do_not_save_artist' => $generalSettings->artist_residency_do_not_save_default,
+            'default_daily_allowance' => $generalSettings->artist_residency_daily_allowance_default,
+            'name_columns' => $generalSettings->artist_residency_name_columns,
         ];
     }
 }

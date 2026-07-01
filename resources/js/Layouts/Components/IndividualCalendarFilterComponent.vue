@@ -183,9 +183,10 @@
                     </Disclosure>
                 </DisclosurePanel>
             </Disclosure>
-            <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
+            <hr v-if="filterArray.eventTypes.length > 0 || filterArray.eventProperties.length > 0"
+                class="border-secondary rounded-full border-2 mt-2 mb-2">
             <!-- Event Filter Section -->
-            <Disclosure v-slot="{ open }">
+            <Disclosure v-if="filterArray.eventTypes.length > 0 || filterArray.eventProperties.length > 0" v-slot="{ open }">
                 <DisclosureButton
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500">
                     <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
@@ -196,8 +197,8 @@
                                      class="h-4 w-4 mt-0.5 text-white"/>
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                    <hr class="border-gray-500 mt-2 mb-2">
-                    <Disclosure v-slot="{ open }">
+                    <hr v-if="filterArray.eventTypes.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <Disclosure v-if="filterArray.eventTypes.length > 0" v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
@@ -219,8 +220,8 @@
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
-                    <Disclosure v-slot="{ open }">
+                    <hr v-if="filterArray.eventProperties.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <Disclosure v-if="filterArray.eventProperties.length > 0" v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
                                 {{ $t('Event properties') }}

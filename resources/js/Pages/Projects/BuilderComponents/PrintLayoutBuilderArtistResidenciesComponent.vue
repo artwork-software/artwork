@@ -14,7 +14,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     <tr v-for="residency in residencies" :key="residency.id">
-                        <td class="whitespace-nowrap py-2 pr-3 text-gray-900">{{ residency.artist_name || '-' }}</td>
+                        <td class="whitespace-nowrap py-2 pr-3 text-gray-900">{{ residency.display_name || '-' }}</td>
                         <td class="whitespace-nowrap px-3 py-2 text-gray-500">{{ residency.position || '-' }}</td>
                         <td class="whitespace-nowrap px-3 py-2 text-gray-500">{{ formatDate(residency.arrival_date) }}</td>
                         <td class="whitespace-nowrap px-3 py-2 text-gray-500">{{ formatDate(residency.departure_date) }}</td>

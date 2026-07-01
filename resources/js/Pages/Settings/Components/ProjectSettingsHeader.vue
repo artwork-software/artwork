@@ -48,6 +48,12 @@ export default defineComponent({
                     permission: true
                 },
                 {
+                    name: this.$t('Artist residencies'),
+                    href: route('project.settings.artist_residencies'),
+                    current: route().current('project.settings.artist_residencies'),
+                    permission: true
+                },
+                {
                     name: this.$t('Project Role Settings'),
                     href: route('project-roles.index'),
                     current: route().current('project-roles.index'),

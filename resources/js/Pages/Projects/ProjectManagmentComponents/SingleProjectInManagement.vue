@@ -28,6 +28,17 @@
                         @click="openProject(component, project)"
                     >
 
+                        <!-- Selection checkbox (only in selection mode, on the title column) -->
+                        <input
+                            v-if="selectionMode && canDelete && component.type === 'ProjectTitleComponent'"
+                            type="checkbox"
+                            :checked="selected"
+                            @click.stop
+                            @change="$emit('toggle-selection', project.id)"
+                            class="mr-3 h-4 w-4 shrink-0 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                            :aria-label="$t('Select project')"
+                        />
+
                         <!-- Visible content -->
                         <component
                             v-if="checkIfComponentIsVisible(component)"
@@ -157,7 +168,15 @@ const props = defineProps({
     createSettings: { type: Object, required: true },
     fullProject: { type: Object, required: true },
     gridTemplateColumns: { type: String, required: true },
+    selectionMode: { type: Boolean, required: false, default: false },
+    selected: { type: Boolean, required: false, default: false },
 });
+
+const emit = defineEmits(['toggle-selection']);
+
+const canDelete = computed(() =>
+    role('artwork admin') || can('delete projects') || checkPermission(props.project, 'delete')
+);
 
 const menuVisible = ref(false);
 const menuPosition = ref({ x: 0, y: 0 });
@@ -216,9 +235,13 @@ const closeEditProjectModal = () => {
 };
 
 const openProject = (component, project) => {
-    if (component.type !== "ActionsComponent") {
-        router.visit(route("projects.tab", { project: project.id, projectTab: project.firstTabId }));
+    if (component.type === "ActionsComponent") return;
+    // In selection mode a row click toggles selection instead of navigating.
+    if (props.selectionMode) {
+        if (canDelete.value) emit("toggle-selection", project.id);
+        return;
     }
+    router.visit(route("projects.tab", { project: project.id, projectTab: project.firstTabId }));
 };
 
 const openProjectInNewTab = (project) => {

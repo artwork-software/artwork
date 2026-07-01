@@ -81,13 +81,15 @@
             </div>
 
             <div class="space-y-1">
-                <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1">
+                <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey"
+                     v-show="Object.values(filterMainCategory).some(sub => sub.length > 0)" class="py-1">
                     <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t(mainKey) }}
                     </div>
 
                     <div class="space-y-2 mt-2">
-                        <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
+                        <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey"
+                             v-show="filterSubCategory.length > 0">
                             <div class="card white px-4 ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                     <div class="text-sm text-gray-900">

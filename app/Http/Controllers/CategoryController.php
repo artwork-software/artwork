@@ -49,7 +49,20 @@ class CategoryController extends Controller
             'currencies' => Currency::select(['id', 'name', 'color'])->get(),
             'states' => ProjectState::select(['id', 'name', 'color', 'is_planning'])->get(),
             'createSettings' => app(ProjectCreateSettings::class),
-            'breakfastDeductionPerDay' => app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class)->breakfast_deduction_per_day
+        ]);
+    }
+
+    public function artistResidencySettings(): Response|ResponseFactory
+    {
+        $this->authorize('viewAny', Category::class);
+
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+
+        return inertia('Settings/ArtistResidencySettings', [
+            'breakfastDeductionPerDay' => $generalSettings->breakfast_deduction_per_day,
+            'artistResidencyDoNotSaveDefault' => $generalSettings->artist_residency_do_not_save_default,
+            'artistResidencyDailyAllowanceDefault' => $generalSettings->artist_residency_daily_allowance_default,
+            'artistResidencyNameColumns' => $generalSettings->artist_residency_name_columns,
         ]);
     }
 

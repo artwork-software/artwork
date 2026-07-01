@@ -72,7 +72,39 @@ class ArtistResidency extends Model
         'crm_property_overrides' => 'array',
     ];
 
-    protected $appends = ['formatted_dates', 'display_name'];
+    protected $appends = [
+        'formatted_dates',
+        'display_name',
+        'resolved_name',
+        'resolved_first_name',
+        'resolved_last_name',
+    ];
+
+    /**
+     * Künstler*innen Name column value – local field with fallback to the linked artist/contact.
+     */
+    public function getResolvedNameAttribute(): ?string
+    {
+        return $this->name
+            ?: $this->artist?->name
+            ?: $this->artistContact?->display_name;
+    }
+
+    /**
+     * Vorname column value – local field with fallback to the linked legacy artist.
+     */
+    public function getResolvedFirstNameAttribute(): ?string
+    {
+        return $this->first_name ?: $this->artist?->first_name;
+    }
+
+    /**
+     * Nachname column value – local field with fallback to the linked legacy artist.
+     */
+    public function getResolvedLastNameAttribute(): ?string
+    {
+        return $this->last_name ?: $this->artist?->last_name;
+    }
 
     /**
      * Returns the artist name – either from the linked Artist or from the local fields.

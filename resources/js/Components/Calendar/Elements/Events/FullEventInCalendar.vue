@@ -3,6 +3,7 @@
         :style="{
       minHeight: isHeightFull ? '100%' : (totalHeight - heightSubtraction(event)) * zoom_factor + 'px',
       backgroundColor: eventBgColor,
+      '--event-contrast-color': eventTextColor,
       fontsize: fontSize,
       lineHeight: lineHeight
     }"

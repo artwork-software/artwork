@@ -695,7 +695,13 @@
 
 
     .event-disabled {
-        background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(189, 189, 189, 0.3) 10px, rgba(189, 189, 189, 0.3) 30px);
+        background-image: repeating-linear-gradient(
+            -45deg,
+            transparent 0,
+            transparent 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 20px
+        );
     }
 
 .tooltip {

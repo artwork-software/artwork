@@ -14,6 +14,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+/.agents
+/.codex
 /data.ms
 /data.ms/*
 MailHog_windows_amd64.exe

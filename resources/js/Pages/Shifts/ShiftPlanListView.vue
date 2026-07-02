@@ -1014,7 +1014,7 @@ const navigateToShiftPlan = async (shift, dayString) => {
     const userId = usePage().props.auth.user.id;
 
     // Ensure weekly (non-daily) view is active
-    await axios.patch(route('user.update.daily_view', userId), { daily_view: false });
+    await axios.patch(route('user.update.daily_view', userId), { daily_view: false, context: 'shift_plan' });
 
     router.patch(route('update.user.shift.calendar.filter.dates', userId), {
         start_date: monday.toISOString().slice(0, 10),

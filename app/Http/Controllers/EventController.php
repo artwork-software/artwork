@@ -263,7 +263,7 @@ class EventController extends Controller
 
         /** @var User $user */
         $user = $this->authManager->user();
-        $isDailyView = (bool) $user->getAttribute('daily_view');
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
         if ($isDailyView) {
             $calendarFilterType = UserFilterTypes::CALENDAR_DAILY_FILTER->value;
@@ -327,7 +327,7 @@ class EventController extends Controller
         }
 
         // Perioden/Monate (leichtgewichtig)
-        $period = $this->calendarDataService->createCalendarPeriodDto($startDate, $endDate, $user, false);
+        $period = $this->calendarDataService->createCalendarPeriodDto($startDate, $endDate, $user, false, $isDailyView);
 
         $months = [];
         foreach ($period as $p) {
@@ -407,7 +407,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $isDailyView = (bool) $user->getAttribute('daily_view');
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
         if ($isDailyView) {
             $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
@@ -479,7 +479,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $isDailyView = (bool) $user->getAttribute('daily_view');
+        $isDailyView = (bool) $user->getAttribute('calendar_daily_view');
 
         if ($isDailyView) {
             $planningFilterType = UserFilterTypes::PLANNING_DAILY_FILTER->value;
@@ -532,7 +532,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             $user,
-            false
+            false,
+            $isDailyView
         );
 
         $months = [];
@@ -643,7 +644,7 @@ class EventController extends Controller
 
         /** @var User $user */
         $user = $this->authManager->user();
-        $isDailyView = !$isInProjectView && (bool) $user->getAttribute('daily_view');
+        $isDailyView = !$isInProjectView && (bool) $user->getAttribute('shift_plan_daily_view');
 
         if ($isDailyView) {
             $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings');
@@ -704,6 +705,8 @@ class EventController extends Controller
             $startDate,
             $endDate,
             $user,
+            true,
+            $isDailyView
         );
 
         $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
@@ -711,7 +714,7 @@ class EventController extends Controller
             $userCalendarFilter,
             $startDate,
             $endDate,
-            (bool) $project || (bool) $user->getAttribute('daily_view'),
+            (bool) $project || $isDailyView,
             $project,
             true
         );
@@ -785,7 +788,7 @@ class EventController extends Controller
     {
         /** @var User $user */
         $user = $this->authManager->user();
-        $isDailyView = (bool) $user->getAttribute('daily_view');
+        $isDailyView = (bool) $user->getAttribute('shift_plan_daily_view');
 
         if ($isDailyView) {
             $shiftFilterType = UserFilterTypes::SHIFT_DAILY_FILTER->value;

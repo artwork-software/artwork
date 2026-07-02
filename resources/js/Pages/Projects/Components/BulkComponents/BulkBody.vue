@@ -23,7 +23,7 @@
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/80 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80 w-fit mx-auto"
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80 w-fit mx-auto"
         >
             <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch

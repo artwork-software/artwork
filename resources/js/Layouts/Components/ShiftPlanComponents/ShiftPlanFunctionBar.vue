@@ -514,12 +514,13 @@ const openHistoryModal = () => {
 };
 
 // Daily view mode management
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const dailyViewMode = ref(usePage().props.auth.user.shift_plan_daily_view ?? false);
 
 const changeDailyViewMode = (newValue) => {
     dailyViewMode.value = newValue;
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
+        daily_view: dailyViewMode.value,
+        context: 'shift_plan'
     }, {
         preserveScroll: false,
         preserveState: false

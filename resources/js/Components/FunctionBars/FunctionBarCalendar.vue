@@ -497,7 +497,7 @@ const props = defineProps({
     }
 })
 
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const dailyViewMode = ref(usePage().props.auth.user.calendar_daily_view ?? false);
 const enableVerification = ref(false);
 const activeCalSettings = computed(() => {
     if (props.dailyView) {
@@ -538,7 +538,8 @@ const closeCalendarAboSettingModal = (bool) => {
 
 const changeDailyViewMode = () => {
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
+        daily_view: dailyViewMode.value,
+        context: 'calendar'
     }, {
         preserveScroll: false,
         preserveState: false
@@ -664,7 +665,8 @@ const jumpToToday = () => {
     if (!dailyViewMode.value) {
         dailyViewMode.value = true;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: true
+            daily_view: true,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,
@@ -716,7 +718,8 @@ const jumpToCurrentMonth = () => {
     if (dailyViewMode.value) {
         dailyViewMode.value = false;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: false
+            daily_view: false,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,

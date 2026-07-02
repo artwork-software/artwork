@@ -1,5 +1,5 @@
 <template>
-    <div class="print:w-full group w-full">
+    <div ref="rowRootEl" class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
             :class="[
@@ -504,6 +504,20 @@ const draftStartDate = ref(props.event.day);
 const draftStartTime = ref(props.event.start_time || '');
 const draftEndTime = ref(props.event.end_time || '');
 
+// Wurzel-Element der Zeile, um beim focusout zu erkennen, ob der Fokus in ein
+// anderes Feld derselben Event-Zeile wandert.
+const rowRootEl = ref(null);
+
+// True, wenn der Fokus beim focusout in ein anderes Eingabefeld derselben Zeile
+// wandert (Feld-zu-Feld-Wechsel). Dann wird die Speicherung/das Autofill aufgeschoben,
+// damit kein Patch/Re-Sort/Autofill den Cursor aus dem gerade angeklickten Feld reißt.
+// Klicks auf Buttons/Menüs zählen NICHT – die sollen ganz normal speichern.
+const focusStaysInRow = (e) => {
+    const rt = e?.relatedTarget;
+    if (!rt || !rowRootEl.value || !rowRootEl.value.contains(rt)) return false;
+    return rt.tagName === 'INPUT' || rt.tagName === 'SELECT' || rt.tagName === 'TEXTAREA';
+};
+
 const parseISODateToUTCMidnight = (iso) => {
     if (!iso) return null;
     const s = String(iso).slice(0, 10);
@@ -682,18 +696,23 @@ const onStartDateFocusOut = async () => {
     // Now apply reactive changes (may trigger re-sort and component re-render)
     props.event.day = newStart;
     props.event.end_day = newEndDay;
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
 };
 
-const onStartTimeFocusOut = () => {
-    // Commit draft start time to actual event object only on focusout
+const onStartTimeFocusOut = (e) => {
+    // Draft immer lokal übernehmen, damit der Wert nicht verloren geht ...
     props.event.start_time = draftStartTime.value;
+    // ... aber Speicherung/Autofill aufschieben, wenn der Fokus in ein anderes Feld
+    // derselben Zeile geht (z.B. Endzeit). Sonst füllt das Autofill die Endzeit vor
+    // und der Cursor springt aus dem gerade angeklickten Feld.
+    if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
 
-const onEndTimeFocusOut = () => {
+const onEndTimeFocusOut = (e) => {
     // Commit draft end time to actual event object only on focusout
     props.event.end_time = draftEndTime.value;
+    if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
 
@@ -740,6 +759,8 @@ watch(() => props.event.day, (v) => {
     if (v && v !== draftStartDate.value) {
         draftStartDate.value = v;
     }
+    // Wochentags-Label mitziehen, wenn sich das Datum extern ändert.
+    dayString.value = getDayOfWeek(v).replace('.', '');
 });
 
 watch(() => props.event.start_time, (v) => {
@@ -761,13 +782,18 @@ const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.l
 
 
 const getDayOfWeek = (date) => {
-    const d = new Date(date);
     const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
-    return days[d.getDay()];
+    // Datum in UTC parsen und mit getUTCDay auslesen, damit der Wochentag zum
+    // angezeigten Kalenderdatum passt – unabhängig von der Zeitzone des Nutzers.
+    // (new Date('2026-04-09') wird als UTC-Mitternacht geparst, .getDay() liest
+    //  aber lokal → je nach Offset Off-by-one, z.B. "Fr" statt "Do".)
+    const d = parseISODateToUTCMidnight(date);
+    if (!d) return '';
+    return days[d.getUTCDay()];
 };
 
 onMounted(() => {
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
     // ensure end_day initialized
     if (!props.event.end_day) props.event.end_day = props.event.day;
     // initialize snapshot so first change is detected

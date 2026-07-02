@@ -11,7 +11,7 @@
       event.occupancy_option ? 'event-disabled' : '',
       calSettings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
-      pageProps.auth.user.daily_view ? 'overflow-y-auto' : '',
+      pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
     ]"
     >

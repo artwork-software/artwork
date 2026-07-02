@@ -67,7 +67,7 @@ class ShiftPlanService
         }
 
         $useDailyView = (bool)$shiftPlanContext['currentProject']
-            || (bool)$shiftPlanContext['currentUser']->getAttribute('daily_view');
+            || (bool)$shiftPlanContext['currentUser']->getAttribute('shift_plan_daily_view');
 
         $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $roomsForRequestedRoom,
@@ -103,7 +103,7 @@ class ShiftPlanService
         }
 
         $useDailyView = (bool)$shiftPlanContext['currentProject']
-            || (bool)$shiftPlanContext['currentUser']->getAttribute('daily_view');
+            || (bool)$shiftPlanContext['currentUser']->getAttribute('shift_plan_daily_view');
 
         $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
             $filteredRooms,
@@ -139,7 +139,7 @@ class ShiftPlanService
         /** @var User $currentUser */
         $currentUser = $request->user();
 
-        $isDailyView = !$isProjectView && (bool) $currentUser->getAttribute('daily_view');
+        $isDailyView = !$isProjectView && (bool) $currentUser->getAttribute('shift_plan_daily_view');
 
         if ($isDailyView) {
             $userCalendarSettings = $currentUser->getAttribute('shift_plan_daily_settings');
@@ -203,6 +203,8 @@ class ShiftPlanService
             $calendarStartDate,
             $calendarEndDate,
             $currentUser,
+            true,
+            $isDailyView
         );
 
         return [

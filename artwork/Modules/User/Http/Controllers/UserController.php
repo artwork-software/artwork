@@ -42,6 +42,7 @@ use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\User\Enums\MemberSortEnum;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
@@ -1547,12 +1548,57 @@ class UserController extends Controller
 
     public function updateDailyView(User $user, Request $request): void
     {
-        $user->update($request->only('daily_view'));
+        $dailyView = $request->boolean('daily_view');
+        // Calendar and shift plan keep their view mode independently. The legacy
+        // "daily_view" column is kept in sync as a fallback for un-migrated readers.
+        $context = $request->get('context', 'calendar');
+
+        $column = $context === 'shift_plan' ? 'shift_plan_daily_view' : 'calendar_daily_view';
+
+        $user->update([
+            $column => $dailyView,
+            'daily_view' => $dailyView,
+        ]);
+
+        // When switching *into* the day view, seed its date range from the current
+        // week-view range so the day view opens where the user currently is
+        // ("vom aktuellen Stand übernehmen"). The week filter stays untouched, so
+        // switching back returns to exactly where the user left off.
+        if ($dailyView) {
+            $seedMap = $context === 'shift_plan'
+                ? [UserFilterTypes::SHIFT_FILTER->value => UserFilterTypes::SHIFT_DAILY_FILTER->value]
+                : [
+                    UserFilterTypes::CALENDAR_FILTER->value => UserFilterTypes::CALENDAR_DAILY_FILTER->value,
+                    UserFilterTypes::PLANNING_FILTER->value => UserFilterTypes::PLANNING_DAILY_FILTER->value,
+                ];
+
+            foreach ($seedMap as $weekType => $dailyType) {
+                $weekFilter = $user->userFilters()->where('filter_type', $weekType)->first();
+                if ($weekFilter?->start_date === null) {
+                    continue;
+                }
+
+                $start = Carbon::parse($weekFilter->start_date)->startOfDay();
+
+                $user->userFilters()->updateOrCreate(
+                    ['filter_type' => $dailyType],
+                    [
+                        'start_date' => $start->format('Y-m-d'),
+                        'end_date' => $start->copy()->addDays(7)->format('Y-m-d'),
+                    ]
+                );
+            }
+        }
     }
 
-    public function updateBulkColumnSize(User $user, Request $request): void
+    public function updateBulkColumnSize(User $user, Request $request): \Illuminate\Http\RedirectResponse
     {
         $user->update($request->only('bulk_column_size'));
+
+        // Redirect zurückgeben, damit Inertia eine gültige Antwort erhält und die
+        // geteilten auth.user-Props (inkl. bulk_column_size) neu lädt – sonst greifen
+        // die neuen Spaltenbreiten erst nach einem vollständigen Reload.
+        return back();
     }
 
     public function updateShowDescriptionInBulk(User $user, Request $request): void

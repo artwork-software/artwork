@@ -1,7 +1,10 @@
 <template>
     <!-- Sticky / Glass Header -->
+    <!-- bg-white als solider Fallback: ohne Hintergrund scheinen beim Scrollen die
+         darunterliegenden Event-Zeilen durch die (transparente) Headerzeile durch.
+         backdrop-blur wird nicht in allen Browsern unterstützt → deshalb voll deckend. -->
     <div
-        class="sticky top-0 z-20 print:static w-max"
+        class="sticky top-0 z-20 print:static w-max bg-white border-b border-zinc-200/70"
     >
         <div
             class="px-6 sm:px-4 mt-2 mb-3"

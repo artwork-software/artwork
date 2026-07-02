@@ -135,17 +135,21 @@
 
 @font-face {
     font-family: 'Inter';
-    src: local('Inter-Regular'), url('../fonts/Inter-Regular.ttf') format('truetype');
+    src: local('Inter-Regular'), url('../fonts/Inter-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
+    /* Deko-Handschrift-Font (ex-NanumPenScript), auf Latein subsettet: 3,4 MB TTF -> ~50 KB woff2 */
     font-family: 'artwork Pen';
-    src: local('artworkPen'), url('../fonts/artworkPen.ttf') format('truetype');
+    src: local('artworkPen'), url('../fonts/artworkPen.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
     font-family: 'Lexend';
-    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.ttf') format('truetype');
+    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
     body {

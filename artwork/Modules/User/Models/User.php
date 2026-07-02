@@ -159,6 +159,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $email_private
  * @property boolean $phone_private
  * @property boolean $daily_view
+ * @property boolean $calendar_daily_view
+ * @property boolean $shift_plan_daily_view
  * @property int $last_project_id
  * @property array $bulk_column_size
  * @property boolean $show_description_in_bulk
@@ -258,6 +260,8 @@ class User extends Model implements
         'email_private',
         'phone_private',
         'daily_view',
+        'calendar_daily_view',
+        'shift_plan_daily_view',
         'entities_per_page',
         'last_project_id',
         'bulk_column_size',
@@ -299,6 +303,8 @@ class User extends Model implements
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
+        'calendar_daily_view' => 'boolean',
+        'shift_plan_daily_view' => 'boolean',
         'bulk_column_size' => 'array',
         'show_description_in_bulk' => 'boolean',
         'show_project_team_names' => 'boolean',

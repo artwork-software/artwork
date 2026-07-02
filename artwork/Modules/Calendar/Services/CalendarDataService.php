@@ -111,7 +111,13 @@ readonly class CalendarDataService
         ];
     }
 
-    public function createCalendarPeriodDto($startDate, $endDate, User $user, bool $extraRow = true): array
+    public function createCalendarPeriodDto(
+        $startDate,
+        $endDate,
+        User $user,
+        bool $extraRow = true,
+        ?bool $isDailyView = null
+    ): array
     {
         if (!$startDate || !$endDate) {
             return [];
@@ -134,7 +140,8 @@ readonly class CalendarDataService
             }
         }
 
-        $hoursOfDay = $user->getAttribute('daily_view')
+        $isDailyView = $isDailyView ?? (bool) $user->getAttribute('daily_view');
+        $hoursOfDay = $isDailyView
             ? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23))
             : [];
 

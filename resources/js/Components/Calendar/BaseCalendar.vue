@@ -158,7 +158,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
+            <div v-else-if="usePage().props.auth.user.calendar_daily_view && !usePage().props.auth.user.at_a_glance">
                 <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -436,7 +436,7 @@ const AsyncSingleEventInCalendar = defineAsyncComponent({
 const user = computed(() => page.props.auth.user);
 const settings = computed(() => user.value.calendar_settings);
 const zoom_factor = ref(user.value.zoom_factor ?? 1);
-const isDaily = computed(() => !!user.value.daily_view);
+const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
 // Maße/Styles

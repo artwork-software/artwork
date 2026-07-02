@@ -563,7 +563,7 @@ const showEventComponent = ref(false)
 
 const isPlanning = ref(false)
 const roomCollisions = ref<any[]>([])
-const dailyViewMode = ref<boolean>(page.props.auth.user.daily_view ?? false)
+const dailyViewMode = ref<boolean>(page.props.auth.user.shift_plan_daily_view ?? false)
 
 // ── P1: Lazy Day-Section Rendering via IntersectionObserver ──
 const visibleDays = ref(new Set<string>())
@@ -1168,7 +1168,7 @@ const eventComponentClosed = () => {
 const changeDailyViewMode = () => {
     router.patch(
         route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value },
+        { daily_view: dailyViewMode.value, context: 'shift_plan' },
         { preserveScroll: false, preserveState: false }
     )
 }
@@ -1177,7 +1177,7 @@ const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => v
     dailyViewMode.value = newValue
     router.patch(
         route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value },
+        { daily_view: dailyViewMode.value, context: 'shift_plan' },
         { preserveScroll: false, preserveState: false, onSuccess: onSuccessCallback }
     )
 }

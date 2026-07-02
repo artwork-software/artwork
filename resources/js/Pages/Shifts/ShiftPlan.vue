@@ -247,34 +247,37 @@
                                     :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
                                     :data-sp-row="rowIndex"
                                 >
-                                    <!-- Project Groups in Events -->
-                                    <template v-if="displayProjectGroups && getRoomDayEvents(room, day.fullDay)?.length">
-                                        <template
-                                            v-for="group in getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, day.fullDay))"
-                                            :key="group.id"
-                                        >
-                                            <Link
-                                                data-sp-pgbar
-                                                :disabled="checkIfUserIsAdminOrInGroup(group)"
-                                                :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
-                                                class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
+                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render -->
+                                    <template v-for="dayEvents in [getRoomDayEvents(room, day.fullDay)]" :key="`cell-events-${day.fullDay}`">
+                                        <!-- Project Groups in Events -->
+                                        <template v-if="displayProjectGroups && dayEvents.length">
+                                            <template
+                                                v-for="group in getAllProjectGroupsInEventsByDay(dayEvents)"
+                                                :key="group.id"
                                             >
-                                                <PropertyIcon :name="group.icon" class="size-4" />
-                                                <span>{{ group.name }}</span>
-                                            </Link>
+                                                <Link
+                                                    data-sp-pgbar
+                                                    :disabled="checkIfUserIsAdminOrInGroup(group)"
+                                                    :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
+                                                    class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
+                                                >
+                                                    <PropertyIcon :name="group.icon" class="size-4" />
+                                                    <span>{{ group.name }}</span>
+                                                </Link>
+                                            </template>
                                         </template>
-                                    </template>
 
-                                    <!-- Events -->
-                                    <template v-if="getRoomDayEvents(room, day.fullDay)?.length">
-                                        <div v-for="event in getRoomDayEvents(room, day.fullDay)" :key="event.id || event.uuid || event.name" class="mb-1" data-sp-eventwrap>
-                                            <SingleEventInShiftPlan
-                                                v-if="!checkIfEventHasShiftsToDisplay(event)"
-                                                :event="event"
-                                                :day="day"
-                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                            />
-                                        </div>
+                                        <!-- Events -->
+                                        <template v-if="dayEvents.length">
+                                            <div v-for="event in dayEvents" :key="event.id || event.uuid || event.name" class="mb-1" data-sp-eventwrap>
+                                                <SingleEventInShiftPlan
+                                                    v-if="!checkIfEventHasShiftsToDisplay(event)"
+                                                    :event="event"
+                                                    :day="day"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                />
+                                            </div>
+                                        </template>
                                     </template>
 
                                     <!-- Shifts -->
@@ -313,6 +316,7 @@
                                                             :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'"
                                                         >
                                                             <SingleShiftInRoom
+                                                                v-memo="[shift, room.__v, multiEditMode, userForMultiEdit, highlightMode, idToHighlight, typeToHighlight, highlightedShiftId]"
                                                                 :multiEditMode="multiEditMode"
                                                                 :user-for-multi-edit="userForMultiEdit"
                                                                 :highlightMode="highlightMode"
@@ -833,6 +837,7 @@ import {
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
+import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
 import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventFormattedDates, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
@@ -1085,6 +1090,13 @@ async function loadShiftPlanWorkers() {
     }
 }
 
+// Websocket-Bursts (z.B. Bulk-Zuweisungen fremder Nutzer) feuern onWorkersNeedReload
+// mehrfach hintereinander. Ohne Entprellung wäre das je ein voller Netzwerk-Reload +
+// komplettes Re-Render der Worker-Übersicht → sichtbares Ruckeln beim Scrollen.
+// Trailing-Debounce (350ms) fasst den Burst zu EINEM Reload zusammen; einzelne Worker
+// werden ohnehin gezielt über reloadSingleWorker (bereits gedrosselt) aktualisiert.
+const debouncedLoadShiftPlanWorkers = debounce(() => { loadShiftPlanWorkers() }, 350)
+
 function numericTypeToWorkerType(type: number|string): string {
     const map: Record<number, string> = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider' }
     return map[type as number] ?? type
@@ -1174,7 +1186,7 @@ const showAddShiftModal = ref(false)
 const shiftToEdit = ref<any | null>(null)
 const newShiftPlanData = ref(props.shiftPlan)
 const openCellMultiEditCalendarDelete = ref(false)
-const dailyViewMode = ref(!!usePage().props.auth.user.daily_view)
+const dailyViewMode = ref(!!usePage().props.auth.user.shift_plan_daily_view)
 const showCalendarWarning = ref<string>(props.calendarWarningText || '')
 const saveQueue = ref<Promise<any>>(Promise.resolve())
 const savingShiftIds = ref<Set<number>>(new Set())
@@ -2027,7 +2039,7 @@ onMounted(async () => {
     attach()
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
-        onWorkersNeedReload: loadShiftPlanWorkers,
+        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
         onWorkerNeedReload: reloadSingleWorker,
         onLookupsReceived: mergeLookups,
     })
@@ -2044,6 +2056,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     detach()
+    debouncedLoadShiftPlanWorkers.cancel()
     monthObserver.value?.disconnect()
     monthObserver.value = null
 
@@ -2137,7 +2150,7 @@ function getDayServicesForCell(worker: any, day: any) {
 function changeDailyViewMode() {
     router.patch(
         route('user.update.daily_view', authUser.value.id),
-        {daily_view: dailyViewMode.value},
+        {daily_view: dailyViewMode.value, context: 'shift_plan'},
         {preserveScroll: false, preserveState: false},
     )
 }

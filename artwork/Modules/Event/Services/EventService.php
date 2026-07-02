@@ -764,13 +764,20 @@ readonly class EventService
         );
     }
 
-    public function generatePeriodArray($startDate, $endDate, User $user, bool $extraRow = true): array
-    {
+    public function generatePeriodArray(
+        $startDate,
+        $endDate,
+        User $user,
+        bool $extraRow = true,
+        ?bool $isDailyView = null
+    ): array {
         $periodArray = [];
 
         if (!$startDate || !$endDate) {
             return $periodArray;
         }
+
+        $isDailyView = $isDailyView ?? (bool) $user->getAttribute('daily_view');
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
@@ -801,7 +808,7 @@ readonly class EventService
                 'isFirstDayOfMonth' => $period->isSameDay($period->copy()->startOfMonth()),
                 'addWeekSeparator' => $period->isSunday(),
                 'holidays' => $holidays,
-                'hoursOfDay' => $user->getAttribute('daily_view')
+                'hoursOfDay' => $isDailyView
                     ? collect(range(0, 23))->map(function ($hour) {
                         return Carbon::createFromTime($hour)->format('H:i');
                     })->toArray()
@@ -1433,7 +1440,8 @@ readonly class EventService
             $startDate,
             $endDate,
             $user,
-            false
+            false,
+            (bool) $user->getAttribute('calendar_daily_view')
         );
 
         if (!$startDate && !$endDate) {

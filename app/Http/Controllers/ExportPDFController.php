@@ -388,7 +388,8 @@ class ExportPDFController extends Controller
 
         // Mirror shiftPlanEventAPI: project view forces non-daily, otherwise respect the user's daily flag.
         $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
-        $isDailyView = !$isInProjectView && $request->boolean('isDailyView', (bool) $user->getAttribute('daily_view'));
+        $isDailyView = !$isInProjectView
+            && $request->boolean('isDailyView', (bool) $user->getAttribute('calendar_daily_view'));
 
         if ($isDailyView) {
             $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings')

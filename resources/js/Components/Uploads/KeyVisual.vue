@@ -9,7 +9,7 @@
             @click="selectNewKeyVisual"
         >
             <div class="space-y-1 text-center">
-                <div class="xsLight flex my-auto h-40 items-center">
+                <div class="xsLight flex my-auto h-14 items-center">
                     <span v-html="$t('Drag your key visual here')"></span>
                     <input
                         id="keyVisual-upload"
@@ -57,14 +57,14 @@
             </div>
 
             <!-- Bild -->
-            <div class="text-center">
+            <div class="text-center w-full">
                 <div class="cursor-pointer">
                     <img
                         :key="cacheBuster"
                         :src="currentPreviewSrc"
                         alt="Aktuelles Key-Visual"
                         @error="(e) => (e.target.src = page.props.big_logo)"
-                        class="rounded-md w-full h-48 object-cover"
+                        class="rounded-md w-full max-h-96 object-contain bg-stone-50"
                     />
                     <input
                         id="keyVisual-upload"

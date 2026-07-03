@@ -125,7 +125,7 @@
             </div>
 
             <div
-                v-for="day in daysLocal"
+                v-for="day in daysToRender"
                 :key="day.withoutFormat"
                 :ref="el => setDayRef(day.withoutFormat, el)"
                 :style="!visibleDays.has(day.withoutFormat)
@@ -1087,6 +1087,26 @@ const roomsForDayMap = computed<Map<string, AnyRoom[]>>(() => {
 const isDayWithoutRooms = (dayLabel: string): boolean => {
     return (roomsForDayMap.value.get(dayLabel)?.length ?? 0) === 0
 }
+
+/**
+ * Hide unoccupied days — Tage ohne jeglichen Termin oder Schicht komplett ausblenden
+ */
+const hideUnoccupiedDays = computed<boolean>(() => {
+    return (page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings)?.hide_unoccupied_days === true
+})
+
+const dayHasContent = (dayLabel: string): boolean => {
+    for (const room of shiftPlanCopy.value || []) {
+        if ((getEventsForRoomDay(room, dayLabel)?.length ?? 0) > 0) return true
+        if ((getFilteredShiftsForRoomDay(room, dayLabel)?.length ?? 0) > 0) return true
+    }
+    return false
+}
+
+const daysToRender = computed<any[]>(() => {
+    if (!hideUnoccupiedDays.value) return daysLocal.value
+    return (daysLocal.value || []).filter((d: any) => d.isExtraRow || dayHasContent(d.fullDay))
+})
 
 /**
  * roomsArray for EventComponent

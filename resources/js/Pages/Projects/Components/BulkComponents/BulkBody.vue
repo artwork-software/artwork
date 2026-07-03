@@ -174,7 +174,10 @@
                         </div>
                     </div>
                 </div>
-                <div :class="isInModal ? 'min-h-96 w-max' : ''">
+                <!-- Modal: kein w-max — die virtualisierten Zeilen sind absolut positioniert und
+                     geben keine intrinsische Breite; w-max ließe den Scroller auf 0px kollabieren.
+                     Die Breite kommt vom w-fit-Elternelement (BulkHeader). -->
+                <div :class="isInModal ? 'min-h-96' : ''">
                     <!--
                         A: Virtualisierte Event-Liste. Statt aller (sehr schweren) BulkSingleEvent-
                         Komponenten wird nur die sichtbare Teilmenge gerendert. Gruppen-Divider,
@@ -205,10 +208,13 @@
                                 item.event ? item.event.name : null,
                             ]"
                         >
-                            <!-- Group Divider -->
+                            <!-- Group Divider
+                                 Abstände in allen Zeilentypen als Padding statt Margin: der
+                                 DynamicScrollerItem misst offsetHeight, Kind-Margins zählen da
+                                 nicht mit — mit Margins überlappen sich die virtuellen Zeilen. -->
                             <DividerChip
                                 v-if="item.kind === 'divider'"
-                                class="mb-6"
+                                class="pb-6"
                                 :class="usePage().props.auth.user.bulk_sort_id === 3 ? 'cursor-pointer' : ''"
                                 variant="brand"
                                 :label="item.group.label"
@@ -216,7 +222,7 @@
                             />
 
                             <!-- Single Event -->
-                            <div v-else-if="item.kind === 'event'" :id="item.eventIndex" class="mx-1 mb-2">
+                            <div v-else-if="item.kind === 'event'" :id="item.eventIndex" class="mx-1 pb-2">
                                 <BulkSingleEvent
                                     :can-edit-component="canEditComponent && hasCreateEventsPermission"
                                     :rooms="rooms"
@@ -240,7 +246,7 @@
 
                             <!-- Add Event Button for this group -->
                             <div v-else-if="item.kind === 'add'"
-                                 class="flex justify-center mt-4 mb-6">
+                                 class="flex justify-center pt-4 pb-6">
                                 <IconCirclePlus
                                     @click="addEmptyEventForGroup(item.group)"
                                     class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
@@ -504,6 +510,12 @@ const copyTypes = ref([
 // BESSER: ref statt reactive([]) für zuverlässiges Re-Rendering bei Reassign/Filter
 const events = ref([]);
 
+// Noch nicht persistierte Zeilen (Modal, Kopien) haben keine event.id — der DynamicScroller
+// braucht aber pro Zeile einen eindeutigen Key, sonst kollabieren mehrere neue Zeilen
+// zu einer einzigen (key-field-Kollision auf "event-undefined").
+let localRowUid = 0;
+const nextLocalRowUid = () => `local-${++localRowUid}`;
+
 // --- BulkEventsBroadcastUpdater Integration
 useBulkEventsBroadcastUpdater(events, computed(() => props.project?.id), {
     onEvent: (event, action) => {
@@ -645,7 +657,7 @@ const flatRows = computed(() => {
         }
 
         group.events.forEach((event, eventIndex) => {
-            rows.push({id: `event-${event.id}`, kind: 'event', event, eventIndex, group});
+            rows.push({id: `event-${event.id ?? event.localUid}`, kind: 'event', event, eventIndex, group});
         });
 
         if (showAddButtons) {
@@ -821,6 +833,7 @@ const addEmptyEvent = () => {
     }
 
     const base = {
+        localUid: nextLocalRowUid(),
         index: events.value.length + 1,
         status: props.eventStatuses?.find(s => s.default) ?? null,
         type: props.eventTypes?.[0] ?? null,
@@ -879,6 +892,7 @@ const addEmptyEventForGroup = (group) => {
     }
 
     const base = {
+        localUid: nextLocalRowUid(),
         index: events.value.length + 1,
         status: baseEvent?.status || props.eventStatuses?.find(s => s.default) || null,
         type: baseEvent?.type || props.eventTypes?.[0] || null,
@@ -952,6 +966,7 @@ const createCopyByEventWithData = (event) => {
         endCursor.setDate(endCursor.getDate() + spanDays);
 
         const clone = {
+            localUid: nextLocalRowUid(),
             index: events.value.length + 1,
             status: event.status,
             type: event.type,

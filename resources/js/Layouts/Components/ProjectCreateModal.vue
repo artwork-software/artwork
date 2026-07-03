@@ -22,9 +22,6 @@
                 </div>
                 <div v-if="!createProjectGroup">
                     <div>
-                       <div v-if="project" class="px-6 py-2">
-                           <KeyVisual :project="project"  />
-                       </div>
                         <div>
                             <div class="px-6 py-2">
                                 <div class="relative flex w-full mb-4">
@@ -374,6 +371,10 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                            <div v-if="project" class="px-6 py-2">
+                                <div class="xsDark mb-1">{{ $t('Key Visual') }}</div>
+                                <KeyVisual :project="project" />
                             </div>
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 mt-5 px-6">

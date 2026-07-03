@@ -4,56 +4,6 @@
                 <div class="headline1 my-2">
                     {{ $t('Edit basic data') }}
                 </div>
-                <div class="group">
-                    <div
-                        class=" flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                        @dragover.prevent
-                        @drop.stop.prevent="uploadDraggedKeyVisual($event)"
-                        @click="selectNewKeyVisual"
-                        v-if="this.project.key_visual_path === null">
-                        <div class="space-y-1 text-center">
-                            <div class="xsLight flex my-auto h-40 items-center"
-                                 v-if="this.project.key_visual_path === null">
-                                <span v-html="$t('Drag your key visual here')"></span>
-                                <input id="keyVisual-upload" ref="keyVisual"
-                                       name="file-upload" type="file" class="sr-only"
-                                       @change="updateKeyVisual"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="flex items-center justify-center relative w-full">
-                        <div
-                            class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                            <button @click="downloadKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
-                            </button>
-                            <button @click="selectNewKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <PropertyIcon name="IconEdit"
-                                    class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                    aria-hidden="true"/>
-                            </button>
-                            <button @click="deleteKeyVisual" type="button"
-                                    class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                       aria-hidden="true"/>
-                            </button>
-                        </div>
-                        <div class="text-center">
-                            <div class="cursor-pointer">
-                                <img src="">
-                                <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
-                                     alt="Aktuelles Key-Visual"
-                                     class="rounded-md w-full h-48">
-                                <input id="keyVisual-upload" ref="keyVisual"
-                                       name="file-upload" type="file" class="sr-only"
-                                       @change="updateKeyVisual"/>
-                            </div>
-                        </div>
-                    </div>
-                    <jet-input-error :message="this.uploadKeyVisualFeedback"/>
-                </div>
                 <input :placeholder="name"
                        id="title"
                        v-model="name"
@@ -188,6 +138,53 @@
                                required
                                class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                     </div>
+                </div>
+                <div class="mt-4 group">
+                    <div class="xsDark mb-1">{{ $t('Key Visual') }}</div>
+                    <div
+                        class="flex w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                        @dragover.prevent
+                        @drop.stop.prevent="uploadDraggedKeyVisual($event)"
+                        @click="selectNewKeyVisual"
+                        v-if="this.project.key_visual_path === null">
+                        <div class="xsLight flex h-12 items-center text-center">
+                            <span v-html="$t('Drag your key visual here')"></span>
+                            <input id="keyVisual-upload" ref="keyVisual"
+                                   name="file-upload" type="file" class="sr-only"
+                                   @change="updateKeyVisual"/>
+                        </div>
+                    </div>
+                    <div v-else class="flex items-center justify-center relative w-full">
+                        <div
+                            class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
+                            <button @click="downloadKeyVisual" type="button"
+                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
+                            </button>
+                            <button @click="selectNewKeyVisual" type="button"
+                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                <PropertyIcon name="IconEdit"
+                                    class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                    aria-hidden="true"/>
+                            </button>
+                            <button @click="deleteKeyVisual" type="button"
+                                    class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                       aria-hidden="true"/>
+                            </button>
+                        </div>
+                        <div class="w-full">
+                            <div class="cursor-pointer">
+                                <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
+                                     alt="Aktuelles Key-Visual"
+                                     class="rounded-md w-full max-h-96 object-contain bg-stone-50">
+                                <input id="keyVisual-upload" ref="keyVisual"
+                                       name="file-upload" type="file" class="sr-only"
+                                       @change="updateKeyVisual"/>
+                            </div>
+                        </div>
+                    </div>
+                    <jet-input-error :message="this.uploadKeyVisualFeedback"/>
                 </div>
             </div>
             <div class="justify-center flex w-full my-6">

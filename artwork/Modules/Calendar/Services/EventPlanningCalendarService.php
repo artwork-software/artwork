@@ -56,7 +56,6 @@ class EventPlanningCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email',
-                'shifts:id,event_id,start_date,end_date',
             ])
             ->withExists([
                 'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
@@ -135,6 +134,14 @@ class EventPlanningCalendarService
 
         foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+
+        if ($userCalendarSettings?->work_shifts) {
+            $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
+        } else {
+            foreach ($rooms as $room) {
+                $room->shifts = collect();
+            }
         }
 
         return $rooms;

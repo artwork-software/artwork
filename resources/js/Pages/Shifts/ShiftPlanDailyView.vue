@@ -82,6 +82,14 @@
                     </div>
 
                     <div class="flex items-center gap-x-5">
+                        <BaseUIButton
+                            v-if="isInProjectView && (can('can plan shifts') || is('artwork admin'))"
+                            :label="$t('Add Shift')"
+                            :icon="IconCalendarUser"
+                            is-small
+                            @click="openAddShiftForRoomAndDay(null, null)"
+                        />
+
                         <SwitchIconTooltip
                             v-if="!props.project"
                             v-model="dailyViewMode"
@@ -496,7 +504,13 @@ provide("event_properties",
  * Lokaler State
  */
 const showCalendarWarning = ref(props.calendarWarningText)
-const daysLocal = shallowRef<any[]>(props.days ?? [])
+
+// Extra rows (KW-Trennzeilen der Wochenansicht) werden in der Tagesansicht nicht gerendert,
+// haben aber kein withoutFormat/fullDay: ihr Lazy-Loading-Platzhalter (minHeight) würde nie
+// aufgelöst (Observer-Key undefined) und erzeugt dauerhaften Leerraum → herausfiltern
+const withoutExtraRows = (days: any[]) => (days ?? []).filter((d: any) => !d?.isExtraRow)
+
+const daysLocal = shallowRef<any[]>(withoutExtraRows(props.days as any[]))
 
 // G4: Stable empty array to avoid creating new references
 const EMPTY_ARRAY: readonly any[] = Object.freeze([])
@@ -865,7 +879,7 @@ const initializeDailyShiftPlan = async () => {
         })
 
         const metaRooms = metaData.rooms ?? []
-        daysLocal.value = enrichDays(metaData.days ?? [])
+        daysLocal.value = withoutExtraRows(enrichDays(metaData.days ?? []))
 
         // Show skeleton rooms immediately while batch loads
         shiftPlanCopy.value = metaRooms.map((r: any) => ({
@@ -896,12 +910,18 @@ const initializeDailyShiftPlan = async () => {
         return
     }
 
-    daysLocal.value = enrichDays(props.days ?? [])
+    daysLocal.value = withoutExtraRows(enrichDays(props.days ?? []))
     shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
     triggerRef(shiftPlanCopy)
 }
 
-watch(() => props.days, (v) => { daysLocal.value = v ?? [] })
+watch(() => props.days, (v) => { daysLocal.value = withoutExtraRows(v as any[]) })
+
+// Zeitraum geändert (z.B. Schicht außerhalb des Projektzeitraums angelegt → headerObject/dateRange
+// aktualisiert): Daten für den neuen Zeitraum nachladen
+watch(() => [props.dateValue?.[0], props.dateValue?.[1]], ([newStart, newEnd], [oldStart, oldEnd]) => {
+    if (newStart !== oldStart || newEnd !== oldEnd) initializeDailyShiftPlan()
+})
 watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
     triggerRef(shiftPlanCopy)
@@ -1134,7 +1154,7 @@ const shiftQualificationsArray = computed(() =>
 /**
  * Modals
  */
-const openAddShiftForRoomAndDay = (day: string, roomId: number | null) => {
+const openAddShiftForRoomAndDay = (day: string | null, roomId: number | null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = roomId
     dayForShiftAdd.value = day
@@ -1148,6 +1168,14 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
 }
 
 const closeAddShiftModal = (success = false, shift = null) => {
+    // Erstellung über den Topbar-Button (freie Datumswahl, kein Tag/keine Schicht vorgegeben):
+    // Der Store-Request liefert keine neuen Props; der Broadcast erreicht nur bereits
+    // gerenderte Tage. Daher headerObject (Zeitraum-Quelle) nachladen und Daten neu holen.
+    const wasFreeDateCreate = success
+        && showAddShiftModal.value
+        && shiftToEdit.value === null
+        && dayForShiftAdd.value === null
+
     if (success && shift) {
         const room = shiftPlanCopy.value.find((r: any) => (r.roomId ?? r.id) === shift.roomId)
         if (room) {
@@ -1166,6 +1194,22 @@ const closeAddShiftModal = (success = false, shift = null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
+
+    if (wasFreeDateCreate && props.isInProjectView) {
+        const prevStart = props.dateValue?.[0]
+        const prevEnd = props.dateValue?.[1]
+        router.reload({
+            only: ['headerObject'],
+            onFinish: () => nextTick(() => {
+                // Zeitraum unverändert (Schicht innerhalb): der dateValue-Watcher feuert
+                // nicht, daher hier explizit neu laden. Bei geändertem Zeitraum lädt
+                // bereits der Watcher.
+                if (props.dateValue?.[0] === prevStart && props.dateValue?.[1] === prevEnd) {
+                    initializeDailyShiftPlan()
+                }
+            }),
+        })
+    }
 }
 
 const openNewEventModalWithBaseData = (day: string, roomId: number | null) => {

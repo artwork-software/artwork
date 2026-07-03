@@ -80,8 +80,8 @@
                 </div>
             </div>
 
-            <!-- Shift Description -->
-            <div class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+            <!-- Shift Description (Anzeigeeinstellung "Notizen einblenden") -->
+            <div v-if="showNotes" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
                 <template v-if="shift.description">
                     <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
                     <component
@@ -404,6 +404,13 @@ const props = defineProps({
 
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
+const showNotes = computed(() => {
+    const pageProps = usePage().props
+    const settings = pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
+    return !!settings?.shift_notes
+})
 
 // Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
 function normalizeTime(val) {

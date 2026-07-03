@@ -400,6 +400,29 @@ class EventController extends Controller
                 : null,
             'filterType' => $calendarFilterType,
             'isDailyView' => $isDailyView,
+            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
+            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
+                : [],
+            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->globalQualificationService->getAll()
+                : [],
+            'crafts' => fn () => $userCalendarSettings?->work_shifts
+                ? Craft::query()
+                    ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
+                    ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                    ->orderBy('position')
+                    ->get()
+                : [],
+            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->getCurrentUserCrafts($user)
+                : [],
+            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftTimePresetService->getAll()
+                : [],
+            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftGroupService->getAllShiftGroups()
+                : [],
         ]);
     }
 
@@ -627,6 +650,29 @@ class EventController extends Controller
             'verifierForEventTypIds' => $user->verifiableEventTypes->pluck('id'),
             'filterType' => $planningFilterType,
             'isDailyView' => $isDailyView,
+            // Daten für Schicht-Karten + Schicht-Bearbeiten-Modal (nur bei aktivem "Schichten anzeigen")
+            'shiftQualifications' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
+                : [],
+            'globalQualifications' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->globalQualificationService->getAll()
+                : [],
+            'crafts' => fn () => $userCalendarSettings?->work_shifts
+                ? Craft::query()
+                    ->select(['id', 'name', 'abbreviation', 'color', 'universally_applicable', 'position'])
+                    ->without(['craftShiftPlaner', 'craftInventoryPlaner'])
+                    ->orderBy('position')
+                    ->get()
+                : [],
+            'currentUserCrafts' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->getCurrentUserCrafts($user)
+                : [],
+            'shiftTimePresets' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftTimePresetService->getAll()
+                : [],
+            'shiftGroups' => fn () => $userCalendarSettings?->work_shifts
+                ? $this->shiftGroupService->getAllShiftGroups()
+                : [],
         ]);
     }
 

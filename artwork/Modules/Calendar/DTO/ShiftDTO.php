@@ -28,6 +28,7 @@ class ShiftDTO extends Data
         public ?array $globalQualifications = null,
         public ?int $shiftGroupId = null,
         public ?array $craft = null,
+        public ?string $projectName = null,
     ) {
     }
 
@@ -55,6 +56,7 @@ class ShiftDTO extends Data
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
             craft: self::serializeCraft($shift),
+            projectName: $resolvedProject?->name,
         );
     }
 

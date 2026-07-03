@@ -2,7 +2,7 @@
     <div class="w-max -ml-3">
         <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-40 top-[71px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
-            <div v-for="room in calendarData" :key="room.roomId ?? room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+            <div v-for="room in calendarData" :key="room.roomId ?? room.id" :style="roomWidthStyle(room)" class="flex items-center h-full truncate">
                 <SingleRoomInHeader :room="room" is-light />
             </div>
         </div>
@@ -58,8 +58,7 @@
 
                             <div v-for="room in calendarData" :key="room.id" class="">
                                 <div :style="{
-                                    minWidth: zoom_factor * 212 + 'px',
-                                    maxWidth: zoom_factor * 212 + 'px',
+                                    ...roomWidthStyle(room),
                                     height: zoom_factor * 115 + 'px',
                                     minHeight: zoom_factor * 115 + 'px',
                                     overflow: 'visible',
@@ -67,13 +66,22 @@
                                     }"
                                      class="group/container"
                                      :id="'scroll_container-' + day.withoutFormat">
-                                    <!-- Container für die Events -->
+                                    <!-- Container für die Events + eigenständigen Schichten -->
                                     <div>
-                                        <div v-for="(event, index) in (room.content[day.fullDay]?.events || [])" :key="event.id">
-                                            <div v-if="event && shouldRenderEvent(event, day, hour)"
+                                        <div v-for="(event, index) in itemsForCell(room, day)" :key="event.id">
+                                            <div v-if="event && event.isShift && shouldRenderEvent(event, day, hour)"
+                                                 class="rounded-lg z-10"
+                                                 :style="getEventStyle(event, day, hour, zoom_factor, itemsForCell(room, day))">
+                                                <ShiftInCalendarCell
+                                                    :shift="event.shift"
+                                                    :day="day.fullDay"
+                                                    @shift-edited="emits('shiftEdited', day)"
+                                                />
+                                            </div>
+                                            <div v-else-if="event && shouldRenderEvent(event, day, hour)"
                                                  class="rounded-lg z-10"
                                                  :id="'event_scroll-' + index + '-day-' + day.withoutFormat"
-                                                 :style="getEventStyle(event, day, hour, zoom_factor, room.content[day.fullDay]?.events || [])"
+                                                 :style="getEventStyle(event, day, hour, zoom_factor, itemsForCell(room, day))"
                                                  @click="onEventClick(event, $event)">
                                                 <SingleEventInCalendar
                                                     :event="event"
@@ -82,7 +90,7 @@
                                                     :first-project-shift-tab-id="firstProjectShiftTabId"
                                                     :first_project_tab_id="firstProjectTabId"
                                                     :multi-edit="multiEdit"
-                                                    :width="zoom_factor * 212"
+                                                    :width="roomWidthPx(room)"
                                                     :is-height-full="true"
                                                     @edit-event="showEditEventModel"
                                                     @edit-sub-event="openAddSubEventModal"
@@ -106,10 +114,11 @@
 </template>
 
 <script setup>
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import SingleEventInCalendar from "@/Components/Calendar/Elements/SingleEventInCalendar.vue";
+import ShiftInCalendarCell from "@/Components/Calendar/Elements/ShiftInCalendarCell.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {usePermission} from "@/Composeables/Permission.js";
@@ -173,8 +182,72 @@ const emits = defineEmits([
     'openAddSubEventModal',
     'openConfirmModal',
     'showDeclineEventModal',
-    'changedMultiEditCheckbox'
+    'changedMultiEditCheckbox',
+    'shiftEdited'
 ]);
+
+// Zeit "HH:MM" aus "HH:MM", "HH:MM:SS" oder ISO-Datetime extrahieren
+const extractTime = (val) => {
+    const str = String(val ?? '');
+    const match = str.match(/(\d{2}:\d{2})/);
+    return match ? match[1] : '00:00';
+};
+
+// Eigenständige Schicht → Pseudo-Event, damit Positionierung (shouldRenderEvent /
+// getEventStyle / Spalten-Layout) gemeinsam mit den Terminen funktioniert.
+const shiftToPseudoEvent = (shift) => {
+    const startTime = extractTime(shift.start);
+    const endTime = extractTime(shift.end);
+    return {
+        id: 'shift-' + shift.id,
+        isShift: true,
+        shift,
+        allDay: false,
+        start: `${shift.startDate} ${startTime}`,
+        end: `${shift.endDate} ${endTime}`,
+        startHour: parseInt(startTime.split(':')[0], 10) || 0,
+        minutesFormStartHourToStart: parseInt(startTime.split(':')[1], 10) || 0,
+        formattedDates: { startTime, endTime },
+    };
+};
+
+// Termine + eigenständige Schichten einer Raum-Tag-Zelle
+const itemsForCell = (room, day) => {
+    const events = room.content[day.fullDay]?.events || [];
+    const shifts = (room.content[day.fullDay]?.shifts || []).map(shiftToPseudoEvent);
+    return shifts.length === 0 ? events : [...events, ...shifts];
+};
+
+// Mindestbreite pro Termin/Schicht in der Tagesansicht: bei vielen parallelen Einträgen
+// wird die Raumspalte breiter statt die Karten schmaler — horizontal wird dann gescrollt.
+const MIN_ITEM_WIDTH_FACTOR = 160;
+
+const roomWidthById = computed(() => {
+    const widths = {};
+    const baseWidth = zoom_factor.value * 212;
+    const minItemWidth = zoom_factor.value * MIN_ITEM_WIDTH_FACTOR;
+
+    for (const room of props.calendarData) {
+        let maxCols = 1;
+        for (const day of props.days) {
+            const items = itemsForCell(room, day);
+            if (items.length < 2) continue;
+            const layout = computeEventLayout(items, day);
+            for (const entry of layout.values()) {
+                if (entry.totalCols > maxCols) maxCols = entry.totalCols;
+            }
+        }
+        widths[room.roomId ?? room.id] = Math.max(baseWidth, maxCols * minItemWidth);
+    }
+
+    return widths;
+});
+
+const roomWidthPx = (room) => roomWidthById.value[room.roomId ?? room.id] ?? zoom_factor.value * 212;
+const roomWidthStyle = (room) => {
+    const width = roomWidthPx(room) + 'px';
+    return { minWidth: width, maxWidth: width, width };
+};
 
 const daysWithoutEventsToDisplayHiddenHours = ref([]);
 
@@ -346,7 +419,7 @@ const eventIntervalOnThisDay = (ev, day) => {
 // Prüft ob irgendein nicht-ganztägiges Event auf diesem Tag in eine versteckte Stunde fällt
 const hasAnyOccupancyInHidden = (day, calendarData, hiddenHourSet) => {
     for (const room of calendarData) {
-        const events = room.content[day.fullDay]?.events || [];
+        const events = itemsForCell(room, day);
         for (const ev of events) {
             const interval = eventIntervalOnThisDay(ev, day);
             if (!interval) continue;

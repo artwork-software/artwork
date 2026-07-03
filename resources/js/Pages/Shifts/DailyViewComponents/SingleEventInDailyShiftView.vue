@@ -40,6 +40,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
+        <div v-if="showNotes && event.description" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+            <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: event.description, class: 'aw-tooltip' }">{{ event.description }}</span>
+        </div>
     </div>
 
     <div v-if="showEventDetails && !isFollowUpDay" class="mt-1 ml-2">
@@ -181,6 +186,13 @@ const formattedDates = computed(() => props.event.formattedDates ?? computeEvent
 
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
+const showNotes = computed(() => {
+    const page = usePage()
+    const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings
+    return !!settings?.shift_notes
+})
 
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
 const displayStartTime = computed(() => {

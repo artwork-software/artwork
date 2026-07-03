@@ -357,22 +357,6 @@
                         </div>
                     </div>
 
-                    <!-- Schichten kompakt rechts daneben -->
-                    <div
-                        v-if="calSettings.work_shifts"
-                        class="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-0.5 text-xs pt-0.5"
-                    >
-                        <a
-                            v-if="firstProjectShiftTabId"
-                            v-for="shift in event.shifts"
-                            :key="shift.id"
-                            :href="route('projects.tab', { project: event?.project?.id, projectTab: firstProjectShiftTabId })"
-                            class="hover:underline underline-offset-2"
-                        >
-                            <span class="font-medium">{{ shift?.craft?.abbreviation }}</span>
-                            <span class="opacity-80"> ({{ shift?.worker_count }}/{{ shift?.max_worker_count }})</span>
-                        </a>
-                    </div>
                 </div>
             </div>
 
@@ -632,19 +616,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Schichten -->
-                                        <div v-if="calSettings.work_shifts" class="grid grid-cols-1 gap-y-0.5 text-xs pt-0.5">
-                                            <a
-                                                v-if="firstProjectShiftTabId"
-                                                v-for="shift in event.shifts"
-                                                :key="'tooltip-shift-'+shift.id"
-                                                :href="route('projects.tab', { project: event?.project?.id, projectTab: firstProjectShiftTabId })"
-                                                class="hover:underline underline-offset-2"
-                                            >
-                                                <span class="font-medium">{{ shift?.craft?.abbreviation }}</span>
-                                                <span class="opacity-80"> ({{ shift?.worker_count }}/{{ shift?.max_worker_count }})</span>
-                                            </a>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -772,20 +743,6 @@
                             </template>
                         </div>
 
-                        <!-- Schichten -->
-                        <div
-                            v-if="calSettings.work_shifts"
-                            class="mt-1 text-xs"
-                            :style="{ color: eventTypeTextColor }"
-                        >
-                            <div v-for="shift in subEvent.shifts" :key="'subs-'+shift.id">
-                                <span class="font-medium">{{ shift.craft.abbreviation }}</span>
-                                (
-                                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))" />/{{ shift.number_employees }}
-                                <span v-if="shift.number_masters > 0"> | {{ shift.master_count }}/{{ shift.number_masters }}</span>
-                                )
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1198,7 +1155,6 @@ const totalHeight = computed(() => {
     if (calSettings.value.options) height += 0;
     if (calSettings.value.project_management) height += 17;
     if (calSettings.value.repeating_events) height += 20;
-    if (calSettings.value.work_shifts) height += 18;
     return height;
 });
 
@@ -1209,9 +1165,6 @@ const heightSubtraction = (event) => {
     }
     if (calSettings.value.repeating_events && (!event.is_series || event.is_series === false)) {
         heightSubtraction += 20;
-    }
-    if (calSettings.value.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
-        heightSubtraction += 18;
     }
     return heightSubtraction;
 };

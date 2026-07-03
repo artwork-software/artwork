@@ -472,9 +472,9 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="work_shifts" class="font-medium text-gray-900">{{ $t('Shifts') }}</label>
+                            <label for="work_shifts" class="font-medium text-gray-900">{{ $t('Show shifts') }}</label>
                             <p id="work_shifts-description" class="text-gray-500 text-xs">
-                                {{ $t('Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.') }}
+                                {{ $t('Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.') }}
                             </p>
                         </div>
                     </div>

@@ -2548,6 +2548,11 @@ class ProjectController extends Controller
         $headerObject->firstEventInProject = $firstEvent;
         $headerObject->lastEventInProject  = $lastEvent;
 
+        // Schichten können auch außerhalb des Event-Zeitraums liegen (z.B. Auf-/Abbau);
+        // der Schichttab richtet seinen Zeitraum am Min/Max über Events UND Schichten aus.
+        $headerObject->firstShiftInProject = $project->shifts()->min('start_date');
+        $headerObject->lastShiftInProject  = $project->shifts()->max('end_date');
+
         $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
         $headerObject->eventTypes        = $this->eventTypeService->getAll();
         $headerObject->eventStatuses     = app(EventSettings::class)->enable_status

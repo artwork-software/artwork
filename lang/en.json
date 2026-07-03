@@ -3106,6 +3106,8 @@
     "List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.": "List the responsible project managers in the calendar and ensure clarity as to who is responsible for coordination and management.",
     "Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.": "Indicates events that take place regularly, ideal for planning recurring meetings or rehearsals.",
     "Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.": "Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.",
+    "Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.": "Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.",
+    "Show shifts": "Show shifts",
     "Contains additional information or notes about the event, perfect for recording details or special features.": "Contains additional information or notes about the event, perfect for recording details or special features.",
     "The title or name of the calendar entry provides information about the content or purpose of the event at a glance.": "The title or name of the calendar entry provides information about the content or purpose of the event at a glance.",
     "Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.": "Expands all days in the calendar automatically, so you can see all events at a glance without having to scroll.",

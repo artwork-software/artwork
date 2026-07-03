@@ -51,6 +51,70 @@
             </div>
         </section>
 
+        <!-- Default project roles -->
+        <section v-if="userType === 'user'" class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+            <div class="px-6 py-5 sm:px-8 sm:py-7">
+                <h3 class="text-lg font-semibold text-zinc-900">
+                    {{ $t('Default project roles') }}
+                </h3>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ $t('These project roles are automatically assigned when the user is added to a project team.') }}
+                </p>
+
+                <div v-if="projectRoles.length > 0" class="mt-4">
+                    <Listbox as="div" class="relative" v-model="defaultProjectRoleIdsModel" multiple>
+                        <ListboxButton
+                            class="flex w-80 items-center justify-between rounded-xl border border-zinc-300 bg-white px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        >
+                            <span class="block truncate">
+                                <template v-if="defaultProjectRoleIds.length">
+                                    {{ $t('{count} selected', { count: defaultProjectRoleIds.length }) }}
+                                </template>
+                                <span v-else class="text-zinc-500">{{ $t('Select project roles') }}</span>
+                            </span>
+                            <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
+                        </ListboxButton>
+
+                        <ListboxOptions
+                            class="absolute z-10 mt-2 max-h-64 w-80 overflow-auto rounded-xl border border-zinc-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                        >
+                            <ListboxOption
+                                v-for="role in projectRoles"
+                                :key="role.id"
+                                as="template"
+                                :value="role.id"
+                                v-slot="{ selected }"
+                            >
+                                <li class="flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 hover:bg-zinc-50">
+                                    <span :class="selected ? 'font-medium' : 'font-normal'">
+                                        {{ role.name }}
+                                    </span>
+                                    <CheckIcon v-if="selected" class="h-5 w-5 text-blue-600" aria-hidden="true" />
+                                </li>
+                            </ListboxOption>
+                        </ListboxOptions>
+                    </Listbox>
+
+                    <div v-if="selectedDefaultProjectRoles.length" class="mt-4 flex flex-wrap gap-2">
+                        <div
+                            v-for="role in selectedDefaultProjectRoles"
+                            :key="role.id"
+                            class="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 pl-3 pr-2 py-1"
+                        >
+                            <span class="text-sm text-zinc-800">{{ role.name }}</span>
+                            <button type="button" @click="removeDefaultProjectRole(role.id)" class="rounded-full p-1 hover:bg-zinc-100">
+                                <XIcon class="h-4 w-4 text-zinc-400 hover:text-red-600" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <p v-else class="mt-4 text-sm text-zinc-400">
+                    {{ $t('No project roles created yet') }}
+                </p>
+            </div>
+        </section>
+
         <!-- Crafts -->
         <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
             <div class="px-6 py-5 sm:px-8 sm:py-7">
@@ -347,6 +411,33 @@ const craftSettingsForm = useForm({
 
 /* UI state */
 const selectedCraftToAssign = ref(null)
+
+/* Default project roles (only relevant for userType 'user').
+   Selection state derives from props so the UI always reflects the server:
+   failed or server-filtered saves revert visibly once the response arrives. */
+const projectRoles = computed(() => usePage().props.projectRoles ?? [])
+const defaultProjectRoleIds = computed(() => props.user.defaultProjectRoleIds ?? [])
+
+const defaultProjectRoleIdsModel = computed({
+    get: () => defaultProjectRoleIds.value,
+    set: (roleIds) => saveDefaultProjectRoles(roleIds),
+})
+
+const selectedDefaultProjectRoles = computed(() =>
+    projectRoles.value.filter(role => defaultProjectRoleIds.value.includes(role.id))
+)
+
+const saveDefaultProjectRoles = (roleIds) => {
+    router.patch(
+        route('user.update.defaultProjectRoles', { user: props.user.id }),
+        { defaultProjectRoleIds: roleIds },
+        { preserveScroll: true, preserveState: true }
+    )
+}
+
+const removeDefaultProjectRole = (roleId) => {
+    saveDefaultProjectRoles(defaultProjectRoleIds.value.filter(id => id !== roleId))
+}
 
 /* Computed: shift qualifications mapped w/ toggled flag */
 const computedShiftQualifications = computed(() => {

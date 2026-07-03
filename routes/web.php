@@ -457,6 +457,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
+    Route::patch('/users/{user}/defaultProjectRoles', [UserController::class, 'updateDefaultProjectRoles'])
+        ->name('user.update.defaultProjectRoles');
     Route::patch('/users/{user}/{qualification}/shift-qualification', [UserController::class, 'updateShiftQualification'])
         ->name('user.update.shift-qualification');
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])

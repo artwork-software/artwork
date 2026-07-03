@@ -29,6 +29,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
@@ -439,6 +440,11 @@ class User extends Model implements
     {
         return $this->belongsToMany(Project::class)
             ->withPivot('access_budget', 'is_manager', 'can_write');
+    }
+
+    public function defaultProjectRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(ProjectRole::class, 'default_project_role_user');
     }
 
     public function comments(): HasMany

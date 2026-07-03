@@ -58,6 +58,7 @@ class UserWorkProfileResource extends JsonResource
                 fn($craft) => !$assignedCrafts->pluck('id')->contains($craft->getAttribute('id'))
             )->toArray(),
             'shiftQualifications' => $this->getAttribute('shiftQualifications'),
+            'defaultProjectRoleIds' => $this->getAttribute('defaultProjectRoles')->pluck('id')->toArray(),
             'is_freelancer' => $this->getAttribute('is_freelancer'),
             'email' => $this->getAttribute('email'),
         ];

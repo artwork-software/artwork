@@ -2,8 +2,14 @@
     <div>
         <div class="flex items-center gap-x-5">
             <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project team') }}</span>
-            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
-                      @click="showTeamModal = true"
+            <!-- Bearbeiten erst nach erfolgreich geladenen Teamdaten: sonst würde ein Speichern
+                 mit leerer Teamliste alle bestehenden Mitglieder aus dem Projekt entfernen -->
+            <IconEdit class="w-5 h-5 rounded-full"
+                      :class="[
+                          inSidebar ? 'text-white' : 'text-artwork-buttons-context',
+                          teamDataLoaded ? 'cursor-pointer' : 'opacity-50 cursor-wait'
+                      ]"
+                      @click="teamDataLoaded ? showTeamModal = true : ensureTeamData(true)"
                       v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"
             />
             <SwitchIconTooltip
@@ -167,6 +173,7 @@ export default defineComponent({
             showTeamModal: false,
             loadingTeam: false,
             loadError: null,
+            teamDataLoaded: hasInitialTeam,
             localProject: hasInitialTeam ? this.project : null,
             showNames: this.$page.props.auth.user.show_project_team_names ?? false
         };
@@ -190,6 +197,7 @@ export default defineComponent({
             handler(newProject) {
                 if (this.projectHasTeamData(newProject)) {
                     this.localProject = newProject;
+                    this.teamDataLoaded = true;
                 }
             }
         }
@@ -204,6 +212,7 @@ export default defineComponent({
     methods: {
         async ensureTeamData(force = false) {
             if (!force && this.projectHasTeamData(this.teamProject)) {
+                this.teamDataLoaded = true;
                 return;
             }
 
@@ -218,6 +227,7 @@ export default defineComponent({
             try {
                 const response = await axios.get(route('projects.tabs.team', {project: id}));
                 this.localProject = response.data.project ?? null;
+                this.teamDataLoaded = true;
             } catch (e) {
                 this.loadError = this.$t
                     ? this.$t('Teamdaten konnten nicht geladen werden.')

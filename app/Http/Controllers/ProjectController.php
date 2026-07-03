@@ -98,6 +98,7 @@ use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
@@ -457,7 +458,9 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => UserWithoutShiftsResource::collection(User::nameOrLastNameLike($query)->get())->resolve()
+            'users' => UserWithoutShiftsResource::collection(
+                User::nameOrLastNameLike($query)->with('defaultProjectRoles')->get()
+            )->resolve()
         ];
     }
 
@@ -3274,7 +3277,23 @@ class ProjectController extends Controller
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
 
-        $project->users()->sync(collect($request->assigned_user_ids));
+        // only persist role ids that actually exist; anything else would linger
+        // in the project_user.roles JSON forever (role deletion can't clean it up)
+        $validRoleIds = ProjectRole::pluck('id');
+        $assignedUsers = collect($request->assigned_user_ids)->map(
+            static function ($pivotData) use ($validRoleIds) {
+                // plain user id without pivot attributes — leave untouched
+                if (!is_array($pivotData)) {
+                    return $pivotData;
+                }
+
+                $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
+
+                return $pivotData;
+            }
+        );
+
+        $project->users()->sync($assignedUsers);
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
         $newProjectDepartments = $project->departments()->get();

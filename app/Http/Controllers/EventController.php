@@ -3992,10 +3992,12 @@ class EventController extends Controller
                 $project,
                 $this->authManager->id()
             );
+            $freshEvent = $storedEvent->fresh();
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-                $storedEvent->fresh(),
+                $freshEvent,
                 'created'
             ));
+            broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
         }
 
         return Redirect::back();
@@ -4016,6 +4018,7 @@ class EventController extends Controller
             $event,
             'updated'
         ));
+        broadcast(new EventUpdated($freshEvent, $freshEvent->room_id));
     }
 
     public function createSingleBulkEvent(
@@ -4029,10 +4032,12 @@ class EventController extends Controller
             $project,
             $this->authManager->id()
         );
+        $freshEvent = $event->fresh();
         broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
-            $event->fresh(),
+            $freshEvent,
             'created'
         ));
+        broadcast(new EventCreated($freshEvent, $freshEvent->room_id));
     }
 
     public function updateDescription(Request $request, Event $event): void

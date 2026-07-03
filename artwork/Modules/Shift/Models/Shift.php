@@ -117,13 +117,10 @@ class Shift extends Model
         'end_date' => 'datetime:d. M Y',
     ];
 
-    protected $with = [
-        'craft',
-        'users',
-        'freelancer',
-        'serviceProvider',
-        'committedBy'
-    ];
+    // Kein globales $with mehr: craft/users/freelancer/serviceProvider/committedBy wurden
+    // vorher bei JEDER Shift-Query mitgeladen — auch bei internen Operationen (Rule-Checks,
+    // Observer, Bulk-Aktionen), die sie nie brauchen. Serialisierende Pfade laden sie
+    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, PushesShiftModification::broadcastWith()).
 
     protected $appends = [
         'break_formatted',

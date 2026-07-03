@@ -5,6 +5,7 @@ namespace Artwork\Modules\Event\Services;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\MinimalInventorySchedulingEventResource;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -103,12 +104,46 @@ class EventCollectionService
         ?Project $project = null,
     ): array {
         $collectedEvents = [];
+        if ($desiredRooms === [] || $desiredDays === []) {
+            return $collectedEvents;
+        }
+
+        $days = [];
         foreach ($desiredDays as $desiredDay) {
-            $day = Carbon::parse($desiredDay);
+            $days[$desiredDay] = Carbon::parse($desiredDay)->toDateString();
+        }
+        $minDay = min($days);
+        $maxDay = max($days);
+
+        // Eine Batch-Query über alle Räume und den gesamten Zeitraum statt einer Query
+        // pro Raum × Tag (vorher: 50 Räume × 30 Tage = 1.500 Queries plus Room-Lookups)
+        $eventsByRoomId = $this->applyCalendarFilterConditions(
+            Event::query()
+                ->whereIn('room_id', $desiredRooms)
+                ->with($this->calendarEventEagerLoads())
+                ->withExists('timelines')
+                ->when($project, fn($builder) => $builder->where('project_id', $project->id))
+                ->whereDate('start_time', '<=', $maxDay)
+                ->whereDate('end_time', '>=', $minDay)
+                ->whereNull('deleted_at')
+                ->orderBy('start_time'),
+            $calendarFilter
+        )
+            ->get()
+            ->groupBy('room_id');
+
+        foreach ($days as $desiredDay => $dayString) {
             foreach ($desiredRooms as $roomId) {
-                $room = $this->roomRepository->findOrFail($roomId);
+                $eventsOnDay = ($eventsByRoomId->get((int) $roomId) ?? collect())
+                    ->filter(
+                        static fn (Event $event): bool => $event->start_time->toDateString() <= $dayString
+                            && $event->end_time->toDateString() >= $dayString
+                    )
+                    ->values()
+                    ->all();
+
                 $collectedEvents[$desiredDay][$roomId] = MinimalCalendarEventResource::collection(
-                    $this->buildRoomCollectionBaseQuery($room, $calendarFilter, $project, null, $day)->get()
+                    $eventsOnDay
                 )->resolve();
             }
         }
@@ -126,29 +161,9 @@ class EventCollectionService
         ?CarbonPeriod $calendarPeriod,
         ?Carbon $date
     ): HasMany {
-        $eventTypeIds     = $calendarFilter?->event_type_ids;
-        $roomIds          = $calendarFilter?->room_ids;
-        $areaIds          = $calendarFilter?->area_ids;
-        $roomAttributeIds = $calendarFilter?->room_attribute_ids;
-        $roomCategoryIds  = $calendarFilter?->room_category_ids;
-
         $q = $room->events()
-            ->with([
-                'room',
-                'creator',
-                'project',
-                'project.managerUsers',
-                'project.status',
-                'shifts',
-                'shifts.craft',
-                'shifts.users',
-                'shifts.freelancer',
-                'shifts.serviceProvider',
-                'shifts.shiftsQualifications',
-                'subEvents.event',
-                'subEvents.event.room',
-                'timelines'
-            ])
+            ->with($this->calendarEventEagerLoads())
+            ->withExists('timelines')
             ->when($calendarPeriod, function ($builder) use ($calendarPeriod) {
                 // Overlap innerhalb Period
                 $builder->where(function ($w) use ($calendarPeriod) {
@@ -164,6 +179,27 @@ class EventCollectionService
                 $builder->whereDate('start_time', '<=', $date)->whereDate('end_time', '>=', $date);
             })
             ->when($project, fn($builder) => $builder->where('project_id', $project->id))
+            ->whereNull('deleted_at')
+            ->orderBy('start_time');
+
+        return $this->applyCalendarFilterConditions($q, $calendarFilter);
+    }
+
+    /**
+     * Kalender-Filter (Räume/Areale/Attribute/Kategorien und Event-Typen) auf eine
+     * Event-Query anwenden — gemeinsam genutzt von Einzelraum- und Batch-Pfad.
+     */
+    private function applyCalendarFilterConditions(
+        Builder|HasMany $builder,
+        ?UserFilter $calendarFilter
+    ): Builder|HasMany {
+        $eventTypeIds     = $calendarFilter?->event_type_ids;
+        $roomIds          = $calendarFilter?->room_ids;
+        $areaIds          = $calendarFilter?->area_ids;
+        $roomAttributeIds = $calendarFilter?->room_attribute_ids;
+        $roomCategoryIds  = $calendarFilter?->room_category_ids;
+
+        return $builder
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn($builder) => $builder->whereHas('room', fn($rb) => $rb
@@ -180,10 +216,46 @@ class EventCollectionService
                     $b->whereIn('event_type_id', $eventTypeIds)
                         ->orWhereHas('subEvents', fn($sb) => $sb->whereIn('event_type_id', $eventTypeIds));
                 });
-            })
-            ->whereNull('deleted_at')
-            ->orderBy('start_time');
+            });
+    }
 
-        return $q;
+    /**
+     * Eager Loads für die Kalender-Resources. event_type/eventStatus/eventProperties/series
+     * werden von den Resources gelesen und liefen vorher als N+1 pro Event; creator und
+     * project.managerUsers werden auf die tatsächlich serialisierten Spalten reduziert.
+     * timelines wird nicht mehr voll geladen — hasTimelines kommt aus withExists('timelines').
+     */
+    private function calendarEventEagerLoads(): array
+    {
+        return [
+            'room' => fn($query) => $query->without(['admins', 'creator']),
+            'creator' => fn($query) => $query->select([
+                'id',
+                'first_name',
+                'last_name',
+                'profile_photo_path',
+                'work_time_balance',
+            ]),
+            'project',
+            'project.managerUsers' => fn($query) => $query->select([
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.profile_photo_path',
+                'users.work_time_balance',
+            ]),
+            'project.status',
+            'event_type',
+            'eventStatus',
+            'eventProperties',
+            'series',
+            // Die Kalender-Resource braucht von den Schicht-Besetzungen nur Anzahlen —
+            // Counts statt voller User-/Freelancer-/Dienstleister-Modelle laden
+            'shifts' => fn($query) => $query->withCount(['users', 'freelancer', 'serviceProvider']),
+            'shifts.craft',
+            'shifts.shiftsQualifications',
+            'subEvents.event',
+            'subEvents.event.room',
+        ];
     }
 }

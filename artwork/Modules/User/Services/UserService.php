@@ -91,6 +91,7 @@ class UserService
 
         $user->assignRole(...$roles);
         $user->givePermissionTo(...$permissions);
+        $user->forgetCachedShareData();
         $user->calendar_settings()->create();
         $user->userFilters()->create([
             'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,

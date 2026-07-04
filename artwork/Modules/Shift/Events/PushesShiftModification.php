@@ -20,6 +20,7 @@ trait PushesShiftModification
         // des Shift-Models und werden von den Live-Update-Konsumenten im Frontend erwartet
         $this->shift->loadMissing(['craft', 'users', 'freelancer', 'serviceProvider', 'committedBy']);
         $event = $this->shift->event;
-        return array_merge($this->shift->toArray(), ['event' => $event->toArray()]);
+        // Schichten ohne Event (z. B. Raum-Schichten) dürfen den Broadcast nicht crashen
+        return array_merge($this->shift->toArray(), ['event' => $event?->toArray()]);
     }
 }

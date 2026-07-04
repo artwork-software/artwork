@@ -1432,12 +1432,21 @@ const roomDayEventsCache = new Map<string, any[]>()
 const roomDayShiftsCache = new Map<string, any[]>()
 const cellProjectGroupsCache = new Map<string, any[]>()
 
+// Die Keys enthalten room.__v und akkumulieren zwischen den Komplett-Clears (z. B. bei
+// vielen Websocket-Updates in einer langen Sitzung) — Obergrenze gegen Memory-Wachstum
+const CELL_CACHE_LIMIT = 20000
+function boundedCacheSet<T>(cache: Map<string, T>, key: string, value: T): T {
+    if (cache.size >= CELL_CACHE_LIMIT) cache.clear()
+    cache.set(key, value)
+    return value
+}
+
 function getGroupedShiftsForCell(room: any, dayKey: string): ShiftGroup[] {
     const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
     const roomVersion = room.__v ?? 0
     const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
     if (!groupedShiftsCache.has(cacheKey)) {
-        groupedShiftsCache.set(cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
+        boundedCacheSet(groupedShiftsCache, cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
     }
     return groupedShiftsCache.get(cacheKey)!
 }
@@ -1504,7 +1513,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     }))
 
     const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
-    cellSummaryCache.set(cacheKey, summary)
+    boundedCacheSet(cellSummaryCache, cacheKey, summary)
     return summary
 }
 
@@ -1637,9 +1646,7 @@ function getRoomDayEvents(room: any, day: string): any[] {
     const cached = roomDayEventsCache.get(cacheKey)
     if (cached) return cached
 
-    const result = resolveRoomDayEvents(room, day)
-    roomDayEventsCache.set(cacheKey, result)
-    return result
+    return boundedCacheSet(roomDayEventsCache, cacheKey, resolveRoomDayEvents(room, day))
 }
 
 function resolveRoomDayEvents(room: any, day: string): any[] {
@@ -1670,8 +1677,11 @@ function getProjectGroupsForCell(room: any, dayKey: string): any[] {
     const cacheKey = `${roomId}|${dayKey}|${room?.__v ?? 0}`
     let groups = cellProjectGroupsCache.get(cacheKey)
     if (!groups) {
-        groups = getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, dayKey))
-        cellProjectGroupsCache.set(cacheKey, groups)
+        groups = boundedCacheSet(
+            cellProjectGroupsCache,
+            cacheKey,
+            getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, dayKey)),
+        )
     }
     return groups
 }
@@ -1684,9 +1694,7 @@ function getRoomDayShifts(room: any, day: string): any[] {
     const cached = roomDayShiftsCache.get(cacheKey)
     if (cached) return cached
 
-    const result = resolveRoomDayShifts(room, day)
-    roomDayShiftsCache.set(cacheKey, result)
-    return result
+    return boundedCacheSet(roomDayShiftsCache, cacheKey, resolveRoomDayShifts(room, day))
 }
 
 function resolveRoomDayShifts(room: any, day: string): any[] {

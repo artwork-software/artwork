@@ -129,10 +129,23 @@ class ExternalIssueController extends Controller
 
     public function returnExternal(ExternalIssue $externalIssue, Request $request): \Illuminate\Http\RedirectResponse
     {
-        $externalIssue->update([
-            'received_by_id' => $this->auth->user()->id,
+        $updateData = [
             'return_remarks' => $request->input('return_remarks'),
-        ]);
+        ];
+
+        // Keep the original receiver when the action is triggered again.
+        if ($externalIssue->received_by_id === null) {
+            $updateData['received_by_id'] = $this->auth->user()->id;
+        }
+
+        // Early return frees the reserved quantity: cap the planned return
+        // date to today so availability calculations stop counting it.
+        $today = now()->startOfDay();
+        if ($externalIssue->return_date !== null && $today->lt($externalIssue->return_date)) {
+            $updateData['return_date'] = $today->toDateString();
+        }
+
+        $externalIssue->update($updateData);
 
         $this->externalIssueService->logActivity($externalIssue, 'returned', 'External issue returned', [
             'translation_key' => 'External issue returned',

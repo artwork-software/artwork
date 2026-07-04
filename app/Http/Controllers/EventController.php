@@ -2129,9 +2129,7 @@ class EventController extends Controller
             app(\Artwork\Modules\Shift\Services\ShiftService::class)->save($shift);
         }
 
-        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
-            $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
-        }
+        $this->craftInventoryItemEventService->updateEventTimesInInventory($event);
 
         broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
@@ -2997,9 +2995,7 @@ class EventController extends Controller
             $projectTabService
         );
 
-        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
-            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
-        }
+        $this->craftInventoryItemEventService->deleteAllEventsFromInventory($event);
 
         //return true;
     }
@@ -3037,9 +3033,7 @@ class EventController extends Controller
             $projectTabService
         );
 
-        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
-            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
-        }
+        $this->craftInventoryItemEventService->deleteAllEventsFromInventory($event);
     }
 
     /**
@@ -3148,9 +3142,7 @@ class EventController extends Controller
             );
 
             // Check and delete from inventory if needed
-            if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($seriesEvent)) {
-                $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
-            }
+            $this->craftInventoryItemEventService->deleteAllEventsFromInventory($seriesEvent);
         }
     }
 

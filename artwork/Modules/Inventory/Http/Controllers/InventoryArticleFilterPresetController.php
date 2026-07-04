@@ -12,8 +12,8 @@ class InventoryArticleFilterPresetController extends Controller
     {
         $data = $request->validate([
             'name' => ['required','string','max:80'],
-            'inventory_category_id' => ['nullable','integer'],
-            'inventory_sub_category_id' => ['nullable','integer'],
+            'inventory_category_id' => ['nullable','integer','exists:inventory_categories,id'],
+            'inventory_sub_category_id' => ['nullable','integer','exists:inventory_sub_categories,id'],
             'filters' => ['nullable','array'],
             'tag_ids' => ['nullable','array'],
             'is_default' => ['nullable','boolean'],

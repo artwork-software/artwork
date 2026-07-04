@@ -144,5 +144,10 @@ return [
         'success' => [
             'update' => 'Modul-Sichtbarkeit wurde erfolgreich aktualisiert.'
         ]
+    ],
+    'shift-settings' => [
+        'error' => [
+            'update' => 'Schicht-Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut.'
+        ]
     ]
 ];

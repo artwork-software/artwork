@@ -96,7 +96,8 @@ class InventoryArticleService
             });
         }
 
-        $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
+        // Cap page size to avoid loading the whole inventory incl. relations at once.
+        $perPage = min(max((int) Request::get('per_page', Request::integer('entitiesPerPage', 50)), 1), 100);
         $this->applyStableOrdering($query, $category, $subCategory);
         return $query->paginate($perPage);
     }
@@ -410,8 +411,25 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ];
 
-            if ($request->filled('inventory_sub_category_id')) {
-                $data['inventory_sub_category_id'] = $request->integer('inventory_sub_category_id');
+            if ($request->exists('inventory_sub_category_id')) {
+                // Explicitly sent null clears the sub category (previously it could never be removed).
+                $data['inventory_sub_category_id'] = $request->filled('inventory_sub_category_id')
+                    ? $request->integer('inventory_sub_category_id')
+                    : null;
+            }
+
+            // Consistency: the sub category must belong to the (possibly changed) category.
+            $subCategoryId = array_key_exists('inventory_sub_category_id', $data)
+                ? $data['inventory_sub_category_id']
+                : $article->inventory_sub_category_id;
+            if (
+                $subCategoryId !== null &&
+                !InventorySubCategory::query()
+                    ->where('id', $subCategoryId)
+                    ->where('inventory_category_id', $data['inventory_category_id'])
+                    ->exists()
+            ) {
+                $data['inventory_sub_category_id'] = null;
             }
 
             $this->articleRepository->update($article, $data);
@@ -633,7 +651,11 @@ class InventoryArticleService
     {
         $images = $request->file('newImages') ?? [];
         if (count($images) > 0) {
-            $mainImageIndex = $request->integer('main_image_index');
+            // Only treat main_image_index as set when it was actually sent —
+            // integer() would silently default to 0 (= first new image).
+            $mainImageIndex = $request->filled('main_image_index')
+                ? $request->integer('main_image_index')
+                : null;
             $this->articleRepository->addImages($article, $images, $mainImageIndex);
         }
     }

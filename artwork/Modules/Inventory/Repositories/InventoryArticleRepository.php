@@ -96,6 +96,7 @@ class InventoryArticleRepository
                             'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
                             'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
                             'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                            default => null,
                         };
 
                         return;
@@ -110,6 +111,7 @@ class InventoryArticleRepository
                             'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
                             'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
                             'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                            default => null,
                         };
 
                         return;
@@ -152,20 +154,22 @@ class InventoryArticleRepository
                                     'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
                                     'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
                                     'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                                    default => null,
                                 };
 
                                 return;
                             }
 
                             if ($property && $property->type === 'manufacturer') {
-                                $q->join('manufacturers', 'inventory_property_values.value', '=', 'manufacturers.id');
+                                $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
 
                                 match ($filter['operator']) {
-                                    'like' => $q->where('manufacturers.name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('manufacturers.name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('manufacturers.name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('manufacturers.name', '=', $filter['value']),
-                                    'not_equals' => $q->where('manufacturers.name', '!=', $filter['value']),
+                                    'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
+                                    'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
+                                    'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
+                                    'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
+                                    'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                                    default => null,
                                 };
 
                                 return;
@@ -206,6 +210,12 @@ class InventoryArticleRepository
 
     public function addImages(InventoryArticle $article, array $images, ?int $mainImageIndex = null): void
     {
+        // A new main image replaces the previous one — otherwise two images
+        // end up flagged and the sorting lets the old one win.
+        if ($mainImageIndex !== null) {
+            $article->images()->update(['is_main_image' => false]);
+        }
+
         foreach ($images as $index => $image) {
             $created = $article->images()->create([
                 'image' => $image->store('inventory_articles', 'public'),
@@ -257,7 +267,10 @@ class InventoryArticleRepository
     {
         $article->images()->delete();
         $article->detailedArticleQuantities()->delete();
-        $article->statusValues()->detach();
+        // Keep status value pivots: this is only a soft delete — detaching here
+        // would irreversibly wipe the stock quantities and restore() would
+        // bring the article back with stock 0. forceDelete() cleans the
+        // pivots via FK ON DELETE CASCADE.
         $article->delete();
     }
 

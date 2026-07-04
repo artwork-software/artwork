@@ -1138,6 +1138,7 @@ const submit = () => {
             route("issue-of-material.update", props.issueOfMaterial.id),
             {
                 onSuccess: () => {
+                    clearConsumedBasket();
                     emits("saved", {
                         issueId: props.issueOfMaterial.id,
                         updatedArticles: internMaterialIssue.articles.map(article => ({
@@ -1152,6 +1153,7 @@ const submit = () => {
     } else {
         internMaterialIssue.post(route("issue-of-material.store"), {
             onSuccess: (response) => {
+                clearConsumedBasket();
                 emits("saved", {
                     issueId: response.props?.issueOfMaterial?.id || null,
                     updatedArticles: internMaterialIssue.articles.map(article => ({
@@ -1466,10 +1468,11 @@ const loadBaskets = async () => {
             currentBasket.value = baskets.value[0].id;
         }
 
-        // >>> NEU: Automatisch Basket 1 übernehmen
-        const basketOne = baskets.value.find(b => b.id === 1);
-        if (basketOne) {
-            addBasketArticlesToIssue(basketOne);
+        // Automatisch den eigenen Warenkorb übernehmen — die API liefert nur
+        // die Baskets des eingeloggten Users (eine feste ID gibt es nicht).
+        const ownBasket = baskets.value.find(b => b.id === currentBasket.value) ?? baskets.value[0];
+        if (ownBasket) {
+            addBasketArticlesToIssue(ownBasket);
         }
     } catch (e) {
         console.error(e);
@@ -1535,10 +1538,19 @@ function addBasketArticlesToIssue(basket) {
     // Verfügbarkeiten nachziehen
     checkAvailableStock();
 
-    // remove articles from basket after adding to issue
-    router.post(route("inventory.product_basket.remove_articles", {productBasket: basket.id}), {
-        basket_id: basket.id
+    // Der Korb wird erst nach ERFOLGREICHEM Speichern der Ausgabe geleert —
+    // beim Abbrechen bleiben die Artikel im Warenkorb erhalten.
+    pendingBasketClearId.value = basket.id;
+}
+
+const pendingBasketClearId = ref(null);
+
+function clearConsumedBasket() {
+    if (!pendingBasketClearId.value) return;
+    router.post(route("inventory.product_basket.remove_articles", {productBasket: pendingBasketClearId.value}), {
+        basket_id: pendingBasketClearId.value
     });
+    pendingBasketClearId.value = null;
 }
 
 </script>

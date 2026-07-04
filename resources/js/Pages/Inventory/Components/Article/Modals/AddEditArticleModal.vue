@@ -820,7 +820,7 @@
                                                       type="button"
                                                       class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
                                                       aria-label="Löschen"
-                                                      @click.stop="removeOpenDetailedArticle(idx)"
+                                                      @click.stop="removeOpenDetailedArticle(item)"
                                                   >
                                                     <component :is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
                                                   </button>
@@ -1375,8 +1375,10 @@ const generateProvisionalInventoryNumber = () => {
     return parentNumber + '-' + String(next).padStart(3, '0')
 }
 
-const removeOpenDetailedArticle = (idx) => {
-    articleToDelete.value = idx
+const removeOpenDetailedArticle = (item) => {
+    // The list renders the FILTERED collection — remember the item itself,
+    // an index would point at the wrong entry of the unfiltered list.
+    articleToDelete.value = item
     confirmSingleDeleteModalOpen.value = true
 }
 
@@ -1613,9 +1615,15 @@ const addNewDetailedArticle = () => {
 }
 
 const removeDetailedArticle = () => {
-    let index = articleToDelete.value
     const arr = articleForm.detailed_article_quantities
-    if (!Array.isArray(arr) || index < 0 || index >= arr.length) return
+    const target = articleToDelete.value
+    if (!Array.isArray(arr) || target == null || typeof target !== 'object') return
+    let index = arr.indexOf(target)
+    if (index === -1) {
+        const key = itemKey(target)
+        index = key != null ? arr.findIndex(a => itemKey(a) === key) : -1
+    }
+    if (index < 0) return
     const removed = arr[index]
     arr.splice(index, 1)
 

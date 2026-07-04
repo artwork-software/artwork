@@ -12,7 +12,7 @@ class DropItemOnInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quantity' => 'required|integer',
+            'quantity' => 'required|integer|min:1',
         ];
     }
 }

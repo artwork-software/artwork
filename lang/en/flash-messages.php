@@ -130,5 +130,10 @@ return [
         'success' => [
             'update' => 'Module visibility has been successfully updated.'
         ]
+    ],
+    'shift-settings' => [
+        'error' => [
+            'update' => 'Shift setting could not be saved. Please try again.'
+        ]
     ]
 ];

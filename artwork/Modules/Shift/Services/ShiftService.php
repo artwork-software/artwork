@@ -589,9 +589,10 @@ class ShiftService
                             'title' => __(
                                 'notification.keyWords.concerns_time_period',
                                 [
-                                    // DATE-Spalten: H:i zeigte immer "00:00"
-                                    'start' => $firstShift->start_date->format('d.m.Y'),
-                                    'end' => $lastShift->end_date->format('d.m.Y'),
+                                    // DATE-Spalten: H:i zeigte immer "00:00";
+                                    // end_date ist nullable → auf start_date zurückfallen
+                                    'start' => $firstShift->start_date?->format('d.m.Y') ?? '',
+                                    'end' => ($lastShift->end_date ?? $lastShift->start_date)?->format('d.m.Y') ?? '',
                                 ],
                                 $user->language
                             ),

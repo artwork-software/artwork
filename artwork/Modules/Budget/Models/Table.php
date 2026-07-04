@@ -93,12 +93,17 @@ class Table extends Model
             ->groupBy('column_id')
             ->skip(3)
             ->mapWithKeys(function (\Illuminate\Database\Eloquent\Collection $cells, $column_id) {
-                return [
-                    $column_id => $cells->sum(
-                        //replace , with . to cast properly to float
-                        fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
-                    )
-                ];
+                // bcadd instead of float addition to avoid cent drift; cast the
+                // exact result back to float to keep the payload shape.
+                $sum = $cells->reduce(function (string $carry, ColumnCell $columnCell): string {
+                    $decimalValue = str_replace(',', '.', $columnCell->value ?: '0');
+                    if (!is_numeric($decimalValue)) {
+                        $decimalValue = '0';
+                    }
+                    return bcadd($carry, $decimalValue, 2);
+                }, '0');
+
+                return [$column_id => (float) $sum];
             });
     }
 

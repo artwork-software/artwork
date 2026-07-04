@@ -3206,10 +3206,7 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        $this->projectService->detachManagementUsers($project, true);
-        if (!empty($request->assignedUsers)) {
-            $this->projectService->attachManagementUsers($project, $request->assignedUsers);
-        }
+        $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
 
         if ($request->boolean('isGroup')) {
             $project->update(['is_group' => true]);
@@ -3915,12 +3912,28 @@ class ProjectController extends Controller
             $newProject,
         );
 
-        $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));
         $newProject->sectors()->sync($project->sectors->pluck('id'));
         $newProject->genres()->sync($project->genres->pluck('id'));
         $newProject->departments()->sync($project->departments->pluck('id'));
-        $newProject->users()->sync($project->users->pluck('id'));
+
+        // Copy team including pivot flags (access_budget, is_manager, can_write, ...)
+        // and make sure the duplicating user keeps access to the copy.
+        $usersWithPivotFlags = $project->users->mapWithKeys(fn($user) => [
+            $user->id => [
+                'access_budget' => $user->pivot->access_budget,
+                'is_manager' => $user->pivot->is_manager,
+                'can_write' => $user->pivot->can_write,
+                'delete_permission' => $user->pivot->delete_permission,
+                'roles' => $user->pivot->roles,
+            ],
+        ])->all();
+
+        if (!array_key_exists(Auth::id(), $usersWithPivotFlags)) {
+            $usersWithPivotFlags[Auth::id()] = ['access_budget' => true];
+        }
+
+        $newProject->users()->sync($usersWithPivotFlags);
 
         if ($projectTab = $this->projectTabService->findFirstProjectTabWithShiftsComponent()) {
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);

@@ -175,7 +175,17 @@ class Sage100Service
     ): void {
         /** @var array $item */
         foreach ($regularBookings as $item) {
-            $this->importBooking($item);
+            // Same per-booking transaction handling as the collective bookings:
+            // one broken booking must neither abort the whole import nor leave
+            // a half-written booking behind.
+            DB::beginTransaction();
+            try {
+                $this->importBooking($item);
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                report($e);
+            }
         }
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
@@ -392,9 +402,13 @@ class Sage100Service
 
     public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): RedirectResponse
     {
-        $columnCells = $columnCell->subPositionRow->cells()->get();
-        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
+        // Deterministic order + count guard: rows with missing cells used to
+        // crash on the hard-coded [0]/[1] access.
+        $columnCells = $columnCell->subPositionRow->cells()->orderBy('column_id')->get();
+        $movedColumnCells = $movedColumn->subPositionRow->cells()->orderBy('column_id')->get();
         if (
+            $columnCells->count() >= 2 &&
+            $movedColumnCells->count() >= 2 &&
             $columnCells[0]->value === $movedColumnCells[0]->value &&
             $columnCells[1]->value === $movedColumnCells[1]->value
         ) {

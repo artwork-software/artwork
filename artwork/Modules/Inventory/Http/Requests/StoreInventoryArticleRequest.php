@@ -27,6 +27,8 @@ class StoreInventoryArticleRequest extends FormRequest
             'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
             'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
             'inventory_article_images' => ['nullable', 'array'],
+            'newImages' => ['nullable', 'array'],
+            'newImages.*' => ['image', 'max:10240'],
             'quantity' => ['required', 'integer'],
             'properties' => ['nullable', 'array'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],

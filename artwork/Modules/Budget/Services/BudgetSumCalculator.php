@@ -75,6 +75,11 @@ class BudgetSumCalculator
                         foreach ($row->cells as $cell) {
                             $columnId = $cell->column_id;
                             $rawValue = str_replace(',', '.', $cell->value ?: '0');
+                            // Accumulate with bcadd like the position sums do —
+                            // plain float addition drifts by cents on large tables.
+                            if (!is_numeric($rawValue)) {
+                                $rawValue = '0';
+                            }
 
                             $column = $table->relationLoaded('columns')
                                 ? $table->columns->firstWhere('id', $columnId)
@@ -85,19 +90,18 @@ class BudgetSumCalculator
                             $isRowCommented = $row->commented;
 
                             if ($isColumnCommented || $isCellCommented || $isRowCommented) {
-                                $target = $isCost ? 'cost' : 'earning';
-                                if ($target === 'cost') {
-                                    $commentedCostSums[$columnId] = ($commentedCostSums[$columnId] ?? 0)
-                                        + floatval($rawValue);
+                                if ($isCost) {
+                                    $commentedCostSums[$columnId] =
+                                        bcadd($commentedCostSums[$columnId] ?? '0', $rawValue, 2);
                                 } else {
-                                    $commentedEarningSums[$columnId] = ($commentedEarningSums[$columnId] ?? 0)
-                                        + floatval($rawValue);
+                                    $commentedEarningSums[$columnId] =
+                                        bcadd($commentedEarningSums[$columnId] ?? '0', $rawValue, 2);
                                 }
                             } else {
                                 if ($isCost) {
-                                    $costSums[$columnId] = ($costSums[$columnId] ?? 0) + floatval($rawValue);
+                                    $costSums[$columnId] = bcadd($costSums[$columnId] ?? '0', $rawValue, 2);
                                 } else {
-                                    $earningSums[$columnId] = ($earningSums[$columnId] ?? 0) + floatval($rawValue);
+                                    $earningSums[$columnId] = bcadd($earningSums[$columnId] ?? '0', $rawValue, 2);
                                 }
                             }
 
@@ -113,20 +117,22 @@ class BudgetSumCalculator
             : collect();
         $skipColumnIds = $sortedColumns->take(3)->pluck('id')->toArray();
 
+        // Cast the exact bcadd strings back to float so the JSON payload shape
+        // for the frontend stays unchanged (numbers, not strings).
         $costSums = collect($costSums)->filter(
             fn ($val, $key) => !in_array($key, $skipColumnIds)
-        );
+        )->map(fn ($val) => (float) $val);
         $earningSums = collect($earningSums)->filter(
             fn ($val, $key) => !in_array($key, $skipColumnIds)
-        );
+        )->map(fn ($val) => (float) $val);
 
         $costSumDetails = $this->buildBudgetSumDetailsMap($allBudgetSumDetails, 'COST');
         $earningSumDetails = $this->buildBudgetSumDetailsMap($allBudgetSumDetails, 'EARNING');
 
         $table->setAttribute('costSums', $costSums);
         $table->setAttribute('earningSums', $earningSums);
-        $table->setAttribute('commentedCostSums', collect($commentedCostSums));
-        $table->setAttribute('commentedEarningSums', collect($commentedEarningSums));
+        $table->setAttribute('commentedCostSums', collect($commentedCostSums)->map(fn ($val) => (float) $val));
+        $table->setAttribute('commentedEarningSums', collect($commentedEarningSums)->map(fn ($val) => (float) $val));
         $table->setAttribute('costSumDetails', $costSumDetails);
         $table->setAttribute('earningSumDetails', $earningSumDetails);
     }

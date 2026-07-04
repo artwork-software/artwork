@@ -593,6 +593,32 @@ class User extends Model implements
         return $this->roles()->pluck('name')->toArray();
     }
 
+    /**
+     * Per-User gecachte Inertia-Share-Daten (HandleInertiaRequests) invalidieren.
+     * Nach Rollen-/Rechteänderungen aufrufen, damit der User nicht bis zum
+     * Cache-TTL (5 Min.) mit veralteter Navigation/Berechtigung arbeitet.
+     */
+    public function forgetCachedShareData(): void
+    {
+        static::forgetCachedShareDataForIds([$this->id]);
+    }
+
+    /**
+     * Wie forgetCachedShareData(), aber für mehrere User-IDs ohne Model-Load —
+     * für Stellen, die Rechte über Pivots ändern (Raum-Admins, Event-Verifier,
+     * Workflow-User, Craft-Planer).
+     *
+     * @param iterable<int|string> $userIds
+     */
+    public static function forgetCachedShareDataForIds(iterable $userIds): void
+    {
+        foreach ($userIds as $userId) {
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:roles_permissions");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:can_see_incoming_requests");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:shift_workflow_flags");
+        }
+    }
+
 
     /**
      * @return array<string, mixed>

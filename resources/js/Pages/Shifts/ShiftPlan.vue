@@ -252,7 +252,7 @@
                                         <!-- Project Groups in Events -->
                                         <template v-if="displayProjectGroups && dayEvents.length">
                                             <template
-                                                v-for="group in getAllProjectGroupsInEventsByDay(dayEvents)"
+                                                v-for="group in getProjectGroupsForCell(room, day.fullDay)"
                                                 :key="group.id"
                                             >
                                                 <Link
@@ -1426,13 +1426,27 @@ type CellSummary = {
 
 const cellSummaryCache = new Map<string, CellSummary>()
 const groupedShiftsCache = new Map<string, ShiftGroup[]>()
+// Caches für die pro Zelle im Template aufgerufenen Resolver — ohne sie laufen die
+// Funktionen bei jedem Re-Render für jede sichtbare Zelle erneut (Räume × Tage)
+const roomDayEventsCache = new Map<string, any[]>()
+const roomDayShiftsCache = new Map<string, any[]>()
+const cellProjectGroupsCache = new Map<string, any[]>()
+
+// Die Keys enthalten room.__v und akkumulieren zwischen den Komplett-Clears (z. B. bei
+// vielen Websocket-Updates in einer langen Sitzung) — Obergrenze gegen Memory-Wachstum
+const CELL_CACHE_LIMIT = 20000
+function boundedCacheSet<T>(cache: Map<string, T>, key: string, value: T): T {
+    if (cache.size >= CELL_CACHE_LIMIT) cache.clear()
+    cache.set(key, value)
+    return value
+}
 
 function getGroupedShiftsForCell(room: any, dayKey: string): ShiftGroup[] {
     const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
     const roomVersion = room.__v ?? 0
     const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
     if (!groupedShiftsCache.has(cacheKey)) {
-        groupedShiftsCache.set(cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
+        boundedCacheSet(groupedShiftsCache, cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
     }
     return groupedShiftsCache.get(cacheKey)!
 }
@@ -1453,7 +1467,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     // --- Project group bars ---
     let pgTotalHeight = 0
     if (showProjectGroups && events.length) {
-        const groups = getAllProjectGroupsInEventsByDay(events)
+        const groups = getProjectGroupsForCell(room, dayKey)
         for (const group of groups) {
             const lines = expanded ? estimateTextLines(group.name, pgBarTextWidth) : 1
             // py-1 (8px) + lines * 16px (text-xs line-height) + mb-0.5 (2px)
@@ -1499,7 +1513,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     }))
 
     const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
-    cellSummaryCache.set(cacheKey, summary)
+    boundedCacheSet(cellSummaryCache, cacheKey, summary)
     return summary
 }
 
@@ -1582,6 +1596,9 @@ watch(
     () => {
         cellSummaryCache.clear()
         groupedShiftsCache.clear()
+        roomDayEventsCache.clear()
+        roomDayShiftsCache.clear()
+        cellProjectGroupsCache.clear()
         if (expandDays.value) {
             measureBaselineMetrics()
         } else {
@@ -1624,6 +1641,15 @@ type ShiftGroup = {
 
 /** Resolve events for a room+day – handles both embedded arrays and ID-based lookup */
 function getRoomDayEvents(room: any, day: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const cacheKey = `${roomId}|${day}|${room?.__v ?? 0}`
+    const cached = roomDayEventsCache.get(cacheKey)
+    if (cached) return cached
+
+    return boundedCacheSet(roomDayEventsCache, cacheKey, resolveRoomDayEvents(room, day))
+}
+
+function resolveRoomDayEvents(room: any, day: string): any[] {
     const cell = room?.content?.[day]
     if (!cell) return []
 
@@ -1645,8 +1671,33 @@ function getRoomDayEvents(room: any, day: string): any[] {
     return []
 }
 
+/** Projektgruppen pro Zelle gecacht — wird im Template je Render aufgerufen */
+function getProjectGroupsForCell(room: any, dayKey: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${room?.__v ?? 0}`
+    let groups = cellProjectGroupsCache.get(cacheKey)
+    if (!groups) {
+        groups = boundedCacheSet(
+            cellProjectGroupsCache,
+            cacheKey,
+            getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, dayKey)),
+        )
+    }
+    return groups
+}
+
 /** Resolve shifts for a room+day – handles both embedded arrays and ID-based lookup */
 function getRoomDayShifts(room: any, day: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const staffedFlag = calendarSettings.value?.show_only_not_fully_staffed_shifts ? 1 : 0
+    const cacheKey = `${roomId}|${day}|${room?.__v ?? 0}|${staffedFlag}`
+    const cached = roomDayShiftsCache.get(cacheKey)
+    if (cached) return cached
+
+    return boundedCacheSet(roomDayShiftsCache, cacheKey, resolveRoomDayShifts(room, day))
+}
+
+function resolveRoomDayShifts(room: any, day: string): any[] {
     const cell = room?.content?.[day]
     if (!cell) return []
 
@@ -2027,13 +2078,14 @@ onMounted(async () => {
         },
     )
 
-    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden
+    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
+    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
+    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
     watch(
-        () => [props.dateValue?.[0], props.dateValue?.[1], props.user_filters?.craft_ids],
+        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
         () => {
             loadShiftPlanWorkers()
         },
-        { deep: true },
     )
 
     attach()

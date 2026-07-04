@@ -73,7 +73,13 @@ class MinimalCalendarEventResource extends JsonResource
             'minutes_form_start_hour_to_start' => $this->getAttribute('minutes_form_start_hour_to_start'),
             'eventProperties'  => $this->getAttribute('eventProperties'),
             'status'           => $this->getAttribute('eventStatus'),
-            'hasTimelines'     => $this->resource->hasTimelines(),
+            // withExists('timelines')-Aggregat bzw. geladene Relation nutzen —
+            // hasTimelines() wäre eine eigene exists()-Query pro Event
+            'hasTimelines'     => $this->getAttribute('timelines_exists') !== null
+                ? (bool) $this->getAttribute('timelines_exists')
+                : ($this->resource->relationLoaded('timelines')
+                    ? $this->getAttribute('timelines')->isNotEmpty()
+                    : $this->resource->hasTimelines()),
         ];
     }
 
@@ -105,9 +111,13 @@ class MinimalCalendarEventResource extends JsonResource
                     'name' => $shift->getAttribute('craft')?->getAttribute('name'),
                     'abbreviation' => $shift->getAttribute('craft')?->getAttribute('abbreviation'),
                 ],
-                'worker_count' => $shift->getAttribute('users')->count()
-                    + $shift->getAttribute('freelancer')->count()
-                    + $shift->getAttribute('serviceProvider')->count(),
+                // withCount-Aggregate bevorzugen; Fallback auf (ggf. bereits geladene) Relationen
+                'worker_count' => ($shift->getAttribute('users_count')
+                        ?? $shift->getAttribute('users')->count())
+                    + ($shift->getAttribute('freelancer_count')
+                        ?? $shift->getAttribute('freelancer')->count())
+                    + ($shift->getAttribute('service_provider_count')
+                        ?? $shift->getAttribute('serviceProvider')->count()),
                 'max_worker_count' => (int)$shift->getAttribute('shiftsQualifications')->sum('value'),
             ];
         }, $shifts);

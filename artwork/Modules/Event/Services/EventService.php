@@ -589,6 +589,7 @@ readonly class EventService
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -914,6 +915,22 @@ readonly class EventService
         }
 
         $q->whereIn('room_id', $rooms->pluck('id'));
+
+        // Eager Loads statt Lazy-Loading pro Event im map() unten (project, eventStatus,
+        // eventProperties, subEvents, room, series wurden je Event einzeln nachgeladen)
+        $q->with(['project', 'eventStatus', 'eventProperties', 'subEvents', 'room', 'series']);
+        if ($isShiftPlan || $userCalendarSettings?->work_shifts) {
+            // Schicht-Relationen für MinimalShiftPlanShiftResource (kamen vorher teils
+            // über das entfernte globale $with des Shift-Models)
+            $q->with([
+                'shifts.craft',
+                'shifts.users.globalQualifications',
+                'shifts.freelancer.globalQualifications',
+                'shifts.serviceProvider.globalQualifications',
+                'shifts.shiftsQualifications',
+            ]);
+        }
+
         $events = $q->get();
 
         foreach ($rooms as $room) {
@@ -937,7 +954,7 @@ readonly class EventService
                 /** @var Project $project */
                 $project = $event->project ?: null;
                 $projectState = null;
-                if($project?->state && $userCalendarSettings->project_status){
+                if($project?->state && $userCalendarSettings?->project_status){
                     /** @var ProjectState $projectState */
                     $projectState = ProjectState::find($project->state);
                 }
@@ -988,12 +1005,12 @@ readonly class EventService
                     //'created_by' => $creator, // lazy load
                 ];
 
-                if ($userCalendarSettings->work_shifts || $isShiftPlan){
+                if ($userCalendarSettings?->work_shifts || $isShiftPlan){
                     $eventArray['shifts'] = MinimalShiftPlanShiftResource::collection($event->shifts)->resolve();
                     $eventArray['days_of_shifts'] = $event->getDaysOfShifts($event->shifts);
                 }
 
-                if ($userCalendarSettings->project_status){
+                if ($userCalendarSettings?->project_status){
                     $eventArray['projectStatusId'] =  $projectState?->id;
                     $eventArray['projectStatusBackgroundColor'] =  $projectState?->color . '33';
                     $eventArray['projectStatusBorderColor'] =  $projectState?->color;

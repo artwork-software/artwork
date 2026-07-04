@@ -1108,6 +1108,8 @@ class UserController extends Controller
 
         $user->syncPermissions($permissionsToGrant);
         $user->syncRoles($rolesToGrant);
+        // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
+        $user->forgetCachedShareData();
 
         return Redirect::back();
     }

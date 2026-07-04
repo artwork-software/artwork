@@ -708,49 +708,54 @@ class ProjectService
         }
 
         $eventsWithRelevant = [];
-        foreach (
-            $project
-                ->events()
-                ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-                ->with(['timelines', 'shifts', 'event_type'])
-                ->orderBy('start_time', 'asc')
-                ->get() as $event
-        ) {
-            $timeline = $event->timelines()
-                ->orderBy('start_date')
-                ->orderBy('start')
-                ->orderBy('end_date')
-                ->orderBy('end')
-                ->get()
-                ->toArray();
+        // Alle Relationen einmalig eager laden statt pro Event/Schicht/Person nachzuladen
+        // (vorher: timelines-Requery, $shift->load() und room()->first() je Event → hunderte Queries)
+        $events = $project
+            ->events()
+            ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
+            ->with([
+                'event_type',
+                'room' => fn ($query) => $query->without(['creator', 'admins']),
+                'timelines' => fn ($query) => $query
+                    ->orderBy('start_date')
+                    ->orderBy('start')
+                    ->orderBy('end_date')
+                    ->orderBy('end'),
+                'shifts.craft',
+                'shifts.committedBy',
+                'shifts.shiftsQualifications',
+                // Personen inkl. globaler Qualifikationen, damit sie im Payload enthalten sind
+                'shifts.users.globalQualifications',
+                'shifts.users.vacations',
+                'shifts.freelancer.globalQualifications',
+                'shifts.serviceProvider.globalQualifications',
+            ])
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        // Urlaubs-Tage nur einmal pro User berechnen, auch wenn er in mehreren Schichten steckt
+        $vacationDaysByUserId = [];
+
+        foreach ($events as $event) {
+            $timeline = $event->timelines->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
             }
 
             foreach ($event->shifts as $shift) {
-                // Eager Load: Schicht- und Personen-bezogene Relationen, damit
-                // die zugewiesenen Personen ihre globalen Qualifikationen im Payload enthalten
-                $shift->load([
-                    'shiftsQualifications',
-                    // Personen inkl. globaler Qualifikationen
-                    'users.globalQualifications',
-                    'freelancer.globalQualifications',
-                    'serviceProvider.globalQualifications',
-                ]);
-
                 foreach ($shift->users as $user) {
-                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                    $user->formatted_vacation_days = $vacationDaysByUserId[$user->id]
+                        ??= $user->getFormattedVacationDays();
                 }
             }
-
 
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
-                'room' => $event->room()->without(['creator', 'admins'])->first()
+                'room' => $event->room,
             ];
         }
         return $this->sortEventsWithRelevant($eventsWithRelevant);

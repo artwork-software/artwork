@@ -66,6 +66,7 @@ class PermissionUpdater
                         $newProjectPermission->name,
                         $newGlobalPermission->name,
                     ]);
+                    $user->forgetCachedShareData();
                 }
             }
         }

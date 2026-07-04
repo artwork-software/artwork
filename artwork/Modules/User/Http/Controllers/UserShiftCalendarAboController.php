@@ -58,7 +58,16 @@ class UserShiftCalendarAboController extends Controller
             ->refreshInterval(5)
             ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
         // Get all shifts for the user — eager-load relations to avoid N+1 queries
-        $user->load(['shifts.event.creator', 'shifts.event.project', 'shifts.event.room', 'shifts.craft']);
+        $user->load([
+            'shifts.event.creator',
+            'shifts.event.project',
+            'shifts.event.room',
+            'shifts.craft',
+            // Teilnehmer des ICS-Termins — kamen früher über das (entfernte) globale Shift-$with
+            'shifts.users',
+            'shifts.freelancer',
+            'shifts.serviceProvider',
+        ]);
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
         // Process each shift and add to the calendar

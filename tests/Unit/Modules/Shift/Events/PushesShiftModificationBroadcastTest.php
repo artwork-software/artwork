@@ -4,6 +4,7 @@ namespace Tests\Unit\Modules\Shift\Events;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Events\ShiftUpdated;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
@@ -58,5 +59,24 @@ final class PushesShiftModificationBroadcastTest extends TestCase
 
         $this->assertNull($payload['event']);
         $this->assertArrayHasKey('users', $payload);
+    }
+
+    #[Test]
+    public function shift_assigned_broadcast_contains_worker_relations(): void
+    {
+        $shift = Shift::factory()->create();
+        $assignedUser = User::factory()->create();
+        $shift->users()->attach($assignedUser->id, [
+            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
+            'shift_count' => 1,
+        ]);
+
+        $payload = (new ShiftAssigned($assignedUser, Shift::query()->findOrFail($shift->id)))
+            ->broadcastWith();
+
+        foreach (['craft', 'users', 'freelancer', 'service_provider', 'committed_by', 'user', 'event'] as $key) {
+            $this->assertArrayHasKey($key, $payload, "ShiftAssigned-Payload muss '{$key}' enthalten");
+        }
+        $this->assertCount(1, $payload['users']);
     }
 }

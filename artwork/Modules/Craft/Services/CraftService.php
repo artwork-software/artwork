@@ -105,6 +105,8 @@ class CraftService
 
         if (!$craftStoreRequest->boolean('assignable_by_all')) {
             $this->craftRepository->syncUsers($craft, $craftStoreRequest->get('users'));
+            // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop
+            User::forgetCachedShareDataForIds($craftStoreRequest->get('users') ?? []);
         }
     }
 
@@ -152,10 +154,18 @@ class CraftService
             }
         }
 
+        // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop —
+        // bisherige und neue Planer invalidieren
+        $previousPlanerIds = $craft->craftShiftPlaner()->pluck('users.id')->all();
         if (!$craftUpdateRequest->boolean('assignable_by_all')) {
             $this->craftRepository->syncUsers($craft, $craftUpdateRequest->get('users'));
+            User::forgetCachedShareDataForIds(array_unique([
+                ...$previousPlanerIds,
+                ...($craftUpdateRequest->get('users') ?? []),
+            ]));
         } else {
             $this->craftRepository->detachUsers($craft);
+            User::forgetCachedShareDataForIds($previousPlanerIds);
         }
 
         if (!$craftUpdateRequest->boolean('inventory_planned_by_all')) {
@@ -167,8 +177,11 @@ class CraftService
 
     public function delete(Craft $craft): void
     {
+        $previousPlanerIds = $craft->craftShiftPlaner()->pluck('users.id')->all();
         $this->craftRepository->detachUsers($craft);
         $this->craftRepository->delete($craft);
+        // Craft-Planer-Status steckt im gecachten shift_workflow_flags-Prop
+        User::forgetCachedShareDataForIds($previousPlanerIds);
     }
 
     public function getAssignableByAllCrafts(): Collection

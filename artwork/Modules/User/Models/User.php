@@ -600,9 +600,23 @@ class User extends Model implements
      */
     public function forgetCachedShareData(): void
     {
-        \Illuminate\Support\Facades\Cache::forget("user:{$this->id}:roles_permissions");
-        \Illuminate\Support\Facades\Cache::forget("user:{$this->id}:can_see_incoming_requests");
-        \Illuminate\Support\Facades\Cache::forget("user:{$this->id}:shift_workflow_flags");
+        static::forgetCachedShareDataForIds([$this->id]);
+    }
+
+    /**
+     * Wie forgetCachedShareData(), aber für mehrere User-IDs ohne Model-Load —
+     * für Stellen, die Rechte über Pivots ändern (Raum-Admins, Event-Verifier,
+     * Workflow-User, Craft-Planer).
+     *
+     * @param iterable<int|string> $userIds
+     */
+    public static function forgetCachedShareDataForIds(iterable $userIds): void
+    {
+        foreach ($userIds as $userId) {
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:roles_permissions");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:can_see_incoming_requests");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:shift_workflow_flags");
+        }
     }
 
 

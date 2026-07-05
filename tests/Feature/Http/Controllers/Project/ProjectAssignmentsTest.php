@@ -3,7 +3,9 @@
 namespace Tests\Feature\Http\Controllers\Project;
 
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -42,6 +44,38 @@ final class ProjectAssignmentsTest extends FeatureTestCase
             'project_id' => $project->id,
             'user_id' => $u2->id,
         ]);
+    }
+
+    #[Test]
+    public function update_team_persists_only_existing_project_role_ids(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create();
+        $user = User::factory()->create();
+        $role = ProjectRole::factory()->create();
+
+        $response = $this->patch('/projects/' . $project->id . '/team', [
+            'assigned_user_ids' => [
+                $user->id => [
+                    'access_budget' => false,
+                    'is_manager' => false,
+                    'can_write' => false,
+                    'delete_permission' => false,
+                    'roles' => [$role->id, 999999],
+                ],
+            ],
+            'assigned_departments' => [],
+        ]);
+
+        $response->assertRedirect();
+        $pivotRoles = json_decode(
+            DB::table('project_user')
+                ->where('project_id', $project->id)
+                ->where('user_id', $user->id)
+                ->value('roles'),
+            true
+        );
+        $this->assertSame([$role->id], $pivotRoles);
     }
 
     #[Test]

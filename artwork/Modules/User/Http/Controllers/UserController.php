@@ -21,6 +21,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
@@ -930,7 +931,7 @@ class UserController extends Controller
         CraftService $craftService
     ): Response|ResponseFactory {
 
-        $user->load(['assignedCrafts.qualifications', 'shiftQualifications']);
+        $user->load(['assignedCrafts.qualifications', 'shiftQualifications', 'defaultProjectRoles']);
 
         $globalQualifications = $this->qualificationService->getAll()->map(function ($qualification) use ($user) {
             return [
@@ -951,6 +952,7 @@ class UserController extends Controller
                 'currentTab' => 'workProfile',
                 'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
                 'globalQualifications' => $globalQualifications,
+                'projectRoles' => ProjectRole::all(),
             ]
         );
     }
@@ -1158,6 +1160,25 @@ class UserController extends Controller
         $user->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
         ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateDefaultProjectRoles(User $user, Request $request): RedirectResponse
+    {
+        $this->authorize('updateWorkProfile', User::class);
+
+        $validated = $request->validate([
+            'defaultProjectRoleIds' => 'array',
+            'defaultProjectRoleIds.*' => 'integer',
+        ]);
+
+        $user->defaultProjectRoles()->sync(
+            ProjectRole::whereIn('id', $validated['defaultProjectRoleIds'] ?? [])->pluck('id')
+        );
 
         return Redirect::back();
     }

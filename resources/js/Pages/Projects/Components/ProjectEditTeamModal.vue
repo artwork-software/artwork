@@ -416,6 +416,8 @@ const addUserToProjectTeamArray = (userToAdd) => {
 
     users.value.push({
         ...userToAdd,
+        // Neue Teammitglieder starten mit ihren im Arbeitsprofil hinterlegten Standard-Projektrollen
+        pivot_roles: [...(userToAdd.default_project_role_ids ?? userToAdd.pivot_roles ?? [])],
         openedMenu: false,
         openedMenuRoles: false,
     })

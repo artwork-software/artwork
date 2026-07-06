@@ -524,6 +524,16 @@
                                             {{ $t('Reset') }}
                                         </span>
                                     </div>
+                                    <MenuItem v-slot="{ active }">
+                                        <div @click="toggleSortWorkersByQualification"
+                                             :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
+                                            <span :class="sortWorkersByQualification ? 'font-bold' : ''">
+                                                {{ $t('Group by function') }}
+                                            </span>
+                                            <PropertyIcon name="IconCheck" v-if="sortWorkersByQualification"
+                                                          class="h-5 w-5"/>
+                                        </div>
+                                    </MenuItem>
                                     <MenuItem
                                         v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                         :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
@@ -613,6 +623,39 @@
                                     </div>
                                 </div>
 
+                                <div v-else-if="row.kind === 'qualificationGroup'" class="w-full px-2">
+                                    <div
+                                        class="flex w-96 cursor-pointer items-center justify-between pl-3 pb-1"
+                                        @click="changeQualificationGroupVisibility(row.groupKey)"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                                {{ row.qualification ? row.qualification.name : $t('Without assigned function') }}
+                                            </span>
+                                            <span
+                                                class="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-normal text-gray-100"
+                                            >
+                                                {{ row.workerCount }}
+                                            </span>
+                                        </div>
+
+                                        <PropertyIcon
+                                            name="IconChevronDown"
+                                            class="h-3 w-3 text-[#A7A6B1] transition-transform duration-200"
+                                            :class="!closedQualificationGroups.includes(row.groupKey) ? 'rotate-180' : ''"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div v-else-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center gap-x-2 px-2">
+                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                        {{ $t('External') }}
+                                        <PropertyIcon :name="row.externBelow ? 'IconArrowDown' : 'IconArrowUp'"
+                                                      class="h-3 w-3 text-[#A7A6B1]"/>
+                                    </span>
+                                    <div class="grow border-t border-white/30"></div>
+                                </div>
+
                                 <div v-else class="w-full">
                                     <DragElement
                                         v-if="!highlightMode && !multiEditMode"
@@ -654,8 +697,13 @@
 
                             <template #cell="{ row, day }">
 
-                                <!-- Craft row: keine Zellen -->
-                                <div v-if="row.kind === 'craft'" class="h-full w-full"></div>
+                                <!-- Intern/Extern-Trennzeile: durchgehende Linie -->
+                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center">
+                                    <div class="w-full border-t border-white/30"></div>
+                                </div>
+
+                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen -->
+                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"></div>
 
                                 <!-- Worker row -->
                                 <div v-else class="relative h-full w-full">
@@ -1250,6 +1298,8 @@ const expandDays = computed(() => calendarSettings.value?.expand_days)
 const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
 const compactMode = computed(() => authUser.value.compact_mode)
 const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+const sortWorkersByQualification = computed(() => authUser.value.sort_workers_by_qualification ?? true)
+const closedQualificationGroups = ref<string[]>([...(authUser.value.closed_qualification_groups ?? [])])
 
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
@@ -2387,7 +2437,90 @@ const shiftPlanUserSortById = computed<string | null>(() => page.props.auth.user
 
 type GridRow =
     | { key: string; kind: 'craft'; craft: any }
+    | { key: string; kind: 'qualificationGroup'; craft: any; qualification: any; groupKey: string; workerCount: number }
+    | { key: string; kind: 'internExternDivider'; craft: any; externBelow: boolean }
     | { key: string; kind: 'worker'; craft: any; worker: any }
+
+function isExternWorker(w: any): boolean {
+    return w.element?.is_freelancer === true || w.type === 1 || w.type === 2
+}
+
+/**
+ * Worker-Zeilen anhängen; bei aktiver Intern/Extern-Sortierung wird an jedem
+ * Intern↔Extern-Wechsel eine eigene Trennzeile mit "Extern"-Label eingefügt
+ * (externBelow: zeigt der Pfeil nach unten, stehen die Externen unter der Linie).
+ */
+function pushWorkerRows(rows: GridRow[], workers: any[], keyPrefix: string, craft: any) {
+    const markInternExtern = shiftPlanUserSortById.value === 'INTERN_EXTERN_ASCENDING'
+        || shiftPlanUserSortById.value === 'INTERN_EXTERN_DESCENDING'
+
+    let previousIsExtern: boolean | null = null
+
+    for (const w of workers) {
+        const currentIsExtern = isExternWorker(w)
+
+        if (markInternExtern && previousIsExtern !== null && previousIsExtern !== currentIsExtern) {
+            rows.push({
+                key: `divider_${keyPrefix}_${w.key}`,
+                kind: 'internExternDivider',
+                craft,
+                externBelow: currentIsExtern,
+            })
+        }
+
+        rows.push({
+            key: `worker_${keyPrefix}_${w.key}`, // w.key ist schon stabil
+            kind: 'worker',
+            craft,
+            worker: w,
+        })
+
+        previousIsExtern = currentIsExtern
+    }
+}
+
+/**
+ * Worker eines Gewerks nach ihren Funktionen (shift_qualifications mit passender
+ * pivot.craft_id) gruppieren. Personen mit mehreren Funktionen erscheinen in jeder
+ * Gruppe (nur Referenzen, keine Daten-Duplikate). Personen ohne Funktion im Gewerk
+ * landen in einer "Ohne Funktion"-Gruppe am Ende.
+ */
+function buildQualificationGroupsOfCraft(craft: any) {
+    const groupsById = new Map<number, { qualification: any; workers: any[] }>()
+    const withoutQualification: any[] = []
+
+    for (const w of craft.users) {
+        const seen = new Set<number>()
+        let grouped = false
+
+        for (const sq of w.element?.shift_qualifications ?? []) {
+            const pivotCraftId = sq.pivot?.craft_id
+            if (pivotCraftId != null && pivotCraftId !== craft.id) continue
+            if (seen.has(sq.id)) continue
+            seen.add(sq.id)
+
+            if (!groupsById.has(sq.id)) {
+                groupsById.set(sq.id, { qualification: sq, workers: [] })
+            }
+            groupsById.get(sq.id)!.workers.push(w)
+            grouped = true
+        }
+
+        if (!grouped) {
+            withoutQualification.push(w)
+        }
+    }
+
+    const groups = [...groupsById.values()]
+        .sort((a, b) => (a.qualification.name ?? '').localeCompare(b.qualification.name ?? ''))
+        .map((g) => ({ ...g, groupKey: `${craft.id}_${g.qualification.id}` }))
+
+    if (withoutQualification.length > 0) {
+        groups.push({ qualification: null, workers: withoutQualification, groupKey: `${craft.id}_none` })
+    }
+
+    return groups
+}
 
 const gridRows = computed<GridRow[]>(() => {
     const rows: GridRow[] = []
@@ -2397,13 +2530,24 @@ const gridRows = computed<GridRow[]>(() => {
 
         if (closedCrafts.value.includes(craft.id)) continue
 
-        for (const w of craft.users) {
+        if (!sortWorkersByQualification.value) {
+            pushWorkerRows(rows, craft.users, `${craft.id}`, craft)
+            continue
+        }
+
+        for (const group of buildQualificationGroupsOfCraft(craft)) {
             rows.push({
-                key: `worker_${craft.id}_${w.key}`, // w.key ist schon stabil
-                kind: 'worker',
+                key: `qualGroup_${group.groupKey}`,
+                kind: 'qualificationGroup',
                 craft,
-                worker: w,
+                qualification: group.qualification,
+                groupKey: group.groupKey,
+                workerCount: group.workers.length,
             })
+
+            if (closedQualificationGroups.value.includes(group.groupKey)) continue
+
+            pushWorkerRows(rows, group.workers, group.groupKey, craft)
         }
     }
 
@@ -3211,6 +3355,31 @@ function changeCraftVisibility(id: number) {
     router.patch(
         route('user.update.open.crafts', {user: authUser.value.id}),
         {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
+        {preserveState: true, preserveScroll: true},
+    )
+}
+
+function changeQualificationGroupVisibility(groupKey: string) {
+    const index = closedQualificationGroups.value.indexOf(groupKey)
+    if (index > -1) {
+        closedQualificationGroups.value.splice(index, 1)
+    } else {
+        closedQualificationGroups.value.push(groupKey)
+    }
+
+    router.patch(
+        route('user.update.closed_qualification_groups', {user: authUser.value.id}),
+        {closed_qualification_groups: closedQualificationGroups.value},
+        {preserveState: true, preserveScroll: true},
+    )
+}
+
+function toggleSortWorkersByQualification() {
+    authUser.value.sort_workers_by_qualification = !sortWorkersByQualification.value
+
+    router.patch(
+        route('user.update.sort_workers_by_qualification', {user: authUser.value.id}),
+        {sort_workers_by_qualification: authUser.value.sort_workers_by_qualification},
         {preserveState: true, preserveScroll: true},
     )
 }

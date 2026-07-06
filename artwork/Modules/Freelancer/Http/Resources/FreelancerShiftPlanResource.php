@@ -21,6 +21,9 @@ class FreelancerShiftPlanResource extends WorkerShiftPlanResource
                 'first_name' => $this->getAttribute('first_name'),
                 'last_name' => $this->getAttribute('last_name'),
                 'profile_photo_url' => $this->getAttribute('profile_image'),
+                'position' => $this->getAttribute('position'),
+                'email' => $this->getAttribute('email'),
+                'phone_number' => $this->getAttribute('phone_number'),
             ],
             parent::toArray($request)
         );

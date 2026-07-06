@@ -105,6 +105,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $profile_photo_url
  * @property float $zoom_factor
  * @property boolean $is_sidebar_opened
+ * @property boolean $show_modal_backdrop
  * @property boolean $compact_mode
  * @property array $show_crafts
  * @property bool $at_a_glance
@@ -144,6 +145,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $bulk_sort_id
  * @property boolean $show_notification_indicator
  * @property int $shift_plan_user_sort_by_id
+ * @property boolean $sort_workers_by_qualification
+ * @property array $closed_qualification_groups
  * @property boolean $is_freelancer
  * @property string $sort_type_shift_tab
  * @property int $drawer_height
@@ -234,6 +237,7 @@ class User extends Model implements
         'language',
         'zoom_factor',
         'is_sidebar_opened',
+        'show_modal_backdrop',
         'compact_mode',
         'show_crafts',
         'opened_crafts',
@@ -244,6 +248,8 @@ class User extends Model implements
         'bulk_sort_id',
         'show_notification_indicator',
         'shift_plan_user_sort_by_id',
+        'sort_workers_by_qualification',
+        'closed_qualification_groups',
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
@@ -285,6 +291,7 @@ class User extends Model implements
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
         'is_sidebar_opened' => 'boolean',
+        'show_modal_backdrop' => 'boolean',
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
         'opened_crafts' => 'array',
@@ -301,6 +308,8 @@ class User extends Model implements
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
         'show_qualifications' => 'array',
+        'sort_workers_by_qualification' => 'boolean',
+        'closed_qualification_groups' => 'array',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',

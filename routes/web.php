@@ -470,6 +470,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //user.sidebar.update
     Route::patch('/users/{user}/sidebar/update', [UserController::class, 'updateSidebar'])
         ->name('user.sidebar.update');
+    //user.modal.backdrop.update
+    Route::patch('/users/{user}/modal-backdrop/update', [UserController::class, 'updateModalBackdrop'])
+        ->name('user.modal.backdrop.update');
     //user.checklist.style
     Route::patch('/users/{user}/checklist/style', [UserController::class, 'updateChecklistStyle'])
         ->name('user.checklist.style');
@@ -2186,9 +2189,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'user'], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
+        // Autorisierung im Controller: eigener Plan via "can view own roster",
+        // fremde Pläne via teammanagement/"can manage workers"
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
-            ->name('user.operationPlan')
-            ->can('can view own roster');
+            ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
         Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
@@ -2209,6 +2213,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 UserController::class, 'updateShiftPlanUserSortBy'
             ]
         )->name('user.update.shiftPlanUserSortBy');
+        Route::patch(
+            '/{user}/update/sort-workers-by-qualification',
+            [
+                UserController::class, 'updateSortWorkersByQualification'
+            ]
+        )->name('user.update.sort_workers_by_qualification');
+        Route::patch(
+            '/{user}/update/closed-qualification-groups',
+            [
+                UserController::class, 'updateClosedQualificationGroups'
+            ]
+        )->name('user.update.closed_qualification_groups');
 
         Route::patch(
             '/{user}/update/shift-tab-user-sort-by',

@@ -1547,6 +1547,13 @@ class UserController extends Controller
         ]));
     }
 
+    public function updateModalBackdrop(User $user, Request $request): void
+    {
+        $user->update([
+            'show_modal_backdrop' => $request->boolean('show_modal_backdrop'),
+        ]);
+    }
+
     public function updateChecklistStyle(User $user, Request $request): void
     {
         $user->update($request->only([
@@ -1646,6 +1653,19 @@ class UserController extends Controller
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
+        // Eigener Plan braucht "can view own roster"; fremde Pläne nur mit Team-
+        // oder Mitarbeiterverwaltung (Admins passieren via Gate::before).
+        if ($user->id === Auth::user()->id) {
+            if (!Auth::user()->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
+                abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+            }
+        } elseif (
+            !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)
+            && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)
+        ) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
         $selectedDate = $showVacationsAndAvailabilities ?
@@ -1872,5 +1892,22 @@ class UserController extends Controller
     public function updateOpenedCrafts(User $user, Request $request): void
     {
         $user->update($request->only('opened_crafts'));
+    }
+
+    public function updateSortWorkersByQualification(User $user, Request $request): void
+    {
+        $request->validate(['sort_workers_by_qualification' => ['required', 'boolean']]);
+
+        $user->update($request->only('sort_workers_by_qualification'));
+    }
+
+    public function updateClosedQualificationGroups(User $user, Request $request): void
+    {
+        $request->validate([
+            'closed_qualification_groups' => ['nullable', 'array'],
+            'closed_qualification_groups.*' => ['string'],
+        ]);
+
+        $user->update($request->only('closed_qualification_groups'));
     }
 }

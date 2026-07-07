@@ -262,10 +262,13 @@ function updateDefaultTab() {
         <div v-if="!tabClosed" class="mt-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <div class="flex items-center justify-between my-2">
+                    <div class="my-2">
                         <h3 class="text-sm font-semibold text-zinc-700 tracking-wide">
-                            {{ $t("Components") }}
+                            {{ $t("Main area") }}
                         </h3>
+                        <p class="mt-0.5 text-[11px] text-zinc-500">
+                            {{ $t("These components are displayed one below the other in the tab") }}
+                        </p>
                     </div>
 
                     <DropNewComponent

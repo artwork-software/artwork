@@ -45,14 +45,16 @@
                     {{ dataGaps.length }} {{ $t('projects with events but no BI figures — they pull every total towards zero.') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
-                    <Link
+                    <button
                         v-for="gap in visibleGaps"
                         :key="gap.project_id"
-                        :href="route('projects.tab', { project: gap.project_id, projectTab: firstProjectTabId })"
-                        class="rounded-full bg-white/80 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 hover:bg-white hover:underline"
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full bg-white/80 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 hover:bg-white"
+                        @click="quickEntryGap = gap"
                     >
+                        <IconPencil class="size-3" />
                         {{ gap.project_name }}
-                    </Link>
+                    </button>
                     <button
                         v-if="dataGaps.length > gapLimit"
                         type="button"
@@ -64,6 +66,15 @@
                 </div>
             </div>
 
+            <BiQuickEntryModal
+                v-if="quickEntryGap"
+                :project-id="quickEntryGap.project_id"
+                :project-name="quickEntryGap.project_name"
+                :project-link="route('projects.tab', { project: quickEntryGap.project_id, projectTab: firstProjectTabId })"
+                @close="quickEntryGap = null"
+                @saved="onQuickEntrySaved"
+            />
+
             <!-- KPI tiles -->
             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
                 <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -72,6 +83,7 @@
                     <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-emerald-600' : 'text-rose-600']">
                         {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ Math.abs(kpi.delta).toFixed(1) }} % {{ $t('vs. previous year') }}
                     </p>
+                    <p v-if="kpi.note" class="text-[10px] text-indigo-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
                 </div>
             </div>
 
@@ -152,7 +164,14 @@
                                     </Link>
                                 </td>
                                 <td class="px-3 py-2 text-gray-600">{{ row.category || '—' }}</td>
-                                <td class="px-3 py-2">{{ formatInt(row.visitors) }}</td>
+                                <td class="px-3 py-2">
+                                    <span
+                                        v-if="row.visitors_estimated"
+                                        class="text-indigo-700"
+                                        v-tooltip.top="{ value: $t('Estimated from sold tickets'), appendTo: 'body', class: 'aw-tooltip' }"
+                                    >≈ {{ formatInt(row.visitors) }}</span>
+                                    <template v-else>{{ formatInt(row.visitors) }}</template>
+                                </td>
                                 <td class="px-3 py-2">{{ formatCurrency(row.revenue) }}</td>
                                 <td class="px-3 py-2">
                                     <div v-if="row.occupancy !== null" class="flex items-center gap-2">
@@ -187,7 +206,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
-import { IconChartHistogram, IconX } from '@tabler/icons-vue';
+import { IconChartHistogram, IconX, IconPencil } from '@tabler/icons-vue';
+import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -227,6 +247,14 @@ watch(() => props.dashboard.range, (range) => {
 const gapLimit = 8;
 const showAllGaps = ref(false);
 const visibleGaps = computed(() => showAllGaps.value ? dataGaps.value : dataGaps.value.slice(0, gapLimit));
+
+const quickEntryGap = ref(null);
+
+const onQuickEntrySaved = () => {
+    quickEntryGap.value = null;
+    // Schreibzugriff hat die Dashboard-Cache-Version gebumpt → Reload liefert frische Zahlen
+    reload(true);
+};
 
 const numberFmt = new Intl.NumberFormat('de-DE');
 const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
@@ -274,7 +302,13 @@ const delta = (key) => {
 };
 
 const kpiTiles = computed(() => [
-    { key: 'visitors', label: 'Visitors', value: formatInt(kpis.value.visitors), delta: delta('visitors') },
+    {
+        key: 'visitors',
+        label: 'Visitors',
+        value: (kpis.value.visitors_estimated ? '≈ ' : '') + formatInt(kpis.value.visitors),
+        delta: delta('visitors'),
+        note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
+    },
     { key: 'revenue', label: 'Revenue', value: formatCurrency(kpis.value.revenue), delta: delta('revenue') },
     { key: 'occupancy', label: 'Occupancy rate', value: kpis.value.occupancy !== null && kpis.value.occupancy !== undefined ? kpis.value.occupancy.toFixed(1) + ' %' : '—', delta: delta('occupancy') },
     { key: 'event_days', label: 'Event days', value: formatInt(kpis.value.event_days), delta: delta('event_days') },

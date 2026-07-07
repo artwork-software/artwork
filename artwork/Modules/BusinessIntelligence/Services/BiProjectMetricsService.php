@@ -21,7 +21,8 @@ class BiProjectMetricsService
      */
     public function summary(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
     {
-        $visitors = $this->visitors($project, $from, $to);
+        $biData = $project->biData;
+        ['value' => $visitors, 'estimated' => $visitorsEstimated] = $this->visitorsWithEstimate($project, $from, $to);
         $soldTickets = $this->soldTickets($project, $from, $to);
         $revenue = $this->revenue($project, $from, $to);
         $capacity = $this->seatsCapacity($project);
@@ -29,14 +30,48 @@ class BiProjectMetricsService
 
         return [
             'visitors' => $visitors,
+            'visitors_estimated' => $visitorsEstimated,
+            'visitors_not_applicable' => (bool) $biData?->visitors_not_applicable,
             'sold_tickets' => $soldTickets,
+            'sold_tickets_not_applicable' => (bool) $biData?->sold_tickets_not_applicable,
             'revenue' => $revenue !== null ? round($revenue, 2) : null,
+            'revenue_not_applicable' => (bool) $biData?->revenue_not_applicable,
             'avg_price' => $this->averagePrice($revenue, $soldTickets),
             'capacity' => $capacity,
             'occupancy' => $this->occupancyRate($soldTickets, $capacity),
             'performances' => $performances,
             'event_days' => $this->eventDays($project, $from, $to),
         ];
+    }
+
+    /**
+     * Visitors with fallback: if no visitor figure was recorded but sold tickets
+     * exist, use those as an estimate. Callers must surface the `estimated` flag
+     * wherever the value is displayed.
+     *
+     * @return array{value: ?int, estimated: bool}
+     */
+    public function visitorsWithEstimate(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $visitors = $this->visitors($project, $from, $to);
+
+        if ($visitors !== null) {
+            return ['value' => $visitors, 'estimated' => false];
+        }
+
+        $biData = $project->biData;
+
+        if (!$biData || $biData->visitors_not_applicable || $biData->sold_tickets_not_applicable) {
+            return ['value' => null, 'estimated' => false];
+        }
+
+        $soldTickets = $this->soldTickets($project, $from, $to);
+
+        if ($soldTickets === null) {
+            return ['value' => null, 'estimated' => false];
+        }
+
+        return ['value' => $soldTickets, 'estimated' => true];
     }
 
     /**
@@ -70,7 +105,7 @@ class BiProjectMetricsService
     {
         $biData = $project->biData;
 
-        if (!$biData) {
+        if (!$biData || $biData->visitors_not_applicable) {
             return null;
         }
 
@@ -78,14 +113,16 @@ class BiProjectMetricsService
             return $biData->visitors_total;
         }
 
-        return (int) $this->sumEventData($project, 'visitors', $from, $to);
+        $sum = $this->sumEventData($project, 'visitors', $from, $to);
+
+        return $sum !== null ? (int) $sum : null;
     }
 
     public function soldTickets(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
         $biData = $project->biData;
 
-        if (!$biData) {
+        if (!$biData || $biData->sold_tickets_not_applicable) {
             return null;
         }
 
@@ -93,14 +130,16 @@ class BiProjectMetricsService
             return $biData->sold_tickets_total;
         }
 
-        return (int) $this->sumEventData($project, 'sold_tickets', $from, $to);
+        $sum = $this->sumEventData($project, 'sold_tickets', $from, $to);
+
+        return $sum !== null ? (int) $sum : null;
     }
 
     public function revenue(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?float
     {
         $biData = $project->biData;
 
-        if (!$biData) {
+        if (!$biData || $biData->revenue_not_applicable) {
             return null;
         }
 
@@ -108,7 +147,7 @@ class BiProjectMetricsService
             return $biData->revenue_total !== null ? (float) $biData->revenue_total : null;
         }
 
-        return (float) $this->sumEventData($project, 'revenue', $from, $to);
+        return $this->sumEventData($project, 'revenue', $from, $to);
     }
 
     public function averagePrice(?float $revenue, ?int $soldTickets): ?float
@@ -180,9 +219,13 @@ class BiProjectMetricsService
         );
     }
 
-    private function sumEventData(Project $project, string $field, ?Carbon $from, ?Carbon $to): float
+    /**
+     * Sum of per-event values in range; null when no event has the field recorded
+     * (distinguishes "nothing entered" from a genuine zero).
+     */
+    private function sumEventData(Project $project, string $field, ?Carbon $from, ?Carbon $to): ?float
     {
-        return (float) $project->biEventData
+        $entries = $project->biEventData
             ->filter(function ($eventData) use ($from, $to): bool {
                 $event = $eventData->event;
 
@@ -206,6 +249,12 @@ class BiProjectMetricsService
 
                 return true;
             })
-            ->sum($field);
+            ->filter(fn($eventData) => $eventData->{$field} !== null);
+
+        if ($entries->isEmpty()) {
+            return null;
+        }
+
+        return (float) $entries->sum($field);
     }
 }

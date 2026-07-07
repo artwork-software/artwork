@@ -1426,6 +1426,19 @@ async function measureBaselineMetrics() {
         null
     if (!root) return
 
+    // Echte Schrift der Zelltexte lesen — Canvas misst damit exakt das, was der
+    // jeweilige Browser rendert (inkl. Font-Fallback und Mindestschriftgröße)
+    const fontSample = root.querySelector('[data-sp-pgbar] span, [data-sp-eventwrap] span') as HTMLElement | null
+    const fontStyle = getComputedStyle(fontSample ?? root)
+    const fontFamily = fontStyle.fontFamily || ''
+    const fontSize = fontSample ? (parseFloat(fontStyle.fontSize) || 12) : 12
+    if (fontFamily !== cellFont.family || fontSize !== cellFont.size) {
+        cellFont.family = fontFamily
+        cellFont.size = fontSize
+        textLinesCache.clear()
+        cellSummaryCache.clear()
+    }
+
     const measureMax = (selector: string, measurer: (el: HTMLElement) => number, count = 10): number | null => {
         const els = root.querySelectorAll(selector) as NodeListOf<HTMLElement>
         if (!els.length) return null
@@ -1451,20 +1464,70 @@ async function measureBaselineMetrics() {
     recomputeRowHeights()
 }
 
-// --- Text wrapping estimation for expanded mode ---
-// Average char width for text-xs (12px) font-semibold, conservative estimate
-const AVG_CHAR_WIDTH = 7
+// --- Text wrapping measurement for expanded mode ---
+// Zeilenzahl per Canvas-measureText mit der real gerenderten Schrift statt fester
+// Zeichenbreite: Browser rendern unterschiedlich breit (Safari breiter, Chrome
+// schmaler) — eine Heuristik schneidet daher entweder ab oder erzeugt Weißraum.
+const AVG_CHAR_WIDTH = 7 // nur noch Fallback, falls kein Canvas verfügbar
 
 // Available text widths derived from shiftColWidth (202) and CSS padding/gaps
-const pgBarTextWidth = shiftColWidth - 2 - 16 - 4 - 16    // 164px: px-[1px]*2, px-2, gap-x-1, icon
-const eventNameTextWidth = shiftColWidth - 2 - 16 - 8 - 12 // 164px: px-[1px]*2, px-2, gap-x-2, color stripe
-const projectBarTextWidth = shiftColWidth - 2 - 16          // 184px: px-[1px]*2, px-2
-const groupBarTextWidth = shiftColWidth - 2 - 16 - 6 - 16  // 162px: px-[1px]*2, px-2, gap-1.5, icon
+const cellInnerWidth = shiftColWidth - 2                 // px-[1px]*2 des day-containers
+const pgBarTextWidth = cellInnerWidth - 16 - 4 - 16      // Projektgruppen-Link: px-2, gap-x-1, Icon size-4
+const eventBarTextWidth = cellInnerWidth - 16            // Projekt-/Gruppenbalken im Event: px-2
 
-function estimateTextLines(text: string | undefined | null, availableWidth: number): number {
-    if (!text || availableWidth <= 0) return 1
+let _measureCtx: CanvasRenderingContext2D | null | undefined
+function getMeasureCtx(): CanvasRenderingContext2D | null {
+    if (_measureCtx === undefined) {
+        _measureCtx = document.createElement('canvas').getContext('2d') ?? null
+    }
+    return _measureCtx
+}
+
+// Schriftfamilie/-größe werden in measureBaselineMetrics vom echten DOM gelesen,
+// damit Font-Fallbacks und Browser-Mindestschriftgrößen in die Messung einfließen
+const cellFont = reactive({ family: '', size: 12 })
+const textLinesCache = new Map<string, number>()
+
+function estimateTextLinesFallback(text: string, availableWidth: number): number {
     const charsPerLine = Math.max(1, Math.floor(availableWidth / AVG_CHAR_WIDTH))
     return Math.max(1, Math.ceil(text.length / charsPerLine))
+}
+
+function measureTextLines(text: string | undefined | null, availableWidth: number, fontWeight = 600): number {
+    if (!text || availableWidth <= 0) return 1
+    const ctx = getMeasureCtx()
+    if (!ctx || !cellFont.family) return estimateTextLinesFallback(String(text), availableWidth)
+    const cacheKey = `${fontWeight}|${availableWidth}|${text}`
+    const cached = textLinesCache.get(cacheKey)
+    if (cached !== undefined) return cached
+
+    ctx.font = `${fontWeight} ${cellFont.size}px ${cellFont.family}`
+    // Leicht konservativ messen: Subpixel-/Kerning-Differenzen zwischen Canvas und
+    // DOM-Layout sollen eher eine Zeile zu viel als eine zu wenig ergeben
+    const width = availableWidth * 0.98
+    const spaceWidth = ctx.measureText(' ').width
+    let lines = 1
+    let lineWidth = 0
+    for (const word of String(text).trim().split(/\s+/)) {
+        if (!word) continue
+        const wordWidth = ctx.measureText(word).width
+        if (wordWidth > width) {
+            // overflow-wrap: break-word — überlanges Wort wird hart umbrochen
+            if (lineWidth > 0) lines++
+            const fullLines = Math.ceil(wordWidth / width)
+            lines += fullLines - 1
+            lineWidth = wordWidth - (fullLines - 1) * width
+            continue
+        }
+        const needed = lineWidth === 0 ? wordWidth : lineWidth + spaceWidth + wordWidth
+        if (needed <= width) {
+            lineWidth = needed
+        } else {
+            lines++
+            lineWidth = wordWidth
+        }
+    }
+    return boundedCacheSet(textLinesCache, cacheKey, lines)
 }
 
 // --- CellSummary cache ---
@@ -1519,13 +1582,21 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     if (showProjectGroups && events.length) {
         const groups = getProjectGroupsForCell(room, dayKey)
         for (const group of groups) {
-            const lines = expanded ? estimateTextLines(group.name, pgBarTextWidth) : 1
+            const lines = expanded ? measureTextLines(group.name, pgBarTextWidth, 700) : 1
             // py-1 (8px) + lines * 16px (text-xs line-height) + mb-0.5 (2px)
             pgTotalHeight += 8 + lines * 16 + 2
         }
     }
 
     // --- Events ---
+    // Nachbildung der Blöcke aus SingleEventInShiftPlan.vue inkl. aller
+    // settings-abhängigen Zeilen (Künstler*innen, Notizen, Projektleitung, Icons)
+    const settings = calendarSettings.value ?? {}
+    // Content-Breite: px-2 (16) + optional Farbstreifen (8px + gap-x-2) + optional Timeline-Icon (16px + gap-x-2)
+    let contentWidth = cellInnerWidth - 16
+    if (!settings.high_contrast) contentWidth -= 16
+    if (settings.show_timeline) contentWidth -= 24
+
     let totalEventHeight = 0
     for (const event of events) {
         if (!checkIfEventHasShiftsToDisplay(event)) {
@@ -1533,20 +1604,55 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
             const evtType = event.eventType ?? resolveEventType(event.eventTypeId)
             const evtProject = event.project ?? resolveProject(event.projectId)
 
-            // Content area: py-2 (16px) + event name + mt-0.5 (2px) + time text-xs/5 (20px)
-            const nameText = `${evtType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
-            const nameLines = expanded ? estimateTextLines(nameText, eventNameTextWidth) : 1
-            let h = 16 + nameLines * 16 + 2 + 20
+            // Content area: py-2 (16px)
+            let h = 16
 
-            // Project name bar: py-1 (8px) + text + border-b (1px)
+            // Künstler*innen-Zeile (text-xs/5 → 20px pro Zeile, font-bold)
+            if (settings.project_artists && evtProject?.artistNames) {
+                const artistLines = expanded ? measureTextLines(evtProject.artistNames, contentWidth, 700) : 1
+                h += artistLines * 20
+            }
+
+            // Namenszeile: Termineigenschafts-Icons (max-w-[45%], flex-wrap) schmälern den Text
+            const propertyCount = event.eventProperties?.length ?? 0
+            let nameWidth = contentWidth
+            let iconsHeight = 0
+            if (propertyCount > 0) {
+                const iconsTotal = propertyCount * 14 + (propertyCount - 1) * 4 // size-3.5 + gap-1
+                const iconsBox = Math.min(iconsTotal, Math.floor(contentWidth * 0.45))
+                nameWidth = contentWidth - iconsBox - 4 // gap-x-1
+                const iconsPerRow = Math.max(1, Math.floor((iconsBox + 4) / 18))
+                const iconRows = Math.ceil(propertyCount / iconsPerRow)
+                iconsHeight = iconRows * 14 + (iconRows - 1) * 4
+            }
+            const nameText = `${evtType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
+            const nameLines = expanded ? measureTextLines(nameText, nameWidth) : 1
+            h += Math.max(nameLines * 16, iconsHeight)
+
+            // Zeitzeile: mt-0.5 (2px) + text-xs/5 (20px)
+            h += 2 + 20
+
+            // Notizen (Anzeigeeinstellung "Notizen einblenden"): mt-0.5 + text-xs
+            if (settings.shift_notes && event.description) {
+                const noteLines = expanded ? measureTextLines(event.description, contentWidth, 400) : 1
+                h += 2 + noteLines * 16
+            }
+
+            // Projektleitung: mt-1 (4px) + Avatar-Zeile h-5 (20px)
+            if (settings.project_management && evtProject?.leaders?.length) {
+                h += 4 + 20
+            }
+
+            // Project name bar: py-1 (8px) + text + border-b (1px); Status-Punkt (size-3.5 + gap-1.5) schmälert
             if (evtProject?.id) {
-                const projLines = expanded ? estimateTextLines(evtProject?.name, projectBarTextWidth) : 1
+                const barWidth = eventBarTextWidth - (settings.project_status && evtProject?.status ? 20 : 0)
+                const projLines = expanded ? measureTextLines(evtProject?.name, barWidth) : 1
                 h += 8 + projLines * 16 + 1
             }
 
             // Group bar inside event: py-1 (8px) + text + border-b (1px)
             if (showProjectGroups && evtProject?.isInGroup && evtProject?.group?.length > 0 && !evtProject?.isGroup) {
-                const grpLines = expanded ? estimateTextLines(evtProject.group[0]?.name, groupBarTextWidth) : 1
+                const grpLines = expanded ? measureTextLines(evtProject.group[0]?.name, eventBarTextWidth) : 1
                 h += 8 + grpLines * 16 + 1
             }
 
@@ -1631,15 +1737,61 @@ function recomputeRowHeights() {
             }
 
             shiftRowHeights.value = result
+            scheduleVerifyVisibleCellHeights()
         })
     }, 80)
 }
 
+/** Sicherheitsnetz gegen abgeschnittene Zellen: misst real gerenderte Zellen nach und
+ *  hebt die Zeilenhöhe an, wenn der Inhalt die Schätzung übersteigt. Nur nach oben —
+ *  das Maximum einer Zeile kann in gerade nicht gerenderten (virtualisierten) Spalten liegen. */
+function verifyVisibleCellHeights() {
+    if (!expandDays.value || !shiftRowHeights.value.length) return
+    const root = shiftPlanEl.value
+    if (!root) return
+    const cells = root.querySelectorAll('.cell[data-sp-row]') as NodeListOf<HTMLElement>
+    let heights: number[] | null = null
+    cells.forEach((el) => {
+        if (el.scrollHeight - el.clientHeight <= 1) return
+        const row = Number(el.dataset.spRow)
+        if (!Number.isInteger(row)) return
+        const needed = Math.ceil(el.scrollHeight + cellMetrics.safetyPadding)
+        if (!heights) heights = [...shiftRowHeights.value]
+        if (needed > (heights[row] ?? 0)) heights[row] = needed
+    })
+    if (heights) shiftRowHeights.value = heights
+}
+
+let _verifyTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleVerifyVisibleCellHeights(delay = 50) {
+    if (_verifyTimer) clearTimeout(_verifyTimer)
+    _verifyTimer = setTimeout(() => {
+        nextTick(() => requestAnimationFrame(verifyVisibleCellHeights))
+    }, delay)
+}
+
+// Beim Scrollen rutschen neue (virtualisierte) Zellen ins Bild — auch die nachmessen
+watch(
+    () => shiftPlanEl.value,
+    (el, _prev, onCleanup) => {
+        if (!el) return
+        const onScroll = () => {
+            if (expandDays.value) scheduleVerifyVisibleCellHeights(150)
+        }
+        el.addEventListener('scroll', onScroll, { passive: true })
+        onCleanup(() => el.removeEventListener('scroll', onScroll))
+    },
+    { immediate: true },
+)
+
 // Trigger recompute + measurement on relevant changes
+// calendarSettings gehört dazu: die Zellhöhe hängt von Anzeigeeinstellungen wie
+// Künstler*innen/Notizen/Projektleitung/Timeline ab (siehe summarizeCell)
 watch(
     () => [
         expandDays.value,
         displayProjectGroups.value,
+        calendarSettings.value,
         shiftPlanArrayRef.value,
         days.value,
     ],
@@ -2062,6 +2214,16 @@ onMounted(async () => {
     if (expandDays.value) {
         measureBaselineMetrics()
     }
+
+    // Webfonts laden evtl. erst nach der ersten Messung — dann einmal neu messen,
+    // sonst basiert die Umbruch-Berechnung auf dem Fallback-Font
+    document.fonts?.ready?.then(() => {
+        if (expandDays.value) {
+            textLinesCache.clear()
+            cellSummaryCache.clear()
+            measureBaselineMetrics()
+        }
+    })
 
     // Load crafts asynchronously for shift plan
     try {

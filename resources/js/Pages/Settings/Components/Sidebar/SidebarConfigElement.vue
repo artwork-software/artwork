@@ -5,7 +5,7 @@ import draggable from "vuedraggable";
 
 import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
-import { IconCirclePlus } from "@tabler/icons-vue";
+import { IconCirclePlus, IconLayoutSidebarRight } from "@tabler/icons-vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps({
@@ -29,9 +29,6 @@ function updateComponentOrder(components) {
         {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => {
-                console.log('Reihenfolge erfolgreich aktualisiert');
-            }
         }
     );
 }
@@ -44,24 +41,30 @@ function handleSaved() {
 </script>
 
 <template>
-    <div class="rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur p-4 shadow-sm">
+    <div class="rounded-2xl border border-zinc-300/80 bg-zinc-50/70 backdrop-blur p-4 shadow-sm">
         <!-- Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-dashed border-zinc-200">
-            <div class="flex items-center gap-2">
-                <h3 class="text-sm font-semibold text-zinc-800 tracking-wide">
-                    {{ t('Sidebar') }}
-                </h3>
-                <span
-                    class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4
-                 border-zinc-200 bg-white/70 text-zinc-600"
-                >
-          {{ sidebarCount }} {{ t('Tab') }}
-        </span>
+        <div class="flex items-start justify-between pb-3 border-b border-dashed border-zinc-200">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <IconLayoutSidebarRight class="size-4 text-zinc-600 shrink-0" />
+                    <h3 class="text-sm font-semibold text-zinc-800 tracking-wide">
+                        {{ t('Sidebar of this tab') }}
+                    </h3>
+                    <span
+                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4
+                     border-zinc-200 bg-white/70 text-zinc-600"
+                    >
+              {{ sidebarCount }} {{ t('Tab') }}
+            </span>
+                </div>
+                <p class="mt-1 text-[11px] text-zinc-500">
+                    {{ t('Optional: shown in the project as a narrow right column next to the main area') }}
+                </p>
             </div>
 
             <button
                 type="button"
-                class="grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white/70 hover:bg-white transition"
+                class="grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white/70 hover:bg-white transition shrink-0"
                 @click="showAddEditSidebarTabModal = true"
                 :aria-label="t('Add sidebar tab')"
             >

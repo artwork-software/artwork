@@ -36,6 +36,7 @@ use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
@@ -51,6 +52,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Event\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFilter;
@@ -520,9 +522,67 @@ readonly class EventService
                 'date' => $formattedDate,
                 'shifts' => [],
                 'individualTimes' => [],
+                'dayServices' => [],
+                'holidays' => [],
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
+        }
+
+        // Tagesdienste des betrachteten Workers (User/Freelancer/Dienstleister) pro Tag einsammeln.
+        $workerClass = [
+            'user' => User::class,
+            'freelancer' => Freelancer::class,
+            'service_provider' => ServiceProvider::class,
+        ][$modelType] ?? User::class;
+
+        $worker = $workerClass::query()->find($modelId);
+        if ($worker !== null) {
+            $workerDayServices = $worker->dayServices()
+                ->wherePivotBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->get();
+
+            foreach ($workerDayServices as $dayService) {
+                $dayKey = Carbon::parse($dayService->pivot->date)->format('Y-m-d');
+                if (!isset($daysWithData[$dayKey])) {
+                    continue;
+                }
+
+                $daysWithData[$dayKey]['dayServices'][] = [
+                    'id' => $dayService->id,
+                    'name' => $dayService->name,
+                    'icon' => $dayService->icon,
+                    'hex_color' => $dayService->hex_color,
+                ];
+            }
+        }
+
+        // Feiertage einmal für den gesamten Zeitraum laden und pro Tag zuordnen.
+        $holidays = Holiday::query()
+            ->where(function (Builder $query) use ($startDate, $endDate): void {
+                $query->where(function (Builder $builder) use ($startDate, $endDate): void {
+                    $builder->whereDate('date', '<=', $endDate->format('Y-m-d'))
+                        ->whereDate('end_date', '>=', $startDate->format('Y-m-d'));
+                })->orWhere('yearly', true);
+            })
+            ->with('subdivisions')
+            ->get();
+
+        foreach ($daysWithData as $dayKey => $dayData) {
+            $dayCarbon = Carbon::parse($dayKey);
+            foreach ($holidays as $holiday) {
+                if (!$this->holidayCoversDay($holiday, $dayCarbon)) {
+                    continue;
+                }
+
+                $daysWithData[$dayKey]['holidays'][] = [
+                    'id' => $holiday->id,
+                    'name' => $holiday->name,
+                    'color' => $holiday->color,
+                    'treatAsSpecialDay' => (bool) $holiday->treatAsSpecialDay,
+                    'subdivisions' => $holiday->subdivisions->pluck('name')->toArray(),
+                ];
+            }
         }
 
         // Individualzeiten nur für User im Zeitraum einsammeln.
@@ -720,6 +780,32 @@ readonly class EventService
         ]);
 
         return $daysWithData;
+    }
+
+    /**
+     * Prüft, ob ein Feiertag (einmalig oder jährlich wiederkehrend) den gegebenen Tag abdeckt.
+     * Bei jährlichen Feiertagen wird der Zeitraum in das Jahr des Tages verschoben; Zeiträume
+     * über den Jahreswechsel werden über den Vorjahres-Kandidaten abgedeckt.
+     */
+    private function holidayCoversDay(Holiday $holiday, Carbon $day): bool
+    {
+        $holidayStart = $holiday->date->copy()->startOfDay();
+        $holidayEnd = ($holiday->end_date ?? $holiday->date)->copy()->startOfDay();
+
+        if (!$holiday->yearly) {
+            return $day->betweenIncluded($holidayStart, $holidayEnd);
+        }
+
+        $spanDays = (int) $holidayStart->diffInDays($holidayEnd);
+        foreach ([$day->year, $day->year - 1] as $candidateYear) {
+            $candidateStart = $holidayStart->copy()->setYear($candidateYear);
+            $candidateEnd = $candidateStart->copy()->addDays($spanDays);
+            if ($day->betweenIncluded($candidateStart, $candidateEnd)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getShiftPlanDto(

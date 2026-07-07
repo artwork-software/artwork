@@ -380,6 +380,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/money_source_search', [UserController::class, 'moneySourceSearch'])
         ->name('users.money_source_search');
     Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
+    Route::get('/users/{user}/tooltip-info', [UserController::class, 'tooltipInfo'])->name('user.tooltip.info');
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])

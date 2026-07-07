@@ -4326,8 +4326,10 @@ class EventController extends Controller
     /**
      * Reload a single worker for the shift plan (lightweight alternative to getShiftPlanWorkers).
      */
-    public function getShiftPlanWorkerSingle(Request $request): JsonResponse
-    {
+    public function getShiftPlanWorkerSingle(
+        Request $request,
+        \Artwork\Modules\Freelancer\Repositories\FreelancerRepository $freelancerRepository
+    ): JsonResponse {
         $validated = $request->validate([
             'worker_id' => 'required|integer',
             'worker_type' => 'required|string|in:user,freelancer,serviceProvider',
@@ -4389,7 +4391,9 @@ class EventController extends Controller
             $qualificationsCache,
             $startDate,
             $endDate,
-            $workerType === 'user',
+            // Parität zum Bulk-Load: User UND Freelancer liefern vacations mit,
+            // sonst verliert die Worker-Zeile beim Einzel-Reload ihre Abwesenheiten
+            in_array($workerType, ['user', 'freelancer'], true),
             $additionalData
         );
 
@@ -4397,6 +4401,13 @@ class EventController extends Controller
             $workerData = $this->workerShiftPlanService->enrichUserWorkerData(
                 $workerData, $workerId, $startDate, $endDate, $worker
             );
+        }
+
+        // Parität zum Bulk-Load (FreelancerService): sonst verschwinden registrierte
+        // Verfügbarkeiten der Zeile nach einem Einzel-Reload
+        if ($workerType === 'freelancer') {
+            $workerData['availabilities'] = $freelancerRepository
+                ->getAvailabilitiesBetweenDatesGroupedByFormattedDate($worker, $startDate, $endDate);
         }
 
         return new JsonResponse([

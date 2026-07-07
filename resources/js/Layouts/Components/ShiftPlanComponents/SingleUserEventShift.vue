@@ -2,7 +2,7 @@
     <div class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md">
         <!-- Farb-Akzent / Headerzeile -->
         <div
-            class="flex items-center justify-between gap-2 px-3 py-2"
+            class="flex items-start justify-between gap-2 px-3 py-2"
             :style="{
         backgroundColor: eventType ? backgroundColorWithOpacity(eventType?.hex_code, percentage) : (resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8'),
         color: eventType ? getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) : getTextColorBasedOnBackground(resolvedCraft?.color ? `${resolvedCraft.color}40` : '#e8e8e8')
@@ -11,26 +11,26 @@
             <a
                 v-if="project && eventType && canAccessProject"
                 :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
-                class="inline-flex items-center max-w-[70%] truncate text-sm font-semibold hover:opacity-90 transition"
+                class="min-w-0 break-words text-sm font-semibold hover:opacity-90 transition"
             >
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </a>
-            <span v-else-if="project && eventType" class="truncate text-sm font-semibold">
+            <span v-else-if="project && eventType" class="min-w-0 break-words text-sm font-semibold">
                 {{ eventType?.abbreviation }}: {{ project?.name }}
             </span>
 
-            <span v-else class="truncate text-sm font-semibold">
+            <span v-else class="min-w-0 break-words text-sm font-semibold">
                 {{ getCraftAndFunctionLabel() }} - <span>
                     <a
                         v-if="canAccessProject"
                         :href="project?.id ? route('projects.tab', { project: project.id, projectTab: firstProjectShiftTabId }) : '#'"
-                        class="inline-flex items-center max-w-[70%] truncate text-sm font-semibold hover:opacity-90 transition"
+                        class="break-words text-sm font-semibold hover:opacity-90 transition"
                     >{{ project?.name }}</a>
                     <span v-else>{{ project?.name }}</span>
                 </span>
             </span>
 
-            <div class="ml-auto flex items-center gap-2">
+            <div class="ml-auto flex items-center gap-2 shrink-0">
                 <PropertyIcon name="IconLock" v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
                 <button
                     v-if="project"
@@ -227,9 +227,9 @@ const getCraftAndFunctionLabel = () => {
     let craftName = null
     let functionName = null
 
-    // Prioritize shift.craft.name for the full craft name
-    if (resolvedCraft.value?.name) {
-        craftName = resolvedCraft.value.name
+    // Abkürzung des Gewerks bevorzugen, damit der Projektname im Header Platz hat
+    if (resolvedCraft.value?.abbreviation || resolvedCraft.value?.name) {
+        craftName = resolvedCraft.value.abbreviation || resolvedCraft.value.name
     }
 
     // Find the current worker in the shift to get their function

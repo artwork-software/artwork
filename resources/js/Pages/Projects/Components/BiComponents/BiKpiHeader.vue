@@ -10,9 +10,17 @@
                     <component :is="kpi.icon" class="size-4 text-gray-400 shrink-0" />
                     <span class="text-xs text-gray-500 truncate">{{ $t(kpi.label) }}</span>
                 </div>
-                <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-900'">
-                    {{ kpi.value ?? '–' }}
+                <p v-if="kpi.notApplicable" class="text-xs text-gray-400 mt-2 italic">
+                    {{ $t('Not relevant') }}
                 </p>
+                <template v-else>
+                    <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-900'">
+                        <template v-if="kpi.estimated">≈ </template>{{ kpi.value ?? '–' }}
+                    </p>
+                    <p v-if="kpi.estimated" class="text-[10px] text-indigo-600 leading-tight">
+                        {{ $t('estimated from sold tickets') }}
+                    </p>
+                </template>
             </div>
         </div>
 
@@ -51,14 +59,44 @@ const formatInt = (v) => (v === null || v === undefined) ? null : numberFmt.form
 const formatCurrency = (v) => (v === null || v === undefined) ? null : currencyFmt.format(v);
 const formatPercent = (v) => (v === null || v === undefined) ? null : `${Number(v).toFixed(1).replace('.', ',')} %`;
 
-const kpiTiles = computed(() => [
-    { key: 'visitors', label: 'Visitors', icon: IconUsers, value: formatInt(props.summary.visitors) },
-    { key: 'sold_tickets', label: 'Sold tickets', icon: IconTicket, value: formatInt(props.summary.sold_tickets) },
-    { key: 'revenue', label: 'Revenue', icon: IconCurrencyEuro, value: formatCurrency(props.summary.revenue) },
-    { key: 'occupancy', label: 'Occupancy rate', icon: IconGauge, value: formatPercent(props.summary.occupancy) },
-    { key: 'avg_price', label: 'Average ticket price', icon: IconTag, value: formatCurrency(props.summary.avg_price) },
-    { key: 'performances', label: 'Performances', icon: IconMasksTheater, value: formatInt(props.summary.performances) },
-]);
+const kpiTiles = computed(() => {
+    const s = props.summary;
+    const ticketsNa = !!s.sold_tickets_not_applicable;
+    const revenueNa = !!s.revenue_not_applicable;
+
+    return [
+        {
+            key: 'visitors', label: 'Visitors', icon: IconUsers,
+            value: formatInt(s.visitors),
+            estimated: !!s.visitors_estimated,
+            notApplicable: !!s.visitors_not_applicable,
+        },
+        {
+            key: 'sold_tickets', label: 'Sold tickets', icon: IconTicket,
+            value: formatInt(s.sold_tickets),
+            notApplicable: ticketsNa,
+        },
+        {
+            key: 'revenue', label: 'Revenue', icon: IconCurrencyEuro,
+            value: formatCurrency(s.revenue),
+            notApplicable: revenueNa,
+        },
+        {
+            key: 'occupancy', label: 'Occupancy rate', icon: IconGauge,
+            value: formatPercent(s.occupancy),
+            notApplicable: ticketsNa,
+        },
+        {
+            key: 'avg_price', label: 'Average ticket price', icon: IconTag,
+            value: formatCurrency(s.avg_price),
+            notApplicable: ticketsNa || revenueNa,
+        },
+        {
+            key: 'performances', label: 'Performances', icon: IconMasksTheater,
+            value: formatInt(s.performances),
+        },
+    ];
+});
 
 // d.m.Y H:i aus dem Backend → Zeitstempel für die chronologische Sortierung
 const parseDate = (value) => {

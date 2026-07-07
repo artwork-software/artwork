@@ -36,10 +36,51 @@
                 </button>
             </div>
 
+            <!-- Ausfüllhilfe: Werte auf ausgewählte Termine anwenden -->
+            <div
+                v-if="canEdit && (selectedIds.size > 0 || hasBulkInput)"
+                class="mb-3 flex flex-wrap items-end gap-3 rounded-md border border-indigo-200 bg-indigo-50/60 p-3 print:hidden"
+            >
+                <span class="pb-2 text-xs font-medium text-indigo-800 whitespace-nowrap">
+                    {{ selectedIds.size }} {{ $t('events selected') }}
+                </span>
+                <BaseInput
+                    v-for="field in fields"
+                    :key="'bulk_' + field.key"
+                    type="number"
+                    :id="'bi_bulk_' + field.key"
+                    v-model.number="bulkValues[field.key]"
+                    :label="$t(field.label)"
+                    :min="0"
+                    :step="field.key === 'revenue' ? 0.01 : 1"
+                    class="w-32"
+                />
+                <BaseUIButton
+                    :label="$t('Apply to selection')"
+                    :disabled="bulkSaving || !hasBulkInput"
+                    hide-icon
+                    @click="applyBulk"
+                />
+                <button type="button" class="pb-2 text-xs text-gray-500 hover:text-gray-700" @click="clearSelection">
+                    {{ $t('Clear selection') }}
+                </button>
+                <p class="w-full text-[11px] text-indigo-700/70 -mt-1">
+                    {{ $t('Empty fields are skipped. Tip: use the copy icon in a row to take over its values.') }}
+                </p>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead>
                         <tr>
+                            <th v-if="canEdit" class="py-2 pr-2 w-8 print:hidden">
+                                <input
+                                    type="checkbox"
+                                    class="input-checklist !h-3.5 !w-3.5"
+                                    :checked="allDisplayedSelected"
+                                    @change="toggleAll($event.target.checked)"
+                                />
+                            </th>
                             <th
                                 v-for="col in columns"
                                 :key="col.key"
@@ -53,6 +94,7 @@
                                     <IconArrowsSort v-else class="size-3.5 text-gray-300" />
                                 </span>
                             </th>
+                            <th v-if="canEdit" class="w-8 print:hidden"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -62,6 +104,14 @@
                             class="hover:bg-gray-50"
                             :class="{ 'bg-indigo-50/60': event.id === latestPastEventId }"
                         >
+                            <td v-if="canEdit" class="py-2 pr-2 print:hidden">
+                                <input
+                                    type="checkbox"
+                                    class="input-checklist !h-3.5 !w-3.5"
+                                    :checked="selectedIds.has(event.id)"
+                                    @change="toggleRow(event.id, $event.target.checked)"
+                                />
+                            </td>
                             <td class="py-2 pl-0 pr-3 text-gray-700">
                                 <span class="inline-flex items-center gap-2">
                                     {{ event.name }}
@@ -100,18 +150,30 @@
                                 </div>
                                 <span v-else class="text-gray-300">–</span>
                             </td>
+                            <td v-if="canEdit" class="py-2 px-1 text-right print:hidden">
+                                <button
+                                    type="button"
+                                    class="text-gray-300 hover:text-indigo-600 transition"
+                                    v-tooltip.top="{ value: $t('Copy values of this row into the fill helper'), appendTo: 'body', class: 'aw-tooltip' }"
+                                    @click="copyRowToBulk(event)"
+                                >
+                                    <IconCopy class="size-4" />
+                                </button>
+                            </td>
                         </tr>
                         <tr v-if="displayedEvents.length === 0">
-                            <td :colspan="columns.length" class="py-4 text-center text-gray-400">{{ $t('No events found.') }}</td>
+                            <td :colspan="totalColumnCount" class="py-4 text-center text-gray-400">{{ $t('No events found.') }}</td>
                         </tr>
                     </tbody>
                     <tfoot v-if="displayedEvents.length > 0">
                         <tr class="border-t-2 border-gray-300">
+                            <td v-if="canEdit" class="print:hidden"></td>
                             <td colspan="3" class="py-2 pl-0 pr-3 font-semibold text-gray-900">{{ $t('Sum') }}</td>
                             <td v-for="field in fields" :key="field.key" class="py-2 px-3 font-semibold text-gray-900">
                                 {{ formatSum(field, sums[field.key]) }}
                             </td>
                             <td v-if="showOccupancy" class="py-2 px-3"></td>
+                            <td v-if="canEdit" class="print:hidden"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -121,9 +183,10 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import { IconChevronDown, IconChevronUp, IconArrowsSort, IconFilter } from '@tabler/icons-vue';
+import { computed, reactive, ref } from 'vue';
+import { IconChevronDown, IconChevronUp, IconArrowsSort, IconFilter, IconCopy } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 
 const props = defineProps({
@@ -272,6 +335,72 @@ const sortByColumn = (key) => {
 const clearFilters = () => {
     filterRoomId.value = null;
     search.value = '';
+};
+
+const totalColumnCount = computed(() => columns.value.length + (props.canEdit ? 2 : 0));
+
+// --- Ausfüllhilfe (Multiselect + Werte auf Auswahl anwenden) ---
+
+const selectedIds = ref(new Set());
+const bulkValues = reactive({});
+const bulkSaving = ref(false);
+
+const hasBulkInput = computed(() => props.fields.some(
+    field => bulkValues[field.key] !== null && bulkValues[field.key] !== undefined && bulkValues[field.key] !== ''
+));
+
+const allDisplayedSelected = computed(() =>
+    displayedEvents.value.length > 0 && displayedEvents.value.every(e => selectedIds.value.has(e.id))
+);
+
+const toggleRow = (eventId, checked) => {
+    const next = new Set(selectedIds.value);
+    if (checked) {
+        next.add(eventId);
+    } else {
+        next.delete(eventId);
+    }
+    selectedIds.value = next;
+};
+
+const toggleAll = (checked) => {
+    selectedIds.value = checked ? new Set(displayedEvents.value.map(e => e.id)) : new Set();
+};
+
+const clearSelection = () => {
+    selectedIds.value = new Set();
+    props.fields.forEach(field => { bulkValues[field.key] = null; });
+};
+
+const copyRowToBulk = (event) => {
+    props.fields.forEach((field) => {
+        bulkValues[field.key] = getEventValue(event.id, field.key);
+    });
+};
+
+const applyBulk = async () => {
+    if (!hasBulkInput.value || selectedIds.value.size === 0) return;
+    bulkSaving.value = true;
+    const data = {};
+    props.fields.forEach((field) => {
+        const value = bulkValues[field.key];
+        if (value !== null && value !== undefined && value !== '') {
+            data[field.key] = Number(value);
+        }
+    });
+    try {
+        await Promise.all(
+            [...selectedIds.value].map(eventId =>
+                axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data)
+            )
+        );
+        clearSelection();
+        emit('updated');
+    } catch (error) {
+        console.error('Error applying bulk values', error);
+    } finally {
+        bulkSaving.value = false;
+    }
 };
 
 const saveEventValue = async (eventId, fieldKey, value) => {

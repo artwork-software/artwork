@@ -373,6 +373,30 @@ class UserController extends Controller
         ]);
     }
 
+    public function tooltipInfo(User $user): JsonResponse
+    {
+        $canViewPrivate = Auth::user()->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+
+        return response()->json([
+            'id' => $user->getAttribute('id'),
+            'first_name' => $user->getAttribute('first_name'),
+            'last_name' => $user->getAttribute('last_name'),
+            'profile_photo_url' => $user->getAttribute('profile_photo_url'),
+            'pronouns' => $user->getAttribute('pronouns'),
+            'position' => $user->getAttribute('position'),
+            'business' => $user->getAttribute('business'),
+            'description' => $user->getAttribute('description'),
+            'email' => !$user->getAttribute('email_private') || $canViewPrivate
+                ? $user->getAttribute('email')
+                : null,
+            'phone_number' => !$user->getAttribute('phone_private') || $canViewPrivate
+                ? $user->getAttribute('phone_number')
+                : null,
+            'email_private' => (bool) $user->getAttribute('email_private'),
+            'phone_private' => (bool) $user->getAttribute('phone_private'),
+        ]);
+    }
+
     public function editUserWorkTime(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserWorkTimePatternPage', [

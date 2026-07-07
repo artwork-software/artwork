@@ -2,7 +2,9 @@
     <div
         class="shiftCell h-full overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100 relative"
         :class="[
-      hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
+      hasUnavailableAssignment
+          ? 'ring-2 ring-inset ring-amber-500 bg-amber-500/20'
+          : hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
     ]"
     >
         <div :class="classes">
@@ -33,7 +35,17 @@
         </div>
 
         <!-- Violation indicators -->
-        <div v-if="violationsToday.length" class="absolute top-0.5 right-0.5 flex items-center gap-0.5">
+        <div v-if="violationsToday.length || hasUnavailableAssignment" class="absolute top-0.5 right-0.5 flex items-center gap-0.5">
+            <!-- Eingeplant, aber nicht verfügbar (z.B. nachträglich krank gemeldet) -->
+            <div
+                v-if="hasUnavailableAssignment"
+                class="h-4 w-4 flex items-center justify-center"
+                :title="t('Assigned but not available')"
+            >
+                <svg class="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
             <div
                 v-for="violation in violationsToday"
                 :key="violation.id"
@@ -262,6 +274,33 @@ const violationsToday = computed(() => {
     const violations = props.user?.violations?.[props.day.withoutFormat]
     if (!violations) return []
     return Array.isArray(violations) ? violations : Object.values(violations)
+})
+
+/**
+ * Eingeplant, aber nicht verfügbar: Person hat am Tag eine Schicht UND einen
+ * Abwesenheits-Eintrag (Typ != AVAILABLE, z.B. Krankheit). Die Zuweisung bleibt
+ * bestehen (Stundenabrechnung bei festgeschriebenen Schichten) — die Zelle wird
+ * nur hervorgehoben, damit Planende den Belegungsbedarf sehen.
+ */
+const hasUnavailableAssignment = computed(() => {
+    if (!shiftsToday.value.length) return false
+
+    const conflictingVacations = (props.user?.vacations ?? []).filter(
+        v => v?.date === props.day.withoutFormat && v?.type !== 'AVAILABLE'
+    )
+    if (!conflictingVacations.length) return false
+
+    return conflictingVacations.some(v => {
+        if (v.full_day || !v.start_time || !v.end_time) return true
+        return shiftsToday.value.some(s => {
+            const start = s.startPivot || s.start
+            const end = s.endPivot || s.end
+            if (!start || !end) return true
+            // Schicht über Mitternacht: Konflikt, wenn Abwesenheit den Abend- oder Morgenteil trifft
+            if (end <= start) return v.end_time > start || v.start_time < end
+            return v.start_time < end && v.end_time > start
+        })
+    })
 })
 
 /** Rahmenregel: mind. 2 unterschiedliche Gruppen am Tag */

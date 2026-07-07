@@ -46,7 +46,14 @@
 
                     <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
-                        <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
+                        <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt -->
+                        <svg v-if="unavailableWorkers.length"
+                             class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                             fill="currentColor" viewBox="0 0 20 20">
+                            <title>{{ unavailableWorkersTooltip }}</title>
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <span v-else class="inline-block w-2.5 h-2.5 rounded-full ml-1"
                               :class="{
                                 'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
                                 'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
@@ -247,6 +254,17 @@ const computedMaxWorkerCount = computed(() => {
 const shiftWorkers = computed(() => props.shift.workers || [])
 
 const computedUsedWorkerCount = computed(() => shiftWorkers.value.length)
+
+// Eingeplant, aber am Schichttag nicht verfügbar (z.B. nachträglich krank gemeldet).
+// Die Zuweisung bleibt bestehen (Stundenabrechnung bei festgeschriebenen Schichten),
+// die Schicht gilt aber nicht mehr als voll besetzt.
+const unavailableWorkers = computed(() => shiftWorkers.value.filter((w: any) => w?.is_unavailable))
+
+const unavailableWorkersTooltip = computed(() => {
+    const names = unavailableWorkers.value.map((w: any) => w.name || `${w.first_name ?? ''} ${w.last_name ?? ''}`.trim()).filter(Boolean)
+    const label = (proxy as any)?.$t?.('Assigned but not available') ?? 'Assigned but not available'
+    return names.length ? `${label}: ${names.join(', ')}` : label
+})
 
 const allowOverbooking = computed(() => !!(page.props as any).allow_shift_overbooking)
 

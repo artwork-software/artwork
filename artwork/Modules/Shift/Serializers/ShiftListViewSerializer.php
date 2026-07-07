@@ -4,7 +4,10 @@ namespace Artwork\Modules\Shift\Serializers;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection as SupportCollection;
 
 readonly class ShiftListViewSerializer
 {
@@ -45,9 +48,9 @@ readonly class ShiftListViewSerializer
                 ] : null,
             ] : null,
             'workers' => [
-                ...$this->serializeListViewWorkers($shift->users, 'user'),
-                ...$this->serializeListViewWorkers($shift->freelancer, 'freelancer'),
-                ...$this->serializeListViewWorkers($shift->serviceProvider, 'service_provider'),
+                ...$this->serializeListViewWorkers($shift->users, 'user', $shift),
+                ...$this->serializeListViewWorkers($shift->freelancer, 'freelancer', $shift),
+                ...$this->serializeListViewWorkers($shift->serviceProvider, 'service_provider', $shift),
             ],
             'shifts_qualifications' => $shift->shiftsQualifications->map(fn ($sq) => [
                 'id' => $sq->id,
@@ -63,16 +66,16 @@ readonly class ShiftListViewSerializer
         ];
     }
 
-    /**
-     * @param \Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection $workers
-     */
-    public function serializeListViewWorkers($workers, string $type): array
-    {
+    public function serializeListViewWorkers(
+        EloquentCollection|SupportCollection|null $workers,
+        string $type,
+        ?Shift $shift = null
+    ): array {
         if ($workers === null || $workers->isEmpty()) {
             return [];
         }
 
-        return $workers->map(function ($worker) use ($type) {
+        return $workers->map(function ($worker) use ($type, $shift) {
             $data = [
                 'id' => $worker->id,
                 'type' => $type,
@@ -80,6 +83,8 @@ readonly class ShiftListViewSerializer
                     'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
                     'is_overbooked' => (bool) ($worker->pivot->is_overbooked ?? false),
                 ] : null,
+                'is_unavailable' => $shift !== null
+                    && ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker),
             ];
 
             if ($type === 'service_provider') {

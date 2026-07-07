@@ -43,7 +43,12 @@ class BiDashboardService
     {
         [$rangeFrom, $rangeTo] = $this->resolveDateRange($from, $to);
 
-        $cacheKey = 'bi_dashboard_' . ($rangeFrom?->toDateString() ?? 'null') . '_' . ($rangeTo?->toDateString() ?? 'null');
+        // Versions-Suffix: Schreibzugriffe bumpen bi_dashboard_version, damit
+        // frisch erfasste Zahlen nicht 10 Minuten hinter dem Cache hängen.
+        $cacheKey = 'bi_dashboard_'
+            . ($rangeFrom?->toDateString() ?? 'null') . '_'
+            . ($rangeTo?->toDateString() ?? 'null')
+            . '_v' . Cache::get('bi_dashboard_version', 0);
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($rangeFrom, $rangeTo): array {
             $projects = $this->loadProjects();
@@ -105,8 +110,13 @@ class BiDashboardService
         $totalEventDays = 0;
         $totalPerformances = 0;
 
+        $anyVisitorsEstimated = false;
+
         foreach ($projects as $project) {
-            $visitors = $this->metricsService->visitors($project, $from, $to) ?? 0;
+            ['value' => $visitorsValue, 'estimated' => $visitorsEstimated] =
+                $this->metricsService->visitorsWithEstimate($project, $from, $to);
+            $visitors = $visitorsValue ?? 0;
+            $anyVisitorsEstimated = $anyVisitorsEstimated || $visitorsEstimated;
             $tickets = $this->metricsService->soldTickets($project, $from, $to) ?? 0;
             $revenue = $this->metricsService->revenue($project, $from, $to) ?? 0.0;
             $capacity = $this->metricsService->seatsCapacity($project);
@@ -137,6 +147,7 @@ class BiDashboardService
                 'project_name' => $project->name,
                 'category' => $this->mainCategory($project),
                 'visitors' => $visitors,
+                'visitors_estimated' => $visitorsEstimated,
                 'revenue' => round($revenue, 2),
                 'occupancy' => $occupancy,
                 'performances' => $performances,
@@ -158,6 +169,7 @@ class BiDashboardService
         return [
             'kpis' => [
                 'visitors' => $totalVisitors,
+                'visitors_estimated' => $anyVisitorsEstimated,
                 'revenue' => round($totalRevenue, 2),
                 'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
                 'event_days' => $totalEventDays,
@@ -302,8 +314,13 @@ class BiDashboardService
                     || $entry->sold_tickets !== null
                     || $entry->revenue !== null
             );
+            // Alle drei Kennzahlen bewusst als "nicht relevant" markiert → keine Lücke
+            $allNotApplicable = $biData
+                && $biData->visitors_not_applicable
+                && $biData->sold_tickets_not_applicable
+                && $biData->revenue_not_applicable;
 
-            if (!$hasTotals && !$hasEventData) {
+            if (!$hasTotals && !$hasEventData && !$allNotApplicable) {
                 $gaps[] = [
                     'project_id' => $project->id,
                     'project_name' => $project->name,

@@ -52,6 +52,7 @@
                         v-for="user in project.leaders.slice(0, 3)"
                         :key="'leader-' + user.id"
                         :user="user"
+                        lazy-load
                         width="5"
                         height="5"
                     />

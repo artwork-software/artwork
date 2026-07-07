@@ -56,10 +56,11 @@ class ChangeService
     {
         return $this->activitiesFor($model)
             ->map(fn (Activity $activity): array => [
-                'changes' => $this->propertiesAsArray($activity),
+                'changes' => $this->frontendChanges($activity),
                 'change_by' => $activity->causer,
                 'created_at' => $this->formatTimestamp($activity),
             ])
+            ->filter(fn (array $row): bool => $row['changes'] !== [])
             ->values()
             ->all();
     }
@@ -87,15 +88,31 @@ class ChangeService
                         $item['changed_by'] = $changerData;
                     }
                     return $item;
-                }, $this->propertiesAsArray($activity));
+                }, $this->frontendChanges($activity));
 
                 return [
                     'changes' => $changes,
                     'created_at' => $this->formatTimestamp($activity),
                 ];
             })
+            ->filter(fn (array $row): bool => $row['changes'] !== [])
             ->values()
             ->all();
+    }
+
+    /**
+     * The frontend history components only understand the numeric change
+     * list produced by `ChangeBuilder` (`changes[0].translationKey`, …).
+     * Spatie's automatic dirty-attribute logs store a keyed
+     * `{attributes, old}` object instead — those entries are dropped here.
+     *
+     * @return array<int, mixed>
+     */
+    private function frontendChanges(Activity $activity): array
+    {
+        $properties = $this->propertiesAsArray($activity);
+
+        return array_is_list($properties) ? $properties : [];
     }
 
     public function latestHistoryEntry(Model $model): ?Activity

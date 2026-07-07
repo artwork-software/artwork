@@ -1191,6 +1191,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
@@ -1213,6 +1216,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
@@ -1235,6 +1241,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },

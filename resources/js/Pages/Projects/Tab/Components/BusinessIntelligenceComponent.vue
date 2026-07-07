@@ -50,6 +50,7 @@
                 <BiSectionCard :title="$t('Audience & revenue')" :icon="IconUsers" :completeness="audienceCompleteness">
                     <BiAudienceRevenueSection
                         :bi-data="biData"
+                        :metrics-summary="metricsSummary"
                         :event-data="eventData"
                         :project-events="projectEvents"
                         :room-capacities="roomCapacities"
@@ -199,11 +200,18 @@ const metricFilled = (metricKey, modeField, totalField) => {
     return eventData.value.some(e => e[metricKey] !== null && e[metricKey] !== undefined);
 };
 
+// Abgedeckt = erfasst ODER bewusst als "nicht relevant" markiert ODER (Besucher) geschätzt
+const metricCovered = (metricKey, modeField, totalField, naField) => {
+    if (biData.value?.[naField]) return true;
+    if (metricKey === 'visitors' && metricsSummary.value?.visitors_estimated) return true;
+    return metricFilled(metricKey, modeField, totalField);
+};
+
 const audienceCompleteness = computed(() => {
     const filled = [
-        metricFilled('visitors', 'visitor_mode', 'visitors_total'),
-        metricFilled('sold_tickets', 'sold_tickets_mode', 'sold_tickets_total'),
-        metricFilled('revenue', 'revenue_mode', 'revenue_total'),
+        metricCovered('visitors', 'visitor_mode', 'visitors_total', 'visitors_not_applicable'),
+        metricCovered('sold_tickets', 'sold_tickets_mode', 'sold_tickets_total', 'sold_tickets_not_applicable'),
+        metricCovered('revenue', 'revenue_mode', 'revenue_total', 'revenue_not_applicable'),
     ].filter(Boolean).length;
     return { filled, total: 3 };
 });
@@ -229,9 +237,9 @@ const customFieldsCompleteness = computed(() => {
 
 const dataQuality = computed(() => {
     const items = [
-        { label: 'Visitors', filled: metricFilled('visitors', 'visitor_mode', 'visitors_total') },
-        { label: 'Sold tickets', filled: metricFilled('sold_tickets', 'sold_tickets_mode', 'sold_tickets_total') },
-        { label: 'Revenue', filled: metricFilled('revenue', 'revenue_mode', 'revenue_total') },
+        { label: 'Visitors', filled: metricCovered('visitors', 'visitor_mode', 'visitors_total', 'visitors_not_applicable') },
+        { label: 'Sold tickets', filled: metricCovered('sold_tickets', 'sold_tickets_mode', 'sold_tickets_total', 'sold_tickets_not_applicable') },
+        { label: 'Revenue', filled: metricCovered('revenue', 'revenue_mode', 'revenue_total', 'revenue_not_applicable') },
         ...(projectRooms.value.length > 0
             ? [{ label: 'Room capacities', filled: capacityCompleteness.value.filled >= capacityCompleteness.value.total }]
             : []),

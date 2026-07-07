@@ -9,6 +9,7 @@ use Artwork\Modules\Project\Models\ProjectComponentValue;
 use Artwork\Modules\Project\Models\ProjectTab;
 use Artwork\Modules\Project\Models\ProjectTabSidebarTab;
 use Artwork\Modules\Project\Models\SidebarTabComponent;
+use Artwork\Modules\Project\Services\ComponentUsageService;
 use Illuminate\Http\Request;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -30,7 +31,7 @@ class ProjectTabController extends Controller
             ->get(['id','name']));
     }
 
-    public function index(): ResponseFactory|Response
+    public function index(ComponentUsageService $componentUsageService): ResponseFactory|Response
     {
         // Tabs mit allen Relationen cachen (Tab Settings ändern sich selten)
         $tabs = Cache::remember(self::CACHE_KEY_TABS, self::CACHE_TTL, function () {
@@ -123,6 +124,7 @@ class ProjectTabController extends Controller
             'tabs' => $tabs,
             'components' => $components,
             'componentsSpecial' => $componentsSpecial,
+            'componentUsages' => $componentUsageService->getUsages(),
         ]);
     }
 
@@ -390,5 +392,6 @@ class ProjectTabController extends Controller
         Cache::forget(self::CACHE_KEY_TABS);
         Cache::forget(self::CACHE_KEY_COMPONENTS);
         Cache::forget(self::CACHE_KEY_COMPONENTS_SPECIAL);
+        ComponentUsageService::clearCache();
     }
 }

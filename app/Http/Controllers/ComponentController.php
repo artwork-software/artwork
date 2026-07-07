@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
+use Artwork\Modules\Project\Services\ComponentUsageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 
 class ComponentController extends Controller
 {
-    public function index(): Response
+    public function index(ComponentUsageService $componentUsageService): Response
     {
         $tabComponentTypes = ProjectTabComponentEnum::getValues();
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
@@ -38,7 +39,8 @@ class ComponentController extends Controller
         return Inertia::render('Settings/ComponentManagement/Index', [
             'components' => $components,
             'componentsSpecial' => $componentsSpecial,
-            'tabComponentTypes' => $tabComponentTypes
+            'tabComponentTypes' => $tabComponentTypes,
+            'componentUsages' => $componentUsageService->getUsages()
         ]);
     }
 
@@ -80,6 +82,8 @@ class ComponentController extends Controller
         // Cache invalidieren, damit neue Komponenten sichtbar werden
         Cache::forget('settings_components_not_special');
         Cache::forget('settings_components_special');
+        // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
+        ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
         Cache::forget('print_layout_components_not_special');
         Cache::forget('print_layout_components_special');
@@ -103,6 +107,8 @@ class ComponentController extends Controller
         // Cache invalidieren, damit Änderungen unmittelbar sichtbar werden
         Cache::forget('settings_components_not_special');
         Cache::forget('settings_components_special');
+        // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
+        ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
         Cache::forget('print_layout_components_not_special');
         Cache::forget('print_layout_components_special');
@@ -143,6 +149,7 @@ class ComponentController extends Controller
         Cache::forget('settings_components_special');
         // Tab-Settings-Cache leeren, damit gelöschte Komponenten aus Tab-Zuweisungen verschwinden
         Cache::forget('settings_tabs_with_relations');
+        ComponentUsageService::clearCache();
         // Auch Drucklayout-bezogene Caches leeren
         Cache::forget('print_layout_components_not_special');
         Cache::forget('print_layout_components_special');

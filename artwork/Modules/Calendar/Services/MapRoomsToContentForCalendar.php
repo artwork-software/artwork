@@ -85,6 +85,14 @@ trait MapRoomsToContentForCalendar
     ): Collection {
         $roomIds = $rooms->pluck('id');
 
+        // Abwesenheiten im Zeitraum für das is_unavailable-Flag im ShiftDTO (ohne N+1)
+        $vacationsScope = fn ($q) => $q
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [
+                Carbon::parse($startDate)->toDateString(),
+                Carbon::parse($endDate)->toDateString(),
+            ]);
+
         $shifts = Shift::query()
             ->select([
                 'id',
@@ -113,10 +121,13 @@ trait MapRoomsToContentForCalendar
                 'globalQualifications',
                 'users:id,first_name,last_name',
                 'users.globalQualifications:id',
+                'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name',
                 'freelancer.globalQualifications:id',
+                'freelancer.vacations' => $vacationsScope,
                 'serviceProvider:id,provider_name',
                 'serviceProvider.globalQualifications:id',
+                'serviceProvider.vacations' => $vacationsScope,
                 'project:id,name',
             ])
             ->orderBy('start')

@@ -188,7 +188,13 @@
                                                             </div>
                                                             <div class="flex items-center text-xs text-gray-500">
                                                                 ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
-                                                                <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                                <svg v-if="getUnavailableWorkers(section.shift).length"
+                                                                     class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                                     fill="currentColor" viewBox="0 0 20 20">
+                                                                    <title>{{ getUnavailableTooltip(section.shift) }}</title>
+                                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                                </svg>
+                                                                <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                                       :class="{
                                                                         'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
                                                                         'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
@@ -302,7 +308,13 @@
                                                     </div>
                                                     <div class="flex items-center text-xs text-gray-500">
                                                         ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
-                                                        <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                        <svg v-if="getUnavailableWorkers(section.shift).length"
+                                                             class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                             fill="currentColor" viewBox="0 0 20 20">
+                                                            <title>{{ getUnavailableTooltip(section.shift) }}</title>
+                                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                               :class="{
                                                                 'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
                                                                 'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
@@ -395,7 +407,13 @@
                                                 </div>
                                                 <div class="flex items-center text-xs text-gray-500">
                                                     ({{ getUsedWorkerCount(shift) }}/{{ getMaxWorkerCount(shift) }})
-                                                    <span class="inline-block w-2 h-2 rounded-full ml-1"
+                                                    <svg v-if="getUnavailableWorkers(shift).length"
+                                                         class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                         fill="currentColor" viewBox="0 0 20 20">
+                                                        <title>{{ getUnavailableTooltip(shift) }}</title>
+                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                           :class="{
                                                             'bg-red-500': getUsedWorkerCount(shift) === 0 && getMaxWorkerCount(shift) !== 0,
                                                             'bg-yellow-500': getUsedWorkerCount(shift) > 0 && getUsedWorkerCount(shift) < getMaxWorkerCount(shift),
@@ -892,6 +910,9 @@ const shiftDisplayCache = computed(() => {
             for (const shift of roomData.shifts || []) {
                 const workers = shift.workers || [];
                 let used = workers.length;
+                // Eingeplant, aber am Schichttag nicht verfügbar (z.B. krank) —
+                // Schicht zählt dann nicht mehr als voll besetzt
+                const unavailable = workers.filter((w) => w?.is_unavailable);
 
                 let max = 0;
                 const rows = [];
@@ -913,6 +934,7 @@ const shiftDisplayCache = computed(() => {
                     used,
                     max,
                     rows,
+                    unavailable,
                     bgColor: hexToRgba(craftColor, 0.12),
                     borderColor: craftColor || '#d1d5db',
                     project: shift.project ?? shift.event?.project ?? null,
@@ -924,13 +946,19 @@ const shiftDisplayCache = computed(() => {
 });
 
 const getShiftDisplay = (shift) => shiftDisplayCache.value.get(shift.id) || {
-    used: 0, max: 0, rows: [], bgColor: 'transparent', borderColor: '#d1d5db', project: null,
+    used: 0, max: 0, rows: [], unavailable: [], bgColor: 'transparent', borderColor: '#d1d5db', project: null,
 };
 
 // Backwards-compatible thin helpers (used in places we don't want to touch).
 const getMaxWorkerCount = (shift) => getShiftDisplay(shift).max;
 const getUsedWorkerCount = (shift) => getShiftDisplay(shift).used;
 const getQualificationRows = (shift) => getShiftDisplay(shift).rows;
+const getUnavailableWorkers = (shift) => getShiftDisplay(shift).unavailable ?? [];
+const getUnavailableTooltip = (shift) => {
+    const names = getUnavailableWorkers(shift).map((w) => w.name).filter(Boolean);
+    const label = $t('Assigned but not available');
+    return names.length ? `${label}: ${names.join(', ')}` : label;
+};
 
 // Shift-qualification icon lookup is hot in the template, so we build a Map once.
 const shiftQualificationIconMap = computed(() => {

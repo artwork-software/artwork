@@ -100,6 +100,7 @@ readonly class ShiftListViewSerializer
         return [
             'id' => $event->id,
             'eventName' => $event->eventName,
+            'description' => $event->description,
             'allDay' => (bool) $event->allDay,
             'start_time' => (string) $event->start_time,
             'end_time' => (string) $event->end_time,

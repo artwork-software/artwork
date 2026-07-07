@@ -106,26 +106,32 @@
                                         <div
                                             v-for="event in roomData.events || []"
                                             :key="`evt-${event.id}`"
-                                            class="flex items-center gap-2 border-b border-gray-100 py-1 px-1.5 border-l-4"
+                                            class="border-b border-gray-100 py-1 px-1.5 border-l-4"
                                             :style="{ backgroundColor: hexToRgba(event.event_type?.hex_code || event.event_type?.color, 0.12), borderLeftColor: event.event_type?.hex_code || event.event_type?.color || '#d1d5db' }"
                                         >
-                                            <span class="font-medium text-xs" :style="{ color: event.event_type?.hex_code || event.event_type?.color }">
-                                                {{ event.event_type?.abbreviation }}
-                                            </span>
-                                            <span class="text-xs text-gray-700 truncate flex-1 min-w-0">
-                                                {{ event.eventName || event.name || event.event_type?.name }}
-                                            </span>
-                                            <span class="text-[11px] text-gray-500 tabular-nums shrink-0">
-                                                <template v-if="event.allDay">{{ $t('All day') }}</template>
-                                                <template v-else>{{ formatEventTime(event.start_time) }} – {{ formatEventTime(event.end_time) }}</template>
-                                            </span>
-                                            <Link
-                                                v-if="event.project"
-                                                :href="route('projects.tab', { project: event.project.id, projectTab: firstProjectShiftTabId })"
-                                                class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-black underline hover:bg-gray-50 transition shrink-0"
-                                            >
-                                                {{ event.project.name }}
-                                            </Link>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium text-xs" :style="{ color: event.event_type?.hex_code || event.event_type?.color }">
+                                                    {{ event.event_type?.abbreviation }}
+                                                </span>
+                                                <span class="text-xs text-gray-700 truncate flex-1 min-w-0">
+                                                    {{ event.eventName || event.name || event.event_type?.name }}
+                                                </span>
+                                                <span class="text-[11px] text-gray-500 tabular-nums shrink-0">
+                                                    <template v-if="event.allDay">{{ $t('All day') }}</template>
+                                                    <template v-else>{{ formatEventTime(event.start_time) }} – {{ formatEventTime(event.end_time) }}</template>
+                                                </span>
+                                                <Link
+                                                    v-if="event.project"
+                                                    :href="route('projects.tab', { project: event.project.id, projectTab: firstProjectShiftTabId })"
+                                                    class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-black underline hover:bg-gray-50 transition shrink-0"
+                                                >
+                                                    {{ event.project.name }}
+                                                </Link>
+                                            </div>
+                                            <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
+                                            <div v-if="listViewSettings.shift_notes && event.description" class="text-xs text-gray-400 mt-0.5 pl-0.5 truncate">
+                                                {{ event.description }}
+                                            </div>
                                         </div>
                                         <button
                                             v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"

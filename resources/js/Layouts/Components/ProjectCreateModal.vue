@@ -37,6 +37,12 @@
                                         v-model="createProjectForm.artists"
                                         label="Artists"
                                     />
+                                    <div class="mt-2">
+                                        <CrmArtistLinkManager
+                                            :project-id="project?.id"
+                                            @update:contact-ids="createProjectForm.crm_artist_contact_ids = $event"
+                                        />
+                                    </div>
                                 </div>
                                 <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
                                     {{ t('Project name is a required field.')}}
@@ -655,6 +661,7 @@ import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import CrmArtistLinkManager from "@/Components/Crm/CrmArtistLinkManager.vue";
 
 // Define props
 const props = defineProps({
@@ -725,6 +732,9 @@ const addToProjectGroup = ref(props.project ? !!props.project?.groups[0] : props
 const createProjectForm = useForm({
     name: props.project ? props.project.name : '',
     artists: props.project ? props.project.artists : '',
+    // null = Feld nicht anfassen (Backend synct nur bei Array); wird von
+    // CrmArtistLinkManager nach dem Laden der Verknüpfungen gesetzt
+    crm_artist_contact_ids: null,
     assignedSectorIds: props.project ? props.project?.sectors?.map(sector => sector.id) : [],
     assignedCategoryIds: props.project ? props.project?.categories?.map(category => category.id) : [],
     assignedGenreIds: props.project ? props.project?.genres?.map(genre => genre.id) : [],

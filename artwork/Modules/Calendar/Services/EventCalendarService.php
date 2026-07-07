@@ -187,6 +187,7 @@ readonly class EventCalendarService
                 'creator:id,first_name,last_name,position,email,profile_photo_path',
                 'eventProperties',
                 'subEvents',
+                'subEvents.eventProperties',
             ])
             ->withExists([
                 'timelines',

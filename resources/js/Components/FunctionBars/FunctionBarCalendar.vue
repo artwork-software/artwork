@@ -83,7 +83,7 @@
                         v-model="projectSearch"
                         :no-margin-top="true"
                         ref="projectSearchInput"
-                        label="Search project"
+                        label="Search project or artist"
                         is-small
                     />
                     <div v-if="projectSearchResults.length > 0"
@@ -95,6 +95,9 @@
                             <div>{{ project.name }}</div>
                             <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
+                            </div>
+                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                                {{ $t('Artist') }}: {{ project.artists }}
                             </div>
                         </div>
                     </div>

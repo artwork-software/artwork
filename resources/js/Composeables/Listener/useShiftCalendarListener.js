@@ -124,6 +124,9 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                         if (i !== -1) ids.splice(i, 1);
                     }
                 }
+                // Der ShiftPlan cached Zell-Inhalte über room.__v — ohne Bump
+                // bleibt der alte Stand sichtbar (Raumwechsel: alter Raum).
+                bumpRoomVersion(room);
             }
         }
 
@@ -138,10 +141,23 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
             if (!room.content[day].eventIds) room.content[day].eventIds = [];
             if (!room.content[day].eventIds.includes(eventData.id)) {
                 room.content[day].eventIds.push(eventData.id);
+                sortEventIdsByStart(room, day);
             }
         }
+        bumpRoomVersion(room);
         if (onEventsChanged) onEventsChanged();
         return true;
+    }
+
+    function sortEventIdsByStart(room, day) {
+        const ids = room.content?.[day]?.eventIds;
+        if (!Array.isArray(ids) || !room.eventsById) return;
+        ids.sort((a, b) => {
+            const ea = room.eventsById[a];
+            const eb = room.eventsById[b];
+            if (!ea?.start || !eb?.start) return 0;
+            return new Date(ea.start.replace(' ', 'T')) - new Date(eb.start.replace(' ', 'T'));
+        });
     }
 
     function updateEventInBaseCalendar(eventData) {
@@ -361,16 +377,21 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                 })
                 .listen('.event.removed', (data) => {
                     for (const currentRoom of newShiftPlanData.value) {
+                        let roomTouched = false;
                         // ShiftPlan structure
                         if (currentRoom.eventsById && currentRoom.eventsById[data.event.id]) {
                             delete currentRoom.eventsById[data.event.id];
+                            roomTouched = true;
                         }
                         for (const day in currentRoom.content || {}) {
                             // ShiftPlan structure: eventIds
                             const ids = currentRoom.content[day].eventIds;
                             if (Array.isArray(ids)) {
                                 const i = ids.indexOf(data.event.id);
-                                if (i !== -1) ids.splice(i, 1);
+                                if (i !== -1) {
+                                    ids.splice(i, 1);
+                                    roomTouched = true;
+                                }
                             }
                             // BaseCalendar structure: events array
                             const events = currentRoom.content[day].events;
@@ -379,6 +400,9 @@ export function useShiftCalendarListener(newShiftPlanData, { onWorkersNeedReload
                                 if (idx !== -1) events.splice(idx, 1);
                             }
                         }
+                        // room.__v ist der Cache-Key der ShiftPlan-Zellen — ohne Bump
+                        // bleibt der gelöschte Termin dort sichtbar.
+                        if (roomTouched) bumpRoomVersion(currentRoom);
                     }
                     if (onEventsChanged) onEventsChanged();
                 });

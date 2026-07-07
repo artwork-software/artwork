@@ -28,6 +28,7 @@
 
 <script setup>
 import { defineComponent } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
 // Synchron importieren – der äußere defineAsyncComponent in BaseCalendar
 // sorgt bereits für Code-Splitting. Ein zweiter Async-Layer erzeugt eine
@@ -41,9 +42,14 @@ const MinimalEventInCalendar = defineComponent({
         event: { type: Object, required: true },
         width: { type: String, default: '248px' }
     },
+    setup() {
+        // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (wie FullEventInCalendar)
+        const zoomFactor = usePage().props.auth.user.zoom_factor ?? 1
+        return { contentZoom: zoomFactor > 1 ? zoomFactor : 1 }
+    },
     template: `
     <div class="rounded-lg border border-gray-200 bg-white px-2 py-1 overflow-hidden"
-         :style="{ minWidth: width, maxWidth: width, width: width }">
+         :style="{ minWidth: width, maxWidth: width, width: width, zoom: contentZoom }">
       <div class="text-xs font-medium truncate">{{ event.title ?? event.eventName ?? 'Event' }}</div>
     </div>`
 })

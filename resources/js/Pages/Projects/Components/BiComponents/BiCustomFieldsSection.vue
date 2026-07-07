@@ -1,6 +1,5 @@
 <template>
-    <div v-if="fields.length > 0" class="mt-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-3">{{ $t('Custom fields') }}</h3>
+    <div v-if="fields.length > 0">
         <div class="space-y-3">
             <div v-for="field in fields" :key="field.id">
                 <!-- TextField -->

@@ -27,6 +27,9 @@ use Illuminate\Support\Collection;
 class ShiftCalendarService
 {
     /**
+     * @param object|null $displaySettings user display settings (shift plan / daily view) used to decide
+     *                                     which optional project data (artists, status, leaders) gets loaded.
+     *                                     null = legacy behavior (status + artists loaded, no leaders).
      * @return array{rooms: Collection, lookups: array}
      */
     public function filterRoomsEventsAndShifts(
@@ -36,7 +39,8 @@ class ShiftCalendarService
         CarbonInterface $endDate,
         bool $addTimeline = false,
         ?Project $project = null,
-        bool $minimalWorkerData = false
+        bool $minimalWorkerData = false,
+        ?object $displaySettings = null
     ): array {
         $roomIds = $rooms->modelKeys();
 
@@ -158,15 +162,40 @@ class ShiftCalendarService
             ->unique()
             ->values();
 
+        // Optionale Projektdaten nur laden, wenn die jeweilige Anzeigeeinstellung aktiv ist
+        // (Performance: der Schichtplan soll keine ungenutzten Daten mitschleppen).
+        $withArtists = $displaySettings === null || (bool) ($displaySettings->project_artists ?? false);
+        $withStatus = $displaySettings === null || (bool) ($displaySettings->project_status ?? false);
+        $withLeaders = $displaySettings !== null && (bool) ($displaySettings->project_management ?? false);
+
+        $projectSelect = ['id','name','state','is_group','icon','color'];
+        if ($withArtists) {
+            $projectSelect[] = 'artists';
+        }
+
+        $projectWith = [
+            'users:id',
+            'groups:id,name,state,is_group,icon,color',
+            'groups.users:id',
+        ];
+        if ($withStatus) {
+            $projectWith[] = 'status:id,name,color';
+            $projectWith[] = 'groups.status:id,name,color';
+        }
+        if ($withLeaders) {
+            $projectWith['managerUsers'] = fn ($q) => $q->select([
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.position',
+                'users.email',
+                'users.profile_photo_path',
+            ]);
+        }
+
         $projects = Project::query()
-            ->select(['id','name','state','artists','is_group','icon','color'])
-            ->with([
-                'status:id,name,color',
-                'users:id',
-                'groups:id,name,state,artists,is_group,icon,color',
-                'groups.status:id,name,color',
-                'groups.users:id',
-            ])
+            ->select($projectSelect)
+            ->with($projectWith)
             ->whereIn('id', $projectIds)
             ->get()
             ->keyBy('id');
@@ -328,6 +357,19 @@ class ShiftCalendarService
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
+            'artistNames' => $project->artists ?? null,
+            'leaders' => $project->relationLoaded('managerUsers')
+                ? $project->managerUsers->map(fn ($user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'position' => $user->position ?? null,
+                    'email' => $user->email,
+                    'profile_photo_url' => $user->profile_photo_path
+                        ? '/storage/' . $user->profile_photo_path
+                        : null,
+                ])->values()->all()
+                : null,
         ];
     }
 

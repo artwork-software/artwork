@@ -3,7 +3,7 @@
          ohne Zuweisungen/Funktions-Verwaltung. Bearbeiten nur über das 3-Punkte-Menü. -->
     <div
         class="w-full rounded-lg select-none border font-lexend"
-        :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor }"
+        :style="{ backgroundColor: `${craftColor}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : craftColor, zoom: contentZoom }"
     >
         <div class="flex flex-col w-full">
             <!-- Zeile 1: Gewerkkürzel + Zeit-Pill + Menü -->
@@ -146,6 +146,11 @@ const props = defineProps({
 const emit = defineEmits(["shift-edited"]);
 
 const canPlanShifts = computed(() => can("can plan shifts") || is("artwork admin"));
+
+// Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (Inhalt layoutet wie
+// bei 100 % und wird inkl. Schrift/Icons hochskaliert); bei ≤ 100 % bleibt alles wie bisher.
+const zoomFactor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+const contentZoom = computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1));
 
 // Projekt-Tab mit Schichtenkomponente; Backend fällt selbst auf den ersten/Default-Tab
 // zurück, wenn keine Schichtenkomponente verbaut ist. Prop-Name je nach Seite unterschiedlich.

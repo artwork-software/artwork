@@ -16,6 +16,7 @@ class ProjectSearchDTO extends Data
         public string $name,
         public ?string $first_event_date = null,
         public ?string $last_event_date = null,
+        public ?string $artists = null,
     ) {
     }
 
@@ -24,11 +25,18 @@ class ProjectSearchDTO extends Data
     {
         $dates = $project->first_and_last_event_date;
 
+        // Freitext-Künstler*innen und verknüpfte CRM-Künstler*innen kombiniert anzeigen
+        $artistNames = array_filter([
+            trim($project->artists ?? ''),
+            $project->crmContacts->pluck('display_name')->filter()->implode(', '),
+        ]);
+
         return new self(
             $project->id,
             $project->name,
             $dates['first_event_date'] ?? null,
-            $dates['last_event_date'] ?? null
+            $dates['last_event_date'] ?? null,
+            implode(', ', $artistNames) ?: null
         );
     }
 

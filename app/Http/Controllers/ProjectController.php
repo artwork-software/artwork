@@ -472,7 +472,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = $projectService->scoutSearch($request->get('query'))->get();
+        $projects = $projectService->searchProjectsByNameOrArtists($request->get('query'));
 
         return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
         //return ProjectIndexResource::collection($projects)->resolve();
@@ -570,6 +570,10 @@ class ProjectController extends Controller
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
+
+        if (is_array($request->input('crm_artist_contact_ids'))) {
+            $this->projectService->syncCrmArtistContacts($project, $request->input('crm_artist_contact_ids'));
+        }
 
         if ($request->boolean('isGroup')) {
             $project->update(['is_group' => true]);
@@ -3208,6 +3212,26 @@ class ProjectController extends Controller
             'color' => $request->get('color'),
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
+
+        // Nur syncen, wenn das Feld explizit als Array mitkommt – andere Aufrufer von
+        // projects.update würden sonst bestehende CRM-Verknüpfungen löschen.
+        if (is_array($request->input('crm_artist_contact_ids'))) {
+            $oldLinkedCrmContactIds = $project->crmContacts()->pluck('crm_contacts.id')->sort()->values()->all();
+            $this->projectService->syncCrmArtistContacts($project, $request->input('crm_artist_contact_ids'));
+            $newLinkedCrmContactIds = $project->crmContacts()->pluck('crm_contacts.id')->sort()->values()->all();
+
+            if ($oldLinkedCrmContactIds !== $newLinkedCrmContactIds) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($project->id)
+                        ->setTranslationKey('Project artists changed')
+                );
+                $this->setPublicChangesNotification($project->id);
+            }
+        }
 
         $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
 

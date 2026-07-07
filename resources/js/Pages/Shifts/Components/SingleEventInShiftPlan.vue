@@ -34,6 +34,13 @@
                         @mouseenter="showProjectNameTooltipHandler"
                         @mouseleave="hideProjectNameTooltip"
                     >
+                        <!-- Projekt-Status Punkt (Anzeigeeinstellung "Projektstatus") -->
+                        <div
+                            v-if="shiftPlanSettings.project_status && project?.status"
+                            class="shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
+                            :style="{ backgroundColor: project.status.color + '33', borderColor: project.status.color }"
+                            v-tooltip.bottom="{ value: project.status.name, class: 'aw-tooltip' }"
+                        ></div>
                         <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})"
                            class="relative flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200">
                             <span ref="projectNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full font-semibold text-xs']">
@@ -58,33 +65,55 @@
                 <div class="flex items-stretch gap-x-2 px-2 py-2">
                     <div class="p-1 rounded-lg w-1" :style="{backgroundColor: eventType.hex_code}" v-if="!shiftPlanSettings.high_contrast"></div>
                     <div :class="[expandDays ? '' : 'max-w-40 w-40', 'min-w-0']" :style="{borderColor: eventType.hex_code}">
-                        <!-- Eventtyp-Abbreviation: Eventname -->
+                        <!-- Künstler*innen (Anzeigeeinstellung "Künstler*innen") -->
                         <div
-                            class="relative"
-                            @mouseenter="showEventNameTooltipHandler"
-                            @mouseleave="hideEventNameTooltip"
+                            v-if="shiftPlanSettings.project_artists && project?.artistNames"
+                            :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 font-bold']"
+                            v-tooltip.bottom="{ value: project.artistNames, class: 'aw-tooltip' }"
                         >
-                            <div v-if="project?.id">
-                                <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
-                                    <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'w-40 max-w-40 truncate', 'block text-xs/4 font-semibold']">
-                                        {{ eventType?.abbreviation }}: {{ event.eventName }}
-                                    </span>
-                                </a>
-                            </div>
-                            <span v-else ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
-                                {{ eventType?.abbreviation }}: {{ event?.eventName }}
-                            </span>
-                            <Teleport to="body">
-                                <div
-                                    v-if="isEventNameTruncated && showEventNameTooltipFlag"
-                                    class="fixed z-[9999] pointer-events-none"
-                                    :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
-                                >
-                                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                        {{ eventType?.abbreviation }}: {{ event?.eventName }}
-                                    </div>
+                            {{ project.artistNames }}
+                        </div>
+                        <!-- Eventtyp-Abbreviation: Eventname + Termineigenschaften oben rechts (wie im FullEventInCalendar) -->
+                        <div class="flex items-start justify-between gap-x-1">
+                            <div
+                                class="relative flex-1 min-w-0"
+                                @mouseenter="showEventNameTooltipHandler"
+                                @mouseleave="hideEventNameTooltip"
+                            >
+                                <div v-if="project?.id">
+                                    <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                                        <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
+                                            {{ eventType?.abbreviation }}: {{ event.eventName }}
+                                        </span>
+                                    </a>
                                 </div>
-                            </Teleport>
+                                <span v-else ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
+                                    {{ eventType?.abbreviation }}: {{ event?.eventName }}
+                                </span>
+                                <Teleport to="body">
+                                    <div
+                                        v-if="isEventNameTruncated && showEventNameTooltipFlag"
+                                        class="fixed z-[9999] pointer-events-none"
+                                        :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
+                                    >
+                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                            {{ eventType?.abbreviation }}: {{ event?.eventName }}
+                                        </div>
+                                    </div>
+                                </Teleport>
+                            </div>
+                            <div v-if="event.eventProperties?.length" class="flex flex-wrap items-center justify-end gap-1 shrink-0 max-w-[45%]">
+                                <div
+                                    v-for="property in event.eventProperties"
+                                    :key="'prop-' + property.id"
+                                    v-tooltip.bottom="{ value: property.name, class: 'aw-tooltip' }"
+                                >
+                                    <PropertyIcon
+                                        :name="property.icon"
+                                        class="size-3.5 opacity-90"
+                                    />
+                                </div>
+                            </div>
                         </div>
                         <div class="text-xs/5 mt-0.5">
                             <div v-if="event.allDay">
@@ -95,6 +124,37 @@
                             </div>
                             <div v-else>
                                 {{ formattedDates?.start }} - {{ formattedDates?.end }}
+                            </div>
+                        </div>
+                        <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
+                        <div
+                            v-if="shiftPlanSettings.shift_notes && event.description"
+                            class="text-xs mt-0.5 opacity-80"
+                        >
+                            <span
+                                :class="[expandDays ? 'break-words' : 'truncate', 'block']"
+                                v-tooltip.bottom="{ value: event.description, class: 'aw-tooltip' }"
+                            >
+                                {{ event.description }}
+                            </span>
+                        </div>
+                        <!-- Projektleitung (Anzeigeeinstellung "Projektleitung") -->
+                        <div
+                            v-if="shiftPlanSettings.project_management && project?.leaders?.length"
+                            class="mt-1 flex flex-wrap items-center gap-1"
+                        >
+                            <UserPopoverTooltip
+                                v-for="user in project.leaders.slice(0, 3)"
+                                :key="'leader-' + user.id"
+                                :user="user"
+                                width="5"
+                                height="5"
+                            />
+                            <div
+                                v-if="project.leaders.length > 3"
+                                class="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white"
+                            >
+                                +{{ project.leaders.length - 3 }}
                             </div>
                         </div>
                     </div>
@@ -134,6 +194,8 @@ import axios from "axios";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {usePage} from "@inertiajs/vue3";
 import {IconTimeline} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {getDaysInRange, computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
 

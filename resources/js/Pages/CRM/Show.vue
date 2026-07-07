@@ -69,7 +69,7 @@
                         {{ $t(contact.contact_type?.name) }}
                     </span>
                 </div>
-                <div class="ml-auto flex items-center gap-2" v-if="!isReadOnly">
+                <div class="ml-auto flex items-center gap-2" v-if="!isReadOnly && activeTab === 'info'">
                     <button class="ui-button-add" @click="toggleEditing">
                         <component :is="editing ? IconCheck : IconEdit" stroke-width="1" class="size-5" />
                         {{ editing ? $t('Save changes') : $t('Edit') }}
@@ -77,8 +77,73 @@
                 </div>
             </div>
 
+            <!-- Tabs (Projekte-Reiter nur, wenn Verknüpfungen existieren) -->
+            <div v-if="linkedProjects.length > 0" class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex gap-x-6">
+                    <button
+                        type="button"
+                        class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
+                        :class="activeTab === 'info'
+                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        @click="activeTab = 'info'"
+                    >
+                        {{ $t('Information') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
+                        :class="activeTab === 'projects'
+                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        @click="activeTab = 'projects'"
+                    >
+                        {{ $t('Projects') }}
+                        <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                            {{ linkedProjects.length }}
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Projects tab -->
+            <div v-if="activeTab === 'projects'" class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Project') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Period') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Linked on') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-for="project in linkedProjects" :key="project.id" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm">
+                                <Link
+                                    v-if="firstProjectTabId"
+                                    :href="route('projects.tab', { project: project.id, projectTab: firstProjectTabId })"
+                                    class="font-medium text-artwork-buttons-create hover:underline"
+                                >
+                                    {{ project.name }}
+                                </Link>
+                                <span v-else class="font-medium text-gray-900">{{ project.name }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <template v-if="project.first_event_date">
+                                    {{ dateOnly(project.first_event_date) }} – {{ dateOnly(project.last_event_date) }}
+                                </template>
+                                <template v-else>-</template>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ project.linked_at ?? '-' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <!-- Property Groups -->
-            <div class="space-y-6">
+            <div v-show="activeTab === 'info'" class="space-y-6">
                 <CrmPropertyGroupSection
                     v-for="group in visibleGroups"
                     :key="group.id"
@@ -92,7 +157,7 @@
             </div>
 
             <!-- Room Types (for Accommodation type) -->
-            <div v-if="contact.contact_type?.slug === 'accommodation'" class="mt-8">
+            <div v-if="contact.contact_type?.slug === 'accommodation' && activeTab === 'info'" class="mt-8">
                 <h2 class="text-lg font-semibold mb-4">{{ $t('Room types') }}</h2>
 
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -195,7 +260,7 @@
             </div>
 
             <!-- Read-only notice for User-type contacts -->
-            <div v-if="isReadOnly" class="mt-6 rounded-md bg-blue-50 p-4">
+            <div v-if="isReadOnly && activeTab === 'info'" class="mt-6 rounded-md bg-blue-50 p-4">
                 <div class="flex">
                     <component :is="IconInfoCircle" class="h-5 w-5 text-blue-400" />
                     <div class="ml-3">
@@ -223,9 +288,16 @@ const props = defineProps({
     contact: { type: Object, required: true },
     propertyGroups: { type: Array, required: true },
     externalAccessStatus: { type: Object, default: null },
+    linkedProjects: { type: Array, default: () => [] },
+    firstProjectTabId: { type: Number, default: null },
 })
 
 const $t = useTranslation()
+
+const activeTab = ref('info')
+
+// Backend liefert "d.m.Y H:i" – im Projektprotokoll nur das Datum anzeigen
+const dateOnly = (value) => (value ? String(value).split(' ')[0] : '-')
 
 const editing = ref(false)
 const editableDisplayName = ref(props.contact.display_name ?? '')

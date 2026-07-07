@@ -14,6 +14,58 @@ use Carbon\Carbon;
  */
 class BiProjectMetricsService
 {
+    /**
+     * Full per-project KPI set for the project tab header.
+     *
+     * @return array<string, mixed>
+     */
+    public function summary(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $visitors = $this->visitors($project, $from, $to);
+        $soldTickets = $this->soldTickets($project, $from, $to);
+        $revenue = $this->revenue($project, $from, $to);
+        $capacity = $this->seatsCapacity($project);
+        $performances = $this->performances($project, $from, $to);
+
+        return [
+            'visitors' => $visitors,
+            'sold_tickets' => $soldTickets,
+            'revenue' => $revenue !== null ? round($revenue, 2) : null,
+            'avg_price' => $this->averagePrice($revenue, $soldTickets),
+            'capacity' => $capacity,
+            'occupancy' => $this->occupancyRate($soldTickets, $capacity),
+            'performances' => $performances,
+            'event_days' => $this->eventDays($project, $from, $to),
+        ];
+    }
+
+    /**
+     * Events tagged "Vorstellung"; falls back to all events when no tag matches.
+     */
+    public function performances(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
+    {
+        $events = $this->eventsInRange($project, $from, $to);
+        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Vorstellung'));
+
+        return $tagged->isNotEmpty() ? $tagged->count() : $events->count();
+    }
+
+    /**
+     * Distinct days with events tagged "Veranstaltungstag"; falls back to all events.
+     */
+    public function eventDays(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
+    {
+        $events = $this->eventsInRange($project, $from, $to);
+        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Veranstaltungstag'));
+        $relevant = $tagged->isNotEmpty() ? $tagged : $events;
+
+        return $relevant
+            ->map(fn($event) => $event->start_time?->format('Y-m-d'))
+            ->filter()
+            ->unique()
+            ->count();
+    }
+
     public function visitors(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
         $biData = $project->biData;
@@ -93,6 +145,39 @@ class BiProjectMetricsService
         }
 
         return round($soldTickets / $capacity * 100, 1);
+    }
+
+    private function eventsInRange(Project $project, ?Carbon $from, ?Carbon $to)
+    {
+        return $project->events->filter(function ($event) use ($from, $to): bool {
+            if (!$event->start_time) {
+                return false;
+            }
+
+            if ($from && $event->end_time && $event->end_time->lt($from->copy()->startOfDay())) {
+                return false;
+            }
+
+            if ($to && $event->start_time->gt($to->copy()->endOfDay())) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    private function eventHasTag($event, string $name): bool
+    {
+        $tags = $event->event_type?->biTags;
+
+        if (!$tags) {
+            return false;
+        }
+
+        return $tags->contains(
+            fn($tag) => strcasecmp($tag->name_de ?? '', $name) === 0
+                || strcasecmp($tag->name ?? '', $name) === 0
+        );
     }
 
     private function sumEventData(Project $project, string $field, ?Carbon $from, ?Carbon $to): float

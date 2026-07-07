@@ -762,7 +762,8 @@ class EventController extends Controller
             $endDate,
             (bool) $project || $isDailyView,
             $project,
-            true
+            true,
+            $userCalendarSettings
         );
         $rooms = $filterResult['rooms'];
 

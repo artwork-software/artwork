@@ -16,6 +16,13 @@
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </span>
                 </div>
+                <!-- Projekt-Status Punkt (Anzeigeeinstellung "Projektstatus") -->
+                <div
+                    v-if="displaySettings?.project_status && project?.status"
+                    class="shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
+                    :style="{ backgroundColor: project.status.color + '33', borderColor: project.status.color }"
+                    v-tooltip.bottom="{ value: project.status.name, class: 'aw-tooltip' }"
+                ></div>
                 <div class="whitespace-nowrap font-medium" :class="subtitleTextClass">
                     {{ eventType?.abbreviation }}:
                 </div>
@@ -28,6 +35,43 @@
                 >
                     {{ eventTitle }}
                 </span>
+                <!-- Künstler*innen (Anzeigeeinstellung "Künstler*innen") -->
+                <span
+                    v-if="displaySettings?.project_artists && project?.artistNames"
+                    class="truncate max-w-40 text-xs font-bold shrink-0"
+                    v-tooltip.bottom="{ value: project.artistNames, class: 'aw-tooltip' }"
+                >
+                    {{ project.artistNames }}
+                </span>
+                <!-- Projektleitung (Anzeigeeinstellung "Projektleitung") -->
+                <div
+                    v-if="displaySettings?.project_management && project?.leaders?.length"
+                    class="flex items-center gap-1 shrink-0"
+                >
+                    <UserPopoverTooltip
+                        v-for="user in project.leaders.slice(0, 3)"
+                        :key="'leader-' + user.id"
+                        :user="user"
+                        width="5"
+                        height="5"
+                    />
+                    <div
+                        v-if="project.leaders.length > 3"
+                        class="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white"
+                    >
+                        +{{ project.leaders.length - 3 }}
+                    </div>
+                </div>
+                <!-- Termineigenschaften als Icons (wie im FullEventInCalendar) -->
+                <div v-if="event.eventProperties?.length" class="flex items-center gap-x-1 shrink-0">
+                    <div
+                        v-for="property in event.eventProperties"
+                        :key="'prop-' + property.id"
+                        v-tooltip.bottom="{ value: property.name, class: 'aw-tooltip' }"
+                    >
+                        <PropertyIcon :name="property.icon" class="size-3.5 opacity-90" />
+                    </div>
+                </div>
             </div>
             <div v-if="!isFollowUpDay" class="flex items-center min-w-0 pr-1">
                 <div class="flex transition-opacity duration-150">
@@ -138,6 +182,7 @@ import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {IconDeviceFloppy, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { router } from '@inertiajs/vue3'
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
@@ -187,12 +232,14 @@ const formattedDates = computed(() => props.event.formattedDates ?? computeEvent
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
 
-// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
-const showNotes = computed(() => {
+// Anzeigeeinstellungen (Tagesansicht-Settings mit Fallback-Kette)
+const displaySettings = computed(() => {
     const page = usePage()
-    const settings = page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings
-    return !!settings?.shift_notes
+    return page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings
 })
+
+// Anzeigeeinstellung "Notizen einblenden"
+const showNotes = computed(() => !!displaySettings.value?.shift_notes)
 
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
 const displayStartTime = computed(() => {

@@ -5,40 +5,12 @@
         @close="$emit('close')"
     >
         <div class="space-y-4">
-            <div class="flex flex-wrap items-end gap-3 border-b border-gray-100 pb-3">
-                <ArtworkBaseListbox
-                    class="w-56"
-                    :model-value="selectedPreset"
-                    @update:model-value="applyPreset"
-                    :items="presets"
-                    by="id"
-                    option-label="name"
-                    :label="$t('Column preset')"
-                    :placeholder="$t('Select preset')"
-                />
-                <BaseInput id="bi_modal_preset_name" v-model="newPresetName" :label="$t('Save as preset')" class="w-48" />
-                <button
-                    class="text-sm text-blue-600 hover:underline pb-2 disabled:opacity-40"
-                    :disabled="!newPresetName || selectedColumns.length === 0"
-                    @click="savePreset"
-                >
-                    {{ $t('Save preset') }}
-                </button>
-            </div>
-
-            <div>
-                <h4 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Columns') }}</h4>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                    <BaseCheckbox
-                        v-for="col in availableColumns"
-                        :key="col.key"
-                        :model-value="selectedColumns.includes(col.key)"
-                        @update:model-value="v => toggleColumn(col.key, v)"
-                        :label="$t(col.label)"
-                        description=""
-                    />
-                </div>
-            </div>
+            <BiExportColumnPicker
+                v-model="selectedColumns"
+                :columns="availableColumns"
+                id-prefix="bi_modal"
+                max-height-class="max-h-64"
+            />
 
             <div>
                 <div class="flex items-center gap-4">
@@ -62,7 +34,8 @@
                 </p>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4">
+            <div class="flex items-center justify-end gap-3 pt-4">
+                <span v-if="exportError" class="text-sm text-rose-600">{{ $t('The export could not be generated.') }}</span>
                 <button @click="$emit('close')" class="text-sm text-gray-500 hover:text-gray-700">{{ $t('Cancel') }}</button>
                 <BaseUIButton
                     @click="doExport"
@@ -75,12 +48,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
-import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
+import BiExportColumnPicker from '@/Pages/Projects/Components/BiComponents/BiExportColumnPicker.vue';
+import { useBiExport } from '@/Composeables/BiExport.js';
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -92,7 +65,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-const isExporting = ref(false);
+const { isExporting, exportError, runExport } = useBiExport();
+
 const dateFrom = ref(props.defaultDateFrom ?? '');
 const dateTo = ref(props.defaultDateTo ?? '');
 
@@ -132,104 +106,28 @@ const staticColumns = [
 const tagColumns = props.tagCounts.map(t => ({
     key: 'tag_' + t.tag_id,
     label: t.tag_name_de,
+    translate: false,
 }));
 
 const customFieldColumns = props.biCustomFields.map(f => ({
     key: 'custom_field_' + f.id,
     label: f.name,
+    translate: false,
 }));
 
 const availableColumns = [...staticColumns, ...tagColumns, ...customFieldColumns];
 
 const selectedColumns = ref(availableColumns.map(c => c.key));
 
-const toggleColumn = (key, checked) => {
-    if (checked) {
-        if (!selectedColumns.value.includes(key)) {
-            selectedColumns.value.push(key);
-        }
-    } else {
-        selectedColumns.value = selectedColumns.value.filter(k => k !== key);
-    }
-};
-
-const presets = ref([]);
-const selectedPreset = ref(null);
-const newPresetName = ref('');
-
-onMounted(async () => {
-    try {
-        const response = await axios.get(route('bi.export.presets.index'));
-        presets.value = response.data;
-    } catch (error) {
-        console.error('Error loading presets', error);
-    }
-});
-
-const applyPreset = (preset) => {
-    selectedPreset.value = preset;
-    if (preset?.columns) {
-        const valid = new Set(availableColumns.map(c => c.key));
-        selectedColumns.value = preset.columns.filter(key => valid.has(key));
-    }
-};
-
-const savePreset = async () => {
-    if (!newPresetName.value || selectedColumns.value.length === 0) return;
-    try {
-        const response = await axios.post(route('bi.export.presets.store'), {
-            name: newPresetName.value,
-            columns: selectedColumns.value,
-        });
-        presets.value.push(response.data);
-        selectedPreset.value = response.data;
-        newPresetName.value = '';
-    } catch (error) {
-        console.error('Error saving preset', error);
-    }
-};
-
 const doExport = async () => {
-    isExporting.value = true;
-    try {
-        const response = await axios.post(route('bi.export.cache'), {
-            project_ids: [props.project.id],
-            columns: selectedColumns.value,
-            date_from: dateFrom.value || null,
-            date_to: dateTo.value || null,
-        });
-
-        await pollAndDownload(response.data.token);
+    const started = await runExport({
+        project_ids: [props.project.id],
+        columns: selectedColumns.value,
+        date_from: dateFrom.value || null,
+        date_to: dateTo.value || null,
+    });
+    if (started) {
         emit('close');
-    } catch (error) {
-        console.error('Export error', error);
-    } finally {
-        isExporting.value = false;
     }
 };
-
-const pollAndDownload = (token) => new Promise((resolve) => {
-    let attempts = 0;
-    const maxAttempts = 120;
-    const check = async () => {
-        attempts++;
-        try {
-            const { data } = await axios.get(route('bi.export.status', token));
-            if (data.status === 'ready') {
-                window.location.href = route('bi.export.download', token);
-                return resolve();
-            }
-            if (data.status === 'failed' || data.status === 'unknown') {
-                return resolve();
-            }
-        } catch (error) {
-            // transient error – keep polling until the attempt budget is exhausted
-        }
-        if (attempts >= maxAttempts) {
-            return resolve();
-        }
-        setTimeout(check, 1500);
-    };
-    check();
-});
 </script>

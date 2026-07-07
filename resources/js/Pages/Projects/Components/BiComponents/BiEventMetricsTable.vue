@@ -2,14 +2,14 @@
     <div>
         <!-- Toolbar: collapse + filter -->
         <div class="flex items-center justify-between mb-2">
-            <button type="button" @click="expanded = !expanded" class="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <button type="button" @click="expanded = !expanded" class="flex items-center gap-2 text-sm font-medium text-gray-700 print:hidden">
                 <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !expanded }" />
-                {{ label }} <span class="text-gray-400">({{ displayedEvents.length }})</span>
+                {{ $t('Entries per event') }} <span class="text-gray-400">({{ displayedEvents.length }})</span>
             </button>
             <button
                 type="button"
                 @click="showFilters = !showFilters"
-                class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50 transition"
+                class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50 transition print:hidden"
                 :class="{ 'bg-gray-100 border-gray-300': showFilters || hasActiveFilter }"
             >
                 <IconFilter class="size-4" />
@@ -17,9 +17,9 @@
             </button>
         </div>
 
-        <div v-show="expanded">
+        <div v-show="expanded" class="print:!block">
             <!-- Filter bar -->
-            <div v-if="showFilters" class="mb-3 flex flex-wrap items-end gap-3 rounded-md bg-gray-50 p-3">
+            <div v-if="showFilters" class="mb-3 flex flex-wrap items-end gap-3 rounded-md bg-gray-50 p-3 print:hidden">
                 <ArtworkBaseListbox
                     class="w-56"
                     :model-value="selectedRoom"
@@ -56,31 +56,62 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr v-for="event in displayedEvents" :key="event.id" class="hover:bg-gray-50">
-                            <td class="py-2 pl-0 pr-3 text-gray-700">{{ event.name }}</td>
+                        <tr
+                            v-for="event in displayedEvents"
+                            :key="event.id"
+                            class="hover:bg-gray-50"
+                            :class="{ 'bg-indigo-50/60': event.id === latestPastEventId }"
+                        >
+                            <td class="py-2 pl-0 pr-3 text-gray-700">
+                                <span class="inline-flex items-center gap-2">
+                                    {{ event.name }}
+                                    <span
+                                        v-if="event.id === latestPastEventId"
+                                        class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 whitespace-nowrap print:hidden"
+                                    >
+                                        {{ $t('Most recent event') }}
+                                    </span>
+                                </span>
+                            </td>
                             <td class="py-2 px-3 text-gray-500 whitespace-nowrap">{{ event.start_time }}</td>
                             <td class="py-2 px-3 text-gray-500">{{ event.room_name }}</td>
-                            <td class="py-2 px-3">
+                            <td v-for="field in fields" :key="field.key" class="py-2 px-3">
                                 <input
                                     v-if="canEdit"
                                     type="number"
-                                    class="w-28 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                    class="w-24 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
                                     :min="0"
-                                    :step="field === 'revenue' ? 0.01 : 1"
-                                    :value="getEventValue(event.id)"
-                                    @change="saveEventValue(event.id, $event.target.value)"
+                                    :step="field.key === 'revenue' ? 0.01 : 1"
+                                    :value="getEventValue(event.id, field.key)"
+                                    @change="saveEventValue(event.id, field.key, $event.target.value)"
                                 />
-                                <span v-else class="text-gray-700">{{ getEventValue(event.id) ?? '–' }}</span>
+                                <span v-else class="text-gray-700">{{ getEventValue(event.id, field.key) ?? '–' }}</span>
+                            </td>
+                            <td v-if="showOccupancy" class="py-2 px-3">
+                                <div v-if="occupancyFor(event) !== null" class="flex items-center gap-2 min-w-28">
+                                    <div class="h-1.5 w-16 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                                        <div
+                                            class="h-full rounded-full"
+                                            :class="occupancyBarClass(occupancyFor(event))"
+                                            :style="{ width: Math.min(occupancyFor(event), 100) + '%' }"
+                                        ></div>
+                                    </div>
+                                    <span class="text-xs text-gray-600 whitespace-nowrap">{{ occupancyFor(event).toFixed(0) }} %</span>
+                                </div>
+                                <span v-else class="text-gray-300">–</span>
                             </td>
                         </tr>
                         <tr v-if="displayedEvents.length === 0">
-                            <td colspan="4" class="py-4 text-center text-gray-400">{{ $t('No events found.') }}</td>
+                            <td :colspan="columns.length" class="py-4 text-center text-gray-400">{{ $t('No events found.') }}</td>
                         </tr>
                     </tbody>
                     <tfoot v-if="displayedEvents.length > 0">
                         <tr class="border-t-2 border-gray-300">
                             <td colspan="3" class="py-2 pl-0 pr-3 font-semibold text-gray-900">{{ $t('Sum') }}</td>
-                            <td class="py-2 px-3 font-semibold text-gray-900">{{ totalSum }}</td>
+                            <td v-for="field in fields" :key="field.key" class="py-2 px-3 font-semibold text-gray-900">
+                                {{ formatSum(field, sums[field.key]) }}
+                            </td>
+                            <td v-if="showOccupancy" class="py-2 px-3"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -100,8 +131,11 @@ const props = defineProps({
     projectEvents: { type: Array, default: () => [] },
     canEdit: { type: Boolean, default: false },
     projectId: { type: Number, required: true },
-    field: { type: String, required: true },
-    label: { type: String, required: true },
+    // [{ key: 'visitors', label: 'Visitors' }, ...] — nur Kennzahlen im Pro-Termin-Modus
+    fields: { type: Array, required: true },
+    showOccupancy: { type: Boolean, default: false },
+    // room_id → effektive Kapazität (Override oder Raum-Default)
+    effectiveCapacities: { type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['updated']);
@@ -113,11 +147,15 @@ const sortAsc = ref(true);
 const filterRoomId = ref(null);
 const search = ref('');
 
+const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const numberFmt = new Intl.NumberFormat('de-DE');
+
 const columns = computed(() => [
     { key: 'name', label: 'Event', translate: true },
     { key: 'date', label: 'Date', translate: true },
     { key: 'room', label: 'Room', translate: true },
-    { key: 'value', label: props.label, translate: false },
+    ...props.fields.map(f => ({ key: f.key, label: f.label, translate: true })),
+    ...(props.showOccupancy ? [{ key: 'occupancy', label: 'Occupancy rate', translate: true }] : []),
 ]);
 
 const rooms = computed(() => {
@@ -133,9 +171,11 @@ const rooms = computed(() => {
 const selectedRoom = computed(() => rooms.value.find(r => r.id === filterRoomId.value) ?? null);
 const hasActiveFilter = computed(() => filterRoomId.value !== null || search.value.trim() !== '');
 
-const getEventValue = (eventId) => {
-    const entry = props.eventData.find(e => e.event_id === eventId);
-    return entry ? entry[props.field] : null;
+const entriesByEventId = computed(() => new Map(props.eventData.map(e => [e.event_id, e])));
+
+const getEventValue = (eventId, fieldKey) => {
+    const entry = entriesByEventId.value.get(eventId);
+    return entry ? entry[fieldKey] : null;
 };
 
 const parseDate = (value) => {
@@ -146,12 +186,26 @@ const parseDate = (value) => {
     return new Date(+year, (+month || 1) - 1, +day || 1, +hour || 0, +minute || 0).getTime();
 };
 
+const occupancyFor = (event) => {
+    const sold = getEventValue(event.id, 'sold_tickets');
+    const capacity = props.effectiveCapacities[event.room_id];
+    if (sold === null || sold === undefined || !capacity) return null;
+    return (Number(sold) / Number(capacity)) * 100;
+};
+
+const occupancyBarClass = (value) => {
+    if (value >= 90) return 'bg-emerald-500';
+    if (value >= 50) return 'bg-indigo-500';
+    return 'bg-amber-500';
+};
+
 const sortValue = (event, key) => {
     switch (key) {
         case 'date': return parseDate(event.start_time);
         case 'room': return (event.room_name || '').toLowerCase();
-        case 'value': return parseFloat(getEventValue(event.id)) || 0;
-        default: return (event.name || '').toLowerCase();
+        case 'occupancy': return occupancyFor(event) ?? -1;
+        case 'name': return (event.name || '').toLowerCase();
+        default: return parseFloat(getEventValue(event.id, key)) || 0;
     }
 };
 
@@ -178,9 +232,33 @@ const displayedEvents = computed(() => {
     return list;
 });
 
-const totalSum = computed(() => displayedEvents.value.reduce((sum, event) => {
-    return sum + (parseFloat(getEventValue(event.id)) || 0);
-}, 0));
+// Der zuletzt vergangene Termin — typischer Erfassungs-Einstieg nach einer Vorstellung
+const latestPastEventId = computed(() => {
+    const now = Date.now();
+    let best = null;
+    let bestTs = -Infinity;
+    props.projectEvents.forEach((event) => {
+        const ts = parseDate(event.start_time);
+        if (ts && ts <= now && ts > bestTs) {
+            bestTs = ts;
+            best = event.id;
+        }
+    });
+    return best;
+});
+
+const sums = computed(() => {
+    const result = {};
+    props.fields.forEach((field) => {
+        result[field.key] = displayedEvents.value.reduce(
+            (sum, event) => sum + (parseFloat(getEventValue(event.id, field.key)) || 0),
+            0
+        );
+    });
+    return result;
+});
+
+const formatSum = (field, value) => field.key === 'revenue' ? currencyFmt.format(value ?? 0) : numberFmt.format(value ?? 0);
 
 const sortByColumn = (key) => {
     if (sortKey.value === key) {
@@ -196,10 +274,10 @@ const clearFilters = () => {
     search.value = '';
 };
 
-const saveEventValue = async (eventId, value) => {
+const saveEventValue = async (eventId, fieldKey, value) => {
     try {
         const data = {};
-        data[props.field] = value === '' ? null : Number(value);
+        data[fieldKey] = value === '' ? null : Number(value);
         await axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data);
         emit('updated');
     } catch (error) {

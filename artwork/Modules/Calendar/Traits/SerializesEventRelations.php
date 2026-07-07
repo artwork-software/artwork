@@ -22,7 +22,11 @@ trait SerializesEventRelations
                 'abbreviation' => $sub->type->abbreviation,
                 'name' => $sub->type->name,
             ] : null,
-            'event_properties' => $sub->eventProperties->map(fn ($p) => ['id' => $p->id])->values()->all(),
+            'event_properties' => $sub->eventProperties->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'icon' => $p->icon ?? null,
+            ])->values()->all(),
         ])->values()->all();
     }
 
@@ -34,6 +38,7 @@ trait SerializesEventRelations
 
         return $event->eventProperties->map(fn ($p) => [
             'id' => $p->id,
+            'name' => $p->name,
             'icon' => $p->icon ?? null,
         ])->values()->all();
     }

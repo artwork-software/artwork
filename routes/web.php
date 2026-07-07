@@ -61,6 +61,7 @@ use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectCrmContactController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectPrintLayoutController;
@@ -582,6 +583,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/shift', [ProjectShiftController::class, 'show'])
             ->name('projects.tabs.shift');
     });
+
+    // Verknüpfung von CRM-Künstler*innen mit einem Projekt (Autorisierung via ProjectPolicy::update)
+    Route::post('/projects/{project}/crm-contacts', [ProjectCrmContactController::class, 'store'])
+        ->name('projects.crm-contacts.store');
+    Route::delete('/projects/{project}/crm-contacts/{crmContact}', [ProjectCrmContactController::class, 'destroy'])
+        ->name('projects.crm-contacts.destroy');
 
     Route::get('/projects/{project}/history', [ProjectController::class, 'history'])
         ->name('projects.history')
@@ -2449,6 +2456,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/export', [CrmExportController::class, 'export'])->name('crm.export');
 
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        Route::get('/contact-mask', [CrmContactController::class, 'createMask'])
+            ->middleware('can:can view crm')->name('crm.contacts.mask');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
         // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran

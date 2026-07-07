@@ -138,15 +138,21 @@
                         :is-small="true"
                         ref="projectSearchInput"
                         is-small
-                        label="Search project"
+                        label="Search project or artist"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                            {{ project.name }}
+                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer flex flex-col">
+                            <div>{{ project.name }}</div>
+                            <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
+                                {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
+                            </div>
+                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                                {{ $t('Artist') }}: {{ project.artists }}
+                            </div>
                         </div>
                     </div>
                 </div>

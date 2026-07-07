@@ -1,10 +1,6 @@
 <template>
-    <div class="mb-8 border-b border-dashed border-gray-400 pb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold text-gray-900">{{ $t('Time efforts') }}</h3>
-        </div>
-
-        <div v-if="canEdit" class="flex items-end gap-3 mb-4 max-w-xl">
+    <div>
+        <div v-if="canEdit" class="flex items-end gap-3 mb-4 max-w-xl print:hidden">
             <BaseInput
                 id="effort_label"
                 v-model="newLabel"

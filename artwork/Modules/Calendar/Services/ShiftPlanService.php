@@ -75,7 +75,9 @@ class ShiftPlanService
             $shiftPlanContext['calendarStartDate'],
             $shiftPlanContext['calendarEndDate'],
             $useDailyView,
-            $shiftPlanContext['currentProject']
+            $shiftPlanContext['currentProject'],
+            false,
+            $shiftPlanContext['userCalendarSettings']
         );
         $roomsForRequestedRoom = $filterResult['rooms'];
 
@@ -111,7 +113,9 @@ class ShiftPlanService
             $shiftPlanContext['calendarStartDate'],
             $shiftPlanContext['calendarEndDate'],
             $useDailyView,
-            $shiftPlanContext['currentProject']
+            $shiftPlanContext['currentProject'],
+            false,
+            $shiftPlanContext['userCalendarSettings']
         );
         $filteredRooms = $filterResult['rooms'];
 

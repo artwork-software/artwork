@@ -5,50 +5,37 @@
                 <slot/>
             </template>
             <template v-else>
-                <img v-if="user" :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 " :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]">
-                <PropertyIcon name="IconUserExclamation" v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
+                <img v-if="provider" :src="provider.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0" :class="['h-' + height, 'w-' + width, 'min-h-' + height, 'min-w-' + width, classes]">
+                <PropertyIcon name="IconBuildingStore" v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300" :class="['h-' + height, 'w-' + width, 'min-h-' + height, 'min-w-' + width, classes]"/>
             </template>
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to" @enter="clampPanelPosition">
-                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-200' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform   rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
-                    <div v-if="user" class="">
+                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-200' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
+                    <div v-if="provider">
                         <div class="flex items-center gap-4">
-                            <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
-                            <div class="">
-                                <div class="font-black font-lexend  text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600" :class="isWhite ? 'text-gray-900' : 'text-white'">
-                                    <span :class="{'underline cursor-pointer': canViewUserInfo}" @click="goToUserInfo">{{ user.first_name }} {{ user.last_name }}</span>
-                                    <div class="text-gray-300 text-xs my-1">
-                                        {{ user.pronouns }}
-                                    </div>
+                            <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="provider.profile_photo_url" alt=""/>
+                            <div>
+                                <div class="font-black font-lexend text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600" :class="isWhite ? 'text-gray-900' : 'text-white'">
+                                    <span :class="{'underline cursor-pointer': canViewProviderInfo}" @click="goToProviderInfo">{{ provider.provider_name }}</span>
                                 </div>
 
-                                <div class="text-sm font-bold flex items-center gap-x-2" v-if="user.position" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
-                                    <PropertyIcon name="IconMapPin" class="h-4 w-4" v-if="user.position"/>
-                                    {{ user.position }}
+                                <div class="text-sm font-bold flex items-center gap-x-2" v-if="provider.email" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                                    <PropertyIcon name="IconMail" class="h-4 w-4"/>
+                                    {{ provider.email }}
                                 </div>
-                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
-                                    <PropertyIcon name="IconMail" class="h-4 w-4" v-if="user.email"/>
-                                    {{ user.email }}
+                                <div class="text-sm font-bold flex items-center gap-x-2" v-if="provider.phone_number" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                                    <PropertyIcon name="IconDeviceMobile" class="h-4 w-4"/>
+                                    {{ provider.phone_number }}
                                 </div>
-                                <div class="text-sm font-bold flex items-center gap-x-2" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
-                                    <PropertyIcon name="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
-                                    {{ user.phone_number }}
+                                <div class="text-sm font-bold flex items-center gap-x-2" v-if="providerAddress" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                                    <PropertyIcon name="IconMapPin" class="h-4 w-4"/>
+                                    {{ providerAddress }}
                                 </div>
-                                <div class="col-span-4 mt-2 break-all text-xs italic" :class="isWhite ? 'text-gray-500' : 'text-gray-300'" v-if="user.description">
-                                    &bdquo;{{ user.description }}&rdquo;
-                                </div>
-                                <div class="col-span-4 mt-2 text-red-600 break-all text-xs italic " v-if="user.rejection_reason">
-                                    &bdquo;{{ user.rejection_reason }}&rdquo;
+                                <div class="text-xs italic mt-2" v-if="!provider.email && !provider.phone_number && !providerAddress" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                                    {{ $t('No contact details available') }}
                                 </div>
                             </div>
-
-                        </div>
-                    </div>
-                    <div v-else class="flex flex-row items-center ring-1 ring-black ring-opacity-5 text-white shadow-lg gap-x-3 py-3 px-5">
-                        <PropertyIcon name="IconUserExclamation" class="h-14 w-14 rounded-full border-2 border-white"/>
-                        <div class="font-black font-lexend text-white text-lg">
-                            {{ $t('Deleted user') }}
                         </div>
                     </div>
                 </PopoverPanel>
@@ -59,15 +46,12 @@
 
 <script>
 import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
-import IconLib from "@/Mixins/IconLib.vue";
-import Permissions from "@/Mixins/Permissions.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
 
 export default {
-    name: "UserPopoverTooltip",
-    mixins: [IconLib, Permissions],
+    name: "ServiceProviderPopoverTooltip",
     setup() {
         const { can, hasAdminRole } = usePermission(usePage().props);
         return { can, hasAdminRole };
@@ -79,8 +63,8 @@ export default {
         PopoverPanel
     },
     props: {
-        user: {
-            type: [Object, Array],
+        provider: {
+            type: Object,
             required: false,
             default: null
         },
@@ -124,10 +108,13 @@ export default {
         }
     },
     computed: {
-        canViewUserInfo() {
-            return this.hasAdminRole() ||
-                this.can('can manage workers') ||
-                this.can('can view private user info');
+        canViewProviderInfo() {
+            return this.hasAdminRole() || this.can('can manage workers');
+        },
+        providerAddress() {
+            if (!this.provider) return '';
+            const cityLine = [this.provider.zip_code, this.provider.location].filter(Boolean).join(' ');
+            return [this.provider.street, cityLine].filter(Boolean).join(', ');
         }
     },
     methods: {
@@ -169,9 +156,9 @@ export default {
                 }
             }
         },
-        goToUserInfo() {
-            if (this.canViewUserInfo && this.user?.id) {
-                router.visit(route('user.edit.info', {user: this.user.id}));
+        goToProviderInfo() {
+            if (this.canViewProviderInfo && this.provider?.id) {
+                router.visit(route('service_provider.show', {serviceProvider: this.provider.id}));
             }
         },
     },

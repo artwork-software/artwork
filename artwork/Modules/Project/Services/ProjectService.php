@@ -5,6 +5,8 @@ namespace Artwork\Modules\Project\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -113,7 +115,11 @@ class ProjectService
 
                             $query
                                 ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like);
+                                ->orWhere('artists', 'like', $like)
+                                ->orWhereHas(
+                                    'crmContacts',
+                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+                                );
                         });
                     }
                 )
@@ -853,6 +859,42 @@ class ProjectService
     public function scoutSearch(string $query): \Laravel\Scout\Builder
     {
         return $this->projectRepository->scoutSearch($query);
+    }
+
+    public function searchProjectsByNameOrArtists(string $search): Collection
+    {
+        return $this->projectRepository->searchByNameOrArtists($search);
+    }
+
+    /**
+     * Verknüpft CRM-Kontakte vom Typ Künstler*in mit dem Projekt.
+     * IDs anderer Kontakttypen werden verworfen.
+     *
+     * @param array<int|string> $crmContactIds
+     */
+    public function syncCrmArtistContacts(Project $project, array $crmContactIds): void
+    {
+        $project->crmContacts()->sync($this->filterArtistCrmContactIds($crmContactIds));
+    }
+
+    /**
+     * @param array<int|string> $crmContactIds
+     * @return array<int>
+     */
+    private function filterArtistCrmContactIds(array $crmContactIds): array
+    {
+        if ($crmContactIds === []) {
+            return [];
+        }
+
+        return CrmContact::query()
+            ->whereIn('id', $crmContactIds)
+            ->whereHas(
+                'contactType',
+                fn($query) => $query->where('slug', CrmSystemContactTypeEnum::ARTIST->value)
+            )
+            ->pluck('id')
+            ->all();
     }
 
     public function pinnedProjects(int $userId): Collection

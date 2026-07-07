@@ -90,13 +90,15 @@ const checkIfAnySettingIsActive = computed(() => {
             'show_appointments',
             'group_by_shift_groups',
             'hide_shift_row',
+            'shift_notes',
         ];
         return listViewKeys.some(setting => settings[setting]);
     }
 
     const settingsInShiftPlan = [
         'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
-        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag', 'show_only_not_fully_staffed_shifts'
+        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag', 'show_only_not_fully_staffed_shifts',
+        'project_artists', 'project_status', 'project_management'
     ]
 
     if (props.isInShiftPlan) {

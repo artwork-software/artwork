@@ -182,6 +182,9 @@
             border: 1px solid var(--lineStrong);
             overflow: hidden;
             margin-bottom: 20px;
+            /* Tag-Teile sind serverseitig auf Seitenhöhe zugeschnitten und
+               werden im Ganzen auf die nächste Seite geschoben statt geteilt */
+            page-break-inside: avoid;
         }
         .day-head{
             padding: 9px 12px;      /* +20% */
@@ -189,6 +192,11 @@
             border-bottom: 1px solid var(--lineStrong);
             font-weight: 900;
             font-size: 6.8pt;
+        }
+        .day-head-cont{
+            font-weight: 900;
+            color: rgba(15,23,42,0.60);
+            margin-left: 6px;
         }
         .day-head-arrow{
             float: right;
@@ -252,9 +260,25 @@
             padding: 6px 5px;       /* +20% */
         }
 
-        /* Zeit kompakt */
+        /* Zeitachse links: jede Segmentzeile zeigt ihre Startzeit */
+        table.grid td.timeCell{
+            background: var(--head);
+            padding: 2px 2px;
+            text-align: center;
+        }
         .timeRange{ font-weight: 900; font-size: 6.0pt; text-align:center; line-height: 1.05; }
         .timeSub{ color: var(--muted); font-size: 5.4pt; margin-top: 3px; text-align:center; } /* +20% */
+        .timeMarker{ font-weight: 900; font-size: 5.4pt; color: #166534; text-align:center; }
+        table.grid tr.endRow td{
+            background: var(--head);
+            padding: 2px 2px;
+        }
+        .endTime{
+            font-weight: 900;
+            font-size: 5.4pt;
+            color: var(--muted);
+            text-align: center;
+        }
 
         .gapRow td{ background: var(--gap); }
         .gapMsg{
@@ -496,15 +520,21 @@
                 $tlW       = (int)($layout['timelineCol'] ?? 42);
                 $tlCols    = (int)($chunk['timelineLanes'] ?? 1);
                 $craftCols = count($chunk['laneColumns'] ?? []);
-                // Zeitspalte entfernt: deren Breite geht an die Timeline-Spalten
-                $tlWExpanded = $tlW + (int)floor($timeW / max(1, $tlCols));
+                $isContinuation = !empty($chunk['isContinuation']);
             @endphp
 
             <div class="day">
                 <div class="day-head-group">
-                <div class="day-head"><span class="day-head-arrow">▼</span>{{ $chunk['dateLabel'] }}</div>
+                <div class="day-head">
+                    <span class="day-head-arrow">{{ !empty($chunk['continues']) ? 'Fortsetzung folgt ▼' : '▼' }}</span>
+                    {{ $chunk['dateLabel'] }}
+                    @if(!empty($chunk['contLabel']))
+                        <span class="day-head-cont">— {{ $chunk['contLabel'] }}</span>
+                    @endif
+                </div>
 
-                {{-- EVENTS --}}
+                {{-- EVENTS (nur im ersten Teil eines Tages) --}}
+                @if(!$isContinuation)
                 <div class="events">
                     @php $cards = $chunk['eventCards'] ?? []; @endphp
                     @if(!empty($cards))
@@ -539,14 +569,17 @@
                         <div style="color: #64748b; font-weight: 900;">Keine Events</div>
                     @endif
                 </div>
+                @endif
                 </div>{{-- /day-head-group --}}
 
-                {{-- GRID --}}
+                {{-- GRID (fehlt bei reinen Kopf/Events-Teilen, deren Grid separat folgt) --}}
+                @if(!empty($chunk['rows']))
                 <table class="grid">
 
                     <colgroup>
+                        <col style="width: {{ $timeW }}px;">
                         @for($tl = 0; $tl < $tlCols; $tl++)
-                            <col style="width: {{ $tlWExpanded }}px;">
+                            <col style="width: {{ $tlW }}px;">
                         @endfor
                         @for($i = 0; $i < $craftCols; $i++)
                             <col>
@@ -555,7 +588,10 @@
 
                     <thead>
                     <tr>
-                        <th colspan="{{ $tlCols }}">Timeline</th>
+                        <th rowspan="2">Zeit</th>
+                        @if($tlCols > 0)
+                            <th colspan="{{ $tlCols }}">Timeline</th>
+                        @endif
 
                         @if(!empty($chunk['craftGroups']))
                             @foreach($chunk['craftGroups'] as $g)
@@ -585,7 +621,7 @@
 
                         @if($row['isGap'])
                             <tr class="gapRow" style="height: {{ $h }}px;">
-                                <td colspan="{{ $tlCols + $craftCols }}">
+                                <td colspan="{{ 1 + $tlCols + $craftCols }}">
                                     <div class="gapMsg {{ !empty($row['prominent']) ? 'gapMsgStrong' : '' }}">
                                         {{ $row['message'] }}
                                     </div>
@@ -595,6 +631,15 @@
                         @endif
 
                         <tr style="height: {{ $h }}px;">
+                            {{-- ZEITACHSE --}}
+                            <td class="timeCell">
+                                @if(!empty($row['markerLabel']))
+                                    <div class="timeMarker">{{ $row['markerLabel'] }}</div>
+                                @elseif(empty($row['suppressT1']))
+                                    <div class="timeRange">{{ $row['t1'] }}</div>
+                                @endif
+                            </td>
+
                             {{-- TIMELINE Lanes --}}
                             @for($tl = 0; $tl < $tlCols; $tl++)
                                 @php
@@ -612,8 +657,6 @@
                                                     <div class="tlTitle">{{ $tm['data']['title'] }}</div>
                                                 @endif
                                             </div>
-
-                                            {!! $ph((int)($tm['heightPx'] ?? $h)) !!}
                                         </div>
                                     </td>
                                 @else
@@ -695,8 +738,6 @@
                                                         </div>
                                                     @endif
                                                 </div>
-
-                                                {!! $ph((int)($cm['heightPx'] ?? $h)) !!}
                                             </div>
                                         </td>
                                     @else
@@ -708,8 +749,23 @@
                             @endif
                         </tr>
                     @endforeach
+
+                    {{-- Abschlusszeile: Ende des (Teil-)Tages auf der Zeitachse --}}
+                    @php
+                        $lastActive = null;
+                        foreach (array_reverse($chunk['rows']) as $r) {
+                            if (empty($r['isGap'])) { $lastActive = $r; break; }
+                        }
+                    @endphp
+                    @if($lastActive)
+                        <tr class="endRow" style="height: 12px;">
+                            <td class="endTime">{{ $lastActive['t2'] }}</td>
+                            <td colspan="{{ $tlCols + $craftCols }}"></td>
+                        </tr>
+                    @endif
                     </tbody>
                 </table>
+                @endif
             </div>
         @endforeach
     </div>

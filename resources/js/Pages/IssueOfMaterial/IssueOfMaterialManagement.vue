@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="$t('Material issue book')">
+    <AppLayout :title="$t('Material Issues')">
         <div class="artwork-container">
             <!-- Header -->
 

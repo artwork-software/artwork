@@ -1,5 +1,5 @@
 <template>
-    <ShiftHeader>
+    <ShiftHeader :title="$t('Shift plan list view')">
         <div class="w-full bg-white">
             <ShiftPlanListViewFunctionBar
                 ref="functionBarRef"

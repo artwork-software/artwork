@@ -21,11 +21,28 @@ class StoreExternalUserSourceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'active' => ['sometimes', 'boolean'],
             'type' => ['required', 'string', 'in:ldap,identity_provider'],
             'config' => ['required', 'array'],
+        ];
+
+        if ($this->input('type') === 'identity_provider') {
+            return $rules + [
+                'config.discovery_url' => ['required', 'url', 'max:500'],
+                'config.client_id' => ['required', 'string', 'max:255'],
+                'config.client_secret' => ['required', 'string', 'max:1000'],
+                'config.scopes' => ['sometimes', 'array'],
+                'config.scopes.*' => ['string', 'max:100'],
+                'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
+                'config.groups_claim' => ['nullable', 'string', 'max:100'],
+                'config.allowed_domains' => ['required', 'array', 'min:1'],
+                'config.allowed_domains.*' => ['string', 'max:255'],
+            ];
+        }
+
+        return $rules + [
             'config.host' => ['required', 'string', 'max:255'],
             'config.port' => ['sometimes', 'integer', 'min:1', 'max:65535'],
             'config.base_dn' => ['required', 'string', 'max:500'],

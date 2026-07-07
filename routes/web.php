@@ -159,6 +159,7 @@ use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
 use App\Http\Controllers\ExternalAccessManagementController;
 use App\Http\Controllers\ExternalSubmissionReviewController;
+use App\Http\Controllers\OidcAuthController;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalAccessSettingsController;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController;
@@ -210,6 +211,12 @@ Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
+
+// OIDC / SSO Login (guest) - Authorization-Code-Flow gegen einen Identity Provider
+Route::get('/auth/oidc/{externalUserSource}/redirect', [OidcAuthController::class, 'redirect'])
+    ->name('auth.oidc.redirect');
+Route::get('/auth/oidc/{externalUserSource}/callback', [OidcAuthController::class, 'callback'])
+    ->name('auth.oidc.callback');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 

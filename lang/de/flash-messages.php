@@ -163,5 +163,12 @@ return [
             'update' => 'Gruppen-Mapping erfolgreich aktualisiert',
             'delete' => 'Gruppen-Mapping erfolgreich gelöscht'
         ]
+    ],
+    'oidc' => [
+        'error' => [
+            'authentication_failed' => 'Anmeldung über den Identity Provider fehlgeschlagen. Bitte versuche es erneut.',
+            'missing_email' => 'Der Identity Provider hat keine E-Mail-Adresse übermittelt. Anmeldung nicht möglich.',
+            'domain_not_allowed' => 'Deine E-Mail-Domain ist für diese Anmeldung nicht zugelassen.'
+        ]
     ]
 ];

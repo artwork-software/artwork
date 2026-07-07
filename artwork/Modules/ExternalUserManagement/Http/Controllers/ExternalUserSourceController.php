@@ -8,6 +8,7 @@ use Artwork\Modules\ExternalUserManagement\Http\Requests\UpdateExternalUserSourc
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSourceService;
 use Artwork\Modules\ExternalUserManagement\Service\LdapService;
+use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,8 @@ class ExternalUserSourceController extends Controller
 {
     public function __construct(
         private readonly ExternalUserSourceService $externalUserSourceService,
-        private readonly LdapService $ldapService
+        private readonly LdapService $ldapService,
+        private readonly OidcService $oidcService
     ) {
     }
 
@@ -77,28 +79,7 @@ class ExternalUserSourceController extends Controller
     {
         $this->authorize('view', GeneralSettings::class);
 
-        if ($externalUserSource->type !== 'ldap') {
-            return response()->json([
-                'success' => false,
-                'message' => __('Only LDAP sources can be tested')
-            ], 400);
-        }
-
-        try {
-            $success = $this->ldapService->testConnection($externalUserSource);
-
-            return response()->json([
-                'success' => $success,
-                'message' => $success
-                    ? __('LDAP connection successful')
-                    : __('LDAP connection failed. Please check your configuration.')
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => __('LDAP connection failed. Please check your configuration.')
-            ], 500);
-        }
+        return $this->runConnectionTest($externalUserSource);
     }
 
     public function testConnectionConfig(Request $request): JsonResponse
@@ -106,23 +87,40 @@ class ExternalUserSourceController extends Controller
         $this->authorize('view', GeneralSettings::class);
 
         $request->validate([
+            'type' => ['sometimes', 'string', 'in:ldap,identity_provider'],
             'config' => ['required', 'array'],
-            'config.host' => ['required', 'string'],
-            'config.port' => ['required', 'integer'],
-            'config.base_dn' => ['required', 'string'],
-            'config.bind_dn' => ['required', 'string'],
-            'config.bind_password' => ['required', 'string'],
-            'config.use_ssl' => ['sometimes', 'boolean'],
-            'config.use_tls' => ['sometimes', 'boolean'],
         ]);
 
         // Create a temporary ExternalUserSource instance for testing
         $tempSource = new ExternalUserSource();
-        $tempSource->type = 'ldap';
+        $tempSource->type = $request->input('type', 'ldap');
         $tempSource->config = $request->input('config');
 
+        return $this->runConnectionTest($tempSource);
+    }
+
+    private function runConnectionTest(ExternalUserSource $source): JsonResponse
+    {
+        if ($source->type === 'identity_provider') {
+            try {
+                $success = $this->oidcService->testConnection($source);
+
+                return response()->json([
+                    'success' => $success,
+                    'message' => $success
+                        ? __('OIDC discovery successful')
+                        : __('OIDC discovery failed. Please check your configuration.')
+                ]);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('OIDC discovery failed. Please check your configuration.')
+                ], 500);
+            }
+        }
+
         try {
-            $success = $this->ldapService->testConnection($tempSource);
+            $success = $this->ldapService->testConnection($source);
 
             return response()->json([
                 'success' => $success,

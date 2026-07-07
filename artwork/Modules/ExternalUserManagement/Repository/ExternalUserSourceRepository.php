@@ -40,6 +40,28 @@ class ExternalUserSourceRepository extends BaseRepository
             ->get();
     }
 
+    public function getAllActiveIdentityProviderSources(): Collection
+    {
+        return $this->getNewModelQuery()
+            ->where('active', true)
+            ->where('type', 'identity_provider')
+            ->get();
+    }
+
+    /**
+     * Aktive Identity-Provider-Quellen für die Login-Seite (nur id + name).
+     *
+     * @return Collection<int, ExternalUserSource>
+     */
+    public function getActiveIdentityProviderSourcesForLogin(): Collection
+    {
+        return $this->getNewModelQuery()
+            ->where('active', true)
+            ->where('type', 'identity_provider')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     public function findByIdWithRelations(int $id): ?ExternalUserSource
     {
         return $this->getNewModelQuery()

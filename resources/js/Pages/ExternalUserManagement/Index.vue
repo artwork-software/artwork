@@ -7,9 +7,9 @@
 
         <div class="mt-10">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-gray-900">{{ $t('LDAP / Active Directory Sources') }}</h2>
+                <h2 class="text-lg font-semibold text-gray-900">{{ $t('External User Sources') }}</h2>
                 <BaseUIButton
-                    :label="$t('Add LDAP Source')"
+                    :label="$t('Add Source')"
                     is-add-button
                     @click="showCreateSourceModal = true"
                 />
@@ -31,11 +31,11 @@
                                 </span>
                                 <span>{{ source.type === 'ldap' ? 'LDAP' : 'OIDC' }}</span>
                                 <span v-if="source.config?.host">{{ source.config.host }}</span>
+                                <span v-else-if="source.config?.discovery_url" class="truncate max-w-xs">{{ source.config.discovery_url }}</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button
-                                v-if="source.type === 'ldap'"
                                 @click="testConnection(source)"
                                 :disabled="testingConnection === source.id"
                                 class="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
@@ -88,7 +88,7 @@
             </div>
 
             <div v-else class="text-center py-12 bg-gray-50 rounded-lg">
-                <p class="text-gray-500">{{ $t('No LDAP sources configured yet.') }}</p>
+                <p class="text-gray-500">{{ $t('No external user sources configured yet.') }}</p>
             </div>
         </div>
 
@@ -104,8 +104,8 @@
         <!-- Delete Confirmation Modal -->
         <ConfirmDeleteModal
             v-if="showDeleteModal"
-            :title="$t('Delete LDAP Source')"
-            :description="$t('Are you sure you want to delete this LDAP source? This action cannot be undone.')"
+            :title="$t('Delete Source')"
+            :description="$t('Are you sure you want to delete this source? This action cannot be undone.')"
             @closed="showDeleteModal = null"
             @delete="deleteSource"
         />

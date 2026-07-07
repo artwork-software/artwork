@@ -2,16 +2,15 @@
 import { ref, reactive, computed, onMounted, getCurrentInstance, onBeforeUnmount, watch, inject } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
-import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
+import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
-import FilePreview from "@/Artwork/Files/FilePreview.vue";
-import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import FilePreview from '@/Artwork/Files/FilePreview.vue'
+import { IconFileUpload, IconFileText, IconPrinter } from '@tabler/icons-vue'
 
 interface ProjectFile {
     id?: number | string
@@ -42,6 +41,7 @@ const uploadedCount = ref(0)
 const totalToUpload = ref(0)
 const isDragging = ref(false)
 const fileInputEl = ref<HTMLInputElement | null>(null)
+const { destroyPrintFrame, printInlineFile } = useInlineFilePrinter()
 
 const page = usePage()
 const userId = computed(() => (page.props as any)?.auth?.user?.id ?? null)
@@ -220,9 +220,12 @@ function isPdf(file: ProjectFile) {
 function isPreviewable(file: ProjectFile) { return isImage(file) || isPdf(file) }
 
 function fileUrl(file: ProjectFile) {
-    // Falls dein Download-Endpoint 'attachment' erzwingt, erlaube serverseitig ?inline=1 o. ä.
-    // Hier nehmen wir denselben Route-Helper wie beim Download.
-    return file.url || route('download_file', { project_file: file as any })
+    return file.url || route('download_file', { project_file: file.id ?? file })
+}
+
+function printFile(file: ProjectFile) {
+    if (!isInlinePrintableFile(file)) return
+    printInlineFile(fileUrl(file))
 }
 
 /* Lightbox State */
@@ -259,7 +262,10 @@ function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape')     closePreview()
 }
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKey)
+    destroyPrintFrame()
+})
 
 function openPreview(file: ProjectFile) {
     if (!isPreviewable(file)) return
@@ -364,7 +370,17 @@ function closePreview() {
                         </div>
                     </div>
 
-                    <div class="shrink-0 flex items-center gap-3">
+                    <div class="shrink-0 flex items-center gap-3 print:hidden">
+                        <button
+                            v-if="isInlinePrintableFile(file)"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            :aria-label="`${$t('Print')}: ${file.name}`"
+                            @click="printFile(file)"
+                        >
+                            <IconPrinter class="size-4" aria-hidden="true" />
+                            {{ $t('Print') }}
+                        </button>
                         <button type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
                             {{ $t('Download') }}
                         </button>

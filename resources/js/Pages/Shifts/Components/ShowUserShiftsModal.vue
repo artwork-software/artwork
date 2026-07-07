@@ -1036,15 +1036,28 @@ function handleSeriesUpdated() {
     closeSeriesModal();
 }
 
-function deleteIndividualTimeById(individualTime) {
-    if (individualTime.id) {
-        router.delete(
-            route('delete.individualTimes', { individualTime }),
-            {
-                preserveScroll: true,
-                preserveState: false,
-            },
-        );
+function removeIndividualTimeFromModal(individualTimeId) {
+    props.user.individual_times = (props.user.individual_times || []).filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+    originalIndividualTimes.value = originalIndividualTimes.value.filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+}
+
+async function deleteIndividualTimeById(individualTime) {
+    const individualTimeId = individualTime?.id;
+
+    if (!individualTimeId) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('delete.individualTimes', { individualTime: individualTimeId }));
+        removeIndividualTimeFromModal(individualTimeId);
+        emit('desiresReload');
+    } catch {
+        // Keep the current modal state if the delete request fails.
     }
 }
 

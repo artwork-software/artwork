@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="$t('Shift plan approvals')">
+    <AppLayout :title="$t('Shift plan Review requests')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 space-y-6 max-w-7xl mx-auto">
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
